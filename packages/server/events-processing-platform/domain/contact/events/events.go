@@ -15,34 +15,36 @@ const (
 )
 
 type ContactCreateEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
-	FirstName     string    `json:"firstName"`
-	LastName      string    `json:"lastName"`
-	Name          string    `json:"name"`
-	Prefix        string    `json:"prefix"`
-	Description   string    `json:"description"`
-	Timezone      string    `json:"timezone"`
-	Source        string    `json:"source"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	AppSource     string    `json:"appSource"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	Tenant          string    `json:"tenant" validate:"required"`
+	FirstName       string    `json:"firstName"`
+	LastName        string    `json:"lastName"`
+	Name            string    `json:"name"`
+	Prefix          string    `json:"prefix"`
+	Description     string    `json:"description"`
+	Timezone        string    `json:"timezone"`
+	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
+	Source          string    `json:"source"`
+	SourceOfTruth   string    `json:"sourceOfTruth"`
+	AppSource       string    `json:"appSource"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
 func NewContactCreateEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactCreateEvent{
-		Tenant:        contactDto.Tenant,
-		FirstName:     contactDto.FirstName,
-		LastName:      contactDto.LastName,
-		Name:          contactDto.Name,
-		Prefix:        contactDto.Prefix,
-		Description:   contactDto.Description,
-		Timezone:      contactDto.Timezone,
-		Source:        contactDto.Source.Source,
-		SourceOfTruth: contactDto.Source.SourceOfTruth,
-		AppSource:     contactDto.Source.AppSource,
-		CreatedAt:     createdAt,
-		UpdatedAt:     updatedAt,
+		Tenant:          contactDto.Tenant,
+		FirstName:       contactDto.FirstName,
+		LastName:        contactDto.LastName,
+		Name:            contactDto.Name,
+		Prefix:          contactDto.Prefix,
+		Description:     contactDto.Description,
+		Timezone:        contactDto.Timezone,
+		ProfilePhotoUrl: contactDto.ProfilePhotoUrl,
+		Source:          contactDto.Source.Source,
+		SourceOfTruth:   contactDto.Source.SourceOfTruth,
+		AppSource:       contactDto.Source.AppSource,
+		CreatedAt:       createdAt,
+		UpdatedAt:       updatedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -57,28 +59,30 @@ func NewContactCreateEvent(aggregate eventstore.Aggregate, contactDto *models.Co
 }
 
 type ContactUpdateEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	FirstName     string    `json:"firstName"`
-	LastName      string    `json:"lastName"`
-	Name          string    `json:"name"`
-	Prefix        string    `json:"prefix"`
-	Description   string    `json:"description"`
-	Timezone      string    `json:"timezone"`
+	Tenant          string    `json:"tenant" validate:"required"`
+	SourceOfTruth   string    `json:"sourceOfTruth"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	FirstName       string    `json:"firstName"`
+	LastName        string    `json:"lastName"`
+	Name            string    `json:"name"`
+	Prefix          string    `json:"prefix"`
+	Description     string    `json:"description"`
+	Timezone        string    `json:"timezone"`
+	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
 }
 
 func NewContactUpdateEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactUpdateEvent{
-		FirstName:     contactDto.FirstName,
-		LastName:      contactDto.LastName,
-		Prefix:        contactDto.Prefix,
-		Description:   contactDto.Description,
-		Timezone:      contactDto.Timezone,
-		Name:          contactDto.Name,
-		Tenant:        contactDto.Tenant,
-		UpdatedAt:     updatedAt,
-		SourceOfTruth: contactDto.Source.SourceOfTruth,
+		FirstName:       contactDto.FirstName,
+		LastName:        contactDto.LastName,
+		Prefix:          contactDto.Prefix,
+		Description:     contactDto.Description,
+		Timezone:        contactDto.Timezone,
+		ProfilePhotoUrl: contactDto.ProfilePhotoUrl,
+		Name:            contactDto.Name,
+		Tenant:          contactDto.Tenant,
+		UpdatedAt:       updatedAt,
+		SourceOfTruth:   contactDto.Source.SourceOfTruth,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

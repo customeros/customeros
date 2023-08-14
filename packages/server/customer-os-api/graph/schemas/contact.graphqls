@@ -85,6 +85,7 @@ type Contact implements ExtensibleEntity & Node {
     lastName: String
     description: String
     timezone: String
+    profilePhotoUrl: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.

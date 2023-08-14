@@ -186,9 +186,10 @@ type Contact struct {
 	// The first name of the contact in customerOS.
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact in customerOS.
-	LastName    *string `json:"lastName,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Timezone    *string `json:"timezone,omitempty"`
+	LastName        *string `json:"lastName,omitempty"`
+	Description     *string `json:"description,omitempty"`
+	Timezone        *string `json:"timezone,omitempty"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt     time.Time  `json:"createdAt"`

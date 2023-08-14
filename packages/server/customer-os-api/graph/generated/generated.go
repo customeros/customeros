@@ -149,6 +149,7 @@ type ComplexityRoot struct {
 		Owner                    func(childComplexity int) int
 		PhoneNumbers             func(childComplexity int) int
 		Prefix                   func(childComplexity int) int
+		ProfilePhotoURL          func(childComplexity int) int
 		Socials                  func(childComplexity int) int
 		Source                   func(childComplexity int) int
 		SourceOfTruth            func(childComplexity int) int
@@ -1675,6 +1676,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Prefix(childComplexity), true
+
+	case "Contact.profilePhotoUrl":
+		if e.complexity.Contact.ProfilePhotoURL == nil {
+			break
+		}
+
+		return e.complexity.Contact.ProfilePhotoURL(childComplexity), true
 
 	case "Contact.socials":
 		if e.complexity.Contact.Socials == nil {
@@ -6914,6 +6922,7 @@ type Contact implements ExtensibleEntity & Node {
     lastName: String
     description: String
     timezone: String
+    profilePhotoUrl: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -14656,6 +14665,47 @@ func (ec *executionContext) fieldContext_Contact_timezone(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_profilePhotoUrl(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProfilePhotoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_profilePhotoUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_createdAt(ctx, field)
 	if err != nil {
@@ -16042,6 +16092,8 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(c
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -16189,6 +16241,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -16723,6 +16777,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -19277,6 +19333,8 @@ func (ec *executionContext) fieldContext_Email_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -24847,6 +24905,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -28055,6 +28115,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -28233,6 +28295,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -28527,6 +28591,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -28644,6 +28710,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -28761,6 +28829,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -28878,6 +28948,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -28995,6 +29067,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -29221,6 +29295,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx con
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -29690,6 +29766,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -32500,6 +32578,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromContact(ctx
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -45717,6 +45797,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(ctx context.Contex
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -46963,6 +47045,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -47143,6 +47227,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -47260,6 +47346,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_description(ctx, field)
 			case "timezone":
 				return ec.fieldContext_Contact_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_Contact_profilePhotoUrl(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -59440,6 +59528,8 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Contact_description(ctx, field, obj)
 		case "timezone":
 			out.Values[i] = ec._Contact_timezone(ctx, field, obj)
+		case "profilePhotoUrl":
+			out.Values[i] = ec._Contact_profilePhotoUrl(ctx, field, obj)
 		case "createdAt":
 			out.Values[i] = ec._Contact_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

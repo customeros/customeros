@@ -102,6 +102,7 @@ func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		 		c.lastName=$lastName, 
 				c.description=$description, 
 				c.timezone=$timezone, 
+				c.profilePhotoUrl=$profilePhotoUrl, 
 		 		c.createdAt=$createdAt, 
 		 		c.updatedAt=$createdAt, 
 		 		c.source=$source, 
@@ -575,7 +576,8 @@ func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx n
 				primary.lastName = CASE WHEN primary.lastName is null OR primary.lastName = '' THEN merged.lastName ELSE primary.lastName END, 
 				primary.name = CASE WHEN primary.name is null OR primary.name = '' THEN merged.name ELSE primary.name END, 
 				primary.description = CASE WHEN primary.description is null OR primary.description = '' THEN merged.description ELSE primary.description END, 
-				primary.timezone = CASE WHEN primary.timezone is null OR primary.timezeon = '' THEN merged.timezone ELSE primary.timezone END, 
+				primary.timezone = CASE WHEN primary.timezone is null OR primary.timezone = '' THEN merged.timezone ELSE primary.timezone END, 
+				primary.profilePhotoUrl = CASE WHEN primary.profilePhotoUrl is null OR primary.profilePhotoUrl = '' THEN merged.profilePhotoUrl ELSE primary.profilePhotoUrl END, 
 				primary.prefix = CASE WHEN primary.prefix is null OR primary.prefix = '' THEN merged.prefix ELSE primary.prefix END, 
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = $now

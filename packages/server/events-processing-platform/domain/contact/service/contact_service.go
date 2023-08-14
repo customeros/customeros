@@ -35,12 +35,13 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contact_grp
 	objectID := request.Id
 
 	coreFields := commands.ContactDataFields{
-		FirstName:   request.FirstName,
-		LastName:    request.LastName,
-		Prefix:      request.Prefix,
-		Description: request.Description,
-		Timezone:    request.Timezone,
-		Name:        request.Name,
+		FirstName:       request.FirstName,
+		LastName:        request.LastName,
+		Prefix:          request.Prefix,
+		Description:     request.Description,
+		Timezone:        request.Timezone,
+		ProfilePhotoUrl: request.ProfilePhotoUrl,
+		Name:            request.Name,
 	}
 	command := commands.NewUpsertContactCommand(objectID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
 		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
@@ -90,7 +91,7 @@ func (s *contactService) CreateContact(ctx context.Context, request *contact_grp
 	}
 	objectID := newObjectId.String()
 
-	command := commands.NewContactCreateCommand(objectID, request.Tenant, request.FirstName, request.LastName, request.Prefix, request.Description, request.Timezone, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt))
+	command := commands.NewContactCreateCommand(objectID, request.Tenant, request.FirstName, request.LastName, request.Prefix, request.Description, request.Timezone, request.ProfilePhotoUrl, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt))
 	if err := s.contactCommands.CreateContactCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(ContactCreateCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, objectID, err)
