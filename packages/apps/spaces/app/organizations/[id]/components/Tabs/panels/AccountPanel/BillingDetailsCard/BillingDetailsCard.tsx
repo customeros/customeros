@@ -148,7 +148,7 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
         <VStack spacing='4' w='full' >
           <Flex justifyItems='space-between' w='full' gap={4}>
             <FormCurrencyInput
-              label='Billing amounts'
+              label='Billing amount'
               color='gray.700'
               isLabelVisible
               formId={formId}
