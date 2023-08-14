@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
@@ -19,10 +19,13 @@ import {
 import { CurrencyInput } from '@ui/form/CurrencyInput';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useQueryClient } from '@tanstack/react-query';
-import { useUpdateRenewalLikelihoodMutation } from '@organization/graphql/updateRenewalLikelyhood.generated';
 import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { useParams } from 'next/navigation';
 import { useUpdateRenewalForecastMutation } from '@organization/graphql/updateRenewalForecast.generated';
+import {
+  handleFormatAmountCurrency,
+  handleParseAmountCurrency,
+} from '@ui/form/CurrencyInput/utils';
 
 export type RenewalForecastValue = {
   amount?: string | null;
@@ -43,6 +46,8 @@ export const RenewalForecastModal = ({
   name,
 }: RenewalForecastModalProps) => {
   const id = useParams()?.id as string;
+  const initialRef = useRef(null);
+
   const [amount, setAmount] = useState<string>(renewalForecast?.amount || '');
   const [reason, setReason] = useState<string>(renewalForecast?.comment || '');
   const client = getGraphQLClient();
@@ -59,7 +64,7 @@ export const RenewalForecastModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={initialRef}>
       <ModalOverlay />
       <ModalContent
         borderRadius='2xl'
@@ -91,6 +96,9 @@ export const RenewalForecastModal = ({
             placeholder='$1700'
             label='Amount'
             min={0}
+            ref={initialRef}
+            formatValue={handleFormatAmountCurrency}
+            parseValue={handleParseAmountCurrency}
           />
 
           <Text as='label' htmlFor='reason' mt='4' fontSize='sm'>
