@@ -14,6 +14,16 @@
   box-sizing: border-box;
 }
 
+.react-date-picker abbr[title] {
+  border-bottom: none !important;
+  -webkit-text-decoration: none !important;
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+  text-decoration: none !important;
+}
+
+
 .react-date-picker--disabled {
   background-color: #f0f0f0;
   color: #6d6d6d;
@@ -320,6 +330,8 @@
   color: var(--chakra-colors-gray-400);
 }
 
+
+
 .react-calendar__year-view .react-calendar__tile,
 .react-calendar__decade-view .react-calendar__tile,
 .react-calendar__century-view .react-calendar__tile {
@@ -349,19 +361,11 @@
   font-weight: 600;
 }
 
-.react-calendar__tile--now {
-  //background: #ffff76;
-}
 
-.react-calendar__tile--now:enabled:hover,
-.react-calendar__tile--now:enabled:focus {
-  //background: #ffffa9;
-  //background: #ffffa9;
-}
 
 .react-calendar__tile--hasActive {
-  background-color: var(--chakra-colors-primary-100);
-  border: 1px solid var(--chakra-colors-primary-200);
+  background-color: var(--chakra-colors-primary-50);
+  border: 1px solid var(--chakra-colors-primary-200) !important;
   font-weight: 600;
 }
 
@@ -372,8 +376,8 @@
 }
 
 .react-calendar__tile--active {
-  background-color: var(--chakra-colors-primary-100);
-  border: 1px solid var(--chakra-colors-primary-200);
+  background-color: var(--chakra-colors-primary-50);
+  border: 1px solid var(--chakra-colors-primary-200) !important;
   font-weight: 600;
 }
 
