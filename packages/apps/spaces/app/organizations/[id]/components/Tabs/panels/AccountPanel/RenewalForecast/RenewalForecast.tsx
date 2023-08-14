@@ -40,7 +40,13 @@ export const RenewalForecast: FC<{
           <FeaturedIcon size='md' colorScheme={amount ? 'success' : 'gray'}>
             <Icons.Calculator />
           </FeaturedIcon>
-          <Flex ml='5' align='center' justify='space-between' w='full'>
+          <Flex
+            ml='5'
+            align='center'
+            justify='space-between'
+            w='full'
+            columnGap={4}
+          >
             <Flex flexDir='column'>
               <Flex align='center'>
                 <Heading size='sm' fontWeight='semibold' color='gray.700'>
