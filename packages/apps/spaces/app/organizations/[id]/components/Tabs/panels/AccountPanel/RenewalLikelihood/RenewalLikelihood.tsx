@@ -172,7 +172,7 @@ function getRenewalColor(
     case 'LOW':
       return 'error.500';
     case 'ZERO':
-      return 'gray.400';
+      return 'gray.700';
     default:
       return 'gray.400';
   }
