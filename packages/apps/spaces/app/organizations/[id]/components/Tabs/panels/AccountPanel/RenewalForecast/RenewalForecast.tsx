@@ -12,12 +12,15 @@ import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 
 import { RenewalForecastModal } from './RenewalForecastModal';
 import { RenewalForecast as RenewalForecastT } from '@graphql/types';
-import {getUserDisplayData} from "@spaces/utils/getUserEmail";
-import {DateTimeUtils} from "@spaces/utils/date";
+import { getUserDisplayData } from '@spaces/utils/getUserEmail';
+import { DateTimeUtils } from '@spaces/utils/date';
 
-export type RenewalForecastType = RenewalForecastT & { amount?: string | null }
+export type RenewalForecastType = RenewalForecastT & { amount?: string | null };
 
-export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ renewalForecast }) => {
+export const RenewalForecast: FC<{
+  renewalForecast: RenewalForecastType;
+  name: string;
+}> = ({ renewalForecast, name }) => {
   const update = useDisclosure();
   const info = useDisclosure();
   const { amount, comment } = renewalForecast;
@@ -55,11 +58,13 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
                 />
               </Flex>
               <Text fontSize='xs' color='gray.500'>
-                {!amount ? 'Not calculated yet' : `Set by 
+                {!amount
+                  ? 'Not calculated yet'
+                  : `Set by 
                 ${getUserDisplayData(renewalForecast?.updatedBy)}
                  ${DateTimeUtils.timeAgo(renewalForecast.updatedAt, {
-                        addSuffix: true,
-                    })}`}
+                   addSuffix: true,
+                 })}`}
               </Text>
             </Flex>
 
@@ -93,6 +98,7 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
           amount: renewalForecast.amount,
           comment: renewalForecast.comment,
         }}
+        name={name}
         isOpen={update.isOpen}
         onClose={update.onClose}
       />

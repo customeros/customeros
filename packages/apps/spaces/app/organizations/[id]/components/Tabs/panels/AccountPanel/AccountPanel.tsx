@@ -34,6 +34,7 @@ export const AccountPanel = () => {
         }
       />
       <RenewalForecast
+        name={data?.organization?.name || ''}
         renewalForecast={
           data?.organization?.accountDetails
             ?.renewalForecast as RenewalForecastType

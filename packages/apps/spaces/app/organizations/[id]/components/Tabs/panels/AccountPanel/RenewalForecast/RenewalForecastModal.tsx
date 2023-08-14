@@ -33,12 +33,14 @@ interface RenewalForecastModalProps {
   isOpen: boolean;
   onClose: () => void;
   renewalForecast: RenewalForecastValue;
+  name: string;
 }
 
 export const RenewalForecastModal = ({
   renewalForecast,
   isOpen,
   onClose,
+  name,
 }: RenewalForecastModalProps) => {
   const id = useParams()?.id as string;
   const [amount, setAmount] = useState<string>(renewalForecast?.amount || '');
@@ -77,9 +79,8 @@ export const RenewalForecastModal = ({
             {`${!renewalForecast.amount ? 'Set' : 'Update'} renewal forecast`}
           </Heading>
           <Text mt='1' fontSize='sm' fontWeight='normal'>
-            {!renewalForecast.amount ? 'Setting' : 'Updating'}{' '}
-            <b>Acme Corp’s</b> renewal forecast will change how expected revenue
-            is reported.
+            {!renewalForecast.amount ? 'Setting' : 'Updating'} <b>{name}</b>{' '}
+            renewal forecast will change how expected revenue is reported.
           </Text>
         </ModalHeader>
         <ModalBody as={Flex} flexDir='column' pb='0'>
