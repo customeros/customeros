@@ -91,23 +91,20 @@ export const RenewalForecastModal = ({
             label='Amount'
             min={0}
           />
-          {amount && (
-            <>
-              <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
-                <b>Reason for change</b> (optional)
-              </Text>
-              <AutoresizeTextarea
-                pt='0'
-                id='reason'
-                value={reason}
-                spellCheck='false'
-                onChange={(e) => setReason(e.target.value)}
-                placeholder={`What is the reason for ${
-                  !renewalForecast.amount ? 'setting' : 'updating'
-                } the renewal forecast?`}
-              />
-            </>
-          )}
+
+          <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
+            <b>Reason for change</b> (optional)
+          </Text>
+          <AutoresizeTextarea
+            pt='0'
+            id='reason'
+            value={reason}
+            spellCheck='false'
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={`What is the reason for ${
+              !renewalForecast.amount ? 'setting' : 'updating'
+            } the renewal forecast?`}
+          />
         </ModalBody>
         <ModalFooter p='6'>
           <Button variant='outline' w='full' onClick={onClose}>
