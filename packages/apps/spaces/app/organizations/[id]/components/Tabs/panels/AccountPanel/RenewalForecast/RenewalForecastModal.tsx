@@ -22,10 +22,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { useParams } from 'next/navigation';
 import { useUpdateRenewalForecastMutation } from '@organization/graphql/updateRenewalForecast.generated';
-import {
-  handleFormatAmountCurrency,
-  handleParseAmountCurrency,
-} from '@ui/form/CurrencyInput/utils';
+
 
 export type RenewalForecastValue = {
   amount?: string | null;
@@ -93,12 +90,10 @@ export const RenewalForecastModal = ({
             onChange={setAmount}
             value={`${amount}`}
             w='full'
-            placeholder='$1700'
+            placeholder='Amount'
             label='Amount'
             min={0}
             ref={initialRef}
-            formatValue={handleFormatAmountCurrency}
-            parseValue={handleParseAmountCurrency}
           />
 
           <Text as='label' htmlFor='reason' mt='4' fontSize='sm'>
