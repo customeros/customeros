@@ -102,7 +102,7 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
         onClose={info.onClose}
         onConfirm={info.onClose}
         confirmButtonLabel='Got it'
-        label='Renewal likelihood'
+        label='Renewal forecast'
       >
         <Text fontSize='sm' fontWeight='normal'>
           The renewal forecast gives you a way to roughly project revenue per
