@@ -49,7 +49,7 @@ export const RenewalForecast: FC<{
           >
             <Flex flexDir='column'>
               <Flex align='center'>
-                <Heading size='sm' fontWeight='semibold' color='gray.700'>
+                <Heading size='sm' fontWeight='semibold' color='gray.700' mr={2}>
                   Renewal forecast
                 </Heading>
                 <IconButton

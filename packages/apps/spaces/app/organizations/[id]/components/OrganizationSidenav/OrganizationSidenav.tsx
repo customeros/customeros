@@ -97,7 +97,7 @@ export const OrganizationSidenav = () => {
           isActive={checkIsActive('account')}
           onClick={handleItemClick('account')}
           icon={
-            <Icons.Folder
+            <Icons.ActivityHeart
               color={checkIsActive('account') ? 'gray.700' : 'gray.500'}
               boxSize='6'
             />

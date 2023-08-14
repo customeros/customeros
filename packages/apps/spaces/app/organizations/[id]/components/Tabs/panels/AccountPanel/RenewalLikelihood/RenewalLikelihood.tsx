@@ -43,12 +43,12 @@ export const RenewalLikelihood: FC<{
             size='md'
             colorScheme={getFeatureIconColor(probability)}
           >
-            <Icons.Building7 />
+            <Icons.HeartActivity />
           </FeaturedIcon>
           <Flex ml='5' align='center' justify='space-between' w='full'>
             <Flex flexDir='column'>
               <Flex align='center'>
-                <Heading size='sm' fontWeight='semibold' color='gray.700'>
+                <Heading size='sm' fontWeight='semibold' color='gray.700' mr={2}>
                   Renewal likelihood
                 </Heading>
                 <IconButton
