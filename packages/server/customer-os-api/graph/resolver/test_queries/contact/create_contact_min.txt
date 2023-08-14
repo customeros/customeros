@@ -10,6 +10,7 @@ contact_Create(
     lastName
     description
     timezone
+    profilePhotoUrl
     source
     createdAt
   }

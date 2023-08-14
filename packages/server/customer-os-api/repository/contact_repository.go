@@ -102,7 +102,6 @@ func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		 		c.lastName=$lastName, 
 				c.description=$description, 
 				c.timezone=$timezone, 
-				c.profilePhotoUrl=$profilePhotoUrl, 
 		 		c.createdAt=$createdAt, 
 		 		c.updatedAt=$createdAt, 
 		 		c.source=$source, 
