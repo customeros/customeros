@@ -116,7 +116,8 @@ export const RenewalLikelihood: FC<{
         <Text fontSize='sm' fontWeight='normal'>
           Renewal likelihood is a rough forecast of how likely {name} is to
           renew their account. This value can be manually set by you or
-          automatically based on certain criteria
+          automatically based on certain criteria. It is used to prioritise
+          actions and calculate renewal forecasts.
         </Text>
         <br />
         <Text fontSize='sm' fontWeight='normal'>
