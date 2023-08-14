@@ -44,7 +44,7 @@ export const RenewalForecast: FC<{
             <Flex flexDir='column'>
               <Flex align='center'>
                 <Heading size='sm' fontWeight='semibold' color='gray.700'>
-                  Renewal Forecast
+                  Renewal forecast
                 </Heading>
                 <IconButton
                   size='xs'
@@ -74,6 +74,7 @@ export const RenewalForecast: FC<{
                 : Intl.NumberFormat('en-US', {
                     style: 'currency',
                     currency: 'USD',
+                    minimumFractionDigits: 0,
                   }).format(parseFloat(`${amount}`))}
             </Heading>
           </Flex>
@@ -84,7 +85,7 @@ export const RenewalForecast: FC<{
               <Divider mt='4' mb='2' />
               <Flex align='flex-start'>
                 <Icons.File2 color='gray.400' />
-                <Text color='gray.500' fontSize='xs' ml='1'>
+                <Text color='gray.500' fontSize='xs' ml='1' noOfLines={2}>
                   {comment}
                 </Text>
               </Flex>
