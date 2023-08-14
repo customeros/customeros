@@ -45,16 +45,17 @@ func TestContactService_CreateContact(t *testing.T) {
 	contactClient := contact_grpc_service.NewContactGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
 	response, err := contactClient.CreateContact(ctx, &contact_grpc_service.CreateContactGrpcRequest{
-		Tenant:        "ziggy",
-		FirstName:     "Bob",
-		LastName:      "Smith",
-		Prefix:        "Mr.",
-		Description:   "This is a contact description",
-		Timezone:      "America/Los_Angeles",
-		AppSource:     "unit-test",
-		Source:        "N/A",
-		SourceOfTruth: "N/A",
-		CreatedAt:     timestamppb.New(timeNow),
+		Tenant:          "ziggy",
+		FirstName:       "Bob",
+		LastName:        "Smith",
+		Prefix:          "Mr.",
+		Description:     "This is a contact description",
+		Timezone:        "America/Los_Angeles",
+		ProfilePhotoUrl: "https://www.google.com",
+		AppSource:       "unit-test",
+		Source:          "N/A",
+		SourceOfTruth:   "N/A",
+		CreatedAt:       timestamppb.New(timeNow),
 	})
 	if err != nil {
 		t.Errorf("Failed to create contact: %v", err)
@@ -73,6 +74,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.Equal(t, "Smith", eventData.LastName)
 	require.Equal(t, "Mr.", eventData.Prefix)
 	require.Equal(t, "America/Los_Angeles", eventData.Timezone)
+	require.Equal(t, "https://www.google.com", eventData.ProfilePhotoUrl)
 	require.Equal(t, "unit-test", eventData.AppSource)
 	require.Equal(t, "N/A", eventData.Source)
 	require.Equal(t, "N/A", eventData.SourceOfTruth)
@@ -96,16 +98,17 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 
 	timeNow := time.Now().UTC()
 	responseContact, err := contactClient.CreateContact(ctx, &contact_grpc_service.CreateContactGrpcRequest{
-		Tenant:        "ziggy",
-		FirstName:     "Bob",
-		LastName:      "Smith",
-		Prefix:        "Mr.",
-		Description:   "This is a contact description",
-		Timezone:      "America/Los_Angeles",
-		AppSource:     "unit-test",
-		Source:        "N/A",
-		SourceOfTruth: "N/A",
-		CreatedAt:     timestamppb.New(timeNow),
+		Tenant:          "ziggy",
+		FirstName:       "Bob",
+		LastName:        "Smith",
+		Prefix:          "Mr.",
+		Description:     "This is a contact description",
+		Timezone:        "America/Los_Angeles",
+		ProfilePhotoUrl: "https://www.google.com?id=123",
+		AppSource:       "unit-test",
+		Source:          "N/A",
+		SourceOfTruth:   "N/A",
+		CreatedAt:       timestamppb.New(timeNow),
 	})
 	if err != nil {
 		t.Errorf("Failed to create contact: %v", err)

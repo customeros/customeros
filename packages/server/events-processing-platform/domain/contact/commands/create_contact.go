@@ -39,17 +39,18 @@ func (h *createContactHandler) Handle(ctx context.Context, command *CreateContac
 	}
 
 	err = contactAggregate.CreateContact(ctx, &models.ContactDto{
-		ID:          command.ObjectID,
-		Tenant:      command.Tenant,
-		FirstName:   command.FirstName,
-		LastName:    command.LastName,
-		Prefix:      command.Prefix,
-		Description: command.Description,
-		Timezone:    command.Timezone,
-		Name:        command.Name,
-		Source:      command.Source,
-		CreatedAt:   command.CreatedAt,
-		UpdatedAt:   command.CreatedAt,
+		ID:              command.ObjectID,
+		Tenant:          command.Tenant,
+		FirstName:       command.FirstName,
+		LastName:        command.LastName,
+		Prefix:          command.Prefix,
+		Description:     command.Description,
+		Timezone:        command.Timezone,
+		ProfilePhotoUrl: command.ProfilePhotoUrl,
+		Name:            command.Name,
+		Source:          command.Source,
+		CreatedAt:       command.CreatedAt,
+		UpdatedAt:       command.CreatedAt,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

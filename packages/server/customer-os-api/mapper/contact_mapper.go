@@ -55,18 +55,19 @@ func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.Conta
 
 func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 	return &model.Contact{
-		ID:            contact.Id,
-		Prefix:        utils.StringPtr(contact.Prefix),
-		Name:          utils.StringPtr(contact.Name),
-		FirstName:     utils.StringPtr(contact.FirstName),
-		LastName:      utils.StringPtr(contact.LastName),
-		Description:   utils.StringPtr(contact.Description),
-		Timezone:      utils.StringPtr(contact.Timezone),
-		CreatedAt:     *contact.CreatedAt,
-		UpdatedAt:     contact.UpdatedAt,
-		Source:        MapDataSourceToModel(contact.Source),
-		SourceOfTruth: MapDataSourceToModel(contact.SourceOfTruth),
-		AppSource:     utils.StringPtr(contact.AppSource),
+		ID:              contact.Id,
+		Prefix:          utils.StringPtr(contact.Prefix),
+		Name:            utils.StringPtr(contact.Name),
+		FirstName:       utils.StringPtr(contact.FirstName),
+		LastName:        utils.StringPtr(contact.LastName),
+		Description:     utils.StringPtr(contact.Description),
+		Timezone:        utils.StringPtr(contact.Timezone),
+		ProfilePhotoURL: utils.StringPtr(contact.ProfilePhotoURL),
+		CreatedAt:       *contact.CreatedAt,
+		UpdatedAt:       contact.UpdatedAt,
+		Source:          MapDataSourceToModel(contact.Source),
+		SourceOfTruth:   MapDataSourceToModel(contact.SourceOfTruth),
+		AppSource:       utils.StringPtr(contact.AppSource),
 	}
 }
 

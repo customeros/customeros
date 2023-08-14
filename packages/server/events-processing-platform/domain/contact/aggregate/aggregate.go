@@ -57,6 +57,7 @@ func (a *ContactAggregate) onContactCreate(event eventstore.Event) error {
 	a.Contact.Name = eventData.Name
 	a.Contact.Description = eventData.Description
 	a.Contact.Timezone = eventData.Timezone
+	a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 	a.Contact.Source = commonModels.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
@@ -79,6 +80,7 @@ func (a *ContactAggregate) onContactUpdate(event eventstore.Event) error {
 	a.Contact.Prefix = eventData.Prefix
 	a.Contact.Description = eventData.Description
 	a.Contact.Timezone = eventData.Timezone
+	a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 	a.Contact.Name = eventData.Name
 	return nil
 }

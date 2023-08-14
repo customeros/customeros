@@ -750,18 +750,19 @@ func (s *contactService) RemoveLocation(ctx context.Context, contactId string, l
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	contact := entity.ContactEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		Description:   utils.GetStringPropOrEmpty(props, "description"),
-		Timezone:      utils.GetStringPropOrEmpty(props, "timezone"),
-		Prefix:        utils.GetStringPropOrEmpty(props, "prefix"),
-		CreatedAt:     utils.ToPtr(utils.GetTimePropOrEpochStart(props, "createdAt")),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Id:              utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
+		Name:            utils.GetStringPropOrEmpty(props, "name"),
+		Description:     utils.GetStringPropOrEmpty(props, "description"),
+		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
+		ProfilePhotoURL: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
+		Prefix:          utils.GetStringPropOrEmpty(props, "prefix"),
+		CreatedAt:       utils.ToPtr(utils.GetTimePropOrEpochStart(props, "createdAt")),
+		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &contact
 }

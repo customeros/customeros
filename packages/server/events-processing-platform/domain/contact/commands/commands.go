@@ -9,12 +9,13 @@ import (
 )
 
 type ContactDataFields struct {
-	FirstName   string
-	LastName    string
-	Name        string
-	Prefix      string
-	Description string
-	Timezone    string
+	FirstName       string
+	LastName        string
+	Name            string
+	Prefix          string
+	Description     string
+	Timezone        string
+	ProfilePhotoUrl string
 }
 
 type UpsertContactCommand struct {
@@ -100,15 +101,16 @@ type UpdateContactCommand struct {
 	LastName  string `json:"lastName" bson:"lastName,omitempty"`
 }
 
-func NewContactCreateCommand(objectID, tenant, firstName, lastName, prefix, description, timezone, source, sourceOfTruth, appSource string, createdAt *time.Time) *CreateContactCommand {
+func NewContactCreateCommand(objectID, tenant, firstName, lastName, prefix, description, timezone, profilePhotoUrl, source, sourceOfTruth, appSource string, createdAt *time.Time) *CreateContactCommand {
 	return &CreateContactCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
 		ContactDataFields: ContactDataFields{
-			FirstName:   firstName,
-			LastName:    lastName,
-			Prefix:      prefix,
-			Description: description,
-			Timezone:    timezone,
+			FirstName:       firstName,
+			LastName:        lastName,
+			Prefix:          prefix,
+			Description:     description,
+			Timezone:        timezone,
+			ProfilePhotoUrl: profilePhotoUrl,
 		},
 		Source: common_models.Source{
 			Source:        source,
