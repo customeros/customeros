@@ -3,7 +3,7 @@ module github.com/openline-ai/openline-customer-os/packages/runner/integrity-che
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.44.321
+	github.com/aws/aws-sdk-go v1.44.322
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
