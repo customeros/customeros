@@ -22,7 +22,8 @@ export type RenewalLikelihoodType = RenewalLikelihoodT;
 
 export const RenewalLikelihood: FC<{
   renewalLikelihood: RenewalLikelihoodType;
-}> = ({ renewalLikelihood }) => {
+  name: string;
+}> = ({ renewalLikelihood, name }) => {
   const updateModal = useDisclosure();
   const infoModal = useDisclosure();
   const { probability, comment } = renewalLikelihood;
@@ -48,7 +49,12 @@ export const RenewalLikelihood: FC<{
           <Flex ml='5' align='center' justify='space-between' w='full'>
             <Flex flexDir='column'>
               <Flex align='center'>
-                <Heading size='sm' fontWeight='semibold' color='gray.700' mr={2}>
+                <Heading
+                  size='sm'
+                  fontWeight='semibold'
+                  color='gray.700'
+                  mr={2}
+                >
                   Renewal likelihood
                 </Heading>
                 <IconButton
@@ -94,6 +100,7 @@ export const RenewalLikelihood: FC<{
       </Card>
 
       <RenewalLikelihoodModal
+        name={name}
         renewalLikelihood={renewalLikelihood}
         isOpen={updateModal.isOpen}
         onClose={updateModal.onClose}
@@ -107,9 +114,9 @@ export const RenewalLikelihood: FC<{
         label='Renewal likelihood'
       >
         <Text fontSize='sm' fontWeight='normal'>
-          Renewal likelihood is a rough forecast of how likely Acme Corp is to
-          renew their account. This renewalLikelihood can be manually set by you
-          or automatically based on certain criteria.
+          Renewal likelihood is a rough forecast of how likely {name} is to
+          renew their account. This value can be manually set by you or
+          automatically based on certain criteria
         </Text>
         <br />
         <Text fontSize='sm' fontWeight='normal'>

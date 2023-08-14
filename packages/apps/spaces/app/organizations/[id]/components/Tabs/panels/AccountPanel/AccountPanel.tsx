@@ -28,6 +28,7 @@ export const AccountPanel = () => {
   return (
     <OrganizationPanel title='Account'>
       <RenewalLikelihood
+        name={data?.organization?.name || ''}
         renewalLikelihood={
           data?.organization?.accountDetails
             ?.renewalLikelihood as RenewalLikelihoodType
