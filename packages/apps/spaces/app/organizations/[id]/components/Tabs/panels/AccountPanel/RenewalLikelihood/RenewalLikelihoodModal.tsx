@@ -23,26 +23,31 @@ import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/pan
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { useUpdateRenewalLikelihoodMutation } from '@organization/graphql/updateRenewalLikelyhood.generated';
-import {RenewalLikelihood, RenewalLikelihoodProbability} from '@graphql/types';
-
-
+import {
+  RenewalLikelihood,
+  RenewalLikelihoodProbability,
+} from '@graphql/types';
 
 interface RenewalLikelihoodModalProps {
   isOpen: boolean;
   onClose: () => void;
   renewalLikelihood: RenewalLikelihood;
+  name: string;
 }
 
 export const RenewalLikelihoodModal = ({
   renewalLikelihood,
   isOpen,
   onClose,
+  name,
 }: RenewalLikelihoodModalProps) => {
   const id = useParams()?.id as string;
-  const [probability, setLikelihood] = useState<RenewalLikelihoodProbability | undefined | null>(
-    renewalLikelihood?.probability,
+  const [probability, setLikelihood] = useState<
+    RenewalLikelihoodProbability | undefined | null
+  >(renewalLikelihood?.probability);
+  const [reason, setReason] = useState<string>(
+    renewalLikelihood?.comment || '',
   );
-  const [reason, setReason] = useState<string>(renewalLikelihood?.comment || '');
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const updateRenewalLikelihood = useUpdateRenewalLikelihoodMutation(client, {
@@ -74,12 +79,14 @@ export const RenewalLikelihoodModal = ({
             <Icons.AlertTriangle />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            {`${!renewalLikelihood.probability ? 'Set' : 'Update'} renewal likelihood`}
+            {`${
+              !renewalLikelihood.probability ? 'Set' : 'Update'
+            } renewal likelihood`}
           </Heading>
           <Text mt='1' fontSize='sm' fontWeight='normal'>
-            {!renewalLikelihood.probability ? 'Setting' : 'Updating'} <b>Acme Corp’s</b>{' '}
-            renewal likelihood will change how its renewal estimates are
-            calculated and actions are prioritised.
+            {!renewalLikelihood.probability ? 'Setting' : 'Updating'}{' '}
+            <b>{name}</b> renewal likelihood will change how its renewal
+            estimates are calculated and actions are prioritised.
           </Text>
         </ModalHeader>
         <ModalBody as={Flex} flexDir='column' pb='0'>

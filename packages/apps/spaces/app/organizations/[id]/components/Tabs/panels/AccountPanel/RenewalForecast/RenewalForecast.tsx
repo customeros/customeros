@@ -12,12 +12,15 @@ import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 
 import { RenewalForecastModal } from './RenewalForecastModal';
 import { RenewalForecast as RenewalForecastT } from '@graphql/types';
-import {getUserDisplayData} from "@spaces/utils/getUserEmail";
-import {DateTimeUtils} from "@spaces/utils/date";
+import { getUserDisplayData } from '@spaces/utils/getUserEmail';
+import { DateTimeUtils } from '@spaces/utils/date';
 
-export type RenewalForecastType = RenewalForecastT & { amount?: string | null }
+export type RenewalForecastType = RenewalForecastT & { amount?: string | null };
 
-export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ renewalForecast }) => {
+export const RenewalForecast: FC<{
+  renewalForecast: RenewalForecastType;
+  name: string;
+}> = ({ renewalForecast, name }) => {
   const update = useDisclosure();
   const info = useDisclosure();
   const { amount, comment } = renewalForecast;
@@ -37,11 +40,17 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
           <FeaturedIcon size='md' colorScheme={amount ? 'success' : 'gray'}>
             <Icons.Calculator />
           </FeaturedIcon>
-          <Flex ml='5' align='center' justify='space-between' w='full'>
+          <Flex
+            ml='5'
+            align='center'
+            justify='space-between'
+            w='full'
+            columnGap={4}
+          >
             <Flex flexDir='column'>
               <Flex align='center'>
-                <Heading size='sm' fontWeight='semibold' color='gray.700'>
-                  Renewal Forecast
+                <Heading size='sm' fontWeight='semibold' color='gray.700' mr={2}>
+                  Renewal forecast
                 </Heading>
                 <IconButton
                   size='xs'
@@ -55,11 +64,13 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
                 />
               </Flex>
               <Text fontSize='xs' color='gray.500'>
-                {!amount ? 'Not calculated yet' : `Set by 
+                {!amount
+                  ? 'Not calculated yet'
+                  : `Set by 
                 ${getUserDisplayData(renewalForecast?.updatedBy)}
                  ${DateTimeUtils.timeAgo(renewalForecast.updatedAt, {
-                        addSuffix: true,
-                    })}`}
+                   addSuffix: true,
+                 })}`}
               </Text>
             </Flex>
 
@@ -69,6 +80,7 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
                 : Intl.NumberFormat('en-US', {
                     style: 'currency',
                     currency: 'USD',
+                    minimumFractionDigits: 0,
                   }).format(parseFloat(`${amount}`))}
             </Heading>
           </Flex>
@@ -79,7 +91,7 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
               <Divider mt='4' mb='2' />
               <Flex align='flex-start'>
                 <Icons.File2 color='gray.400' />
-                <Text color='gray.500' fontSize='xs' ml='1'>
+                <Text color='gray.500' fontSize='xs' ml='1' noOfLines={2}>
                   {comment}
                 </Text>
               </Flex>
@@ -93,6 +105,7 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
           amount: renewalForecast.amount,
           comment: renewalForecast.comment,
         }}
+        name={name}
         isOpen={update.isOpen}
         onClose={update.onClose}
       />
@@ -102,7 +115,7 @@ export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ 
         onClose={info.onClose}
         onConfirm={info.onClose}
         confirmButtonLabel='Got it'
-        label='Renewal likelihood'
+        label='Renewal forecast'
       >
         <Text fontSize='sm' fontWeight='normal'>
           The renewal forecast gives you a way to roughly project revenue per

@@ -22,7 +22,8 @@ export type RenewalLikelihoodType = RenewalLikelihoodT;
 
 export const RenewalLikelihood: FC<{
   renewalLikelihood: RenewalLikelihoodType;
-}> = ({ renewalLikelihood }) => {
+  name: string;
+}> = ({ renewalLikelihood, name }) => {
   const updateModal = useDisclosure();
   const infoModal = useDisclosure();
   const { probability, comment } = renewalLikelihood;
@@ -43,12 +44,17 @@ export const RenewalLikelihood: FC<{
             size='md'
             colorScheme={getFeatureIconColor(probability)}
           >
-            <Icons.Building7 />
+            <Icons.HeartActivity />
           </FeaturedIcon>
           <Flex ml='5' align='center' justify='space-between' w='full'>
             <Flex flexDir='column'>
               <Flex align='center'>
-                <Heading size='sm' fontWeight='semibold' color='gray.700'>
+                <Heading
+                  size='sm'
+                  fontWeight='semibold'
+                  color='gray.700'
+                  mr={2}
+                >
                   Renewal likelihood
                 </Heading>
                 <IconButton
@@ -94,6 +100,7 @@ export const RenewalLikelihood: FC<{
       </Card>
 
       <RenewalLikelihoodModal
+        name={name}
         renewalLikelihood={renewalLikelihood}
         isOpen={updateModal.isOpen}
         onClose={updateModal.onClose}
@@ -107,9 +114,10 @@ export const RenewalLikelihood: FC<{
         label='Renewal likelihood'
       >
         <Text fontSize='sm' fontWeight='normal'>
-          Renewal likelihood is a rough forecast of how likely Acme Corp is to
-          renew their account. This renewalLikelihood can be manually set by you
-          or automatically based on certain criteria.
+          Renewal likelihood is a rough forecast of how likely {name} is to
+          renew their account. This value can be manually set by you or
+          automatically based on certain criteria. It is used to prioritise
+          actions and calculate renewal forecasts.
         </Text>
         <br />
         <Text fontSize='sm' fontWeight='normal'>
@@ -150,7 +158,7 @@ function parseRenewalLabel(
     case 'ZERO':
       return 'Zero';
     default:
-      'Not set';
+      return 'Not set';
   }
 }
 
@@ -165,7 +173,7 @@ function getRenewalColor(
     case 'LOW':
       return 'error.500';
     case 'ZERO':
-      return 'gray.400';
+      return 'gray.700';
     default:
       return 'gray.400';
   }

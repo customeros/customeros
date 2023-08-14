@@ -32,6 +32,7 @@ export type OrganizationAccountDetailsQuery = {
   organization?: {
     __typename?: 'Organization';
     id: string;
+    name: string;
     accountDetails?: {
       __typename?: 'OrgAccountDetails';
       renewalForecast?: {
@@ -83,6 +84,7 @@ export const OrganizationAccountDetailsDocument = `
     query OrganizationAccountDetails($id: ID!) {
   organization(id: $id) {
     id
+    name
     accountDetails {
       renewalForecast {
         amount

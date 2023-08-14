@@ -64,6 +64,11 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
               bg: 'gray.100',
             },
           }),
+          placeholder: (props) => ({
+            ...props,
+            color: 'gray.400',
+          }),
+
           menuList: (props) => ({
             ...props,
             padding: '2',
