@@ -93,7 +93,7 @@ export const RenewalForecastModal = ({
             min={0}
           />
 
-          <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
+          <Text as='label' htmlFor='reason' mt='4' fontSize='sm'>
             <b>Reason for change</b> (optional)
           </Text>
           <AutoresizeTextarea
