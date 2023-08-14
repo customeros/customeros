@@ -150,7 +150,7 @@ function parseRenewalLabel(
     case 'ZERO':
       return 'Zero';
     default:
-      'Not set';
+      return 'Not set';
   }
 }
 
