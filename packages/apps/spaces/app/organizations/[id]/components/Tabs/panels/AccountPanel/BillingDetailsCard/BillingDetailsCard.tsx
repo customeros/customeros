@@ -145,8 +145,8 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
       </Box>
 
       <CardBody padding={4}>
-        <VStack spacing='4' w='full'>
-          <Flex justifyItems='space-between' w='full'>
+        <VStack spacing='4' w='full' >
+          <Flex justifyItems='space-between' w='full' gap={4}>
             <FormCurrencyInput
               label='Billing amounts'
               color='gray.700'
@@ -177,7 +177,7 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
               }
             />
           </Flex>
-          <Flex justifyItems='space-between' w='full'>
+          <Flex justifyItems='space-between' w='full' gap={4}>
             <FormSelect
               isClearable
               label='Renewal cycle'
