@@ -1,19 +1,15 @@
 import { THead, createColumnHelper } from '@ui/presentation/Table';
-import {
-  AddressTableCell,
-  OrganizationTableCell,
-} from '@spaces/finder/finder-table';
-import { ExternalLinkCell } from '@spaces/atoms/table/table-cells/TableCell';
-import { Organization } from '@spaces/graphql';
+import { OrganizationTableCell } from '@spaces/finder/finder-table';
+import { Organization } from '@graphql/types';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
+import { LastTouchpointTableCell } from '@spaces/finder/finder-table/LastTouchpointTableCell';
 import { Skeleton } from '@spaces/atoms/skeleton/Skeleton';
 
 import { OrganizationRelationship } from '../organization-details/relationship/OrganizationRelationship';
 import { RelationshipStage } from '../organization-details/stage/RelationshipStage';
+import { RenewalLikelihoodCell } from '../organization-details/renewal/RenewalLikelihood';
 
 import styles from './organization-list.module.scss';
-import { LastTouchpointTableCell } from '@spaces/finder/finder-table/LastTouchpointTableCell';
-import { HealthIndicatorSelect } from '@spaces/organization/health-select/HealthIndicatorSelect';
 
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
@@ -29,14 +25,7 @@ export const columns = [
         />
       );
     },
-    header: (props) => (
-      <THead<Organization>
-        title='Company'
-        subTitle='Branch'
-        columnHasIcon
-        {...props}
-      />
-    ),
+    header: (props) => <THead<Organization> title='Company' {...props} />,
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
   columnHelper.accessor('relationshipStages', {
@@ -76,25 +65,26 @@ export const columns = [
       </div>
     ),
   }),
-  columnHelper.accessor('website', {
-    id: 'DOMAIN',
+  columnHelper.accessor('accountDetails', {
+    id: 'RENEWAL_LIKELIHOOD',
     cell: (props) => {
-      const url = props.getValue();
-      if (!url) return <div />;
-      return <ExternalLinkCell url={url} />;
+      const organizationId = props.row.original.id;
+      const value = props.getValue()?.renewalLikelihood;
+      const currentProbability = value?.probability;
+      const previousProbability = value?.previousProbability;
+      const updatedAt = value?.updatedAt;
+
+      return (
+        <RenewalLikelihoodCell
+          updatedAt={updatedAt}
+          organizationId={organizationId}
+          currentProbability={currentProbability}
+          previousProbability={previousProbability}
+        />
+      );
     },
     header: (props) => (
-      <THead<Organization> title='Domain' subTitle='Website' {...props} />
-    ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
-  }),
-  columnHelper.accessor('locations', {
-    id: 'LOCATION',
-    cell: (props) => {
-      return <AddressTableCell locations={props.getValue()} />;
-    },
-    header: (props) => (
-      <THead<Organization> title='Location' subTitle='Address' {...props} />
+      <THead<Organization> title='Renewal Likelihood' {...props} />
     ),
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
@@ -109,18 +99,6 @@ export const columns = [
     header: (props) => <THead<Organization> title='Owner' {...props} />,
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
-  columnHelper.accessor('healthIndicator', {
-    id: 'HEALTH',
-    cell: (props) => (
-      <HealthIndicatorSelect
-        organizationId={props.row.original.id}
-        healthIndicator={props.row.original.healthIndicator}
-      />
-    ),
-    header: (props) => <THead<Organization> title='Health' {...props} />,
-    skeleton: () => <Skeleton width='100%' height='21px' />,
-  }),
-  //using market as accessor to have sorting working. using a simple property like description does not work. using lastTouchPointTimelineEvent does not work
   columnHelper.accessor('market', {
     id: 'LAST_TOUCHPOINT',
     cell: (props) => (

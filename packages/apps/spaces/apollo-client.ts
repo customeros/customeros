@@ -10,7 +10,6 @@ export const httpLink = new HttpLink({
 });
 
 export const authLink = setContext((_, { headers }) => {
-
   return {
     headers: {
       ...headers,
@@ -21,7 +20,7 @@ export const authLink = setContext((_, { headers }) => {
 
 const client = new ApolloClient({
   ssrMode: typeof window === 'undefined',
-  connectToDevTools: process.env.NODE_ENV === 'development',
+  connectToDevTools: true,
   cache: new InMemoryCache({
     typePolicies: {
       Contact: {

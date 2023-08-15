@@ -26,6 +26,24 @@ export const customIcons = {
       strokeLinejoin='round'
     />
   ),
+  ArrowNarrowDownRight: (
+    <path
+      d='M6 6L18 18M18 18V10M18 18H10'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+  ),
+  ArrowNarrowUpRight: (
+    <path
+      d='M6 18L18 6M18 6H10M18 6V14'
+      stroke='currentColor'
+      strokeWidth='2'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+  ),
   ArrowUp: (
     <path
       d='M12 19V5M12 5L5 12M12 5L19 12'
@@ -152,6 +170,7 @@ export const customIcons = {
       strokeLinejoin='round'
     />
   ),
+  Dot: <circle cx='12' cy='12' r='4' fill='currentColor' />,
   DotsVertical: (
     <>
       <path

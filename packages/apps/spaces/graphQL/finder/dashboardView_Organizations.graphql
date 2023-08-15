@@ -26,6 +26,42 @@ query dashboardView_Organizations(
       industry
       website
       domains
+      accountDetails {
+        renewalForecast {
+          amount
+          previousAmount
+          comment
+          updatedAt
+          updatedBy {
+            id
+            firstName
+            lastName
+            emails {
+              email
+            }
+          }
+        }
+        renewalLikelihood {
+          probability
+          previousProbability
+          comment
+          updatedBy {
+            id
+            firstName
+            lastName
+            emails {
+              email
+            }
+          }
+          updatedAt
+        }
+        billingDetails {
+          renewalCycle
+          frequency
+          amount
+          renewalCycleStart
+        }
+      }
       locations {
         ...LocationBaseDetails
         rawAddress

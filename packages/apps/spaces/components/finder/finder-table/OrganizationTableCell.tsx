@@ -1,74 +1,56 @@
-import React from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { selectedItemsIds, tableMode } from '../state';
-import styles from './finder-table.module.scss';
-import { Checkbox } from '@spaces/atoms/checkbox';
-import { Organization } from '@spaces/graphql';
-import { TableCell } from '@spaces/atoms/table';
-import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
-import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
+import { useRouter } from 'next/navigation';
 
-export const OrganizationTableCell: React.FC<{
+import { Organization } from '@graphql/types';
+import { Avatar } from '@ui/media/Avatar';
+import { Link } from '@ui/navigation/Link';
+import { Flex } from '@ui/layout/Flex';
+import { Tooltip } from '@ui/overlay/Tooltip';
+
+interface OrganizationTableCellProps {
   organization: Organization;
-}> = ({ organization }) => {
-  const mode = useRecoilValue(tableMode);
-  const [selectedIds, setSelectedIds] = useRecoilState(selectedItemsIds);
-  const handleCheckboxToggle = () => {
-    const isChecked =
-      selectedIds.findIndex((id) => organization.id === id) !== -1;
+}
 
-    if (isChecked) {
-      const filteredIds = selectedIds.filter((id) => id !== organization.id);
-      setSelectedIds([...filteredIds]);
-      return;
-    }
+export const OrganizationTableCell = ({
+  organization,
+}: OrganizationTableCellProps) => {
+  const router = useRouter();
 
-    setSelectedIds((oldSelectedIds) => {
-      return Array.from(new Set([...oldSelectedIds, organization.id]));
-    });
-  };
-  if (!organization) {
-    return <div className={styles.emptyCell}>-</div>;
-  }
-
+  const href = `/organizations/${organization.id}?tab=about`;
   const hasParent = !!organization.subsidiaryOf?.length;
+  const fullName = hasParent
+    ? organization.subsidiaryOf[0].organization.name
+    : organization.name || 'Unnamed';
 
   return (
-    <>
-      {(mode === 'MERGE' || mode === 'ARCHIVE') && (
-        <Checkbox
-          type='checkbox'
-          checked={selectedIds.findIndex((id) => organization.id === id) !== -1}
-          label={
-            <TableCell
-              label={
-                hasParent
-                  ? organization.subsidiaryOf[0].organization.name
-                  : organization.name || 'Unnamed'
-              }
-              subLabel={hasParent ? organization.name || 'Unnamed' : ''}
-            >
-              <OrganizationAvatar name={organization?.name || 'Unnamed'} />
-            </TableCell>
-          }
-          //@ts-expect-error fixme
-          onChange={() => handleCheckboxToggle()}
+    <Flex align='center'>
+      <Tooltip label={fullName} fontWeight='normal'>
+        <Avatar
+          name={fullName}
+          cursor='pointer'
+          onClick={() => router.push(href)}
         />
-      )}
-
-      {(mode !== 'MERGE' && mode !== 'ARCHIVE') && (
-        <LinkCell
-          label={
-            hasParent
-              ? organization.subsidiaryOf[0].organization.name
-              : organization.name || 'Unnamed'
-          }
-          subLabel={hasParent ? organization.name || 'Unnamed' : ''}
-          url={`/organizations/${organization.id}?tab=about`}
+      </Tooltip>
+      <Flex flexDir='column' ml='2'>
+        <Link
+          href={href}
+          color='gray.700'
+          fontWeight='semibold'
+          _hover={{ textDecoration: 'none' }}
         >
-          <OrganizationAvatar name={organization?.name} />
-        </LinkCell>
-      )}
-    </>
+          {fullName}
+        </Link>
+        {organization.website && (
+          <Link
+            target='_blank'
+            color='gray.500'
+            href={organization.website ?? ''}
+            transition='color 0.2s ease-in-out'
+            _hover={{ textDecoration: 'none', color: 'gray.700' }}
+          >
+            {organization.website}
+          </Link>
+        )}
+      </Flex>
+    </Flex>
   );
 };

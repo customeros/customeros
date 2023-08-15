@@ -108,7 +108,7 @@ export const Table = <T extends object>({
 
   useEffect(() => {
     setTableActionsWidth(tableActionsRef.current?.clientWidth ?? 0);
-  }, [enableRowSelection, enableTableActions, _selection]);
+  }, [enableRowSelection, enableTableActions, _selection, data.length]);
 
   const skeletonRow = useMemo(
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
@@ -118,7 +118,7 @@ export const Table = <T extends object>({
   return (
     <Flex w='100%' flexDir='column'>
       <TContent minW={`calc(100vw - 200px - 2rem)`}>
-        <THeader>
+        <THeader minW='1210px'>
           {table.getHeaderGroups().map((headerGroup) => (
             <THeaderGroup key={headerGroup.id}>
               {enableRowSelection && <THeaderCell w='44px' p='0' />}
@@ -149,11 +149,7 @@ export const Table = <T extends object>({
             </THeaderGroup>
           ))}
         </THeader>
-        <TBody
-          ref={scrollElementRef}
-          width='100%'
-          minW={'1210px'}
-        >
+        <TBody ref={scrollElementRef} width='100%' minW={'1210px'}>
           {!virtualRows.length && <TRow justifyContent='center'>No data</TRow>}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
@@ -165,11 +161,11 @@ export const Table = <T extends object>({
                 minW={table.getCenterTotalSize()}
                 top={`${virtualRow.start}px`}
                 ref={rowVirtualizer.measureElement}
-                bg={virtualRow.index % 2 === 0 ? 'gray.50' : 'white'}
+                bg={virtualRow.index % 2 === 0 ? 'gray.25' : 'white'}
               >
                 {enableRowSelection && (
                   <TCell maxW='fit-content' pl='6' pr='0'>
-                    <Flex align='center' flexDir='row'>
+                    <Flex align='center' flexDir='row' h='full'>
                       <Checkbox
                         size='lg'
                         checked={row?.getIsSelected()}
@@ -202,7 +198,7 @@ export const Table = <T extends object>({
                 ))}
                 {enableTableActions && (
                   <TCell flex='0' p='0'>
-                    <Flex flex='0' w={`${tableActionsWidth - 6}px`} />
+                    <Flex flex='0' w={`${tableActionsWidth}px`} />
                   </TCell>
                 )}
               </TRow>
@@ -270,6 +266,7 @@ const TCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       flexDir='column'
       whiteSpace='nowrap'
       wordBreak='keep-all'
+      justify='center'
       ref={ref}
       {...props}
     />
@@ -280,14 +277,14 @@ const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   return (
     <Flex
       ref={ref}
-      bg='white'
+      bg='gray.25'
       overflowX='auto'
       flexDir='column'
       borderRadius='2xl'
       borderStyle='hidden'
       border='1px solid'
       borderColor='gray.200'
-      height='calc(100vh - 99px)'
+      height='calc(100vh - 70px)'
       {...props}
     />
   );

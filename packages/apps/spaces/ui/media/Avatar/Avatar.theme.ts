@@ -11,7 +11,11 @@ export const Avatar = helpers.defineMultiStyleConfig({
   baseStyle: () => ({
     container: {
       bg: 'primary.100',
-      boxShadow: 'avatarRing',
+      border: '1px solid transparent',
+      // using & selector to work around borderColor bug
+      '&': {
+        borderColor: 'primary.200',
+      },
     },
     label: {
       color: 'primary.700',
@@ -27,7 +31,13 @@ export const Avatar = helpers.defineMultiStyleConfig({
       },
     },
   },
-  variants: {},
+  variants: {
+    shadowed: {
+      container: {
+        boxShadow: 'avatarRing',
+      },
+    },
+  },
   defaultProps: {
     size: 'lg',
     colorScheme: 'primary',
