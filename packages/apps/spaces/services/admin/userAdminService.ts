@@ -7,6 +7,7 @@ export interface OAuthToken {
     expiresAt: Date;
     scope: string;
     providerAccountId: string;
+    idToken: string
 }
 
 export interface SignInRequest {

@@ -9,7 +9,7 @@ import (
 )
 
 type OAuthTokenRepository interface {
-	GetByPlayerIdAndTenantAndProvider(playerId string, tenantName string, provider string) helper.QueryResult
+	GetByPlayerIdAndProvider(playerId string, provider string) helper.QueryResult
 	Save(oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
 }
 
@@ -23,12 +23,11 @@ func NewOAuthTokenRepository(db *gorm.DB) OAuthTokenRepository {
 	}
 }
 
-func (oAuthTokenRepo oAuthTokenRepository) GetByPlayerIdAndTenantAndProvider(playerId string, tenantName string, provider string) helper.QueryResult {
+func (oAuthTokenRepo oAuthTokenRepository) GetByPlayerIdAndProvider(playerId string, provider string) helper.QueryResult {
 	var oAuthTokenEntity entity.OAuthTokenEntity
 
 	err := oAuthTokenRepo.db.
-		Where("player_id = ?", playerId).
-		Where("tenant_name = ?", tenantName).
+		Where("player_identity_id = ?", playerId).
 		Where("provider = ?", provider).
 		First(&oAuthTokenEntity).Error
 

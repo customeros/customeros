@@ -9,20 +9,17 @@ import (
 )
 
 func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, commonRepositoryContainer *commonRepository.Repositories, services *service.Services) {
-	r.GET("/user/settings/oauth/:tenant/:playerIdentityId",
+	r.GET("/user/settings/oauth/:playerIdentityId",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 
 		func(c *gin.Context) {
-			tenant := c.Param("tenant")
 			playerIdentityId := c.Param("playerIdentityId")
-			userSettings, err := services.UserSettingsService.GetOAuthUserSettings(tenant, playerIdentityId)
-
+			userSettings, err := services.OAuthUserSettingsService.GetOAuthUserSettings(playerIdentityId)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
-
 			c.JSON(200, userSettings)
 		})
 
@@ -68,7 +65,7 @@ func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, commonRepository
 	//			return
 	//		}
 	//		request.TenantName = c.Keys["TenantName"].(string)
-	//		services.UserSettingsService.Save(&request)
+	//		services.OAuthUserSettingsService.Save(&request)
 	//		c.JSON(200, request)
 	//	})
 }

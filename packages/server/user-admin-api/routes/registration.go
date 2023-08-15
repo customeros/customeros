@@ -14,6 +14,7 @@ import (
 	"google.golang.org/api/oauth2/v2"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const APP_SOURCE = "user-admin-api"
@@ -153,22 +154,52 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 			tenantName = &tenantStr
 		}
 
-		oauthToken := entity.OAuthTokenEntity{
-			Provider:         signInRequest.Provider,
-			TenantName:       *tenantName,
-			PlayerIdentityId: signInRequest.OAuthToken.ProviderAccountId,
-			EmailAddress:     signInRequest.Email,
-			AccessToken:      signInRequest.OAuthToken.AccessToken,
-			RefreshToken:     signInRequest.OAuthToken.RefreshToken,
-			ExpiresAt:        signInRequest.OAuthToken.ExpiresAt,
-			Scope:            signInRequest.OAuthToken.Scope,
+		if isRequestEnablingOAuthSync(signInRequest) {
+			//TODO Move this logic to a service
+			var oauthToken, _ = authServices.OAuthTokenService.GetByPlayerIdAndProvider(signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+			if oauthToken == nil {
+				oauthToken = &entity.OAuthTokenEntity{}
+			}
+			oauthToken.Provider = signInRequest.Provider
+			oauthToken.TenantName = *tenantName
+			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+			oauthToken.EmailAddress = signInRequest.Email
+			oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+			oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+			oauthToken.Scope = signInRequest.OAuthToken.Scope
+			if isRequestEnablingGmailSync(signInRequest) {
+				oauthToken.GmailSyncEnabled = true
+			}
+			if isRequestEnablingGoogleCalendarSync(signInRequest) {
+				oauthToken.GoogleCalendarSyncEnabled = true
+			}
+			authServices.OAuthTokenService.Save(*oauthToken)
 		}
-		if signInRequest.OAuthToken.RefreshToken != "" {
-			oauthToken.EnabledForSync = true
-		}
-		authServices.OAuthTokenService.Save(oauthToken)
 		ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+}
+
+func isRequestEnablingGmailSync(signInRequest model.SignInRequest) bool {
+	if strings.Contains(signInRequest.OAuthToken.Scope, "gmail") {
+		return true
+	}
+	return false
+}
+
+func isRequestEnablingGoogleCalendarSync(signInRequest model.SignInRequest) bool {
+	if strings.Contains(signInRequest.OAuthToken.Scope, "calendar.events") {
+		return true
+	}
+	return false
+}
+
+func isRequestEnablingOAuthSync(signInRequest model.SignInRequest) bool {
+	if isRequestEnablingGmailSync(signInRequest) || isRequestEnablingGoogleCalendarSync(signInRequest) {
+		return true
+	}
+	return false
 }
 
 func makeTenantAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenantStr string, appSource string, req model.SignInRequest, userInfo *oauth2.Userinfo) (string, bool) {

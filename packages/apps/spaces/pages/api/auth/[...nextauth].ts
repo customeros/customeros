@@ -28,13 +28,15 @@ const callbacks = {
         if (account) {
             token.accessToken = account.access_token
             token.id = profile.id
+            token.playerIdentityId = account.providerAccountId
 
             const oAuthToken : OAuthToken = {
                 accessToken: account.access_token,
                 refreshToken: account.refresh_token,
                 expiresAt: new Date(account.expires_at*1000),
                 scope: account.scope,
-                providerAccountId: account.providerAccountId
+                providerAccountId: account.providerAccountId,
+                idToken: account.id_token
             }
 
             const signInRequest: SignInRequest ={
@@ -48,10 +50,11 @@ const callbacks = {
         return token
     },
     async session({ session, user, token }) {
-        if (token.accessToken){
+        if (token){
             session.accessToken = token.accessToken
             session.user.id = token.id
             session.user.name = token.name
+            session.user.playerIdentityId = token.playerIdentityId
         }
         return session
     }

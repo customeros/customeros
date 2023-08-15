@@ -8,7 +8,7 @@ import (
 
 type OAuthTokenService interface {
 	Save(tokenEntity entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
-	GetByPlayerIdAndTenantAndProvider(playerId string, tenant string, provider string) (*entity.OAuthTokenEntity, error)
+	GetByPlayerIdAndProvider(playerId string, provider string) (*entity.OAuthTokenEntity, error)
 }
 
 type oAuthTokenService struct {
@@ -26,8 +26,8 @@ func (o oAuthTokenService) Save(tokenEntity entity.OAuthTokenEntity) (*entity.OA
 	return result, err
 }
 
-func (o oAuthTokenService) GetByPlayerIdAndTenantAndProvider(playerId string, tenant string, provider string) (*entity.OAuthTokenEntity, error) {
-	qr := o.repositories.OAuthTokenRepository.GetByPlayerIdAndTenantAndProvider(playerId, tenant, provider)
+func (o oAuthTokenService) GetByPlayerIdAndProvider(playerId string, provider string) (*entity.OAuthTokenEntity, error) {
+	qr := o.repositories.OAuthTokenRepository.GetByPlayerIdAndProvider(playerId, provider)
 	var oAuthToken entity.OAuthTokenEntity
 	var ok bool
 	if qr.Error != nil {

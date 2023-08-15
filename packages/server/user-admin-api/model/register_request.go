@@ -8,6 +8,7 @@ type OAuthToken struct {
 	ExpiresAt         time.Time `json:"expiresAt"`
 	Scope             string    `json:"scope"`
 	ProviderAccountId string    `json:"providerAccountId"`
+	IdToken           string    `json:"idToken"`
 }
 
 type SignInRequest struct {

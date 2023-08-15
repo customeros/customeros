@@ -1,37 +1,20 @@
 import axios from 'axios';
 import {env} from "string-env-interpolation";
 
-
-export interface UserSettingsInterface {
-    id: string;
-    tenantName: string;
-    username: string;
-    googleOAuthAllScopesEnabled: boolean;
-    googleOAuthUserAccessToken: string;
+export interface UserDetails{
+    playerIdentityId: string;
+    name: string;
+}
+export interface OAuthUserSettingsInterface {
+    gmailSyncEnabled: boolean;
+    googleCalendarSyncEnabled: boolean;
 }
 
-export function UpdateUserSettings(
-    data: UserSettingsInterface,
-): Promise<any> {
-    return new Promise((resolve, reject) =>
-        axios
-            .post(`/sa/user/settings`, data,).then((response: any) => {
-                if (response.data) {
-                    resolve(response.data);
-                } else {
-                    reject(response.error);
-                }
-            })
-            .catch((reason) => {
-                reject(reason);
-            }),
-    );
-}
 
-export function GetUserSettings(identifier:string): Promise<UserSettingsInterface> {
+export function GetOAuthUserSettings(identifier:string): Promise<OAuthUserSettingsInterface> {
     return new Promise((resolve, reject) =>
         axios
-            .get(`/sa/user/settings/${identifier}`)
+            .get(`/sa/user/settings/oauth/${identifier}`)
             .then(({ data, error }: any) => {
                 if (data) {
                     resolve(data);

@@ -2,7 +2,7 @@ import { defineStyleConfig } from '@chakra-ui/react';
 
 export const Button = defineStyleConfig({
   baseStyle: {
-    borderRadius: '5px',
+    borderRadius: '0.5rem',
   },
   variants: {
     outline: ({ colorScheme }) => {
