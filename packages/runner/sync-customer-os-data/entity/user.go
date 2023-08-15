@@ -8,6 +8,7 @@ type UserData struct {
 	Email           string `json:"email,omitempty"`
 	PhoneNumber     string `json:"phoneNumber,omitempty"`
 	ExternalOwnerId string `json:"externalOwnerId,omitempty"`
+	ProfilePhotoUrl string `json:"profilePhotoUrl,omitempty"`
 }
 
 func (u *UserData) HasPhoneNumber() bool {

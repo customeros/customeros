@@ -90,6 +90,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 		"               u.name=$name, " +
 		"               u.firstName=$firstName, " +
 		"				u.lastName=$lastName, " +
+		"				u.profilePhotoUrl=$profilePhotoUrl, " +
 		"               u.source=$source, " +
 		"				u.sourceOfTruth=$sourceOfTruth, " +
 		"				u.appSource=$appSource, " +
@@ -98,6 +99,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 		"				u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.name is null OR u.name = '' THEN $name ELSE u.name END, " +
 		"				u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END, " +
 		"				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END, " +
+		"				u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END, " +
 		"				u.updatedAt=$now " +
 		" WITH u, ext " +
 		" MERGE (u)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
@@ -107,7 +109,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 		" WITH u " +
 		" FOREACH (x in CASE WHEN u.sourceOfTruth <> $sourceOfTruth THEN [u] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateUser {source:$source, id:x.id}) " +
-		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName, alt.name=$name " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName, alt.name=$name, alt.profilePhotoUrl=$profilePhotoUrl " +
 		") RETURN u.id"
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -122,6 +124,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 				"name":            user.Name,
 				"firstName":       user.FirstName,
 				"lastName":        user.LastName,
+				"profilePhotoUrl": user.ProfilePhotoUrl,
 				"createdAt":       utils.TimePtrFirstNonNilNillableAsAny(user.CreatedAt),
 				"updatedAt":       utils.TimePtrFirstNonNilNillableAsAny(user.UpdatedAt),
 				"source":          user.ExternalSystem,
