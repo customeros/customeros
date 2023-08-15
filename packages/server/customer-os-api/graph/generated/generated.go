@@ -808,12 +808,12 @@ type ComplexityRoot struct {
 	}
 
 	RenewalForecast struct {
-		Amount         func(childComplexity int) int
-		Comment        func(childComplexity int) int
-		PreviousAmount func(childComplexity int) int
-		UpdatedAt      func(childComplexity int) int
-		UpdatedBy      func(childComplexity int) int
-		UpdatedByID    func(childComplexity int) int
+		Amount          func(childComplexity int) int
+		Comment         func(childComplexity int) int
+		PotentialAmount func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
+		UpdatedBy       func(childComplexity int) int
+		UpdatedByID     func(childComplexity int) int
 	}
 
 	RenewalLikelihood struct {
@@ -6114,12 +6114,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RenewalForecast.Comment(childComplexity), true
 
-	case "RenewalForecast.previousAmount":
-		if e.complexity.RenewalForecast.PreviousAmount == nil {
+	case "RenewalForecast.potentialAmount":
+		if e.complexity.RenewalForecast.PotentialAmount == nil {
 			break
 		}
 
-		return e.complexity.RenewalForecast.PreviousAmount(childComplexity), true
+		return e.complexity.RenewalForecast.PotentialAmount(childComplexity), true
 
 	case "RenewalForecast.updatedAt":
 		if e.complexity.RenewalForecast.UpdatedAt == nil {
@@ -8343,7 +8343,7 @@ type RenewalLikelihood {
 
 type RenewalForecast {
     amount: Float
-    previousAmount: Float
+    potentialAmount: Float
     comment: String
     updatedAt: Time
     updatedById: String
@@ -41695,8 +41695,8 @@ func (ec *executionContext) fieldContext_OrgAccountDetails_renewalForecast(ctx c
 			switch field.Name {
 			case "amount":
 				return ec.fieldContext_RenewalForecast_amount(ctx, field)
-			case "previousAmount":
-				return ec.fieldContext_RenewalForecast_previousAmount(ctx, field)
+			case "potentialAmount":
+				return ec.fieldContext_RenewalForecast_potentialAmount(ctx, field)
 			case "comment":
 				return ec.fieldContext_RenewalForecast_comment(ctx, field)
 			case "updatedAt":
@@ -49845,8 +49845,8 @@ func (ec *executionContext) fieldContext_RenewalForecast_amount(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _RenewalForecast_previousAmount(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_RenewalForecast_previousAmount(ctx, field)
+func (ec *executionContext) _RenewalForecast_potentialAmount(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalForecast_potentialAmount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -49859,7 +49859,7 @@ func (ec *executionContext) _RenewalForecast_previousAmount(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PreviousAmount, nil
+		return obj.PotentialAmount, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -49873,7 +49873,7 @@ func (ec *executionContext) _RenewalForecast_previousAmount(ctx context.Context,
 	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_RenewalForecast_previousAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_RenewalForecast_potentialAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RenewalForecast",
 		Field:      field,
@@ -66937,8 +66937,8 @@ func (ec *executionContext) _RenewalForecast(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("RenewalForecast")
 		case "amount":
 			out.Values[i] = ec._RenewalForecast_amount(ctx, field, obj)
-		case "previousAmount":
-			out.Values[i] = ec._RenewalForecast_previousAmount(ctx, field, obj)
+		case "potentialAmount":
+			out.Values[i] = ec._RenewalForecast_potentialAmount(ctx, field, obj)
 		case "comment":
 			out.Values[i] = ec._RenewalForecast_comment(ctx, field, obj)
 		case "updatedAt":

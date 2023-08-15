@@ -12,7 +12,7 @@ mutation UpdateOrganization($organizationId: ID!) {
       accountDetails {
               renewalForecast {
                   amount
-                  previousAmount
+                  potentialAmount
                   comment
                   updatedAt
                   updatedById
@@ -21,6 +21,24 @@ mutation UpdateOrganization($organizationId: ID!) {
                     firstName
                     lastName
                   }
+              }
+              renewalLikelihood {
+                  probability
+                  previousProbability
+                  comment
+                  updatedAt
+                  updatedById
+                  updatedBy {
+                        id
+                        firstName
+                        lastName
+                  }
+              }
+              billingDetails {
+                  amount
+                  frequency
+                  renewalCycle
+                  renewalCycleStart
               }
           }
     }

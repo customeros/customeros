@@ -94,7 +94,7 @@ func (r *mutationResolver) OrganizationUpdateRenewalForecast(ctx context.Context
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	err := r.Services.OrganizationService.UpdateRenewalForecast(ctx, input.ID, mapper.MapRenewalForecastInputToEntity(input))
+	err := r.Services.OrganizationService.UpdateRenewalForecast(ctx, input.ID, mapper.MapRenewalForecastInputToEntity(input), false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update organization' renewal forecast %s", input.ID)

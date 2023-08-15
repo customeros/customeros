@@ -22,6 +22,24 @@ mutation UpdateOrganization($organizationId: ID!) {
                         lastName
                   }
               }
+              renewalForecast {
+                  amount
+                  potentialAmount
+                  comment
+                  updatedAt
+                  updatedById
+                  updatedBy {
+                    id
+                    firstName
+                    lastName
+                  }
+              }
+              billingDetails {
+                  amount
+                  frequency
+                  renewalCycle
+                  renewalCycleStart
+              }
           }
     }
 }

@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+type RenewalLikelihoodProbability string
+
+const (
+	RenewalLikelihoodProbabilityHigh   RenewalLikelihoodProbability = "0-HIGH"
+	RenewalLikelihoodProbabilityMedium RenewalLikelihoodProbability = "1-MEDIUM"
+	RenewalLikelihoodProbabilityLow    RenewalLikelihoodProbability = "2-LOW"
+	RenewalLikelihoodProbabilityZero   RenewalLikelihoodProbability = "3-ZERO"
+)
+
 type OrganizationEntity struct {
 	ID                 string
 	TenantOrganization bool
@@ -54,11 +63,11 @@ type RenewalLikelihood struct {
 	UpdatedBy                 *string
 }
 type RenewalForecast struct {
-	Amount         *float64
-	PreviousAmount *float64
-	Comment        *string
-	UpdatedAt      *time.Time
-	UpdatedBy      *string
+	Amount          *float64
+	PotentialAmount *float64
+	Comment         *string
+	UpdatedAt       *time.Time
+	UpdatedBy       *string
 }
 type BillingDetails struct {
 	Amount            *float64

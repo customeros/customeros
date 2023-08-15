@@ -12,7 +12,7 @@ query GetOrganizationById($organizationId: ID!){
         }
         renewalForecast {
             amount
-            previousAmount
+            potentialAmount
             comment
             updatedAt
             updatedById

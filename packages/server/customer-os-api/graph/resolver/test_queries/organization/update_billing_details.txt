@@ -2,7 +2,7 @@ mutation UpdateOrganization($organizationId: ID!) {
   organization_UpdateBillingDetails(
         input: {
             id: $organizationId
-            amount: 50.5
+            amount: 100
             frequency: MONTHLY
             renewalCycle: QUARTERLY
             renewalCycleStart: "2020-01-01T11:20:35.000Z"
@@ -17,6 +17,30 @@ mutation UpdateOrganization($organizationId: ID!) {
                   frequency
                   renewalCycle
                   renewalCycleStart
+              }
+              renewalLikelihood {
+                  probability
+                  previousProbability
+                  comment
+                  updatedAt
+                  updatedById
+                  updatedBy {
+                        id
+                        firstName
+                        lastName
+                  }
+              }
+              renewalForecast {
+                  amount
+                  potentialAmount
+                  comment
+                  updatedAt
+                  updatedById
+                  updatedBy {
+                    id
+                    firstName
+                    lastName
+                  }
               }
           }
     }
