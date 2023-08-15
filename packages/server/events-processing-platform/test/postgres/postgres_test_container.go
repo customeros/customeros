@@ -38,7 +38,7 @@ func InitTestDB() (testcontainers.Container, *gorm.DB, *sql.DB) {
 	var err error
 	postgresContainer, err := startPostgresContainer(ctx)
 	if err != nil {
-		log.Panic("Container should start")
+		panic(err)
 	}
 
 	port, err := postgresContainer.MappedPort(context.Background(), "5432")
@@ -49,6 +49,8 @@ func InitTestDB() (testcontainers.Container, *gorm.DB, *sql.DB) {
 	if err != nil {
 		panic(err)
 	}
+
+	time.Sleep(4 * time.Second) // add sleep to ensure container is ready
 
 	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ", host, port.Port(), "testdb", "postgres", "postgres")
 	gormDb, err := gorm.Open(postgres.Open(connectString), &gorm.Config{

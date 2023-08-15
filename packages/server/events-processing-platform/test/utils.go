@@ -3,8 +3,8 @@ package test
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	logger "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/postgres"
@@ -22,7 +22,7 @@ type TestDatabase struct {
 func SetupTestDatabase() (TestDatabase, func()) {
 	testDBs := TestDatabase{}
 
-	appLogger := logger.NewExtendedAppLogger(&common_logger.Config{
+	appLogger := logger.NewExtendedAppLogger(&comlog.Config{
 		DevMode: true,
 	})
 	appLogger.InitLogger()
