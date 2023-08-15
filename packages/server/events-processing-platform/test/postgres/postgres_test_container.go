@@ -50,15 +50,25 @@ func InitTestDB() (testcontainers.Container, *gorm.DB, *sql.DB) {
 		panic(err)
 	}
 
-	time.Sleep(4 * time.Second) // add sleep to ensure container is ready
-
 	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ", host, port.Port(), "testdb", "postgres", "postgres")
-	gormDb, err := gorm.Open(postgres.Open(connectString), &gorm.Config{
-		AllowGlobalUpdate: true,
-		Logger:            initLog(),
-	})
-	if err != nil {
-		panic(err)
+	var gormDb *gorm.DB
+	maxRetries := 3
+	for i := 0; i < maxRetries; i++ {
+		gormDb, err = gorm.Open(postgres.Open(connectString), &gorm.Config{
+			AllowGlobalUpdate: true,
+			Logger:            initLog(),
+		})
+		if err == nil {
+			// success, break out of loop
+			break
+		}
+		// error occurred
+		if i == maxRetries-1 {
+			// last attempt failed, panic
+			panic(err)
+		}
+		// sleep before retrying
+		time.Sleep(1 * time.Second)
 	}
 
 	sqlDb, err := gormDb.DB()

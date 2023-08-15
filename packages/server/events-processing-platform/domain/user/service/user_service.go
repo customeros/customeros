@@ -34,10 +34,11 @@ func (s *userService) UpsertUser(ctx context.Context, request *user_grpc_service
 	objectID := request.Id
 
 	coreFields := models.UserCoreFields{
-		Name:      request.Name,
-		FirstName: request.FirstName,
-		LastName:  request.LastName,
-		Internal:  request.Internal,
+		Name:            request.Name,
+		FirstName:       request.FirstName,
+		LastName:        request.LastName,
+		Internal:        request.Internal,
+		ProfilePhotoUrl: request.ProfilePhotoUrl,
 	}
 	command := commands.NewUpsertUserCommand(objectID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
 		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))

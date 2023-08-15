@@ -53,17 +53,18 @@ func TestUserService_UpsertUser(t *testing.T) {
 	userId, _ := uuid.NewUUID()
 
 	response, err := userClient.UpsertUser(ctx, &user_grpc_service.UpsertUserGrpcRequest{
-		Id:            userId.String(),
-		Tenant:        "ziggy",
-		FirstName:     "Bob",
-		LastName:      "Dole",
-		Name:          "Bob Dole",
-		AppSource:     "unit-test",
-		Source:        "N/A",
-		SourceOfTruth: "N/A",
-		Internal:      true,
-		CreatedAt:     timestamppb.New(timeNow),
-		UpdatedAt:     timestamppb.New(timeNow),
+		Id:              userId.String(),
+		Tenant:          "ziggy",
+		FirstName:       "Bob",
+		LastName:        "Dole",
+		Name:            "Bob Dole",
+		AppSource:       "unit-test",
+		Source:          "N/A",
+		SourceOfTruth:   "N/A",
+		Internal:        true,
+		ProfilePhotoUrl: "https://www.google.com",
+		CreatedAt:       timestamppb.New(timeNow),
+		UpdatedAt:       timestamppb.New(timeNow),
 	})
 
 	require.Nil(t, err)
@@ -90,6 +91,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, "ziggy", eventData.Tenant)
 	require.True(t, eventData.Internal)
+	require.Equal(t, "https://www.google.com", eventData.ProfilePhotoUrl)
 }
 
 func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {

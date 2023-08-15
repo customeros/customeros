@@ -46,6 +46,7 @@ func (r *userRepository) CreateUser(ctx context.Context, userId string, event ev
 						p.createdAt = $createdAt,
 						p.updatedAt = $updatedAt,
 						p.internal = $internal,
+						p.profilePhotoUrl = $profilePhotoUrl,
 						p.syncedWithEventStore = true 
 		 ON MATCH SET 	p.syncedWithEventStore = true
 `
@@ -53,17 +54,18 @@ func (r *userRepository) CreateUser(ctx context.Context, userId string, event ev
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":            userId,
-				"name":          event.Name,
-				"firstName":     event.FirstName,
-				"lastName":      event.LastName,
-				"tenant":        event.Tenant,
-				"source":        event.Source,
-				"sourceOfTruth": event.SourceOfTruth,
-				"appSource":     event.AppSource,
-				"createdAt":     event.CreatedAt,
-				"updatedAt":     event.UpdatedAt,
-				"internal":      event.Internal,
+				"id":              userId,
+				"name":            event.Name,
+				"firstName":       event.FirstName,
+				"lastName":        event.LastName,
+				"tenant":          event.Tenant,
+				"source":          event.Source,
+				"sourceOfTruth":   event.SourceOfTruth,
+				"appSource":       event.AppSource,
+				"createdAt":       event.CreatedAt,
+				"updatedAt":       event.UpdatedAt,
+				"internal":        event.Internal,
+				"profilePhotoUrl": event.ProfilePhotoUrl,
 			})
 		return nil, err
 	})
@@ -86,19 +88,21 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 				p.sourceOfTruth = $sourceOfTruth,
 				p.updatedAt = $updatedAt,
 				p.internal = $internal,
+				p.profilePhotoUrl = $profilePhotoUrl,
 				p.syncedWithEventStore = true`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":            userId,
-				"tenant":        event.Tenant,
-				"name":          event.Name,
-				"firstName":     event.FirstName,
-				"lastName":      event.LastName,
-				"sourceOfTruth": event.SourceOfTruth,
-				"updatedAt":     event.UpdatedAt,
-				"internal":      event.Internal,
+				"id":              userId,
+				"tenant":          event.Tenant,
+				"name":            event.Name,
+				"firstName":       event.FirstName,
+				"lastName":        event.LastName,
+				"sourceOfTruth":   event.SourceOfTruth,
+				"updatedAt":       event.UpdatedAt,
+				"internal":        event.Internal,
+				"profilePhotoUrl": event.ProfilePhotoUrl,
 			})
 		return nil, err
 	})

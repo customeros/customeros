@@ -43,6 +43,7 @@ type User {
     """
     lastName: String!
     internal: Boolean!
+    profilePhotoUrl: String
 
     player: Player! @goField(forceResolver: true)
 

@@ -16,30 +16,32 @@ const (
 )
 
 type UserCreateEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
-	Name          string    `json:"name"`
-	FirstName     string    `json:"firstName"`
-	LastName      string    `json:"lastName"`
-	Source        string    `json:"source"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	AppSource     string    `json:"appSource"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	Internal      bool      `json:"internal"`
+	Tenant          string    `json:"tenant" validate:"required"`
+	Name            string    `json:"name"`
+	FirstName       string    `json:"firstName"`
+	LastName        string    `json:"lastName"`
+	Source          string    `json:"source"`
+	SourceOfTruth   string    `json:"sourceOfTruth"`
+	AppSource       string    `json:"appSource"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	Internal        bool      `json:"internal"`
+	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
 }
 
 func NewUserCreateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UserCreateEvent{
-		Tenant:        userDto.Tenant,
-		Name:          userDto.UserCoreFields.Name,
-		FirstName:     userDto.UserCoreFields.FirstName,
-		LastName:      userDto.UserCoreFields.LastName,
-		Internal:      userDto.UserCoreFields.Internal,
-		Source:        userDto.Source.Source,
-		SourceOfTruth: userDto.Source.SourceOfTruth,
-		AppSource:     userDto.Source.AppSource,
-		CreatedAt:     createdAt,
-		UpdatedAt:     updatedAt,
+		Tenant:          userDto.Tenant,
+		Name:            userDto.UserCoreFields.Name,
+		FirstName:       userDto.UserCoreFields.FirstName,
+		LastName:        userDto.UserCoreFields.LastName,
+		Internal:        userDto.UserCoreFields.Internal,
+		ProfilePhotoUrl: userDto.UserCoreFields.ProfilePhotoUrl,
+		Source:          userDto.Source.Source,
+		SourceOfTruth:   userDto.Source.SourceOfTruth,
+		AppSource:       userDto.Source.AppSource,
+		CreatedAt:       createdAt,
+		UpdatedAt:       updatedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -54,24 +56,26 @@ func NewUserCreateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto,
 }
 
 type UserUpdateEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	Name          string    `json:"name"`
-	FirstName     string    `json:"firstName"`
-	LastName      string    `json:"lastName"`
-	Internal      bool      `json:"internal"`
+	Tenant          string    `json:"tenant" validate:"required"`
+	SourceOfTruth   string    `json:"sourceOfTruth"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	Name            string    `json:"name"`
+	FirstName       string    `json:"firstName"`
+	LastName        string    `json:"lastName"`
+	Internal        bool      `json:"internal"`
+	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
 }
 
 func NewUserUpdateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UserUpdateEvent{
-		Name:          userDto.UserCoreFields.Name,
-		FirstName:     userDto.UserCoreFields.FirstName,
-		LastName:      userDto.UserCoreFields.LastName,
-		Internal:      userDto.UserCoreFields.Internal,
-		Tenant:        userDto.Tenant,
-		UpdatedAt:     updatedAt,
-		SourceOfTruth: userDto.Source.SourceOfTruth,
+		Name:            userDto.UserCoreFields.Name,
+		FirstName:       userDto.UserCoreFields.FirstName,
+		LastName:        userDto.UserCoreFields.LastName,
+		Internal:        userDto.UserCoreFields.Internal,
+		ProfilePhotoUrl: userDto.UserCoreFields.ProfilePhotoUrl,
+		Tenant:          userDto.Tenant,
+		UpdatedAt:       updatedAt,
+		SourceOfTruth:   userDto.Source.SourceOfTruth,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

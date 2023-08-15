@@ -431,34 +431,34 @@ func TestQueryResolver_User(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
-		FirstName: "first",
-		LastName:  "user",
+	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName:       "first",
+		LastName:        "user",
+		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 	})
 	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "second",
 		LastName:  "user",
 	})
 
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "test@openline.com", true, "MAIN")
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 
-	rawResponse, err := c.RawPost(getQuery("user/get_user_by_id"),
-		client.Var("userId", userId1))
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "user/get_user_by_id", map[string]interface{}{"userId": userId})
 
 	var user struct {
 		User model.User
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &user)
 	require.Nil(t, err)
 	require.NotNil(t, user)
-	require.Equal(t, userId1, user.User.ID)
+	require.Equal(t, userId, user.User.ID)
 	require.Equal(t, "first", user.User.FirstName)
 	require.Equal(t, "user", user.User.LastName)
 	require.Equal(t, "test@openline.com", *user.User.Emails[0].Email)
+	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", *user.User.ProfilePhotoURL)
 }
 
 func TestQueryResolver_User_WithConversations(t *testing.T) {

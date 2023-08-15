@@ -16,6 +16,7 @@ message UpsertUserGrpcRequest {
   google.protobuf.Timestamp  createdAt = 9;
   google.protobuf.Timestamp  updatedAt = 10;
   bool internal = 11;
+  string profilePhotoUrl = 12;
 }
 message LinkJobRoleToUserGrpcRequest {
   string tenant = 1;

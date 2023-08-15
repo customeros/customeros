@@ -142,6 +142,7 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 				  	id: $userId,
 				  	firstName: $firstName,
 				  	lastName: $lastName,
+					profilePhotoUrl: $profilePhotoUrl,
 					createdAt :datetime({timezone: 'UTC'}),
 					source: $source,
 					sourceOfTruth: $sourceOfTruth
@@ -150,14 +151,15 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 				u.roles=$roles,
 				u.internal=$internal`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":        tenant,
-		"userId":        userId,
-		"firstName":     user.FirstName,
-		"lastName":      user.LastName,
-		"source":        user.Source,
-		"sourceOfTruth": user.SourceOfTruth,
-		"roles":         user.Roles,
-		"internal":      user.Internal,
+		"tenant":          tenant,
+		"userId":          userId,
+		"firstName":       user.FirstName,
+		"lastName":        user.LastName,
+		"source":          user.Source,
+		"sourceOfTruth":   user.SourceOfTruth,
+		"roles":           user.Roles,
+		"internal":        user.Internal,
+		"profilePhotoUrl": user.ProfilePhotoUrl,
 	})
 	return userId
 }

@@ -33,10 +33,11 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 		ID:     myUserId.String(),
 		Tenant: tenantName,
 		UserCoreFields: models.UserCoreFields{
-			FirstName: "Bob",
-			LastName:  "Dole",
-			Name:      "Bob Dole",
-			Internal:  true,
+			FirstName:       "Bob",
+			LastName:        "Dole",
+			Name:            "Bob Dole",
+			Internal:        true,
+			ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		},
 		Source: commonModels.Source{
 			Source:        "N/A",
@@ -68,7 +69,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
-
+	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(props, "profilePhotoUrl"))
 }
 
 func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
@@ -95,9 +96,10 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 		ID:     myUserId.String(),
 		Tenant: tenantName,
 		UserCoreFields: models.UserCoreFields{
-			FirstName: "Bob",
-			LastName:  "Dole",
-			Name:      "Bob Dole",
+			FirstName:       "Bob",
+			LastName:        "Dole",
+			Name:            "Bob Dole",
+			ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		},
 		Source: commonModels.Source{
 			Source:        "N/A",
@@ -147,6 +149,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(userProps, "sourceOfTruth"))
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(userProps, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userProps, "syncedWithEventStore"))
+	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(userProps, "profilePhotoUrl"))
 
 	dbJobRoleNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, myJobRoleId.String())
 	if err != nil {

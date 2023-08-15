@@ -65,6 +65,7 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	a.User.FirstName = eventData.FirstName
 	a.User.LastName = eventData.LastName
 	a.User.Internal = eventData.Internal
+	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 	a.User.Source = common_models.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
@@ -86,6 +87,7 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 	a.User.FirstName = eventData.FirstName
 	a.User.LastName = eventData.LastName
 	a.User.Internal = eventData.Internal
+	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 	return nil
 }
 
