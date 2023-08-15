@@ -28,6 +28,15 @@ export type Action = {
   source: DataSource;
 };
 
+export type ActionItem = {
+  __typename?: 'ActionItem';
+  appSource: Scalars['String'];
+  content: Scalars['String'];
+  createdAt: Scalars['Time'];
+  id: Scalars['ID'];
+  source: DataSource;
+};
+
 export enum ActionType {
   Created = 'CREATED'
 }
@@ -78,6 +87,22 @@ export type AttachmentInput = {
   mimeType: Scalars['String'];
   name: Scalars['String'];
   size: Scalars['Int64'];
+};
+
+export type BillingDetails = {
+  __typename?: 'BillingDetails';
+  amount?: Maybe<Scalars['Float']>;
+  frequency?: Maybe<RenewalCycle>;
+  renewalCycle?: Maybe<RenewalCycle>;
+  renewalCycleStart?: Maybe<Scalars['Time']>;
+};
+
+export type BillingDetailsInput = {
+  amount?: InputMaybe<Scalars['Float']>;
+  frequency?: InputMaybe<RenewalCycle>;
+  id: Scalars['ID'];
+  renewalCycle?: InputMaybe<RenewalCycle>;
+  renewalCycleStart?: InputMaybe<Scalars['Time']>;
 };
 
 /**
@@ -575,6 +600,7 @@ export enum DataSource {
   Na = 'NA',
   Openline = 'OPENLINE',
   Pipedrive = 'PIPEDRIVE',
+  Slack = 'SLACK',
   Webscrape = 'WEBSCRAPE',
   ZendeskSupport = 'ZENDESK_SUPPORT'
 }
@@ -739,6 +765,7 @@ export enum ExternalSystemType {
   Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
   Pipedrive = 'PIPEDRIVE',
+  Slack = 'SLACK',
   ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
@@ -835,6 +862,7 @@ export enum GCliSearchResultType {
   Contact = 'CONTACT',
   Email = 'EMAIL',
   Organization = 'ORGANIZATION',
+  OrganizationRelationship = 'ORGANIZATION_RELATIONSHIP',
   State = 'STATE'
 }
 
@@ -854,6 +882,7 @@ export type HealthIndicator = {
 
 export type InteractionEvent = Node & {
   __typename?: 'InteractionEvent';
+  actionItems?: Maybe<Array<ActionItem>>;
   appSource: Scalars['String'];
   channel?: Maybe<Scalars['String']>;
   channelData?: Maybe<Scalars['String']>;
@@ -872,6 +901,7 @@ export type InteractionEvent = Node & {
   sentTo: Array<InteractionEventParticipant>;
   source: DataSource;
   sourceOfTruth: DataSource;
+  summary?: Maybe<Analysis>;
 };
 
 export type InteractionEventInput = {
@@ -1285,6 +1315,9 @@ export type Mutation = {
   organization_SetRelationshipStage: Organization;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
+  organization_UpdateBillingDetails: Organization;
+  organization_UpdateRenewalForecast: Organization;
+  organization_UpdateRenewalLikelihood: Organization;
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
   phoneNumberMergeToUser: PhoneNumber;
@@ -1814,6 +1847,21 @@ export type MutationOrganization_UpdateArgs = {
 };
 
 
+export type MutationOrganization_UpdateBillingDetailsArgs = {
+  input: BillingDetailsInput;
+};
+
+
+export type MutationOrganization_UpdateRenewalForecastArgs = {
+  input: RenewalForecastInput;
+};
+
+
+export type MutationOrganization_UpdateRenewalLikelihoodArgs = {
+  input: RenewalLikelihoodInput;
+};
+
+
 export type MutationPhoneNumberMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: PhoneNumberInput;
@@ -2034,8 +2082,16 @@ export type NoteUpdateInput = {
 
 export type NotedEntity = Contact | Organization;
 
+export type OrgAccountDetails = {
+  __typename?: 'OrgAccountDetails';
+  billingDetails?: Maybe<BillingDetails>;
+  renewalForecast?: Maybe<RenewalForecast>;
+  renewalLikelihood?: Maybe<RenewalLikelihood>;
+};
+
 export type Organization = Node & {
   __typename?: 'Organization';
+  accountDetails?: Maybe<OrgAccountDetails>;
   appSource: Scalars['String'];
   contacts: ContactsPage;
   createdAt: Scalars['Time'];
@@ -2069,12 +2125,14 @@ export type Organization = Node & {
   phoneNumbers: Array<PhoneNumber>;
   relationshipStages: Array<OrganizationRelationshipStage>;
   relationships: Array<OrganizationRelationship>;
+  slackChannelLink?: Maybe<Scalars['String']>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
   subIndustry?: Maybe<Scalars['String']>;
   subsidiaries: Array<LinkedOrganization>;
   subsidiaryOf: Array<LinkedOrganization>;
+  suggestedMergeTo: Array<SuggestedMergeOrganization>;
   tags?: Maybe<Array<Tag>>;
   targetAudience?: Maybe<Scalars['String']>;
   timelineEvents: Array<TimelineEvent>;
@@ -2200,6 +2258,7 @@ export type OrganizationUpdateInput = {
   lastFundingRound?: InputMaybe<FundingRound>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
+  slackChannelLink?: InputMaybe<Scalars['String']>;
   subIndustry?: InputMaybe<Scalars['String']>;
   targetAudience?: InputMaybe<Scalars['String']>;
   valueProposition?: InputMaybe<Scalars['String']>;
@@ -2413,7 +2472,7 @@ export type Query = {
    * - CREATED_AT
    */
   contacts: ContactsPage;
-  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
+  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE */
   dashboardView_Contacts?: Maybe<ContactsPage>;
   /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
@@ -2595,6 +2654,54 @@ export type QueryUsersArgs = {
   where?: InputMaybe<Filter>;
 };
 
+export enum RenewalCycle {
+  Annually = 'ANNUALLY',
+  Biannually = 'BIANNUALLY',
+  Biweekly = 'BIWEEKLY',
+  Monthly = 'MONTHLY',
+  Quarterly = 'QUARTERLY',
+  Weekly = 'WEEKLY'
+}
+
+export type RenewalForecast = {
+  __typename?: 'RenewalForecast';
+  amount?: Maybe<Scalars['Float']>;
+  comment?: Maybe<Scalars['String']>;
+  previousAmount?: Maybe<Scalars['Float']>;
+  updatedAt?: Maybe<Scalars['Time']>;
+  updatedBy?: Maybe<User>;
+  updatedById?: Maybe<Scalars['String']>;
+};
+
+export type RenewalForecastInput = {
+  amount?: InputMaybe<Scalars['Float']>;
+  comment?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
+};
+
+export type RenewalLikelihood = {
+  __typename?: 'RenewalLikelihood';
+  comment?: Maybe<Scalars['String']>;
+  previousProbability?: Maybe<RenewalLikelihoodProbability>;
+  probability?: Maybe<RenewalLikelihoodProbability>;
+  updatedAt?: Maybe<Scalars['Time']>;
+  updatedBy?: Maybe<User>;
+  updatedById?: Maybe<Scalars['String']>;
+};
+
+export type RenewalLikelihoodInput = {
+  comment?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
+  probability?: InputMaybe<RenewalLikelihoodProbability>;
+};
+
+export enum RenewalLikelihoodProbability {
+  High = 'HIGH',
+  Low = 'LOW',
+  Medium = 'MEDIUM',
+  Zero = 'ZERO'
+}
+
 /**
  * Describes the success or failure of the GraphQL call.
  * **A `return` object**
@@ -2663,6 +2770,14 @@ export type State = {
   country: Country;
   id: Scalars['ID'];
   name: Scalars['String'];
+};
+
+export type SuggestedMergeOrganization = {
+  __typename?: 'SuggestedMergeOrganization';
+  confidence?: Maybe<Scalars['Float']>;
+  organization: Organization;
+  suggestedAt?: Maybe<Scalars['Time']>;
+  suggestedBy?: Maybe<Scalars['String']>;
 };
 
 export type Tag = {
@@ -3178,7 +3293,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'Conversation' } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, sentBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, previousAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleStart?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'Conversation' } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, sentBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -3532,6 +3647,13 @@ export type UpdateOrganizationWebsiteMutationVariables = Exact<{
 
 
 export type UpdateOrganizationWebsiteMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, website?: string | null } };
+
+export type UpdateRenewalLikelihoodMutationVariables = Exact<{
+  input: RenewalLikelihoodInput;
+}>;
+
+
+export type UpdateRenewalLikelihoodMutation = { __typename?: 'Mutation', organization_UpdateRenewalLikelihood: { __typename?: 'Organization', id: string } };
 
 export type CreateMeetingMutationVariables = Exact<{
   meeting: MeetingInput;
@@ -5767,6 +5889,42 @@ export const DashboardView_OrganizationsDocument = gql`
       industry
       website
       domains
+      accountDetails {
+        renewalForecast {
+          amount
+          previousAmount
+          comment
+          updatedAt
+          updatedBy {
+            id
+            firstName
+            lastName
+            emails {
+              email
+            }
+          }
+        }
+        renewalLikelihood {
+          probability
+          previousProbability
+          comment
+          updatedBy {
+            id
+            firstName
+            lastName
+            emails {
+              email
+            }
+          }
+          updatedAt
+        }
+        billingDetails {
+          renewalCycle
+          frequency
+          amount
+          renewalCycleStart
+        }
+      }
       locations {
         ...LocationBaseDetails
         rawAddress
@@ -7670,6 +7828,39 @@ export function useUpdateOrganizationWebsiteMutation(baseOptions?: Apollo.Mutati
 export type UpdateOrganizationWebsiteMutationHookResult = ReturnType<typeof useUpdateOrganizationWebsiteMutation>;
 export type UpdateOrganizationWebsiteMutationResult = Apollo.MutationResult<UpdateOrganizationWebsiteMutation>;
 export type UpdateOrganizationWebsiteMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>;
+export const UpdateRenewalLikelihoodDocument = gql`
+    mutation updateRenewalLikelihood($input: RenewalLikelihoodInput!) {
+  organization_UpdateRenewalLikelihood(input: $input) {
+    id
+  }
+}
+    `;
+export type UpdateRenewalLikelihoodMutationFn = Apollo.MutationFunction<UpdateRenewalLikelihoodMutation, UpdateRenewalLikelihoodMutationVariables>;
+
+/**
+ * __useUpdateRenewalLikelihoodMutation__
+ *
+ * To run a mutation, you first call `useUpdateRenewalLikelihoodMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateRenewalLikelihoodMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateRenewalLikelihoodMutation, { data, loading, error }] = useUpdateRenewalLikelihoodMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateRenewalLikelihoodMutation(baseOptions?: Apollo.MutationHookOptions<UpdateRenewalLikelihoodMutation, UpdateRenewalLikelihoodMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateRenewalLikelihoodMutation, UpdateRenewalLikelihoodMutationVariables>(UpdateRenewalLikelihoodDocument, options);
+      }
+export type UpdateRenewalLikelihoodMutationHookResult = ReturnType<typeof useUpdateRenewalLikelihoodMutation>;
+export type UpdateRenewalLikelihoodMutationResult = Apollo.MutationResult<UpdateRenewalLikelihoodMutation>;
+export type UpdateRenewalLikelihoodMutationOptions = Apollo.BaseMutationOptions<UpdateRenewalLikelihoodMutation, UpdateRenewalLikelihoodMutationVariables>;
 export const CreateMeetingDocument = gql`
     mutation createMeeting($meeting: MeetingInput!) {
   meeting_Create(meeting: $meeting) {

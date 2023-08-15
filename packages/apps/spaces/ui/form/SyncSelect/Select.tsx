@@ -6,15 +6,19 @@ import {
   SelectInstance,
   chakraComponents,
   ClearIndicatorProps,
+  GroupBase,
+  ChakraStylesConfig,
 } from 'chakra-react-select';
+
 import Delete from '@spaces/atoms/icons/Delete';
+import omit from 'lodash/omit';
 
 export interface SelectProps extends Props<any, any, any> {
   leftElement?: React.ReactNode;
 }
 
 export const Select = forwardRef<SelectInstance, SelectProps>(
-  ({ leftElement, ...props }, ref) => {
+  ({ leftElement, chakraStyles, ...props }, ref) => {
     const Control = useCallback(({ children, ...rest }: ControlProps) => {
       return (
         <chakraComponents.Control {...rest}>
@@ -51,46 +55,60 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         components={components}
         tabSelectsValue={false}
         chakraStyles={{
-          container: (props) => ({
+          container: (props, state) => ({
             ...props,
             w: '100%',
             overflow: 'visible',
             _hover: { cursor: 'pointer' },
+            ...chakraStyles?.container?.(props, state),
           }),
-          clearIndicator: (props) => ({
+          clearIndicator: (props, state) => ({
             ...props,
             padding: 2,
             _hover: {
               bg: 'gray.100',
             },
+            ...chakraStyles?.clearIndicator?.(props, state),
           }),
           placeholder: (props) => ({
             ...props,
             color: 'gray.400',
           }),
-
-          menuList: (props) => ({
+          menuList: (props, state) => ({
             ...props,
             padding: '2',
             boxShadow: 'md',
             borderColor: 'gray.200',
             borderRadius: 'lg',
+            ...chakraStyles?.menuList?.(props, state),
           }),
-          option: (props, { isSelected, isFocused }) => ({
+          option: (props, state) => ({
             ...props,
             my: '2px',
             borderRadius: 'md',
             color: 'gray.700',
-            bg: isSelected ? 'primary.50' : 'white',
-            boxShadow: isFocused ? 'menuOptionsFocus' : 'none',
-            _hover: { bg: isSelected ? 'primary.50' : 'gray.100' },
+            bg: state.isSelected ? 'primary.50' : 'white',
+            boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
+            _hover: { bg: state.isSelected ? 'primary.50' : 'gray.100' },
+            ...chakraStyles?.option?.(props, state),
           }),
-          groupHeading: (props) => ({
+          groupHeading: (props, state) => ({
             ...props,
             color: 'gray.400',
             textTransform: 'uppercase',
             fontWeight: 'regular',
+            ...chakraStyles?.groupHeading?.(props, state),
           }),
+          ...omit<ChakraStylesConfig<unknown, false, GroupBase<unknown>>>(
+            chakraStyles,
+            [
+              'container',
+              'clearIndicator',
+              'menuList',
+              'option',
+              'groupHeading',
+            ],
+          ),
         }}
         {...props}
       />
