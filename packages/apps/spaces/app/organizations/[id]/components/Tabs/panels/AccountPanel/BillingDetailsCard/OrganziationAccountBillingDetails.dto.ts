@@ -37,8 +37,14 @@ export class OrganizationAccountBillingDetails
     return {
       amount: data.amount,
       renewalCycleStart: data.renewalCycleStart,
-      renewalCycle: data.renewalCycle?.value,
-      frequency: data.frequency?.value,
+      renewalCycle:
+        typeof data.renewalCycle === 'string'
+          ? data?.renewalCycle
+          : data?.renewalCycle?.value,
+      frequency:
+        typeof data.renewalCycle === 'string'
+          ? data?.renewalCycle
+          : data?.renewalCycle?.value,
     } as any;
   }
 }

@@ -24,7 +24,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateBillingDetailsMutation } from '@organization/graphql/updateBillingDetails.generated';
 import { BillingDetails as BillingDetailsT } from '@graphql/types';
 
-export type BillingDetailsType =  BillingDetailsT & { amount?: string | null }
+export type BillingDetailsType = BillingDetailsT & { amount?: string | null };
 interface BillingDetailsCardBProps {
   billingDetailsData: BillingDetailsType;
   id: string;
@@ -47,6 +47,7 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
       ...state.values,
       ...variables,
     });
+
     updateBillingDetails.mutate({
       input: { id, ...inputData },
     });
@@ -78,6 +79,7 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
             if (shouldPreventFrequencyOptionSave) {
               return next;
             }
+
             const renewalCycle = action.payload?.value?.value;
             const renewalCycleStart = state.values.renewalCycleStart;
 
@@ -145,7 +147,7 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
       </Box>
 
       <CardBody padding={4}>
-        <VStack spacing='4' w='full' >
+        <VStack spacing='4' w='full'>
           <Flex justifyItems='space-between' w='full' gap={4}>
             <FormCurrencyInput
               label='Billing amount'
