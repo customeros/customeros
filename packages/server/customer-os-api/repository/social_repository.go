@@ -79,7 +79,7 @@ func (r *socialRepository) Update(ctx context.Context, tenant string, socialEnti
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MERGE (soc:Social_%s {id:$id})
+	query := `MATCH (soc:Social_%s {id:$id})
 			SET soc.updatedAt=$now,
 				soc.platformName=$platformName,
 				soc.url=$url,
