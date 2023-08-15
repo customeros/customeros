@@ -62,7 +62,7 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 		LastName:        utils.StringPtr(contact.LastName),
 		Description:     utils.StringPtr(contact.Description),
 		Timezone:        utils.StringPtr(contact.Timezone),
-		ProfilePhotoURL: utils.StringPtr(contact.ProfilePhotoURL),
+		ProfilePhotoURL: utils.StringPtr(contact.ProfilePhotoUrl),
 		CreatedAt:       *contact.CreatedAt,
 		UpdatedAt:       contact.UpdatedAt,
 		Source:          MapDataSourceToModel(contact.Source),

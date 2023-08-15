@@ -624,16 +624,17 @@ func (s *userService) UpsertEmailRelationInEventStore(ctx context.Context, size 
 func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	return &entity.UserEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Roles:         utils.GetListStringPropOrEmpty(props, "roles"),
-		Internal:      utils.GetBoolPropOrFalse(props, "internal"),
+		Id:              utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
+		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
+		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
+		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
+		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
 	}
 }
 

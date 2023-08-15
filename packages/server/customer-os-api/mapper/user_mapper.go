@@ -34,16 +34,17 @@ func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 		return nil
 	}
 	return &model.User{
-		ID:            userEntity.Id,
-		FirstName:     userEntity.FirstName,
-		LastName:      userEntity.LastName,
-		CreatedAt:     userEntity.CreatedAt,
-		UpdatedAt:     userEntity.UpdatedAt,
-		Source:        MapDataSourceToModel(userEntity.Source),
-		SourceOfTruth: MapDataSourceToModel(userEntity.SourceOfTruth),
-		Roles:         MapRolesToModel(userEntity.Roles),
-		AppSource:     userEntity.AppSource,
-		Internal:      userEntity.Internal,
+		ID:              userEntity.Id,
+		FirstName:       userEntity.FirstName,
+		LastName:        userEntity.LastName,
+		CreatedAt:       userEntity.CreatedAt,
+		UpdatedAt:       userEntity.UpdatedAt,
+		Source:          MapDataSourceToModel(userEntity.Source),
+		SourceOfTruth:   MapDataSourceToModel(userEntity.SourceOfTruth),
+		Roles:           MapRolesToModel(userEntity.Roles),
+		AppSource:       userEntity.AppSource,
+		Internal:        userEntity.Internal,
+		ProfilePhotoURL: utils.StringPtr(userEntity.ProfilePhotoUrl),
 	}
 }
 

@@ -7,17 +7,18 @@ import (
 )
 
 type User struct {
-	ID           string                     `json:"id"`
-	Name         string                     `json:"name"`
-	FirstName    string                     `json:"firstName"`
-	LastName     string                     `json:"lastName"`
-	Internal     bool                       `json:"internal"`
-	Source       common_models.Source       `json:"source"`
-	CreatedAt    time.Time                  `json:"createdAt"`
-	UpdatedAt    time.Time                  `json:"updatedAt"`
-	PhoneNumbers map[string]UserPhoneNumber `json:"phoneNumbers"`
-	Emails       map[string]UserEmail       `json:"emails"`
-	JobRoles     map[string]bool            `json:"jobRoles"`
+	ID              string                     `json:"id"`
+	Name            string                     `json:"name"`
+	FirstName       string                     `json:"firstName"`
+	LastName        string                     `json:"lastName"`
+	Internal        bool                       `json:"internal"`
+	ProfilePhotoUrl string                     `json:"profilePhotoUrl"`
+	Source          common_models.Source       `json:"source"`
+	CreatedAt       time.Time                  `json:"createdAt"`
+	UpdatedAt       time.Time                  `json:"updatedAt"`
+	PhoneNumbers    map[string]UserPhoneNumber `json:"phoneNumbers"`
+	Emails          map[string]UserEmail       `json:"emails"`
+	JobRoles        map[string]bool            `json:"jobRoles"`
 }
 
 type UserPhoneNumber struct {

@@ -6,10 +6,11 @@ import (
 )
 
 type UserCoreFields struct {
-	Name      string
-	FirstName string
-	LastName  string
-	Internal  bool
+	Name            string
+	FirstName       string
+	LastName        string
+	Internal        bool
+	ProfilePhotoUrl string
 }
 
 type UserDto struct {

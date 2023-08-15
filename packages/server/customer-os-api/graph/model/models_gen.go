@@ -1503,10 +1503,11 @@ type User struct {
 	FirstName string `json:"firstName"`
 	// The last name of the customerOS user.
 	// **Required**
-	LastName string  `json:"lastName"`
-	Internal bool    `json:"internal"`
-	Player   *Player `json:"player"`
-	Roles    []Role  `json:"roles"`
+	LastName        string  `json:"lastName"`
+	Internal        bool    `json:"internal"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
+	Player          *Player `json:"player"`
+	Roles           []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails       []*Email       `json:"emails,omitempty"`

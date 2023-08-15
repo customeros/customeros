@@ -13,7 +13,7 @@ type ContactEntity struct {
 	LastName        string     `neo4jDb:"property:lastName;lookupName:LAST_NAME;supportCaseSensitive:true"`
 	Description     string     `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
 	Timezone        string     `neo4jDb:"property:timezone;lookupName:TIMEZONE;supportCaseSensitive:true"`
-	ProfilePhotoURL string     `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
+	ProfilePhotoUrl string     `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
 	CreatedAt       *time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
 	UpdatedAt       time.Time  `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`
 	Source          DataSource `neo4jDb:"property:source;lookupName:SOURCE;supportCaseSensitive:false"`
