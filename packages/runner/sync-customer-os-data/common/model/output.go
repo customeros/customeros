@@ -115,4 +115,5 @@ type Output struct {
 	Timezone               string `json:"timezone,omitempty"`
 	OpenlineOrganizationId string `json:"openlineOrganizationId,omitempty"`
 	Identifier             string `json:"identifier,omitempty"`
+	ProfilePhotoUrl        string `json:"profilePhotoUrl,omitempty"`
 }

@@ -35,6 +35,7 @@ type ContactData struct {
 	Zip                           string            `json:"zip,omitempty"`
 	Timezone                      string            `json:"timezone,omitempty"`
 	OpenlineOrganizationId        string            `json:"openlineOrganizationId,omitempty"`
+	ProfilePhotoUrl               string            `json:"profilePhotoUrl,omitempty"`
 }
 
 type ContactNote struct {

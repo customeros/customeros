@@ -17,6 +17,7 @@ func MapUser(inputJson string) (string, error) {
 			FirstName string `json:"first_name,omitempty"`
 			LastName  string `json:"last_name,omitempty"`
 			Name      string `json:"real_name,omitempty"`
+			Image192  string `json:"image_192,omitempty"`
 		} `json:"profile"`
 	}
 
@@ -31,6 +32,9 @@ func MapUser(inputJson string) (string, error) {
 		FirstName:   input.Profile.FirstName,
 		LastName:    input.Profile.LastName,
 		Name:        input.Profile.Name,
+	}
+	if !strings.HasPrefix(input.Profile.Image192, "https://secure.gravatar.com") {
+		output.ProfilePhotoUrl = input.Profile.Image192
 	}
 
 	outputJson, err := json.Marshal(output)
@@ -52,6 +56,7 @@ func MapContact(inputJson string) (string, error) {
 			FirstName string `json:"first_name,omitempty"`
 			LastName  string `json:"last_name,omitempty"`
 			Name      string `json:"real_name_normalized,omitempty"`
+			Image192  string `json:"image_192,omitempty"`
 		} `json:"profile"`
 	}
 
@@ -68,6 +73,9 @@ func MapContact(inputJson string) (string, error) {
 		Name:                   input.Profile.Name,
 		Timezone:               input.Timezone,
 		OpenlineOrganizationId: input.OpenlineOrganizationId,
+	}
+	if !strings.HasPrefix(input.Profile.Image192, "https://secure.gravatar.com") {
+		output.ProfilePhotoUrl = input.Profile.Image192
 	}
 
 	outputJson, err := json.Marshal(output)

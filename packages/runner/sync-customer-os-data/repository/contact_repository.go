@@ -108,12 +108,14 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		"				c.firstName=$firstName, " +
 		"				c.lastName=$lastName,  " +
 		"				c.timezone=$timezone,  " +
+		"				c.profilePhotoUrl=$profilePhotoUrl,  " +
 		"				c.name=$name,  " +
 		" 				c:%s " +
 		" ON MATCH SET 	c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR c.firstName is null OR c.firstName = '' THEN $firstName ELSE c.firstName END, " +
 		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.lastName is null OR c.lastName = '' THEN $lastName ELSE c.lastName END, " +
 		"				c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.name is null OR c.name = '' THEN $name ELSE c.name END, " +
 		"				c.timezone = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.timezone is null OR c.timezone = '' THEN $timezone ELSE c.timezone END, " +
+		"				c.profilePhotoUrl = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.profilePhotoUrl is null OR c.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE c.profilePhotoUrl END, " +
 		"				c.updatedAt = $now " +
 		" WITH c, ext " +
 		" MERGE (c)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
@@ -122,7 +124,7 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		" WITH c " +
 		" FOREACH (x in CASE WHEN c.sourceOfTruth <> $sourceOfTruth THEN [c] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateContact {source:$source, id:x.id}) " +
-		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName, alt.name=$name, alt.timezone=$timezone " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName, alt.name=$name, alt.timezone=$timezone, alt.profilePhotoUrl=$profilePhotoUrl " +
 		" ) " +
 		" RETURN c.id"
 
@@ -130,22 +132,23 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			query, "Contact_"+tenant),
 			map[string]interface{}{
-				"tenant":         tenant,
-				"contactId":      contact.Id,
-				"externalSystem": contact.ExternalSystem,
-				"externalId":     contact.ExternalId,
-				"externalUrl":    contact.ExternalUrl,
-				"firstName":      contact.FirstName,
-				"lastName":       contact.LastName,
-				"name":           contact.Name,
-				"timezone":       contact.Timezone,
-				"syncDate":       syncDate,
-				"createdAt":      utils.TimePtrFirstNonNilNillableAsAny(contact.CreatedAt),
-				"updatedAt":      utils.TimePtrFirstNonNilNillableAsAny(contact.UpdatedAt),
-				"source":         contact.ExternalSystem,
-				"sourceOfTruth":  contact.ExternalSystem,
-				"appSource":      constants.AppSourceSyncCustomerOsData,
-				"now":            utils.Now(),
+				"tenant":          tenant,
+				"contactId":       contact.Id,
+				"externalSystem":  contact.ExternalSystem,
+				"externalId":      contact.ExternalId,
+				"externalUrl":     contact.ExternalUrl,
+				"firstName":       contact.FirstName,
+				"lastName":        contact.LastName,
+				"name":            contact.Name,
+				"timezone":        contact.Timezone,
+				"profilePhotoUrl": contact.ProfilePhotoUrl,
+				"syncDate":        syncDate,
+				"createdAt":       utils.TimePtrFirstNonNilNillableAsAny(contact.CreatedAt),
+				"updatedAt":       utils.TimePtrFirstNonNilNillableAsAny(contact.UpdatedAt),
+				"source":          contact.ExternalSystem,
+				"sourceOfTruth":   contact.ExternalSystem,
+				"appSource":       constants.AppSourceSyncCustomerOsData,
+				"now":             utils.Now(),
 			})
 		if err != nil {
 			return nil, err

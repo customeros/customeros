@@ -185,16 +185,17 @@ func (s *syncToEventStoreService) upsertUsersIntoEventStore(ctx context.Context,
 	}
 	for _, v := range records {
 		_, err := s.grpcClients.UserClient.UpsertUser(context.Background(), &user_grpc_service.UpsertUserGrpcRequest{
-			Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
-			Tenant:        v.LinkedNodeId,
-			FirstName:     utils.GetStringPropOrEmpty(v.Node.Props, "firstName"),
-			LastName:      utils.GetStringPropOrEmpty(v.Node.Props, "lastName"),
-			Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
-			AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-			Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-			SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-			CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-			UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			Id:              utils.GetStringPropOrEmpty(v.Node.Props, "id"),
+			Tenant:          v.LinkedNodeId,
+			FirstName:       utils.GetStringPropOrEmpty(v.Node.Props, "firstName"),
+			LastName:        utils.GetStringPropOrEmpty(v.Node.Props, "lastName"),
+			Name:            utils.GetStringPropOrEmpty(v.Node.Props, "name"),
+			ProfilePhotoUrl: utils.GetStringPropOrEmpty(v.Node.Props, "profilePhotoUrl"),
+			AppSource:       utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+			Source:          utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+			SourceOfTruth:   utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+			CreatedAt:       utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+			UpdatedAt:       utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
 		})
 		if err != nil {
 			failedRecords++
@@ -224,19 +225,20 @@ func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Conte
 	}
 	for _, v := range records {
 		_, err := s.grpcClients.ContactClient.UpsertContact(context.Background(), &contact_grpc_service.UpsertContactGrpcRequest{
-			Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
-			Tenant:        v.LinkedNodeId,
-			FirstName:     utils.GetStringPropOrEmpty(v.Node.Props, "firstName"),
-			LastName:      utils.GetStringPropOrEmpty(v.Node.Props, "lastName"),
-			Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
-			Description:   utils.GetStringPropOrEmpty(v.Node.Props, "description"),
-			Timezone:      utils.GetStringPropOrEmpty(v.Node.Props, "timezone"),
-			Prefix:        utils.GetStringPropOrEmpty(v.Node.Props, "prefix"),
-			AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-			Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-			SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-			CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-			UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			Id:              utils.GetStringPropOrEmpty(v.Node.Props, "id"),
+			Tenant:          v.LinkedNodeId,
+			FirstName:       utils.GetStringPropOrEmpty(v.Node.Props, "firstName"),
+			LastName:        utils.GetStringPropOrEmpty(v.Node.Props, "lastName"),
+			Name:            utils.GetStringPropOrEmpty(v.Node.Props, "name"),
+			Description:     utils.GetStringPropOrEmpty(v.Node.Props, "description"),
+			Timezone:        utils.GetStringPropOrEmpty(v.Node.Props, "timezone"),
+			ProfilePhotoUrl: utils.GetStringPropOrEmpty(v.Node.Props, "profilePhotoUrl"),
+			Prefix:          utils.GetStringPropOrEmpty(v.Node.Props, "prefix"),
+			AppSource:       utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+			Source:          utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+			SourceOfTruth:   utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+			CreatedAt:       utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+			UpdatedAt:       utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
 		})
 		if err != nil {
 			failedRecords++
