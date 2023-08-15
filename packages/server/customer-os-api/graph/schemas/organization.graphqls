@@ -103,7 +103,7 @@ type RenewalLikelihood {
 
 type RenewalForecast {
     amount: Float
-    previousAmount: Float
+    potentialAmount: Float
     comment: String
     updatedAt: Time
     updatedById: String

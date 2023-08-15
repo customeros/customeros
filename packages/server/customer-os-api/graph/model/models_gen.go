@@ -1371,12 +1371,12 @@ type PlayerUser struct {
 }
 
 type RenewalForecast struct {
-	Amount         *float64   `json:"amount,omitempty"`
-	PreviousAmount *float64   `json:"previousAmount,omitempty"`
-	Comment        *string    `json:"comment,omitempty"`
-	UpdatedAt      *time.Time `json:"updatedAt,omitempty"`
-	UpdatedByID    *string    `json:"updatedById,omitempty"`
-	UpdatedBy      *User      `json:"updatedBy,omitempty"`
+	Amount          *float64   `json:"amount,omitempty"`
+	PotentialAmount *float64   `json:"potentialAmount,omitempty"`
+	Comment         *string    `json:"comment,omitempty"`
+	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
+	UpdatedByID     *string    `json:"updatedById,omitempty"`
+	UpdatedBy       *User      `json:"updatedBy,omitempty"`
 }
 
 type RenewalForecastInput struct {

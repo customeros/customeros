@@ -429,7 +429,7 @@ func TestMutationResolver_OrganizationUpdateRenewalForecast(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
 	require.Equal(t, float64(100.01), *updatedOrganization.AccountDetails.RenewalForecast.Amount)
 	require.Equal(t, "This is an updated comment", *updatedOrganization.AccountDetails.RenewalForecast.Comment)
-	require.Nil(t, updatedOrganization.AccountDetails.RenewalForecast.PreviousAmount)
+	require.Nil(t, updatedOrganization.AccountDetails.RenewalForecast.PotentialAmount)
 	require.NotNil(t, *updatedOrganization.AccountDetails.RenewalForecast.UpdatedAt)
 	require.Equal(t, "test-user-id", *updatedOrganization.AccountDetails.RenewalForecast.UpdatedByID)
 	// test logged-in user is mocked and not present in db
@@ -445,7 +445,12 @@ func TestMutationResolver_OrganizationUpdateBillingDetails(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org name",
+		RenewalLikelihood: entity.RenewalLikelihood{
+			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityMedium),
+		},
+	})
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 
@@ -462,10 +467,15 @@ func TestMutationResolver_OrganizationUpdateBillingDetails(t *testing.T) {
 	require.Equal(t, organizationId, updatedOrganization.ID)
 	require.NotNil(t, updatedOrganization.UpdatedAt)
 	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
-	require.Equal(t, float64(50.5), *updatedOrganization.AccountDetails.BillingDetails.Amount)
+	require.Equal(t, float64(100), *updatedOrganization.AccountDetails.BillingDetails.Amount)
 	require.Equal(t, model.RenewalCycleMonthly, *updatedOrganization.AccountDetails.BillingDetails.Frequency)
 	require.Equal(t, model.RenewalCycleQuarterly, *updatedOrganization.AccountDetails.BillingDetails.RenewalCycle)
 	require.Equal(t, "2020-01-01 00:00:00 +0000 UTC", (*updatedOrganization.AccountDetails.BillingDetails.RenewalCycleStart).String())
+
+	require.Nil(t, updatedOrganization.AccountDetails.RenewalForecast.UpdatedByID)
+	require.Equal(t, float64(300), *updatedOrganization.AccountDetails.RenewalForecast.PotentialAmount)
+	require.Equal(t, float64(150), *updatedOrganization.AccountDetails.RenewalForecast.Amount)
+	require.NotNil(t, updatedOrganization.AccountDetails.RenewalForecast.UpdatedAt)
 
 	// Check still single organization node exists after update, no new node created
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
@@ -1033,18 +1043,18 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org",
 		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood:         "HIGH",
-			PreviousRenewalLikelihood: "MEDIUM",
+			RenewalLikelihood:         "0-HIGH",
+			PreviousRenewalLikelihood: "1-MEDIUM",
 			Comment:                   utils.StringPtr("comment 1"),
 			UpdatedAt:                 utils.TimePtr(utils.Now()),
 			UpdatedBy:                 utils.StringPtr("user 1"),
 		},
 		RenewalForecast: entity.RenewalForecast{
-			Amount:         utils.ToPtr[float64](1000),
-			PreviousAmount: utils.ToPtr[float64](0.5),
-			Comment:        utils.StringPtr("comment 2"),
-			UpdatedAt:      nil,
-			UpdatedBy:      nil,
+			Amount:          utils.ToPtr[float64](1000),
+			PotentialAmount: utils.ToPtr[float64](0.5),
+			Comment:         utils.StringPtr("comment 2"),
+			UpdatedAt:       nil,
+			UpdatedBy:       nil,
 		},
 		BillingDetails: entity.BillingDetails{
 			Amount:            utils.ToPtr[float64](1.1),
@@ -1074,7 +1084,7 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	require.Equal(t, "user 1", *organization.AccountDetails.RenewalLikelihood.UpdatedByID)
 	require.NotNil(t, organization.AccountDetails.RenewalLikelihood.UpdatedAt)
 	require.Equal(t, 1000.0, *organization.AccountDetails.RenewalForecast.Amount)
-	require.Equal(t, 0.5, *organization.AccountDetails.RenewalForecast.PreviousAmount)
+	require.Equal(t, 0.5, *organization.AccountDetails.RenewalForecast.PotentialAmount)
 	require.Equal(t, "comment 2", *organization.AccountDetails.RenewalForecast.Comment)
 	require.Nil(t, organization.AccountDetails.RenewalForecast.UpdatedAt)
 	require.Nil(t, organization.AccountDetails.RenewalForecast.UpdatedBy)
