@@ -2,23 +2,26 @@ import {
   MergeOrganizationsMutation,
   useMergeOrganizationsMutation,
 } from './types';
-import { useRecoilState } from 'recoil';
-import { selectedItemsIds } from '../../components/finder/state';
+import { useSetRecoilState } from 'recoil';
+import { selectedItemsIds, tableMode } from '@spaces/finder/state';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 interface Result {
   onMergeOrganizations: (input: {
     primaryOrganizationId: string;
     mergedOrganizationIds: Array<string>;
+    onSuccess: () => void;
   }) => Promise<MergeOrganizationsMutation['organization_Merge'] | null>;
 }
 export const useMergeOrganizations = (): Result => {
-  const [mergeOrganizationsMutation, { loading, error, data }] =
-    useMergeOrganizationsMutation();
-  const [selectedItems, setSelectedItems] = useRecoilState(selectedItemsIds);
-  const handleMergeOrganizations: Result['onMergeOrganizations'] = async (
-    input,
-  ) => {
+  const setMode = useSetRecoilState(tableMode);
+
+  const [mergeOrganizationsMutation] = useMergeOrganizationsMutation();
+  const setSelectedItems = useSetRecoilState(selectedItemsIds);
+  const handleMergeOrganizations: Result['onMergeOrganizations'] = async ({
+    onSuccess,
+    ...input
+  }) => {
     try {
       const response = await mergeOrganizationsMutation({
         variables: input,
@@ -26,7 +29,9 @@ export const useMergeOrganizations = (): Result => {
       });
 
       if (response.data?.organization_Merge !== null) {
+        onSuccess();
         setSelectedItems([]);
+        setMode('PREVIEW');
         toastSuccess(
           'Organizations merged',
           `merge-organizations-success-${input.primaryOrganizationId}`,

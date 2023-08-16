@@ -132,8 +132,11 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     onMergeOrganizations({
       primaryOrganizationId: primaryId,
       mergedOrganizationIds: mergeIds,
+      onSuccess: () => {
+        setEnableSelection(false);
+        table.resetRowSelection();
+      },
     });
-    table.resetRowSelection();
   };
   const handleArchiveOrganizations = () => {
     onArchiveOrganization({
