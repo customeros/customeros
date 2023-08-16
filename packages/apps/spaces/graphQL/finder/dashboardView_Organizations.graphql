@@ -29,7 +29,7 @@ query dashboardView_Organizations(
       accountDetails {
         renewalForecast {
           amount
-          previousAmount
+          potentialAmount
           comment
           updatedAt
           updatedBy {

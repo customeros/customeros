@@ -94,6 +94,7 @@ export type BillingDetails = {
   amount?: Maybe<Scalars['Float']>;
   frequency?: Maybe<RenewalCycle>;
   renewalCycle?: Maybe<RenewalCycle>;
+  renewalCycleNext?: Maybe<Scalars['Time']>;
   renewalCycleStart?: Maybe<Scalars['Time']>;
 };
 
@@ -193,6 +194,7 @@ export type Contact = ExtensibleEntity & Node & {
    */
   phoneNumbers: Array<PhoneNumber>;
   prefix?: Maybe<Scalars['String']>;
+  profilePhotoUrl?: Maybe<Scalars['String']>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -2667,7 +2669,7 @@ export type RenewalForecast = {
   __typename?: 'RenewalForecast';
   amount?: Maybe<Scalars['Float']>;
   comment?: Maybe<Scalars['String']>;
-  previousAmount?: Maybe<Scalars['Float']>;
+  potentialAmount?: Maybe<Scalars['Float']>;
   updatedAt?: Maybe<Scalars['Time']>;
   updatedBy?: Maybe<User>;
   updatedById?: Maybe<Scalars['String']>;
@@ -2870,6 +2872,7 @@ export type User = {
   lastName: Scalars['String'];
   phoneNumbers: Array<PhoneNumber>;
   player: Player;
+  profilePhotoUrl?: Maybe<Scalars['String']>;
   roles: Array<Role>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -3293,7 +3296,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, previousAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleStart?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'Conversation' } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, sentBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, potentialAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleStart?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'Conversation' } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, sentBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -5892,7 +5895,7 @@ export const DashboardView_OrganizationsDocument = gql`
       accountDetails {
         renewalForecast {
           amount
-          previousAmount
+          potentialAmount
           comment
           updatedAt
           updatedBy {

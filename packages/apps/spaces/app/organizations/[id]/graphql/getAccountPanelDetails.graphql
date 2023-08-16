@@ -1,42 +1,42 @@
 query OrganizationAccountDetails($id: ID!) {
-    organization(id: $id) {
-        id
-        name
-        accountDetails {
-            renewalForecast {
-                amount
-                previousAmount
-                comment
-                updatedAt
-                updatedBy {
-                    id
-                    firstName
-                    lastName
-                    emails {
-                        email
-                    }
-                }
-            }
-            renewalLikelihood {
-                probability
-                previousProbability
-                comment
-                updatedBy {
-                    id
-                    firstName
-                    lastName
-                    emails {
-                        email
-                    }
-                }
-                updatedAt
-            }
-            billingDetails {
-                renewalCycle
-                frequency
-                amount
-                renewalCycleStart
-            }
+  organization(id: $id) {
+    id
+    name
+    accountDetails {
+      renewalForecast {
+        amount
+        potentialAmount
+        comment
+        updatedAt
+        updatedBy {
+          id
+          firstName
+          lastName
+          emails {
+            email
+          }
         }
+      }
+      renewalLikelihood {
+        probability
+        previousProbability
+        comment
+        updatedBy {
+          id
+          firstName
+          lastName
+          emails {
+            email
+          }
+        }
+        updatedAt
+      }
+      billingDetails {
+        renewalCycle
+        frequency
+        amount
+        renewalCycleStart
+      }
     }
+  }
 }

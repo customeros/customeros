@@ -4,7 +4,6 @@ import { Card, CardBody } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
-import { Text } from '@ui/typography/Text';
 import { Divider } from '@ui/presentation/Divider';
 import { FormLabel, Skeleton } from '@chakra-ui/react';
 import { CardHeader } from '@ui/layout/Card';
@@ -31,9 +30,7 @@ export const AccountPanelSkeleton: React.FC = () => {
                   Renewal likelihood
                 </Heading>
               </Flex>
-              <Text fontSize='xs' color='gray.500'>
-                <Skeleton height='10px' width='90px' borderRadius='md' mt={1} />
-              </Text>
+              <Skeleton height='10px' width='90px' borderRadius='md' mt={1} />
             </Flex>
 
             <Heading fontSize='2xl' color='gray'>
@@ -55,14 +52,10 @@ export const AccountPanelSkeleton: React.FC = () => {
                   Renewal Forecast
                 </Heading>
               </Flex>
-              <Text fontSize='xs' color='gray.500'>
-                <Skeleton height='10px' width='90px' borderRadius='md' mt={1} />
-              </Text>
+              <Skeleton height='10px' width='90px' borderRadius='md' mt={1} />
             </Flex>
 
-            <Heading fontSize='2xl' color='gray'>
-              <Skeleton height='40px' width='96px' borderRadius='md' />
-            </Heading>
+            <Skeleton height='40px' width='96px' borderRadius='md' />
           </Flex>
         </CardBody>
       </Card>
@@ -100,7 +93,12 @@ export const AccountPanelSkeleton: React.FC = () => {
                     <Box color='gray.500' mr={4}>
                       <CurrencyDollar height='16px' />
                     </Box>
-                    <Skeleton height='12px' width='140px' borderRadius='md' mt={1}/>
+                    <Skeleton
+                      height='12px'
+                      width='140px'
+                      borderRadius='md'
+                      mt={1}
+                    />
                   </Flex>
                 </FormLabel>
               </Flex>
@@ -116,7 +114,12 @@ export const AccountPanelSkeleton: React.FC = () => {
                     <Box color='gray.500' mr={4}>
                       <CoinsSwap height={16} />
                     </Box>
-                    <Skeleton height='12px' width='140px' borderRadius='md' mt={1}/>
+                    <Skeleton
+                      height='12px'
+                      width='140px'
+                      borderRadius='md'
+                      mt={1}
+                    />
                   </Flex>
                 </FormLabel>
               </Flex>
@@ -134,7 +137,12 @@ export const AccountPanelSkeleton: React.FC = () => {
                     <Box mr={3} color='gray.500'>
                       <ClockCheck height={16} />
                     </Box>
-                    <Skeleton height='12px' width='140px' borderRadius='md' mt={1}/>
+                    <Skeleton
+                      height='12px'
+                      width='140px'
+                      borderRadius='md'
+                      mt={1}
+                    />
                   </Flex>
                 </FormLabel>
               </Flex>{' '}
@@ -150,7 +158,12 @@ export const AccountPanelSkeleton: React.FC = () => {
                     <Box mr={4} color='gray.500'>
                       <Calendar height={16} />
                     </Box>
-                    <Skeleton height='12px' width='140px' borderRadius='md' mt={1}/>
+                    <Skeleton
+                      height='12px'
+                      width='140px'
+                      borderRadius='md'
+                      mt={1}
+                    />
                   </Flex>
                 </FormLabel>
               </Flex>

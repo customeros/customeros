@@ -814,6 +814,18 @@
             "deprecationReason": null
           },
           {
+            "name": "renewalCycleNext",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Time",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "renewalCycleStart",
             "description": null,
             "args": [],
@@ -1562,6 +1574,18 @@
           },
           {
             "name": "prefix",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "profilePhotoUrl",
             "description": null,
             "args": [],
             "type": {
@@ -19949,7 +19973,7 @@
             "deprecationReason": null
           },
           {
-            "name": "previousAmount",
+            "name": "potentialAmount",
             "description": null,
             "args": [],
             "type": {
@@ -21508,6 +21532,18 @@
                 "name": "Player",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "profilePhotoUrl",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

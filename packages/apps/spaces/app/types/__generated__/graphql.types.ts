@@ -97,6 +97,7 @@ export type BillingDetails = {
   amount?: Maybe<Scalars['Float']>;
   frequency?: Maybe<RenewalCycle>;
   renewalCycle?: Maybe<RenewalCycle>;
+  renewalCycleNext?: Maybe<Scalars['Time']>;
   renewalCycleStart?: Maybe<Scalars['Time']>;
 };
 
@@ -197,6 +198,7 @@ export type Contact = ExtensibleEntity &
      */
     phoneNumbers: Array<PhoneNumber>;
     prefix?: Maybe<Scalars['String']>;
+    profilePhotoUrl?: Maybe<Scalars['String']>;
     socials: Array<Social>;
     source: DataSource;
     sourceOfTruth: DataSource;
@@ -2528,7 +2530,7 @@ export type RenewalForecast = {
   __typename?: 'RenewalForecast';
   amount?: Maybe<Scalars['Float']>;
   comment?: Maybe<Scalars['String']>;
-  previousAmount?: Maybe<Scalars['Float']>;
+  potentialAmount?: Maybe<Scalars['Float']>;
   updatedAt?: Maybe<Scalars['Time']>;
   updatedBy?: Maybe<User>;
   updatedById?: Maybe<Scalars['String']>;
@@ -2741,6 +2743,7 @@ export type User = {
   lastName: Scalars['String'];
   phoneNumbers: Array<PhoneNumber>;
   player: Player;
+  profilePhotoUrl?: Maybe<Scalars['String']>;
   roles: Array<Role>;
   source: DataSource;
   sourceOfTruth: DataSource;
