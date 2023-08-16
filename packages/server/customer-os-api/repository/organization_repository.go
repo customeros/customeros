@@ -1322,6 +1322,7 @@ func (r *organizationRepository) UpdateBillingDetails(ctx context.Context, orgId
 					org.billingDetailsFrequency=$frequency, 
 					org.billingDetailsRenewalCycle=$renewalCycle, 
 			 		org.billingDetailsRenewalCycleStart=$renewalCycleStart,
+			 		org.billingDetailsRenewalCycleNext=$renewalCycleNext,
 					org.updatedAt=$now, 
 					org.sourceOfTruth=$source`
 	span.LogFields(log.String("query", query))
@@ -1332,7 +1333,8 @@ func (r *organizationRepository) UpdateBillingDetails(ctx context.Context, orgId
 		"amount":            data.Amount,
 		"frequency":         data.Frequency,
 		"renewalCycle":      data.RenewalCycle,
-		"renewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(utils.ToDateNillable(data.RenewalCycleStart)),
+		"renewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(data.RenewalCycleStart),
+		"renewalCycleNext":  utils.TimePtrFirstNonNilNillableAsAny(data.RenewalCycleNext),
 		"source":            entity.DataSourceOpenline,
 		"now":               utils.Now(),
 	})

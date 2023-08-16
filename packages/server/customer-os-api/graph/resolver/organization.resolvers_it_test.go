@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -469,12 +470,14 @@ func TestMutationResolver_OrganizationUpdateBillingDetails(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
 	require.Equal(t, float64(100), *updatedOrganization.AccountDetails.BillingDetails.Amount)
 	require.Equal(t, model.RenewalCycleMonthly, *updatedOrganization.AccountDetails.BillingDetails.Frequency)
-	require.Equal(t, model.RenewalCycleQuarterly, *updatedOrganization.AccountDetails.BillingDetails.RenewalCycle)
+	require.Equal(t, model.RenewalCycleAnnually, *updatedOrganization.AccountDetails.BillingDetails.RenewalCycle)
 	require.Equal(t, "2020-01-01 00:00:00 +0000 UTC", (*updatedOrganization.AccountDetails.BillingDetails.RenewalCycleStart).String())
+	nextYear := time.Now().AddDate(1, 0, 0).Year()
+	require.Equal(t, strconv.Itoa(nextYear)+"-01-01 00:00:00 +0000 UTC", (*updatedOrganization.AccountDetails.BillingDetails.RenewalCycleNext).String())
 
 	require.Nil(t, updatedOrganization.AccountDetails.RenewalForecast.UpdatedByID)
-	require.Equal(t, float64(300), *updatedOrganization.AccountDetails.RenewalForecast.PotentialAmount)
-	require.Equal(t, float64(150), *updatedOrganization.AccountDetails.RenewalForecast.Amount)
+	require.Equal(t, float64(1200), *updatedOrganization.AccountDetails.RenewalForecast.PotentialAmount)
+	require.Equal(t, float64(600), *updatedOrganization.AccountDetails.RenewalForecast.Amount)
 	require.NotNil(t, updatedOrganization.AccountDetails.RenewalForecast.UpdatedAt)
 
 	// Check still single organization node exists after update, no new node created

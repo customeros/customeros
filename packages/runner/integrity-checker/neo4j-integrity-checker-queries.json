@@ -51,6 +51,10 @@
     {
       "name": "Check orphan nodes",
       "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain return count(n)"
+    },
+    {
+      "name": "Check property valid values",
+      "query": "CALL {\nMATCH (n:Organization)\nWHERE n.renewalLikelihood IS NOT NULL AND NOT n.renewalLikelihood IN ['', '0-HIGH', '1-MEDIUM', '2-LOW', '3-ZERO']\nRETURN count(n) as cnt\nUNION ALL\nMATCH (n:Organization)\nWHERE n.billingDetailsFrequency IS NOT NULL AND NOT n.billingDetailsFrequency IN ['', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'BIANNUALLY','ANNUALLY']\nRETURN count(n) as cnt\nUNION ALL\nMATCH (n:Organization)\nWHERE n.billingDetailsRenewalCycle IS NOT NULL AND NOT n.billingDetailsRenewalCycle IN ['', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'BIANNUALLY','ANNUALLY']\nRETURN count(n) as cnt\n} return sum(cnt)"
     }
   ]
 }

@@ -115,6 +115,7 @@ type BillingDetails {
     frequency: RenewalCycle
     renewalCycle: RenewalCycle
     renewalCycleStart: Time
+    renewalCycleNext: Time
 }
 
 type OrganizationPage implements Pages {
