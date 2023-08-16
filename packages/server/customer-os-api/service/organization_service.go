@@ -311,14 +311,14 @@ func (s *organizationService) UpdateRenewalForecast(ctx context.Context, orgId s
 	data.UpdatedAt = utils.TimePtr(utils.Now())
 	if setInternally {
 		data.Comment = nil
-		data.UpdatedBy = nil
+		data.UpdatedById = nil
 	} else {
 		if utils.IfNotNilFloat64(organization.RenewalForecast.Amount) == utils.IfNotNilFloat64(data.Amount) &&
 			utils.IfNotNilString(organization.RenewalForecast.Comment) == utils.IfNotNilString(data.Comment) {
 			span.LogFields(log.String("output", "nothing to update"))
 			return nil
 		}
-		data.UpdatedBy = utils.StringPtr(common.GetUserIdFromContext(ctx))
+		data.UpdatedById = utils.StringPtr(common.GetUserIdFromContext(ctx))
 		data.PotentialAmount = organization.RenewalForecast.PotentialAmount
 	}
 
@@ -1109,7 +1109,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 			Amount:          utils.GetFloatPropOrNil(props, "renewalForecastAmount"),
 			PotentialAmount: utils.GetFloatPropOrNil(props, "renewalForecastPotentialAmount"),
 			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
-			UpdatedBy:       utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
+			UpdatedById:     utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
 			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
 		},
 		BillingDetails: entity.BillingDetails{

@@ -433,6 +433,11 @@ type ComplexityRoot struct {
 		UpdatedAt           func(childComplexity int) int
 	}
 
+	JobRoleParticipant struct {
+		JobRoleParticipant func(childComplexity int) int
+		Type               func(childComplexity int) int
+	}
+
 	LinkedOrganization struct {
 		Organization func(childComplexity int) int
 		Type         func(childComplexity int) int
@@ -3095,6 +3100,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JobRole.UpdatedAt(childComplexity), true
+
+	case "JobRoleParticipant.jobRoleParticipant":
+		if e.complexity.JobRoleParticipant.JobRoleParticipant == nil {
+			break
+		}
+
+		return e.complexity.JobRoleParticipant.JobRoleParticipant(childComplexity), true
+
+	case "JobRoleParticipant.type":
+		if e.complexity.JobRoleParticipant.Type == nil {
+			break
+		}
+
+		return e.complexity.JobRoleParticipant.Type(childComplexity), true
 
 	case "LinkedOrganization.organization":
 		if e.complexity.LinkedOrganization.Organization == nil {
@@ -7756,8 +7775,8 @@ type HealthIndicator {
     name: String!
     order: Int64!
 }`, BuiltIn: false},
-	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
-union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
+	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
+union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
 extend type Query {
     interactionSession(id: ID!): InteractionSession!
@@ -7882,6 +7901,11 @@ type PhoneNumberParticipant {
 
 type ContactParticipant {
     contactParticipant: Contact!
+    type: String
+}
+
+type JobRoleParticipant {
+    jobRoleParticipant: JobRole!
     type: String
 }
 
@@ -25442,6 +25466,123 @@ func (ec *executionContext) _JobRole_appSource(ctx context.Context, field graphq
 func (ec *executionContext) fieldContext_JobRole_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "JobRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _JobRoleParticipant_jobRoleParticipant(ctx context.Context, field graphql.CollectedField, obj *model.JobRoleParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JobRoleParticipant_jobRoleParticipant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JobRoleParticipant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.JobRole)
+	fc.Result = res
+	return ec.marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JobRoleParticipant_jobRoleParticipant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JobRoleParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JobRole_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_JobRole_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_JobRole_updatedAt(ctx, field)
+			case "organization":
+				return ec.fieldContext_JobRole_organization(ctx, field)
+			case "contact":
+				return ec.fieldContext_JobRole_contact(ctx, field)
+			case "jobTitle":
+				return ec.fieldContext_JobRole_jobTitle(ctx, field)
+			case "primary":
+				return ec.fieldContext_JobRole_primary(ctx, field)
+			case "responsibilityLevel":
+				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "description":
+				return ec.fieldContext_JobRole_description(ctx, field)
+			case "company":
+				return ec.fieldContext_JobRole_company(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_JobRole_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_JobRole_endedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_JobRole_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_JobRole_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JobRole", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _JobRoleParticipant_type(ctx context.Context, field graphql.CollectedField, obj *model.JobRoleParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JobRoleParticipant_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JobRoleParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JobRoleParticipant",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -58815,6 +58956,13 @@ func (ec *executionContext) _InteractionEventParticipant(ctx context.Context, se
 			return graphql.Null
 		}
 		return ec._OrganizationParticipant(ctx, sel, obj)
+	case model.JobRoleParticipant:
+		return ec._JobRoleParticipant(ctx, sel, &obj)
+	case *model.JobRoleParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._JobRoleParticipant(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -58852,13 +59000,6 @@ func (ec *executionContext) _InteractionSessionParticipant(ctx context.Context, 
 			return graphql.Null
 		}
 		return ec._UserParticipant(ctx, sel, obj)
-	case model.OrganizationParticipant:
-		return ec._OrganizationParticipant(ctx, sel, &obj)
-	case *model.OrganizationParticipant:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._OrganizationParticipant(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -62889,6 +63030,47 @@ func (ec *executionContext) _JobRole(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var jobRoleParticipantImplementors = []string{"JobRoleParticipant", "InteractionEventParticipant"}
+
+func (ec *executionContext) _JobRoleParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.JobRoleParticipant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, jobRoleParticipantImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("JobRoleParticipant")
+		case "jobRoleParticipant":
+			out.Values[i] = ec._JobRoleParticipant_jobRoleParticipant(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._JobRoleParticipant_type(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var linkedOrganizationImplementors = []string{"LinkedOrganization"}
 
 func (ec *executionContext) _LinkedOrganization(ctx context.Context, sel ast.SelectionSet, obj *model.LinkedOrganization) graphql.Marshaler {
@@ -65629,7 +65811,7 @@ func (ec *executionContext) _OrganizationPage(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var organizationParticipantImplementors = []string{"OrganizationParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "MeetingParticipant"}
+var organizationParticipantImplementors = []string{"OrganizationParticipant", "InteractionEventParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _OrganizationParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, organizationParticipantImplementors)

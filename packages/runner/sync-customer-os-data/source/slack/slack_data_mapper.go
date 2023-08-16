@@ -111,15 +111,16 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		Channel:     "SLACK",
 	}
 	output.SentBy = struct {
-		OpenlineId      string `json:"openlineId,omitempty"`
-		ExternalId      string `json:"externalId,omitempty"`
-		ParticipantType string `json:"participantType,omitempty"`
-		RelationType    string `json:"relationType,omitempty"`
+		OpenlineId                string `json:"openlineId,omitempty"`
+		ExternalId                string `json:"externalId,omitempty"`
+		ParticipantType           string `json:"participantType,omitempty"`
+		RelationType              string `json:"relationType,omitempty"`
+		ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
+		OrganizationId            string `json:"organizationId,omitempty"`
 	}{
-		OpenlineId:      "",
-		ExternalId:      input.SenderUser,
-		ParticipantType: "",
-		RelationType:    "",
+		ExternalId:                input.SenderUser,
+		ReplaceContactWithJobRole: true,
+		OrganizationId:            input.OpenlineOrganizationId,
 	}
 	output.PartOfSession.Channel = "SLACK"
 	output.PartOfSession.Type = "THREAD"
@@ -139,30 +140,31 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		if user != input.SenderUser {
 			output.SentTo = append(output.SentTo,
 				struct {
-					OpenlineId      string `json:"openlineId,omitempty"`
-					ExternalId      string `json:"externalId,omitempty"`
-					ParticipantType string `json:"participantType,omitempty"`
-					RelationType    string `json:"relationType,omitempty"`
+					OpenlineId                string `json:"openlineId,omitempty"`
+					ExternalId                string `json:"externalId,omitempty"`
+					ParticipantType           string `json:"participantType,omitempty"`
+					RelationType              string `json:"relationType,omitempty"`
+					ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
+					OrganizationId            string `json:"organizationId,omitempty"`
 				}{
-					OpenlineId:      "",
-					ExternalId:      user,
-					ParticipantType: "",
-					RelationType:    "",
+					ExternalId:                user,
+					ReplaceContactWithJobRole: true,
+					OrganizationId:            input.OpenlineOrganizationId,
 				})
 		}
 	}
 
 	output.SentTo = append(output.SentTo,
 		struct {
-			OpenlineId      string `json:"openlineId,omitempty"`
-			ExternalId      string `json:"externalId,omitempty"`
-			ParticipantType string `json:"participantType,omitempty"`
-			RelationType    string `json:"relationType,omitempty"`
+			OpenlineId                string `json:"openlineId,omitempty"`
+			ExternalId                string `json:"externalId,omitempty"`
+			ParticipantType           string `json:"participantType,omitempty"`
+			RelationType              string `json:"relationType,omitempty"`
+			ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
+			OrganizationId            string `json:"organizationId,omitempty"`
 		}{
 			OpenlineId:      input.OpenlineOrganizationId,
-			ExternalId:      "",
 			ParticipantType: "ORGANIZATION",
-			RelationType:    "",
 		})
 
 	if input.Type != "message" {

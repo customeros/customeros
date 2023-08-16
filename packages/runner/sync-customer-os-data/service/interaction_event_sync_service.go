@@ -10,8 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"golang.org/x/exp/slices"
 	"sync"
 	"time"
 )
@@ -150,12 +152,30 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 	}
 
 	if !failedSync && interactionEventInput.HasSender() {
-		err = s.repositories.InteractionEventRepository.LinkInteractionEventWithSenderByExternalId(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, interactionEventInput.SentBy)
+		sender := interactionEventInput.SentBy
+		participantNode, err := s.repositories.InteractionEventRepository.FindParticipantByExternalId(ctx, tenant, sender.ExternalId, interactionEventInput.ExternalSystem)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed link interaction event with sender by external reference %v for tenant %v :%v", interactionEventInput.ExternalId, tenant, err)
+			reason = fmt.Sprintf("failed finding participant by external id %v for tenant %v :%v", sender.ExternalId, tenant, err)
 			s.log.Error(reason)
+		}
+		if sender.ReplaceContactWithJobRole && participantNode != nil && slices.Contains(participantNode.Labels, "Contact") {
+			err = s.repositories.InteractionEventRepository.LinkInteractionEventWithSenderJobRole(ctx, tenant, interactionEventId, sender.OrganizationId, utils.GetStringPropOrEmpty(participantNode.Props, "id"))
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed link interaction event with job role for tenant %v :%v", tenant, err)
+				s.log.Error(reason)
+			}
+		} else {
+			err = s.repositories.InteractionEventRepository.LinkInteractionEventWithSenderByExternalId(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, sender)
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed link interaction event with sender by external reference %v for tenant %v :%v", interactionEventInput.ExternalId, tenant, err)
+				s.log.Error(reason)
+			}
 		}
 	}
 
@@ -168,16 +188,31 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("failed link interaction event with recipient by id %v for tenant %v :%v", recipient.OpenlineId, tenant, err.Error())
 					s.log.Error(reason)
-					break
 				}
 			} else {
-				err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientByExternalId(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, recipient)
+				participantNode, err := s.repositories.InteractionEventRepository.FindParticipantByExternalId(ctx, tenant, recipient.ExternalId, interactionEventInput.ExternalSystem)
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("failed link interaction event with recipient by external reference %v for tenant %v :%v", recipient.ExternalId, tenant, err.Error())
+					reason = fmt.Sprintf("failed finding participant by external id %v for tenant %v :%v", recipient.ExternalId, tenant, err)
 					s.log.Error(reason)
-					break
+				}
+				if recipient.ReplaceContactWithJobRole && participantNode != nil && slices.Contains(participantNode.Labels, "Contact") {
+					err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientJobRole(ctx, tenant, interactionEventId, recipient.OrganizationId, utils.GetStringPropOrEmpty(participantNode.Props, "id"), recipient.RelationType)
+					if err != nil {
+						failedSync = true
+						tracing.TraceErr(span, err)
+						reason = fmt.Sprintf("failed link interaction event with job role for tenant %v :%v", tenant, err)
+						s.log.Error(reason)
+					}
+				} else {
+					err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientByExternalId(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, recipient)
+					if err != nil {
+						failedSync = true
+						tracing.TraceErr(span, err)
+						reason = fmt.Sprintf("failed link interaction event with recipient by external reference %v for tenant %v :%v", interactionEventInput.ExternalId, tenant, err)
+						s.log.Error(reason)
+					}
 				}
 			}
 		}

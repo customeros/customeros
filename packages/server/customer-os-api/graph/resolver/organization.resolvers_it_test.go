@@ -622,7 +622,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
 	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	neo4jt.LinkContactWithOrganization(ctx, driver, contactId1, organizationId)
+	jobRoleId1 := neo4jt.LinkContactWithOrganization(ctx, driver, contactId1, organizationId)
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId2, organizationId)
 
 	now := time.Now().UTC()
@@ -637,6 +637,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	secAgo80 := now.Add(time.Duration(-80) * time.Second)
 	secAgo90 := now.Add(time.Duration(-90) * time.Second)
 	secAgo100 := now.Add(time.Duration(-100) * time.Second)
+	secAgo110 := now.Add(time.Duration(-100) * time.Second)
 	secAgo1000 := now.Add(time.Duration(-1000) * time.Second)
 
 	actionId1 := neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, entity.ActionCreated, secAgo5)
@@ -671,6 +672,10 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	interactionEventId4 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 4", "application/json", nil, secAgo100)
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4, organizationId, "TO")
 
+	// prepare direct interaction events linked to job role
+	interactionEventId5 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 5", "application/json", nil, secAgo110)
+	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId5, jobRoleId1, "")
+
 	// prepare issue with tags
 	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
 		Subject:     "subject 1",
@@ -690,24 +695,24 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
+	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
-	require.Equal(t, 11, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 12, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_direct_and_via_contacts"),
 		client.Var("organizationId", organizationId),
 		client.Var("from", now),
-		client.Var("size", 10))
+		client.Var("size", 11))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	organization := rawResponse.Data.(map[string]interface{})["organization"]
 	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
 
 	timelineEvents := organization.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 10, len(timelineEvents))
+	require.Equal(t, 11, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, "Action", timelineEvent1["__typename"].(string))
@@ -776,6 +781,12 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, interactionEventId4, timelineEvent9["id"].(string))
 	require.NotNil(t, timelineEvent9["createdAt"].(string))
 	require.Equal(t, "IE text 4", timelineEvent9["content"].(string))
+
+	timelineEvent10 := timelineEvents[9].(map[string]interface{})
+	require.Equal(t, "InteractionEvent", timelineEvent10["__typename"].(string))
+	require.Equal(t, interactionEventId5, timelineEvent10["id"].(string))
+	require.NotNil(t, timelineEvent10["createdAt"].(string))
+	require.Equal(t, "IE text 5", timelineEvent10["content"].(string))
 }
 
 func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
@@ -1066,7 +1077,7 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 			PotentialAmount: utils.ToPtr[float64](0.5),
 			Comment:         utils.StringPtr("comment 2"),
 			UpdatedAt:       nil,
-			UpdatedBy:       nil,
+			UpdatedById:     nil,
 		},
 		BillingDetails: entity.BillingDetails{
 			Amount:            utils.ToPtr[float64](1.1),

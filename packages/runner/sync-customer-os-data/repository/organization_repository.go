@@ -522,7 +522,7 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 
 	query := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
 		CALL { ` +
-		// get all timeline events for the organization contatcs
+		// get all timeline events for the organization contacts
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
 		p = (c)-[*1..2]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $contactRelationTypes)
@@ -548,10 +548,10 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
 		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
-		// get all timeline events for the organization emails and phone numbers
-		` WITH o MATCH (o)-[:HAS]->(e), 
+		// get all timeline events for the organization emails, phone numbers and job roles
+		` WITH o MATCH (o)-[:HAS|ROLE_IN]-(e), 
 		p = (e)-[*1..2]-(a:TimelineEvent) 
-		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
+		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e) OR 'JobRole' in labels(e)) 
 		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
 		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
 	 	RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 

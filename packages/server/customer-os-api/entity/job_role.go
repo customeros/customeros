@@ -20,14 +20,26 @@ type JobRoleEntity struct {
 	Description         *string
 	Company             *string
 
+	InteractionEventParticipantDetails InteractionEventParticipantDetails
+
 	DataloaderKey string
 }
+
+type JobRoleEntities []JobRoleEntity
 
 func (jobRole JobRoleEntity) ToString() string {
 	return fmt.Sprintf("id: %s\njob title: %s", jobRole.Id, jobRole.JobTitle)
 }
 
-type JobRoleEntities []JobRoleEntity
+func (JobRoleEntity) IsInteractionEventParticipant() {}
+
+func (JobRoleEntity) InteractionEventParticipantLabel() string {
+	return NodeLabel_JobRole
+}
+
+func (jobRole JobRoleEntity) GetDataloaderKey() string {
+	return jobRole.DataloaderKey
+}
 
 func (jobRole JobRoleEntity) Labels(tenant string) []string {
 	return []string{"JobRole", "JobRole_" + tenant}

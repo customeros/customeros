@@ -102,17 +102,21 @@ type Output struct {
 		Identifier string `json:"identifier,omitempty"`
 	} `json:"partOfSession,omitempty"`
 	SentBy struct {
-		OpenlineId      string `json:"openlineId,omitempty"`
-		ExternalId      string `json:"externalId,omitempty"`
-		ParticipantType string `json:"participantType,omitempty"`
-		RelationType    string `json:"relationType,omitempty"`
+		OpenlineId                string `json:"openlineId,omitempty"`
+		ExternalId                string `json:"externalId,omitempty"`
+		ParticipantType           string `json:"participantType,omitempty"`
+		RelationType              string `json:"relationType,omitempty"`
+		ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
+		OrganizationId            string `json:"organizationId,omitempty"`
 	} `json:"sentBy,omitempty"`
 
 	SentTo []struct {
-		OpenlineId      string `json:"openlineId,omitempty"`
-		ExternalId      string `json:"externalId,omitempty"`
-		ParticipantType string `json:"participantType,omitempty"`
-		RelationType    string `json:"relationType,omitempty"`
+		OpenlineId                string `json:"openlineId,omitempty"`
+		ExternalId                string `json:"externalId,omitempty"`
+		ParticipantType           string `json:"participantType,omitempty"`
+		RelationType              string `json:"relationType,omitempty"`
+		ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
+		OrganizationId            string `json:"organizationId,omitempty"`
 	} `json:"sentTo,omitempty"`
 	Timezone               string `json:"timezone,omitempty"`
 	OpenlineOrganizationId string `json:"openlineOrganizationId,omitempty"`

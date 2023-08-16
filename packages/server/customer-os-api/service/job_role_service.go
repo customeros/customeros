@@ -23,6 +23,7 @@ type JobRoleService interface {
 	CreateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error)
 	UpdateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error)
 	GetAllForUsers(ctx context.Context, userIds []string) (*entity.JobRoleEntities, error)
+	mapDbNodeToJobRoleEntity(node dbtype.Node) *entity.JobRoleEntity
 }
 
 type jobRoleService struct {

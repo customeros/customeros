@@ -1,5 +1,5 @@
-union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
-union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
+union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
+union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
 extend type Query {
     interactionSession(id: ID!): InteractionSession!
@@ -124,6 +124,11 @@ type PhoneNumberParticipant {
 
 type ContactParticipant {
     contactParticipant: Contact!
+    type: String
+}
+
+type JobRoleParticipant {
+    jobRoleParticipant: JobRole!
     type: String
 }
 
