@@ -20,11 +20,12 @@ func (participant InteractionEventParticipant) GetNodeLabel() string {
 	case "PHONE":
 		return "PhoneNumber"
 	default:
-		return "Unknown"
+		return ""
 	}
 }
 
 type InteractionEventParticipant struct {
+	OpenlineId      string `json:"openlineId,omitempty"`
 	ExternalId      string `json:"externalId,omitempty"`
 	ParticipantType string `json:"participantType,omitempty"`
 	RelationType    string `json:"relationType,omitempty"`
@@ -60,10 +61,6 @@ func (i *InteractionEventData) IsPartOfByExternalId() bool {
 
 func (i *InteractionEventData) HasSender() bool {
 	return len(i.SentBy.ExternalId) > 0
-}
-
-func (i *InteractionEventData) HasRecipients() bool {
-	return len(i.SentTo) > 0
 }
 
 func (i *InteractionEventData) HasSession() bool {

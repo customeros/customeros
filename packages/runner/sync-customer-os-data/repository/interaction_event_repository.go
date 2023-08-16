@@ -28,6 +28,7 @@ type InteractionEventRepository interface {
 	LinkInteractionEventAsPartOfByExternalId(ctx context.Context, tenant string, event entity.InteractionEventData) error
 	LinkInteractionEventWithSenderByExternalId(ctx context.Context, tenant, eventId, externalSystem string, sender entity.InteractionEventParticipant) error
 	LinkInteractionEventWithRecipientByExternalId(ctx context.Context, tenant, eventId, externalSystem string, recipient entity.InteractionEventParticipant) error
+	LinkInteractionEventWithRecipientByOpenlineId(ctx context.Context, tenant, eventId string, recipient entity.InteractionEventParticipant) error
 }
 
 type interactionEventRepository struct {
@@ -366,6 +367,7 @@ func (r *interactionEventRepository) LinkInteractionEventWithSenderByExternalId(
 
 	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
 		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$sentByExternalId}]-(n) 
+		WHERE ($nodeLabel = '' OR $nodeLabel in labels(n))
 		MERGE (ie)-[result:SENT_BY]->(n)`, tenant)
 	span.LogFields(log.String("query", query))
 
@@ -375,6 +377,7 @@ func (r *interactionEventRepository) LinkInteractionEventWithSenderByExternalId(
 		_, err := tx.Run(ctx, query, map[string]interface{}{
 			"tenant":             tenant,
 			"interactionEventId": eventId,
+			"nodeLabel":          sender.GetNodeLabel(),
 			"sentByExternalId":   sender.ExternalId,
 			"externalSystemId":   externalSystem,
 		})
@@ -393,6 +396,7 @@ func (r *interactionEventRepository) LinkInteractionEventWithRecipientByExternal
 
 	query := `MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
 		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$sentByExternalId}]-(n) 
+		WHERE ($nodeLabel = '' OR $nodeLabel in labels(n))
 		MERGE (ie)-[result:SENT_TO]->(n)
 		ON CREATE SET result.type=$relationType
 		return result`
@@ -405,6 +409,33 @@ func (r *interactionEventRepository) LinkInteractionEventWithRecipientByExternal
 				"nodeLabel":          recipient.GetNodeLabel(),
 				"relationType":       recipient.RelationType,
 				"externalSystemId":   externalSystem,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *interactionEventRepository) LinkInteractionEventWithRecipientByOpenlineId(ctx context.Context, tenant, eventId string, recipient entity.InteractionEventParticipant) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithRecipientByOpenlineId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
+		MATCH (n:%s {id:$id}) 
+		MERGE (ie)-[result:SENT_TO]->(n)
+		ON CREATE SET result.type=$relationType
+		return result`, tenant, recipient.GetNodeLabel()+"_"+tenant)
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":             tenant,
+				"interactionEventId": eventId,
+				"id":                 recipient.OpenlineId,
+				"relationType":       recipient.RelationType,
 			})
 		return nil, err
 	})
