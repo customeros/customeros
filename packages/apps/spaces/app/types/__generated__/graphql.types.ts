@@ -97,7 +97,6 @@ export type BillingDetails = {
   amount?: Maybe<Scalars['Float']>;
   frequency?: Maybe<RenewalCycle>;
   renewalCycle?: Maybe<RenewalCycle>;
-  renewalCycleNext?: Maybe<Scalars['Time']>;
   renewalCycleStart?: Maybe<Scalars['Time']>;
 };
 

@@ -38,8 +38,8 @@ export type OrganizationAccountDetailsQuery = {
       renewalForecast?: {
         __typename?: 'RenewalForecast';
         amount?: number | null;
-        comment?: string | null;
         potentialAmount?: number | null;
+        comment?: string | null;
         updatedAt?: any | null;
         updatedBy?: {
           __typename?: 'User';
@@ -88,8 +88,8 @@ export const OrganizationAccountDetailsDocument = `
     accountDetails {
       renewalForecast {
         amount
-        comment
         potentialAmount
+        comment
         updatedAt
         updatedBy {
           id

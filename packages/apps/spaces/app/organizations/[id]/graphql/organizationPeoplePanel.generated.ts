@@ -53,6 +53,7 @@ export type OrganizationPeoplePanelQuery = {
           jobTitle?: string | null;
           description?: string | null;
           company?: string | null;
+          startedAt?: any | null;
         }>;
         phoneNumbers: Array<{
           __typename?: 'PhoneNumber';
@@ -79,6 +80,12 @@ export type OrganizationPeoplePanelQuery = {
             isDisabled?: boolean | null;
           };
         }>;
+        socials: Array<{
+          __typename?: 'Social';
+          id: string;
+          platformName?: string | null;
+          url: string;
+        }>;
       }>;
     };
   } | null;
@@ -104,6 +111,7 @@ export const OrganizationPeoplePanelDocument = `
           jobTitle
           description
           company
+          startedAt
         }
         phoneNumbers {
           id
@@ -126,6 +134,11 @@ export const OrganizationPeoplePanelDocument = `
             validated
             isDisabled
           }
+        }
+        socials {
+          id
+          platformName
+          url
         }
         profilePhotoUrl
       }
