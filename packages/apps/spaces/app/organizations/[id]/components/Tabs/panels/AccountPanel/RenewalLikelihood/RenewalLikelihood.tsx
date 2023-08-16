@@ -90,7 +90,7 @@ export const RenewalLikelihood: FC<{
               <Divider mt='4' mb='2' />
               <Flex align='flex-start'>
                 <Icons.File2 color='gray.400' />
-                <Text color='gray.500' fontSize='xs' ml='1'>
+                <Text color='gray.500' fontSize='xs' ml='1' noOfLines={2}>
                   {comment}
                 </Text>
               </Flex>
