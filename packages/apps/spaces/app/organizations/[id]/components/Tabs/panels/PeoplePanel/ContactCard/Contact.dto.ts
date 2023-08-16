@@ -1,4 +1,4 @@
-import { Contact } from '@graphql/types';
+import { Contact, Social } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
 
 import { UpdateContactMutationVariables } from '@organization/graphql/updateContact.generated';
@@ -15,6 +15,8 @@ export interface ContactForm {
   phoneId: string;
   timezone: SelectOption<string> | null;
   company?: string;
+  socials: Pick<Social, 'id' | 'url'>[];
+  startedAt: string;
 }
 
 export class ContactFormDto implements ContactForm {
@@ -29,6 +31,8 @@ export class ContactFormDto implements ContactForm {
   phoneId: string; // auxiliary field
   timezone: SelectOption<string> | null;
   company: string;
+  socials: Pick<Social, 'id' | 'url'>[];
+  startedAt: string;
 
   constructor(data?: Partial<Contact> | null) {
     this.id = data?.id || ''; // auxiliary field
@@ -44,6 +48,8 @@ export class ContactFormDto implements ContactForm {
       ? { label: data?.timezone, value: data?.timezone }
       : null;
     this.company = data?.jobRoles?.[0]?.company || '';
+    this.socials = data?.socials || [];
+    this.startedAt = data?.jobRoles?.[0]?.startedAt || '';
   }
 
   static toForm(data: Contact) {

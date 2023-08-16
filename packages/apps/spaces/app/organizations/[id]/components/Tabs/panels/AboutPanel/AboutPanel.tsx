@@ -20,6 +20,7 @@ import { useUpdateOrganizationMutation } from '@organization/graphql/updateOrgan
 import { useSetRelationshipStageMutation } from '@organization/graphql/setRelationshipStage.generated';
 import { useRemoveRelationshipStageMutation } from '@organization/graphql/removeRelationshipStage.generated';
 
+import { FormSocialInput } from '../../shared/FormSocialInput';
 import {
   stageOptions,
   industryOptions,
@@ -33,7 +34,6 @@ import {
   OrganizationAboutFormDto,
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
-import { FormSocialInput } from './FormSocialInput';
 import { useEffect } from 'react';
 
 const placeholders = {
@@ -325,6 +325,7 @@ export const AboutPanel = () => {
           />
 
           <FormSocialInput
+            bg='gray.25'
             name='socials'
             organizationId={id}
             defaultValues={defaultValues.socials}

@@ -12,13 +12,20 @@ import { SocialIcon } from './SocialIcons';
 import { formatSocialUrl } from '../util';
 
 interface SocialInputGroupProps extends InputProps {
-  index: number;
+  index?: number;
   value: string;
   leftElement?: React.ReactNode;
 }
 
 export const SocialInput = memo(
-  ({ value, onBlur, leftElement, ...rest }: SocialInputGroupProps) => {
+  ({
+    bg,
+    value,
+    onBlur,
+    leftElement,
+    isReadOnly,
+    ...rest
+  }: SocialInputGroupProps) => {
     const [isFocused, setIsFocused] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +34,7 @@ export const SocialInput = memo(
     const formattedUrl = formatSocialUrl(value);
 
     const handleFocus = () => {
+      if (isReadOnly) return;
       setIsFocused(true);
       inputRef.current?.focus();
     };
@@ -51,12 +59,13 @@ export const SocialInput = memo(
           value={value}
           ref={inputRef}
           onBlur={handleBlur}
+          isReadOnly={isReadOnly}
           {...rest}
         />
 
         {!isFocused && !!value && (
           <Flex
-            bg='gray.25'
+            bg={bg ?? 'white'}
             w='calc(100% - 30px)'
             left='30px'
             align='center'

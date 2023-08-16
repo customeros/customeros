@@ -3,12 +3,14 @@ import { MouseEvent, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 import { useQueryClient } from '@tanstack/react-query';
+import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 
 import { Flex } from '@ui/layout/Flex';
 import { IconButton } from '@ui/form/IconButton';
 import { Avatar } from '@ui/media/Avatar';
 import { Icons } from '@ui/media/Icon';
 import { FormInput } from '@ui/form/Input';
+import { Text } from '@ui/typography/Text';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { FormInputGroup } from '@ui/form/InputGroup';
@@ -33,6 +35,8 @@ import User from '@spaces/atoms/icons/User';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 import { Contact } from '@graphql/types';
 import { Fade } from '@ui/transitions/Fade';
+
+import { FormSocialInput } from '../../../shared/FormSocialInput';
 
 interface ContactCardProps {
   index: number;
@@ -323,6 +327,25 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
                 name='phone'
                 placeholder='Phone number'
                 leftElement={<Icons.Phone2 color='gray.500' />}
+              />
+              {/* TODO: replace with FormInput. currently displayed as a text just for demoing purposes */}
+              {data?.startedAt && (
+                <Flex align='center' h='39px'>
+                  <Icons.Calendar color='gray.500' />
+                  <Text ml='14px' cursor='text'>{`${formatDistanceToNow(
+                    new Date(data.startedAt),
+                  )} at ${data?.company}`}</Text>
+                </Flex>
+              )}
+              {/* END TODO */}
+              <FormSocialInput
+                isReadOnly
+                name='socials'
+                formId={formId}
+                placeholder='Social link'
+                defaultValues={data?.socials}
+                organizationId={organizationId}
+                leftElement={<Icons.Share7 color='gray.500' />}
               />
               <FormSelect
                 formId={formId}
