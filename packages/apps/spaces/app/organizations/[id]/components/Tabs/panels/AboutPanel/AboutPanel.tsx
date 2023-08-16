@@ -81,10 +81,6 @@ export const AboutPanel = () => {
     });
   };
 
-  useEffect(() => {
-    return () => mutateOrganization({});
-  }, []);
-
   const { state } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
     defaultValues,
