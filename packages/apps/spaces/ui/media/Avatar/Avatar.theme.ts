@@ -37,18 +37,6 @@ export const Avatar = helpers.defineMultiStyleConfig({
         boxShadow: 'avatarRing',
       },
     },
-    skeleton: {
-      container: {
-        bg: 'gray.100',
-        boxShadow: 'avatarRingGray',
-        '&': {
-          borderColor: 'gray.200',
-        },
-      },
-      label: {
-        color: 'gray.700',
-      },
-    },
   },
   defaultProps: {
     size: 'lg',

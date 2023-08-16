@@ -7,8 +7,8 @@ import { OrganizationPanel } from '@organization/components/Tabs/panels/Organiza
 import { CardHeader } from '@ui/presentation/Card';
 import { Avatar } from '@ui/media/Avatar';
 import User from '@spaces/atoms/icons/User';
-import { Card } from '@chakra-ui/card';
-import { Skeleton } from '@chakra-ui/react';
+import { Card } from '@ui/layout/Card';
+import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
 
 export const PeoplePanelSkeleton = () => {
   return (
@@ -43,13 +43,8 @@ export const PeoplePanelSkeleton = () => {
         transition='all 0.2s ease-out'
       >
         <CardHeader as={Flex} p='4' pb={2} position='relative'>
-          <Avatar
-            name=''
-            variant='skeleton'
-            icon={
-              <User color={'var(--chakra-colors-gray-400)'} height='1.8rem' />
-            }
-          />
+          <SkeletonCircle height={12} width={12} boxShadow='avatarRingGray' />
+
           <Flex ml='4' flexDir='column' flex='1'>
             <Skeleton h={3} w={100} mb={3} />
             <Skeleton h={3} w={200} mb={4} />
@@ -74,14 +69,9 @@ export const PeoplePanelSkeleton = () => {
         transition='all 0.2s ease-out'
       >
         <CardHeader as={Flex} p='4' pb={2} position='relative'>
-          <Avatar
-            name=''
-            variant='skeleton'
-            icon={
-              <User color={'var(--chakra-colors-gray-400)'} height='1.8rem' />
-            }
-          />
-          <Flex ml='4' flexDir='column' flex='1'>
+            <SkeletonCircle height={12} width={12} boxShadow='avatarRingGray' />
+
+            <Flex ml='4' flexDir='column' flex='1'>
             <Skeleton h={3} w={100} mb={3} />
             <Skeleton h={3} w={200} mb={4} />
             <Skeleton h={3} w={250} mb={2} />
