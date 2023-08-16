@@ -96,9 +96,10 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 		  	ie.identifier=$identifier, 
 		  	ie.content=$content, 
 		  	ie.contentType=$contentType,
+			ie.hide=$hide,
 		  	ie.source=$source, 
 		  	ie.sourceOfTruth=$sourceOfTruth,
-		  	ie.appSource=$appSource 
+		  	ie.appSource=$appSource
 		 ON MATCH SET 
 			ie.content=$content, 
 		  	ie.contentType=$contentType
@@ -120,6 +121,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 			"externalId":       event.ExternalId,
 			"syncDate":         syncDate,
 			"channel":          event.Channel,
+			"hide":             event.Hide,
 		}
 
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),

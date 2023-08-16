@@ -13,6 +13,7 @@ type InteractionEventEntity struct {
 	EventIdentifier string
 	Content         string
 	ContentType     string
+	Hide            bool
 	Source          DataSource
 	SourceOfTruth   DataSource
 	EventType       *string

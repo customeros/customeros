@@ -803,6 +803,14 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", &channel, now)
 	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", &channel, now)
 	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", &channel, now)
+	interactionEventId4Hidden := neo4jt.CreateInteractionEventFromEntity(ctx, driver, tenantName, entity.InteractionEventEntity{
+		EventIdentifier: "myExternalId",
+		Content:         "IE text 4",
+		ContentType:     "application/json",
+		Channel:         &channel,
+		CreatedAt:       &now,
+		Hide:            true,
+	})
 	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
 	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
@@ -810,6 +818,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailIdOrg, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, phoneNumberId, "")
+	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4Hidden, emailIdContact, "")
 
 	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
 		Subject:     "subject 1",
@@ -824,11 +833,11 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
-	require.Equal(t, 8, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_total_count"),
 		client.Var("organizationId", organizationId))

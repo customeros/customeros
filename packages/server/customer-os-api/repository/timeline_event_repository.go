@@ -60,6 +60,7 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -69,6 +70,7 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+
@@ -120,6 +122,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY']) "+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -128,6 +131,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY', 'PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+
@@ -176,6 +180,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -184,6 +189,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" p = (o)-[*1]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY','ACTION_ON'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -193,6 +199,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -202,6 +209,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+
@@ -253,6 +261,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -260,6 +269,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" WITH o MATCH (o), "+
 		" p = (o)-[*1]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY', 'ACTION_ON'])"+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -268,6 +278,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -276,6 +287,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" } "+

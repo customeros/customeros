@@ -116,4 +116,5 @@ type Output struct {
 	OpenlineOrganizationId string `json:"openlineOrganizationId,omitempty"`
 	Identifier             string `json:"identifier,omitempty"`
 	ProfilePhotoUrl        string `json:"profilePhotoUrl,omitempty"`
+	Hide                   bool   `json:"hide,omitempty"`
 }
