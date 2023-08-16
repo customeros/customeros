@@ -1304,7 +1304,7 @@ func (r *organizationRepository) UpdateRenewalForecast(ctx context.Context, orgI
 		"renewalForecast":          data.Amount,
 		"renewalForecastPotential": data.PotentialAmount,
 		"comment":                  data.Comment,
-		"updatedBy":                data.UpdatedBy,
+		"updatedBy":                data.UpdatedById,
 		"updatedAt":                utils.TimePtrFirstNonNilNillableAsAny(data.UpdatedAt),
 		"source":                   entity.DataSourceOpenline,
 		"now":                      utils.Now(),

@@ -891,6 +891,13 @@ type JobRoleInput struct {
 	Company             *string    `json:"company,omitempty"`
 }
 
+type JobRoleParticipant struct {
+	JobRoleParticipant *JobRole `json:"jobRoleParticipant"`
+	Type               *string  `json:"type,omitempty"`
+}
+
+func (JobRoleParticipant) IsInteractionEventParticipant() {}
+
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleUpdateInput struct {
@@ -1212,8 +1219,6 @@ type OrganizationParticipant struct {
 }
 
 func (OrganizationParticipant) IsInteractionEventParticipant() {}
-
-func (OrganizationParticipant) IsInteractionSessionParticipant() {}
 
 func (OrganizationParticipant) IsMeetingParticipant() {}
 

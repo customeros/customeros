@@ -83,7 +83,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 				PotentialAmount: entity.RenewalForecast.PotentialAmount,
 				Comment:         entity.RenewalForecast.Comment,
 				UpdatedAt:       entity.RenewalForecast.UpdatedAt,
-				UpdatedByID:     entity.RenewalForecast.UpdatedBy,
+				UpdatedByID:     entity.RenewalForecast.UpdatedById,
 			},
 			BillingDetails: &model.BillingDetails{
 				Amount:            entity.BillingDetails.Amount,

@@ -40,6 +40,12 @@ func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *e
 			OrganizationParticipant: MapEntityToOrganization(organizationEntity),
 			Type:                    utils.StringPtrNillable(organizationEntity.InteractionEventParticipantDetails.Type),
 		}
+	case entity.NodeLabel_JobRole:
+		jobRoleEntity := (*interactionEventParticipantEntity).(*entity.JobRoleEntity)
+		return model.JobRoleParticipant{
+			JobRoleParticipant: MapEntityToJobRole(jobRoleEntity),
+			Type:               utils.StringPtrNillable(jobRoleEntity.InteractionEventParticipantDetails.Type),
+		}
 	}
 
 	fmt.Errorf("participant of type %s not identified", reflect.TypeOf(interactionEventParticipantEntity))

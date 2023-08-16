@@ -363,13 +363,14 @@ func MapInteractionEvent(inputJSON string) (string, error) {
 	}
 	if input.AuthorId > 0 {
 		output.SentBy = struct {
-			ExternalId      string `json:"externalId,omitempty"`
-			ParticipantType string `json:"participantType,omitempty"`
-			RelationType    string `json:"relationType,omitempty"`
+			OpenlineId                string `json:"openlineId,omitempty"`
+			ExternalId                string `json:"externalId,omitempty"`
+			ParticipantType           string `json:"participantType,omitempty"`
+			RelationType              string `json:"relationType,omitempty"`
+			ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
+			OrganizationId            string `json:"organizationId,omitempty"`
 		}{
-			ExternalId:      fmt.Sprintf("%d", input.AuthorId),
-			ParticipantType: "",
-			RelationType:    "",
+			ExternalId: fmt.Sprintf("%d", input.AuthorId),
 		}
 	}
 

@@ -733,7 +733,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"renewalForecast":                 organization.RenewalForecast.Amount,
 		"renewalForecastPotential":        organization.RenewalForecast.PotentialAmount,
 		"renewalForecastComment":          organization.RenewalForecast.Comment,
-		"renewalForecastUpdatedBy":        organization.RenewalForecast.UpdatedBy,
+		"renewalForecastUpdatedBy":        organization.RenewalForecast.UpdatedById,
 		"renewalForecastUpdatedAt":        utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalForecast.UpdatedAt),
 		"billingDetailsAmount":            organization.BillingDetails.Amount,
 		"billingDetailsFrequency":         organization.BillingDetails.Frequency,
@@ -1039,11 +1039,12 @@ func NoteCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext, not
 	})
 }
 
-func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId string) {
+func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId string) string {
+	var jobId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
 			(org:Organization {id:$organizationId})
 			MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org)
-			ON CREATE SET 	j.id=randomUUID(), 
+			ON CREATE SET 	j.id=$jobId,
 							j.createdAt=$now,
 							j.updatedAt=$now,
 							j.source=$source,
@@ -1054,7 +1055,9 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 		"contactId":      contactId,
 		"source":         "test",
 		"now":            utils.Now(),
+		"jobId":          jobId.String(),
 	})
+	return jobId.String()
 }
 
 func CreateAnalysis(ctx context.Context, driver *neo4j.DriverWithContext, tenant, content, contentType, analysisType string, createdAt time.Time) string {

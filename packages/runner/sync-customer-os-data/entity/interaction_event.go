@@ -25,10 +25,12 @@ func (participant InteractionEventParticipant) GetNodeLabel() string {
 }
 
 type InteractionEventParticipant struct {
-	OpenlineId      string `json:"openlineId,omitempty"`
-	ExternalId      string `json:"externalId,omitempty"`
-	ParticipantType string `json:"participantType,omitempty"`
-	RelationType    string `json:"relationType,omitempty"`
+	OpenlineId                string `json:"openlineId,omitempty"`
+	ExternalId                string `json:"externalId,omitempty"`
+	ParticipantType           string `json:"participantType,omitempty"`
+	RelationType              string `json:"relationType,omitempty"`
+	ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
+	OrganizationId            string `json:"organizationId,omitempty"`
 }
 
 type InteractionSession struct {

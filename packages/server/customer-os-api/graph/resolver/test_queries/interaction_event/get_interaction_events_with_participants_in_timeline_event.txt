@@ -36,6 +36,17 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                         }
                         type
                     }
+                    ... on JobRoleParticipant {
+                        jobRoleParticipant {
+                            id
+                            contact {
+                                id
+                                firstName
+                                lastName
+                            }
+                        }
+                        type
+                    }
                     ... on OrganizationParticipant {
                         organizationParticipant {
                             id
