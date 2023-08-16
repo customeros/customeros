@@ -9,6 +9,7 @@ export const shadows = {
   outline: '0px 0px 0px 4px #F4EBFF',
   ringPrimary: '0px 0px 0px 4px #F4EBFF',
   avatarRing: '0px 0px 0px 6px #F9F5FF',
+  avatarRingGray: '0px 0px 0px 6px var(--chakra-colors-gray-50)',
   menuOptionsFocus: '0px 0px 0px 2px #F4EBFF',
   sidenavItemFocus: '0px 0px 0px 1px #F4EBFF',
   sidenavItemActive: '0px 0px 0px 3px #EAECF0',
