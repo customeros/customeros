@@ -114,7 +114,7 @@ export const AuthPanel = () => {
           <Flex direction={'column'} gap={2} width={'250px'}>
             <Flex justifyContent={'space-between'}>
               <Flex gap='1' align='center'>
-                <Icons.GMAIL boxSize='6' />
+                <Icons.Mail1 boxSize='6' />
                 <FormLabel htmlFor={'changeEmailSyncSwitchButton'} mb='0'>
                   Sync Google Mail
                 </FormLabel>
@@ -128,7 +128,7 @@ export const AuthPanel = () => {
             </Flex>
             <Flex justifyContent={'space-between'}>
               <Flex gap='1' align='center'>
-                <Icons.GOOGLE_CALENDAR boxSize='6' />
+                <Icons.Calendar boxSize='6' />
                 <FormLabel
                   htmlFor={'changeGoogleCalendarSyncSwitchButton'}
                   mb='0'
