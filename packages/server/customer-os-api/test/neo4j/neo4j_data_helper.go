@@ -1094,6 +1094,16 @@ func AnalysisDescribes(ctx context.Context, driver *neo4j.DriverWithContext, ten
 }
 
 func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, content, contentType string, channel *string, createdAt time.Time) string {
+	return CreateInteractionEventFromEntity(ctx, driver, tenant, entity.InteractionEventEntity{
+		EventIdentifier: identifier,
+		Content:         content,
+		ContentType:     contentType,
+		Channel:         channel,
+		CreatedAt:       &createdAt,
+	})
+}
+
+func CreateInteractionEventFromEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, ie entity.InteractionEventEntity) string {
 	var interactionEventId, _ = uuid.NewRandom()
 
 	query := "MERGE (ie:InteractionEvent {id:$id})" +
@@ -1103,20 +1113,22 @@ func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext
 		"	ie.channel=$channel, " +
 		"	ie.contentType=$contentType, " +
 		"	ie.source=$source, " +
+		"   ie.hide=$hide, " +
 		"	ie.sourceOfTruth=$sourceOfTruth, " +
 		"	ie.appSource=$appSource," +
 		"	ie:InteractionEvent_%s, ie:TimelineEvent, ie:TimelineEvent_%s," +
 		"   ie.identifier=$identifier"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":            interactionEventId.String(),
-		"content":       content,
-		"contentType":   contentType,
-		"channel":       channel,
-		"createdAt":     createdAt,
+		"content":       ie.Content,
+		"contentType":   ie.ContentType,
+		"channel":       ie.Channel,
+		"createdAt":     *ie.CreatedAt,
 		"source":        "openline",
 		"sourceOfTruth": "openline",
 		"appSource":     "test",
-		"identifier":    identifier,
+		"identifier":    ie.EventIdentifier,
+		"hide":          ie.Hide,
 	})
 	return interactionEventId.String()
 }

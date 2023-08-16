@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -106,7 +107,14 @@ func TestMutationResolver_AnalysisCreate_Event(t *testing.T) {
 
 	now := utils.Now()
 	channel := "VOICE"
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "Hello?", "text/plain", &channel, now)
+	interactionEventId1 := neo4jt.CreateInteractionEventFromEntity(ctx, driver, tenantName, entity.InteractionEventEntity{
+		EventIdentifier: "myExternalId1",
+		Content:         "Hello?",
+		ContentType:     "text/plain",
+		Channel:         &channel,
+		CreatedAt:       &now,
+		Hide:            false,
+	})
 
 	rawResponse, err := c.RawPost(getQuery("analysis/create_analysis"),
 		client.Var("contentType", "application/x-openline-translation"),

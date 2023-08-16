@@ -122,11 +122,12 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	output.PartOfSession.Type = "THREAD"
 	output.PartOfSession.Status = "ACTIVE"
 	if input.ThreadTs != "" {
+		output.Hide = true
 		output.PartOfSession.ExternalId = "session/" + input.ChannelId + "/" + input.ThreadTs
 		output.PartOfSession.CreatedAt = TsStrToRFC3339Nanos(input.ThreadTs)
 		output.PartOfSession.Identifier = input.ChannelId + "/" + input.ThreadTs
 	} else {
-		output.PartOfSession.ExternalId = input.ChannelId + "/" + input.Ts
+		output.PartOfSession.ExternalId = "session/" + input.ChannelId + "/" + input.Ts
 		output.PartOfSession.CreatedAt = TsStrToRFC3339Nanos(input.Ts)
 		output.PartOfSession.Identifier = input.ChannelId + "/" + input.Ts
 	}

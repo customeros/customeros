@@ -47,6 +47,7 @@ type InteractionEventData struct {
 	Type             string                        `json:"type,omitempty"`
 	Channel          string                        `json:"channel,omitempty"`
 	Identifier       string                        `json:"identifier,omitempty"`
+	Hide             bool                          `json:"hide,omitempty"`
 	PartOfExternalId string                        `json:"partOfExternalId,omitempty"`
 	PartOfSession    InteractionSession            `json:"partOfSession,omitempty"`
 	SentBy           InteractionEventParticipant   `json:"sentBy,omitempty"`
