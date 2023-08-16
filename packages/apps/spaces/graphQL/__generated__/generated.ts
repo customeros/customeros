@@ -3651,6 +3651,13 @@ export type UpdateOrganizationWebsiteMutationVariables = Exact<{
 
 export type UpdateOrganizationWebsiteMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, website?: string | null } };
 
+export type UpdateRenewalForecastMutationVariables = Exact<{
+  input: RenewalForecastInput;
+}>;
+
+
+export type UpdateRenewalForecastMutation = { __typename?: 'Mutation', organization_UpdateRenewalForecast: { __typename?: 'Organization', id: string } };
+
 export type UpdateRenewalLikelihoodMutationVariables = Exact<{
   input: RenewalLikelihoodInput;
 }>;
@@ -7831,6 +7838,39 @@ export function useUpdateOrganizationWebsiteMutation(baseOptions?: Apollo.Mutati
 export type UpdateOrganizationWebsiteMutationHookResult = ReturnType<typeof useUpdateOrganizationWebsiteMutation>;
 export type UpdateOrganizationWebsiteMutationResult = Apollo.MutationResult<UpdateOrganizationWebsiteMutation>;
 export type UpdateOrganizationWebsiteMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>;
+export const UpdateRenewalForecastDocument = gql`
+    mutation updateRenewalForecast($input: RenewalForecastInput!) {
+  organization_UpdateRenewalForecast(input: $input) {
+    id
+  }
+}
+    `;
+export type UpdateRenewalForecastMutationFn = Apollo.MutationFunction<UpdateRenewalForecastMutation, UpdateRenewalForecastMutationVariables>;
+
+/**
+ * __useUpdateRenewalForecastMutation__
+ *
+ * To run a mutation, you first call `useUpdateRenewalForecastMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateRenewalForecastMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateRenewalForecastMutation, { data, loading, error }] = useUpdateRenewalForecastMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateRenewalForecastMutation(baseOptions?: Apollo.MutationHookOptions<UpdateRenewalForecastMutation, UpdateRenewalForecastMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateRenewalForecastMutation, UpdateRenewalForecastMutationVariables>(UpdateRenewalForecastDocument, options);
+      }
+export type UpdateRenewalForecastMutationHookResult = ReturnType<typeof useUpdateRenewalForecastMutation>;
+export type UpdateRenewalForecastMutationResult = Apollo.MutationResult<UpdateRenewalForecastMutation>;
+export type UpdateRenewalForecastMutationOptions = Apollo.BaseMutationOptions<UpdateRenewalForecastMutation, UpdateRenewalForecastMutationVariables>;
 export const UpdateRenewalLikelihoodDocument = gql`
     mutation updateRenewalLikelihood($input: RenewalLikelihoodInput!) {
   organization_UpdateRenewalLikelihood(input: $input) {

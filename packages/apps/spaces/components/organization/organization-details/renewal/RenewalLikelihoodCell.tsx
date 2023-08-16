@@ -5,6 +5,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Text } from '@ui/typography/Text';
 import { Select } from '@ui/form/SyncSelect/Select';
+import { SelectOption } from '@shared/types/SelectOptions';
 import { RenewalLikelihoodProbability } from '@graphql/types';
 import { useUpdateRenewalLikelihoodMutation } from '@spaces/graphql';
 
@@ -37,7 +38,9 @@ export const RenewalLikelihoodCell = ({
     ? { label: capitalize(currentProbability), value: currentProbability }
     : undefined;
 
-  const handleChange = (newValue: any) => {
+  const handleChange = (
+    newValue: SelectOption<RenewalLikelihoodProbability>,
+  ) => {
     updateRenewalLikelihood({
       variables: {
         input: {
