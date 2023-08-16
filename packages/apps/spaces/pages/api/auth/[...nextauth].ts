@@ -21,9 +21,8 @@ const pages = {
         signIn: "/auth/signin",
     };
 
-// @ts-ignore
 const callbacks = {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile }: any) {
         // Persist the OAuth access_token and or the user id to the token right after signin
         if (account) {
             token.accessToken = account.access_token
@@ -49,7 +48,7 @@ const callbacks = {
         }
         return token
     },
-    async session({ session, user, token }) {
+    async session({ session, user, token }: any) {
         if (token){
             session.accessToken = token.accessToken
             session.user.id = token.id
