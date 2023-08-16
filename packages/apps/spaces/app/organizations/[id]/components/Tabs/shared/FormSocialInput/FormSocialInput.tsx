@@ -23,16 +23,17 @@ type Value = Pick<Social, 'id' | 'url'>;
 interface FormSocialInputProps extends InputGroupProps {
   name: string;
   formId: string;
+  isReadOnly?: boolean;
   organizationId: string;
   leftElement?: React.ReactNode;
   defaultValues: Array<Value>;
 }
 
-
 export const FormSocialInput = ({
   name,
   formId,
   leftElement,
+  isReadOnly,
   organizationId,
   defaultValues,
   ...rest
@@ -180,29 +181,33 @@ export const FormSocialInput = ({
           key={index}
           value={url}
           index={index}
+          bg={rest.bg}
           onBlur={handleBlur}
+          isReadOnly={isReadOnly}
           onChange={handleChange}
           leftElement={_leftElement}
           onKeyDown={handleRemoveKeyDown}
         />
       ))}
 
-      <InputGroup {...rest}>
-        {leftElement && (
-          <InputLeftElement w='4'>
-            <SocialIcon url={newValue}>{leftElement}</SocialIcon>
-          </InputLeftElement>
-        )}
-        <Input
-          value={newValue}
-          ref={newInputRef}
-          pl='30px'
-          onBlur={handleAddBlur}
-          onChange={handleAddChange}
-          onKeyDown={handleAddKeyDown}
-          {...rest}
-        />
-      </InputGroup>
+      {!isReadOnly && (
+        <InputGroup {...rest}>
+          {leftElement && (
+            <InputLeftElement w='4'>
+              <SocialIcon url={newValue}>{leftElement}</SocialIcon>
+            </InputLeftElement>
+          )}
+          <Input
+            value={newValue}
+            ref={newInputRef}
+            pl='30px'
+            onBlur={handleAddBlur}
+            onChange={handleAddChange}
+            onKeyDown={handleAddKeyDown}
+            {...rest}
+          />
+        </InputGroup>
+      )}
     </>
   );
 };

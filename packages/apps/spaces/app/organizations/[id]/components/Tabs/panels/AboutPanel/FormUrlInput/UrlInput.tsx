@@ -8,7 +8,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { InputGroup } from '@ui/form/InputGroup';
 import { Input, InputProps } from '@ui/form/Input';
 
-import { formatSocialUrl } from '../util';
+import { formatSocialUrl } from '../../../shared/util';
 
 interface UrlInputProps extends InputProps {
   value: string;

@@ -17,6 +17,7 @@ query OrganizationPeoplePanel($id: ID!) {
           jobTitle
           description
           company
+          startedAt
         }
         phoneNumbers {
           id
@@ -39,6 +40,11 @@ query OrganizationPeoplePanel($id: ID!) {
             validated
             isDisabled
           }
+        }
+        socials {
+          id
+          platformName
+          url
         }
       }
       totalElements
