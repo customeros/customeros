@@ -236,12 +236,14 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	for _, message := range channelMessages {
 		output := struct {
 			slack.Message
-			ChannelUserIds []string `json:"channel_user_ids"`
-			ChannelId      string   `json:"channel_id"`
+			ChannelUserIds         []string `json:"channel_user_ids"`
+			ChannelId              string   `json:"channel_id"`
+			OpenlineOrganizationId string   `json:"openline_organization_id"`
 		}{
-			Message:        message,
-			ChannelUserIds: channelRealUserIds,
-			ChannelId:      channelId,
+			Message:                message,
+			ChannelUserIds:         channelRealUserIds,
+			ChannelId:              channelId,
+			OpenlineOrganizationId: orgId,
 		}
 		messageJson, _ := json.Marshal(output)
 		err = rawrepo.RawChannelMessages_Save(ctx, s.getDb(tenant), string(messageJson))
@@ -254,12 +256,14 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	for _, message := range threadMessages {
 		output := struct {
 			slack.Message
-			ChannelUserIds []string `json:"channel_user_ids"`
-			ChannelId      string   `json:"channel_id"`
+			ChannelUserIds         []string `json:"channel_user_ids"`
+			ChannelId              string   `json:"channel_id"`
+			OpenlineOrganizationId string   `json:"openline_organization_id"`
 		}{
-			Message:        message,
-			ChannelUserIds: channelRealUserIds,
-			ChannelId:      channelId,
+			Message:                message,
+			ChannelUserIds:         channelRealUserIds,
+			ChannelId:              channelId,
+			OpenlineOrganizationId: orgId,
 		}
 		messageJson, _ := json.Marshal(output)
 		err = rawrepo.RawThreadMessages_Save(ctx, s.getDb(tenant), string(messageJson))

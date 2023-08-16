@@ -29,9 +29,7 @@ func NewDefaultInteractionEventSyncService(repositories *repository.Repositories
 }
 
 func (s *interactionEventSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-
 	completed, failed, skipped := 0, 0, 0
-
 	for {
 
 		events := dataService.GetDataForSync(ctx, common.INTERACTION_EVENTS, batchSize, runId)
@@ -161,14 +159,26 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 		}
 	}
 
-	if !failedSync && interactionEventInput.HasRecipients() {
+	if !failedSync {
 		for _, recipient := range interactionEventInput.SentTo {
-			err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientByExternalId(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, recipient)
-			if err != nil {
-				failedSync = true
-				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("failed link interaction event with recipient by external reference %v for tenant %v :%v", interactionEventInput.ExternalId, tenant, err)
-				s.log.Error(reason)
+			if recipient.OpenlineId != "" {
+				err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientByOpenlineId(ctx, tenant, interactionEventId, recipient)
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("failed link interaction event with recipient by id %v for tenant %v :%v", recipient.OpenlineId, tenant, err.Error())
+					s.log.Error(reason)
+					break
+				}
+			} else {
+				err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientByExternalId(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, recipient)
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("failed link interaction event with recipient by external reference %v for tenant %v :%v", recipient.ExternalId, tenant, err.Error())
+					s.log.Error(reason)
+					break
+				}
 			}
 		}
 	}

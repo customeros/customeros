@@ -62,19 +62,36 @@ type RenewalLikelihood struct {
 	UpdatedAt                 *time.Time
 	UpdatedBy                 *string
 }
+
+func (r RenewalLikelihood) String() string {
+	return fmt.Sprintf("RenewalLikelihood: %v, Previous: %v, Comment: %v, UpdatedAt: %v, UpdatedBy: %v",
+		r.RenewalLikelihood, r.PreviousRenewalLikelihood, r.Comment, r.UpdatedAt, r.UpdatedBy)
+}
+
 type RenewalForecast struct {
 	Amount          *float64
 	PotentialAmount *float64
 	Comment         *string
 	UpdatedAt       *time.Time
-	UpdatedBy       *string
+	UpdatedById     *string
 }
+
+func (r RenewalForecast) String() string {
+	return fmt.Sprintf("Amount: %v, Potential: %v, Comment: %v, UpdatedAt: %v, UpdatedById: %v",
+		r.Amount, r.PotentialAmount, r.Comment, r.UpdatedAt, r.UpdatedById)
+}
+
 type BillingDetails struct {
 	Amount            *float64
 	Frequency         string
 	RenewalCycle      string
 	RenewalCycleStart *time.Time
 	RenewalCycleNext  *time.Time
+}
+
+func (b BillingDetails) String() string {
+	return fmt.Sprintf("Amount: %v, Frequency: %v, RenewalCycle: %v, RenewalCycleStart: %v, RenewalCycleNext: %v",
+		b.Amount, b.Frequency, b.RenewalCycle, b.RenewalCycleStart, b.RenewalCycleNext)
 }
 
 func (organization OrganizationEntity) ToString() string {
