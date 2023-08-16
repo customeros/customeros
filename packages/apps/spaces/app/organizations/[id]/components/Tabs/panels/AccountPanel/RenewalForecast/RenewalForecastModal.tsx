@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
@@ -22,6 +22,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { useParams } from 'next/navigation';
 import { useUpdateRenewalForecastMutation } from '@organization/graphql/updateRenewalForecast.generated';
+import {Box} from "@ui/layout/Box";
+import CurrencyDollar from "@spaces/atoms/icons/CurrencyDollar";
 
 export type RenewalForecastValue = {
   amount?: string | null;
@@ -97,6 +99,11 @@ export const RenewalForecastModal = ({
             label='Amount'
             min={0}
             ref={initialRef}
+            leftElement={
+              <Box color='gray.500'>
+                <CurrencyDollar height='16px' />
+              </Box>
+            }
           />
 
           <Text as='label' htmlFor='reason' mt='4' fontSize='sm'>
