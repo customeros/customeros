@@ -1,4 +1,5 @@
 import { atom } from 'recoil';
+import {UserDetails} from "../services/settings/settingsService";
 
 export const ownerListData = atom({
   key: 'ownerListData',

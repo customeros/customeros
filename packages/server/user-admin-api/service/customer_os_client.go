@@ -16,12 +16,14 @@ type CustomerOsClient interface {
 	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
 	CreateUser(user *model.UserInput, tenant string, roles []Role) (string, error)
 	MergeTenant(tenant *model.TenantInput) (string, error)
+	IsPlayer(authId string, provider string) (string, error)
 }
 
 type customerOsClient struct {
 	cfg           *config.Config
 	graphqlClient *graphql.Client
 }
+
 type Role string
 
 const (
@@ -222,4 +224,35 @@ func (s *customerOsClient) addHeadersToGraphRequest(req *graphql.Request, tenant
 func (s *customerOsClient) contextWithTimeout() (context.Context, context.CancelFunc, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Second)
 	return ctx, cancel, nil
+}
+
+func (s *customerOsClient) IsPlayer(authId string, provider string) (string, error) {
+
+	graphqlRequest := graphql.NewRequest(
+		`
+		query GetPlayer ($authId: String!, $provider: String!) {
+				player_ByAuthIdProvider(
+					  authId: $authId,
+					  provider: $provider
+				) { id }
+		}
+	`)
+	graphqlRequest.Var("authId", authId)
+	graphqlRequest.Var("provider", provider)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, nil)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.GetPlayerResponse
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", err
+	}
+	return graphqlResponse.Id, nil
 }

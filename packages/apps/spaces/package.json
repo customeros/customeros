@@ -13,7 +13,7 @@
     "preatify": "yarn prettier --write ."
   },
   "dependencies": {
-    "@apollo/client": "^3.7.14",
+    "@apollo/client": "3.7.14",
     "@apollo/react-hooks": "^4.0.0",
     "@apollo/react-testing": "^4.0.0",
     "@chakra-ui/next-js": "^2.1.4",

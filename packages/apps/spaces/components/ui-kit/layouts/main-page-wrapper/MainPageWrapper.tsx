@@ -27,6 +27,7 @@ export const MainPageWrapper = ({ children }: any) => {
   const analytics = useJune();
   const { data: session } = useSession();
 
+
   useEffect(() => {
     if (analytics && session) {
       analytics.user().then((user) => {

@@ -1,5 +1,5 @@
 export {
-  GetSettings,
+  GetIntegrationsSettings,
   UpdateIntegrationSettings,
   DeleteIntegrationSettings,
 } from './settingsService';

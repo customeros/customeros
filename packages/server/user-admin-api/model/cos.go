@@ -1,5 +1,9 @@
 package model
 
+type GetPlayerResponse struct {
+	Id string `json:"id"`
+}
+
 type GetTenantByWorkspaceResponse struct {
 	Workspace *string `json:"tenant_ByWorkspace"`
 }

@@ -10,6 +10,9 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.theme';
 
 import { colors } from './colors';
 import { shadows } from './shadows';
+import {Simulate} from "react-dom/test-utils";
+import select = Simulate.select;
+import {fontWeight} from "@mui/system";
 
 export const theme = extendTheme({
   fonts: {

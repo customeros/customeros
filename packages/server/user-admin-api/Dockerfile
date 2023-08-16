@@ -6,6 +6,7 @@ RUN apk add --update make bash
 WORKDIR /app
 
 COPY user-admin-api ./user-admin-api
+COPY customer-os-common-auth ./customer-os-common-auth
 
 WORKDIR /app/user-admin-api
 RUN go build -o bin/user-admin-api

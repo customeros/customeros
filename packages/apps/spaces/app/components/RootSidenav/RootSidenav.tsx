@@ -1,6 +1,4 @@
 'use client';
-import { signOut } from 'next-auth/react';
-import { useJune } from '@spaces/hooks/useJune';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -15,13 +13,6 @@ interface RootSidenavProps {
 }
 
 export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
-  const analytics = useJune();
-
-  const handleClick = () => {
-    analytics?.reset();
-    signOut();
-  };
-
   return (
     <GridItem
       px='2'
@@ -105,16 +96,6 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
           label='Settings'
           icon={(isActive) => (
             <Icons.Settings
-              boxSize='6'
-              color={isActive ? 'gray.700' : 'gray.500'}
-            />
-          )}
-        />
-        <SidenavItem
-          label='Sign out'
-          onClick={handleClick}
-          icon={(isActive) => (
-            <Icons.Logout1
               boxSize='6'
               color={isActive ? 'gray.700' : 'gray.500'}
             />

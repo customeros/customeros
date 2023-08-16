@@ -19,6 +19,15 @@ RUN cd /workspace/build/customer-os-common-module && go mod download && go mod v
 COPY customer-os-common-module/. /workspace/build/customer-os-common-module/
 RUN cd /workspace/build/customer-os-common-module && go build
 
+#copy and build common auth module
+COPY customer-os-common-auth/go.mod /workspace/build/customer-os-common-auth/go.mod
+COPY customer-os-common-auth/go.sum /workspace/build/customer-os-common-auth/go.sum
+
+RUN cd /workspace/build/customer-os-common-auth && go mod download && go mod verify
+
+COPY customer-os-common-auth/. /workspace/build/customer-os-common-auth/
+RUN cd /workspace/build/customer-os-common-auth && go build
+
 #copy and build file storage api
 COPY settings-api/go.mod /workspace/build/settings-api/go.mod
 COPY settings-api/go.sum /workspace/build/settings-api/go.sum
