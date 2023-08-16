@@ -19,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 	"math"
 	"reflect"
+	"time"
 )
 
 type OrganizationService interface {
@@ -343,6 +344,8 @@ func (s *organizationService) UpdateBillingDetails(ctx context.Context, orgId st
 		tracing.TraceErr(span, err)
 		return err
 	}
+	data.RenewalCycleStart = utils.ToDateNillable(data.RenewalCycleStart)
+	data.RenewalCycleNext = s.calculateRenewalCycleNext(*data)
 
 	err = s.repositories.OrganizationRepository.UpdateBillingDetails(ctx, orgId, *data)
 	if err != nil {
@@ -1114,6 +1117,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 			Frequency:         utils.GetStringPropOrEmpty(props, "billingDetailsFrequency"),
 			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),
 			RenewalCycleStart: utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleStart"),
+			RenewalCycleNext:  utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleNext"),
 		},
 	}
 	return &output
@@ -1132,7 +1136,6 @@ func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(
 }
 
 func (s *organizationService) calculateForecastAmount(billingDtls entity.BillingDetails, likelihood string) (*float64, error) {
-
 	if billingDtls.Amount == nil || billingDtls.Frequency == "" || billingDtls.RenewalCycle == "" || likelihood == "" {
 		return nil, nil
 	}
@@ -1163,7 +1166,6 @@ func (s *organizationService) calculateForecastAmount(billingDtls entity.Billing
 }
 
 func (s *organizationService) getBillingPeriods(billingFreq string, renewalFreq string) float64 {
-
 	switch billingFreq {
 
 	case "WEEKLY":
@@ -1237,4 +1239,36 @@ func (s *organizationService) getBillingPeriods(billingFreq string, renewalFreq 
 	}
 
 	return 1
+}
+
+func (s *organizationService) calculateRenewalCycleNext(billingDtls entity.BillingDetails) *time.Time {
+	if billingDtls.RenewalCycleStart == nil || billingDtls.RenewalCycle == "" {
+		return nil
+	}
+
+	renewalCycleNext := *billingDtls.RenewalCycleStart
+	for {
+		switch billingDtls.RenewalCycle {
+		case "WEEKLY":
+			renewalCycleNext = renewalCycleNext.AddDate(0, 0, 7)
+		case "BIWEEKLY":
+			renewalCycleNext = renewalCycleNext.AddDate(0, 0, 14)
+		case "MONTHLY":
+			renewalCycleNext = renewalCycleNext.AddDate(0, 1, 0)
+		case "QUARTERLY":
+			renewalCycleNext = renewalCycleNext.AddDate(0, 3, 0)
+		case "BIANNUALLY":
+			renewalCycleNext = renewalCycleNext.AddDate(0, 6, 0)
+		case "ANNUALLY":
+			renewalCycleNext = renewalCycleNext.AddDate(1, 0, 0)
+		default:
+			return nil // invalid
+		}
+
+		if renewalCycleNext.After(time.Now()) {
+			break
+		}
+	}
+
+	return &renewalCycleNext
 }

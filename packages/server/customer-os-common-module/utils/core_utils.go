@@ -5,7 +5,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -66,15 +65,6 @@ func TimePtrFirstNonNilNillableAsAny(times ...*time.Time) interface{} {
 		}
 	}
 	return nil
-}
-
-func ToDateNillable(t *time.Time) *time.Time {
-	if t == nil {
-		return nil
-	}
-	y, m, d := t.Date()
-	val := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
-	return &val
 }
 
 func NodePtr(node dbtype.Node) *dbtype.Node {
@@ -220,10 +210,6 @@ func ReverseMap[K comparable, V comparable](in map[K]V) map[V]K {
 	return out
 }
 
-func Now() time.Time {
-	return time.Now().UTC()
-}
-
 func Contains(list []string, str string) bool {
 	for _, v := range list {
 		if v == str {
@@ -269,13 +255,6 @@ func GetFunctionName() string {
 		fullName = fullName[lastSlash+1:]
 	}
 	return fullName
-}
-
-func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {
-	if input == nil {
-		return nil
-	}
-	return timestamppb.New(*input)
 }
 
 func ParseStringToFloat(input string) *float64 {

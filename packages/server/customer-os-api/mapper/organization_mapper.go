@@ -90,6 +90,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 				Frequency:         MapRenewalCycleToModel(entity.BillingDetails.Frequency),
 				RenewalCycle:      MapRenewalCycleToModel(entity.BillingDetails.RenewalCycle),
 				RenewalCycleStart: entity.BillingDetails.RenewalCycleStart,
+				RenewalCycleNext:  entity.BillingDetails.RenewalCycleNext,
 			},
 		},
 	}

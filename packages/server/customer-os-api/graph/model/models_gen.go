@@ -148,6 +148,7 @@ type BillingDetails struct {
 	Frequency         *RenewalCycle `json:"frequency,omitempty"`
 	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
 	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
+	RenewalCycleNext  *time.Time    `json:"renewalCycleNext,omitempty"`
 }
 
 type BillingDetailsInput struct {

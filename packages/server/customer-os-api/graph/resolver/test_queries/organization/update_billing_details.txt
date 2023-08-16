@@ -4,8 +4,8 @@ mutation UpdateOrganization($organizationId: ID!) {
             id: $organizationId
             amount: 100
             frequency: MONTHLY
-            renewalCycle: QUARTERLY
-            renewalCycleStart: "2020-01-01T11:20:35.000Z"
+            renewalCycle: ANNUALLY
+            renewalCycleStart: "2020-01-01T11:12:35.000Z"
         }) {
       id
       name
@@ -17,6 +17,7 @@ mutation UpdateOrganization($organizationId: ID!) {
                   frequency
                   renewalCycle
                   renewalCycleStart
+                  renewalCycleNext
               }
               renewalLikelihood {
                   probability

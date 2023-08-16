@@ -74,6 +74,7 @@ type BillingDetails struct {
 	Frequency         string
 	RenewalCycle      string
 	RenewalCycleStart *time.Time
+	RenewalCycleNext  *time.Time
 }
 
 func (organization OrganizationEntity) ToString() string {
