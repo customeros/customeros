@@ -38,7 +38,6 @@ export const OrganizationSidenav = () => {
       h='full'
       w='200px'
       background='gray.25'
-
       display='flex'
       flexDir='column'
       gridArea='sidebar'

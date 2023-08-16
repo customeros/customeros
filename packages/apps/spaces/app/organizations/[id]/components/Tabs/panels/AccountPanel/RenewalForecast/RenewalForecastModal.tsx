@@ -22,8 +22,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { useParams } from 'next/navigation';
 import { useUpdateRenewalForecastMutation } from '@organization/graphql/updateRenewalForecast.generated';
-import {Box} from "@ui/layout/Box";
-import CurrencyDollar from "@spaces/atoms/icons/CurrencyDollar";
+import { Box } from '@ui/layout/Box';
+import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
 
 export type RenewalForecastValue = {
   amount?: string | null;

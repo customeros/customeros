@@ -4,17 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 import { useJune } from '@spaces/hooks/useJune';
-import {useSession} from "next-auth/react";
+import { useSession } from 'next-auth/react';
 
-export const JuneProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+export const JuneProvider = ({ children }: { children: React.ReactNode }) => {
   const analytics = useJune();
   const pathname = usePathname();
 
-  const {data: session} = useSession();
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (analytics && session) {

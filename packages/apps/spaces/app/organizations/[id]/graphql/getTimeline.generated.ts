@@ -48,6 +48,149 @@ export type GetTimelineQuery = {
           interactionSession?: {
             __typename?: 'InteractionSession';
             name: string;
+            events: Array<{
+              __typename?: 'InteractionEvent';
+              id: string;
+              channel?: string | null;
+              content?: string | null;
+              contentType?: string | null;
+              date: any;
+              interactionSession?: {
+                __typename?: 'InteractionSession';
+                name: string;
+              } | null;
+              issue?: {
+                __typename?: 'Issue';
+                externalLinks: Array<{
+                  __typename?: 'ExternalSystem';
+                  type: Types.ExternalSystemType;
+                  externalId?: string | null;
+                  externalUrl?: string | null;
+                }>;
+              } | null;
+              repliesTo?: {
+                __typename?: 'InteractionEvent';
+                id: string;
+              } | null;
+              summary?: {
+                __typename?: 'Analysis';
+                id: string;
+                content?: string | null;
+                contentType?: string | null;
+              } | null;
+              actionItems?: Array<{
+                __typename?: 'ActionItem';
+                id: string;
+                content: string;
+              }> | null;
+              sentBy: Array<
+                | {
+                    __typename: 'ContactParticipant';
+                    contactParticipant: {
+                      __typename?: 'Contact';
+                      id: string;
+                      name?: string | null;
+                      firstName?: string | null;
+                      lastName?: string | null;
+                      profilePhotoUrl?: string | null;
+                    };
+                  }
+                | {
+                    __typename: 'EmailParticipant';
+                    type?: string | null;
+                    emailParticipant: {
+                      __typename?: 'Email';
+                      email?: string | null;
+                      id: string;
+                      contacts: Array<{
+                        __typename?: 'Contact';
+                        id: string;
+                        name?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                        emails: Array<{
+                          __typename?: 'Email';
+                          email?: string | null;
+                        }>;
+                      }>;
+                      users: Array<{
+                        __typename?: 'User';
+                        id: string;
+                        firstName: string;
+                        lastName: string;
+                      }>;
+                      organizations: Array<{
+                        __typename?: 'Organization';
+                        id: string;
+                        name: string;
+                      }>;
+                    };
+                  }
+                | { __typename?: 'OrganizationParticipant' }
+                | { __typename?: 'PhoneNumberParticipant' }
+                | {
+                    __typename: 'UserParticipant';
+                    userParticipant: {
+                      __typename?: 'User';
+                      id: string;
+                      firstName: string;
+                      lastName: string;
+                      profilePhotoUrl?: string | null;
+                    };
+                  }
+              >;
+              sentTo: Array<
+                | {
+                    __typename: 'ContactParticipant';
+                    contactParticipant: {
+                      __typename?: 'Contact';
+                      name?: string | null;
+                      id: string;
+                      firstName?: string | null;
+                      lastName?: string | null;
+                    };
+                  }
+                | {
+                    __typename: 'EmailParticipant';
+                    type?: string | null;
+                    emailParticipant: {
+                      __typename?: 'Email';
+                      email?: string | null;
+                      id: string;
+                      contacts: Array<{
+                        __typename?: 'Contact';
+                        id: string;
+                        name?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                      }>;
+                      users: Array<{
+                        __typename?: 'User';
+                        id: string;
+                        firstName: string;
+                        lastName: string;
+                      }>;
+                      organizations: Array<{
+                        __typename?: 'Organization';
+                        id: string;
+                        name: string;
+                      }>;
+                    };
+                  }
+                | { __typename: 'OrganizationParticipant' }
+                | { __typename: 'PhoneNumberParticipant' }
+                | {
+                    __typename: 'UserParticipant';
+                    type?: string | null;
+                    userParticipant: {
+                      __typename?: 'User';
+                      id: string;
+                      firstName: string;
+                      lastName: string;
+                    };
+                  }
+              >;
+            }>;
           } | null;
           issue?: {
             __typename?: 'Issue';
@@ -79,6 +222,7 @@ export type GetTimelineQuery = {
                   name?: string | null;
                   firstName?: string | null;
                   lastName?: string | null;
+                  profilePhotoUrl?: string | null;
                 };
               }
             | {
@@ -121,6 +265,7 @@ export type GetTimelineQuery = {
                   id: string;
                   firstName: string;
                   lastName: string;
+                  profilePhotoUrl?: string | null;
                 };
               }
           >;
@@ -256,6 +401,7 @@ export const GetTimelineDocument = `
               name
               firstName
               lastName
+              profilePhotoUrl
             }
           }
           ... on UserParticipant {
@@ -264,6 +410,7 @@ export const GetTimelineDocument = `
               id
               firstName
               lastName
+              profilePhotoUrl
             }
           }
         }
@@ -308,6 +455,131 @@ export const GetTimelineDocument = `
               id
               firstName
               lastName
+            }
+          }
+        }
+        interactionSession {
+          name
+          events {
+            ... on InteractionEvent {
+              id
+              date: createdAt
+              channel
+              interactionSession {
+                name
+              }
+              content
+              contentType
+              issue {
+                externalLinks {
+                  type
+                  externalId
+                  externalUrl
+                }
+              }
+              repliesTo {
+                id
+              }
+              summary {
+                id
+                content
+                contentType
+              }
+              actionItems {
+                id
+                content
+              }
+              sentBy {
+                ... on EmailParticipant {
+                  __typename
+                  type
+                  emailParticipant {
+                    email
+                    id
+                    contacts {
+                      id
+                      name
+                      firstName
+                      lastName
+                      emails {
+                        email
+                      }
+                    }
+                    users {
+                      id
+                      firstName
+                      lastName
+                    }
+                    organizations {
+                      id
+                      name
+                    }
+                  }
+                }
+                ... on ContactParticipant {
+                  __typename
+                  contactParticipant {
+                    id
+                    name
+                    firstName
+                    lastName
+                    profilePhotoUrl
+                  }
+                }
+                ... on UserParticipant {
+                  __typename
+                  userParticipant {
+                    id
+                    firstName
+                    lastName
+                    profilePhotoUrl
+                  }
+                }
+              }
+              sentTo {
+                __typename
+                ... on EmailParticipant {
+                  __typename
+                  type
+                  emailParticipant {
+                    email
+                    contacts {
+                      id
+                      name
+                      firstName
+                      lastName
+                    }
+                    users {
+                      id
+                      firstName
+                      lastName
+                    }
+                    organizations {
+                      id
+                      name
+                    }
+                    id
+                  }
+                }
+                ... on ContactParticipant {
+                  __typename
+                  contactParticipant {
+                    name
+                    id
+                    firstName
+                    lastName
+                  }
+                }
+                ... on UserParticipant {
+                  __typename
+                  type
+                  userParticipant {
+                    id
+                    firstName
+                    lastName
+                  }
+                }
+              }
             }
           }
         }

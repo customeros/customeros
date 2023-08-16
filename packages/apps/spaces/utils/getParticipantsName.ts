@@ -52,8 +52,8 @@ export const getParticipantNames = (participants: Participant[]): string[] => {
 
 const getName = (
   data: Contact | User,
-  email: string | null | undefined,
-  rawEmail: string | undefined | null,
+  email?: string | null | undefined,
+  rawEmail?: string | undefined | null,
 ): string => {
   if (data.__typename === 'Contact' && data?.name) {
     return data.name;
@@ -82,6 +82,22 @@ export const getEmailParticipantName = (
 
   return email || rawEmail || '';
 };
+
+export const getParticipantName = (
+  participant: ContactParticipant | UserParticipant,
+): string => {
+  let participantT;
+  if ((participant as ContactParticipant)?.contactParticipant) {
+    participantT = (participant as ContactParticipant).contactParticipant;
+  }
+  if ((participant as UserParticipant)?.userParticipant) {
+    participantT = (participant as UserParticipant).userParticipant;
+  }
+  if (!participantT) return '';
+
+  return getName(participantT);
+};
+
 export const getEmailParticipantsName = (
   participants: EmailParticipant[],
 ): string => {

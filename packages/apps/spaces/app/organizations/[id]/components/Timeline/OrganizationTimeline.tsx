@@ -15,6 +15,7 @@ import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
 import { TimelineItemSkeleton } from '@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
 import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
 import { useQueryClient } from '@tanstack/react-query';
+import { SlackStub } from '@organization/components/Timeline/events/slack/SlackStub';
 
 const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   return (
@@ -66,9 +67,12 @@ export const OrganizationTimeline: FC = () => {
   const timelineEmailEvents = (
     data?.organization?.timelineEvents as unknown as InteractionEvent[]
   )
-    ?.filter((d: InteractionEvent) => !!d?.id && d.channel === 'EMAIL')
+    ?.filter(
+      (d: InteractionEvent) =>
+        !!d?.id && (d.channel === 'EMAIL' || d.channel === 'SLACK'),
+    )
     ?.reverse();
-
+  console.log('🏷️ ----- timelineEmailEvents: ', timelineEmailEvents);
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
@@ -102,7 +106,16 @@ export const OrganizationTimeline: FC = () => {
           return (
             // @ts-expect-error this is correct, generated types did not picked up alias correctly
             <TimelineItem date={timelineEvent?.date} showDate={showDate}>
-              <EmailStub email={timelineEvent as unknown as InteractionEvent} />
+              {timelineEvent.channel === 'EMAIL' && (
+                <EmailStub
+                  email={timelineEvent as unknown as InteractionEvent}
+                />
+              )}
+              {timelineEvent.channel === 'SLACK' && (
+                <SlackStub
+                  slackEvent={timelineEvent as unknown as InteractionEvent}
+                />
+              )}
             </TimelineItem>
           );
         }}
