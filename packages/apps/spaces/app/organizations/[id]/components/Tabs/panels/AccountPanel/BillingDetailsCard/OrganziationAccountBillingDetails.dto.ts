@@ -42,9 +42,9 @@ export class OrganizationAccountBillingDetails
           ? data?.renewalCycle
           : data?.renewalCycle?.value,
       frequency:
-        typeof data.renewalCycle === 'string'
-          ? data?.renewalCycle
-          : data?.renewalCycle?.value,
+        typeof data.frequency === 'string'
+          ? data?.frequency
+          : data?.frequency?.value,
     } as any;
   }
 }
