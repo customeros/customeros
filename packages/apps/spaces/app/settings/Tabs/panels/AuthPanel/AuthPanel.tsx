@@ -122,6 +122,7 @@ export const AuthPanel = () => {
               <Switch
                 id={'changeGmailSyncSwitchButton'}
                 isChecked={oAuthSettings.gmailSyncEnabled}
+                colorScheme='green'
                 onChange={(event) => handleSyncGoogleMailClick(event)}
               ></Switch>
             </Flex>
@@ -138,6 +139,7 @@ export const AuthPanel = () => {
               <Switch
                 id={'changeGoogleCalendarSyncSwitchButton'}
                 isChecked={oAuthSettings.googleCalendarSyncEnabled}
+                colorScheme='green'
                 onChange={(event) => handleSyncGoogleCalendarClick(event)}
               ></Switch>
             </Flex>
