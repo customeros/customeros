@@ -19,12 +19,15 @@ import { useOrganizationPeoplePanelQuery } from '@organization/graphql/organizat
 import { invalidateQuery } from '@organization/components/Tabs/panels/PeoplePanel/util';
 import { Contact } from '@graphql/types';
 import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { PeoplePanelSkeleton } from '@organization/components/Tabs/panels/PeoplePanel/PeoplePanelSkeleton';
 
 export const PeoplePanel = () => {
   const id = useParams()?.id as string;
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const { data } = useOrganizationPeoplePanelQuery(client, { id });
+  const { data, isInitialLoading } = useOrganizationPeoplePanelQuery(client, {
+    id,
+  });
   const createContact = useCreateContactMutation(client);
   const addContactToOrganization = useAddOrganizationToContactMutation(client, {
     onSuccess: () => invalidateQuery(queryClient, id),
@@ -49,6 +52,11 @@ export const PeoplePanel = () => {
       },
     );
   };
+
+  if (isInitialLoading) {
+    return <PeoplePanelSkeleton />;
+  }
+
   return (
     <OrganizationPanel
       title='People'
