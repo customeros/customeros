@@ -29,7 +29,10 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
       <Card
         variant='outline'
         size='md'
+        boxShadow='xs'
         fontSize='14px'
+        border='1px solid'
+        borderColor='gray.200'
         background='white'
         flexDirection='row'
         maxWidth={549}
