@@ -17,7 +17,6 @@ import {
 } from '@graphql/types';
 import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { DateTimeUtils } from '@spaces/utils/date';
-import EmptyNote from '@spaces/atoms/icons/EmptyNote';
 
 export type RenewalLikelihoodType = RenewalLikelihoodT;
 

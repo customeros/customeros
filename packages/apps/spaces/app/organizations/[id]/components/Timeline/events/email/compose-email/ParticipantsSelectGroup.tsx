@@ -171,21 +171,21 @@ export const ParticipantsSelectGroup = ({
           </Button>
         )}
 
-        {/*{!showBCC && (*/}
-        {/*  <Button*/}
-        {/*    variant='ghost'*/}
-        {/*    fontWeight={600}*/}
-        {/*    size='sm'*/}
-        {/*    px={1}*/}
-        {/*    color='gray.400'*/}
-        {/*    onClick={() => {*/}
-        {/*      setShowBCC(true);*/}
-        {/*      setFocusedItemIndex(2);*/}
-        {/*    }}*/}
-        {/*  >*/}
-        {/*    BCC*/}
-        {/*  </Button>*/}
-        {/*)}*/}
+        {!showBCC && (
+          <Button
+            variant='ghost'
+            fontWeight={600}
+            size='sm'
+            px={1}
+            color='gray.400'
+            onClick={() => {
+              setShowBCC(true);
+              setFocusedItemIndex(2);
+            }}
+          >
+            BCC
+          </Button>
+        )}
       </Flex>
 
       {!modal && (
