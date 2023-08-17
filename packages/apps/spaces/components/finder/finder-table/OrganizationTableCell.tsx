@@ -5,6 +5,10 @@ import { Avatar } from '@ui/media/Avatar';
 import { Link } from '@ui/navigation/Link';
 import { Flex } from '@ui/layout/Flex';
 import { Tooltip } from '@ui/overlay/Tooltip';
+import {
+  getExternalUrl,
+  getFormattedLink,
+} from '@spaces/utils/getExternalLink';
 
 interface OrganizationTableCellProps {
   organization: Organization;
@@ -42,12 +46,13 @@ export const OrganizationTableCell = ({
         {organization.website && (
           <Link
             target='_blank'
+            rel='noopener noreferrer'
             color='gray.500'
-            href={organization.website ?? ''}
+            href={getExternalUrl(organization.website)}
             transition='color 0.2s ease-in-out'
             _hover={{ textDecoration: 'none', color: 'gray.700' }}
           >
-            {organization.website}
+            {getFormattedLink(organization.website)}
           </Link>
         )}
       </Flex>
