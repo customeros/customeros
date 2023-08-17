@@ -56,7 +56,7 @@ type OrganizationEntity struct {
 }
 
 type RenewalLikelihood struct {
-	RenewalLikelihood         string
+	RenewalLikelihood         string `neo4jDb:"property:renewalLikelihood;lookupName:RENEWAL_LIKELIHOOD;supportCaseSensitive:false"`
 	PreviousRenewalLikelihood string
 	Comment                   *string
 	UpdatedAt                 *time.Time
@@ -64,12 +64,28 @@ type RenewalLikelihood struct {
 }
 
 func (r RenewalLikelihood) String() string {
-	return fmt.Sprintf("RenewalLikelihood: %v, Previous: %v, Comment: %v, UpdatedAt: %v, UpdatedBy: %v",
-		r.RenewalLikelihood, r.PreviousRenewalLikelihood, r.Comment, r.UpdatedAt, r.UpdatedBy)
+	output := ""
+	output += fmt.Sprintf("RenewalLikelihood: %v, Previous: %v", r.RenewalLikelihood, r.PreviousRenewalLikelihood)
+	if r.Comment != nil {
+		output += fmt.Sprintf(", Comment: %v", *r.Comment)
+	} else {
+		output += ", Comment: nil"
+	}
+	if r.UpdatedAt != nil {
+		output += fmt.Sprintf(", UpdatedAt: %v", *r.UpdatedAt)
+	} else {
+		output += ", UpdatedAt: nil"
+	}
+	if r.UpdatedBy != nil {
+		output += fmt.Sprintf(", UpdatedBy: %v", *r.UpdatedBy)
+	} else {
+		output += ", UpdatedBy: nil"
+	}
+	return output
 }
 
 type RenewalForecast struct {
-	Amount          *float64
+	Amount          *float64 `neo4jDb:"property:renewalForecastAmount;lookupName:FORECAST_AMOUNT;supportCaseSensitive:false"`
 	PotentialAmount *float64
 	Comment         *string
 	UpdatedAt       *time.Time
@@ -77,8 +93,33 @@ type RenewalForecast struct {
 }
 
 func (r RenewalForecast) String() string {
-	return fmt.Sprintf("Amount: %v, Potential: %v, Comment: %v, UpdatedAt: %v, UpdatedById: %v",
-		r.Amount, r.PotentialAmount, r.Comment, r.UpdatedAt, r.UpdatedById)
+	output := ""
+	if r.Amount != nil {
+		output += fmt.Sprintf("Amount: %v", *r.Amount)
+	} else {
+		output += "Amount: nil"
+	}
+	if r.PotentialAmount != nil {
+		output += fmt.Sprintf(", Potential: %v", *r.PotentialAmount)
+	} else {
+		output += ", Potential: nil"
+	}
+	if r.Comment != nil {
+		output += fmt.Sprintf(", Comment: %v", *r.Comment)
+	} else {
+		output += ", Comment: nil"
+	}
+	if r.UpdatedAt != nil {
+		output += fmt.Sprintf(", UpdatedAt: %v", *r.UpdatedAt)
+	} else {
+		output += ", UpdatedAt: nil"
+	}
+	if r.UpdatedById != nil {
+		output += fmt.Sprintf(", UpdatedById: %v", *r.UpdatedById)
+	} else {
+		output += ", UpdatedById: nil"
+	}
+	return output
 }
 
 type BillingDetails struct {
@@ -86,12 +127,29 @@ type BillingDetails struct {
 	Frequency         string
 	RenewalCycle      string
 	RenewalCycleStart *time.Time
-	RenewalCycleNext  *time.Time
+	RenewalCycleNext  *time.Time `neo4jDb:"property:billingDetailsRenewalCycleNext;lookupName:RENEWAL_CYCLE_NEXT;supportCaseSensitive:false"`
 }
 
 func (b BillingDetails) String() string {
-	return fmt.Sprintf("Amount: %v, Frequency: %v, RenewalCycle: %v, RenewalCycleStart: %v, RenewalCycleNext: %v",
-		b.Amount, b.Frequency, b.RenewalCycle, b.RenewalCycleStart, b.RenewalCycleNext)
+	output := ""
+	if b.Amount != nil {
+		output += fmt.Sprintf("Amount: %v", *b.Amount)
+	} else {
+		output += "Amount: nil"
+	}
+	output += fmt.Sprintf(", Frequency: %v", b.Frequency)
+	output += fmt.Sprintf(", RenewalCycle: %v", b.RenewalCycle)
+	if b.RenewalCycleStart != nil {
+		output += fmt.Sprintf(", RenewalCycleStart: %v", *b.RenewalCycleStart)
+	} else {
+		output += ", RenewalCycleStart: nil"
+	}
+	if b.RenewalCycleNext != nil {
+		output += fmt.Sprintf(", RenewalCycleNext: %v", *b.RenewalCycleNext)
+	} else {
+		output += ", RenewalCycleNext: nil"
+	}
+	return output
 }
 
 func (organization OrganizationEntity) ToString() string {

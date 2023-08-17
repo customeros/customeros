@@ -416,6 +416,15 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			if sort.By == "ORGANIZATION" {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "FORECAST_AMOUNT" {
+				cypherSort.NewSortRule("FORECAST_AMOUNT", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.RenewalForecast{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "RENEWAL_LIKELIHOOD" {
+				cypherSort.NewSortRule("RENEWAL_LIKELIHOOD", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.RenewalLikelihood{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "RENEWAL_CYCLE_NEXT" {
+				cypherSort.NewSortRule("RENEWAL_CYCLE_NEXT", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.BillingDetails{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "LAST_TOUCHPOINT" {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))

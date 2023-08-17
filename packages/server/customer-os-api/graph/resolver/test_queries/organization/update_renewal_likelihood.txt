@@ -2,7 +2,7 @@ mutation UpdateOrganization($organizationId: ID!) {
   organization_UpdateRenewalLikelihood(
         input: {
             id: $organizationId
-            probability: HIGH
+            probability: MEDIUM
             comment: "This is an updated comment"
         }) {
       id
