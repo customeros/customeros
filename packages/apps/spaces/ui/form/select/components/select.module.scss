@@ -1,4 +1,4 @@
-@import '../../../../styles/mixins';
+@import "../../../../styles/mixins";
 // TODO: move hardcoded colors and boxshadows to variables in theme.scss
 
 .dropdownWrapper {
@@ -11,7 +11,7 @@
 .dropdownInput {
   width: min-content;
   border: unset;
-  color: #404040;
+  color: var(--chakra-colors-gray-700);
   font-weight: 400;
   background: transparent;
   white-space: nowrap;
@@ -25,12 +25,12 @@
 
   &[contentEditable]:empty:before {
     content: attr(placeholder);
-    color: #d9d9d9;
+    color: var(--chakra-colors-gray-400);
     display: inline-block;
     text-overflow: initial;
   }
   &.dropdownInputEditable[contentEditable]:empty:before {
-    color: darken(#d9d9d9, 20%);
+    color: var(--chakra-colors-gray-400);
     text-overflow: initial;
   }
 }

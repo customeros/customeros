@@ -1,0 +1,5 @@
+mutation updateRenewalForecast($input: RenewalForecastInput!) {
+  organization_UpdateRenewalForecast(input: $input) {
+    id
+  }
+}

@@ -24,8 +24,8 @@
   font-weight: 500;
 }
 .addressContainer {
-   overflow: hidden;
-   text-overflow: ellipsis;
+  overflow: hidden;
+  text-overflow: ellipsis;
   &:not(:last-of-type) {
     border-bottom: 1px solid var(--gray-300);
     padding-bottom: var(--spacing-xxxs);
@@ -77,11 +77,11 @@
   overflow: hidden;
   width: 100%;
   display: block;
-  color: var(--table-label-color);
+  color: var(--chakra-colors-gray-700);
 }
 
 .subLabel {
-  color: var(--table-sublabel-color);
+  color: var(--chakra-colors-gray-500);
   font-size: var(--font-size-sm);
 }
 

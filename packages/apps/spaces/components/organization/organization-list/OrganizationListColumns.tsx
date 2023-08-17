@@ -7,7 +7,9 @@ import { Skeleton } from '@spaces/atoms/skeleton/Skeleton';
 
 import { OrganizationRelationship } from '../organization-details/relationship/OrganizationRelationship';
 import { RelationshipStage } from '../organization-details/stage/RelationshipStage';
-import { RenewalLikelihoodCell } from '../organization-details/renewal/RenewalLikelihood';
+import { RenewalLikelihoodCell } from '../organization-details/renewal/RenewalLikelihoodCell';
+import { RenewalForecastCell } from '../organization-details/renewal/RenewalForecastCell';
+import { TimeToRenewalCell } from '../organization-details/renewal/TimeToRenewalCell';
 
 import styles from './organization-list.module.scss';
 
@@ -85,6 +87,45 @@ export const columns = [
     },
     header: (props) => (
       <THead<Organization> title='Renewal Likelihood' {...props} />
+    ),
+    skeleton: () => <Skeleton width='100%' height='21px' />,
+  }),
+  columnHelper.accessor('accountDetails', {
+    id: 'TIME_TO_RENEWAL',
+    cell: (props) => {
+      const values = props.getValue()?.billingDetails;
+      const renewalDate = values?.renewalCycleNext;
+      const renewalFrequency = values?.frequency;
+
+      return (
+        <TimeToRenewalCell
+          renewalDate={renewalDate}
+          renewalFrequency={renewalFrequency}
+        />
+      );
+    },
+    header: (props) => (
+      <THead<Organization> title='Time to renewal' {...props} />
+    ),
+    skeleton: () => <Skeleton width='100%' height='21px' />,
+  }),
+  columnHelper.accessor('accountDetails', {
+    id: 'RENEWAL_FORECAST',
+    cell: (props) => {
+      const value = props.getValue()?.renewalForecast;
+      const amount = value?.amount;
+      const potentialAmount = value?.potentialAmount;
+
+      return (
+        <RenewalForecastCell
+          amount={amount}
+          potentialAmount={potentialAmount}
+          isUpdatedByUser={!!value?.updatedById}
+        />
+      );
+    },
+    header: (props) => (
+      <THead<Organization> title='Renewal Forecast' {...props} />
     ),
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),

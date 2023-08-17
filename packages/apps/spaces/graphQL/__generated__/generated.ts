@@ -3296,7 +3296,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, potentialAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleStart?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'Conversation' } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, sentBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, potentialAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedById?: string | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedById?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleNext?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'Conversation' } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, sentBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -3650,6 +3650,13 @@ export type UpdateOrganizationWebsiteMutationVariables = Exact<{
 
 
 export type UpdateOrganizationWebsiteMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, website?: string | null } };
+
+export type UpdateRenewalForecastMutationVariables = Exact<{
+  input: RenewalForecastInput;
+}>;
+
+
+export type UpdateRenewalForecastMutation = { __typename?: 'Mutation', organization_UpdateRenewalForecast: { __typename?: 'Organization', id: string } };
 
 export type UpdateRenewalLikelihoodMutationVariables = Exact<{
   input: RenewalLikelihoodInput;
@@ -5898,6 +5905,7 @@ export const DashboardView_OrganizationsDocument = gql`
           potentialAmount
           comment
           updatedAt
+          updatedById
           updatedBy {
             id
             firstName
@@ -5911,6 +5919,7 @@ export const DashboardView_OrganizationsDocument = gql`
           probability
           previousProbability
           comment
+          updatedById
           updatedBy {
             id
             firstName
@@ -5925,7 +5934,7 @@ export const DashboardView_OrganizationsDocument = gql`
           renewalCycle
           frequency
           amount
-          renewalCycleStart
+          renewalCycleNext
         }
       }
       locations {
@@ -7831,6 +7840,39 @@ export function useUpdateOrganizationWebsiteMutation(baseOptions?: Apollo.Mutati
 export type UpdateOrganizationWebsiteMutationHookResult = ReturnType<typeof useUpdateOrganizationWebsiteMutation>;
 export type UpdateOrganizationWebsiteMutationResult = Apollo.MutationResult<UpdateOrganizationWebsiteMutation>;
 export type UpdateOrganizationWebsiteMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>;
+export const UpdateRenewalForecastDocument = gql`
+    mutation updateRenewalForecast($input: RenewalForecastInput!) {
+  organization_UpdateRenewalForecast(input: $input) {
+    id
+  }
+}
+    `;
+export type UpdateRenewalForecastMutationFn = Apollo.MutationFunction<UpdateRenewalForecastMutation, UpdateRenewalForecastMutationVariables>;
+
+/**
+ * __useUpdateRenewalForecastMutation__
+ *
+ * To run a mutation, you first call `useUpdateRenewalForecastMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateRenewalForecastMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateRenewalForecastMutation, { data, loading, error }] = useUpdateRenewalForecastMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateRenewalForecastMutation(baseOptions?: Apollo.MutationHookOptions<UpdateRenewalForecastMutation, UpdateRenewalForecastMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateRenewalForecastMutation, UpdateRenewalForecastMutationVariables>(UpdateRenewalForecastDocument, options);
+      }
+export type UpdateRenewalForecastMutationHookResult = ReturnType<typeof useUpdateRenewalForecastMutation>;
+export type UpdateRenewalForecastMutationResult = Apollo.MutationResult<UpdateRenewalForecastMutation>;
+export type UpdateRenewalForecastMutationOptions = Apollo.BaseMutationOptions<UpdateRenewalForecastMutation, UpdateRenewalForecastMutationVariables>;
 export const UpdateRenewalLikelihoodDocument = gql`
     mutation updateRenewalLikelihood($input: RenewalLikelihoodInput!) {
   organization_UpdateRenewalLikelihood(input: $input) {
