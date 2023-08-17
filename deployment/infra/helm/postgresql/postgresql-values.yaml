@@ -11,6 +11,8 @@ primary:
   persistence:
     enabled: true
     existingClaim: "customer-db-postgresql-claim"
+  service:
+    type: LoadBalancer
 
 volumePermissions:
   enabled: true
