@@ -109,8 +109,9 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       });
     }
     if (newMode === REPLY_ALL_MODE) {
+      const newTo = getEmailParticipantsNameAndEmail(to, 'value');
       newDefaultValues = new ComposeEmailDto({
-        to: [...from, ...to],
+        to: [...from, ...newTo],
         cc,
         bcc,
         subject: `Re: ${subject}`,
