@@ -216,6 +216,15 @@ export const customIcons = {
       strokeLinejoin='round'
     />
   ),
+  FileCross: (
+    <path
+      d='M9.334 7.333h-4M6.667 10H5.334m5.333-5.333H5.334m8 3.333V4.533c0-1.12 0-1.68-.218-2.107a2 2 0 0 0-.874-.875c-.428-.218-.988-.218-2.108-.218H5.867c-1.12 0-1.68 0-2.108.218a2 2 0 0 0-.874.875c-.218.427-.218.987-.218 2.107v6.934c0 1.12 0 1.68.218 2.108a2 2 0 0 0 .874.874c.428.218.988.218 2.108.218H8m2.667-4L14 14m0-3.333L10.667 14'
+      stroke='currentColor'
+      strokeWidth={1.33}
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
+  ),
   FilterLines: (
     <path
       d='M6 12H18M3 6H21M9 18H15'
