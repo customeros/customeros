@@ -707,7 +707,8 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.billingDetailsAmount=$billingDetailsAmount,
 							org.billingDetailsFrequency=$billingDetailsFrequency,
 							org.billingDetailsRenewalCycle=$billingDetailsRenewalCycle,
-							org.billingDetailsRenewalCycleStart=$billingDetailsRenewalCycleStart
+							org.billingDetailsRenewalCycleStart=$billingDetailsRenewalCycleStart,
+							org.billingDetailsRenewalCycleNext=$billingDetailsRenewalCycleNext
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                              organizationId.String(),
@@ -739,6 +740,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"billingDetailsFrequency":         organization.BillingDetails.Frequency,
 		"billingDetailsRenewalCycle":      organization.BillingDetails.RenewalCycle,
 		"billingDetailsRenewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(utils.ToDateNillable(organization.BillingDetails.RenewalCycleStart)),
+		"billingDetailsRenewalCycleNext":  utils.TimePtrFirstNonNilNillableAsAny(utils.ToDateNillable(organization.BillingDetails.RenewalCycleNext)),
 
 		"now": utils.Now(),
 	})

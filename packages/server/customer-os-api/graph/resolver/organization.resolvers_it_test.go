@@ -376,7 +376,14 @@ func TestMutationResolver_OrganizationUpdateRenewalLikelihood(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org name",
+		BillingDetails: entity.BillingDetails{
+			Amount:       utils.Float64Ptr(100),
+			Frequency:    "MONTHLY",
+			RenewalCycle: "QUARTERLY",
+		},
+	})
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 
@@ -393,13 +400,17 @@ func TestMutationResolver_OrganizationUpdateRenewalLikelihood(t *testing.T) {
 	require.Equal(t, organizationId, updatedOrganization.ID)
 	require.NotNil(t, updatedOrganization.UpdatedAt)
 	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
-	require.Equal(t, model.RenewalLikelihoodProbabilityHigh, *updatedOrganization.AccountDetails.RenewalLikelihood.Probability)
+	require.Equal(t, model.RenewalLikelihoodProbabilityMedium, *updatedOrganization.AccountDetails.RenewalLikelihood.Probability)
 	require.Equal(t, "This is an updated comment", *updatedOrganization.AccountDetails.RenewalLikelihood.Comment)
 	require.Nil(t, updatedOrganization.AccountDetails.RenewalLikelihood.PreviousProbability)
 	require.NotNil(t, *updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedAt)
 	require.Equal(t, "test-user-id", *updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedByID)
 	// test logged-in user is mocked and not present in db
 	require.Nil(t, updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedBy)
+
+	// test forecast updated as expected
+	require.Equal(t, float64(150), *updatedOrganization.AccountDetails.RenewalForecast.Amount)
+	require.Equal(t, float64(300), *updatedOrganization.AccountDetails.RenewalForecast.PotentialAmount)
 
 	// Check still single organization node exists after update, no new node created
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{

@@ -267,12 +267,12 @@ func (s *organizationService) UpdateRenewalLikelihood(ctx context.Context, orgId
 	}
 
 	if organization.RenewalLikelihood.RenewalLikelihood != data.RenewalLikelihood {
-		amount, err := s.calculateForecastAmount(organization.BillingDetails, organization.RenewalLikelihood.RenewalLikelihood)
+		amount, err := s.calculateForecastAmount(ctx, organization.BillingDetails, data.RenewalLikelihood)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
-		potentialAmount, err := s.calculateForecastAmount(organization.BillingDetails, string(entity.RenewalLikelihoodProbabilityHigh))
+		potentialAmount, err := s.calculateForecastAmount(ctx, organization.BillingDetails, string(entity.RenewalLikelihoodProbabilityHigh))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -345,7 +345,7 @@ func (s *organizationService) UpdateBillingDetails(ctx context.Context, orgId st
 		return err
 	}
 	data.RenewalCycleStart = utils.ToDateNillable(data.RenewalCycleStart)
-	data.RenewalCycleNext = s.calculateRenewalCycleNext(*data)
+	data.RenewalCycleNext = s.calculateRenewalCycleNext(ctx, *data)
 
 	err = s.repositories.OrganizationRepository.UpdateBillingDetails(ctx, orgId, *data)
 	if err != nil {
@@ -356,12 +356,12 @@ func (s *organizationService) UpdateBillingDetails(ctx context.Context, orgId st
 	if utils.IfNotNilFloat64(organization.BillingDetails.Amount) != utils.IfNotNilFloat64(data.Amount) ||
 		organization.BillingDetails.Frequency != data.Frequency ||
 		organization.BillingDetails.RenewalCycle != data.RenewalCycle {
-		amount, err := s.calculateForecastAmount(*data, organization.RenewalLikelihood.RenewalLikelihood)
+		amount, err := s.calculateForecastAmount(ctx, *data, organization.RenewalLikelihood.RenewalLikelihood)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
-		potentialAmount, err := s.calculateForecastAmount(*data, string(entity.RenewalLikelihoodProbabilityHigh))
+		potentialAmount, err := s.calculateForecastAmount(ctx, *data, string(entity.RenewalLikelihoodProbabilityHigh))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -1135,7 +1135,11 @@ func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(
 	organizationEntity.SuggestedMerge.Confidence = utils.GetFloatPropOrNil(props, "confidence")
 }
 
-func (s *organizationService) calculateForecastAmount(billingDtls entity.BillingDetails, likelihood string) (*float64, error) {
+func (s *organizationService) calculateForecastAmount(ctx context.Context, billingDtls entity.BillingDetails, likelihood string) (*float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.calculateForecastAmount")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	if billingDtls.Amount == nil || billingDtls.Frequency == "" || billingDtls.RenewalCycle == "" || likelihood == "" {
 		return nil, nil
 	}
@@ -1161,6 +1165,7 @@ func (s *organizationService) calculateForecastAmount(billingDtls entity.Billing
 	// trim decimal places
 	forecastAmount = math.Trunc(forecastAmount*100) / 100
 
+	span.LogFields(log.Float64("return - forecastAmount", forecastAmount))
 	return &forecastAmount, nil
 
 }
@@ -1241,7 +1246,11 @@ func (s *organizationService) getBillingPeriods(billingFreq string, renewalFreq 
 	return 1
 }
 
-func (s *organizationService) calculateRenewalCycleNext(billingDtls entity.BillingDetails) *time.Time {
+func (s *organizationService) calculateRenewalCycleNext(ctx context.Context, billingDtls entity.BillingDetails) *time.Time {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.calculateRenewalCycleNext")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	if billingDtls.RenewalCycleStart == nil || billingDtls.RenewalCycle == "" {
 		return nil
 	}
@@ -1270,5 +1279,6 @@ func (s *organizationService) calculateRenewalCycleNext(billingDtls entity.Billi
 		}
 	}
 
+	span.LogFields(log.Object("return - renewalCycleNext", renewalCycleNext))
 	return &renewalCycleNext
 }

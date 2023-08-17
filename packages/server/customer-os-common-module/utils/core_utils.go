@@ -83,6 +83,10 @@ func Int64Ptr(i int64) *int64 {
 	return &i
 }
 
+func Float64Ptr(f float64) *float64 {
+	return &f
+}
+
 func Int64PtrToIntPtr(v *int64) *int {
 	if v == nil {
 		return nil

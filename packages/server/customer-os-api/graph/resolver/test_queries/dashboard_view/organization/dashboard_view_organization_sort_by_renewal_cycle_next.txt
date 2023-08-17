@@ -1,0 +1,16 @@
+query dashboardView_Organizations($page: Int!, $limit: Int!) {
+  dashboardView_Organizations(
+  pagination: { page: $page, limit: $limit },
+    sort: {by: "RENEWAL_CYCLE_NEXT"}) {
+    content {
+      id
+      name
+      accountDetails {
+        billingDetails {
+            renewalCycleNext
+        }
+      }
+    }
+    totalElements
+  }
+}

@@ -7,8 +7,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestQueryResolver_Search_Contact_By_Name(t *testing.T) {
@@ -525,4 +527,161 @@ func TestQueryResolver_DashboardViewFilterByRelationshipAndStage(t *testing.T) {
 	require.Equal(t, int64(1), organizationsPageStruct.DashboardView_Organizations.TotalElements)
 	require.Equal(t, 1, len(organizationsPageStruct.DashboardView_Organizations.Content))
 	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+}
+
+func TestQueryResolver_DashboardView_SortByForecastAmount(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org1",
+		RenewalForecast: entity.RenewalForecast{
+			Amount: utils.ToPtr[float64](200),
+		},
+	})
+	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org2",
+	})
+	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org3",
+		RenewalForecast: entity.RenewalForecast{
+			Amount: utils.ToPtr[float64](100.5),
+		},
+	})
+	organizationId4 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org4",
+		RenewalForecast: entity.RenewalForecast{
+			Amount: utils.ToPtr[float64](300),
+		},
+	})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 4})
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort_by_forecast_amount",
+		map[string]interface{}{
+			"page":  1,
+			"limit": 10})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+
+	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Equal(t, float64(100.5), *organizationsPageStruct.DashboardView_Organizations.Content[0].AccountDetails.RenewalForecast.Amount)
+
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
+	require.Equal(t, float64(200), *organizationsPageStruct.DashboardView_Organizations.Content[1].AccountDetails.RenewalForecast.Amount)
+
+	require.Equal(t, organizationId4, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
+	require.Equal(t, float64(300), *organizationsPageStruct.DashboardView_Organizations.Content[2].AccountDetails.RenewalForecast.Amount)
+
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
+	require.Nil(t, organizationsPageStruct.DashboardView_Organizations.Content[3].AccountDetails.RenewalForecast.Amount)
+}
+
+func TestQueryResolver_DashboardView_SortByRenewalLikelihood(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org1",
+		RenewalLikelihood: entity.RenewalLikelihood{
+			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityMedium),
+		},
+	})
+	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org2",
+	})
+	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org3",
+		RenewalLikelihood: entity.RenewalLikelihood{
+			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityHigh),
+		},
+	})
+	organizationId4 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org4",
+		RenewalLikelihood: entity.RenewalLikelihood{
+			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityLow),
+		},
+	})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 4})
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort_by_renewal_likelihood",
+		map[string]interface{}{
+			"page":  1,
+			"limit": 10})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Nil(t, organizationsPageStruct.DashboardView_Organizations.Content[0].AccountDetails.RenewalLikelihood.Probability)
+
+	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
+	require.Equal(t, model.RenewalLikelihoodProbabilityHigh, *organizationsPageStruct.DashboardView_Organizations.Content[1].AccountDetails.RenewalLikelihood.Probability)
+
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
+	require.Equal(t, model.RenewalLikelihoodProbabilityMedium, *organizationsPageStruct.DashboardView_Organizations.Content[2].AccountDetails.RenewalLikelihood.Probability)
+
+	require.Equal(t, organizationId4, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
+	require.Equal(t, model.RenewalLikelihoodProbabilityLow, *organizationsPageStruct.DashboardView_Organizations.Content[3].AccountDetails.RenewalLikelihood.Probability)
+}
+
+func TestQueryResolver_DashboardView_SortByRenewalCycleNext(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	daysFromNow10 := time.Now().AddDate(0, 0, 10)
+	daysFromNow20 := time.Now().AddDate(0, 0, 20)
+
+	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org1",
+		BillingDetails: entity.BillingDetails{
+			RenewalCycleNext: utils.TimePtr(daysFromNow10),
+		},
+	})
+	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org2",
+	})
+	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "org3",
+		BillingDetails: entity.BillingDetails{
+			RenewalCycleNext: utils.TimePtr(daysFromNow20),
+		},
+	})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3})
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort_by_renewal_cycle_next",
+		map[string]interface{}{
+			"page":  1,
+			"limit": 10})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(3), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
 }
