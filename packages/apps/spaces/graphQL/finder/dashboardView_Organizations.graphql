@@ -32,6 +32,7 @@ query dashboardView_Organizations(
           potentialAmount
           comment
           updatedAt
+          updatedById
           updatedBy {
             id
             firstName
@@ -45,6 +46,7 @@ query dashboardView_Organizations(
           probability
           previousProbability
           comment
+          updatedById
           updatedBy {
             id
             firstName
@@ -59,7 +61,7 @@ query dashboardView_Organizations(
           renewalCycle
           frequency
           amount
-          renewalCycleStart
+          renewalCycleNext
         }
       }
       locations {

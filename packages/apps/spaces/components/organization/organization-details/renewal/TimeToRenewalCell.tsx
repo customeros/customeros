@@ -1,12 +1,35 @@
-import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { RenewalCycle } from '@spaces/graphql';
 
-import formatDistanceToNow from 'date-fns/formatDistanceToNow';
+import {
+  getTimeToNextRenewal,
+  RenewalFrequency,
+} from '@organization/components/Tabs/shared/util';
 
-export const TimeToRenewalCell = () => {
+interface TimeToRenewalCellProps {
+  renewalDate: string | null;
+  renewalFrequency?: RenewalCycle | null;
+}
+
+export const TimeToRenewalCell = ({
+  renewalDate,
+  renewalFrequency,
+}: TimeToRenewalCellProps) => {
+  if (!renewalDate || !renewalFrequency)
+    return (
+      <Text fontSize='sm' color='gray.500'>
+        Unknown
+      </Text>
+    );
+
+  const [numberValue, unit] = getTimeToNextRenewal(
+    new Date(renewalDate ?? ''),
+    renewalFrequency as RenewalFrequency,
+  );
+
   return (
     <Text fontSize='sm' color='gray.700'>
-      7 weeks
+      {numberValue} {unit}
     </Text>
   );
 };

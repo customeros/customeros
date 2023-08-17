@@ -93,8 +93,16 @@ export const columns = [
   columnHelper.accessor('accountDetails', {
     id: 'TIME_TO_RENEWAL',
     cell: (props) => {
-      const value = props.getValue()?.billingDetails?.renewalCycleStart;
-      return <TimeToRenewalCell />;
+      const values = props.getValue()?.billingDetails;
+      const renewalDate = values?.renewalCycleNext;
+      const renewalFrequency = values?.frequency;
+
+      return (
+        <TimeToRenewalCell
+          renewalDate={renewalDate}
+          renewalFrequency={renewalFrequency}
+        />
+      );
     },
     header: (props) => (
       <THead<Organization> title='Time to renewal' {...props} />
@@ -105,14 +113,14 @@ export const columns = [
     id: 'RENEWAL_FORECAST',
     cell: (props) => {
       const value = props.getValue()?.renewalForecast;
-      const currentForecast = value?.amount;
-      const previousForecast = value?.previousAmount;
+      const amount = value?.amount;
+      const potentialAmount = value?.potentialAmount;
 
       return (
         <RenewalForecastCell
-          currentForecast={currentForecast}
-          previousForecast={previousForecast}
-          organizationId={props.row.original.id}
+          amount={amount}
+          potentialAmount={potentialAmount}
+          isUpdatedByUser={!!value?.updatedById}
         />
       );
     },

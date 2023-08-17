@@ -31,7 +31,7 @@ export const THead = <T extends object>({
       ml={columnHasIcon ? '6' : 'unset'}
     >
       <Flex>
-        <Text fontSize='sm' fontWeight='medium' color='gray.600'>
+        <Text fontSize='sm' fontWeight='medium' color='gray.700'>
           {title}
         </Text>
         {canSort && (
@@ -54,7 +54,7 @@ export const THead = <T extends object>({
         )}
       </Flex>
       {subTitle && (
-        <Text fontSize='xs' color='gray.600'>
+        <Text fontSize='xs' color='gray.500'>
           {subTitle}
         </Text>
       )}

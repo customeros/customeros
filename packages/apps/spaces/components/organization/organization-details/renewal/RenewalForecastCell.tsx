@@ -1,9 +1,5 @@
-import { useState } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { CurrencyInput } from '@ui/form/CurrencyInput/CurrencyInput';
-
-import { useUpdateRenewalForecastMutation } from '@spaces/graphql';
 
 const formatCurrency = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -12,51 +8,23 @@ const formatCurrency = new Intl.NumberFormat('en-US', {
 }).format;
 
 interface RenewalForecastCellProps {
-  organizationId: string;
-  currentForecast?: number | null;
-  previousForecast?: number | null;
+  amount?: number | null;
+  isUpdatedByUser?: boolean;
+  potentialAmount?: number | null;
 }
 
 export const RenewalForecastCell = ({
-  organizationId,
-  currentForecast = null,
-  previousForecast = null,
+  amount = null,
+  potentialAmount = null,
 }: RenewalForecastCellProps) => {
-  const [_value, setValue] = useState<string>(() =>
-    String(currentForecast ?? ''),
-  );
-  const [updateRenewalForecast] = useUpdateRenewalForecastMutation();
-
-  const handleChange = (value: string) => {
-    setValue(value);
-  };
-
-  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    updateRenewalForecast({
-      variables: {
-        input: {
-          id: organizationId,
-          amount: Number(_value),
-        },
-      },
-    });
-  };
-
   return (
     <Flex flexDir='column' justify='center'>
-      {/* <Text fontSize='sm' color='gray.700'>
-        {currentForecast ? formatCurrency(currentForecast) : '-'}
-      </Text> */}
-      <CurrencyInput
-        value={_value}
-        size='sm'
-        onBlur={handleBlur}
-        onChange={handleChange}
-        isLabelVisible={false}
-      />
-      {previousForecast && (
+      <Text fontSize='sm' color={amount ? 'gray.700' : 'gray.500'}>
+        {amount ? formatCurrency(amount) : 'Unknown'}
+      </Text>
+      {potentialAmount && potentialAmount !== amount && (
         <Text fontSize='sm' color='gray.500' textDecoration='line-through'>
-          {formatCurrency(previousForecast)}
+          {formatCurrency(potentialAmount)}
         </Text>
       )}
     </Flex>

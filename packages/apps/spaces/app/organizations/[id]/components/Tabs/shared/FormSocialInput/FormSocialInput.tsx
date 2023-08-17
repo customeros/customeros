@@ -40,6 +40,7 @@ export const FormSocialInput = ({
 }: FormSocialInputProps) => {
   const { getInputProps } = useField(name, formId);
   const { value, onChange, onBlur } = getInputProps();
+  console.log('value', value);
   const values = useMemo(
     () => (Array.isArray(value) ? ([...value] as Value[]) : value),
     [value],
@@ -175,7 +176,7 @@ export const FormSocialInput = ({
 
   return (
     <>
-      {(values as Value[])?.map(({ id, url }, index) => (
+      {((values as Value[]) || [])?.map(({ id, url }, index) => (
         <SocialInput
           id={id}
           key={index}
