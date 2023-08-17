@@ -1,5 +1,5 @@
 'use client';
-import React, { FC, useMemo, useRef } from 'react';
+import React, { FC, useRef } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Virtuoso } from 'react-virtuoso';
 import { EmailStub, TimelineItem } from './events';
@@ -7,7 +7,6 @@ import { useGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
 import { InteractionEvent } from '@graphql/types';
-import { EmailPreviewModal } from './events/email/EmailPreviewModal';
 import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
@@ -16,6 +15,7 @@ import { TimelineItemSkeleton } from '@organization/components/Timeline/events/T
 import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
 import { useQueryClient } from '@tanstack/react-query';
 import { SlackStub } from '@organization/components/Timeline/events/slack/SlackStub';
+import { TimelineEventPreviewModal } from '@organization/components/Timeline/preview/TimelineEventPreviewModal';
 
 const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   return (
@@ -72,7 +72,6 @@ export const OrganizationTimeline: FC = () => {
         !!d?.id && (d.channel === 'EMAIL' || d.channel === 'SLACK'),
     )
     ?.reverse();
-  console.log('🏷️ ----- timelineEmailEvents: ', timelineEmailEvents);
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
@@ -129,8 +128,7 @@ export const OrganizationTimeline: FC = () => {
           ),
         }}
       />
-
-      <EmailPreviewModal invalidateQuery={invalidateQuery} />
+      <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
     </TimelineEventPreviewContextContextProvider>
   );
 };

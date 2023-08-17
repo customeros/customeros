@@ -1,6 +1,7 @@
 import {
   ContactParticipant,
   EmailParticipant,
+  JobRoleParticipant,
   PhoneNumberParticipant,
   UserParticipant,
 } from '@graphql/types';
@@ -50,7 +51,7 @@ export const getParticipantNames = (participants: Participant[]): string[] => {
   });
 };
 
-const getName = (
+export const getName = (
   data: Contact | User,
   email?: string | null | undefined,
   rawEmail?: string | undefined | null,
@@ -84,7 +85,7 @@ export const getEmailParticipantName = (
 };
 
 export const getParticipantName = (
-  participant: ContactParticipant | UserParticipant,
+  participant: ContactParticipant | UserParticipant | JobRoleParticipant,
 ): string => {
   let participantT;
   if ((participant as ContactParticipant)?.contactParticipant) {
@@ -92,6 +93,10 @@ export const getParticipantName = (
   }
   if ((participant as UserParticipant)?.userParticipant) {
     participantT = (participant as UserParticipant).userParticipant;
+  }
+  if ((participant as JobRoleParticipant)?.jobRoleParticipant?.contact) {
+    participantT = (participant as JobRoleParticipant).jobRoleParticipant
+      ?.contact;
   }
   if (!participantT) return '';
 

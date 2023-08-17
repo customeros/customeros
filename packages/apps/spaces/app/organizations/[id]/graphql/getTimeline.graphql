@@ -69,6 +69,19 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                             profilePhotoUrl
                         }
                     }
+                    ... on JobRoleParticipant {
+                        __typename
+                        jobRoleParticipant {
+                            id
+                            contact {
+                                id
+                                name
+                                firstName
+                                lastName
+                                profilePhotoUrl
+                            }
+                        }
+                    }
                     ... on UserParticipant {
                         __typename
                         userParticipant {
@@ -102,6 +115,19 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                                 name
                             }
                             id
+                        }
+                    }
+                    ... on JobRoleParticipant {
+                        __typename
+                        jobRoleParticipant {
+                            id
+                            contact {
+                                id
+                                name
+                                firstName
+                                lastName
+                                profilePhotoUrl
+                            }
                         }
                     }
                     ... on ContactParticipant {
@@ -193,6 +219,19 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                                         profilePhotoUrl
                                     }
                                 }
+                                ... on JobRoleParticipant {
+                                    __typename
+                                    jobRoleParticipant {
+                                        id
+                                        contact {
+                                            id
+                                            name
+                                            firstName
+                                            lastName
+                                            profilePhotoUrl
+                                        }
+                                    }
+                                }
                                 ... on UserParticipant {
                                     __typename
                                     userParticipant {
@@ -235,6 +274,21 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                                         id
                                         firstName
                                         lastName
+                                        profilePhotoUrl
+
+                                    }
+                                }
+                                ... on JobRoleParticipant {
+                                    __typename
+                                    jobRoleParticipant {
+                                        id
+                                        contact {
+                                            id
+                                            name
+                                            firstName
+                                            lastName
+                                            profilePhotoUrl
+                                        }
                                     }
                                 }
                                 ... on UserParticipant {
@@ -244,6 +298,8 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                                         id
                                         firstName
                                         lastName
+                                        profilePhotoUrl
+
                                     }
                                 }
                             }

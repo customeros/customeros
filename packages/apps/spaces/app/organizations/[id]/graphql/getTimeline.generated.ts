@@ -126,6 +126,21 @@ export type GetTimelineQuery = {
                       }>;
                     };
                   }
+                | {
+                    __typename: 'JobRoleParticipant';
+                    jobRoleParticipant: {
+                      __typename?: 'JobRole';
+                      id: string;
+                      contact?: {
+                        __typename?: 'Contact';
+                        id: string;
+                        name?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                        profilePhotoUrl?: string | null;
+                      } | null;
+                    };
+                  }
                 | { __typename?: 'OrganizationParticipant' }
                 | { __typename?: 'PhoneNumberParticipant' }
                 | {
@@ -148,6 +163,7 @@ export type GetTimelineQuery = {
                       id: string;
                       firstName?: string | null;
                       lastName?: string | null;
+                      profilePhotoUrl?: string | null;
                     };
                   }
                 | {
@@ -177,6 +193,21 @@ export type GetTimelineQuery = {
                       }>;
                     };
                   }
+                | {
+                    __typename: 'JobRoleParticipant';
+                    jobRoleParticipant: {
+                      __typename?: 'JobRole';
+                      id: string;
+                      contact?: {
+                        __typename?: 'Contact';
+                        id: string;
+                        name?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                        profilePhotoUrl?: string | null;
+                      } | null;
+                    };
+                  }
                 | { __typename: 'OrganizationParticipant' }
                 | { __typename: 'PhoneNumberParticipant' }
                 | {
@@ -187,6 +218,7 @@ export type GetTimelineQuery = {
                       id: string;
                       firstName: string;
                       lastName: string;
+                      profilePhotoUrl?: string | null;
                     };
                   }
               >;
@@ -256,6 +288,21 @@ export type GetTimelineQuery = {
                   }>;
                 };
               }
+            | {
+                __typename: 'JobRoleParticipant';
+                jobRoleParticipant: {
+                  __typename?: 'JobRole';
+                  id: string;
+                  contact?: {
+                    __typename?: 'Contact';
+                    id: string;
+                    name?: string | null;
+                    firstName?: string | null;
+                    lastName?: string | null;
+                    profilePhotoUrl?: string | null;
+                  } | null;
+                };
+              }
             | { __typename?: 'OrganizationParticipant' }
             | { __typename?: 'PhoneNumberParticipant' }
             | {
@@ -305,6 +352,21 @@ export type GetTimelineQuery = {
                     id: string;
                     name: string;
                   }>;
+                };
+              }
+            | {
+                __typename: 'JobRoleParticipant';
+                jobRoleParticipant: {
+                  __typename?: 'JobRole';
+                  id: string;
+                  contact?: {
+                    __typename?: 'Contact';
+                    id: string;
+                    name?: string | null;
+                    firstName?: string | null;
+                    lastName?: string | null;
+                    profilePhotoUrl?: string | null;
+                  } | null;
                 };
               }
             | { __typename: 'OrganizationParticipant' }
@@ -404,6 +466,19 @@ export const GetTimelineDocument = `
               profilePhotoUrl
             }
           }
+          ... on JobRoleParticipant {
+            __typename
+            jobRoleParticipant {
+              id
+              contact {
+                id
+                name
+                firstName
+                lastName
+                profilePhotoUrl
+              }
+            }
+          }
           ... on UserParticipant {
             __typename
             userParticipant {
@@ -437,6 +512,19 @@ export const GetTimelineDocument = `
                 name
               }
               id
+            }
+          }
+          ... on JobRoleParticipant {
+            __typename
+            jobRoleParticipant {
+              id
+              contact {
+                id
+                name
+                firstName
+                lastName
+                profilePhotoUrl
+              }
             }
           }
           ... on ContactParticipant {
@@ -526,6 +614,19 @@ export const GetTimelineDocument = `
                     profilePhotoUrl
                   }
                 }
+                ... on JobRoleParticipant {
+                  __typename
+                  jobRoleParticipant {
+                    id
+                    contact {
+                      id
+                      name
+                      firstName
+                      lastName
+                      profilePhotoUrl
+                    }
+                  }
+                }
                 ... on UserParticipant {
                   __typename
                   userParticipant {
@@ -568,6 +669,20 @@ export const GetTimelineDocument = `
                     id
                     firstName
                     lastName
+                    profilePhotoUrl
+                  }
+                }
+                ... on JobRoleParticipant {
+                  __typename
+                  jobRoleParticipant {
+                    id
+                    contact {
+                      id
+                      name
+                      firstName
+                      lastName
+                      profilePhotoUrl
+                    }
                   }
                 }
                 ... on UserParticipant {
@@ -577,6 +692,7 @@ export const GetTimelineDocument = `
                     id
                     firstName
                     lastName
+                    profilePhotoUrl
                   }
                 }
               }
