@@ -193,8 +193,6 @@ export const AboutPanel = () => {
     },
   });
 
-  console.log(defaultValues);
-
   return (
     <Flex
       pt='4'

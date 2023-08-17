@@ -18,7 +18,7 @@ import { useRemoveSocialMutation } from '@organization/graphql/removeSocial.gene
 import { SocialIcon } from './SocialIcons';
 import { SocialInput } from './SocialInput';
 
-type Value = Pick<Social, 'id' | 'url'>;
+type SocialInputValue = Pick<Social, 'id' | 'url'>;
 
 interface FormSocialInputProps extends InputGroupProps {
   name: string;
@@ -26,7 +26,7 @@ interface FormSocialInputProps extends InputGroupProps {
   isReadOnly?: boolean;
   organizationId: string;
   leftElement?: React.ReactNode;
-  defaultValues: Array<Value>;
+  defaultValues: Array<SocialInputValue>;
 }
 
 export const FormSocialInput = ({
@@ -40,9 +40,8 @@ export const FormSocialInput = ({
 }: FormSocialInputProps) => {
   const { getInputProps } = useField(name, formId);
   const { value, onChange, onBlur } = getInputProps();
-  console.log('value', value);
   const values = useMemo(
-    () => (Array.isArray(value) ? ([...value] as Value[]) : value),
+    () => (Array.isArray(value) ? ([...value] as SocialInputValue[]) : value),
     [value],
   );
   const _leftElement = useMemo(() => leftElement, []);
@@ -176,7 +175,7 @@ export const FormSocialInput = ({
 
   return (
     <>
-      {((values as Value[]) || [])?.map(({ id, url }, index) => (
+      {((values as SocialInputValue[]) || [])?.map(({ id, url }, index) => (
         <SocialInput
           id={id}
           key={index}

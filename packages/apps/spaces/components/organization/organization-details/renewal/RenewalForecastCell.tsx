@@ -1,11 +1,6 @@
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-
-const formatCurrency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 0,
-}).format;
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 interface RenewalForecastCellProps {
   amount?: number | null;
