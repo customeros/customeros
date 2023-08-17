@@ -14,6 +14,7 @@ import { RenewalForecastModal } from './RenewalForecastModal';
 import { RenewalForecast as RenewalForecastT } from '@graphql/types';
 import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 export type RenewalForecastType = RenewalForecastT & { amount?: string | null };
 
@@ -71,6 +72,7 @@ export const RenewalForecast: FC<{
               <Flex align='center'>
                 <Heading
                   size='sm'
+                  whiteSpace='nowrap'
                   fontWeight='semibold'
                   color='gray.700'
                   mr={2}
@@ -94,13 +96,7 @@ export const RenewalForecast: FC<{
             </Flex>
 
             <Heading fontSize='2xl' color={!amount ? 'gray.400' : 'gray.700'}>
-              {!amount
-                ? 'Unknown'
-                : Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    minimumFractionDigits: 0,
-                  }).format(parseFloat(`${amount}`))}
+              {!amount ? 'Unknown' : formatCurrency(amount)}
             </Heading>
           </Flex>
         </CardBody>
