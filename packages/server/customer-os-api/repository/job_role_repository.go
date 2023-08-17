@@ -191,7 +191,6 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 		"				r.primary=$primary, " +
 		"				r.description=$description, " +
 		"				r.company=$company, " +
-		"				r.responsibilityLevel=$responsibilityLevel, " +
 		"				r.source=$source, " +
 		"				r.sourceOfTruth=$sourceOfTruth, " +
 		"				r.appSource=$appSource, " +
@@ -204,19 +203,18 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 
 	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "JobRole_"+tenant),
 		map[string]interface{}{
-			"tenant":              tenant,
-			"contactId":           contactId,
-			"jobTitle":            input.JobTitle,
-			"description":         input.Description,
-			"company":             input.Company,
-			"primary":             input.Primary,
-			"responsibilityLevel": input.ResponsibilityLevel,
-			"source":              input.Source,
-			"sourceOfTruth":       input.SourceOfTruth,
-			"appSource":           input.AppSource,
-			"startedAt":           utils.TimePtrFirstNonNilNillableAsAny(input.StartedAt, utils.TimePtr(utils.Now())),
-			"endedAt":             utils.TimePtrFirstNonNilNillableAsAny(input.EndedAt),
-			"now":                 utils.Now(),
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"jobTitle":      input.JobTitle,
+			"description":   input.Description,
+			"company":       input.Company,
+			"primary":       input.Primary,
+			"source":        input.Source,
+			"sourceOfTruth": input.SourceOfTruth,
+			"appSource":     input.AppSource,
+			"startedAt":     utils.TimePtrFirstNonNilNillableAsAny(input.StartedAt, utils.TimePtr(utils.Now())),
+			"endedAt":       utils.TimePtrFirstNonNilNillableAsAny(input.EndedAt),
+			"now":           utils.Now(),
 		}); err != nil {
 		return nil, err
 	} else {
@@ -236,25 +234,23 @@ func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.M
 				r.primary=$primary,
 				r.description=$description,
 				r.company=$company,
-				r.responsibilityLevel=$responsibilityLevel,
 				r.sourceOfTruth=$sourceOfTruth,
 				r.startedAt=$startedAt,
 				r.endedAt=$endedAt,
 				r.updatedAt=$now
 			RETURN r`,
 		map[string]interface{}{
-			"tenant":              tenant,
-			"contactId":           contactId,
-			"roleId":              roleId,
-			"jobTitle":            input.JobTitle,
-			"description":         input.Description,
-			"company":             input.Company,
-			"primary":             input.Primary,
-			"responsibilityLevel": input.ResponsibilityLevel,
-			"sourceOfTruth":       input.SourceOfTruth,
-			"now":                 utils.Now(),
-			"startedAt":           utils.TimePtrFirstNonNilNillableAsAny(input.StartedAt),
-			"endedAt":             utils.TimePtrFirstNonNilNillableAsAny(input.EndedAt),
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"roleId":        roleId,
+			"jobTitle":      input.JobTitle,
+			"description":   input.Description,
+			"company":       input.Company,
+			"primary":       input.Primary,
+			"sourceOfTruth": input.SourceOfTruth,
+			"now":           utils.Now(),
+			"startedAt":     utils.TimePtrFirstNonNilNillableAsAny(input.StartedAt),
+			"endedAt":       utils.TimePtrFirstNonNilNillableAsAny(input.EndedAt),
 		}); err != nil {
 		return nil, err
 	} else {

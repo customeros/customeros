@@ -26,8 +26,6 @@ type JobRole {
 
     primary: Boolean!
 
-    responsibilityLevel: Int64!
-
     description: String
     company: String
 
@@ -49,7 +47,6 @@ input JobRoleInput {
     primary: Boolean
     startedAt: Time
     endedAt: Time
-    responsibilityLevel: Int64
     appSource: String
     description: String
     company: String
@@ -66,7 +63,6 @@ input JobRoleUpdateInput {
     organizationId: ID
     jobTitle: String
     primary: Boolean
-    responsibilityLevel: Int64
     description: String
     company: String
 }

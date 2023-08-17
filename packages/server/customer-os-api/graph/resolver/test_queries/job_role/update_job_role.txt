@@ -7,7 +7,6 @@ mutation JobRoleUpdate($contactId: ID!, $roleId: ID!){
                     description: "CEO of Apple"
                     company: "Apple"
                     primary: true
-                    responsibilityLevel: 1
                }
      ) {
         organization {
@@ -18,7 +17,6 @@ mutation JobRoleUpdate($contactId: ID!, $roleId: ID!){
         description
         company
         primary
-        responsibilityLevel
         sourceOfTruth
         startedAt
         endedAt

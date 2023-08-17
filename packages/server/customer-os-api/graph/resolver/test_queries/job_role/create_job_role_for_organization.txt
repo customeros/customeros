@@ -7,7 +7,6 @@ mutation CreateJobRole($contactId: ID!, $organizationId: ID!) {
       description: "CEO of the company",
       company: "Acme Inc.",
       primary: true,
-      responsibilityLevel: 2,
       appSource: "Hubspot",
       startedAt: "2019-01-01T00:00:00.000Z"
       endedAt: "2020-01-01T00:00:00.000Z"
@@ -28,6 +27,5 @@ mutation CreateJobRole($contactId: ID!, $organizationId: ID!) {
     updatedAt
     startedAt
     endedAt
-    responsibilityLevel
   }
 }

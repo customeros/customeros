@@ -15,6 +15,5 @@ mutation CreateJobRole($contactId: ID!) {
     updatedAt
     startedAt
     endedAt
-    responsibilityLevel
   }
 }

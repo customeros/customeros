@@ -601,18 +601,16 @@ func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
 
 	title := "jobTitle"
 	isPrimary := true
-	rspLvl := int64(1)
 	appSrc := "testApp"
 	desr := "some description"
 	rawResponse, err := cAdminWithTenant.RawPost(getQuery("user/customer_user_add_job_role"),
 		client.Var("userId", userId1),
 		client.Var("jobRoleInput", model.JobRoleInput{
-			OrganizationID:      &organizationId,
-			JobTitle:            &title,
-			Primary:             &isPrimary,
-			ResponsibilityLevel: &rspLvl,
-			AppSource:           &appSrc,
-			Description:         &desr,
+			OrganizationID: &organizationId,
+			JobTitle:       &title,
+			Primary:        &isPrimary,
+			AppSource:      &appSrc,
+			Description:    &desr,
 		}),
 		client.Var("tenant", "otherTenant"))
 	assertRawResponseSuccess(t, rawResponse, err)
