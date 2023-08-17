@@ -17,6 +17,7 @@ import {
 } from '@graphql/types';
 import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { DateTimeUtils } from '@spaces/utils/date';
+import EmptyNote from '@spaces/atoms/icons/EmptyNote';
 
 export type RenewalLikelihoodType = RenewalLikelihoodT;
 
@@ -84,19 +85,23 @@ export const RenewalLikelihood: FC<{
             </Heading>
           </Flex>
         </CardBody>
-        <CardFooter p='0' as={Flex} flexDir='column'>
-          {comment && (
-            <>
-              <Divider mt='4' mb='2' />
-              <Flex align='flex-start'>
+
+        {probability && updatedBy && (
+          <CardFooter p='0' as={Flex} flexDir='column'>
+            <Divider mt='4' mb='2' />
+            <Flex align='flex-start'>
+              {comment ? (
                 <Icons.File2 color='gray.400' />
-                <Text color='gray.500' fontSize='xs' ml='1' noOfLines={2}>
-                  {comment}
-                </Text>
-              </Flex>
-            </>
-          )}
-        </CardFooter>
+              ) : (
+                <Icons.FileCross viewBox='0 0 16 16' color='gray.400' />
+              )}
+
+              <Text color='gray.500' fontSize='xs' ml='1' noOfLines={2}>
+                {comment || 'No reason provided'}
+              </Text>
+            </Flex>
+          </CardFooter>
+        )}
       </Card>
 
       <RenewalLikelihoodModal
