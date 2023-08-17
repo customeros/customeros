@@ -21,7 +21,8 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
   content,
 }) => {
   const data: boolean | Array<EmailMetaData> =
-    typeof content !== 'string' && getEmailParticipantsNameAndEmail(content, 'email');
+    typeof content !== 'string' &&
+    getEmailParticipantsNameAndEmail(content, 'email');
   return (
     <Flex overflow='hidden' maxWidth={'100%'}>
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
@@ -48,15 +49,19 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
                 );
               }
               return (
-                <Tooltip
+                <React.Fragment
                   key={`email-participant-tag-${e.label}-${e.email}`}
-                  label={e.email}
-                  aria-label={`${e.email}`}
-                  placement='top'
-                  zIndex={100}
                 >
-                  {`${e.label} ${i !== data.length - 1 ? ', ' : ''}`}
-                </Tooltip>
+                  <Tooltip
+                    label={e.email}
+                    aria-label={`${e.email}`}
+                    placement='top'
+                    zIndex={100}
+                  >
+                    {e.label}
+                  </Tooltip>
+                  {i !== data.length - 1 ? ',  ' : ''}
+                </React.Fragment>
               );
             })}
         </>
