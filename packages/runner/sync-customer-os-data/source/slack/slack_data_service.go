@@ -164,7 +164,7 @@ func (s *slackDataService) GetInteractionEventsForSync(ctx context.Context, batc
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		rawRecords, err := repository.GetOpenlineUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range rawRecords {

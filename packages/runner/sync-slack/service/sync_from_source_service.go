@@ -225,23 +225,26 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 		}
 	}
 
-	// filter for real users
 	channelRealUserIds := make([]string, 0)
+	channelUserNames := make(map[string]string, 0)
 	for _, userId := range channelUserIds {
 		if s.isRealUser(tenant, userId) {
 			channelRealUserIds = append(channelRealUserIds, userId)
 		}
+		channelUserNames[userId] = s.getUserName(tenant, userId)
 	}
 
 	for _, message := range channelMessages {
 		output := struct {
 			slack.Message
-			ChannelUserIds         []string `json:"channel_user_ids"`
-			ChannelId              string   `json:"channel_id"`
-			OpenlineOrganizationId string   `json:"openline_organization_id"`
+			ChannelUserIds         []string          `json:"channel_user_ids"`
+			ChannelUserNames       map[string]string `json:"channel_user_names"`
+			ChannelId              string            `json:"channel_id"`
+			OpenlineOrganizationId string            `json:"openline_organization_id"`
 		}{
 			Message:                message,
 			ChannelUserIds:         channelRealUserIds,
+			ChannelUserNames:       channelUserNames,
 			ChannelId:              channelId,
 			OpenlineOrganizationId: orgId,
 		}
@@ -256,12 +259,14 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	for _, message := range threadMessages {
 		output := struct {
 			slack.Message
-			ChannelUserIds         []string `json:"channel_user_ids"`
-			ChannelId              string   `json:"channel_id"`
-			OpenlineOrganizationId string   `json:"openline_organization_id"`
+			ChannelUserIds         []string          `json:"channel_user_ids"`
+			ChannelUserNames       map[string]string `json:"channel_user_names"`
+			ChannelId              string            `json:"channel_id"`
+			OpenlineOrganizationId string            `json:"openline_organization_id"`
 		}{
 			Message:                message,
 			ChannelUserIds:         channelRealUserIds,
+			ChannelUserNames:       channelUserNames,
 			ChannelId:              channelId,
 			OpenlineOrganizationId: orgId,
 		}
@@ -288,10 +293,10 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 	span.SetTag("tenant", tenant)
 	span.LogFields(log.String("tenantDomain", tenantDomain), log.String("userId", userId), log.String("orgId", orgId))
 
-	slackUserType, ok := s.cache.GetSlackUser(tenant, userId)
+	cachedSlackUser, ok := s.cache.GetSlackUser(tenant, userId)
 	var okContactCheck = true
-	if ok && slackUserType == "contact" {
-		_, okContactCheck = s.cache.GetSlackUserAsContact(orgId, userId)
+	if ok && cachedSlackUser.UserType == caches.UserType_Contact {
+		_, okContactCheck = s.cache.GetSlackUserAsContactForOrg(orgId, userId)
 	}
 	if !ok || !okContactCheck {
 		slackUser, err := s.slackService.FetchUserInfo(ctx, userId, dtls)
@@ -305,7 +310,10 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 		}
 		if slackUser.Deleted || slackUser.IsBot || slackUser.IsAppUser {
 			// save as non-user
-			s.cache.SetSlackUser(tenant, userId, "non-user")
+			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
+				UserType: caches.UserType_NonUser,
+				Name:     slackUser.Profile.DisplayName,
+			})
 			return nil
 		}
 		if err != nil {
@@ -320,7 +328,10 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 				tracing.TraceErr(span, err)
 				return err
 			}
-			s.cache.SetSlackUser(tenant, userId, "user")
+			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
+				UserType: caches.UserType_User,
+				Name:     slackUser.Profile.RealNameNormalized,
+			})
 		} else {
 			// save as contact
 			output := struct {
@@ -337,8 +348,11 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 				tracing.TraceErr(span, err)
 				return err
 			}
-			s.cache.SetSlackUser(tenant, userId, "contact")
-			s.cache.SetSlackUserAsContact(orgId, userId, "contact")
+			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
+				UserType: caches.UserType_Contact,
+				Name:     slackUser.Profile.RealNameNormalized,
+			})
+			s.cache.SetSlackUserAsContactForOrg(orgId, userId, "contact")
 		}
 	}
 	return nil
@@ -433,6 +447,11 @@ func (s *syncFromSourceService) getPreviousSyncRunForChannel(ctx context.Context
 }
 
 func (s *syncFromSourceService) isRealUser(tenant, userId string) bool {
-	userType, _ := s.cache.GetSlackUser(tenant, userId)
-	return userType == "user" || userType == "contact"
+	user, _ := s.cache.GetSlackUser(tenant, userId)
+	return user.UserType == caches.UserType_User || user.UserType == caches.UserType_Contact
+}
+
+func (s *syncFromSourceService) getUserName(tenant, userId string) string {
+	user, _ := s.cache.GetSlackUser(tenant, userId)
+	return user.Name
 }

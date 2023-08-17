@@ -555,7 +555,6 @@ func (r *contactRepository) LinkContactWithOrganizationByExternalId(ctx context.
 		"				j.appSource=$appSource, " +
 		"				j.createdAt=$now, " +
 		"				j.updatedAt=$now, " +
-		"				j.startedAt=$contactCreatedAt, " +
 		"				j:%s "
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, "JobRole_"+tenant),
@@ -592,18 +591,16 @@ func (r *contactRepository) LinkContactWithOrganizationByInternalId(ctx context.
 		"				j.appSource=$appSource, "+
 		"				j.createdAt=$now, "+
 		"				j.updatedAt=$now, "+
-		"				j.startedAt=$contactCreatedAt, "+
 		"				j:JobRole_%s ", tenant)
 	span.LogFields(log.String("query", query))
 	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{
-		"tenant":           tenant,
-		"contactId":        contactId,
-		"organizationId":   organizationId,
-		"now":              utils.Now(),
-		"source":           source,
-		"sourceOfTruth":    source,
-		"appSource":        constants.AppSourceSyncCustomerOsData,
-		"contactCreatedAt": contactCreatedAt,
+		"tenant":         tenant,
+		"contactId":      contactId,
+		"organizationId": organizationId,
+		"now":            utils.Now(),
+		"source":         source,
+		"sourceOfTruth":  source,
+		"appSource":      constants.AppSourceSyncCustomerOsData,
 	})
 }
 

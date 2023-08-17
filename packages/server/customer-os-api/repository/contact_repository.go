@@ -454,7 +454,6 @@ func (r *contactRepository) AddOrganization(ctx context.Context, tenant, contact
 						j.appSource=$appSource, 
 						j.createdAt=$now, 
 						j.updatedAt=$now,
-						j.startedAt=$now,
 						j:JobRole_%s
 		 RETURN c`
 
