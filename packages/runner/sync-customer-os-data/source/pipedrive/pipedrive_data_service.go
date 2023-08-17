@@ -101,7 +101,7 @@ func (s *pipedriveDataService) GetUsersForSync(ctx context.Context, batchSize in
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range airbyteRecords {

@@ -3,6 +3,7 @@ package slack
 import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -16,7 +17,7 @@ func MapUser(inputJson string) (string, error) {
 			Phone     string `json:"phone,omitempty"`
 			FirstName string `json:"first_name,omitempty"`
 			LastName  string `json:"last_name,omitempty"`
-			Name      string `json:"real_name,omitempty"`
+			Name      string `json:"real_name_normalized,omitempty"`
 			Image192  string `json:"image_192,omitempty"`
 		} `json:"profile"`
 	}
@@ -88,14 +89,15 @@ func MapContact(inputJson string) (string, error) {
 
 func MapInteractionEvent(inputJson string) (string, error) {
 	var input struct {
-		Ts                     string   `json:"ts,omitempty"`
-		ChannelId              string   `json:"channel_id,omitempty"`
-		Type                   string   `json:"type,omitempty"`
-		SenderUser             string   `json:"user,omitempty"`
-		Text                   string   `json:"text,omitempty"`
-		UserIds                []string `json:"channel_user_ids,omitempty"`
-		ThreadTs               string   `json:"thread_ts,omitempty"`
-		OpenlineOrganizationId string   `json:"openline_organization_id,omitempty"`
+		Ts                     string            `json:"ts,omitempty"`
+		ChannelId              string            `json:"channel_id,omitempty"`
+		Type                   string            `json:"type,omitempty"`
+		SenderUser             string            `json:"user,omitempty"`
+		Text                   string            `json:"text,omitempty"`
+		UserIds                []string          `json:"channel_user_ids,omitempty"`
+		UserNamesById          map[string]string `json:"channel_user_names,omitempty"`
+		ThreadTs               string            `json:"thread_ts,omitempty"`
+		OpenlineOrganizationId string            `json:"openline_organization_id,omitempty"`
 	}
 
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
@@ -104,8 +106,8 @@ func MapInteractionEvent(inputJson string) (string, error) {
 
 	output := model.Output{
 		ExternalId:  input.ChannelId + "/" + input.Ts,
-		CreatedAt:   TsStrToRFC3339Nanos(input.Ts),
-		Content:     input.Text,
+		CreatedAt:   tsStrToRFC3339Nanos(input.Ts),
+		Content:     replaceUserIDs(input.Text, input.UserNamesById),
 		ContentType: "text/plain",
 		Type:        "MESSAGE",
 		Channel:     "SLACK",
@@ -128,11 +130,11 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	if input.ThreadTs != "" {
 		output.Hide = true
 		output.PartOfSession.ExternalId = "session/" + input.ChannelId + "/" + input.ThreadTs
-		output.PartOfSession.CreatedAt = TsStrToRFC3339Nanos(input.ThreadTs)
+		output.PartOfSession.CreatedAt = tsStrToRFC3339Nanos(input.ThreadTs)
 		output.PartOfSession.Identifier = input.ChannelId + "/" + input.ThreadTs
 	} else {
 		output.PartOfSession.ExternalId = "session/" + input.ChannelId + "/" + input.Ts
-		output.PartOfSession.CreatedAt = TsStrToRFC3339Nanos(input.Ts)
+		output.PartOfSession.CreatedAt = tsStrToRFC3339Nanos(input.Ts)
 		output.PartOfSession.Identifier = input.ChannelId + "/" + input.Ts
 	}
 
@@ -180,11 +182,24 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	return string(outputJson), nil
 }
 
-func TsStrToRFC3339Nanos(ts string) string {
+func tsStrToRFC3339Nanos(ts string) string {
 	parts := strings.Split(ts, ".")
 	secs, _ := strconv.ParseInt(parts[0], 10, 64)
 	millis, _ := strconv.ParseInt(parts[1], 10, 64)
 	t := time.Unix(secs, millis*1000).UTC()
 	layout := "2006-01-02T15:04:05.000000Z"
 	return t.Format(layout)
+}
+
+func replaceUserIDs(text string, userNames map[string]string) string {
+	re := regexp.MustCompile("<@(U[A-Z0-9]+)>")
+	replaced := re.ReplaceAllStringFunc(text, func(mention string) string {
+		id := mention[2 : len(mention)-1]
+		name, ok := userNames[id]
+		if !ok || name == "" {
+			return "<Deleted User>"
+		}
+		return name
+	})
+	return replaced
 }
