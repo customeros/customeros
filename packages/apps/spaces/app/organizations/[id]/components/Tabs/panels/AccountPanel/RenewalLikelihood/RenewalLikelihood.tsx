@@ -26,7 +26,7 @@ export const RenewalLikelihood: FC<{
 }> = ({ renewalLikelihood, name }) => {
   const updateModal = useDisclosure();
   const infoModal = useDisclosure();
-  const { probability, comment } = renewalLikelihood;
+  const { probability, comment, updatedBy, updatedAt } = renewalLikelihood;
 
   return (
     <>
@@ -42,7 +42,7 @@ export const RenewalLikelihood: FC<{
         <CardBody as={Flex} p='0' align='center'>
           <FeaturedIcon
             size='md'
-            colorScheme={getFeatureIconColor(probability)}
+            colorScheme={updatedBy ? 'gray' : getFeatureIconColor(probability)}
           >
             <Icons.HeartActivity />
           </FeaturedIcon>
@@ -72,8 +72,8 @@ export const RenewalLikelihood: FC<{
                 {!probability
                   ? 'Not set yet'
                   : `Set by 
-                ${getUserDisplayData(renewalLikelihood?.updatedBy)}
-                 ${DateTimeUtils.timeAgo(renewalLikelihood.updatedAt, {
+                ${getUserDisplayData(updatedBy)}
+                 ${DateTimeUtils.timeAgo(updatedAt, {
                    addSuffix: true,
                  })}`}
               </Text>

@@ -23,7 +23,24 @@ export const RenewalForecast: FC<{
 }> = ({ renewalForecast, name }) => {
   const update = useDisclosure();
   const info = useDisclosure();
-  const { amount, comment } = renewalForecast;
+  const { amount, comment, updatedBy, updatedAt } = renewalForecast;
+
+  const getForecastMetaInfo = () => {
+    if (!amount) {
+      return 'Not calculated yet';
+    }
+
+    if (!updatedBy) {
+      return 'Calculated from subscription amount';
+    }
+
+    return `Set by ${getUserDisplayData(updatedBy)} ${DateTimeUtils.timeAgo(
+      updatedAt,
+      {
+        addSuffix: true,
+      },
+    )}`;
+  };
 
   return (
     <>
@@ -37,7 +54,10 @@ export const RenewalForecast: FC<{
         onClick={update.onOpen}
       >
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' colorScheme={amount ? 'success' : 'gray'}>
+          <FeaturedIcon
+            size='md'
+            colorScheme={amount && !updatedBy ? 'success' : 'gray'}
+          >
             <Icons.Calculator />
           </FeaturedIcon>
           <Flex
@@ -69,13 +89,7 @@ export const RenewalForecast: FC<{
                 />
               </Flex>
               <Text fontSize='xs' color='gray.500'>
-                {!amount
-                  ? 'Not calculated yet'
-                  : `Set by 
-                ${getUserDisplayData(renewalForecast?.updatedBy)}
-                 ${DateTimeUtils.timeAgo(renewalForecast.updatedAt, {
-                   addSuffix: true,
-                 })}`}
+                {getForecastMetaInfo()}
               </Text>
             </Flex>
 
