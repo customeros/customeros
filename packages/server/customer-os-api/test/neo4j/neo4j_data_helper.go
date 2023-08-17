@@ -768,16 +768,15 @@ func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (org:Organization {id:$organizationId})
 			MERGE (c)-[:WORKS_AS]->(r:JobRole)-[:ROLE_IN]->(org)
-			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary, r.responsibilityLevel=$responsibilityLevel,
+			ON CREATE SET r.id=$id, r.jobTitle=$jobTitle, r.primary=$primary,
 							r.createdAt=datetime({timezone: 'UTC'}), r.appSource=$appSource`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                  roleId.String(),
-		"contactId":           contactId,
-		"organizationId":      organizationId,
-		"jobTitle":            jobTitle,
-		"primary":             primary,
-		"responsibilityLevel": 1,
-		"appSource":           "test",
+		"id":             roleId.String(),
+		"contactId":      contactId,
+		"organizationId": organizationId,
+		"jobTitle":       jobTitle,
+		"primary":        primary,
+		"appSource":      "test",
 	})
 	return roleId.String()
 }
@@ -786,16 +785,15 @@ func UserWorksAs(ctx context.Context, driver *neo4j.DriverWithContext, userId, j
 	var roleId, _ = uuid.NewRandom()
 	query := `MATCH (u:User {id:$userId})
 			MERGE (u)-[:WORKS_AS]->(r:JobRole)
-			ON CREATE SET r.id=$id, r.description=$description, r.jobTitle=$jobTitle, r.primary=$primary, r.responsibilityLevel=$responsibilityLevel,
+			ON CREATE SET r.id=$id, r.description=$description, r.jobTitle=$jobTitle, r.primary=$primary,
 							r.createdAt=datetime({timezone: 'UTC'}), r.appSource=$appSource`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                  roleId.String(),
-		"userId":              userId,
-		"jobTitle":            jobTitle,
-		"description":         description,
-		"primary":             primary,
-		"responsibilityLevel": 1,
-		"appSource":           "test",
+		"id":          roleId.String(),
+		"userId":      userId,
+		"jobTitle":    jobTitle,
+		"description": description,
+		"primary":     primary,
+		"appSource":   "test",
 	})
 	return roleId.String()
 }

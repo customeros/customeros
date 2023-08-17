@@ -865,30 +865,28 @@ type JobRole struct {
 	Organization *Organization `json:"organization,omitempty"`
 	Contact      *Contact      `json:"contact,omitempty"`
 	// The Contact's job title.
-	JobTitle            *string    `json:"jobTitle,omitempty"`
-	Primary             bool       `json:"primary"`
-	ResponsibilityLevel int64      `json:"responsibilityLevel"`
-	Description         *string    `json:"description,omitempty"`
-	Company             *string    `json:"company,omitempty"`
-	StartedAt           *time.Time `json:"startedAt,omitempty"`
-	EndedAt             *time.Time `json:"endedAt,omitempty"`
-	Source              DataSource `json:"source"`
-	SourceOfTruth       DataSource `json:"sourceOfTruth"`
-	AppSource           string     `json:"appSource"`
+	JobTitle      *string    `json:"jobTitle,omitempty"`
+	Primary       bool       `json:"primary"`
+	Description   *string    `json:"description,omitempty"`
+	Company       *string    `json:"company,omitempty"`
+	StartedAt     *time.Time `json:"startedAt,omitempty"`
+	EndedAt       *time.Time `json:"endedAt,omitempty"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
 }
 
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleInput struct {
-	OrganizationID      *string    `json:"organizationId,omitempty"`
-	JobTitle            *string    `json:"jobTitle,omitempty"`
-	Primary             *bool      `json:"primary,omitempty"`
-	StartedAt           *time.Time `json:"startedAt,omitempty"`
-	EndedAt             *time.Time `json:"endedAt,omitempty"`
-	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
-	AppSource           *string    `json:"appSource,omitempty"`
-	Description         *string    `json:"description,omitempty"`
-	Company             *string    `json:"company,omitempty"`
+	OrganizationID *string    `json:"organizationId,omitempty"`
+	JobTitle       *string    `json:"jobTitle,omitempty"`
+	Primary        *bool      `json:"primary,omitempty"`
+	StartedAt      *time.Time `json:"startedAt,omitempty"`
+	EndedAt        *time.Time `json:"endedAt,omitempty"`
+	AppSource      *string    `json:"appSource,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Company        *string    `json:"company,omitempty"`
 }
 
 type JobRoleParticipant struct {
@@ -901,15 +899,14 @@ func (JobRoleParticipant) IsInteractionEventParticipant() {}
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleUpdateInput struct {
-	ID                  string     `json:"id"`
-	StartedAt           *time.Time `json:"startedAt,omitempty"`
-	EndedAt             *time.Time `json:"endedAt,omitempty"`
-	OrganizationID      *string    `json:"organizationId,omitempty"`
-	JobTitle            *string    `json:"jobTitle,omitempty"`
-	Primary             *bool      `json:"primary,omitempty"`
-	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
-	Description         *string    `json:"description,omitempty"`
-	Company             *string    `json:"company,omitempty"`
+	ID             string     `json:"id"`
+	StartedAt      *time.Time `json:"startedAt,omitempty"`
+	EndedAt        *time.Time `json:"endedAt,omitempty"`
+	OrganizationID *string    `json:"organizationId,omitempty"`
+	JobTitle       *string    `json:"jobTitle,omitempty"`
+	Primary        *bool      `json:"primary,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Company        *string    `json:"company,omitempty"`
 }
 
 type LinkOrganizationsInput struct {

@@ -307,7 +307,8 @@ func (r *contactRepository) Delete(ctx context.Context, session neo4j.SessionWit
 			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
 			OPTIONAL MATCH (c)-[:HAS_COMPLEX_PROPERTY]->(fs:FieldSet)
 			OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole)
-            DETACH DELETE f, fs, j, c`,
+			OPTIONAL MATCH (c)--(alt:AlternateContact)
+            DETACH DELETE alt, f, fs, j, c`,
 			map[string]interface{}{
 				"contactId": contactId,
 				"tenant":    tenant,

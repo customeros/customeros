@@ -241,19 +241,18 @@ func (s *jobRoleService) DeleteJobRole(ctx context.Context, contactId, roleId st
 func (s *jobRoleService) mapDbNodeToJobRoleEntity(node dbtype.Node) *entity.JobRoleEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.JobRoleEntity{
-		Id:                  utils.GetStringPropOrEmpty(props, "id"),
-		JobTitle:            utils.GetStringPropOrEmpty(props, "jobTitle"),
-		Description:         utils.GetStringPropOrNil(props, "description"),
-		Company:             utils.GetStringPropOrNil(props, "company"),
-		Primary:             utils.GetBoolPropOrFalse(props, "primary"),
-		ResponsibilityLevel: utils.GetInt64PropOrZero(props, "responsibilityLevel"),
-		Source:              entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:       entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:           utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:           utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:           utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		StartedAt:           utils.GetTimePropOrNil(props, "startedAt"),
-		EndedAt:             utils.GetTimePropOrNil(props, "endedAt"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		JobTitle:      utils.GetStringPropOrEmpty(props, "jobTitle"),
+		Description:   utils.GetStringPropOrNil(props, "description"),
+		Company:       utils.GetStringPropOrNil(props, "company"),
+		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrNil(props, "startedAt"),
+		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
 	}
 	return &result
 }

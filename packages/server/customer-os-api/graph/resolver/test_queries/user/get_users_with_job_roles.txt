@@ -6,7 +6,6 @@ query {
           id
           jobTitle
           primary
-          responsibilityLevel
           description
           startedAt
           endedAt
