@@ -32,7 +32,7 @@ export const RenewalForecast: FC<{
     }
 
     if (!updatedBy) {
-      return 'Calculated from subscription amount';
+      return 'Calculated from billing amount';
     }
 
     return `Set by ${getUserDisplayData(updatedBy)} ${DateTimeUtils.timeAgo(
