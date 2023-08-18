@@ -9,19 +9,23 @@ import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { useDisclosure } from '@ui/utils';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
-
 import { RenewalForecastModal } from './RenewalForecastModal';
-import { RenewalForecast as RenewalForecastT } from '@graphql/types';
+import {
+  RenewalForecast as RenewalForecastT,
+  RenewalLikelihoodProbability,
+} from '@graphql/types';
 import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { getFeatureIconColor } from '@organization/components/Tabs/panels/AccountPanel/utils';
 
 export type RenewalForecastType = RenewalForecastT & { amount?: string | null };
 
 export const RenewalForecast: FC<{
   renewalForecast: RenewalForecastType;
+  renewalProbability?: RenewalLikelihoodProbability | null;
   name: string;
-}> = ({ renewalForecast, name }) => {
+}> = ({ renewalForecast, renewalProbability, name }) => {
   const update = useDisclosure();
   const info = useDisclosure();
   const { amount, comment, updatedBy, updatedAt } = renewalForecast;
@@ -57,7 +61,11 @@ export const RenewalForecast: FC<{
         <CardBody as={Flex} p='0' align='center'>
           <FeaturedIcon
             size='md'
-            colorScheme={amount && !updatedBy ? 'success' : 'gray'}
+            colorScheme={
+              amount && !updatedBy
+                ? getFeatureIconColor(renewalProbability)
+                : 'gray'
+            }
           >
             <Icons.Calculator />
           </FeaturedIcon>
