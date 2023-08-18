@@ -23,7 +23,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230811131018-c07b2469cc3e
 	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20230811143143-2a3840956183
 	github.com/opentracing/opentracing-go v1.2.0
-	github.com/redis/go-redis/v9 v9.0.5
+	github.com/redis/go-redis/v9 v9.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/vektah/gqlparser/v2 v2.5.8
