@@ -312,6 +312,15 @@ func (s *organizationService) UpdateRenewalForecast(ctx context.Context, orgId s
 	if setInternally {
 		data.Comment = nil
 		data.UpdatedById = nil
+	} else if !setInternally && data.Amount == nil {
+		data.Comment = nil
+		data.UpdatedById = nil
+		data.PotentialAmount, err = s.calculateForecastAmount(ctx, organization.BillingDetails, string(entity.RenewalLikelihoodProbabilityHigh))
+		data.Amount, err = s.calculateForecastAmount(ctx, organization.BillingDetails, organization.RenewalLikelihood.RenewalLikelihood)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	} else {
 		if utils.IfNotNilFloat64(organization.RenewalForecast.Amount) == utils.IfNotNilFloat64(data.Amount) &&
 			utils.IfNotNilString(organization.RenewalForecast.Comment) == utils.IfNotNilString(data.Comment) {
