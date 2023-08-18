@@ -231,7 +231,6 @@ export const ContactCard = ({
           onClick={toggle}
         >
           <Avatar
-            src=''
             name={state?.values?.name ?? data?.name}
             variant='shadowed'
             src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
