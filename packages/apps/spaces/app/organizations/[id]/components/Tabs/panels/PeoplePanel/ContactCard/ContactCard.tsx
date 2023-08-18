@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 import { useQueryClient } from '@tanstack/react-query';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
+import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
 
 import { Flex } from '@ui/layout/Flex';
 import { IconButton } from '@ui/form/IconButton';
@@ -102,6 +103,23 @@ export const ContactCard = ({
 
   const prevEmail = data.email;
   const prevPhoneNumberId = data.phoneId;
+
+  const timeAt = (() => {
+    if (!data.startedAt) return undefined;
+    const months = differenceInCalendarMonths(
+      new Date(data.startedAt),
+      new Date(),
+    );
+
+    if (months < 0) return `less than a month at ${organizationName}`;
+    if (months === 1) return `${months} month at ${organizationName}`;
+    if (months > 1) return `${months} months at ${organizationName}`;
+    if (months === 12) return `1 year at ${organizationName}`;
+    if (months > 12)
+      return `${formatDistanceToNow(
+        new Date(data?.startedAt),
+      )} at ${organizationName}`;
+  })();
 
   const { state } = useForm<ContactForm>({
     formId,
@@ -340,12 +358,12 @@ export const ContactCard = ({
                 leftElement={<Icons.Phone2 color='gray.500' />}
               />
               {/* TODO: replace with FormInput. currently displayed as a text just for demoing purposes */}
-              {true && (
+              {timeAt && (
                 <Flex align='center' h='39px'>
                   <Icons.Calendar color='gray.500' />
-                  <Text ml='14px' cursor='text'>{`${formatDistanceToNow(
-                    new Date(),
-                  )} at ${organizationName}`}</Text>
+                  <Text ml='14px' cursor='text'>
+                    {timeAt}
+                  </Text>
                 </Flex>
               )}
               {/* END TODO */}
