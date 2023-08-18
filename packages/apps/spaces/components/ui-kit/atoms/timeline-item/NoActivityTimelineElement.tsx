@@ -23,7 +23,7 @@ export const NoActivityTimelineElement: React.FC = () => {
           <div className={styles.sourceLogo}>
             <Image
               className={styles.logo}
-              src={`/logos/customer-os-small.svg`}
+              src={`/logos/customer-os.png`}
               alt='Openline'
               height={16}
               width={16}

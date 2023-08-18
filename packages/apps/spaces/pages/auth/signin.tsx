@@ -22,21 +22,35 @@ import LoginBg from '@spaces/atoms/backgrounds/Login';
 import BackgroundGridDot from '../../public/backgrounds/grid/backgroundGridDot.png';
 import GoogleLogo from '@spaces/atoms/icons/GoogleLogo';
 import React from 'react';
-import CustomerOsLogo from '@spaces/atoms/icons/CustomerOsLogo';
 
 export default function SignIn({
   providers,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <ChakraProvider theme={theme}>
-      <Grid templateColumns={['1fr', '1fr', '1fr', '10fr 11fr']} gap={1} h='100vh'>
+      <Grid
+        templateColumns={['1fr', '1fr', '1fr', '10fr 11fr']}
+        gap={1}
+        h='100vh'
+      >
         <GridItem h='100vh'>
           <Box height='50%'>
-            <Image alt='' src={BackgroundGridDot} width={480} top='-10%' margin='auto' />
+            <Image
+              alt=''
+              src={BackgroundGridDot}
+              width={480}
+              top='-10%'
+              margin='auto'
+            />
           </Box>
           <Center height='100%' pos='relative' top='-50%'>
             <Flex flexDirection={'column'} align={'center'} width={360}>
-              <CustomerOsLogo height={64} />
+              <Image
+                src='/logos/customer-os-with-text-small.png'
+                alt='CustomerOS'
+                width={150}
+                height={150}
+              />
               <Heading color='gray.900' size='lg' py={3}>
                 Welcome back
               </Heading>
@@ -58,10 +72,7 @@ export default function SignIn({
             </Flex>
           </Center>
         </GridItem>
-        <GridItem
-          h='100vh'
-          w='50vw'
-        >
+        <GridItem h='100vh' w='full' overflow='hidden'>
           <LoginBg />
         </GridItem>
       </Grid>
