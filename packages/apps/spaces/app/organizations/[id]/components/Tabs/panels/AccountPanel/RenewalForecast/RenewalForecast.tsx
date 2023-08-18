@@ -47,6 +47,8 @@ export const RenewalForecast: FC<{
     )}`;
   };
 
+  const isAmountSet = amount !== null && amount !== undefined;
+
   return (
     <>
       <Card
@@ -103,8 +105,11 @@ export const RenewalForecast: FC<{
               </Text>
             </Flex>
 
-            <Heading fontSize='2xl' color={!amount ? 'gray.400' : 'gray.700'}>
-              {!amount ? 'Unknown' : formatCurrency(amount)}
+            <Heading
+              fontSize='2xl'
+              color={isAmountSet ? 'gray.700' : 'gray.400'}
+            >
+              {isAmountSet ? formatCurrency(amount) : 'Unknown'}
             </Heading>
           </Flex>
         </CardBody>
