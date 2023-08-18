@@ -92,6 +92,17 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             _hover: { bg: state.isSelected ? 'primary.50' : 'gray.100' },
             ...chakraStyles?.option?.(props, state),
           }),
+          multiValue: (props, state) => ({
+            ...props,
+            borderRadius: 'full',
+            bg: 'gray.50',
+            color: 'gray.500',
+            ml: 0,
+            mr: 1,
+            border: '1px solid',
+            borderColor: 'gray.200',
+            ...chakraStyles?.multiValue?.(props, state),
+          }),
           groupHeading: (props, state) => ({
             ...props,
             color: 'gray.400',

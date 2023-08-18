@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 import { useQueryClient } from '@tanstack/react-query';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
+import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
 
 import { Flex } from '@ui/layout/Flex';
 import { IconButton } from '@ui/form/IconButton';
@@ -37,19 +38,26 @@ import { Contact } from '@graphql/types';
 import { Fade } from '@ui/transitions/Fade';
 
 import { FormSocialInput } from '../../../shared/FormSocialInput';
+import { SelectOption } from '@shared/types/SelectOptions';
+import { FormRoleSelect } from './FormRoleSelect';
 
 interface ContactCardProps {
-  index: number;
   contact: Contact;
+  organizationName?: string;
 }
 
-export const ContactCard = ({ contact, index }: ContactCardProps) => {
+export const ContactCard = ({
+  contact,
+  organizationName,
+}: ContactCardProps) => {
   const client = getGraphQLClient();
   const organizationId = useParams()?.id as string;
   const queryClient = useQueryClient();
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [roleIsFocused, setRoleIsFocused] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+
   useOutsideClick({
     ref: cardRef,
     handler: () => setIsExpanded(false),
@@ -96,6 +104,23 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
   const prevEmail = data.email;
   const prevPhoneNumberId = data.phoneId;
 
+  const timeAt = (() => {
+    if (!data.startedAt) return undefined;
+    const months = differenceInCalendarMonths(
+      new Date(data.startedAt),
+      new Date(),
+    );
+
+    if (months < 0) return `less than a month at ${organizationName}`;
+    if (months === 1) return `${months} month at ${organizationName}`;
+    if (months > 1) return `${months} months at ${organizationName}`;
+    if (months === 12) return `1 year at ${organizationName}`;
+    if (months > 12)
+      return `${formatDistanceToNow(
+        new Date(data?.startedAt),
+      )} at ${organizationName}`;
+  })();
+
   const { state } = useForm<ContactForm>({
     formId,
     defaultValues: data,
@@ -112,7 +137,6 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
             updateContact.mutate(ContactFormDto.toDto({ ...state.values }));
             break;
           }
-          case 'company':
           case 'title':
           case 'role': {
             const key = (() => {
@@ -122,14 +146,22 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
               return name;
             })();
 
+            const value = (() => {
+              if (action.payload.name === 'role') {
+                return (action.payload.value as SelectOption[])
+                  .map((v) => v.value)
+                  .join(',');
+              }
+              return action.payload.value;
+            })();
+
             updateRole.mutate({
               contactId: state.values.id,
               input: {
                 id: state.values.roleId,
-                description: state.values.role,
+                description: state.values.role.map((v) => v.value).join(','),
                 jobTitle: state.values.title,
-                company: state.values.company,
-                [key]: action.payload.value,
+                [key]: value,
               },
             });
             break;
@@ -172,6 +204,7 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
             break;
         }
       }
+
       return next;
     },
   });
@@ -242,12 +275,13 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
               formId={formId}
               placeholder='Title'
             />
-            <FormInput
-              h='6'
+            <FormRoleSelect
               name='role'
-              color='gray.500'
               formId={formId}
               placeholder='Role'
+              isFocused={roleIsFocused}
+              setIsFocused={setRoleIsFocused}
+              displayValue={data.role?.map((v) => v.label).join(', ')}
             />
           </Flex>
           {isExpanded && (
@@ -305,12 +339,6 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
             <CardBody pt={0}>
               <FormInputGroup
                 formId={formId}
-                name='company'
-                placeholder='Company name'
-                leftElement={<Icons.Building7 color='gray.500' />}
-              />
-              <FormInputGroup
-                formId={formId}
                 name='email'
                 placeholder='Email'
                 leftElement={<Icons.Mail1 color='gray.500' />}
@@ -330,12 +358,12 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
                 leftElement={<Icons.Phone2 color='gray.500' />}
               />
               {/* TODO: replace with FormInput. currently displayed as a text just for demoing purposes */}
-              {data?.startedAt && (
+              {timeAt && (
                 <Flex align='center' h='39px'>
                   <Icons.Calendar color='gray.500' />
-                  <Text ml='14px' cursor='text'>{`${formatDistanceToNow(
-                    new Date(data.startedAt),
-                  )} at ${data?.company}`}</Text>
+                  <Text ml='14px' cursor='text'>
+                    {timeAt}
+                  </Text>
                 </Flex>
               )}
               {/* END TODO */}

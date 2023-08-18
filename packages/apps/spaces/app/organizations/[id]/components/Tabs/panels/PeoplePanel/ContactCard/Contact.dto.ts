@@ -7,14 +7,13 @@ export interface ContactForm {
   id: string;
   name: string;
   title: string;
-  role: string;
+  role: SelectOption<string>[];
   roleId: string;
   note: string;
   email: string;
   phone: string;
   phoneId: string;
   timezone: SelectOption<string> | null;
-  company?: string;
   socials: Pick<Social, 'id' | 'url'>[];
   startedAt: string;
 }
@@ -22,7 +21,7 @@ export interface ContactForm {
 export class ContactFormDto implements ContactForm {
   id: string; // auxiliary field
   name: string;
-  role: string;
+  role: SelectOption<string>[];
   roleId: string; // auxiliary field
   title: string;
   note: string;
@@ -30,7 +29,6 @@ export class ContactFormDto implements ContactForm {
   phone: string;
   phoneId: string; // auxiliary field
   timezone: SelectOption<string> | null;
-  company: string;
   socials: Pick<Social, 'id' | 'url'>[];
   startedAt: string;
 
@@ -39,7 +37,11 @@ export class ContactFormDto implements ContactForm {
     this.name = data?.firstName || '';
     this.title = data?.jobRoles?.[0]?.jobTitle || '';
     this.roleId = data?.jobRoles?.[0]?.id || ''; // auxiliary field
-    this.role = data?.jobRoles?.[0]?.description || '';
+    this.role = (() => {
+      const _role = data?.jobRoles?.[0]?.description;
+      if (!_role?.length) return [];
+      return _role?.split(',').map((v) => ({ value: v, label: v })) || [];
+    })();
     this.note = data?.description || '';
     this.email = data?.emails?.[0]?.email || '';
     this.phone = data?.phoneNumbers?.[0]?.rawPhoneNumber || '';
@@ -47,7 +49,6 @@ export class ContactFormDto implements ContactForm {
     this.timezone = data?.timezone
       ? { label: data?.timezone, value: data?.timezone }
       : null;
-    this.company = data?.jobRoles?.[0]?.company || '';
     this.socials = data?.socials || [];
     this.startedAt = data?.jobRoles?.[0]?.startedAt || '';
   }

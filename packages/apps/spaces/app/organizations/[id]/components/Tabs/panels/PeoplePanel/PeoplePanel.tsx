@@ -116,7 +116,10 @@ export const PeoplePanel = () => {
       {!!contacts.length &&
         contacts.map((contact, index) => (
           <Fade key={contact.id} in style={{ width: '100%' }}>
-            <ContactCard index={index} contact={contact as Contact} />
+            <ContactCard
+              contact={contact as Contact}
+              organizationName={data?.organization?.name}
+            />
           </Fade>
         ))}
     </OrganizationPanel>
