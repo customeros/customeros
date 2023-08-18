@@ -312,7 +312,7 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 			// save as non-user
 			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
 				UserType: caches.UserType_NonUser,
-				Name:     slackUser.Profile.DisplayName,
+				Name:     slackUser.Name,
 			})
 			return nil
 		}
