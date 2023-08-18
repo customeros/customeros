@@ -188,8 +188,6 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
     onOpen();
   };
 
-  console.log('🏷️ ----- contact: ', contact);
-
   return (
     <>
       <Card
