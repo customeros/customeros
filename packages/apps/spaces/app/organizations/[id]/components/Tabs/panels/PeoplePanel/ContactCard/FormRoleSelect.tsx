@@ -56,7 +56,7 @@ export const FormRoleSelect = ({
   return (
     <Text
       cursor='text'
-      color='gray.500'
+      color={displayValue ? 'gray.500' : 'gray.400'}
       onClick={(e) => {
         e.stopPropagation();
         setIsFocused(true);
