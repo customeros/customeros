@@ -1,5 +1,5 @@
 'use client';
-import React, { FC, useMemo, useRef } from 'react';
+import React, { FC, useRef } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Virtuoso } from 'react-virtuoso';
 import { EmailStub, TimelineItem } from './events';
@@ -7,7 +7,6 @@ import { useGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
 import { InteractionEvent } from '@graphql/types';
-import { EmailPreviewModal } from './events/email/EmailPreviewModal';
 import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
@@ -15,6 +14,8 @@ import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
 import { TimelineItemSkeleton } from '@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
 import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
 import { useQueryClient } from '@tanstack/react-query';
+import { SlackStub } from '@organization/components/Timeline/events/slack/SlackStub';
+import { TimelineEventPreviewModal } from '@organization/components/Timeline/preview/TimelineEventPreviewModal';
 
 const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   return (
@@ -66,9 +67,11 @@ export const OrganizationTimeline: FC = () => {
   const timelineEmailEvents = (
     data?.organization?.timelineEvents as unknown as InteractionEvent[]
   )
-    ?.filter((d: InteractionEvent) => !!d?.id && d.channel === 'EMAIL')
+    ?.filter(
+      (d: InteractionEvent) =>
+        !!d?.id && (d.channel === 'EMAIL' || d.channel === 'SLACK'),
+    )
     ?.reverse();
-
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
@@ -102,7 +105,16 @@ export const OrganizationTimeline: FC = () => {
           return (
             // @ts-expect-error this is correct, generated types did not picked up alias correctly
             <TimelineItem date={timelineEvent?.date} showDate={showDate}>
-              <EmailStub email={timelineEvent as unknown as InteractionEvent} />
+              {timelineEvent.channel === 'EMAIL' && (
+                <EmailStub
+                  email={timelineEvent as unknown as InteractionEvent}
+                />
+              )}
+              {timelineEvent.channel === 'SLACK' && (
+                <SlackStub
+                  slackEvent={timelineEvent as unknown as InteractionEvent}
+                />
+              )}
             </TimelineItem>
           );
         }}
@@ -116,8 +128,7 @@ export const OrganizationTimeline: FC = () => {
           ),
         }}
       />
-
-      <EmailPreviewModal invalidateQuery={invalidateQuery} />
+      <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
     </TimelineEventPreviewContextContextProvider>
   );
 };

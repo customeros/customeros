@@ -923,6 +923,7 @@ export type InteractionEventInput = {
 export type InteractionEventParticipant =
   | ContactParticipant
   | EmailParticipant
+  | JobRoleParticipant
   | OrganizationParticipant
   | PhoneNumberParticipant
   | UserParticipant;
@@ -973,7 +974,6 @@ export type InteractionSessionInput = {
 export type InteractionSessionParticipant =
   | ContactParticipant
   | EmailParticipant
-  | OrganizationParticipant
   | PhoneNumberParticipant
   | UserParticipant;
 
@@ -1031,7 +1031,6 @@ export type JobRole = {
    */
   organization?: Maybe<Organization>;
   primary: Scalars['Boolean'];
-  responsibilityLevel: Scalars['Int64'];
   source: DataSource;
   sourceOfTruth: DataSource;
   startedAt?: Maybe<Scalars['Time']>;
@@ -1050,8 +1049,13 @@ export type JobRoleInput = {
   jobTitle?: InputMaybe<Scalars['String']>;
   organizationId?: InputMaybe<Scalars['ID']>;
   primary?: InputMaybe<Scalars['Boolean']>;
-  responsibilityLevel?: InputMaybe<Scalars['Int64']>;
   startedAt?: InputMaybe<Scalars['Time']>;
+};
+
+export type JobRoleParticipant = {
+  __typename?: 'JobRoleParticipant';
+  jobRoleParticipant: JobRole;
+  type?: Maybe<Scalars['String']>;
 };
 
 /**
@@ -1066,7 +1070,6 @@ export type JobRoleUpdateInput = {
   jobTitle?: InputMaybe<Scalars['String']>;
   organizationId?: InputMaybe<Scalars['ID']>;
   primary?: InputMaybe<Scalars['Boolean']>;
-  responsibilityLevel?: InputMaybe<Scalars['Int64']>;
   startedAt?: InputMaybe<Scalars['Time']>;
 };
 

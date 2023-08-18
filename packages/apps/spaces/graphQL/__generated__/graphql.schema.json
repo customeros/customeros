@@ -6758,6 +6758,11 @@
           },
           {
             "kind": "OBJECT",
+            "name": "JobRoleParticipant",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
             "name": "OrganizationParticipant",
             "ofType": null
           },
@@ -7309,11 +7314,6 @@
           },
           {
             "kind": "OBJECT",
-            "name": "OrganizationParticipant",
-            "ofType": null
-          },
-          {
-            "kind": "OBJECT",
             "name": "PhoneNumberParticipant",
             "ofType": null
           },
@@ -7838,22 +7838,6 @@
             "deprecationReason": null
           },
           {
-            "name": "responsibilityLevel",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "source",
             "description": null,
             "args": [],
@@ -8010,18 +7994,6 @@
             "deprecationReason": null
           },
           {
-            "name": "responsibilityLevel",
-            "description": null,
-            "type": {
-              "kind": "SCALAR",
-              "name": "Int64",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "startedAt",
             "description": null,
             "type": {
@@ -8035,6 +8007,45 @@
           }
         ],
         "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "JobRoleParticipant",
+        "description": null,
+        "fields": [
+          {
+            "name": "jobRoleParticipant",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "JobRole",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "type",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -8126,18 +8137,6 @@
             "type": {
               "kind": "SCALAR",
               "name": "Boolean",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "responsibilityLevel",
-            "description": null,
-            "type": {
-              "kind": "SCALAR",
-              "name": "Int64",
               "ofType": null
             },
             "defaultValue": null,

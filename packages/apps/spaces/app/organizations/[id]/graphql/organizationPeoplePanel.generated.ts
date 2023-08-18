@@ -45,6 +45,7 @@ export type OrganizationPeoplePanelQuery = {
         prefix?: string | null;
         description?: string | null;
         timezone?: string | null;
+        profilePhotoUrl?: string | null;
         jobRoles: Array<{
           __typename?: 'JobRole';
           id: string;
@@ -139,6 +140,7 @@ export const OrganizationPeoplePanelDocument = `
           platformName
           url
         }
+        profilePhotoUrl
       }
       totalElements
     }
