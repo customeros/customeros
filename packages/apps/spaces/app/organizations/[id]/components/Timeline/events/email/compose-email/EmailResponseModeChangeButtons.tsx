@@ -1,12 +1,11 @@
 'use client';
 import React, { FC, MouseEventHandler, ReactElement } from 'react';
-import { ButtonGroup } from '@ui/form/ButtonGroup';
 import ReplyMany from '@spaces/atoms/icons/ReplyMany';
 import Reply from '@spaces/atoms/icons/Reply';
 import Forward from '@spaces/atoms/icons/Forward';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
-import { Box, Flex } from '@chakra-ui/react';
+import { Flex } from '@ui/layout/Flex';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';

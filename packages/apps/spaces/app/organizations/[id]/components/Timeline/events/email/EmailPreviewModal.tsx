@@ -28,7 +28,7 @@ import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { convert } from 'html-to-text';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import { useDisclosure } from '@chakra-ui/react-use-disclosure';
+import { useDisclosure } from '@ui/utils';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';

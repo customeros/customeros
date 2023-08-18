@@ -9,18 +9,16 @@ import { useTimelineEventPreviewContext } from '@organization/components/Timelin
 import { DateTimeUtils } from '@spaces/utils/date';
 import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';
-
 import copy from 'copy-to-clipboard';
 import { SlackMessageCard } from '@organization/components/Timeline/events/slack/SlackMessageCard';
 import { getName } from '@spaces/utils/getParticipantsName';
-
 import {
   ContactParticipant,
   InteractionEventParticipant,
   JobRoleParticipant,
   UserParticipant,
 } from '@graphql/types';
-import { Divider } from '@chakra-ui/react';
+import { Divider } from '@ui/presentation/Divider';
 
 const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
   const sender =

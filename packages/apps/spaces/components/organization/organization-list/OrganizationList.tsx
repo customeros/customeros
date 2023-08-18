@@ -30,8 +30,7 @@ import { useRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '@spaces/utils/mapGCliSearchTerms';
 import { useRouter } from 'next/router';
-
-import { useDisclosure } from '@chakra-ui/react-use-disclosure';
+import { useDisclosure } from '@ui/utils';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { Text } from '@chakra-ui/react';
 

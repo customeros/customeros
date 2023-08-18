@@ -14,7 +14,7 @@ import { handleSendEmail } from '@organization/components/Timeline/events/email/
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import { useDisclosure } from '@chakra-ui/react-use-disclosure';
+import { useDisclosure } from '@ui/utils';
 
 interface TimelineActionsProps {
   onScrollBottom: () => void;
