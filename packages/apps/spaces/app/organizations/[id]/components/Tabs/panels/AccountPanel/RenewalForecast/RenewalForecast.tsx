@@ -100,7 +100,7 @@ export const RenewalForecast: FC<{
             </Heading>
           </Flex>
         </CardBody>
-        {amount && updatedBy && (
+        {!!amount && updatedBy && (
           <CardFooter p='0' as={Flex} flexDir='column'>
             <Divider mt='4' mb='2' />
             <Flex align='flex-start'>

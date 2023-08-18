@@ -110,10 +110,12 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     }
     if (newMode === REPLY_ALL_MODE) {
       const newTo = getEmailParticipantsNameAndEmail(to, 'value');
+      const newCC = getEmailParticipantsNameAndEmail(cc, 'value');
+      const newBCC = getEmailParticipantsNameAndEmail(bcc, 'value');
       newDefaultValues = new ComposeEmailDto({
         to: [...from, ...newTo],
-        cc,
-        bcc,
+        cc: newCC,
+        bcc: newBCC,
         subject: `Re: ${subject}`,
         content: mode === FORWARD_MODE ? '' : state.values.content,
       });
