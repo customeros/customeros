@@ -177,6 +177,8 @@ func convertCallEventPartyTypeToSourceType(partyType model.CallEventPartyType) s
 		return "ESIM"
 	case model.CALL_EVENT_TYPE_WEBTRC:
 		return "WEBRTC"
+	case model.CALL_EVENT_TYPE_VOICEMAIL:
+		return "VOICEMAIL"
 	default:
 		return "UNKNOWN"
 	}

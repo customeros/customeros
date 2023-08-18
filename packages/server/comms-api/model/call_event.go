@@ -5,9 +5,10 @@ import "time"
 type CallEventPartyType string
 
 const (
-	CALL_EVENT_TYPE_PSTN   = "pstn"
-	CALL_EVENT_TYPE_SIP    = "sip"
-	CALL_EVENT_TYPE_WEBTRC = "webrtc"
+	CALL_EVENT_TYPE_PSTN      = "pstn"
+	CALL_EVENT_TYPE_SIP       = "sip"
+	CALL_EVENT_TYPE_WEBTRC    = "webrtc"
+	CALL_EVENT_TYPE_VOICEMAIL = "voicemail"
 )
 
 type CallEventParty struct {
