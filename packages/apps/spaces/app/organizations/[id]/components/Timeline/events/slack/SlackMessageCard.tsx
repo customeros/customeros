@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from 'react';
-import { Card, CardBody } from '@ui/presentation/Card';
+import { Card, CardBody, CardProps } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
@@ -12,7 +12,7 @@ interface SlackMessageCardProps extends PropsWithChildren {
   content: string;
   onClick?: () => void;
   date: string;
-  w?: any;
+  w?: CardProps['w'];
   showDateOnHover?: boolean;
 }
 
