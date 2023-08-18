@@ -34,6 +34,9 @@ import {
   OrganizationAboutFormDto,
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
+import { Box } from '@ui/layout/Box';
+import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
+import React from 'react';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -310,7 +313,11 @@ export const AboutPanel = () => {
               formId='organization-about'
               placeholder='Last funding amount'
               min={0}
-              leftElement={<Icons.BankNote3 color='gray.500' />}
+              leftElement={
+                <Box color='gray.500' ml={1}>
+                  <CurrencyDollar height={16} />
+                </Box>
+              }
             />
           </HStack>
 
