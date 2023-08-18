@@ -9,7 +9,11 @@ export const ViewInSlackButton: FC<{ url: string }> = ({ url }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
-    <Tooltip label='View in Slack' variant='dark' hasArrow>
+    <Tooltip
+      label='' //View in Slack
+      variant='dark'
+      hasArrow
+    >
       <IconButton
         aria-label='View in slack'
         size='xs'
