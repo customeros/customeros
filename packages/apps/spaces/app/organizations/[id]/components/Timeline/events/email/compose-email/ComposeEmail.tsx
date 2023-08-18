@@ -1,5 +1,5 @@
 'use client';
-import React, { FC } from 'react';
+import React, { FC, useRef } from 'react';
 import { Button } from '@ui/form/Button';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 // import { FileUpload } from '@spaces/atoms/index';
@@ -30,6 +30,10 @@ export const ComposeEmail: FC<ComposeEmail> = ({
   cc,
   bcc,
 }) => {
+  const myRef = useRef<HTMLDivElement>(null);
+  const height =
+    modal && (myRef?.current?.getBoundingClientRect()?.height || 0) + 100 + 24;
+
   return (
     <Box
       borderTop={modal ? '1px dashed var(--gray-200, #EAECF0)' : 'none'}
@@ -50,13 +54,15 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           <ModeChangeButtons handleModeChange={onModeChange} />
         </div>
       )}
-      <ParticipantsSelectGroup
-        to={to}
-        cc={cc}
-        bcc={bcc}
-        modal={modal}
-        formId={formId}
-      />
+      <Box ref={myRef}>
+        <ParticipantsSelectGroup
+          to={to}
+          cc={cc}
+          bcc={bcc}
+          modal={modal}
+          formId={formId}
+        />
+      </Box>
 
       <Flex direction='column' align='flex-start' mt={2} flex={1} maxW='100%'>
         <FormAutoresizeTextarea
@@ -71,7 +77,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           outline='none'
           borderBottomWidth={0}
           minHeight={modal ? '100px' : '30px'}
-          maxHeight={modal ? '38vh' : 'auto'}
+          maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
+          height={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
           position='initial'
           overflowY='auto'
           _focusVisible={{
