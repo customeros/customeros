@@ -13,6 +13,7 @@ export const ViewInSlackButton: FC<{ url: string }> = ({ url }) => {
       <IconButton
         aria-label='View in slack'
         size='xs'
+        isDisabled
         variant={hovered ? 'ghost' : 'outline'}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
