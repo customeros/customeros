@@ -1,11 +1,10 @@
-import React, { PropsWithChildren, ReactNode } from 'react';
+import React, { PropsWithChildren } from 'react';
 import { Card, CardBody } from '@ui/presentation/Card';
-import { Flex, Text } from '@chakra-ui/react';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
-
 import User from '@spaces/atoms/icons/User';
 import { ViewInSlackButton } from '@organization/components/Timeline/events/slack/ViewInSlackButton';
-import { DateTimeUtils } from '@spaces/utils/date';
 
 interface SlackMessageCardProps extends PropsWithChildren {
   name: string;

@@ -9,7 +9,8 @@ import {
 } from '@graphql/types';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { Avatar } from '@ui/media/Avatar';
-import { Flex, Text } from '@chakra-ui/react';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
 import { getName } from '@spaces/utils/getParticipantsName';
 import Slack from '@spaces/atoms/icons/Slack';
 import { Button } from '@ui/form/Button';
@@ -81,6 +82,7 @@ export const SlackStub: FC<{ slackEvent: InteractionEvent }> = ({
         profilePhotoUrl={slackSender?.profilePhotoUrl}
         content={slackEvent?.content || ''}
         onClick={() => openModal(slackEvent)}
+        // @ts-expect-error typescript does not work well with aliases
         date={DateTimeUtils.formatTime(slackEvent?.date)}
         showDateOnHover
       >
