@@ -46,6 +46,7 @@ query OrganizationPeoplePanel($id: ID!) {
           platformName
           url
         }
+        profilePhotoUrl
       }
       totalElements
     }

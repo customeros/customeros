@@ -1,7 +1,7 @@
 import { SendMailRequest } from '@spaces/molecules/conversation-timeline-item/types';
 import axios from 'axios';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import {useOrganizationQuery} from "@organization/graphql/organization.generated";
+import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 
 export const handleSendEmail = (
   textEmailContent: string,
@@ -38,7 +38,6 @@ export const handleSendEmail = (
     })
     .then((res) => {
       if (res.data) {
-
         toastSuccess(
           'Email successfully sent',
           `send-email-success-${subject}`,

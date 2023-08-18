@@ -12,4 +12,11 @@ export const Tooltip = defineStyleConfig({
     border: '1px solid',
     borderColor: 'gray.100',
   },
+  variants: {
+    dark: {
+      bg: 'gray.700',
+      border: 'none',
+      color: 'white'
+    },
+  },
 });

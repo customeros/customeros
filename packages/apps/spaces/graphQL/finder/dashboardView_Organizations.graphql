@@ -107,7 +107,32 @@ query dashboardView_Organizations(
                 rawEmail
               }
             }
+            ... on ContactParticipant {
+              contactParticipant {
+                id
+                name
+                firstName
+                lastName
+              }
+            }
+            ... on JobRoleParticipant {
+              jobRoleParticipant {
+                contact {
+                  id
+                  name
+                  firstName
+                  lastName
+                }
+              }
+            }
+              ... on UserParticipant {
+              userParticipant {
+                id
+                firstName
+                lastName
+              }
           }
+        }
         }
         ... on Analysis {
           id

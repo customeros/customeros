@@ -54,6 +54,21 @@ export const Button = defineStyleConfig({
         },
       };
     },
+    link: () => {
+      return {
+        color: 'gray.500',
+        fontWeight: 'normal',
+        _hover: {
+          color: 'primary.700',
+        },
+        _focusVisible: {
+          color: 'primary.700',
+        },
+        _active: {
+          color: 'primary.700',
+        },
+      };
+    },
   },
   defaultProps: {},
 });

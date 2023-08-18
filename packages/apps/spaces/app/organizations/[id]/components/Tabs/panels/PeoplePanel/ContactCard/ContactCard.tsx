@@ -218,6 +218,7 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
           <Avatar
             name={state?.values?.name ?? data?.name}
             variant='shadowed'
+            src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
             icon={
               <User
                 color={'var(--chakra-colors-primary-700)'}

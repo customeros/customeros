@@ -1,5 +1,6 @@
 query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
     organization(id: $organizationId) {
+        slackChannelLink
         timelineEvents(from: $from, size: $size, timelineEventTypes: [INTERACTION_EVENT]) {
             __typename
             ... on InteractionEvent {
@@ -30,6 +31,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                     id
                     content
                 }
+
 
                 sentBy {
                     ... on EmailParticipant {
@@ -65,6 +67,20 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                             name
                             firstName
                             lastName
+                            profilePhotoUrl
+                        }
+                    }
+                    ... on JobRoleParticipant {
+                        __typename
+                        jobRoleParticipant {
+                            id
+                            contact {
+                                id
+                                name
+                                firstName
+                                lastName
+                                profilePhotoUrl
+                            }
                         }
                     }
                     ... on UserParticipant {
@@ -73,6 +89,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                             id
                             firstName
                             lastName
+                            profilePhotoUrl
                         }
                     }
                 }
@@ -101,6 +118,19 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                             id
                         }
                     }
+                    ... on JobRoleParticipant {
+                        __typename
+                        jobRoleParticipant {
+                            id
+                            contact {
+                                id
+                                name
+                                firstName
+                                lastName
+                                profilePhotoUrl
+                            }
+                        }
+                    }
                     ... on ContactParticipant {
                         __typename
                         contactParticipant {
@@ -117,6 +147,163 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                             id
                             firstName
                             lastName
+                        }
+                    }
+                }
+                interactionSession {
+                    name
+                    events {
+                        ... on InteractionEvent {
+                            id
+                            date: createdAt
+                            channel
+                            interactionSession {
+                                name
+                            }
+                            content
+                            contentType
+                            issue {
+                                externalLinks {
+                                    type
+                                    externalId
+                                    externalUrl
+                                }
+                            }
+                            repliesTo {
+                                id
+                            }
+                            summary {
+                                id
+                                content
+                                contentType
+                            }
+                            actionItems {
+                                id
+                                content
+                            }
+
+
+                            sentBy {
+                                ... on EmailParticipant {
+                                    __typename
+                                    type
+                                    emailParticipant {
+                                        email
+                                        id
+                                        contacts {
+                                            id
+                                            name
+                                            firstName
+                                            lastName
+                                            emails {
+                                                email
+                                            }
+                                        }
+                                        users {
+                                            id
+                                            firstName
+                                            lastName
+                                        }
+                                        organizations {
+                                            id
+                                            name
+                                        }
+                                    }
+                                }
+                                ... on ContactParticipant {
+                                    __typename
+                                    contactParticipant {
+                                        id
+                                        name
+                                        firstName
+                                        lastName
+                                        profilePhotoUrl
+                                    }
+                                }
+                                ... on JobRoleParticipant {
+                                    __typename
+                                    jobRoleParticipant {
+                                        id
+                                        contact {
+                                            id
+                                            name
+                                            firstName
+                                            lastName
+                                            profilePhotoUrl
+                                        }
+                                    }
+                                }
+                                ... on UserParticipant {
+                                    __typename
+                                    userParticipant {
+                                        id
+                                        firstName
+                                        lastName
+                                        profilePhotoUrl
+                                    }
+                                }
+                            }
+                            sentTo {
+                                __typename
+                                ... on EmailParticipant {
+                                    __typename
+                                    type
+                                    emailParticipant {
+                                        email
+                                        contacts {
+                                            id
+                                            name
+                                            firstName
+                                            lastName
+                                        }
+                                        users {
+                                            id
+                                            firstName
+                                            lastName
+                                        }
+                                        organizations {
+                                            id
+                                            name
+                                        }
+                                        id
+                                    }
+                                }
+                                ... on ContactParticipant {
+                                    __typename
+                                    contactParticipant {
+                                        name
+                                        id
+                                        firstName
+                                        lastName
+                                        profilePhotoUrl
+
+                                    }
+                                }
+                                ... on JobRoleParticipant {
+                                    __typename
+                                    jobRoleParticipant {
+                                        id
+                                        contact {
+                                            id
+                                            name
+                                            firstName
+                                            lastName
+                                            profilePhotoUrl
+                                        }
+                                    }
+                                }
+                                ... on UserParticipant {
+                                    __typename
+                                    type
+                                    userParticipant {
+                                        id
+                                        firstName
+                                        lastName
+                                        profilePhotoUrl
+
+                                    }
+                                }
+                            }
                         }
                     }
                 }

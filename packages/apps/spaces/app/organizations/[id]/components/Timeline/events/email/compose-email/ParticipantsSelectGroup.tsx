@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { InputProps } from '@ui/form/Input';
-
 import { EmailParticipantSelect } from '@organization/components/Timeline/events/email/compose-email/EmailParticipantSelect';
 import { useOutsideClick } from '@spaces/hooks/useOutsideClick';
-import { Box } from '@chakra-ui/react';
+import { Box } from  '@ui/layout/Box';
 import { EmailSubjectInput } from '@organization/components/Timeline/events/email/compose-email/EmailSubjectInput';
 import { Button } from '@ui/form/Button';
 import Image from 'next/image';
