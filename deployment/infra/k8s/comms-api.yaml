@@ -13,7 +13,7 @@ spec:
         app: comms-api
     spec:                        # Spec for the container which will run in the Pod
       containers:
-        - image: ghcr.io/openline-ai/openline-customer-os/comms-api:latest
+        - image: ghcr.io/openline-ai/openline-customer-os/comms-api:local
           name: comms-api
           imagePullPolicy: Never
           ports:
@@ -70,3 +70,14 @@ spec:
               value: "customer-db-redis-master.openline.svc.cluster.local:6379"
             - name: REDIS_SCHEME
               value: "redis"
+            - name: COMMS_API_MAIL_API_KEY
+              value: "4537b6d3-915c-4050-badb-f2514a618474"
+            - name: COMMS_API_VCON_API_KEY
+              value: "4537b6d3-915c-4050-badb-f2514a618474"
+            - name: CALCOM_SECRET
+              value: "test"
+
+            - name: JAEGER_AGENT_HOST
+              value: "jaeger-agent.openline.svc.cluster.local"
+            - name: JAEGER_AGENT_PORT
+              value: "6831"
