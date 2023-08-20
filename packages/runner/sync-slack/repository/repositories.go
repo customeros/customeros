@@ -18,7 +18,7 @@ type Repositories struct {
 
 	CommonRepositories       *commonrepo.Repositories
 	TenantSettingsRepository postgresrepo.TenantSettingsRepository
-	SlackSyncReposiotry      postgresrepo.SlackSyncRepository
+	SlackSyncReposiotry      postgresrepo.SlackSyncSettingsRepository
 	SlackSyncRunRepository   postgresrepo.SlackSyncRunRepository
 
 	TenantRepository       neo4jrepo.TenantRepository

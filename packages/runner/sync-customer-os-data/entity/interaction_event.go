@@ -4,7 +4,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
-	"time"
 )
 
 func (participant InteractionEventParticipant) GetNodeLabel() string {
@@ -31,16 +30,6 @@ type InteractionEventParticipant struct {
 	RelationType              string `json:"relationType,omitempty"`
 	ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
 	OrganizationId            string `json:"organizationId,omitempty"`
-}
-
-type InteractionSession struct {
-	ExternalId   string     `json:"externalId,omitempty"`
-	Channel      string     `json:"channel,omitempty"`
-	Type         string     `json:"type,omitempty"`
-	CreatedAt    *time.Time `json:"createdAtTime,omitempty"`
-	CreatedAtStr string     `json:"createdAt,omitempty"`
-	Status       string     `json:"status,omitempty"`
-	Identifier   string     `json:"identifier,omitempty"`
 }
 
 type InteractionEventData struct {

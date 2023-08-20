@@ -2,12 +2,26 @@ package entity
 
 import "time"
 
-type SlackSync struct {
-	ChannelId  string    `gorm:"primary_key;varchar(50)" binding:"required"`
-	Tenant     string    `gorm:"primary_key;type:varchar(255)" binding:"required"`
-	LastSyncAt time.Time `gorm:"type:timestamp with time zone;not null" binding:"required"`
+type SlackSyncSettings struct {
+	Tenant         string     `gorm:"primary_key;type:varchar(255)"`
+	ChannelId      string     `gorm:"primary_key;varchar(50)"`
+	ChannelName    string     `gorm:"primary_key;varchar(1000)"`
+	SlackAccess    bool       `gorm:"column:slack_access;not null;default:true"`
+	OrganizationId string     `gorm:"varchar(50)"`
+	Enabled        bool       `gorm:"column:enabled;not null;default:false"`
+	CreatedAt      time.Time  `gorm:"type:timestamp with time zone;not null;default:CURRENT_TIMESTAMP - interval '30 day'"`
+	SyncSince      time.Time  `gorm:"type:timestamp with time zone;not null;default:date_trunc('day', CURRENT_TIMESTAMP - interval '30 day')" `
+	LookbackWindow int        `gorm:"default:7;not null"`
+	LastSyncAt     *time.Time `gorm:"type:timestamp with time zone"`
 }
 
-func (SlackSync) TableName() string {
-	return "slack_sync"
+func (SlackSyncSettings) TableName() string {
+	return "slack_sync_settings"
+}
+
+func (s SlackSyncSettings) GetSyncStartDate() time.Time {
+	if s.LastSyncAt == nil {
+		return s.SyncSince
+	}
+	return *s.LastSyncAt
 }

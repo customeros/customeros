@@ -468,7 +468,8 @@ func (r *interactionEventRepository) MergeInteractionSessionForEvent(ctx context
 									is.identifier=$identifier,
 									is.status=$status,
 									is.type=$type,
-									is.channel=$channel
+									is.channel=$channel,
+									is.name=$name
 		WITH is, ie
 		MERGE (ie)-[r:PART_OF]->(is)`, tenant, tenant)
 
@@ -486,6 +487,7 @@ func (r *interactionEventRepository) MergeInteractionSessionForEvent(ctx context
 		"channel":            session.Channel,
 		"type":               session.Type,
 		"status":             session.Status,
+		"name":               session.Name,
 	})
 }
 
