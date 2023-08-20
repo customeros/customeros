@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Organization } from '@graphql/types';
 import { Avatar } from '@ui/media/Avatar';
 import { Link } from '@ui/navigation/Link';
+import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
+import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip';
+import { Icons } from '@ui/media/Icon';
+import { Fade } from '@ui/transitions/Fade';
 import {
   getExternalUrl,
   getFormattedLink,
@@ -18,6 +23,7 @@ export const OrganizationTableCell = ({
   organization,
 }: OrganizationTableCellProps) => {
   const router = useRouter();
+  const [isHovered, setIsHovered] = useState(false);
 
   const href = `/organizations/${organization.id}?tab=about`;
   const hasParent = !!organization.subsidiaryOf?.length;
@@ -29,12 +35,13 @@ export const OrganizationTableCell = ({
     <Flex align='center'>
       <Tooltip label={fullName} fontWeight='normal'>
         <Avatar
+          variant='outline'
           name={fullName}
           cursor='pointer'
           onClick={() => router.push(href)}
         />
       </Tooltip>
-      <Flex flexDir='column' ml='2'>
+      <Flex display='inline-block' ml='3' isTruncated>
         <Link
           href={href}
           color='gray.700'
@@ -43,17 +50,44 @@ export const OrganizationTableCell = ({
         >
           {fullName}
         </Link>
+        <br />
         {organization.website && (
-          <Link
-            target='_blank'
-            rel='noopener noreferrer'
-            color='gray.500'
-            href={getExternalUrl(organization.website)}
-            transition='color 0.2s ease-in-out'
-            _hover={{ textDecoration: 'none', color: 'gray.700' }}
-          >
-            {getFormattedLink(organization.website)}
-          </Link>
+          <>
+            <Text
+              isTruncated
+              color='gray.500'
+              onMouseEnter={() => setIsHovered(true)}
+            >
+              {getFormattedLink(organization.website)}
+            </Text>
+            <Fade in={isHovered} unmountOnExit>
+              <Flex
+                position='absolute'
+                bottom='16px'
+                pl='1'
+                ml='-1'
+                bg='white'
+                borderRadius='lg'
+                boxShadow='base'
+                zIndex='overlay'
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                <Text color='gray.500' cursor='default'>
+                  {getFormattedLink(organization?.website)}
+                </Text>
+                <IconButton
+                  ml='1'
+                  variant='ghost'
+                  size='xs'
+                  onClick={() =>
+                    window.open(getExternalUrl(organization.website ?? '/'))
+                  }
+                  aria-label='organization website'
+                  icon={<Icons.LinkExternal2 color='gray.500' />}
+                />
+              </Flex>
+            </Fade>
+          </>
         )}
       </Flex>
     </Flex>

@@ -35,38 +35,38 @@ const OrganizationListActions = ({
     if (Object.keys(selection).length > 1 && mode === 'MERGE') {
       return (
         <IconButton
-          size='sm'
+          size='xs'
           variant='ghost'
           colorScheme='green'
           onClick={() => onMergeOrganizations(table)}
           aria-label='Merge Organizations'
-          icon={<Icons.Check boxSize='6' />}
+          icon={<Icons.Check boxSize='4' />}
         />
       );
     }
     if (Object.keys(selection).length >= 1 && mode === 'ARCHIVE') {
       return (
         <IconButton
-          size='sm'
+          size='xs'
           variant='ghost'
           colorScheme='red'
           onClick={() => onArchiveOrganizations(table)}
           aria-label='Archive Organizations'
-          icon={<Icons.Trash1 boxSize='6' />}
+          icon={<Icons.Trash1 boxSize='4' />}
         />
       );
     }
 
     return (
       <IconButton
-        size='sm'
+        size='xs'
         aria-label='Discard'
         variant='ghost'
         onClick={() => {
           toggleSelection(false);
           table.resetRowSelection();
         }}
-        icon={<Icons.XClose boxSize='6' color='gray.400' />}
+        icon={<Icons.XClose boxSize='4' color='gray.400' />}
       />
     );
   }
@@ -74,11 +74,11 @@ const OrganizationListActions = ({
   return (
     <Menu>
       <MenuButton
-        size='sm'
+        size='xs'
         variant='ghost'
         as={IconButton}
         aria-label='Table Actions'
-        icon={<Icons.DotsVertical color='gray.400' boxSize='6' />}
+        icon={<Icons.DotsVertical color='gray.400' boxSize='4' />}
       />
       <MenuList boxShadow='xl'>
         <MenuItem onClick={onCreateOrganization}>Add organization</MenuItem>

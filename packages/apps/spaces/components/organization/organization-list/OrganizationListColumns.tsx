@@ -27,19 +27,16 @@ export const columns = [
         />
       );
     },
+    minSize: 200,
     header: (props) => <THead<Organization> title='Company' {...props} />,
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
   columnHelper.accessor('relationshipStages', {
     id: 'RELATIONSHIP',
     header: (props) => (
-      <THead<Organization>
-        title='Relationship'
-        subTitle='Stage'
-        columnHasIcon
-        {...props}
-      />
+      <THead<Organization> title='Relationship | Stage' {...props} />
     ),
+    minSize: 200,
     cell: (props) => {
       const relationshipStages = props.getValue();
       const relationship = relationshipStages?.[0]?.relationship;
@@ -69,6 +66,7 @@ export const columns = [
   }),
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_LIKELIHOOD',
+    minSize: 200,
     cell: (props) => {
       const organizationId = props.row.original.id;
       const value = props.getValue()?.renewalLikelihood;
@@ -91,7 +89,8 @@ export const columns = [
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
   columnHelper.accessor('accountDetails', {
-    id: 'TIME_TO_RENEWAL',
+    id: 'RENEWAL_CYCLE_NEXT',
+    minSize: 200,
     cell: (props) => {
       const values = props.getValue()?.billingDetails;
       const renewalDate = values?.renewalCycleNext;
@@ -110,7 +109,8 @@ export const columns = [
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
   columnHelper.accessor('accountDetails', {
-    id: 'RENEWAL_FORECAST',
+    id: 'FORECAST_AMOUNT',
+    minSize: 200,
     cell: (props) => {
       const value = props.getValue()?.renewalForecast;
       const amount = value?.amount;
@@ -131,6 +131,7 @@ export const columns = [
   }),
   columnHelper.accessor('owner', {
     id: 'OWNER',
+    minSize: 200,
     cell: (props) => (
       <OwnerTableCell
         owner={props.getValue()}
@@ -142,6 +143,7 @@ export const columns = [
   }),
   columnHelper.accessor('market', {
     id: 'LAST_TOUCHPOINT',
+    minSize: 200,
     cell: (props) => (
       <LastTouchpointTableCell
         lastTouchPointAt={props.row.original.lastTouchPointAt}
@@ -151,12 +153,7 @@ export const columns = [
       />
     ),
     header: (props) => (
-      <THead<Organization>
-        title='Last touchpoint'
-        subTitle={'How long ago'}
-        columnHasIcon
-        {...props}
-      />
+      <THead<Organization> title='Last touchpoint' {...props} />
     ),
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),

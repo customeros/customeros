@@ -5,12 +5,9 @@ import {
   useRemoveStageFromOrganizationRelationshipMutation,
 } from '@spaces/graphql';
 import { stageOptions } from './util';
-import {
-  Select,
-  SelectMenu,
-  SelectInput,
-  SelectWrapper,
-} from '@spaces/ui/form/select';
+
+import { Select } from '@ui/form/SyncSelect/Select';
+import { SelectOption } from '@shared/types/SelectOptions';
 
 interface RelationshipStageProps {
   defaultValue?: string | null;
@@ -27,6 +24,9 @@ export const RelationshipStage = ({
     useSetStageToOrganizationRelationshipMutation();
   const [removeStageFromRelationship] =
     useRemoveStageFromOrganizationRelationshipMutation();
+  const value = defaultValue
+    ? stageOptions.find((o) => o.value === defaultValue)
+    : null;
 
   const handleRemoveStage = useCallback(() => {
     if (!relationship || !organizationId) return;
@@ -98,32 +98,58 @@ export const RelationshipStage = ({
   );
 
   const handleSelect = useCallback(
-    (value: string) => {
+    (option: SelectOption) => {
       if (!relationship || !organizationId) return;
 
-      if (!value) {
+      if (!option) {
         handleRemoveStage();
       } else {
-        handleAddStage(value);
+        handleAddStage(option.value);
       }
     },
     [handleRemoveStage, handleAddStage, relationship, organizationId],
   );
 
   return (
-    <Select<string>
+    <Select
+      size='sm'
+      isClearable
+      value={value}
+      isLoading={loading}
+      variant='unstyled'
+      placeholder='Stage'
+      backspaceRemovesValue
       options={stageOptions}
-      onSelect={handleSelect}
-      value={defaultValue ?? ''}
-    >
-      <SelectWrapper isHidden={!relationship}>
-        <SelectInput
-          placeholder='Stage'
-          saving={loading}
-          customStyles={{ marginLeft: 32 }}
-        />
-        <SelectMenu />
-      </SelectWrapper>
-    </Select>
+      onChange={handleSelect}
+      chakraStyles={{
+        valueContainer: (props) => ({
+          ...props,
+          p: 0,
+        }),
+        singleValue: (props) => ({
+          ...props,
+          paddingBottom: 0,
+          ml: 0,
+        }),
+        control: (props) => ({
+          ...props,
+          minH: '0',
+        }),
+        clearIndicator: (props) => ({
+          ...props,
+          display: 'none',
+        }),
+        placeholder: (props) => ({
+          ...props,
+          ml: 0,
+          color: 'gray.500',
+        }),
+        inputContainer: (props) => ({
+          ...props,
+          py: 0,
+          ml: 0,
+        }),
+      }}
+    />
   );
 };
