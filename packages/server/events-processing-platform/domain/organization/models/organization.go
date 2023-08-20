@@ -26,7 +26,6 @@ type Organization struct {
 	Market            string                             `json:"market"`
 	LastFundingRound  string                             `json:"lastFundingRound"`
 	LastFundingAmount string                             `json:"lastFundingAmount"`
-	SlackChannelLink  string                             `json:"slackChannelLink"`
 	Source            common_models.Source               `json:"source"`
 	CreatedAt         time.Time                          `json:"createdAt"`
 	UpdatedAt         time.Time                          `json:"updatedAt"`

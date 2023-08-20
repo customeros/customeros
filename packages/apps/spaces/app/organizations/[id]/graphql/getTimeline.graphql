@@ -1,6 +1,5 @@
 query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
     organization(id: $organizationId) {
-        slackChannelLink
         timelineEvents(from: $from, size: $size, timelineEventTypes: [INTERACTION_EVENT]) {
             __typename
             ... on InteractionEvent {

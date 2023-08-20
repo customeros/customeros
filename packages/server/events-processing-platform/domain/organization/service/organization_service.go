@@ -47,7 +47,6 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		Market:            request.Market,
 		LastFundingRound:  request.LastFundingRound,
 		LastFundingAmount: request.LastFundingAmount,
-		SlackChannelLink:  request.SlackChannelLink,
 	}
 	command := commands.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {

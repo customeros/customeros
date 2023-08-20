@@ -65,7 +65,6 @@ func TestQueryResolver_Organization(t *testing.T) {
 		ValueProposition:  "value-proposition",
 		LastFundingRound:  "Seed",
 		LastFundingAmount: "10k",
-		SlackChannelLink:  "slack-channel-link",
 		IsPublic:          true,
 	}
 	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
@@ -96,7 +95,6 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.ValueProposition, *organizationStruct.Organization.ValueProposition)
 	require.Equal(t, model.FundingRoundSeed, *organizationStruct.Organization.LastFundingRound)
 	require.Equal(t, inputOrganizationEntity.LastFundingAmount, *organizationStruct.Organization.LastFundingAmount)
-	require.Equal(t, inputOrganizationEntity.SlackChannelLink, *organizationStruct.Organization.SlackChannelLink)
 	require.NotNil(t, organizationStruct.Organization.CreatedAt)
 }
 
@@ -363,7 +361,6 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, model.MarketB2b, *updatedOrganization.Market)
 	require.Equal(t, model.FundingRoundIPO, *updatedOrganization.LastFundingRound)
 	require.Equal(t, "1M", *updatedOrganization.LastFundingAmount)
-	require.Equal(t, "updated slack channel link", *updatedOrganization.SlackChannelLink)
 	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
 
 	// Check still single organization node exists after update, no new node created

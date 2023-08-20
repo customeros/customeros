@@ -16337,7 +16337,6 @@
             "deprecationReason": null
           },
           {
-            "name": "slackChannelLink",
             "description": null,
             "args": [],
             "type": {
@@ -17416,7 +17415,6 @@
             "deprecationReason": null
           },
           {
-            "name": "slackChannelLink",
             "description": null,
             "type": {
               "kind": "SCALAR",

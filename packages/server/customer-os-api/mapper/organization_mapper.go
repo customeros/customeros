@@ -38,7 +38,6 @@ func MapOrganizationUpdateInputToEntity(input *model.OrganizationUpdateInput) *e
 		ValueProposition:  utils.IfNotNilString(input.ValueProposition),
 		LastFundingRound:  MapFundingRoundFromModel(input.LastFundingRound),
 		LastFundingAmount: utils.IfNotNilString(input.LastFundingAmount),
-		SlackChannelLink:  utils.IfNotNilString(input.SlackChannelLink),
 		SourceOfTruth:     entity.DataSourceOpenline,
 	}
 }
@@ -62,7 +61,6 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		Market:                        MapMarketToModel(entity.Market),
 		LastFundingRound:              MapFundingRoundToModel(entity.LastFundingRound),
 		LastFundingAmount:             utils.StringPtr(entity.LastFundingAmount),
-		SlackChannelLink:              utils.StringPtr(entity.SlackChannelLink),
 		CreatedAt:                     entity.CreatedAt,
 		UpdatedAt:                     entity.UpdatedAt,
 		Source:                        MapDataSourceToModel(entity.Source),
