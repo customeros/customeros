@@ -17,11 +17,11 @@ import (
 const pageSize = 200
 
 type SlackService interface {
-	FetchUserIdsFromSlackChannel(ctx context.Context, channelId string, slackDtls SlackWorkspaceDtls) ([]string, error)
-	FetchUserInfo(ctx context.Context, userId string, slackDtls SlackWorkspaceDtls) (*slack.User, error)
-	FetchNewMessagesFromSlackChannel(ctx context.Context, channelId string, from, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error)
-	FetchMessagesFromSlackChannelWithReplies(ctx context.Context, channelId string, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error)
-	FetchNewThreadMessages(ctx context.Context, channelId, parentTs string, from, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error)
+	FetchUserIdsFromSlackChannel(ctx context.Context, token, channelId string) ([]string, error)
+	FetchUserInfo(ctx context.Context, token, userId string) (*slack.User, error)
+	FetchNewMessagesFromSlackChannel(ctx context.Context, token, channelId string, from, to time.Time) ([]slack.Message, error)
+	FetchMessagesFromSlackChannelWithReplies(ctx context.Context, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error)
+	FetchNewThreadMessages(ctx context.Context, token, channelId, parentTs string, from, to time.Time) ([]slack.Message, error)
 }
 
 type slackService struct {
@@ -38,11 +38,11 @@ func NewSlackService(cfg *config.Config, log logger.Logger, repositories *reposi
 	}
 }
 
-func (s *slackService) FetchUserIdsFromSlackChannel(ctx context.Context, channelId string, slackDtls SlackWorkspaceDtls) ([]string, error) {
+func (s *slackService) FetchUserIdsFromSlackChannel(ctx context.Context, token, channelId string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchUserIdsFromSlackChannel")
 	defer span.Finish()
 
-	client := slack.New(slackDtls.token)
+	client := slack.New(token)
 
 	users := make([]string, 0)
 
@@ -89,11 +89,11 @@ func (s *slackService) FetchUserIdsFromSlackChannel(ctx context.Context, channel
 	return users, nil
 }
 
-func (s *slackService) FetchUserInfo(ctx context.Context, userId string, slackDtls SlackWorkspaceDtls) (*slack.User, error) {
+func (s *slackService) FetchUserInfo(ctx context.Context, token, userId string) (*slack.User, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchUserFromSlackChannel")
 	defer span.Finish()
 
-	client := slack.New(slackDtls.token)
+	client := slack.New(token)
 
 	slackUser, err := client.GetUserInfo(userId)
 	if err != nil {
@@ -103,12 +103,12 @@ func (s *slackService) FetchUserInfo(ctx context.Context, userId string, slackDt
 	return slackUser, nil
 }
 
-func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, channelId string, from, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error) {
+func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, token, channelId string, from, to time.Time) ([]slack.Message, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchNewMessagesFromSlackChannel")
 	defer span.Finish()
 	span.LogFields(log.String("channelId", channelId), log.Object("from", from), log.Object("to", to))
 
-	client := slack.New(slackDtls.token)
+	client := slack.New(token)
 
 	messages := make([]slack.Message, 0, pageSize)
 
@@ -155,14 +155,14 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, cha
 	return messages, nil
 }
 
-func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Context, channelId string, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error) {
+func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Context, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchMessagesFromSlackChannelWithReplies")
 	defer span.Finish()
-	span.LogFields(log.String("channelId", channelId), log.Int("lookBackWindowDays", slackDtls.lookBackWindowDays), log.Object("to", to))
+	span.LogFields(log.String("channelId", channelId), log.Int("lookBackWindowDays", lookbackWindow), log.Object("to", to))
 
-	client := slack.New(slackDtls.token)
+	client := slack.New(token)
 	messages := make([]slack.Message, 0, pageSize)
-	from := utils.Now().AddDate(0, 0, 0-slackDtls.lookBackWindowDays)
+	from := utils.Now().AddDate(0, 0, 0-lookbackWindow)
 
 	var cursor = "" // initial empty cursor
 	for {
@@ -212,12 +212,12 @@ func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Cont
 	return messages, nil
 }
 
-func (s *slackService) FetchNewThreadMessages(ctx context.Context, channelId, parentTs string, from, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error) {
+func (s *slackService) FetchNewThreadMessages(ctx context.Context, token, channelId, parentTs string, from, to time.Time) ([]slack.Message, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchNewThreadMessages")
 	defer span.Finish()
 	span.LogFields(log.String("channelId", channelId), log.String("parentMessageTs", parentTs), log.Object("from", from), log.Object("to", to))
 
-	client := slack.New(slackDtls.token)
+	client := slack.New(token)
 
 	var messages []slack.Message
 	messages = make([]slack.Message, 0, pageSize)

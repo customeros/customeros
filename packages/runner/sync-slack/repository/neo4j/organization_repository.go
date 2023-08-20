@@ -11,20 +11,19 @@ import (
 )
 
 type OrganizationRepository interface {
-	GetOrganizationsWithSlackChannels(ctx context.Context, tenant string) ([]*dbtype.Node, error)
+	GetOrganization(ctx context.Context, tenant, id string) (*dbtype.Node, error)
 }
 
 type organizationRepository struct {
 	driver *neo4j.DriverWithContext
 }
 
-func (r *organizationRepository) GetOrganizationsWithSlackChannels(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationsWithSlackChannels")
+func (r *organizationRepository) GetOrganization(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(span)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization) 
-				WHERE NOT org.slackChannelLink IS NULL AND org.slackChannelLink <> ''
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) 
 				RETURN org`
 	span.LogFields(log.String("query", query))
 
@@ -34,13 +33,14 @@ func (r *organizationRepository) GetOrganizationsWithSlackChannels(ctx context.C
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, map[string]any{
 			"tenant": tenant,
+			"id":     id,
 		})
-		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.([]*dbtype.Node), nil
+	return result.(*dbtype.Node), nil
 }
 
 func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {

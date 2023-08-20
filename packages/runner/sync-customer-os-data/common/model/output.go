@@ -95,6 +95,7 @@ type Output struct {
 	PartOfExternalId               string   `json:"partOfExternalId,omitempty"`
 	PartOfSession                  struct {
 		ExternalId string `json:"externalId,omitempty"`
+		Name       string `json:"name,omitempty"`
 		Channel    string `json:"channel,omitempty"`
 		Type       string `json:"type,omitempty"`
 		CreatedAt  string `json:"createdAt,omitempty"`

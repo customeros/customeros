@@ -91,6 +91,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	var input struct {
 		Ts                     string            `json:"ts,omitempty"`
 		ChannelId              string            `json:"channel_id,omitempty"`
+		ChannelName            string            `json:"channel_name,omitempty"`
 		Type                   string            `json:"type,omitempty"`
 		SenderUser             string            `json:"user,omitempty"`
 		Text                   string            `json:"text,omitempty"`
@@ -127,6 +128,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	output.PartOfSession.Channel = "SLACK"
 	output.PartOfSession.Type = "THREAD"
 	output.PartOfSession.Status = "ACTIVE"
+	output.PartOfSession.Name = input.ChannelName
 	if input.ThreadTs != "" {
 		if input.ThreadTs != input.Ts {
 			output.Hide = true

@@ -40,5 +40,5 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 }
 
 func syncSlackRawJob(cont *container.Container) {
-	service.NewSlackRawService(cont.Cfg, cont.Log, cont.Repositories, cont.RawDataStoreDB).FetchAllTenantsDataFromSlack()
+	service.NewSlackRawService(cont.Cfg, cont.Log, cont.Repositories, cont.RawDataStoreDB).SyncSlackRawData()
 }
