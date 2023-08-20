@@ -16,7 +16,6 @@ mutation UpdateOrganization($organizationId: ID!) {
             targetAudience: "updated target audience"
             lastFundingRound: IPO
             lastFundingAmount: "1M"
-            slackChannelLink: "updated slack channel link"
         }) {
       id
       name
@@ -36,6 +35,5 @@ mutation UpdateOrganization($organizationId: ID!) {
       targetAudience
       lastFundingRound
       lastFundingAmount
-      slackChannelLink
     }
 }

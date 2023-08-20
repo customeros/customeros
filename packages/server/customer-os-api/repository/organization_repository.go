@@ -129,7 +129,6 @@ func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTra
 					org.valueProposition=$valueProposition,
 					org.lastFundingRound=$lastFundingRound,
 					org.lastFundingAmount=$lastFundingAmount,
-					org.slackChannelLink=$slackChannelLink,
 					org.sourceOfTruth=$sourceOfTruth,
 					org.updatedAt=$now 
 			 RETURN org`
@@ -153,7 +152,6 @@ func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTra
 			"valueProposition":  organization.ValueProposition,
 			"lastFundingRound":  organization.LastFundingRound,
 			"lastFundingAmount": organization.LastFundingAmount,
-			"slackChannelLink":  organization.SlackChannelLink,
 			"now":               utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
@@ -370,7 +368,6 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 				primary.targetAudience = CASE WHEN primary.targetAudience is null OR primary.targetAudience = '' THEN merged.targetAudience ELSE primary.targetAudience END, 
 				primary.lastFundingRound = CASE WHEN primary.lastFundingRound is null OR primary.lastFundingRound = '' THEN merged.lastFundingRound ELSE primary.lastFundingRound END, 
 				primary.lastFundingAmount = CASE WHEN primary.lastFundingAmount is null OR primary.lastFundingAmount = '' THEN merged.lastFundingAmount ELSE primary.lastFundingAmount END, 
-				primary.slackChannelLink = CASE WHEN primary.slackChannelLink is null OR primary.slackChannelLink = '' THEN merged.slackChannelLink ELSE primary.slackChannelLink END, 
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = $now
 			`,

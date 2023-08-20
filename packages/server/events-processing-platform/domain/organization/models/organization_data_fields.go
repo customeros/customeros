@@ -19,7 +19,6 @@ type OrganizationDataFields struct {
 	Market            string
 	LastFundingRound  string
 	LastFundingAmount string
-	SlackChannelLink  string
 }
 
 type OrganizationFields struct {

@@ -51,7 +51,6 @@ type Organization implements Node {
     employees:   Int64
     lastFundingRound: FundingRound
     lastFundingAmount: String
-    slackChannelLink: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -159,7 +158,6 @@ input OrganizationUpdateInput {
     valueProposition: String
     lastFundingRound: FundingRound
     lastFundingAmount: String
-    slackChannelLink: String
 }
 
 input LinkOrganizationsInput {

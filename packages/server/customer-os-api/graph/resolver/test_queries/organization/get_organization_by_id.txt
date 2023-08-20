@@ -12,7 +12,6 @@ query GetOrganization($organizationId: ID!){
     valueProposition
     lastFundingRound
     lastFundingAmount
-    slackChannelLink
     isPublic
     createdAt
     lastTouchPointTimelineEventId

@@ -2021,7 +2021,6 @@ export type Organization = Node & {
   phoneNumbers: Array<PhoneNumber>;
   relationshipStages: Array<OrganizationRelationshipStage>;
   relationships: Array<OrganizationRelationship>;
-  slackChannelLink?: Maybe<Scalars['String']>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -2150,7 +2149,6 @@ export type OrganizationUpdateInput = {
   lastFundingRound?: InputMaybe<FundingRound>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
-  slackChannelLink?: InputMaybe<Scalars['String']>;
   subIndustry?: InputMaybe<Scalars['String']>;
   targetAudience?: InputMaybe<Scalars['String']>;
   valueProposition?: InputMaybe<Scalars['String']>;
