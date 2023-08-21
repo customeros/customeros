@@ -78,7 +78,14 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
   };
 
   return (
-    <Flex alignItems='baseline' marginBottom={-1} marginTop={0} flex={1}>
+    <Flex
+      alignItems='baseline'
+      marginBottom={-1}
+      marginTop={0}
+      flex={1}
+      maxH='86px'
+      overflowY='auto'
+    >
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
         {entryType}:
       </Text>
