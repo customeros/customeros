@@ -3,7 +3,6 @@ import { OrganizationTableCell } from '@spaces/finder/finder-table';
 import { Organization } from '@graphql/types';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
 import { LastTouchpointTableCell } from '@spaces/finder/finder-table/LastTouchpointTableCell';
-// import { Skeleton } from '@spaces/atoms/skeleton/Skeleton';
 import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
 import { Flex } from '@ui/layout/Flex';
 
@@ -12,8 +11,6 @@ import { RelationshipStage } from '../organization-details/stage/RelationshipSta
 import { RenewalLikelihoodCell } from '../organization-details/renewal/RenewalLikelihoodCell';
 import { RenewalForecastCell } from '../organization-details/renewal/RenewalForecastCell';
 import { TimeToRenewalCell } from '../organization-details/renewal/TimeToRenewalCell';
-
-import styles from './organization-list.module.scss';
 
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
