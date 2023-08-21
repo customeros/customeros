@@ -83,13 +83,7 @@ export const RenewalLikelihoodCell = ({
         placeholder='Not set'
         value={value}
         onChange={handleChange}
-        leftElement={
-          !currentProbability ? (
-            <Icons.Dot boxSize='3' color='gray.500' />
-          ) : (
-            <Flex w='3' h='3' />
-          )
-        }
+        leftElement={<Flex w='3' h='3' />}
         options={renewalLikelihoodOptions}
         chakraStyles={{
           singleValue: (props) => ({
@@ -126,7 +120,9 @@ export const RenewalLikelihoodCell = ({
             <Icons.ArrowNarrowDownRight boxSize='3' color='gray.500' />
           )}
           <Text color='gray.500' ml='2'>
-            {updatedAt ? formatDistanceToNow(new Date(updatedAt)) : 'Not set'}
+            {updatedAt
+              ? `${formatDistanceToNow(new Date(updatedAt))} ago`
+              : 'Not set'}
           </Text>
         </Flex>
       )}

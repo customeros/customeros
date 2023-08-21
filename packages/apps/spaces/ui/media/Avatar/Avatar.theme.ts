@@ -40,7 +40,6 @@ export const Avatar = helpers.defineMultiStyleConfig({
   baseStyle: () => ({
     container: {
       bg: 'primary.100',
-      boxShadow: 'avatarRing',
     },
     label: {
       color: 'primary.700',
@@ -82,6 +81,15 @@ export const Avatar = helpers.defineMultiStyleConfig({
     shadowed: {
       container: {
         boxShadow: 'avatarRing',
+      },
+    },
+    outline: {
+      container: {
+        bg: 'primary.50',
+        border: '1px solid',
+        '&': {
+          borderColor: 'primary.200',
+        },
       },
     },
   },

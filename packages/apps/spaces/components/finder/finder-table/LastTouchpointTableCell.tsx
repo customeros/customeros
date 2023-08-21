@@ -1,15 +1,10 @@
 import React from 'react';
 import { Maybe, TimelineEvent } from '@spaces/graphql';
+import { Icons } from '@ui/media/Icon';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+
 import { DateTimeUtils } from '../../../utils';
-import { TableCell } from '@spaces/atoms/table';
-import {
-  Company,
-  Meeting,
-  Notes,
-  OutgoingEmail,
-  OutgoingVoice,
-  UpdateOnIssue,
-} from '@spaces/atoms/icons';
 
 export const LastTouchpointTableCell = ({
   lastTouchPointAt,
@@ -28,7 +23,7 @@ export const LastTouchpointTableCell = ({
         switch (lastTouchPointTimelineEvent.actionType) {
           case 'CREATED':
             label += 'Created';
-            icon = <Company width='24' height='24' viewBox='0 0 24 24' />;
+            icon = <Icons.Building7 boxSize='3' color='gray.700' />;
             break;
           default:
             break;
@@ -39,7 +34,7 @@ export const LastTouchpointTableCell = ({
         break;
       case 'Issue':
         label = 'Issue';
-        icon = <UpdateOnIssue width='24' height='24' viewBox='0 0 24 24' />;
+        icon = <Icons.Ticket2 boxSize='3' color='gray.700' />;
         break;
       case 'Note': {
         label =
@@ -47,21 +42,24 @@ export const LastTouchpointTableCell = ({
           lastTouchPointTimelineEvent.createdBy?.firstName +
           ' ' +
           lastTouchPointTimelineEvent.createdBy?.lastName;
-        icon = <Notes width='24' height='24' viewBox='0 0 24 24' />;
+        icon = <Icons.File2 boxSize='3' color='gray.700' />;
         break;
       }
       case 'InteractionEvent': {
         if (lastTouchPointTimelineEvent.channel === 'EMAIL') {
           label = 'Email sent';
-          icon = <OutgoingEmail width='24' height='24' viewBox='0 0 24 24' />;
+          icon = <Icons.Mail1 boxSize='3' color='gray.700' />;
         } else if (lastTouchPointTimelineEvent.channel === 'VOICE') {
           label = 'Phone call';
-          icon = <OutgoingVoice width='24' height='24' viewBox='0 0 24 24' />;
+          icon = <Icons.PhoneOutgoing2 boxSize='3' color='greay.700' />;
         } else if (
           !lastTouchPointTimelineEvent.channel &&
           lastTouchPointTimelineEvent.eventType === 'meeting'
         ) {
           label = '';
+        } else if (lastTouchPointTimelineEvent.channel === 'SLACK') {
+          label = 'Slack message';
+          icon = <Icons.MessageTextSquare1 boxSize='3' color='gray.700' />;
         } else {
           label = 'InteractionEvent';
         }
@@ -76,13 +74,12 @@ export const LastTouchpointTableCell = ({
           lastTouchPointTimelineEvent.attendedBy.length +
           ' participant' +
           (lastTouchPointTimelineEvent.attendedBy.length === 1 ? '' : 's');
-        icon = <Meeting width='24' height='24' viewBox='0 0 24 24' />;
+        icon = <Icons.Calendar boxSize='3' color='gray.700' />;
         break;
       }
       default:
-        console.log(
-          'not able to print: ' + lastTouchPointTimelineEvent.__typename,
-        );
+        label = 'Unknown';
+        icon = <Icons.Ticket2 boxSize='3' color='gray.700' />;
         break;
     }
   }
@@ -92,14 +89,19 @@ export const LastTouchpointTableCell = ({
         addSuffix: true,
       })
     : '';
+
   return (
-    <TableCell
-      label={label}
-      subLabel={subLabel}
-      customStyleLabel={{ marginLeft: 4 }}
-      customStyleSubLabel={{ marginLeft: 4 }}
-    >
-      {icon}
-    </TableCell>
+    <Flex flexDir='column'>
+      <Flex align='center'>
+        {icon}
+        <Text color='gray.700' ml='2'>
+          {label}
+        </Text>
+      </Flex>
+
+      <Text color='gray.500' ml='5'>
+        {subLabel}
+      </Text>
+    </Flex>
   );
 };

@@ -18,6 +18,9 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { Flex, FlexProps } from '@ui/layout/Flex';
 import { Checkbox } from '@ui/form/Checkbox';
+import { Fade } from '@ui/transitions/Fade';
+
+const CELL_PADDING_X = 24;
 
 declare module '@tanstack/table-core' {
   // REASON: TData & TValue are not used in this interface but need to be defined
@@ -79,6 +82,8 @@ export const Table = <T extends object>({
     onRowSelectionChange: onSelectionChange ?? setSelection,
   });
 
+  const tableActionsCellWidth = tableActionsWidth + 2 * CELL_PADDING_X;
+
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
     count: !data.length && isLoading ? 5 : totalItems,
@@ -117,16 +122,22 @@ export const Table = <T extends object>({
 
   return (
     <Flex w='100%' flexDir='column'>
-      <TContent minW={`calc(100vw - 200px - 2rem)`}>
-        <THeader minW='1210px'>
+      <TContent>
+        <THeader
+          minW={
+            table.getCenterTotalSize() +
+            tableActionsCellWidth +
+            (enableRowSelection ? 44 : 0)
+          }
+        >
           {table.getHeaderGroups().map((headerGroup) => (
             <THeaderGroup key={headerGroup.id}>
               {enableRowSelection && <THeaderCell w='44px' p='0' />}
               {headerGroup.headers.map((header, index) => (
                 <THeaderCell
                   key={header.id}
-                  flex={header.colSpan}
-                  minWidth={header.getSize()}
+                  flex={header.colSpan ?? '1'}
+                  minWidth={`${header.getSize()}`}
                   pl={index === 0 ? '3' : '6'}
                 >
                   {header.isPlaceholder
@@ -149,7 +160,7 @@ export const Table = <T extends object>({
             </THeaderGroup>
           ))}
         </THeader>
-        <TBody ref={scrollElementRef} width='100%' minW={'1210px'}>
+        <TBody ref={scrollElementRef} width='100%'>
           {!virtualRows.length && <TRow justifyContent='center'>No data</TRow>}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
@@ -158,7 +169,11 @@ export const Table = <T extends object>({
                 key={virtualRow.key}
                 data-index={virtualRow.index}
                 minH={`${virtualRow.size}px`}
-                minW={table.getCenterTotalSize()}
+                minW={
+                  table.getCenterTotalSize() +
+                  tableActionsCellWidth +
+                  (enableRowSelection ? 44 : 0)
+                }
                 top={`${virtualRow.start}px`}
                 ref={rowVirtualizer.measureElement}
                 bg={virtualRow.index % 2 === 0 ? 'gray.25' : 'white'}
@@ -188,16 +203,26 @@ export const Table = <T extends object>({
                         ?.colSpan ?? '1'
                     }
                   >
-                    {row
-                      ? flexRender(
+                    {row ? (
+                      <Fade in={!!row}>
+                        {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
-                        )
-                      : cell.column.columnDef?.skeleton?.()}
+                        )}
+                      </Fade>
+                    ) : (
+                      <Fade in={!row}>
+                        {cell.column.columnDef?.skeleton?.()}
+                      </Fade>
+                    )}
                   </TCell>
                 ))}
                 {enableTableActions && (
-                  <TCell flex='0' p='0'>
+                  <TCell
+                    data-index={(row ?? skeletonRow).getAllCells().length + 1}
+                    flex='0'
+                    p='0'
+                  >
                     <Flex flex='0' w={`${tableActionsWidth}px`} />
                   </TCell>
                 )}
@@ -216,9 +241,7 @@ const TBody = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       ref={ref}
       flex='1'
       w='100%'
-      overflowY='auto'
       height='inherit'
-      overflowX='hidden'
       position='relative'
       sx={{
         '&::-webkit-scrollbar': {
@@ -248,10 +271,9 @@ const TRow = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       flex='1'
       width='100%'
       fontSize='sm'
-      overflow='visible'
       position='absolute'
       borderBottom='1px solid'
-      borderBottomColor='gray.200'
+      borderBottomColor='gray.100'
       {...props}
     />
   );
@@ -275,18 +297,20 @@ const TCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
 
 const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   return (
-    <Flex
-      ref={ref}
-      bg='gray.25'
-      overflowX='auto'
-      flexDir='column'
-      borderRadius='2xl'
-      borderStyle='hidden'
-      border='1px solid'
-      borderColor='gray.200'
-      height='calc(100vh - 70px)'
-      {...props}
-    />
+    <Fade in>
+      <Flex
+        ref={ref}
+        bg='gray.25'
+        overflowX='auto'
+        flexDir='column'
+        borderRadius='2xl'
+        borderStyle='hidden'
+        border='1px solid'
+        borderColor='gray.200'
+        height='calc(100vh - 70px)'
+        {...props}
+      />
+    </Fade>
   );
 });
 
@@ -295,8 +319,9 @@ const THeader = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
     <Flex
       ref={ref}
       bg='white'
+      width='inherit'
       borderBottom='1px solid'
-      borderBottomColor='gray.200'
+      borderBottomColor='gray.100'
       {...props}
     />
   );
@@ -307,7 +332,16 @@ const THeaderGroup = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
 });
 
 const THeaderCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
-  return <Flex px='6' py='3' whiteSpace='nowrap' ref={ref} {...props} />;
+  return (
+    <Flex
+      align='center'
+      px='6'
+      py='3'
+      whiteSpace='nowrap'
+      ref={ref}
+      {...props}
+    />
+  );
 });
 
 export type { RowSelectionState, SortingState, TableInstance };

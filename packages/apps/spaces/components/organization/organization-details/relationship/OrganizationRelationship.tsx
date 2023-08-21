@@ -1,83 +1,14 @@
 import { useState, useCallback } from 'react';
-import classNames from 'classnames';
+
 import {
   OrganizationRelationship as Relationship,
   useAddRelationshipToOrganizationMutation,
   useRemoveOrganizationRelationshipMutation,
 } from '@spaces/graphql';
+import { Select } from '@ui/form/SyncSelect/Select';
+import { SelectOption } from '@shared/types/SelectOptions';
+
 import { relationshipOptions } from './util';
-import { SelectMenuItemIcon } from './SelectMenuItemIcon';
-import {
-  Select,
-  useSelect,
-  SelectInput,
-  SelectWrapper,
-} from '@spaces/ui/form/select';
-import styles from '@spaces/ui/form/select/components/select.module.scss';
-
-interface SelectMenuProps {
-  noOfVisibleItems?: number;
-  itemSize?: number;
-}
-
-const SelectMenu = ({
-  noOfVisibleItems = 7,
-  itemSize = 38,
-}: SelectMenuProps) => {
-  const { state, getMenuProps, getMenuItemProps } = useSelect();
-  const maxMenuHeight = itemSize * noOfVisibleItems;
-
-  return (
-    <ul
-      className={styles.dropdownMenu}
-      {...getMenuProps({ maxHeight: maxMenuHeight })}
-    >
-      {state.items.length ? (
-        state.items.map(({ value, label }, index) => (
-          <li
-            key={value}
-            className={classNames(styles.dropdownMenuItem, {
-              [styles.isFocused]: state.currentIndex === index,
-              [styles.isSelected]: state.selection === value,
-            })}
-            {...getMenuItemProps({ value, index })}
-          >
-            <SelectMenuItemIcon
-              width='16'
-              height='16'
-              viewBox='0 0 24 24'
-              name={value as Relationship}
-            />{' '}
-            {label}
-          </li>
-        ))
-      ) : (
-        <li className={styles.dropdownMenuItem} data-dropdown='menuitem'>
-          No options available
-        </li>
-      )}
-    </ul>
-  );
-};
-
-const OrganizationSelectInput = () => {
-  const { state } = useSelect();
-
-  return (
-    <>
-      <SelectMenuItemIcon
-        width='24'
-        height='24'
-        viewBox='0 0 24 24'
-        name={state.selection as Relationship}
-      />
-      <SelectInput
-        placeholder='Relationship'
-        customStyles={{ paddingLeft: '8px' }}
-      />
-    </>
-  );
-};
 
 interface OrganizationRelationshipProps {
   defaultValue: Relationship;
@@ -90,10 +21,13 @@ export const OrganizationRelationship = ({
 }: OrganizationRelationshipProps) => {
   const [prevSelection, setPrevSelection] =
     useState<Relationship>(defaultValue);
-  const [addRelationshipToOrganization] =
+  const [addRelationshipToOrganization, { loading }] =
     useAddRelationshipToOrganizationMutation();
   const [removeOrganizationRelationship] =
     useRemoveOrganizationRelationshipMutation();
+  const value = defaultValue
+    ? relationshipOptions.find((o) => o.value === defaultValue)
+    : null;
 
   const removeRelationship = useCallback(() => {
     removeOrganizationRelationship({
@@ -171,27 +105,57 @@ export const OrganizationRelationship = ({
   );
 
   const handleSelect = useCallback(
-    (relationship: Relationship) => {
-      if (!relationship && prevSelection) {
+    (option: SelectOption<Relationship>) => {
+      if (!option && prevSelection) {
         removeRelationship();
       } else {
-        addRelationship(relationship);
-        setPrevSelection(relationship);
+        addRelationship(option.value);
+        setPrevSelection(option.value);
       }
     },
     [prevSelection, addRelationship, removeRelationship],
   );
 
   return (
-    <Select<Relationship>
-      onSelect={handleSelect}
-      value={defaultValue}
+    <Select
+      size='sm'
+      isClearable
+      value={value}
+      variant='unstyled'
+      isLoading={loading}
+      backspaceRemovesValue
+      onChange={handleSelect}
+      placeholder='Relationship'
       options={relationshipOptions}
-    >
-      <SelectWrapper>
-        <OrganizationSelectInput />
-        <SelectMenu />
-      </SelectWrapper>
-    </Select>
+      chakraStyles={{
+        valueContainer: (props) => ({
+          ...props,
+          p: 0,
+        }),
+        singleValue: (props) => ({
+          ...props,
+          paddingBottom: 0,
+          ml: 0,
+        }),
+        control: (props) => ({
+          ...props,
+          minH: '0',
+        }),
+        clearIndicator: (props) => ({
+          ...props,
+          display: 'none',
+        }),
+        placeholder: (props) => ({
+          ...props,
+          ml: 0,
+          color: 'gray.500',
+        }),
+        inputContainer: (props) => ({
+          ...props,
+          py: 0,
+          ml: 0,
+        }),
+      }}
+    />
   );
 };

@@ -3,15 +3,14 @@ import { OrganizationTableCell } from '@spaces/finder/finder-table';
 import { Organization } from '@graphql/types';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
 import { LastTouchpointTableCell } from '@spaces/finder/finder-table/LastTouchpointTableCell';
-import { Skeleton } from '@spaces/atoms/skeleton/Skeleton';
+import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
+import { Flex } from '@ui/layout/Flex';
 
 import { OrganizationRelationship } from '../organization-details/relationship/OrganizationRelationship';
 import { RelationshipStage } from '../organization-details/stage/RelationshipStage';
 import { RenewalLikelihoodCell } from '../organization-details/renewal/RenewalLikelihoodCell';
 import { RenewalForecastCell } from '../organization-details/renewal/RenewalForecastCell';
 import { TimeToRenewalCell } from '../organization-details/renewal/TimeToRenewalCell';
-
-import styles from './organization-list.module.scss';
 
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
@@ -27,19 +26,24 @@ export const columns = [
         />
       );
     },
+    minSize: 200,
     header: (props) => <THead<Organization> title='Company' {...props} />,
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => (
+      <Flex align='center' h='full'>
+        <SkeletonCircle size='48px' />
+        <Flex ml='2' flexDir='column' h='42px' align='center' gap='1'>
+          <Skeleton width='100px' height='18px' />
+          <Skeleton width='100px' height='18px' />
+        </Flex>
+      </Flex>
+    ),
   }),
   columnHelper.accessor('relationshipStages', {
     id: 'RELATIONSHIP',
     header: (props) => (
-      <THead<Organization>
-        title='Relationship'
-        subTitle='Stage'
-        columnHasIcon
-        {...props}
-      />
+      <THead<Organization> title='Relationship | Stage' {...props} />
     ),
+    minSize: 200,
     cell: (props) => {
       const relationshipStages = props.getValue();
       const relationship = relationshipStages?.[0]?.relationship;
@@ -61,14 +65,15 @@ export const columns = [
       );
     },
     skeleton: () => (
-      <div className={styles.skeletonWrapper}>
-        <Skeleton width='100%' height='21px' />
-        <Skeleton width='25%' height='21px' />
-      </div>
+      <Flex gap='1' flexDir='column'>
+        <Skeleton width='100%' height='18px' />
+        <Skeleton width='25%' height='18px' />
+      </Flex>
     ),
   }),
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_LIKELIHOOD',
+    minSize: 200,
     cell: (props) => {
       const organizationId = props.row.original.id;
       const value = props.getValue()?.renewalLikelihood;
@@ -88,10 +93,16 @@ export const columns = [
     header: (props) => (
       <THead<Organization> title='Renewal Likelihood' {...props} />
     ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => (
+      <Flex flexDir='column' gap='1'>
+        <Skeleton width='25%' height='18px' />
+        <Skeleton width='75%' height='18px' />
+      </Flex>
+    ),
   }),
   columnHelper.accessor('accountDetails', {
-    id: 'TIME_TO_RENEWAL',
+    id: 'RENEWAL_CYCLE_NEXT',
+    minSize: 200,
     cell: (props) => {
       const values = props.getValue()?.billingDetails;
       const renewalDate = values?.renewalCycleNext;
@@ -107,10 +118,11 @@ export const columns = [
     header: (props) => (
       <THead<Organization> title='Time to renewal' {...props} />
     ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => <Skeleton width='50%' height='18px' />,
   }),
   columnHelper.accessor('accountDetails', {
-    id: 'RENEWAL_FORECAST',
+    id: 'FORECAST_AMOUNT',
+    minSize: 200,
     cell: (props) => {
       const value = props.getValue()?.renewalForecast;
       const amount = value?.amount;
@@ -127,10 +139,16 @@ export const columns = [
     header: (props) => (
       <THead<Organization> title='Renewal Forecast' {...props} />
     ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => (
+      <Flex flexDir='column' gap='1'>
+        <Skeleton width='50%' height='18px' />
+        <Skeleton width='25%' height='18px' />
+      </Flex>
+    ),
   }),
   columnHelper.accessor('owner', {
     id: 'OWNER',
+    minSize: 200,
     cell: (props) => (
       <OwnerTableCell
         owner={props.getValue()}
@@ -138,10 +156,11 @@ export const columns = [
       />
     ),
     header: (props) => <THead<Organization> title='Owner' {...props} />,
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => <Skeleton width='75%' height='18px' />,
   }),
   columnHelper.accessor('market', {
     id: 'LAST_TOUCHPOINT',
+    minSize: 200,
     cell: (props) => (
       <LastTouchpointTableCell
         lastTouchPointAt={props.row.original.lastTouchPointAt}
@@ -151,13 +170,13 @@ export const columns = [
       />
     ),
     header: (props) => (
-      <THead<Organization>
-        title='Last touchpoint'
-        subTitle={'How long ago'}
-        columnHasIcon
-        {...props}
-      />
+      <THead<Organization> title='Last touchpoint' {...props} />
     ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => (
+      <Flex flexDir='column' gap='1'>
+        <Skeleton width='75%' height='18px' />
+        <Skeleton width='100%' height='18px' />
+      </Flex>
+    ),
   }),
 ];
