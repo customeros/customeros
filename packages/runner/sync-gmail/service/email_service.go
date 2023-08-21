@@ -29,6 +29,7 @@ type emailService struct {
 type EmailService interface {
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 	SyncEmails(externalSystemId, tenant string) error
+	SyncEmailsForUser(externalSystemId, tenant string, userSource string) error
 	SyncEmailByEmailRawId(externalSystemId, tenant, usernameSource string, emailId uuid.UUID) error
 	SyncEmailByMessageId(externalSystemId, tenant string, fromUsername, messageId string) error
 }
@@ -50,6 +51,43 @@ func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEnt
 
 func (s *emailService) SyncEmails(externalSystemId, tenant string) error {
 	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForSync(externalSystemId, tenant)
+	if err != nil {
+		logrus.Errorf("failed to get emails for sync: %v", err)
+		return err
+	}
+
+	for _, emailForSync := range emailsIdsForSync {
+
+		if emailForSync.MessageId == "" {
+			err = s.repositories.RawEmailRepository.MarkSentToEventStore(emailForSync.ID, err == nil, "message id is empty")
+			if err != nil {
+				logrus.Errorf("unable to mark email as sent to event store: %v", err)
+				return err
+			}
+		}
+
+		err := s.syncEmail(externalSystemId, tenant, emailForSync.UsernameSource, emailForSync.ID)
+
+		var errMessage string
+		if err != nil {
+			errMessage = err.Error()
+		}
+
+		err = s.repositories.RawEmailRepository.MarkSentToEventStore(emailForSync.ID, err == nil, errMessage)
+
+		if err != nil {
+			logrus.Errorf("unable to mark email as sent to event store: %v", err)
+			return err
+		}
+
+		fmt.Println("raw email processed: " + emailForSync.ID.String())
+	}
+
+	return nil
+}
+
+func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string) error {
+	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForUserForSync(externalSystemId, tenant, userSource)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 		return err
@@ -624,6 +662,8 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 			if err != nil {
 				return "", fmt.Errorf("unable to link domain to organization: %v", err)
 			}
+		} else {
+			organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
 		}
 
 	}
