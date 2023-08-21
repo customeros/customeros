@@ -22,7 +22,7 @@ func (i *Loaders) GetDomainsForOrganization(ctx context.Context, organizationId 
 func (b *domainBatcher) getDomainsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetMediumLivedContext(ctx)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	domainEntitiesPtr, err := b.domainService.GetDomainsForOrganizations(ctx, ids)

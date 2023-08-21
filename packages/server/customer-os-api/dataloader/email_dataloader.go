@@ -32,7 +32,7 @@ func (i *Loaders) GetEmailsForOrganization(ctx context.Context, organizationId s
 func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetMediumLivedContext(ctx)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	emailEntitiesPtr, err := b.emailService.GetAllForEntityTypeByIds(ctx, entity.CONTACT, ids)
@@ -76,7 +76,7 @@ func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader
 func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetMediumLivedContext(ctx)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	emailEntitiesPtr, err := b.emailService.GetAllForEntityTypeByIds(ctx, entity.ORGANIZATION, ids)
