@@ -9,6 +9,7 @@ import (
 
 type RawEmailRepository interface {
 	GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error)
+	GetEmailsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
 	GetEmailForSyncByMessageId(externalSystem, tenant, usernameSource, messageId string) (*entity.RawEmail, error)
 	MarkSentToEventStore(id uuid.UUID, sentToEventStore bool, error string) error
@@ -24,7 +25,19 @@ func NewRawEmailRepository(gormDb *gorm.DB) RawEmailRepository {
 
 func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error) {
 	result := []entity.RawEmail{}
-	err := repo.gormDb.Select("id").Find(&result, "external_system = ? AND tenant_name = ? AND sent_to_event_store = false", externalSystem, tenantName).Limit(25).Error
+	err := repo.gormDb.Select([]string{"id", "message_id"}).Select("message_id").Find(&result, "external_system = ? AND tenant_name = ? AND sent_to_event_store = false", externalSystem, tenantName).Limit(25).Error
+
+	if err != nil {
+		logrus.Errorf("Failed getting rawEmails: %s; %s", externalSystem, tenantName)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (repo *rawEmailRepositoryImpl) GetEmailsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawEmail, error) {
+	result := []entity.RawEmail{}
+	err := repo.gormDb.Select([]string{"id", "message_id"}).Find(&result, "external_system = ? AND tenant_name = ? AND username_source = ? AND sent_to_event_store = false", externalSystem, tenantName, userSource).Limit(25).Error
 
 	if err != nil {
 		logrus.Errorf("Failed getting rawEmails: %s; %s", externalSystem, tenantName)

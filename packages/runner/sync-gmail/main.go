@@ -99,27 +99,36 @@ func main() {
 			runId, _ := uuid.NewRandom()
 			logrus.Infof("run id: %s syncing emails from gmail into customer-os at %v", runId.String(), time.Now().UTC())
 
-			//services.EmailService.SyncEmailByMessageId("gmail", "openline", "", "")
-
-			tenants, err := services.TenantService.GetAllTenants(ctx)
+			externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, "openline", "gmail")
 			if err != nil {
+				logrus.Errorf("failed to merge external system: %v", err)
 				panic(err) //todo handle error
 			}
 
-			for _, tenant := range tenants {
+			services.EmailService.SyncEmailsForUser(externalSystemId, "openline", "matt@openline.ai")
+			services.EmailService.SyncEmailsForUser(externalSystemId, "openline", "antoine@openline.ai")
 
-				if tenant.Name != "openline" {
-					continue
-				}
+			//services.EmailService.SyncEmailByMessageId("gmail", "openline", "", "")
 
-				externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, tenant.Name, "gmail")
-				if err != nil {
-					logrus.Errorf("failed to merge external system: %v", err)
-					panic(err) //todo handle error
-				}
-
-				services.EmailService.SyncEmails(externalSystemId, "openline")
-			}
+			//tenants, err := services.TenantService.GetAllTenants(ctx)
+			//if err != nil {
+			//	panic(err) //todo handle error
+			//}
+			//
+			//for _, tenant := range tenants {
+			//
+			//	if tenant.Name != "openline" {
+			//		continue
+			//	}
+			//
+			//	externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, tenant.Name, "gmail")
+			//	if err != nil {
+			//		logrus.Errorf("failed to merge external system: %v", err)
+			//		panic(err) //todo handle error
+			//	}
+			//
+			//	services.EmailService.SyncEmails(externalSystemId, "openline")
+			//}
 
 			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 		},
