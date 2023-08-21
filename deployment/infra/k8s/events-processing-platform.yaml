@@ -93,3 +93,5 @@ spec:
             - name: JAEGER_AGENT_PORT
               value: "6831"
 
+            - name: POSTGRES_HOST
+              value: "customer-db-postgresql.openline.svc.cluster.local"
