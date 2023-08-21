@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -23,7 +24,8 @@ type ContactRepository interface {
 	GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
-	GetContactForRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error)
+	// FIXME alexb rework
+	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
 	GetContactsForEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
@@ -348,28 +350,35 @@ func (r *contactRepository) GetAllForConversation(ctx context.Context, session n
 	return dbNodes, err
 }
 
-func (r *contactRepository) GetContactForRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactForRole")
+func (r *contactRepository) GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllForJobRoles")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("jobRoleIds", fmt.Sprintf("%v", jobRoleIds)))
 
+	query := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:WORKS_AS]->(j:JobRole)
+				WHERE j.id IN $jobRoleIds
+				RETURN c, j.id`
+
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (:JobRole {id:$roleId})<-[:WORKS_AS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			RETURN c`,
+		if queryResult, err := tx.Run(ctx, query,
 			map[string]any{
-				"tenant": tenant,
-				"roleId": roleId,
+				"tenant":     tenant,
+				"jobRoleIds": jobRoleIds,
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.(*dbtype.Node), nil
+	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *contactRepository) AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error) {
