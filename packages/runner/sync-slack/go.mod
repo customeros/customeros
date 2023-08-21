@@ -11,11 +11,12 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230812050709-8221d3096813
 	github.com/opentracing/opentracing-go v1.2.0
+	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/slack-go/slack v0.12.2
 	github.com/stretchr/testify v1.8.4
 	gorm.io/driver/postgres v1.5.2
-	gorm.io/gorm v1.25.3
+	gorm.io/gorm v1.25.4
 	zgo.at/zcache v1.2.0
 )
 
@@ -29,7 +30,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/matryer/is v1.4.1 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
