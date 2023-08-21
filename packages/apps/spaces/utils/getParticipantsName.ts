@@ -119,22 +119,18 @@ export const getParticipantNameAndEmail = (
   const { contacts, users, email, rawEmail } = emailParticipant;
 
   if (contacts.length) {
-    const label = contacts
-      .map((c) => (c?.name ? c.name : `${c.firstName} ${c.lastName}`))
-      .join(' ')
-      .trim();
+    const label = contacts.find((c) => c?.name || c?.firstName || c?.lastName);
+
     return {
-      label,
+      label: label?.name || `${label?.firstName} ${label?.lastName}`.trim(),
       [keyName]: email || rawEmail || '',
     };
   }
   if (users.length) {
-    const label = users
-      .map((c) => `${c.firstName} ${c.lastName}`)
-      .join(' ')
-      .trim();
+    const label = users.find((c) => c?.firstName || c?.lastName);
+
     return {
-      label,
+      label: `${label?.firstName} ${label?.lastName}`.trim(),
       [keyName]: email || rawEmail || '',
     };
   }
