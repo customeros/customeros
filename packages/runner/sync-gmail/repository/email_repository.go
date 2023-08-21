@@ -15,8 +15,8 @@ type EmailRepository interface {
 	GetEmailId(ctx context.Context, tenant, email string) (string, error)
 	GetEmailsByRawEmail(ctx context.Context, tenant string, rawEmails []string) ([]*dbtype.Node, error)
 	FindUserByEmail(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
-	CreateEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error)
-	CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, externalSystemId string) (string, error)
+	CreateEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, appSource string) (string, error)
+	CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, source, appSource string) (string, error)
 }
 
 type emailRepository struct {
@@ -106,9 +106,9 @@ func (r *emailRepository) FindUserByEmail(ctx context.Context, tenant string, us
 	return result.(*dbtype.Node), nil
 }
 
-func (r *emailRepository) CreateEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error) {
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(
-		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{id: $organizationId}) WITH t, o"+
+func (r *emailRepository) CreateEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, appSource string) (string, error) {
+	dbResult, err := tx.Run(ctx, fmt.Sprintf(
+		" MATCH (t:Tenant {name:$tenant}) "+
 			" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
 			" ON CREATE SET "+
 			"				e.id=randomUUID(), "+
@@ -118,21 +118,19 @@ func (r *emailRepository) CreateEmailLinkedToOrganization(ctx context.Context, t
 			"				e.sourceOfTruth=$sourceOfTruth, "+
 			"				e.appSource=$appSource, "+
 			"				e:%s "+
-			" WITH DISTINCT o, e "+
-			" MERGE (e)<-[rel:HAS]-(o) return e.id limit 1", "Email_"+tenant),
+			" return e.id ", "Email_"+tenant),
 		map[string]interface{}{
-			"tenant":         tenant,
-			"organizationId": organizationId,
-			"email":          email,
-			"source":         source,
-			"sourceOfTruth":  sourceOfTruth,
-			"appSource":      appSource,
-			"now":            date,
+			"tenant":        tenant,
+			"email":         email,
+			"source":        source,
+			"sourceOfTruth": "openline",
+			"appSource":     appSource,
+			"now":           time.Now().UTC(),
 		})
 	if err != nil {
 		return "", err
 	}
-	records, err := queryResult.Collect(ctx)
+	records, err := dbResult.Collect(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -142,7 +140,7 @@ func (r *emailRepository) CreateEmailLinkedToOrganization(ctx context.Context, t
 	return records[0].Values[0].(string), nil
 }
 
-func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, externalSystemId string) (string, error) {
+func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, source, appSource string) (string, error) {
 	dbResult, err := tx.Run(ctx, fmt.Sprintf(
 		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{id: $organizationId}) WITH t, o "+
 			" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
@@ -154,7 +152,7 @@ func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context
 			"				e.sourceOfTruth=$sourceOfTruth, "+
 			"				e.appSource=$appSource, "+
 			"				e:%s "+
-			" WITH DISTINCT t, e "+
+			" WITH t, e, o "+
 			" MERGE (e)<-[rel:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
 			" ON CREATE SET rel.primary=true, "+
 			"				c.id=randomUUID(), "+
@@ -166,16 +164,26 @@ func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context
 			"				c.sourceOfTruth=$sourceOfTruth, "+
 			"				c.appSource=$appSource, "+
 			"               c:%s"+
-			" RETURN e.id limit 1", "Email_"+tenant, "Contact_"+tenant),
+			" WITH t, e, o, c "+
+			" MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(o) "+
+			" ON CREATE SET c.updatedAt=$now, "+
+			" 	j.id=randomUUID(), "+
+			"   j.source=$source, "+
+			"   j.sourceOfTruth=$source, "+
+			"   j.appSource=$appSource, "+
+			"   j.createdAt=$now, "+
+			"   j.updatedAt=$now, "+
+			"   j:JobRole_%s "+
+			" RETURN e.id limit 1", "Email_"+tenant, "Contact_"+tenant, tenant),
 		map[string]interface{}{
 			"tenant":         tenant,
 			"organizationId": organizationId,
 			"email":          email,
 			"firstName":      firstName,
 			"lastName":       lastName,
-			"source":         externalSystemId,
-			"sourceOfTruth":  externalSystemId,
-			"appSource":      externalSystemId,
+			"source":         source,
+			"sourceOfTruth":  "openline",
+			"appSource":      appSource,
 			"now":            time.Now().UTC(),
 		})
 	if err != nil {

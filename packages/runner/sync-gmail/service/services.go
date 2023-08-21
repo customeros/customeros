@@ -11,12 +11,11 @@ type Services struct {
 	cfg          *config.Config
 	Repositories *repository.Repositories
 
-	TenantService        TenantService
-	UserService          UserService
-	OpenAiService        OpenAiService
-	AnthropicService     AnthropicService
-	ValidationApiService ValidationApiService
-	EmailService         EmailService
+	TenantService    TenantService
+	UserService      UserService
+	OpenAiService    OpenAiService
+	AnthropicService AnthropicService
+	EmailService     EmailService
 }
 
 func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.Config) *Services {
@@ -30,7 +29,6 @@ func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.
 	services.UserService = NewUserService(repositories)
 	services.OpenAiService = NewOpenAiService(cfg, repositories)
 	services.AnthropicService = NewAnthropicService(cfg)
-	services.ValidationApiService = NewValidationApiService(cfg)
 	services.EmailService = NewEmailService(cfg, repositories, services)
 
 	return services
