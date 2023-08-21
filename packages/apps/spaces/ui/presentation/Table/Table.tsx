@@ -18,6 +18,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { Flex, FlexProps } from '@ui/layout/Flex';
 import { Checkbox } from '@ui/form/Checkbox';
+import { Fade } from '@ui/transitions/Fade';
 
 const CELL_PADDING_X = 24;
 
@@ -202,12 +203,18 @@ export const Table = <T extends object>({
                         ?.colSpan ?? '1'
                     }
                   >
-                    {row
-                      ? flexRender(
+                    {row ? (
+                      <Fade in={!!row}>
+                        {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
-                        )
-                      : cell.column.columnDef?.skeleton?.()}
+                        )}
+                      </Fade>
+                    ) : (
+                      <Fade in={!row}>
+                        {cell.column.columnDef?.skeleton?.()}
+                      </Fade>
+                    )}
                   </TCell>
                 ))}
                 {enableTableActions && (
@@ -290,18 +297,20 @@ const TCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
 
 const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   return (
-    <Flex
-      ref={ref}
-      bg='gray.25'
-      overflowX='auto'
-      flexDir='column'
-      borderRadius='2xl'
-      borderStyle='hidden'
-      border='1px solid'
-      borderColor='gray.200'
-      height='calc(100vh - 70px)'
-      {...props}
-    />
+    <Fade in>
+      <Flex
+        ref={ref}
+        bg='gray.25'
+        overflowX='auto'
+        flexDir='column'
+        borderRadius='2xl'
+        borderStyle='hidden'
+        border='1px solid'
+        borderColor='gray.200'
+        height='calc(100vh - 70px)'
+        {...props}
+      />
+    </Fade>
   );
 });
 

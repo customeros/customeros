@@ -3,7 +3,9 @@ import { OrganizationTableCell } from '@spaces/finder/finder-table';
 import { Organization } from '@graphql/types';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
 import { LastTouchpointTableCell } from '@spaces/finder/finder-table/LastTouchpointTableCell';
-import { Skeleton } from '@spaces/atoms/skeleton/Skeleton';
+// import { Skeleton } from '@spaces/atoms/skeleton/Skeleton';
+import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
+import { Flex } from '@ui/layout/Flex';
 
 import { OrganizationRelationship } from '../organization-details/relationship/OrganizationRelationship';
 import { RelationshipStage } from '../organization-details/stage/RelationshipStage';
@@ -29,7 +31,15 @@ export const columns = [
     },
     minSize: 200,
     header: (props) => <THead<Organization> title='Company' {...props} />,
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => (
+      <Flex align='center' h='full'>
+        <SkeletonCircle size='48px' />
+        <Flex ml='2' flexDir='column' h='42px' align='center' gap='1'>
+          <Skeleton width='100px' height='18px' />
+          <Skeleton width='100px' height='18px' />
+        </Flex>
+      </Flex>
+    ),
   }),
   columnHelper.accessor('relationshipStages', {
     id: 'RELATIONSHIP',
@@ -58,10 +68,10 @@ export const columns = [
       );
     },
     skeleton: () => (
-      <div className={styles.skeletonWrapper}>
-        <Skeleton width='100%' height='21px' />
-        <Skeleton width='25%' height='21px' />
-      </div>
+      <Flex gap='1' flexDir='column'>
+        <Skeleton width='100%' height='18px' />
+        <Skeleton width='25%' height='18px' />
+      </Flex>
     ),
   }),
   columnHelper.accessor('accountDetails', {
@@ -86,7 +96,12 @@ export const columns = [
     header: (props) => (
       <THead<Organization> title='Renewal Likelihood' {...props} />
     ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => (
+      <Flex flexDir='column' gap='1'>
+        <Skeleton width='25%' height='18px' />
+        <Skeleton width='75%' height='18px' />
+      </Flex>
+    ),
   }),
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_CYCLE_NEXT',
@@ -106,7 +121,7 @@ export const columns = [
     header: (props) => (
       <THead<Organization> title='Time to renewal' {...props} />
     ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => <Skeleton width='50%' height='18px' />,
   }),
   columnHelper.accessor('accountDetails', {
     id: 'FORECAST_AMOUNT',
@@ -127,7 +142,12 @@ export const columns = [
     header: (props) => (
       <THead<Organization> title='Renewal Forecast' {...props} />
     ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => (
+      <Flex flexDir='column' gap='1'>
+        <Skeleton width='50%' height='18px' />
+        <Skeleton width='25%' height='18px' />
+      </Flex>
+    ),
   }),
   columnHelper.accessor('owner', {
     id: 'OWNER',
@@ -139,7 +159,7 @@ export const columns = [
       />
     ),
     header: (props) => <THead<Organization> title='Owner' {...props} />,
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => <Skeleton width='75%' height='18px' />,
   }),
   columnHelper.accessor('market', {
     id: 'LAST_TOUCHPOINT',
@@ -155,6 +175,11 @@ export const columns = [
     header: (props) => (
       <THead<Organization> title='Last touchpoint' {...props} />
     ),
-    skeleton: () => <Skeleton width='100%' height='21px' />,
+    skeleton: () => (
+      <Flex flexDir='column' gap='1'>
+        <Skeleton width='75%' height='18px' />
+        <Skeleton width='100%' height='18px' />
+      </Flex>
+    ),
   }),
 ];
