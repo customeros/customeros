@@ -92,8 +92,7 @@ export const Table = <T extends object>({
     estimateSize: () => 21,
   });
 
-  const { getVirtualItems } = rowVirtualizer;
-  const virtualRows = getVirtualItems();
+  const virtualRows = rowVirtualizer.getVirtualItems();
 
   useEffect(() => {
     const [lastItem] = [...virtualRows].reverse();
@@ -122,8 +121,10 @@ export const Table = <T extends object>({
 
   return (
     <Flex w='100%' flexDir='column'>
-      <TContent>
+      <TContent ref={scrollElementRef}>
         <THeader
+          top='0'
+          position='sticky'
           minW={
             table.getCenterTotalSize() +
             tableActionsCellWidth +
@@ -160,7 +161,7 @@ export const Table = <T extends object>({
             </THeaderGroup>
           ))}
         </THeader>
-        <TBody ref={scrollElementRef} width='100%'>
+        <TBody width='100%'>
           {!virtualRows.length && <TRow justifyContent='center'>No data</TRow>}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
@@ -243,20 +244,6 @@ const TBody = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       w='100%'
       height='inherit'
       position='relative'
-      sx={{
-        '&::-webkit-scrollbar': {
-          width: '6px',
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-track': {
-          width: '6px',
-          background: 'white',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'gray.200',
-          borderRadius: '24px',
-        },
-      }}
       {...props}
     />
   );
@@ -301,13 +288,29 @@ const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       <Flex
         ref={ref}
         bg='gray.25'
-        overflowX='auto'
+        overflow='auto'
         flexDir='column'
         borderRadius='2xl'
         borderStyle='hidden'
         border='1px solid'
         borderColor='gray.200'
         height='calc(100vh - 70px)'
+        sx={{
+          '&::-webkit-scrollbar': {
+            width: '6px',
+            height: '6px',
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-track': {
+            width: '6px',
+            height: '6px',
+            background: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'gray.200',
+            borderRadius: '24px',
+          },
+        }}
         {...props}
       />
     </Fade>
@@ -322,6 +325,7 @@ const THeader = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       width='inherit'
       borderBottom='1px solid'
       borderBottomColor='gray.100'
+      zIndex='docked'
       {...props}
     />
   );
