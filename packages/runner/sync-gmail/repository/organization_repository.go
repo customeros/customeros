@@ -26,7 +26,7 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 }
 
 func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName string) (*dbtype.Node, error) {
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domainName}) RETURN o`
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domainName}) RETURN o limit 1`
 
 	queryResult, err := tx.Run(ctx, query, map[string]any{
 		"tenant":     tenant,
