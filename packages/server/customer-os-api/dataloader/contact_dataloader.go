@@ -5,7 +5,10 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -42,13 +45,18 @@ func (i *Loaders) GetContactForJobRole(ctx context.Context, jobRoleId string) (*
 }
 
 func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForEmails")
+	defer span.Finish()
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetMediumLivedContext(ctx)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	contactEntitiesPtr, err := b.contactService.GetContactsForEmails(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get contacts for emails")}}
@@ -78,20 +86,28 @@ func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataload
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.ContactEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
 
 	return results
 }
 
 func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForPhoneNumbers")
+	defer span.Finish()
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetMediumLivedContext(ctx)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	contactEntitiesPtr, err := b.contactService.GetContactsForPhoneNumbers(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get contacts for phone numbers")}}
@@ -121,13 +137,20 @@ func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys da
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.ContactEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
 
 	return results
 }
 
 func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForJobRoles")
+	defer span.Finish()
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -135,6 +158,7 @@ func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys datalo
 
 	contactEntities, err := b.contactService.GetContactsForJobRoles(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get contacts for job roles")}}
@@ -161,8 +185,11 @@ func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys datalo
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.ContactEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
 
 	return results
 }

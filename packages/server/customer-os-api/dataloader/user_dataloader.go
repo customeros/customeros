@@ -5,7 +5,10 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -40,6 +43,10 @@ func (i *Loaders) GetUsersForPlayer(ctx context.Context, playerID string) (*enti
 }
 
 func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForEmails")
+	defer span.Finish()
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -47,6 +54,7 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 
 	userEntitiesPtr, err := b.userService.GetUsersForEmails(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for emails")}}
@@ -76,13 +84,20 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.UserEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
 
 	return results
 }
 
 func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForPhoneNumbers")
+	defer span.Finish()
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -90,6 +105,7 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 
 	userEntitiesPtr, err := b.userService.GetUsersForPhoneNumbers(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for phone numbers")}}
@@ -119,13 +135,20 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.UserEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
 
 	return results
 }
 
 func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForPlayers")
+	defer span.Finish()
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -133,6 +156,7 @@ func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Ke
 
 	userEntitiesPtr, err := b.userService.GetUsersForPlayers(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for players")}}
@@ -162,8 +186,11 @@ func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Ke
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.UserEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
 
 	return results
 }
@@ -181,6 +208,10 @@ func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationI
 }
 
 func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserOwnersForOrganizations")
+	defer span.Finish()
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -188,6 +219,7 @@ func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys da
 
 	userEntities, err := b.userService.GetUserOwnersForOrganizations(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for organizations")}}
@@ -214,8 +246,11 @@ func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys da
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
 
 	return results
 }

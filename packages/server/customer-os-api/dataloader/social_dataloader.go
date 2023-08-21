@@ -32,7 +32,7 @@ func (i *Loaders) GetSocialsForOrganization(ctx context.Context, organizationId 
 func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetMediumLivedContext(ctx)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, entity.CONTACT, ids)
@@ -76,7 +76,7 @@ func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataload
 func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetMediumLivedContext(ctx)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, entity.ORGANIZATION, ids)
