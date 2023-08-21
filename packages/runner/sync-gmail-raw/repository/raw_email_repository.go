@@ -37,6 +37,7 @@ func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenantName, usernameSo
 	result.UsernameSource = usernameSource
 	result.MessageId = messageId
 	result.Data = rawEmail
+	result.SentToEventStoreState = "PENDING"
 
 	err = repo.gormDb.Save(&result).Error
 	if err != nil {

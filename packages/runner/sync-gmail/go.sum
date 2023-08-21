@@ -65,6 +65,8 @@ github.com/neo4j/neo4j-go-driver/v5 v5.11.0 h1:5Tbzmf5uikC8dv2a84uQ+rsXnMg0Bqgw6
 github.com/neo4j/neo4j-go-driver/v5 v5.11.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230804160743-29869053814b h1:YfTJMCuyhdOIHLh4be4kGim+NEeqoSRIQtrCgTH3zWg=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230804160743-29869053814b/go.mod h1:jcnuArpsD+nvQrhfK7N/XINTYO72+Ij+OdrVjittxhU=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230821181543-3e24af4c9e51 h1:4Hq8vBY6sw0yzyEIGdc3H+4PHNyTvOgyZo1gTqFIPuo=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230821181543-3e24af4c9e51/go.mod h1:td+vyi09yaWF3WBDkyDponvy7Qe2hg20eVIlsbXTfUU=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pelletier/go-toml/v2 v2.0.8 h1:0ctb6s9mE31h0/lhu+J6OPmVeDxJn+kYnJc2jZR9tGQ=
