@@ -1,5 +1,6 @@
 query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
     organization(id: $organizationId) {
+        timelineEventsTotalCount(timelineEventTypes: [INTERACTION_EVENT])
         timelineEvents(from: $from, size: $size, timelineEventTypes: [INTERACTION_EVENT]) {
             __typename
             ... on InteractionEvent {
@@ -44,9 +45,6 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                                 name
                                 firstName
                                 lastName
-                                emails {
-                                    email
-                                }
                             }
                             users {
                                 id
@@ -194,9 +192,6 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                                             name
                                             firstName
                                             lastName
-                                            emails {
-                                                email
-                                            }
                                         }
                                         users {
                                             id
@@ -239,67 +234,6 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                                         firstName
                                         lastName
                                         profilePhotoUrl
-                                    }
-                                }
-                            }
-                            sentTo {
-                                __typename
-                                ... on EmailParticipant {
-                                    __typename
-                                    type
-                                    emailParticipant {
-                                        email
-                                        contacts {
-                                            id
-                                            name
-                                            firstName
-                                            lastName
-                                        }
-                                        users {
-                                            id
-                                            firstName
-                                            lastName
-                                        }
-                                        organizations {
-                                            id
-                                            name
-                                        }
-                                        id
-                                    }
-                                }
-                                ... on ContactParticipant {
-                                    __typename
-                                    contactParticipant {
-                                        name
-                                        id
-                                        firstName
-                                        lastName
-                                        profilePhotoUrl
-
-                                    }
-                                }
-                                ... on JobRoleParticipant {
-                                    __typename
-                                    jobRoleParticipant {
-                                        id
-                                        contact {
-                                            id
-                                            name
-                                            firstName
-                                            lastName
-                                            profilePhotoUrl
-                                        }
-                                    }
-                                }
-                                ... on UserParticipant {
-                                    __typename
-                                    type
-                                    userParticipant {
-                                        id
-                                        firstName
-                                        lastName
-                                        profilePhotoUrl
-
                                     }
                                 }
                             }
