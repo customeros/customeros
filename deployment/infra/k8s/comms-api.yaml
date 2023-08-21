@@ -13,7 +13,7 @@ spec:
         app: comms-api
     spec:                        # Spec for the container which will run in the Pod
       containers:
-        - image: ghcr.io/openline-ai/openline-customer-os/comms-api:local
+        - image: ghcr.io/openline-ai/openline-customer-os/comms-api:latest
           name: comms-api
           imagePullPolicy: Never
           ports:
