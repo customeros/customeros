@@ -11,6 +11,7 @@ import client from '../../apollo-client';
 
 interface Props {
   organizationId: string;
+  onCompleted?: () => void;
 }
 
 interface Result {
@@ -22,9 +23,12 @@ interface Result {
 
 export const useUnlinkOrganizationOwner = ({
   organizationId,
+  onCompleted,
 }: Props): Result => {
   const [unlinkOrganizationOwnerMutation, { loading }] =
-    useRemoveOrganizationOwnerMutation();
+    useRemoveOrganizationOwnerMutation({
+      onCompleted,
+    });
 
   const handleUpdateCacheAfterUnlinkingOwner = (
     cache: ApolloCache<any>,

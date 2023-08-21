@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import capitalize from 'lodash/capitalize';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Text } from '@ui/typography/Text';
+import { IconButton } from '@ui/form/IconButton';
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { RenewalLikelihoodProbability } from '@graphql/types';
@@ -28,6 +30,7 @@ export const RenewalLikelihoodCell = ({
   currentProbability,
   previousProbability,
 }: RenewalLikelihoodCellProps) => {
+  const [isEditing, setIsEditing] = useState(false);
   const [updateRenewalLikelihood] = useUpdateRenewalLikelihoodMutation();
 
   const isIncreased = isLikelihoodIncreased(
@@ -47,6 +50,9 @@ export const RenewalLikelihoodCell = ({
           id: organizationId,
           probability: newValue.value,
         },
+      },
+      onCompleted: () => {
+        setIsEditing(false);
       },
       update: (cache) => {
         const normalizedId = cache.identify({
@@ -76,40 +82,85 @@ export const RenewalLikelihoodCell = ({
   };
 
   return (
-    <Flex flexDir='column'>
-      <Select
-        size='sm'
-        variant='unstyled'
-        placeholder='Not set'
-        value={value}
-        onChange={handleChange}
-        leftElement={<Flex w='3' h='3' />}
-        options={renewalLikelihoodOptions}
-        chakraStyles={{
-          singleValue: (props) => ({
-            ...props,
-            color: getLikelihoodColor(currentProbability),
-            paddingBottom: 0,
-          }),
-          control: (props) => ({
-            ...props,
-            minH: '0',
-          }),
-          placeholder: (props) => ({
-            ...props,
-            color: 'gray.500',
-          }),
-          valueContainer: (props) => ({
-            ...props,
-            ml: 1.5,
-          }),
-          inputContainer: (props) => ({
-            ...props,
-            paddingTop: 0,
-            paddingBottom: 0,
-          }),
-        }}
-      />
+    <Flex flexDir='column' key={Math.random()}>
+      {isEditing ? (
+        <Select
+          size='sm'
+          variant='unstyled'
+          placeholder='Not set'
+          value={value}
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsEditing(false);
+            }
+          }}
+          defaultMenuIsOpen
+          openMenuOnClick={false}
+          onBlur={() => setIsEditing(false)}
+          onChange={handleChange}
+          leftElement={<Flex w='3' h='3' />}
+          options={renewalLikelihoodOptions}
+          chakraStyles={{
+            singleValue: (props) => ({
+              ...props,
+              color: getLikelihoodColor(currentProbability),
+              paddingBottom: 0,
+            }),
+            control: (props) => ({
+              ...props,
+              minH: '0',
+            }),
+            placeholder: (props) => ({
+              ...props,
+              color: 'gray.500',
+            }),
+            valueContainer: (props) => ({
+              ...props,
+              ml: 1.5,
+            }),
+            inputContainer: (props) => ({
+              ...props,
+              paddingTop: 0,
+              paddingBottom: 0,
+            }),
+          }}
+        />
+      ) : (
+        <Flex
+          w='full'
+          gap='1'
+          ml='5'
+          align='center'
+          _hover={{
+            '& #edit-button': {
+              opacity: 1,
+            },
+          }}
+        >
+          <Text
+            cursor='default'
+            color={value ? getLikelihoodColor(currentProbability) : 'gray.500'}
+            onDoubleClick={() => setIsEditing(true)}
+          >
+            {value?.label ?? 'Not set'}
+          </Text>
+          <IconButton
+            aria-label='erc'
+            size='xs'
+            borderRadius='md'
+            minW='4'
+            w='4'
+            minH='4'
+            h='4'
+            opacity='0'
+            variant='ghost'
+            id='edit-button'
+            onClick={() => setIsEditing(true)}
+            icon={<Icons.Edit3 color='gray.500' boxSize='3' />}
+          />
+        </Flex>
+      )}
       {currentProbability && (
         <Flex align='center'>
           {!previousProbability ? (

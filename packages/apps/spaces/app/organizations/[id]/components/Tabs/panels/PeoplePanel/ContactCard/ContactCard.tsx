@@ -106,14 +106,14 @@ export const ContactCard = ({
 
   const timeAt = (() => {
     if (!data.startedAt) return undefined;
-    const months = differenceInCalendarMonths(
-      new Date(data.startedAt),
-      new Date(),
+    const months = Math.abs(
+      differenceInCalendarMonths(new Date(data.startedAt), new Date()),
     );
 
-    if (months < 0) return `less than a month at ${organizationName}`;
+    if (months < 0) return `Less than a month at ${organizationName}`;
     if (months === 1) return `${months} month at ${organizationName}`;
-    if (months > 1) return `${months} months at ${organizationName}`;
+    if (months > 1 && months < 12)
+      return `${months} months at ${organizationName}`;
     if (months === 12) return `1 year at ${organizationName}`;
     if (months > 12)
       return `${formatDistanceToNow(
@@ -279,6 +279,7 @@ export const ContactCard = ({
               name='role'
               formId={formId}
               placeholder='Role'
+              isCardOpen={isExpanded}
               isFocused={roleIsFocused}
               setIsFocused={setRoleIsFocused}
               displayValue={data.role?.map((v) => v.label).join(', ')}
@@ -361,7 +362,7 @@ export const ContactCard = ({
               {timeAt && (
                 <Flex align='center' h='39px'>
                   <Icons.Calendar color='gray.500' />
-                  <Text ml='14px' cursor='text'>
+                  <Text ml='14px' cursor='text' textTransform='capitalize'>
                     {timeAt}
                   </Text>
                 </Flex>

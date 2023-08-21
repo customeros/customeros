@@ -116,7 +116,7 @@ export const columns = [
       );
     },
     header: (props) => (
-      <THead<Organization> title='Time to renewal' {...props} />
+      <THead<Organization> title='Time to Renewal' {...props} />
     ),
     skeleton: () => <Skeleton width='50%' height='18px' />,
   }),
@@ -170,7 +170,7 @@ export const columns = [
       />
     ),
     header: (props) => (
-      <THead<Organization> title='Last touchpoint' {...props} />
+      <THead<Organization> title='Last Touchpoint' {...props} />
     ),
     skeleton: () => (
       <Flex flexDir='column' gap='1'>

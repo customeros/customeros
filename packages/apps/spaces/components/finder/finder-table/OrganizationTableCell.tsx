@@ -9,7 +9,6 @@ import { Flex } from '@ui/layout/Flex';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { Icons } from '@ui/media/Icon';
-import { Fade } from '@ui/transitions/Fade';
 import {
   getExternalUrl,
   getFormattedLink,
@@ -60,25 +59,27 @@ export const OrganizationTableCell = ({
             >
               {getFormattedLink(organization.website)}
             </Text>
-            <Fade in={isHovered} unmountOnExit>
+            {isHovered && (
               <Flex
                 position='absolute'
                 bottom='16px'
                 pl='1'
-                ml='-1'
+                ml='-5px'
                 bg='white'
-                borderRadius='lg'
-                boxShadow='base'
+                borderRadius='md'
+                border='1px solid'
                 zIndex='overlay'
+                borderColor='gray.200'
                 onMouseLeave={() => setIsHovered(false)}
               >
-                <Text color='gray.500' cursor='default'>
+                <Text color='gray.500' cursor='default' lineHeight='23px'>
                   {getFormattedLink(organization?.website)}
                 </Text>
                 <IconButton
                   ml='1'
                   variant='ghost'
                   size='xs'
+                  borderRadius='5px'
                   onClick={() =>
                     window.open(getExternalUrl(organization.website ?? '/'))
                   }
@@ -86,7 +87,7 @@ export const OrganizationTableCell = ({
                   icon={<Icons.LinkExternal2 color='gray.500' />}
                 />
               </Flex>
-            </Fade>
+            )}
           </>
         )}
       </Flex>
