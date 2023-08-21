@@ -36,7 +36,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
         flexDirection='row'
         maxWidth={w || 549}
         position='unset'
-        cursor='pointer'
+        cursor={onClick ? 'pointer' : 'unset'}
         boxShadow='xs'
         borderColor='gray.100'
         onClick={() => onClick?.()}
@@ -51,19 +51,19 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
             <Avatar
               name={name}
               variant='roundedSquare'
-              size='lg'
+              size='md'
               icon={
                 <User color={'var(--chakra-colors-gray-500)'} height='1.8rem' />
               }
               border={
                 profilePhotoUrl
                   ? 'none'
-                  : '2px solid var(--chakra-colors-primary-200)'
+                  : '1px solid var(--chakra-colors-primary-200)'
               }
               src={profilePhotoUrl || undefined}
             />
             <Flex direction='column' flex={1}>
-              <Flex justifyContent='space-between' flex={1}>
+              <Flex justifyContent='space-between' alignItems='flex-end' flex={1}>
                 <Flex>
                   <Text color='gray.700' fontWeight={600}>
                     {name}

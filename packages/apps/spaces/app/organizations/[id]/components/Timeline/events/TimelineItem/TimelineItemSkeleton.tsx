@@ -26,6 +26,7 @@ export const TimelineItemSkeleton: FC = () => {
         maxWidth={549}
         position='unset'
         aspectRatio='9/2'
+        boxShadow='xs'
       >
         <CardBody
           pt={5}

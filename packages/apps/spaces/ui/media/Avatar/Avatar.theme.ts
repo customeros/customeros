@@ -54,6 +54,12 @@ export const Avatar = helpers.defineMultiStyleConfig({
         h: '12',
       },
     },
+    md: {
+      container: {
+        w: '10',
+        h: '10',
+      },
+    },
   },
   variants: {
     roundedSquare,

@@ -33,6 +33,7 @@ export type GetTimelineQuery = {
   __typename?: 'Query';
   organization?: {
     __typename?: 'Organization';
+    timelineEventsTotalCount: any;
     timelineEvents: Array<
       | { __typename: 'Action' }
       | { __typename: 'Analysis' }
@@ -108,10 +109,6 @@ export type GetTimelineQuery = {
                         name?: string | null;
                         firstName?: string | null;
                         lastName?: string | null;
-                        emails: Array<{
-                          __typename?: 'Email';
-                          email?: string | null;
-                        }>;
                       }>;
                       users: Array<{
                         __typename?: 'User';
@@ -145,74 +142,6 @@ export type GetTimelineQuery = {
                 | { __typename?: 'PhoneNumberParticipant' }
                 | {
                     __typename: 'UserParticipant';
-                    userParticipant: {
-                      __typename?: 'User';
-                      id: string;
-                      firstName: string;
-                      lastName: string;
-                      profilePhotoUrl?: string | null;
-                    };
-                  }
-              >;
-              sentTo: Array<
-                | {
-                    __typename: 'ContactParticipant';
-                    contactParticipant: {
-                      __typename?: 'Contact';
-                      name?: string | null;
-                      id: string;
-                      firstName?: string | null;
-                      lastName?: string | null;
-                      profilePhotoUrl?: string | null;
-                    };
-                  }
-                | {
-                    __typename: 'EmailParticipant';
-                    type?: string | null;
-                    emailParticipant: {
-                      __typename?: 'Email';
-                      email?: string | null;
-                      id: string;
-                      contacts: Array<{
-                        __typename?: 'Contact';
-                        id: string;
-                        name?: string | null;
-                        firstName?: string | null;
-                        lastName?: string | null;
-                      }>;
-                      users: Array<{
-                        __typename?: 'User';
-                        id: string;
-                        firstName: string;
-                        lastName: string;
-                      }>;
-                      organizations: Array<{
-                        __typename?: 'Organization';
-                        id: string;
-                        name: string;
-                      }>;
-                    };
-                  }
-                | {
-                    __typename: 'JobRoleParticipant';
-                    jobRoleParticipant: {
-                      __typename?: 'JobRole';
-                      id: string;
-                      contact?: {
-                        __typename?: 'Contact';
-                        id: string;
-                        name?: string | null;
-                        firstName?: string | null;
-                        lastName?: string | null;
-                        profilePhotoUrl?: string | null;
-                      } | null;
-                    };
-                  }
-                | { __typename: 'OrganizationParticipant' }
-                | { __typename: 'PhoneNumberParticipant' }
-                | {
-                    __typename: 'UserParticipant';
-                    type?: string | null;
                     userParticipant: {
                       __typename?: 'User';
                       id: string;
@@ -270,10 +199,6 @@ export type GetTimelineQuery = {
                     name?: string | null;
                     firstName?: string | null;
                     lastName?: string | null;
-                    emails: Array<{
-                      __typename?: 'Email';
-                      email?: string | null;
-                    }>;
                   }>;
                   users: Array<{
                     __typename?: 'User';
@@ -395,6 +320,7 @@ export type GetTimelineQuery = {
 export const GetTimelineDocument = `
     query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
+    timelineEventsTotalCount(timelineEventTypes: [INTERACTION_EVENT])
     timelineEvents(
       from: $from
       size: $size
@@ -441,9 +367,6 @@ export const GetTimelineDocument = `
                 name
                 firstName
                 lastName
-                emails {
-                  email
-                }
               }
               users {
                 id
@@ -589,9 +512,6 @@ export const GetTimelineDocument = `
                       name
                       firstName
                       lastName
-                      emails {
-                        email
-                      }
                     }
                     users {
                       id
@@ -629,65 +549,6 @@ export const GetTimelineDocument = `
                 }
                 ... on UserParticipant {
                   __typename
-                  userParticipant {
-                    id
-                    firstName
-                    lastName
-                    profilePhotoUrl
-                  }
-                }
-              }
-              sentTo {
-                __typename
-                ... on EmailParticipant {
-                  __typename
-                  type
-                  emailParticipant {
-                    email
-                    contacts {
-                      id
-                      name
-                      firstName
-                      lastName
-                    }
-                    users {
-                      id
-                      firstName
-                      lastName
-                    }
-                    organizations {
-                      id
-                      name
-                    }
-                    id
-                  }
-                }
-                ... on ContactParticipant {
-                  __typename
-                  contactParticipant {
-                    name
-                    id
-                    firstName
-                    lastName
-                    profilePhotoUrl
-                  }
-                }
-                ... on JobRoleParticipant {
-                  __typename
-                  jobRoleParticipant {
-                    id
-                    contact {
-                      id
-                      name
-                      firstName
-                      lastName
-                      profilePhotoUrl
-                    }
-                  }
-                }
-                ... on UserParticipant {
-                  __typename
-                  type
                   userParticipant {
                     id
                     firstName
