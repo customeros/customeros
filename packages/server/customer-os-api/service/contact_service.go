@@ -32,7 +32,7 @@ type ContactService interface {
 	PermanentDelete(ctx context.Context, id string) (bool, error)
 	Archive(ctx context.Context, contactId string) (bool, error)
 	RestoreFromArchive(ctx context.Context, contactId string) (bool, error)
-	GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error)
+	GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.ContactEntities, error)
 	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
 	GetContactsForEmails(ctx context.Context, emailIds []string) (*entity.ContactEntities, error)
@@ -361,7 +361,7 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 }
 
 func (s *contactService) GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetAllForConversation")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetAllForConversation")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("conversationId", conversationId))
@@ -381,24 +381,27 @@ func (s *contactService) GetAllForConversation(ctx context.Context, conversation
 	return &contactEntities, nil
 }
 
-func (s *contactService) GetContactForRole(ctx context.Context, roleId string) (*entity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactForRole")
+func (s *contactService) GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.ContactEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForJobRoles")
 	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("roleId", roleId))
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("jobRoleIds", jobRoleIds))
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	dbNode, err := s.repositories.ContactRepository.GetContactForRole(ctx, session, common.GetContext(ctx).Tenant, roleId)
-	if dbNode == nil || err != nil {
+	contacts, err := s.repositories.ContactRepository.GetAllForJobRoles(ctx, common.GetTenantFromContext(ctx), jobRoleIds)
+	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToContactEntity(*dbNode), nil
+	contactEntities := make(entity.ContactEntities, 0, len(contacts))
+	for _, v := range contacts {
+		contactEntity := s.mapDbNodeToContactEntity(*v.Node)
+		contactEntity.DataloaderKey = v.LinkedNodeId
+		contactEntities = append(contactEntities, *contactEntity)
+	}
+	return &contactEntities, nil
 }
 
 func (s *contactService) GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactsForOrganization")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId), log.Int("page", page), log.Int("limit", limit))
@@ -447,7 +450,7 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 }
 
 func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedContactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.Merge")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("primaryContactId", primaryContactId), log.String("mergedContactId", mergedContactId))
@@ -494,7 +497,7 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 }
 
 func (s *contactService) AddTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.AddTag")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.AddTag")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.String("tagId", tagId))
@@ -507,7 +510,7 @@ func (s *contactService) AddTag(ctx context.Context, contactId, tagId string) (*
 }
 
 func (s *contactService) RemoveTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.RemoveTag")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.RemoveTag")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.String("tagId", tagId))
@@ -520,7 +523,7 @@ func (s *contactService) RemoveTag(ctx context.Context, contactId, tagId string)
 }
 
 func (s *contactService) AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*entity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.AddOrganization")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.AddOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.String("organizationId", organizationId))
@@ -534,7 +537,7 @@ func (s *contactService) AddOrganization(ctx context.Context, contactId, organiz
 }
 
 func (s *contactService) RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.RemoveOrganization")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.RemoveOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.String("organizationId", organizationId))
@@ -548,7 +551,7 @@ func (s *contactService) RemoveOrganization(ctx context.Context, contactId, orga
 }
 
 func (s *contactService) GetContactsForEmails(ctx context.Context, emailIds []string) (*entity.ContactEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactsForEmails")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForEmails")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.Object("emailIds", emailIds))
@@ -567,7 +570,7 @@ func (s *contactService) GetContactsForEmails(ctx context.Context, emailIds []st
 }
 
 func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.ContactEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactsForPhoneNumbers")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForPhoneNumbers")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.Object("phoneNumberIds", phoneNumberIds))

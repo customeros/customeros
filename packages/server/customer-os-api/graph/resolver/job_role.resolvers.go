@@ -39,11 +39,11 @@ func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*mod
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.jobRoleID", obj.ID))
 
-	contactEntity, err := r.Services.ContactService.GetContactForRole(ctx, obj.ID)
+	contactEntity, err := dataloader.For(ctx).GetContactForJobRole(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get contact job for role %s", obj.ID)
-		return nil, err
+		graphql.AddErrorf(ctx, "Failed to get contact for job role %s", obj.ID)
+		return nil, nil
 	}
 	if contactEntity == nil {
 		return nil, nil

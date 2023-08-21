@@ -64,6 +64,7 @@ type Loaders struct {
 	ExternalSystemsForEntity                    *dataloader.Loader
 	TimelineEventForTimelineEventId             *dataloader.Loader
 	OrganizationForJobRole                      *dataloader.Loader
+	ContactForJobRole                           *dataloader.Loader
 	IssueForInteractionEvent                    *dataloader.Loader
 	MeetingForInteractionEvent                  *dataloader.Loader
 	HealthIndicatorForOrganization              *dataloader.Loader
@@ -301,6 +302,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ExternalSystemsForEntity:                    dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForEntities, dataloader.WithClearCacheOnBatch()),
 		TimelineEventForTimelineEventId:             dataloader.NewBatchedLoader(timelineEventBatcher.getTimelineEventsForTimelineEventIds, dataloader.WithClearCacheOnBatch()),
 		OrganizationForJobRole:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch()),
+		ContactForJobRole:                           dataloader.NewBatchedLoader(contactBatcher.getContactsForJobRoles, dataloader.WithClearCacheOnBatch()),
 		IssueForInteractionEvent:                    dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		MeetingForInteractionEvent:                  dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		HealthIndicatorForOrganization:              dataloader.NewBatchedLoader(healthIndicatorBatcher.getHealthIndicatorsForOrganizations, dataloader.WithClearCacheOnBatch()),

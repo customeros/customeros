@@ -59,6 +59,10 @@
     {
       "name": "Check emails not shared between users",
       "query": "MATCH (u:User)-[r1:HAS]->(e:Email)<-[r2:HAS]-(n:User) WHERE u <> n return count(e)"
+    },
+    {
+      "name": "Check JobRole nodes without linked contact or user",
+      "query": "MATCH (j:JobRole) WHERE NOT (j)--(:Contact|User) RETURN count(j)"
     }
   ]
 }

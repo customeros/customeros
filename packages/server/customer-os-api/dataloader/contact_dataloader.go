@@ -29,6 +29,18 @@ func (i *Loaders) GetContactsForPhoneNumber(ctx context.Context, phoneNumberId s
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetContactForJobRole(ctx context.Context, jobRoleId string) (*entity.ContactEntity, error) {
+	thunk := i.ContactForJobRole.Load(ctx, dataloader.StringKey(jobRoleId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.ContactEntity), nil
+}
+
 func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
@@ -109,6 +121,46 @@ func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys da
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.ContactEntities{})); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	return results
+}
+
+func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	contactEntities, err := b.contactService.GetContactsForJobRoles(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get contacts for job roles")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	contactEntityByJobRoleId := make(map[string]entity.ContactEntity)
+	for _, val := range *contactEntities {
+		contactEntityByJobRoleId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for jobRoleId, _ := range contactEntityByJobRoleId {
+		if ix, ok := keyOrder[jobRoleId]; ok {
+			val := contactEntityByJobRoleId[jobRoleId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, jobRoleId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.ContactEntity{}), true); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
