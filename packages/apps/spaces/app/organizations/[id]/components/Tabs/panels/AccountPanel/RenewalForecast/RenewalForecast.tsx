@@ -154,8 +154,7 @@ export const RenewalForecast: FC<{
         </Text>
         <br />
         <Text fontSize='sm' fontWeight='normal'>
-          {`It's calculated by discounting the subscription amount based on the
-          renewal likelihood—Medium, Low, or Zero.`}
+          {`It's calculated by discounting the renewal potential (billing amount * billings per cycle) based on the renewal likelihood—Medium, Low, or Zero.`}
         </Text>
         <br />
         <Text fontSize='sm' fontWeight='normal'>
