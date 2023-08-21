@@ -7,6 +7,7 @@ import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 
 import { SidenavItem } from './SidenavItem';
+import React from 'react';
 
 interface RootSidenavProps {
   isOwner: boolean;

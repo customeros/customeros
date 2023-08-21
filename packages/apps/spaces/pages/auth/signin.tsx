@@ -46,7 +46,7 @@ export default function SignIn({
           <Center height='100%' pos='relative' top='-50%'>
             <Flex flexDirection={'column'} align={'center'} width={360}>
               <Image
-                src='/logos/customer-os-with-text-small.png'
+                src='/logos/customer-os-with-text.png'
                 alt='CustomerOS'
                 width={150}
                 height={150}
