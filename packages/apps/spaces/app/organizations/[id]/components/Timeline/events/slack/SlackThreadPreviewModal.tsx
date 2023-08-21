@@ -45,7 +45,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
           alignItems='center'
         >
           <Flex mb={2} alignItems='center'>
-            <Heading size='sm'>
+            <Heading size='sm' fontSize='lg'>
               {modalContent?.interactionSession?.name || 'Thread'}
             </Heading>
             {/* todo uncomment when channel data is available  */}
