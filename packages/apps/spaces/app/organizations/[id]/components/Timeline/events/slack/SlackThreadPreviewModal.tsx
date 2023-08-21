@@ -44,11 +44,17 @@ export const SlackThreadPreviewModal: React.FC = () => {
           justifyContent='space-between'
           alignItems='center'
         >
-          <div>
-            <Heading size='sm' mb={2}>
-              Thread
+          <Flex mb={2} alignItems='center'>
+            <Heading size='sm'>
+              {modalContent?.interactionSession?.name || 'Thread'}
             </Heading>
-          </div>
+            {/* todo uncomment when channel data is available  */}
+            {/*{channel && (*/}
+            {/*  <Text color='gray.500' ml={2} fontSize='sm'>*/}
+            {/*    {channel}*/}
+            {/*  </Text>*/}
+            {/*)}*/}
+          </Flex>
           <Flex direction='row' justifyContent='flex-end' alignItems='center'>
             <Tooltip label='Copy link to this thread' placement='bottom'>
               <IconButton
