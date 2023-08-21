@@ -77,7 +77,17 @@ spec:
             - name: CALCOM_SECRET
               value: "test"
 
+            - name: JAEGER_ENABLED
+              value: "true"
+            - name: JAEGER_SERVICE_NAME
+              value: "comms-api"
             - name: JAEGER_AGENT_HOST
               value: "jaeger-agent.openline.svc.cluster.local"
             - name: JAEGER_AGENT_PORT
               value: "6831"
+            - name: JAEGER_SAMPLER_TYPE
+              value: "const"
+            - name: JAEGER_SAMPLER_PARAM
+              value: "1"
+            - name: JAEGER_REPORTER_LOG_SPANS
+              value: "true"
