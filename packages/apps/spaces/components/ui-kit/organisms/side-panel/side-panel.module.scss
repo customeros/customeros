@@ -22,8 +22,7 @@
   }
 
   & .logoWrapper .logo {
-    width: 31px;
-    height: 40px;
+
     pointer-events: none;
     transition: var(--transition-opacity);
   }
@@ -36,4 +35,13 @@
     justify-content: flex-end;
     margin-bottom: var(--spacing-sm);
   }
+}
+
+.logo {
+  position: relative;
+  height: 300px;
+  width: 300px;
+
+  pointer-events: none;
+  transition: var(--transition-opacity);
 }

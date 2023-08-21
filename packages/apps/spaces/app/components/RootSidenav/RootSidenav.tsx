@@ -7,6 +7,7 @@ import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 
 import { SidenavItem } from './SidenavItem';
+import React from 'react';
 
 interface RootSidenavProps {
   isOwner: boolean;
@@ -44,7 +45,7 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
           h='40px'
           alt='CustomerOS'
           pointerEvents='none'
-          src='/logos/customer-os-small.svg'
+          src='/logos/customer-os.png'
           transition='opacity 0.25s ease-in-out'
         />
       </Flex>

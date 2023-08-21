@@ -20,7 +20,7 @@ export const SidePanel: React.FC = () => {
       <aside className={styles.sidebar}>
         <div className={styles.logoWrapper} role='button' tabIndex={0}>
           <Image
-            src='/logos/customer-os-small.svg'
+            src='/logos/customer-os.png'
             alt='CustomerOS'
             width={31}
             height={40}
