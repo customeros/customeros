@@ -5,7 +5,10 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -29,6 +32,11 @@ func (i *Loaders) GetRelationshipStagesForOrganization(ctx context.Context, orga
 }
 
 func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipDataLoader.getRelationshipsForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -36,6 +44,7 @@ func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Conte
 
 	entitiesPtr, err := b.organizationRelationshipService.GetRelationshipsForOrganizations(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: entity.OrganizationRelationships{}, Error: errors.New("deadline exceeded to get relationships for organizations")}}
@@ -66,13 +75,21 @@ func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Conte
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationRelationships{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{entity.OrganizationRelationships{}, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }
 
 func (b *relationshipBatcher) getRelationshipStagesForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipDataLoader.getRelationshipStagesForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -80,6 +97,7 @@ func (b *relationshipBatcher) getRelationshipStagesForOrganizations(ctx context.
 
 	entitiesPtr, err := b.organizationRelationshipService.GetRelationshipsWithStagesForOrganizations(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get relationships with stages for organizations")}}
@@ -110,8 +128,11 @@ func (b *relationshipBatcher) getRelationshipStagesForOrganizations(ctx context.
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationRelationshipsWithStages{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }

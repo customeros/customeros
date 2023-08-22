@@ -20,16 +20,11 @@ import (
 
 // Describes is the resolver for the describes field.
 func (r *analysisResolver) Describes(ctx context.Context, obj *model.Analysis) ([]model.DescriptionNode, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "AnalysisResolver.Describes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.analysisID", obj.ID))
-
 	participantEntities, err := dataloader.For(ctx).GetDescribesForAnalysis(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get participants for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToDescriptionNodes(participantEntities), nil
 }

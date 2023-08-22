@@ -6,7 +6,10 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -41,6 +44,11 @@ func (i *Loaders) GetAttachmentsForMeeting(ctx context.Context, meetingId string
 }
 
 func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -48,6 +56,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_INTERACTION_EVENT, nil, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for interaction events")}}
@@ -77,13 +86,21 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("output - results_length", len(results)))
 
 	return results
 }
 
 func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForInteractionSessions")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -91,6 +108,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Con
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_INTERACTION_SESSION, nil, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for interaction sessions")}}
@@ -120,13 +138,21 @@ func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Con
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("output - results_length", len(results)))
 
 	return results
 }
 
 func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForMeetings")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -134,6 +160,7 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_MEETING, nil, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for interaction sessions")}}
@@ -163,8 +190,11 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("output - results_length", len(results)))
 
 	return results
 }

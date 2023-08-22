@@ -5,7 +5,10 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -20,6 +23,11 @@ func (i *Loaders) GetDescribesForAnalysis(ctx context.Context, analysisId string
 }
 
 func (b *analysisBatcher) getDescribesForAnalysis(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisDataLoader.getDescribesForAnalysis")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -27,6 +35,7 @@ func (b *analysisBatcher) getDescribesForAnalysis(ctx context.Context, keys data
 
 	participantEntitiesPtr, err := b.analysisService.GetDescribesForAnalysis(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction event participants")}}
@@ -57,8 +66,11 @@ func (b *analysisBatcher) getDescribesForAnalysis(ctx context.Context, keys data
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.AnalysisDescribes{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("output - results_length", len(results)))
 
 	return results
 }

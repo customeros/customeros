@@ -19,48 +19,33 @@ import (
 
 // Users is the resolver for the users field.
 func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EmailResolver.Users", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.emailID", obj.ID))
-
 	userEntities, err := dataloader.For(ctx).GetUsersForEmail(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get users for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get users for email %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToUsers(userEntities), nil
 }
 
 // Contacts is the resolver for the contacts field.
 func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EmailResolver.Contacts", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.emailID", obj.ID))
-
 	contactEntities, err := dataloader.For(ctx).GetContactsForEmail(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get contacts for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contacts for email %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToContacts(contactEntities), nil
 }
 
 // Organizations is the resolver for the organizations field.
 func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EmailResolver.Organizations", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.emailID", obj.ID))
-
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForEmail(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get organizations for email %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get organizations for email %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToOrganizations(organizationEntities), nil
 }

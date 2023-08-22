@@ -18,30 +18,20 @@ import (
 
 // Organization is the resolver for the organization field.
 func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "JobRoleResolver.Organization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.jobRoleID", obj.ID))
-
 	organizationEntityNillable, err := dataloader.For(ctx).GetOrganizationForJobRole(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get organization for job role %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get organization for job role %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntityNillable), nil
 }
 
 // Contact is the resolver for the contact field.
 func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "JobRoleResolver.Contact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.jobRoleID", obj.ID))
-
 	contactEntity, err := dataloader.For(ctx).GetContactForJobRole(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get contact for job role %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get contact for job role %s", obj.ID)
 		return nil, nil
 	}

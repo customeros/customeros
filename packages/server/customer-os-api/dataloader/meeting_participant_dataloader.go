@@ -5,7 +5,10 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -30,6 +33,11 @@ func (i *Loaders) GetAttendedByParticipantsForMeeting(ctx context.Context, conta
 }
 
 func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingParticipantDataLoader.getCreatedByParticipantsForMeeting")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -37,6 +45,7 @@ func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx conte
 
 	participantEntitiesPtr, err := b.meetingService.GetParticipantsForMeetings(ctx, ids, entity.CREATED_BY)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get meeting created participants")}}
@@ -67,13 +76,21 @@ func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx conte
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.MeetingParticipants{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }
 
 func (b *meetingParticipantBatcher) getAttendedByParticipantsForMeeting(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingParticipantDataLoader.getAttendedByParticipantsForMeeting")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -81,6 +98,7 @@ func (b *meetingParticipantBatcher) getAttendedByParticipantsForMeeting(ctx cont
 
 	participantEntitiesPtr, err := b.meetingService.GetParticipantsForMeetings(ctx, ids, entity.ATTENDED_BY)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get meeting attended participants")}}
@@ -111,8 +129,11 @@ func (b *meetingParticipantBatcher) getAttendedByParticipantsForMeeting(ctx cont
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.MeetingParticipants{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }

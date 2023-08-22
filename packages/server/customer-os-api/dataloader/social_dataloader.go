@@ -5,7 +5,10 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -30,6 +33,11 @@ func (i *Loaders) GetSocialsForOrganization(ctx context.Context, organizationId 
 }
 
 func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialDataLoader.getSocialsForContacts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -37,6 +45,7 @@ func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataload
 
 	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, entity.CONTACT, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get socials for contacts")}}
@@ -67,13 +76,21 @@ func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataload
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.SocialEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }
 
 func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialDataLoader.getSocialsForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -81,6 +98,7 @@ func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dat
 
 	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, entity.ORGANIZATION, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get socials for organizations")}}
@@ -111,8 +129,11 @@ func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dat
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.SocialEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }

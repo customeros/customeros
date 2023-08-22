@@ -6,7 +6,10 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -21,6 +24,11 @@ func (i *Loaders) GetDescribedByFor(ctx context.Context, linkedWith repository.L
 }
 
 func (b *analysisBatcher) getDescribedByFor(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisDataLoader.getDescribedByFor")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -28,6 +36,7 @@ func (b *analysisBatcher) getDescribedByFor(ctx context.Context, keys dataloader
 
 	analysisEntitiesPtr, err := b.analysisService.GetDescribedByForXX(ctx, ids, ctx.Value("LinkedWith").(repository.LinkedWith))
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get analysis for meeting")}}
@@ -58,8 +67,11 @@ func (b *analysisBatcher) getDescribedByFor(ctx context.Context, keys dataloader
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.AnalysisEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("output - results_length", len(results)))
 
 	return results
 }

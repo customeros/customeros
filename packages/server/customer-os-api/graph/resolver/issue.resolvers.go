@@ -18,14 +18,9 @@ import (
 
 // Tags is the resolver for the tags field.
 func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "IssueResolver.Tags", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.issueID", obj.ID))
-
 	tagEntities, err := dataloader.For(ctx).GetTagsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get tags for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get tags for issue %s", obj.ID)
 		return nil, err
 	}
@@ -34,46 +29,31 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 
 // MentionedByNotes is the resolver for the mentionedByNotes field.
 func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "IssueResolver.MentionedByNotes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.issueID", obj.ID))
-
 	noteEntities, err := dataloader.For(ctx).GetMentionedByNotesForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get mentioned by notes for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get notes for issue %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToNotes(noteEntities), nil
 }
 
 // InteractionEvents is the resolver for the interactionEvents field.
 func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "IssueResolver.InteractionEvents", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.issueID", obj.ID))
-
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForIssue(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get interaction events for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction events for issue %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]*model.ExternalSystem, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "IssueResolver.ExternalLinks", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.issueID", obj.ID))
-
 	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get external system for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for issue %s", obj.ID)
 		return nil, err
 	}

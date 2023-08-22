@@ -5,7 +5,10 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -40,6 +43,11 @@ func (i *Loaders) GetPhoneNumbersForContact(ctx context.Context, contactId strin
 }
 
 func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -47,6 +55,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context
 
 	phoneNumberEntitiesPtr, err := b.phoneNumberService.GetAllForEntityTypeByIds(ctx, entity.ORGANIZATION, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get phone numbers for organizations")}}
@@ -77,13 +86,21 @@ func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }
 
 func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForUsers")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -91,6 +108,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys d
 
 	phoneNumberEntitiesPtr, err := b.phoneNumberService.GetAllForEntityTypeByIds(ctx, entity.USER, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get phone numbers for users")}}
@@ -121,13 +139,21 @@ func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys d
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }
 
 func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForContacts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -135,6 +161,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, key
 
 	phoneNumberEntitiesPtr, err := b.phoneNumberService.GetAllForEntityTypeByIds(ctx, entity.CONTACT, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get phone numbers for users")}}
@@ -165,8 +192,11 @@ func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, key
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
+		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }
