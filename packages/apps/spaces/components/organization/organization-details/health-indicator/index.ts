@@ -1,1 +1,0 @@
-export { OrganizationHealthIndicator } from './OrganizationHealthIndicator';

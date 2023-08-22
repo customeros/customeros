@@ -1,11 +1,6 @@
 query GetOrganizationDetails($id: ID!) {
   organization(id: $id) {
     ...OrganizationDetails
-    healthIndicator {
-      id
-      name
-      order
-    }
     subsidiaryOf {
       organization {
         id

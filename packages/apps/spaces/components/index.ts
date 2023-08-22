@@ -19,5 +19,4 @@ export {
   TagListSkeleton,
   Highlight,
   Tooltip,
-  DetailsPageLayout,
 } from './ui-kit';
