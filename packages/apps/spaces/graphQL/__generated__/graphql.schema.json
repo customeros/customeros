@@ -16337,17 +16337,6 @@
             "deprecationReason": null
           },
           {
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "socials",
             "description": null,
             "args": [],
@@ -17409,17 +17398,6 @@
                 "name": "String",
                 "ofType": null
               }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "description": null,
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -18921,7 +18899,7 @@
           },
           {
             "name": "dashboardView_Organizations",
-            "description": "sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME",
+            "description": "sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT",
             "args": [
               {
                 "name": "pagination",

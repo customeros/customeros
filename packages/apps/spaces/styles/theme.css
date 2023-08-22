@@ -115,13 +115,6 @@
   --text-faded: var(--gray-600);
 
   --gray-background: #d9d9d9;
-
-  --health-indicator-unset: #d9d9d9;
-  --health-indicator-green: #1bb33e;
-  --health-indicator-yellow: #ffc107;
-  --health-indicator-orange: #ff6a0f;
-  --health-indicator-red: #dc3545;
-
   /* BORDER */
   --border-radius-xs: 2px; /* very small border radius */
   --border-radius-sm: 4px; /* small border radius */

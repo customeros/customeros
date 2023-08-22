@@ -68,11 +68,6 @@ query dashboardView_Organizations(
         ...LocationBaseDetails
         rawAddress
       }
-      healthIndicator {
-        id
-        name
-        order
-      }
       relationshipStages {
         relationship
         stage

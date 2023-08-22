@@ -1,1 +1,0 @@
-export { DetailsPageLayout } from './DetailsPageLayout';

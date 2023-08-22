@@ -2,11 +2,6 @@ query GetOrganization($id: ID!) {
   organization(id: $id) {
     ...OrganizationDetails
     ...OrganizationContacts
-    healthIndicator {
-      id
-      name
-      order
-    }
     owner {
       id
       firstName

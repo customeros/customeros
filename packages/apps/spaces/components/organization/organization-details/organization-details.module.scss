@@ -1,57 +1,11 @@
 @import '../../../styles/mixins';
 
-.detailsAndCommunicationChannel {
-  position: relative;
-}
-
-.nameAndButtons {
-  display: flex;
-}
-.deleteButton {
-  position: absolute;
-  bottom: var(--spacing-md);
-  left: var(--spacing-lg);
-}
-
-.organizationDetails {
-  display: flex;
-  flex-direction: column;
-  border-radius: 10px;
-  box-shadow: 2px 2px 4px -2px rgba(0, 0, 50, 0.23),
-    6px 6px 20px rgba(0, 0, 50, 0.1),
-    -8px -8px 16px 2px hsla(200, 0%, 100%, 0.278);
-  background-size: cover;
-  background-repeat: no-repeat;
-  position: relative;
-  backdrop-filter: blur(10px);
-  aspect-ratio: 3/2;
-  min-height: available;
-  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-xxl);
-  font-size: var(--font-size-sm);
-  color: var(--text-default-color);
-}
-
-.editButton {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  max-width: 50px;
-  right: var(--spacing-lg);
-
-  & .icon {
-    margin-bottom: 12px;
-  }
-}
-
 .name {
   font-size: var(--heading-main);
   font-weight: normal;
   margin-bottom: var(--spacing-xs);
 }
-.parent_company_name {
-  @include text-hint;
-  display: block;
-}
+
 
 .industry {
   @include text-hint;
@@ -65,12 +19,3 @@
   margin: var(--spacing-xxs) 0;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-}
-
-.organizationIdCard {
-  grid-area: idCard;
-
-}
