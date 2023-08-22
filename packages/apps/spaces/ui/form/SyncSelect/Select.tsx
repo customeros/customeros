@@ -6,11 +6,13 @@ import {
   SelectInstance,
   chakraComponents,
   ClearIndicatorProps,
+  LoadingIndicatorProps,
   GroupBase,
   ChakraStylesConfig,
 } from 'chakra-react-select';
 
 import Delete from '@spaces/atoms/icons/Delete';
+import { Icons } from '@ui/media/Icon';
 import omit from 'lodash/omit';
 
 export interface SelectProps extends Props<any, any, any> {
@@ -29,20 +31,37 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
     }, []);
     const ClearIndicator = useCallback(
       ({ children, ...rest }: ClearIndicatorProps) => {
+        const boxSize = (() => {
+          switch (rest.selectProps.size) {
+            case 'sm':
+              return '3';
+            case 'md':
+              return '4';
+            case 'lg':
+              return '5';
+            default:
+              return '4';
+          }
+        })();
+
         if (!rest.isFocused) return null;
         return (
           <chakraComponents.ClearIndicator {...rest} className='clearButton'>
-            <Delete color='var(--chakra-colors-gray-500)' height='1rem' />
+            <Icons.Delete color='gray.500' boxSize={boxSize} />
           </chakraComponents.ClearIndicator>
         );
       },
       [],
     );
+    const LoadingIndicator = useCallback((props: LoadingIndicatorProps) => {
+      return <chakraComponents.LoadingIndicator thickness='1px' {...props} />;
+    }, []);
 
     const components = useMemo(
       () => ({
         Control,
         ClearIndicator,
+        LoadingIndicator,
         DropdownIndicator: () => null,
       }),
       [Control],
@@ -66,9 +85,18 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             ...props,
             padding: 2,
             _hover: {
-              bg: 'gray.100',
+              bg: '#F2F4F7',
             },
-            ...chakraStyles?.clearIndicator?.(props, state),
+            ...chakraStyles?.clearIndicator?.(
+              {
+                ...props,
+                padding: 2,
+                _hover: {
+                  bg: '#F2F4F7',
+                },
+              },
+              state,
+            ),
           }),
           placeholder: (props) => ({
             ...props,
@@ -80,7 +108,16 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             boxShadow: 'md',
             borderColor: 'gray.200',
             borderRadius: 'lg',
-            ...chakraStyles?.menuList?.(props, state),
+            ...chakraStyles?.menuList?.(
+              {
+                ...props,
+                padding: '2',
+                boxShadow: 'md',
+                borderColor: 'gray.200',
+                borderRadius: 'lg',
+              },
+              state,
+            ),
           }),
           option: (props, state) => ({
             ...props,
@@ -110,10 +147,16 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             fontWeight: 'regular',
             ...chakraStyles?.groupHeading?.(props, state),
           }),
+          loadingIndicator: (props, state) => ({
+            ...props,
+            color: 'gray.500',
+            ...chakraStyles?.loadingIndicator?.(props, state),
+          }),
           ...omit<ChakraStylesConfig<unknown, false, GroupBase<unknown>>>(
             chakraStyles,
             [
               'container',
+              'loadingIndicator',
               'clearIndicator',
               'menuList',
               'option',

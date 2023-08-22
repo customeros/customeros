@@ -10,6 +10,7 @@ interface FormRoleSelectProps {
   isFocused: boolean;
   displayValue: string;
   placeholder?: string;
+  isCardOpen?: boolean;
   setIsFocused: (isFocused: boolean) => void;
 }
 
@@ -17,6 +18,7 @@ export const FormRoleSelect = ({
   name,
   formId,
   isFocused,
+  isCardOpen,
   placeholder,
   displayValue,
   setIsFocused,
@@ -34,10 +36,8 @@ export const FormRoleSelect = ({
         <FormSelect
           isMulti
           autoFocus
+          menuIsOpen
           name={name}
-          onMenuOpen={() => {
-            setIsFocused(true);
-          }}
           options={[
             { value: 'Decision Maker', label: 'Decision Maker' },
             { value: 'Influencer', label: 'Influencer' },
@@ -58,7 +58,9 @@ export const FormRoleSelect = ({
       cursor='text'
       color={displayValue ? 'gray.500' : 'gray.400'}
       onClick={(e) => {
-        e.stopPropagation();
+        if (isCardOpen) {
+          e.stopPropagation();
+        }
         setIsFocused(true);
       }}
       borderBottom='1px solid transparent'

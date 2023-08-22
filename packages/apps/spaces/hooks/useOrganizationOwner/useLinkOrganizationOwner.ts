@@ -11,6 +11,7 @@ import client from '../../apollo-client';
 
 interface Props {
   organizationId: string;
+  onCompleted?: () => void;
 }
 
 interface Result {
@@ -23,9 +24,12 @@ interface Result {
   >;
 }
 
-export const useLinkOrganizationOwner = ({ organizationId }: Props): Result => {
+export const useLinkOrganizationOwner = ({
+  organizationId,
+  onCompleted,
+}: Props): Result => {
   const [linkOrganizationOwnerMutation, { loading }] =
-    useUpdateOrganizationOwnerMutation();
+    useUpdateOrganizationOwnerMutation({ onCompleted });
 
   const handleUpdateCacheAfterAddingLocation = (
     cache: ApolloCache<any>,

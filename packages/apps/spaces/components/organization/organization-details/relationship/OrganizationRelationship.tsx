@@ -5,6 +5,11 @@ import {
   useAddRelationshipToOrganizationMutation,
   useRemoveOrganizationRelationshipMutation,
 } from '@spaces/graphql';
+import { Text } from '@ui/typography/Text';
+import { Flex } from '@ui/layout/Flex';
+import { Icons } from '@ui/media/Icon';
+import { IconButton } from '@ui/form/IconButton';
+
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 
@@ -19,6 +24,7 @@ export const OrganizationRelationship = ({
   defaultValue,
   organizationId,
 }: OrganizationRelationshipProps) => {
+  const [isEditing, setIsEditing] = useState(false);
   const [prevSelection, setPrevSelection] =
     useState<Relationship>(defaultValue);
   const [addRelationshipToOrganization, { loading }] =
@@ -34,6 +40,9 @@ export const OrganizationRelationship = ({
       variables: {
         organizationId,
         relationship: prevSelection,
+      },
+      onCompleted: () => {
+        setIsEditing(false);
       },
       update: (cache) => {
         const normalizedId = cache.identify({
@@ -63,6 +72,9 @@ export const OrganizationRelationship = ({
               organizationId,
               relationship: prevSelection,
             },
+            onCompleted: () => {
+              setIsEditing(false);
+            },
           });
         }
 
@@ -70,6 +82,9 @@ export const OrganizationRelationship = ({
           variables: {
             organizationId,
             relationship,
+          },
+          onCompleted: () => {
+            setIsEditing(false);
           },
           update: (cache) => {
             const normalizedId = cache.identify({
@@ -116,15 +131,61 @@ export const OrganizationRelationship = ({
     [prevSelection, addRelationship, removeRelationship],
   );
 
+  if (!isEditing) {
+    return (
+      <Flex
+        w='full'
+        gap='1'
+        align='center'
+        _hover={{
+          '& #edit-button': {
+            opacity: 1,
+          },
+        }}
+      >
+        <Text
+          cursor='default'
+          color={value ? 'gray.700' : 'gray.500'}
+          onDoubleClick={() => setIsEditing(true)}
+        >
+          {value?.label ?? 'Relationship'}
+        </Text>
+        <IconButton
+          aria-label='erc'
+          size='xs'
+          borderRadius='md'
+          minW='4'
+          w='4'
+          minH='4'
+          h='4'
+          opacity='0'
+          variant='ghost'
+          id='edit-button'
+          onClick={() => setIsEditing(true)}
+          icon={<Icons.Edit3 color='gray.500' boxSize='3' />}
+        />
+      </Flex>
+    );
+  }
+
   return (
     <Select
       size='sm'
       isClearable
       value={value}
+      autoFocus
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          setIsEditing(false);
+        }
+      }}
+      defaultMenuIsOpen
+      onBlur={() => setIsEditing(false)}
       variant='unstyled'
       isLoading={loading}
       backspaceRemovesValue
       onChange={handleSelect}
+      openMenuOnClick={false}
       placeholder='Relationship'
       options={relationshipOptions}
       chakraStyles={{
@@ -143,7 +204,7 @@ export const OrganizationRelationship = ({
         }),
         clearIndicator: (props) => ({
           ...props,
-          display: 'none',
+          boxSize: '3',
         }),
         placeholder: (props) => ({
           ...props,
@@ -154,6 +215,10 @@ export const OrganizationRelationship = ({
           ...props,
           py: 0,
           ml: 0,
+        }),
+        menuList: (props) => ({
+          ...props,
+          w: '262px',
         }),
       }}
     />

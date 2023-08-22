@@ -86,7 +86,7 @@ export const Table = <T extends object>({
 
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
-    count: !data.length && isLoading ? 5 : totalItems,
+    count: !data.length && isLoading ? 15 : totalItems,
     overscan: 25,
     getScrollElement: () => scrollElementRef.current,
     estimateSize: () => 21,
