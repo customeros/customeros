@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.3
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
