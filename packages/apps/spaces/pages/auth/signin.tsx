@@ -39,7 +39,7 @@ export default function SignIn({
         <GridItem h='100vh'>
           <Box height='50%'>
             <Image
-              alt='dotted background'
+              alt=''
               src={BackgroundGridDot}
               width={480}
               top='-10%'
