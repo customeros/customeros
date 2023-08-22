@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
-	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
+	orgevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -26,7 +26,7 @@ type OrganizationSubscriber struct {
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *commands.OrganizationCommands, repositories *repository.Repositories, caches caches.Cache) *OrganizationSubscriber {
+func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.OrganizationCommands, repositories *repository.Repositories, caches caches.Cache) *OrganizationSubscriber {
 	return &OrganizationSubscriber{
 		log: log,
 		db:  db,
@@ -117,16 +117,23 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 	}
 
 	switch evt.GetEventType() {
-	case organization_events.OrganizationCreateV1:
+	case orgevts.OrganizationCreateV1:
 		return s.organizationEventHandler.AdjustNewOrganizationFields(ctx, evt)
-	case organization_events.OrganizationUpdateV1:
+	case orgevts.OrganizationUpdateV1:
 		return s.organizationEventHandler.AdjustUpdatedOrganizationFields(ctx, evt)
-	case organization_events.OrganizationLinkDomainV1:
+	case orgevts.OrganizationLinkDomainV1:
 		return s.organizationEventHandler.WebscrapeOrganization(ctx, evt)
+	case orgevts.OrganizationRequestRenewalForecastV1:
+		return s.organizationEventHandler.OnRenewalForecastRequested(ctx, evt)
+	case orgevts.OrganizationRequestNextCycleDateV1:
+		return s.organizationEventHandler.OnNextCycleDateRequested(ctx, evt)
 	case
-		organization_events.OrganizationPhoneNumberLinkV1,
-		organization_events.OrganizationEmailLinkV1,
-		organization_events.OrganizationAddSocialV1:
+		orgevts.OrganizationPhoneNumberLinkV1,
+		orgevts.OrganizationEmailLinkV1,
+		orgevts.OrganizationAddSocialV1,
+		orgevts.OrganizationUpdateRenewalLikelihoodV1,
+		orgevts.OrganizationUpdateRenewalForecastV1,
+		orgevts.OrganizationUpdateBillingDetailsV1:
 		return nil
 
 	default:

@@ -6,14 +6,14 @@ import (
 	interaction_event_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
 	job_role_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	location_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
-	organization_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
+	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	user_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
 )
 
 type Commands struct {
 	ContactCommands          *contact_commands.ContactCommands
-	OrganizationCommands     *organization_commands.OrganizationCommands
+	OrganizationCommands     *orgcmdhnd.OrganizationCommands
 	PhoneNumberCommands      *phone_number_commands.PhoneNumberCommands
 	EmailCommands            *email_commands.EmailCommands
 	UserCommands             *user_commands.UserCommands

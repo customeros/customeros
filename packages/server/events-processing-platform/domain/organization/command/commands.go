@@ -1,4 +1,4 @@
-package commands
+package command
 
 import (
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
@@ -90,40 +90,58 @@ func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) 
 	}
 }
 
-type LinkDomainCommand struct {
+type UpdateRenewalLikelihoodCommand struct {
 	eventstore.BaseCommand
-	Domain string
+	Fields models.RenewalLikelihoodFields
 }
 
-func NewLinkDomainCommand(objectID, tenant, domain string) *LinkDomainCommand {
-	return &LinkDomainCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
-		Domain:      domain,
+func NewUpdateRenewalLikelihoodCommand(tenant, orgId string, fields models.RenewalLikelihoodFields) *UpdateRenewalLikelihoodCommand {
+	return &UpdateRenewalLikelihoodCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+		Fields:      fields,
 	}
 }
 
-type AddSocialCommand struct {
+type RequestNextCycleDateCommand struct {
 	eventstore.BaseCommand
-	SocialId       string
-	SocialPlatform string
-	SocialUrl      string
-	Source         common_models.Source
-	CreatedAt      *time.Time
-	UpdatedAt      *time.Time
 }
 
-func NewAddSocialCommand(objectID, tenant, socialId, socialPlatform, socialUrl, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *AddSocialCommand {
-	return &AddSocialCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectID, tenant),
-		SocialId:       socialId,
-		SocialPlatform: socialPlatform,
-		SocialUrl:      socialUrl,
-		Source: common_models.Source{
-			Source:        source,
-			SourceOfTruth: sourceOfTruth,
-			AppSource:     appSource,
-		},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+func NewRequestNextCycleDateCommand(tenant, orgId string) *RequestNextCycleDateCommand {
+	return &RequestNextCycleDateCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+	}
+}
+
+type RequestRenewalForecastCommand struct {
+	eventstore.BaseCommand
+}
+
+func NewRequestRenewalForecastCommand(tenant, orgId string) *RequestRenewalForecastCommand {
+	return &RequestRenewalForecastCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+	}
+}
+
+type UpdateRenewalForecastCommand struct {
+	eventstore.BaseCommand
+	Fields models.RenewalForecastFields
+}
+
+func NewUpdateRenewalForecastCommand(tenant, orgId string, fields models.RenewalForecastFields) *UpdateRenewalForecastCommand {
+	return &UpdateRenewalForecastCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+		Fields:      fields,
+	}
+}
+
+type UpdateBillingDetailsCommand struct {
+	eventstore.BaseCommand
+	Fields models.BillingDetailsFields
+}
+
+func NewUpdateBillingDetailsCommand(tenant, orgId string, fields models.BillingDetailsFields) *UpdateBillingDetailsCommand {
+	return &UpdateBillingDetailsCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+		Fields:      fields,
 	}
 }

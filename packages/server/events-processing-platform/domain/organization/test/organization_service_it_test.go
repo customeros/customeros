@@ -3,9 +3,12 @@ package test
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	organizationAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/grpc"
@@ -37,7 +40,7 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	aggregateStore := eventstore.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	if err != nil {
-		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
+		t.Fatalf("Failed to connect to processing platform: %v", err)
 	}
 	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
@@ -107,7 +110,7 @@ func TestOrganizationsService_LinkDomain(t *testing.T) {
 	aggregateStore := eventstore.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	if err != nil {
-		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
+		t.Fatalf("Failed to connect to processing platform: %v", err)
 	}
 	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
 	organizationId := uuid.New().String()
@@ -135,6 +138,170 @@ func TestOrganizationsService_LinkDomain(t *testing.T) {
 	}
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, domain, eventData.Domain)
+}
+
+func TestOrganizationsService_UpdateRenewalLikelihood(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	if err != nil {
+		t.Fatalf("Failed to connect to processing platform: %v", err)
+	}
+	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+
+	organizationId := uuid.New().String()
+	tenant := "openline"
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenant)
+	neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenant, entity.OrganizationEntity{
+		ID: organizationId,
+	})
+
+	response, err := organizationClient.UpdateOrganizationRenewalLikelihood(ctx, &organization_grpc_service.OrganizationRenewalLikelihoodRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		Likelihood:     organization_grpc_service.Likelihood_HIGH,
+		Comment:        utils.StringPtr("test comment"),
+		UserId:         "user-123",
+	})
+	if err != nil {
+		t.Errorf("Failed to update renewal likelihood: %v", err)
+	}
+	require.NotNil(t, response)
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	aggregate := organizationAggregate.NewOrganizationAggregateWithTenantAndID(tenant, response.Id)
+	eventList := eventsMap[aggregate.ID]
+	require.Equal(t, 2, len(eventList))
+
+	aggregateId := string(organizationAggregate.OrganizationAggregateType) + "-" + tenant + "-" + organizationId
+	require.Equal(t, organizationEvents.OrganizationCreateV1, eventList[0].GetEventType())
+	require.Equal(t, aggregateId, eventList[0].GetAggregateID())
+
+	require.Equal(t, organizationEvents.OrganizationUpdateRenewalLikelihoodV1, eventList[1].GetEventType())
+	require.Equal(t, aggregateId, eventList[1].GetAggregateID())
+	var eventData organizationEvents.OrganizationUpdateRenewalLikelihoodEvent
+	if err := eventList[1].GetJsonData(&eventData); err != nil {
+		t.Errorf("Failed to unmarshal event data: %v", err)
+	}
+	require.Equal(t, tenant, eventData.Tenant)
+	require.NotNil(t, eventData.Comment)
+	require.Equal(t, "test comment", *eventData.Comment)
+	require.Equal(t, "user-123", eventData.UpdatedBy)
+	require.Equal(t, models.RenewalLikelihoodHIGH, eventData.RenewalLikelihood)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+}
+
+func TestOrganizationsService_UpdateRenewalForecast(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	if err != nil {
+		t.Fatalf("Failed to connect to processing platform: %v", err)
+	}
+	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+
+	organizationId := uuid.New().String()
+	tenant := "openline"
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenant)
+	neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenant, entity.OrganizationEntity{
+		ID: organizationId,
+	})
+
+	response, err := organizationClient.UpdateOrganizationRenewalForecast(ctx, &organization_grpc_service.OrganizationRenewalForecastRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		Amount:         utils.Float64Ptr(100),
+		Comment:        utils.StringPtr("test comment"),
+		UserId:         "user-123",
+	})
+	if err != nil {
+		t.Errorf("Failed to update renewal forecast: %v", err)
+	}
+	require.NotNil(t, response)
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	aggregate := organizationAggregate.NewOrganizationAggregateWithTenantAndID(tenant, response.Id)
+	eventList := eventsMap[aggregate.ID]
+	require.Equal(t, 2, len(eventList))
+
+	aggregateId := string(organizationAggregate.OrganizationAggregateType) + "-" + tenant + "-" + organizationId
+	require.Equal(t, organizationEvents.OrganizationCreateV1, eventList[0].GetEventType())
+	require.Equal(t, aggregateId, eventList[0].GetAggregateID())
+
+	require.Equal(t, organizationEvents.OrganizationUpdateRenewalForecastV1, eventList[1].GetEventType())
+	require.Equal(t, aggregateId, eventList[1].GetAggregateID())
+	var eventData organizationEvents.OrganizationUpdateRenewalForecastEvent
+	if err := eventList[1].GetJsonData(&eventData); err != nil {
+		t.Errorf("Failed to unmarshal event data: %v", err)
+	}
+	require.Equal(t, tenant, eventData.Tenant)
+	require.NotNil(t, eventData.Comment)
+	require.Equal(t, "test comment", *eventData.Comment)
+	require.Equal(t, "user-123", eventData.UpdatedBy)
+	require.Equal(t, utils.Float64Ptr(100), eventData.Amount)
+	require.Nil(t, eventData.PotentialAmount)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+}
+
+func TestOrganizationsService_UpdateBillingDetails(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	if err != nil {
+		t.Fatalf("Failed to connect to processing platform: %v", err)
+	}
+	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+
+	organizationId := uuid.New().String()
+	tenant := "openline"
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenant)
+	neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenant, entity.OrganizationEntity{
+		ID: organizationId,
+	})
+	now := utils.Now()
+
+	response, err := organizationClient.UpdateOrganizationBillingDetails(ctx, &organization_grpc_service.OrganizationBillingDetailsRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		Amount:         utils.Float64Ptr(100),
+		UserId:         "user-123",
+		Frequency:      utils.ToPtr(organization_grpc_service.Frequency_WEEKLY),
+		RenewalCycle:   utils.ToPtr(organization_grpc_service.Frequency_MONTHLY),
+		CycleStart:     utils.ConvertTimeToTimestampPtr(utils.TimePtr(now)),
+	})
+	if err != nil {
+		t.Errorf("Failed to update billing details: %v", err)
+	}
+	require.NotNil(t, response)
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	aggregate := organizationAggregate.NewOrganizationAggregateWithTenantAndID(tenant, response.Id)
+	eventList := eventsMap[aggregate.ID]
+	require.Equal(t, 2, len(eventList))
+
+	aggregateId := string(organizationAggregate.OrganizationAggregateType) + "-" + tenant + "-" + organizationId
+	require.Equal(t, organizationEvents.OrganizationCreateV1, eventList[0].GetEventType())
+	require.Equal(t, aggregateId, eventList[0].GetAggregateID())
+
+	require.Equal(t, organizationEvents.OrganizationUpdateBillingDetailsV1, eventList[1].GetEventType())
+	require.Equal(t, aggregateId, eventList[1].GetAggregateID())
+	var eventData organizationEvents.OrganizationUpdateBillingDetailsEvent
+	if err := eventList[1].GetJsonData(&eventData); err != nil {
+		t.Errorf("Failed to unmarshal event data: %v", err)
+	}
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, utils.Float64Ptr(100), eventData.Amount)
+	require.Equal(t, "user-123", eventData.UpdatedBy)
+	require.Equal(t, "WEEKLY", eventData.Frequency)
+	require.Equal(t, "MONTHLY", eventData.RenewalCycle)
+	require.Equal(t, now, *eventData.RenewalCycleStart)
+	require.Nil(t, eventData.RenewalCycleNext)
 }
 
 func tearDownTestCase(ctx context.Context, database *test.TestDatabase) func(tb testing.TB) {

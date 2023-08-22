@@ -1,9 +1,10 @@
-package commands
+package command_handler
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -12,30 +13,30 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type LinkEmailCommandHandler interface {
-	Handle(ctx context.Context, command *LinkEmailCommand) error
+type LinkPhoneNumberCommandHandler interface {
+	Handle(ctx context.Context, command *command.LinkPhoneNumberCommand) error
 }
 
-type linkEmailCommandHandler struct {
+type linkPhoneNumberCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewLinkEmailCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkEmailCommandHandler {
-	return &linkEmailCommandHandler{log: log, cfg: cfg, es: es}
+func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkPhoneNumberCommandHandler {
+	return &linkPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *LinkEmailCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "linkEmailCommandHandler.Handle")
+func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *command.LinkPhoneNumberCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "linkPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant
 	}
-	if len(command.EmailId) == 0 {
-		return errors.ErrMissingEmailId
+	if len(command.PhoneNumberId) == 0 {
+		return errors.ErrMissingPhoneNumberId
 	}
 
 	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
@@ -43,13 +44,14 @@ func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *LinkEmail
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if err = organizationAggregate.LinkEmail(ctx, command.Tenant, command.EmailId, command.Label, command.Primary); err != nil {
+
+	if err = organizationAggregate.LinkPhoneNumber(ctx, command.Tenant, command.PhoneNumberId, command.Label, command.Primary); err != nil {
 		return err
 	}
 	if command.Primary {
-		for k, v := range organizationAggregate.Organization.Emails {
-			if k != command.EmailId && v.Primary {
-				if err = organizationAggregate.SetEmailNonPrimary(ctx, command.Tenant, command.EmailId); err != nil {
+		for k, v := range organizationAggregate.Organization.PhoneNumbers {
+			if k != command.PhoneNumberId && v.Primary {
+				if err = organizationAggregate.SetPhoneNumberNonPrimary(ctx, command.Tenant, command.PhoneNumberId); err != nil {
 					return err
 				}
 			}

@@ -1,6 +1,8 @@
 package events
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -8,12 +10,17 @@ import (
 )
 
 const (
-	OrganizationCreateV1          = "V1_ORGANIZATION_CREATE"
-	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
-	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
-	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
-	OrganizationLinkDomainV1      = "V1_ORGANIZATION_LINK_DOMAIN"
-	OrganizationAddSocialV1       = "V1_ORGANIZATION_ADD_SOCIAL"
+	OrganizationCreateV1                  = "V1_ORGANIZATION_CREATE"
+	OrganizationUpdateV1                  = "V1_ORGANIZATION_UPDATE"
+	OrganizationPhoneNumberLinkV1         = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
+	OrganizationEmailLinkV1               = "V1_ORGANIZATION_EMAIL_LINK"
+	OrganizationLinkDomainV1              = "V1_ORGANIZATION_LINK_DOMAIN"
+	OrganizationAddSocialV1               = "V1_ORGANIZATION_ADD_SOCIAL"
+	OrganizationUpdateRenewalLikelihoodV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_LIKELIHOOD"
+	OrganizationUpdateRenewalForecastV1   = "V1_ORGANIZATION_UPDATE_RENEWAL_FORECAST"
+	OrganizationUpdateBillingDetailsV1    = "V1_ORGANIZATION_UPDATE_BILLING_DETAILS"
+	OrganizationRequestRenewalForecastV1  = "V1_ORGANIZATION_RECALCULATE_RENEWAL_FORECAST_REQUEST"
+	OrganizationRequestNextCycleDateV1    = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
 )
 
 type OrganizationCreateEvent struct {
@@ -232,6 +239,144 @@ func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, tenant, socia
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationAddSocialV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationUpdateRenewalLikelihoodEvent struct {
+	Tenant            string                              `json:"tenant" validate:"required"`
+	RenewalLikelihood models.RenewalLikelihoodProbability `json:"renewalLikelihood"`
+	UpdatedAt         time.Time                           `json:"updatedAt"`
+	UpdatedBy         string                              `json:"updatedBy"`
+	Comment           *string                             `json:"comment,omitempty"`
+}
+
+func (e OrganizationUpdateRenewalLikelihoodEvent) GetRenewalLikelihoodAsStringForGraphDb() string {
+	return string(mapper.MapRenewalLikelihoodToGraphDb(e.RenewalLikelihood))
+}
+
+func NewOrganizationUpdateRenewalLikelihoodEvent(aggregate eventstore.Aggregate, renewalLikelihood models.RenewalLikelihoodProbability, updatedBy string, comment *string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationUpdateRenewalLikelihoodEvent{
+		Tenant:            aggregate.GetTenant(),
+		RenewalLikelihood: renewalLikelihood,
+		UpdatedBy:         updatedBy,
+		UpdatedAt:         updatedAt,
+		Comment:           comment,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateRenewalLikelihoodV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationUpdateRenewalForecastEvent struct {
+	Tenant          string    `json:"tenant" validate:"required"`
+	Amount          *float64  `json:"amount"`
+	PotentialAmount *float64  `json:"potentialAmount"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+	UpdatedBy       string    `json:"updatedBy"`
+	Comment         *string   `json:"comment,omitempty"`
+}
+
+func NewOrganizationUpdateRenewalForecastEvent(aggregate eventstore.Aggregate, amount, potentialAmount *float64, updatedBy string, comment *string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationUpdateRenewalForecastEvent{
+		Tenant:          aggregate.GetTenant(),
+		Amount:          amount,
+		PotentialAmount: potentialAmount,
+		UpdatedBy:       updatedBy,
+		UpdatedAt:       updatedAt,
+		Comment:         comment,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateRenewalForecastV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationRequestRenewalForecastEvent struct {
+	Tenant      string    `json:"tenant" validate:"required"`
+	RequestedAt time.Time `json:"requestedAt"`
+}
+
+func NewOrganizationRequestRenewalForecastEvent(aggregate eventstore.Aggregate, tenant string) (eventstore.Event, error) {
+	eventData := OrganizationRequestRenewalForecastEvent{
+		Tenant:      tenant,
+		RequestedAt: utils.Now(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestRenewalForecastV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationUpdateBillingDetailsEvent struct {
+	Tenant            string     `json:"tenant" validate:"required"`
+	Amount            *float64   `json:"amount"`
+	Frequency         string     `json:"frequency"`
+	RenewalCycle      string     `json:"renewalCycle"`
+	RenewalCycleStart *time.Time `json:"renewalCycleStart"`
+	RenewalCycleNext  *time.Time `json:"renewalCycleNext"`
+	UpdatedBy         string     `json:"updatedBy"`
+}
+
+func NewOrganizationUpdateBillingDetailsEvent(aggregate eventstore.Aggregate, amount *float64, frequency, renewalCycle, updatedBy string, cycleStart, cycleNext *time.Time) (eventstore.Event, error) {
+	eventData := OrganizationUpdateBillingDetailsEvent{
+		Tenant:            aggregate.GetTenant(),
+		Amount:            amount,
+		Frequency:         frequency,
+		RenewalCycle:      renewalCycle,
+		RenewalCycleStart: cycleStart,
+		RenewalCycleNext:  cycleNext,
+		UpdatedBy:         updatedBy,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateBillingDetailsV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationRequestNextCycleDateEvent struct {
+	Tenant      string    `json:"tenant" validate:"required"`
+	RequestedAt time.Time `json:"requestedAt"`
+}
+
+func NewOrganizationRequestNextCycleDateEvent(aggregate eventstore.Aggregate, tenant string) (eventstore.Event, error) {
+	eventData := OrganizationRequestNextCycleDateEvent{
+		Tenant:      tenant,
+		RequestedAt: utils.Now(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestNextCycleDateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

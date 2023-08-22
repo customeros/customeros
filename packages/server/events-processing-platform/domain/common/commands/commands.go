@@ -8,17 +8,18 @@ import (
 	interactionEventCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
 	jobRoleCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
-	organizationCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
+	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	phoneNumberCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	userCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
-func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore eventstore.AggregateStore) *domain.Commands {
+func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore eventstore.AggregateStore, repositories *repository.Repositories) *domain.Commands {
 	return &domain.Commands{
 		ContactCommands:          contactCommands.NewContactCommands(log, cfg, aggregateStore),
-		OrganizationCommands:     organizationCommands.NewOrganizationCommands(log, cfg, aggregateStore),
+		OrganizationCommands:     orgcmdhnd.NewOrganizationCommands(log, cfg, aggregateStore, repositories),
 		InteractionEventCommands: interactionEventCommands.NewInteractionEventCommands(log, cfg, aggregateStore),
 		PhoneNumberCommands:      phoneNumberCommands.NewPhoneNumberCommands(log, cfg, aggregateStore),
 		LocationCommands:         locationCommands.NewLocationCommands(log, cfg, aggregateStore),

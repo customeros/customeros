@@ -5,10 +5,10 @@ import (
 	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands"
-	server "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/event-processor-server"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	server "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"log"
@@ -26,7 +26,7 @@ func (dfi TestDialFactoryImpl) Close(conn *grpc.ClientConn) {
 	}
 }
 
-func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repository *repository.Repositories, aggregateStore eventstore.AggregateStore) (*grpc.ClientConn, error) {
+func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *repository.Repositories, aggregateStore eventstore.AggregateStore) (*grpc.ClientConn, error) {
 	if dfi.eventsProcessingPlatformConn != nil {
 		return dfi.eventsProcessingPlatformConn, nil
 	}
@@ -42,8 +42,8 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repository *repos
 	appLogger.WithName("unit-test")
 
 	myServer := server.NewServer(&config.Config{}, appLogger)
-	myServer.SetRepository(repository)
-	myServer.SetCommands(commands.CreateCommands(appLogger, &config.Config{}, aggregateStore))
+	myServer.SetRepository(repositories)
+	myServer.SetCommands(commands.CreateCommands(appLogger, &config.Config{}, aggregateStore, repositories))
 
 	server.RegisterGrpcServices(myServer, grpcServer)
 	go func() {

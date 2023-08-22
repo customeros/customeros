@@ -21,6 +21,9 @@ type OrganizationRepository interface {
 	LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error
 	OrganizationWebscrapedForDomain(ctx context.Context, tenant, organizationId, domain string) (bool, error)
 	GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
+	UpdateRenewalLikelihood(ctx context.Context, orgId string, event events.OrganizationUpdateRenewalLikelihoodEvent) error
+	UpdateRenewalForecast(ctx context.Context, orgId string, event events.OrganizationUpdateRenewalForecastEvent) error
+	UpdateBillingDetails(ctx context.Context, orgId string, event events.OrganizationUpdateBillingDetailsEvent) error
 }
 
 type organizationRepository struct {
@@ -280,6 +283,93 @@ func (r *organizationRepository) GetOrganization(ctx context.Context, tenant, or
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *organizationRepository) UpdateRenewalLikelihood(ctx context.Context, orgId string, event events.OrganizationUpdateRenewalLikelihoodEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateRenewalLikelihood")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("organizationId", orgId), log.Object("event", event))
+
+	query := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			 SET 	org.renewalLikelihoodPrevious = CASE WHEN org.renewalLikelihood <> $renewalLikelihood THEN org.renewalLikelihood ELSE org.renewalLikelihoodPrevious END,
+					org.renewalLikelihood=$renewalLikelihood,					
+					org.renewalLikelihoodComment=$comment, 
+			 		org.renewalLikelihoodUpdatedBy=$updatedBy, 
+					org.renewalLikelihoodUpdatedAt=$updatedAt,
+					org.updatedAt=$now, 
+					org.sourceOfTruth=$source`
+	span.LogFields(log.String("query", query))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":            event.Tenant,
+		"organizationId":    orgId,
+		"renewalLikelihood": event.GetRenewalLikelihoodAsStringForGraphDb(),
+		"comment":           event.Comment,
+		"updatedBy":         event.UpdatedBy,
+		"updatedAt":         event.UpdatedAt,
+		"source":            constants.SourceOpenline,
+		"now":               utils.Now(),
+	})
+}
+
+func (r *organizationRepository) UpdateRenewalForecast(ctx context.Context, orgId string, event events.OrganizationUpdateRenewalForecastEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateRenewalForecast")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("organizationId", orgId), log.Object("event", event))
+
+	query := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			 SET 	org.renewalForecastAmount=$renewalForecast, 
+					org.renewalForecastPotentialAmount=CASE WHEN $updatedBy = '' THEN $renewalForecastPotential ELSE org.renewalForecastPotentialAmount END, 
+					org.renewalForecastComment=$comment, 
+			 		org.renewalForecastUpdatedBy=$updatedBy, 
+					org.renewalForecastUpdatedAt=$updatedAt,
+					org.updatedAt=$now, 
+					org.sourceOfTruth=$source`
+	span.LogFields(log.String("query", query))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":                   event.Tenant,
+		"organizationId":           orgId,
+		"renewalForecast":          event.Amount,
+		"renewalForecastPotential": event.PotentialAmount,
+		"comment":                  event.Comment,
+		"updatedBy":                event.UpdatedBy,
+		"updatedAt":                event.UpdatedAt,
+		"source":                   constants.SourceOpenline,
+		"now":                      utils.Now(),
+	})
+}
+
+func (r *organizationRepository) UpdateBillingDetails(ctx context.Context, orgId string, event events.OrganizationUpdateBillingDetailsEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateBillingDetails")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("organizationId", orgId), log.Object("event", event))
+
+	query := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			 SET 	org.billingDetailsAmount=$amount, 
+					org.billingDetailsFrequency=$frequency, 
+					org.billingDetailsRenewalCycle=$renewalCycle, 
+			 		org.billingDetailsRenewalCycleStart=$renewalCycleStart,
+					org.billingDetailsRenewalCycleNext = CASE WHEN $updatedBy = '' THEN $renewalCycleNext ELSE org.billingDetailsRenewalCycleNext END,
+					org.updatedAt=$now, 
+					org.sourceOfTruth=$source`
+	span.LogFields(log.String("query", query))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":            event.Tenant,
+		"organizationId":    orgId,
+		"amount":            event.Amount,
+		"frequency":         event.Frequency,
+		"renewalCycle":      event.RenewalCycle,
+		"renewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(event.RenewalCycleStart),
+		"renewalCycleNext":  utils.TimePtrFirstNonNilNillableAsAny(event.RenewalCycleNext),
+		"source":            constants.SourceOpenline,
+		"now":               utils.Now(),
+		"updatedBy":         event.UpdatedBy,
+	})
 }
 
 // Common database interaction method

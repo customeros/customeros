@@ -24,6 +24,8 @@ func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAgg
 	organizationAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
 	organizationAggregate.SetWhen(organizationAggregate.When)
 	organizationAggregate.Organization = &models.Organization{}
+	organizationAggregate.Tenant = tenant
+
 	return &organizationAggregate
 }
 
@@ -42,6 +44,15 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onDomainLink(event)
 	case events.OrganizationAddSocialV1:
 		return a.onAddSocial(event)
+	case events.OrganizationUpdateRenewalLikelihoodV1:
+		return a.onUpdateRenewalLikelihood(event)
+	case events.OrganizationUpdateRenewalForecastV1:
+		return a.onUpdateRenewalForecast(event)
+	case events.OrganizationUpdateBillingDetailsV1:
+		return a.onUpdateBillingDetails(event)
+	case events.OrganizationRequestRenewalForecastV1,
+		events.OrganizationRequestNextCycleDateV1:
+		return nil
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
@@ -196,6 +207,45 @@ func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
 	a.Organization.Socials[eventData.SocialId] = models.Social{
 		PlatformName: eventData.PlatformName,
 		Url:          eventData.Url,
+	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onUpdateRenewalLikelihood(event eventstore.Event) error {
+	var eventData events.OrganizationUpdateRenewalLikelihoodEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Organization.RenewalLikelihood.RenewalLikelihood = eventData.RenewalLikelihood
+	a.Organization.RenewalLikelihood.Comment = eventData.Comment
+	a.Organization.RenewalLikelihood.UpdatedBy = eventData.UpdatedBy
+	a.Organization.RenewalLikelihood.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *OrganizationAggregate) onUpdateRenewalForecast(event eventstore.Event) error {
+	var eventData events.OrganizationUpdateRenewalForecastEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Organization.RenewalForecast.Amount = eventData.Amount
+	a.Organization.RenewalForecast.Comment = eventData.Comment
+	a.Organization.RenewalForecast.UpdatedBy = eventData.UpdatedBy
+	a.Organization.RenewalForecast.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *OrganizationAggregate) onUpdateBillingDetails(event eventstore.Event) error {
+	var eventData events.OrganizationUpdateBillingDetailsEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Organization.BillingDetails.Amount = eventData.Amount
+	a.Organization.BillingDetails.Frequency = eventData.Frequency
+	a.Organization.BillingDetails.RenewalCycle = eventData.RenewalCycle
+	a.Organization.BillingDetails.RenewalCycleStart = eventData.RenewalCycleStart
+	if eventData.UpdatedBy == "" {
+		a.Organization.BillingDetails.RenewalCycleNext = eventData.RenewalCycleNext
 	}
 	return nil
 }

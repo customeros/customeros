@@ -11,6 +11,7 @@ import (
 const tenantName = "ziggy"
 
 var testDatabase *test.TestDatabase
+var testLogger = test.SetupTestLogger()
 
 func TestMain(m *testing.M) {
 	myDatabase, shutdown := test.SetupTestDatabase()
