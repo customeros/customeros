@@ -1,3 +1,5 @@
+import React from 'react';
+
 import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
@@ -21,7 +23,8 @@ import { Image } from '@ui/media/Image';
 import LoginBg from '@spaces/atoms/backgrounds/Login';
 import BackgroundGridDot from '../../public/backgrounds/grid/backgroundGridDot.png';
 import GoogleLogo from '@spaces/atoms/icons/GoogleLogo';
-import React from 'react';
+
+import CustomOsLogo from './CustomerOS-logo.png';
 
 export default function SignIn({
   providers,
@@ -36,7 +39,7 @@ export default function SignIn({
         <GridItem h='100vh'>
           <Box height='50%'>
             <Image
-              alt=''
+              alt='dotted background'
               src={BackgroundGridDot}
               width={480}
               top='-10%'
@@ -46,10 +49,10 @@ export default function SignIn({
           <Center height='100%' pos='relative' top='-50%'>
             <Flex flexDirection={'column'} align={'center'} width={360}>
               <Image
-                src='/logos/customer-os-with-text.png'
+                src={CustomOsLogo}
                 alt='CustomerOS'
-                width={150}
-                height={150}
+                width={264}
+                height={264}
               />
               <Heading color='gray.900' size='lg' py={3}>
                 Welcome back

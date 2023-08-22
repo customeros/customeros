@@ -106,7 +106,7 @@ export const columns = [
     cell: (props) => {
       const values = props.getValue()?.billingDetails;
       const renewalDate = values?.renewalCycleNext;
-      const renewalFrequency = values?.frequency;
+      const renewalFrequency = values?.renewalCycle;
 
       return (
         <TimeToRenewalCell
