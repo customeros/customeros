@@ -93,7 +93,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
         {!!slackEventReplies.length && (
           <>
             <Flex marginY={2} alignItems='center'>
-              <Text color='gray.400' fontSize='xs' whiteSpace='nowrap' mr={2}>
+              <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
                 {slackEventReplies.length}{' '}
                 {slackEventReplies.length === 1 ? 'reply' : 'replies'}
               </Text>

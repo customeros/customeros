@@ -58,14 +58,18 @@ export const Button = defineStyleConfig({
       return {
         color: 'gray.500',
         fontWeight: 'normal',
+        textDecoration: 'none',
         _hover: {
           color: 'primary.700',
+          textDecoration: 'none',
         },
         _focusVisible: {
           color: 'primary.700',
+          textDecoration: 'none',
         },
         _active: {
           color: 'primary.700',
+          textDecoration: 'none',
         },
       };
     },
