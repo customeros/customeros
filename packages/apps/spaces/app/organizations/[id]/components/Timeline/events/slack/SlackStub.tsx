@@ -101,7 +101,7 @@ export const SlackStub: FC<{ slackEvent: InteractionEvent }> = ({
                 ),
               )}
             </Flex>
-            <Button variant='link'>
+            <Button variant='link' fontSize='sm' size='sm'>
               {slackEventReplies.length}{' '}
               {slackEventReplies.length === 1 ? 'reply' : 'replies'}
             </Button>
