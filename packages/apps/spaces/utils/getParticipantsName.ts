@@ -56,8 +56,8 @@ export const getName = (
   email?: string | null | undefined,
   rawEmail?: string | undefined | null,
 ): string => {
-  if (data.__typename === 'Contact' && data?.name) {
-    return data.name;
+  if ((data as Contact)?.name) {
+    return <string>(data as Contact).name;
   }
   if (data?.firstName || data?.lastName) {
     return `${data.firstName} ${data.lastName}`;
