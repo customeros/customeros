@@ -21,30 +21,20 @@ import (
 
 // InteractionSession is the resolver for the interactionSession field.
 func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.InteractionSession", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	interactionSessionEntityNillable, err := dataloader.For(ctx).GetInteractionSessionForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get interaction session for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction session for interaction event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntityToInteractionSession(interactionSessionEntityNillable), nil
 }
 
 // Issue is the resolver for the issue field.
 func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.InteractionEvent) (*model.Issue, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Issue", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	issueEntityNillable, err := dataloader.For(ctx).GetIssueForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get issue for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get issue for interaction event %s", obj.ID)
 		return nil, nil
 	}
@@ -53,64 +43,44 @@ func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.Interac
 
 // Meeting is the resolver for the meeting field.
 func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Meeting", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	meetingEntityNillable, err := dataloader.For(ctx).GetMeetingForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get meeting for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get meeting for interaction event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntityToMeeting(meetingEntityNillable), nil
 }
 
 // SentBy is the resolver for the sentBy field.
 func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.SentBy", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	participantEntities, err := dataloader.For(ctx).GetSentByParticipantsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get SentBy for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToInteractionEventParticipants(participantEntities), nil
 }
 
 // SentTo is the resolver for the sentTo field.
 func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.SentTo", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	participantEntities, err := dataloader.For(ctx).GetSentToParticipantsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get SentTo for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToInteractionEventParticipants(participantEntities), nil
 }
 
 // RepliesTo is the resolver for the repliesTo field.
 func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.RepliesTo", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get ReplyTo for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get ReplyTo for interaction event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	if len(*interactionEventEntities) > 0 {
 		return mapper.MapEntityToInteractionEvent(&(*interactionEventEntities)[0]), nil
@@ -120,32 +90,22 @@ func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.Int
 
 // Includes is the resolver for the includes field.
 func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Includes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get attachment entities for Interaction Event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for Interaction Event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToAttachment(entities), nil
 }
 
 // Summary is the resolver for the summary field.
 func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.InteractionEvent) (*model.Analysis, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Summary", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_INTERACTION_EVENT, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get analysis for InteractionEvent %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get analysis for InteractionEvent %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	if len(*analysisEntities) == 1 {
 		return mapper.MapEntityToAnalysis(&(*analysisEntities)[0]), nil
@@ -155,80 +115,55 @@ func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.Inter
 
 // ActionItems is the resolver for the actionItems field.
 func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.InteractionEvent) ([]*model.ActionItem, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.ActionItems", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionEventID", obj.ID))
-
 	entities, err := dataloader.For(ctx).GetActionItemsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get action items entities for Interaction Event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get action items entities for Interaction Event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToActionItem(entities), nil
 }
 
 // Events is the resolver for the events field.
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionSessionResolver.Events", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionSessionID", obj.ID))
-
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionSession(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get interaction events for interaction session %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get interaction events for interaction session %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
 }
 
 // AttendedBy is the resolver for the attendedBy field.
 func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionSessionResolver.AttendedBy", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionSessionID", obj.ID))
-
 	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForInteractionSession(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get AttendedBy for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToInteractionSessionParticipants(participantEntities), nil
 }
 
 // Includes is the resolver for the includes field.
 func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.InteractionSession) ([]*model.Attachment, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionSessionResolver.Includes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionSessionID", obj.ID))
-
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionSession(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get attachment entities for Interaction Session %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for Interaction Session %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToAttachment(entities), nil
 }
 
 // DescribedBy is the resolver for the describedBy field.
 func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model.InteractionSession) ([]*model.Analysis, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionSessionResolver.DescribedBy", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.interactionSessionID", obj.ID))
-
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_INTERACTION_SESSION, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get analysis for InteractionSession %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get analysis for InteractionSession %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToAnalysis(analysisEntities), nil
 }

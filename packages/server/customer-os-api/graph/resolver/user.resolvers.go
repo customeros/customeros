@@ -236,48 +236,33 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.PhoneNumbers", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.user", obj.ID))
-
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForUser(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get phone numbers for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get phone numbers for user %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), nil
 }
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.JobRoles", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", obj.ID))
-
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForUser(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get job roles for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for user %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
 }
 
 // Calendars is the resolver for the calendars field.
 func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Calendars", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", obj.ID))
-
 	calendarsForUser, err := dataloader.For(ctx).GetCalendarsForUser(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get calendars for user %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for user %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToCalendars(calendarsForUser), err
 }

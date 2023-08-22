@@ -65,16 +65,11 @@ func (r *mutationResolver) PlayerSetDefaultUser(ctx context.Context, id string, 
 
 // Users is the resolver for the users field.
 func (r *playerResolver) Users(ctx context.Context, obj *model.Player) ([]*model.PlayerUser, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PlayerResolver.Users", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.playerID", obj.ID))
-
 	userEntities, err := dataloader.For(ctx).GetUsersForPlayer(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get users for player %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get users for player %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToPlayerUsers(userEntities), nil
 }

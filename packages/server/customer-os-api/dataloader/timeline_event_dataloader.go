@@ -5,7 +5,10 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 func (i *Loaders) GetTimelineEventForTimelineEventId(ctx context.Context, timelineEventId string) (*entity.TimelineEvent, error) {
@@ -21,6 +24,11 @@ func (i *Loaders) GetTimelineEventForTimelineEventId(ctx context.Context, timeli
 }
 
 func (b *timelineEventBatcher) getTimelineEventsForTimelineEventIds(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventDataLoader.getTimelineEventsForTimelineEventIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -28,6 +36,7 @@ func (b *timelineEventBatcher) getTimelineEventsForTimelineEventIds(ctx context.
 
 	timelineEventsPtr, err := b.timelineEventService.GetTimelineEventsWithIds(ctx, ids)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get timeline events for timeline event ids")}}
@@ -52,6 +61,8 @@ func (b *timelineEventBatcher) getTimelineEventsForTimelineEventIds(ctx context.
 	for _, ix := range keyOrder {
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
+
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }

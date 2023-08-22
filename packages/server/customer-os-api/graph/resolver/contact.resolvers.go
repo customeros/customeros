@@ -22,32 +22,22 @@ import (
 
 // Tags is the resolver for the tags field.
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Tags", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
 	tagEntities, err := dataloader.For(ctx).GetTagsForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get tags for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.JobRoles", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get job roles for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get job roles for contact %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
 }
@@ -78,46 +68,31 @@ func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact,
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.PhoneNumbers", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get phone numbers for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get phone numbers for contact %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), nil
 }
 
 // Emails is the resolver for the emails field.
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Emails", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
 	emailEntities, err := dataloader.For(ctx).GetEmailsForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get emails for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get emails for contact %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToEmails(emailEntities), nil
 }
 
 // Locations is the resolver for the locations field.
 func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Locations", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
 	locationEntities, err := dataloader.For(ctx).GetLocationsForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get locations for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get locations for contact %s", obj.ID)
 		return nil, err
 	}
@@ -126,16 +101,11 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 
 // Socials is the resolver for the socials field.
 func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Socials", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
 	socialEntities, err := dataloader.For(ctx).GetSocialsForContact(ctx, obj.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		r.log.Errorf("Failed to get socials for contact %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToSocials(socialEntities), err
 }
