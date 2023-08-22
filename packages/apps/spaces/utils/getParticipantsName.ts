@@ -122,7 +122,9 @@ export const getParticipantNameAndEmail = (
     const label = contacts.find((c) => c?.name || c?.firstName || c?.lastName);
 
     return {
-      label: label?.name || `${label?.firstName} ${label?.lastName}`.trim(),
+      label: label
+        ? label?.name || `${label?.firstName} ${label?.lastName}`.trim()
+        : '',
       [keyName]: email || rawEmail || '',
     };
   }
@@ -130,7 +132,7 @@ export const getParticipantNameAndEmail = (
     const label = users.find((c) => c?.firstName || c?.lastName);
 
     return {
-      label: `${label?.firstName} ${label?.lastName}`.trim(),
+      label: label ? `${label?.firstName} ${label?.lastName}`.trim() : '',
       [keyName]: email || rawEmail || '',
     };
   }
