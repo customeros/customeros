@@ -489,42 +489,47 @@ func extractEmailAddresses(input string) []string {
 	// Regular expression pattern to match email addresses between <>
 	emailPattern := `<(.*?)>`
 
-	// Check if the input contains angle brackets
-	if strings.Contains(input, "<") && strings.Contains(input, ">") {
-		// Extract email addresses using the regular expression pattern
-		re := regexp.MustCompile(emailPattern)
-		matches := re.FindAllStringSubmatch(input, -1)
+	emails := make([]string, 0)
+	emailAddresses := make([]string, 0)
 
-		// Create a map to store unique email addresses
-		emailMap := make(map[string]bool)
-		for _, match := range matches {
-			email := match[1]
-			emailMap[email] = true
-		}
-
-		// Convert the map keys to an array of email addresses
-		emailAddresses := make([]string, 0, len(emailMap))
-		for email := range emailMap {
-			if isValidEmailSyntax(email) {
-				emailAddresses = append(emailAddresses, email)
-			}
-		}
-
-		return emailAddresses
-	} else if strings.Contains(input, ",") {
-		// Split the input string by commas
-		emails := make([]string, 0)
+	if strings.Contains(input, ",") {
 		split := strings.Split(input, ",")
 
-		// Trim any whitespace from the email addresses
 		for _, email := range split {
 			email = strings.TrimSpace(email)
-			if isValidEmailSyntax(email) {
-				emails = append(emails, email)
-			}
+			emails = append(emails, email)
 		}
+	} else {
+		emails = append(emails, input)
+	}
 
-		return emails
+	for _, email := range emails {
+		if strings.Contains(email, "<") && strings.Contains(email, ">") {
+			// Extract email addresses using the regular expression pattern
+			re := regexp.MustCompile(emailPattern)
+			matches := re.FindAllStringSubmatch(email, -1)
+
+			// Create a map to store unique email addresses
+			emailMap := make(map[string]bool)
+			for _, match := range matches {
+				email := match[1]
+				emailMap[email] = true
+			}
+
+			// Convert the map keys to an array of email addresses
+			for email := range emailMap {
+				if isValidEmailSyntax(email) {
+					emailAddresses = append(emailAddresses, email)
+				}
+			}
+
+		} else if isValidEmailSyntax(email) {
+			emailAddresses = append(emailAddresses, email)
+		}
+	}
+
+	if len(emailAddresses) > 0 {
+		return emailAddresses
 	}
 
 	if input != "" {
