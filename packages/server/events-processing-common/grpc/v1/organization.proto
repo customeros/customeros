@@ -49,6 +49,49 @@ message LinkDomainToOrganizationGrpcRequest {
   string domain = 3;
 }
 
+enum Likelihood {
+  NONE_LIKELIHOOD = 0;
+  HIGH = 1;
+  MEDIUM = 2;
+  LOW = 3;
+  ZERO = 4;
+}
+
+message OrganizationRenewalLikelihoodRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string userId = 3;
+  Likelihood likelihood = 4;
+  optional string comment = 5;
+}
+
+message OrganizationRenewalForecastRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string userId = 3;
+  optional double amount = 4;
+  optional string comment = 5;
+}
+
+enum Frequency {
+  WEEKLY = 0;
+  BIWEEKLY = 1;
+  MONTHLY = 2;
+  QUARTERLY = 3;
+  BIANNUALLY = 4;
+  ANNUALLY = 5;
+}
+
+message OrganizationBillingDetailsRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string userId = 3;
+  optional double amount = 4;
+  optional Frequency frequency = 5;
+  optional Frequency renewalCycle = 6;
+  optional google.protobuf.Timestamp  cycleStart = 7;
+}
+
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -58,4 +101,7 @@ service organizationGrpcService {
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpdateOrganizationRenewalLikelihood(OrganizationRenewalLikelihoodRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpdateOrganizationRenewalForecast(OrganizationRenewalForecastRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpdateOrganizationBillingDetails(OrganizationBillingDetailsRequest) returns (OrganizationIdGrpcResponse);
 }

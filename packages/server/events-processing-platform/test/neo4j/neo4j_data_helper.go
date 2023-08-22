@@ -3,10 +3,13 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/stretchr/testify/require"
 	"reflect"
 	"sort"
 	"testing"
@@ -32,6 +35,54 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant": tenant,
 	})
+}
+
+func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
+	orgId := organization.ID
+	if orgId == "" {
+		orgId = uuid.New().String()
+	}
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$id})
+				SET o:Organization_%s,
+					o.name=$name,
+					o.renewalLikelihood=$renewalLikelihood,
+					o.renewalLikelihoodComment=$renewalLikelihoodComment,
+					o.renewalLikelihoodUpdatedAt=$renewalLikelihoodUpdatedAt,
+					o.renewalLikelihoodUpdatedBy=$renewalLikelihoodUpdatedBy,
+					o.renewalForecastAmount=$renewalForecastAmount,
+					o.renewalForecastPotentialAmount=$renewalForecastPotentialAmount,
+					o.renewalForecastUpdatedAt=$renewalForecastUpdatedAt,
+					o.renewalForecastUpdatedBy=$renewalForecastUpdatedBy,
+					o.renewalForecastComment=$renewalForecastComment,
+					o.billingDetailsAmount=$billingAmount, 
+					o.billingDetailsFrequency=$billingFrequency, 
+					o.billingDetailsRenewalCycle=$billingRenewalCycle, 
+			 		o.billingDetailsRenewalCycleStart=$billingRenewalCycleStart,
+			 		o.billingDetailsRenewalCycleNext=$billingRenewalCycleNext
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":                         tenant,
+		"name":                           organization.Name,
+		"id":                             orgId,
+		"renewalLikelihood":              organization.RenewalLikelihood.RenewalLikelihood,
+		"renewalLikelihoodPrevious":      organization.RenewalLikelihood.PreviousRenewalLikelihood,
+		"renewalLikelihoodComment":       organization.RenewalLikelihood.Comment,
+		"renewalLikelihoodUpdatedAt":     organization.RenewalLikelihood.UpdatedAt,
+		"renewalLikelihoodUpdatedBy":     organization.RenewalLikelihood.UpdatedBy,
+		"renewalForecastAmount":          organization.RenewalForecast.Amount,
+		"renewalForecastPotentialAmount": organization.RenewalForecast.PotentialAmount,
+		"renewalForecastUpdatedBy":       organization.RenewalForecast.UpdatedBy,
+		"renewalForecastUpdatedAt":       organization.RenewalForecast.UpdatedAt,
+		"renewalForecastComment":         organization.RenewalForecast.Comment,
+		"billingAmount":                  organization.BillingDetails.Amount,
+		"billingFrequency":               organization.BillingDetails.Frequency,
+		"billingRenewalCycle":            organization.BillingDetails.RenewalCycle,
+		"billingRenewalCycleStart":       utils.TimePtrFirstNonNilNillableAsAny(organization.BillingDetails.RenewalCycleStart),
+		"billingRenewalCycleNext":        utils.TimePtrFirstNonNilNillableAsAny(organization.BillingDetails.RenewalCycleNext),
+	})
+	return orgId
 }
 
 func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
@@ -118,5 +169,19 @@ func AssertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWi
 	sort.Strings(actualLabels)
 	if !reflect.DeepEqual(actualLabels, expectedLabels) {
 		t.Errorf("Expected labels: %v, \nActual labels: %v", expectedLabels, actualLabels)
+	}
+}
+
+func AssertNeo4jNodeCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, nodes map[string]int) {
+	for name, expectedCount := range nodes {
+		actualCount := GetCountOfNodes(ctx, driver, name)
+		require.Equal(t, expectedCount, actualCount, "Unexpected count for node: "+name)
+	}
+}
+
+func AssertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, relations map[string]int) {
+	for name, expectedCount := range relations {
+		actualCount := GetCountOfRelationships(ctx, driver, name)
+		require.Equal(t, expectedCount, actualCount, "Unexpected count for relationship: "+name)
 	}
 }

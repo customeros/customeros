@@ -6,6 +6,15 @@ import (
 	"time"
 )
 
+type RenewalLikelihoodProbability string
+
+const (
+	RenewalLikelihoodHIGH   RenewalLikelihoodProbability = "HIGH"
+	RenewalLikelihoodMEDIUM RenewalLikelihoodProbability = "MEDIUM"
+	RenewalLikelihoodLOW    RenewalLikelihoodProbability = "LOW"
+	RenewalLikelihoodZERO   RenewalLikelihoodProbability = "ZERO"
+)
+
 type Social struct {
 	PlatformName string `json:"platformName"`
 	Url          string `json:"url"`
@@ -27,12 +36,38 @@ type Organization struct {
 	LastFundingRound  string                             `json:"lastFundingRound"`
 	LastFundingAmount string                             `json:"lastFundingAmount"`
 	Source            common_models.Source               `json:"source"`
-	CreatedAt         time.Time                          `json:"createdAt"`
-	UpdatedAt         time.Time                          `json:"updatedAt"`
+	CreatedAt         time.Time                          `json:"createdAt,omitempty"`
+	UpdatedAt         time.Time                          `json:"updatedAt,omitempty"`
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
 	Emails            map[string]OrganizationEmail       `json:"emails"`
 	Domains           []string                           `json:"domains,omitempty"`
 	Socials           map[string]Social                  `json:"socials,omitempty"`
+	RenewalLikelihood RenewalLikelihood                  `json:"renewalLikelihood,omitempty"`
+	RenewalForecast   RenewalForecast                    `json:"renewalForecast,omitempty"`
+	BillingDetails    BillingDetails                     `json:"billingDetails,omitempty"`
+}
+
+type RenewalLikelihood struct {
+	RenewalLikelihood RenewalLikelihoodProbability `json:"renewalLikelihood,omitempty"`
+	Comment           *string                      `json:"comment,omitempty"`
+	UpdatedAt         time.Time                    `json:"updatedAt,omitempty"`
+	UpdatedBy         string                       `json:"updatedBy,omitempty"`
+}
+
+type RenewalForecast struct {
+	Amount    *float64  `json:"amount,omitempty"`
+	Comment   *string   `json:"comment,omitempty"`
+	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+	UpdatedBy string    `json:"updatedBy,omitempty"`
+}
+
+type BillingDetails struct {
+	Amount            *float64   `json:"amount,omitempty"`
+	UpdatedBy         string     `json:"updatedBy,omitempty"`
+	Frequency         string     `json:"frequency,omitempty"`
+	RenewalCycle      string     `json:"renewalCycle,omitempty"`
+	RenewalCycleStart *time.Time `json:"renewalCycleStart,omitempty"`
+	RenewalCycleNext  *time.Time `json:"renewalCycleNext,omitempty"`
 }
 
 type OrganizationPhoneNumber struct {

@@ -1,10 +1,11 @@
-package commands
+package command_handler
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -15,7 +16,7 @@ import (
 )
 
 type UpdateOrganizationCommandHandler interface {
-	Handle(ctx context.Context, command *UpdateOrganizationCommand) error
+	Handle(ctx context.Context, command *command.UpdateOrganizationCommand) error
 }
 
 type updateOrganizationCommandHandler struct {
@@ -28,7 +29,7 @@ func NewUpdateOrganizationCommandHandler(log logger.Logger, cfg *config.Config, 
 	return &updateOrganizationCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *UpdateOrganizationCommand) error {
+func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *command.UpdateOrganizationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))

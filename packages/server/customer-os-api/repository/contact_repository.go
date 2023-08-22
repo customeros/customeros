@@ -23,8 +23,6 @@ type ContactRepository interface {
 	LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entityTemplateId string) error
 	GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
-	// FIXME alexb rework
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
 	GetContactsForEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
@@ -320,36 +318,6 @@ func (r *contactRepository) Delete(ctx context.Context, session neo4j.SessionWit
 	return err
 }
 
-func (r *contactRepository) GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetAllForConversation")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})
-			RETURN c`,
-			map[string]any{
-				"tenant":         tenant,
-				"conversationId": conversationId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Collect(ctx)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	dbNodes := []*dbtype.Node{}
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		if v.Values[0] != nil {
-			dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
-		}
-	}
-	return dbNodes, err
-}
-
 func (r *contactRepository) GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllForJobRoles")
 	defer span.Finish()
@@ -613,26 +581,6 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		"primaryContactId": primaryContactId,
 		"mergedContactId":  mergedContactId,
 		"now":              utils.Now(),
-	}
-
-	if _, err := tx.Run(ctx, matchQuery+" "+
-		" WITH primary, merged "+
-		" MATCH (merged)-[rel:PARTICIPATES]->(c:Conversation) "+
-		" MERGE (primary)-[newRel:PARTICIPATES]->(c)"+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
-		return err
-	}
-
-	if _, err := tx.Run(ctx, matchQuery+" "+
-		" WITH primary, merged "+
-		" MATCH (merged)-[rel:INITIATED]->(c:Conversation) "+
-		" MERGE (primary)-[newRel:INITIATED]->(c)"+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
-		return err
 	}
 
 	if _, err := tx.Run(ctx, matchQuery+" "+

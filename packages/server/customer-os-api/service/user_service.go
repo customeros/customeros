@@ -32,7 +32,6 @@ type UserService interface {
 	IsOwner(ctx context.Context, id string) (*bool, error)
 	GetContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	GetNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
-	GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error)
 	GetUsersForEmails(ctx context.Context, emailIds []string) (*entity.UserEntities, error)
 	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
 	GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error)
@@ -397,26 +396,6 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 		return nil, err
 	}
 	return s.mapDbNodeToUserEntity(*userDbNode), nil
-}
-
-func (s *userService) GetAllForConversation(parentCtx context.Context, conversationId string) (*entity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetAllForConversation")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	dbNodes, err := s.repositories.UserRepository.GetAllForConversation(ctx, session, common.GetContext(ctx).Tenant, conversationId)
-	if err != nil {
-		return nil, err
-	}
-
-	userEntities := make(entity.UserEntities, 0, len(dbNodes))
-	for _, dbNode := range dbNodes {
-		userEntities = append(userEntities, *s.mapDbNodeToUserEntity(*dbNode))
-	}
-	return &userEntities, nil
 }
 
 func (s *userService) createUserInDBTxWork(parentCtx context.Context, newUser *UserCreateData) func(tx neo4j.ManagedTransaction) (any, error) {

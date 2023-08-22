@@ -2,24 +2,29 @@ package service
 
 import (
 	"context"
-	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
+	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
-	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
+	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
+	"github.com/opentracing/opentracing-go/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type organizationService struct {
-	organization_grpc_service.UnimplementedOrganizationGrpcServiceServer
+	pb.UnimplementedOrganizationGrpcServiceServer
 	log                  logger.Logger
 	repositories         *repository.Repositories
-	organizationCommands *commands.OrganizationCommands
+	organizationCommands *command_handler.OrganizationCommands
 }
 
-func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, organizationCommands *commands.OrganizationCommands) *organizationService {
+func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, organizationCommands *command_handler.OrganizationCommands) *organizationService {
 	return &organizationService{
 		log:                  log,
 		repositories:         repositories,
@@ -27,7 +32,7 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 	}
 }
 
-func (s *organizationService) UpsertOrganization(ctx context.Context, request *organization_grpc_service.UpsertOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) UpsertOrganization(ctx context.Context, request *pb.UpsertOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertOrganization")
 	defer span.Finish()
 
@@ -48,7 +53,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		LastFundingRound:  request.LastFundingRound,
 		LastFundingAmount: request.LastFundingAmount,
 	}
-	command := commands.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertSyncOrganization.Handle) tenant:%s, organizationID: %s , err: {%v}", request.Tenant, organizationId, err)
@@ -57,14 +62,14 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 
 	s.log.Infof("Upserted organization %s", organizationId)
 
-	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: organizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: organizationId}, nil
 }
 
-func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context, request *organization_grpc_service.LinkPhoneNumberToOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context, request *pb.LinkPhoneNumberToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkPhoneNumberToOrganization")
 	defer span.Finish()
 
-	command := commands.NewLinkPhoneNumberCommand(request.OrganizationId, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
+	command := cmd.NewLinkPhoneNumberCommand(request.OrganizationId, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(LinkPhoneNumberToOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
@@ -73,14 +78,14 @@ func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context,
 
 	s.log.Infof("Linked phone number {%s} to organization {%s}", request.PhoneNumberId, request.OrganizationId)
 
-	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) LinkEmailToOrganization(ctx context.Context, request *organization_grpc_service.LinkEmailToOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) LinkEmailToOrganization(ctx context.Context, request *pb.LinkEmailToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToOrganization")
 	defer span.Finish()
 
-	command := commands.NewLinkEmailCommand(request.OrganizationId, request.Tenant, request.EmailId, request.Label, request.Primary)
+	command := cmd.NewLinkEmailCommand(request.OrganizationId, request.Tenant, request.EmailId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
@@ -89,14 +94,14 @@ func (s *organizationService) LinkEmailToOrganization(ctx context.Context, reque
 
 	s.log.Infof("Linked email {%s} to organization {%s}", request.EmailId, request.OrganizationId)
 
-	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) LinkDomainToOrganization(ctx context.Context, request *organization_grpc_service.LinkDomainToOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) LinkDomainToOrganization(ctx context.Context, request *pb.LinkDomainToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkDomainToOrganization")
 	defer span.Finish()
 
-	command := commands.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain)
+	command := command_handler.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain)
 	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
@@ -105,9 +110,92 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 
 	s.log.Infof("Linked domain {%s} to organization {%s}", request.Domain, request.OrganizationId)
 
-	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Context, req *pb.OrganizationRenewalLikelihoodRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalLikelihood")
+	defer span.Finish()
+	span.LogFields(log.Object("request", req))
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	fields := models.RenewalLikelihoodFields{
+		RenewalLikelihood: mapper.MapRenewalLikelihoodToModels(req.Likelihood),
+		Comment:           req.Comment,
+		UpdatedBy:         req.UserId,
+	}
+	command := cmd.NewUpdateRenewalLikelihoodCommand(req.Tenant, req.OrganizationId, fields)
+	if err := s.organizationCommands.UpdateRenewalLikelihoodCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed update renewal likelihood for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Updated renewal likelihood for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+
+	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+}
+
+func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Context, req *pb.OrganizationRenewalForecastRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalForecast")
+	defer span.Finish()
+	span.LogFields(log.Object("request", req))
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	fields := models.RenewalForecastFields{
+		Amount:    req.Amount,
+		Comment:   req.Comment,
+		UpdatedBy: req.UserId,
+	}
+	command := cmd.NewUpdateRenewalForecastCommand(req.Tenant, req.OrganizationId, fields)
+	if err := s.organizationCommands.UpdateRenewalForecastCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed update renewal forecast for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Updated renewal forecast for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+
+	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+}
+
+func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Context, req *pb.OrganizationBillingDetailsRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationBillingDetails")
+	defer span.Finish()
+	span.LogFields(log.Object("request", req))
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	fields := models.BillingDetailsFields{
+		Amount:            req.Amount,
+		UpdatedBy:         req.UserId,
+		Frequency:         mapper.MapFrequencyToString(req.Frequency),
+		RenewalCycle:      mapper.MapFrequencyToString(req.RenewalCycle),
+		RenewalCycleStart: utils.TimestampProtoToTime(req.CycleStart),
+	}
+	command := cmd.NewUpdateBillingDetailsCommand(req.Tenant, req.OrganizationId, fields)
+	if err := s.organizationCommands.UpdateBillingDetailsCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed update billing details for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Updated billing details for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+
+	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
 }
 
 func (s *organizationService) errResponse(err error) error {
-	return grpc_errors.ErrResponse(err)
+	return grpcerr.ErrResponse(err)
 }

@@ -28,7 +28,6 @@ type ContactService interface {
 	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
 	Archive(ctx context.Context, contactId string) (bool, error)
 	RestoreFromArchive(ctx context.Context, contactId string) (bool, error)
@@ -358,27 +357,6 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
-}
-
-func (s *contactService) GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetAllForConversation")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("conversationId", conversationId))
-
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	dbNodes, err := s.repositories.ContactRepository.GetAllForConversation(ctx, session, common.GetContext(ctx).Tenant, conversationId)
-	if err != nil {
-		return nil, err
-	}
-
-	contactEntities := make(entity.ContactEntities, 0, len(dbNodes))
-	for _, dbNode := range dbNodes {
-		contactEntities = append(contactEntities, *s.mapDbNodeToContactEntity(*dbNode))
-	}
-	return &contactEntities, nil
 }
 
 func (s *contactService) GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.ContactEntities, error) {

@@ -10,7 +10,17 @@ import (
 )
 
 func GetOrganizationObjectID(aggregateID string, tenant string) string {
+	if tenant == "" {
+		return getOrganizationObjectUUID(aggregateID)
+	}
 	return strings.ReplaceAll(aggregateID, string(OrganizationAggregateType)+"-"+tenant+"-", "")
+}
+
+// use this method when tenant is not known
+func getOrganizationObjectUUID(aggregateID string) string {
+	parts := strings.Split(aggregateID, "-")
+	fullUUID := parts[len(parts)-5] + "-" + parts[len(parts)-4] + "-" + parts[len(parts)-3] + "-" + parts[len(parts)-2] + "-" + parts[len(parts)-1]
+	return fullUUID
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {

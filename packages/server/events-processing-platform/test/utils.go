@@ -8,8 +8,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/postgres"
+	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
+	"testing"
+	"time"
 )
 
 type TestDatabase struct {
@@ -19,13 +22,19 @@ type TestDatabase struct {
 	GormDB         *gorm.DB
 }
 
-func SetupTestDatabase() (TestDatabase, func()) {
-	testDBs := TestDatabase{}
-
-	appLogger := logger.NewExtendedAppLogger(&comlog.Config{
+func SetupTestLogger() logger.Logger {
+	testLogger := logger.NewExtendedAppLogger(&comlog.Config{
 		DevMode: true,
 	})
-	appLogger.InitLogger()
+	testLogger.InitLogger()
+	return testLogger
+}
+
+func SetupTestDatabase() (TestDatabase, func()) {
+	SetupTestLogger()
+
+	testDBs := TestDatabase{}
+	testLogger := SetupTestLogger()
 
 	testDBs.Neo4jContainer, testDBs.Driver = neo4jt.InitTestNeo4jDB()
 
@@ -33,7 +42,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		err := postgresContainer.Terminate(ctx)
 		if err != nil {
-			appLogger.Fatal("Error during container termination")
+			testLogger.Fatal("Error during container termination")
 		}
 	}(postgresContainer, context.Background())
 
@@ -45,4 +54,12 @@ func SetupTestDatabase() (TestDatabase, func()) {
 		neo4jt.Terminate(testDBs.Neo4jContainer, context.Background())
 	}
 	return testDBs, shutdown
+}
+
+func AssertRecentTime(t *testing.T, checkTime time.Time) {
+	x := 2 // Set the time difference to 2 seconds
+
+	diff := time.Since(checkTime)
+
+	require.True(t, diff <= time.Duration(x)*time.Second, "The time is within the last %d seconds.", x)
 }

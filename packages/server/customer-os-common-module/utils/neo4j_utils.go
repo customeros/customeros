@@ -372,6 +372,13 @@ func GetTimePropOrEpochStart(props map[string]any, key string) time.Time {
 	return GetEpochStart()
 }
 
+func GetTimePropOrZeroTime(props map[string]any, key string) time.Time {
+	if props[key] != nil {
+		return props[key].(time.Time)
+	}
+	return ZeroTime()
+}
+
 func GetEpochStart() time.Time {
 	return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 }

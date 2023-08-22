@@ -8,8 +8,11 @@ extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UpdateRenewalLikelihood(input: RenewalLikelihoodInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_UpdateRenewalLikelihoodAsync(input: RenewalLikelihoodInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UpdateRenewalForecast(input: RenewalForecastInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_UpdateRenewalForecastAsync(input: RenewalForecastInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UpdateBillingDetails(input: BillingDetailsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_UpdateBillingDetailsAsync(input: BillingDetailsInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant

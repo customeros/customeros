@@ -332,7 +332,7 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 				UserType: caches.UserType_Contact,
 				Name:     slackUser.Profile.RealNameNormalized,
 			})
-			s.cache.SetSlackUserAsContactForOrg(orgId, userId, "contact")
+			s.cache.SetSlackUserAsContactForOrg(orgId, userId, string(caches.UserType_Contact))
 			span.LogFields(log.String("output", "slack user is contact"))
 		}
 	}

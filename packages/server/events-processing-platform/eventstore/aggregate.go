@@ -11,45 +11,10 @@ const (
 	aggregateUncommittedEventsInitialCap = 10
 )
 
-// HandleCommand Aggregate commands' handler method
-// Example
-//
-//	func (a *ContactAggregate) HandleCommand(command interface{}) error {
-//		switch c := command.(type) {
-//		case *CreateContactCommand:
-//			return a.handleCreateContactCommand(c)
-//		case *ContactPaidCommand:
-//			return a.handleContactPaidCommand(c)
-//		case *SubmitContactCommand:
-//			return a.handleSubmitContactCommand(c)
-//		default:
-//			return errors.New("invalid command type")
-//		}
-//	}
 type HandleCommand interface {
 	HandleCommand(ctx context.Context, command Command) error
 }
 
-// When process and update aggregate state on specified es.Event type
-// Example:
-//
-// func (a *ContactAggregate) When(evt es.Event) error {
-//
-//		switch evt.GetEventType() {
-//
-//		case events.ContactCreated:
-//			var eventData events.ContactCreatedEvent
-//			if err := json.Unmarshal(evt.GetData(), &eventData); err != nil {
-//				return err
-//			}
-//			a.Contact.ItemsIDs = eventData.ItemsIDs
-//			a.Contact.Created = true
-//			return nil
-//
-//		default:
-//			return errors.New("invalid event type")
-//		}
-//	}
 type When interface {
 	When(event Event) error
 }
@@ -74,6 +39,7 @@ type Aggregate interface {
 // AggregateRoot contains all methods of AggregateBase
 type AggregateRoot interface {
 	GetUncommittedEvents() []Event
+	GetTenant() string
 	GetID() string
 	SetID(id string) *AggregateBase
 	GetVersion() int64
@@ -85,6 +51,7 @@ type AggregateRoot interface {
 	GetAppliedEvents() []Event
 	RaiseEvent(event Event) error
 	String() string
+	IsWithAppliedEvents() bool
 	Load
 	Apply
 }
@@ -142,6 +109,11 @@ func (a *AggregateBase) GetID() string {
 	return a.ID
 }
 
+// GetTenant get AggregateBase Tenant
+func (a *AggregateBase) GetTenant() string {
+	return a.Tenant
+}
+
 // SetType set AggregateBase AggregateType
 func (a *AggregateBase) SetType(aggregateType AggregateType) {
 	a.Type = aggregateType
@@ -175,6 +147,14 @@ func (a *AggregateBase) SetAppliedEvents(events []Event) {
 // GetUncommittedEvents get AggregateBase uncommitted Event's
 func (a *AggregateBase) GetUncommittedEvents() []Event {
 	return a.UncommittedEvents
+}
+
+func (a *AggregateBase) WithAppliedEvents() {
+	a.withAppliedEvents = true
+}
+
+func (a *AggregateBase) IsWithAppliedEvents() bool {
+	return a.withAppliedEvents
 }
 
 // Load add existing events from event store to aggregate using When interface method

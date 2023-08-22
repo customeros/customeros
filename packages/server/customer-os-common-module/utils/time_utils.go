@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+func ZeroTime() time.Time {
+	return time.Time{}
+}
+
 func Now() time.Time {
 	return time.Now().UTC()
 }

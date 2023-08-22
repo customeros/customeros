@@ -20,7 +20,6 @@ type UserRepository interface {
 	GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedNonInternalUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetById(ctx context.Context, session neo4j.SessionWithContext, tenant, userId string) (*dbtype.Node, error)
-	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error)
@@ -322,36 +321,6 @@ func (r *userRepository) GetById(parentCtx context.Context, session neo4j.Sessio
 		return nil, err
 	}
 	return dbRecord.(*dbtype.Node), err
-}
-
-func (r *userRepository) GetAllForConversation(parentCtx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllForConversation")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})
-			RETURN u`,
-			map[string]any{
-				"tenant":         tenant,
-				"conversationId": conversationId,
-			}); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Collect(ctx)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	dbNodes := []*dbtype.Node{}
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		if v.Values[0] != nil {
-			dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
-		}
-	}
-	return dbNodes, err
 }
 
 func (r *userRepository) GetAllForEmails(parentCtx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {

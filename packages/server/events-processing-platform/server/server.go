@@ -108,10 +108,10 @@ func (server *server) Run(parentCtx context.Context) error {
 	server.repositories = repository.InitRepos(&neo4jDriver, postgresDb.GormDB)
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
-	server.commands = commands.CreateCommands(server.log, server.cfg, aggregateStore)
+	server.commands = commands.CreateCommands(server.log, server.cfg, aggregateStore, server.repositories)
 
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.cfg)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.commands, server.cfg)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {

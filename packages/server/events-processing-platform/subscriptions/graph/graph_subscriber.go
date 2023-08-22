@@ -3,12 +3,13 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	contactevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	interactionevtevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	organizationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -39,14 +40,14 @@ type GraphSubscriber struct {
 	interactionEventHandler  *GraphInteractionEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commands *domain.Commands, cfg *config.Config) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                      log,
 		db:                       db,
 		repositories:             repositories,
 		cfg:                      cfg,
 		contactEventHandler:      &GraphContactEventHandler{Repositories: repositories},
-		organizationEventHandler: &GraphOrganizationEventHandler{Repositories: repositories},
+		organizationEventHandler: &GraphOrganizationEventHandler{log: log, Repositories: repositories, organizationCommands: commands.OrganizationCommands},
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
 		userEventHandler:         &GraphUserEventHandler{Repositories: repositories},
@@ -168,18 +169,27 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case contactevents.ContactEmailLinkV1:
 		return s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
 
-	case organizationevents.OrganizationCreateV1:
+	case orgevents.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
-	case organizationevents.OrganizationUpdateV1:
+	case orgevents.OrganizationUpdateV1:
 		return s.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
-	case organizationevents.OrganizationPhoneNumberLinkV1:
+	case orgevents.OrganizationPhoneNumberLinkV1:
 		return s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
-	case organizationevents.OrganizationEmailLinkV1:
+	case orgevents.OrganizationEmailLinkV1:
 		return s.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
-	case organizationevents.OrganizationLinkDomainV1:
+	case orgevents.OrganizationLinkDomainV1:
 		return s.organizationEventHandler.OnDomainLinkedToOrganization(ctx, evt)
-	case organizationevents.OrganizationAddSocialV1:
+	case orgevents.OrganizationAddSocialV1:
 		return s.organizationEventHandler.OnSocialAddedToOrganization(ctx, evt)
+	case orgevents.OrganizationUpdateRenewalLikelihoodV1:
+		return s.organizationEventHandler.OnRenewalLikelihoodUpdate(ctx, evt)
+	case orgevents.OrganizationUpdateRenewalForecastV1:
+		return s.organizationEventHandler.OnRenewalForecastUpdate(ctx, evt)
+	case orgevents.OrganizationUpdateBillingDetailsV1:
+		return s.organizationEventHandler.OnBillingDetailsUpdate(ctx, evt)
+	case orgevents.OrganizationRequestRenewalForecastV1,
+		orgevents.OrganizationRequestNextCycleDateV1:
+		return nil
 
 	case userevents.UserCreateV1:
 		return s.userEventHandler.OnUserCreate(ctx, evt)

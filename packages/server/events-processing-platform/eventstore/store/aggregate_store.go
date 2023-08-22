@@ -68,8 +68,11 @@ func (as *aggregateStore) Load(ctx context.Context, aggregate es.Aggregate) erro
 func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AggregateStore.Save")
 	defer span.Finish()
-	span.LogFields(log.String("aggregateID", aggregate.GetID()), log.Int64("version", aggregate.GetVersion()),
-		log.Object("aggregateType", aggregate.GetType()))
+	span.LogFields(log.String("aggregateID", aggregate.GetID()),
+		log.Int64("version", aggregate.GetVersion()),
+		log.Object("aggregateType", aggregate.GetType()),
+		log.Int("uncommittedEvents", len(aggregate.GetUncommittedEvents())),
+		log.Int("appliedEvents", len(aggregate.GetAppliedEvents())))
 
 	if len(aggregate.GetUncommittedEvents()) == 0 {
 		as.log.Debugf("(Save) [no uncommittedEvents] len: {%d}", len(aggregate.GetUncommittedEvents()))
@@ -81,9 +84,11 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 		eventsData = append(eventsData, event.ToEventData())
 	}
 
-	// check for aggregate.GetVersion() == 0 or len(aggregate.GetAppliedEvents()) == 0 means new aggregate
+	// check if new aggregate, version is 0, or now events applied or version is not greater than uncommitted events
 	var expectedRevision esdb.ExpectedRevision
-	if aggregate.GetVersion() == 0 {
+	if aggregate.GetVersion() == 0 ||
+		int64(len(aggregate.GetUncommittedEvents()))-aggregate.GetVersion()-1 == 0 ||
+		(aggregate.IsWithAppliedEvents() && len(aggregate.GetAppliedEvents()) == 0) {
 		expectedRevision = esdb.NoStream{}
 		as.log.Debugf("(Save) expectedRevision: {%T}", expectedRevision)
 
