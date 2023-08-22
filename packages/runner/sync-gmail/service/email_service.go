@@ -497,6 +497,7 @@ func extractEmailAddresses(input string) []string {
 
 		for _, email := range split {
 			email = strings.TrimSpace(email)
+			email = strings.ToLower(email)
 			emails = append(emails, email)
 		}
 	} else {
@@ -504,6 +505,8 @@ func extractEmailAddresses(input string) []string {
 	}
 
 	for _, email := range emails {
+		email = strings.TrimSpace(email)
+		email = strings.ToLower(email)
 		if strings.Contains(email, "<") && strings.Contains(email, ">") {
 			// Extract email addresses using the regular expression pattern
 			re := regexp.MustCompile(emailPattern)
