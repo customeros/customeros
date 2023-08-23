@@ -28,6 +28,7 @@ type Repositories struct {
 	AnalysisRepository         AnalysisRepository
 	ActionItemRepository       ActionItemRepository
 	DomainRepository           DomainRepository
+	TimelineEventRepository    TimelineEventRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
@@ -50,6 +51,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		AnalysisRepository:         NewAnalysisRepository(driver),
 		ActionItemRepository:       NewActionItemRepository(driver),
 		DomainRepository:           NewDomainRepository(driver),
+		TimelineEventRepository:    NewTimelineEventRepository(driver),
 	}
 
 	var err error

@@ -153,7 +153,7 @@ func (r *interactionEventRepository) MergeEmailInteractionSession(ctx context.Co
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MERGE (is:InteractionSession_%s {identifier:$identifier, source:$source, channel:$channel}) " +
+	query := "MERGE (is:InteractionSession_%s {identifier:$identifier, channel:$channel}) " +
 		" ON CREATE SET " +
 		"  is:InteractionSession, " +
 		"  is.id=randomUUID(), " +
