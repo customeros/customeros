@@ -176,7 +176,6 @@ export { default as Minus } from './Minus';
 export { default as Mobile } from './Mobile';
 export { default as MoneyBill } from './MoneyBill';
 export { default as Moon } from './Moon';
-export { default as NotFoundBgPattern } from './NotFoundBgPattern';
 export { default as NoteTimeline } from './NoteTimeline';
 export { default as Notes } from './Notes';
 export { default as OriginalDesignManufacturer } from './OriginalDesignManufacturer';
