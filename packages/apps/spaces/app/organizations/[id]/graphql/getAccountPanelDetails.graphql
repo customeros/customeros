@@ -36,6 +36,7 @@ query OrganizationAccountDetails($id: ID!) {
         frequency
         amount
         renewalCycleStart
+        renewalCycleNext
       }
     }
   }

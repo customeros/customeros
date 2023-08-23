@@ -17,7 +17,7 @@ import {
 } from '@graphql/types';
 import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { DateTimeUtils } from '@spaces/utils/date';
-import {getFeatureIconColor} from "@organization/components/Tabs/panels/AccountPanel/utils";
+import { getFeatureIconColor } from '@organization/components/Tabs/panels/AccountPanel/utils';
 
 export type RenewalLikelihoodType = RenewalLikelihoodT;
 
@@ -43,6 +43,7 @@ export const RenewalLikelihood: FC<{
         <CardBody as={Flex} p='0' align='center'>
           <FeaturedIcon
             size='md'
+            minW='10'
             colorScheme={getFeatureIconColor(probability)}
           >
             <Icons.HeartActivity />
@@ -88,7 +89,7 @@ export const RenewalLikelihood: FC<{
 
         {probability && updatedBy && (
           <CardFooter p='0' as={Flex} flexDir='column'>
-            <Divider mt='4' mb='2' />
+            <Divider my='4' />
             <Flex align='flex-start'>
               {comment ? (
                 <Icons.File2 color='gray.400' />

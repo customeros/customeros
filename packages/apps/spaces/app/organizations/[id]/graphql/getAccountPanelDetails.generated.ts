@@ -75,6 +75,7 @@ export type OrganizationAccountDetailsQuery = {
         frequency?: Types.RenewalCycle | null;
         amount?: number | null;
         renewalCycleStart?: any | null;
+        renewalCycleNext?: any | null;
       } | null;
     } | null;
   } | null;
@@ -119,6 +120,7 @@ export const OrganizationAccountDetailsDocument = `
         frequency
         amount
         renewalCycleStart
+        renewalCycleNext
       }
     }
   }

@@ -1,114 +1,67 @@
 import React from 'react';
-import { Card, CardBody, CardHeader } from '@ui/layout/Card';
+import { useForm } from 'react-inverted-form';
+
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Divider } from '@ui/presentation/Divider';
-import { VStack } from '@ui/layout/Stack';
+import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
-import BillingDetails from '@spaces/atoms/icons/BillingDetails';
 import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
 import { FormSelect } from '@ui/form/SyncSelect';
 import CoinsSwap from '@spaces/atoms/icons/CoinsSwap';
-import { frequencyOptions } from './utils';
-import ClockCheck from '@spaces/atoms/icons/ClockCheck';
-import { DatePicker } from '@ui/form/DatePicker/DatePicker';
+import { Card, CardBody, CardFooter } from '@ui/layout/Card';
 import { FormCurrencyInput } from '@ui/form/CurrencyInput/FormCurrencyInput';
-import { useForm } from 'react-inverted-form';
-import {
-  OrganizationAccountBillingDetails,
-  OrganizationAccountBillingDetailsForm,
-} from './OrganziationAccountBillingDetails.dto';
+import { BillingDetailsForm, BillingDetailsDTO } from './BillingDetails.dto';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateBillingDetailsMutation } from '@organization/graphql/updateBillingDetails.generated';
-import { BillingDetails as BillingDetailsT } from '@graphql/types';
+import { BillingDetails as BillingDetails } from '@graphql/types';
 
-export type BillingDetailsType = BillingDetailsT & { amount?: string | null };
+import { frequencyOptions } from '../utils';
+
 interface BillingDetailsCardBProps {
-  billingDetailsData: BillingDetailsType;
   id: string;
+  data?: BillingDetails | null;
 }
 export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
-  billingDetailsData,
   id,
+  data,
 }) => {
   const queryClient = useQueryClient();
-  const defaultValues: OrganizationAccountBillingDetailsForm =
-    new OrganizationAccountBillingDetails(billingDetailsData);
+  const defaultValues = BillingDetailsDTO.toForm(data);
   const client = getGraphQLClient();
   const updateBillingDetails = useUpdateBillingDetailsMutation(client, {
     onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
   });
-  const handleUpdateBillingDetails = (
-    variables: Partial<OrganizationAccountBillingDetailsForm>,
-  ) => {
-    const inputData = OrganizationAccountBillingDetails.toPayload({
-      ...state.values,
+  const formId = 'billing-details-form';
+
+  const handleUpdateBillingDetails = (variables: BillingDetailsForm) => {
+    const payload = BillingDetailsDTO.toPayload({
+      organizationId: id,
+      ...data,
       ...variables,
     });
 
     updateBillingDetails.mutate({
-      input: { id, ...inputData },
+      input: {
+        ...payload,
+      },
     });
   };
 
-  const formId = 'organization-account-billing-details-form';
-  const { state } = useForm<OrganizationAccountBillingDetailsForm>({
+  useForm<BillingDetailsForm>({
     formId,
     defaultValues,
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        const shouldPreventFrequencyOptionSave =
-          action.payload?.value?.value ===
-          //@ts-expect-error fixme
-          defaultValues?.[action.payload.name]?.value;
-
         switch (action.payload.name) {
           case 'frequency': {
-            if (shouldPreventFrequencyOptionSave) {
-              return next;
-            }
             handleUpdateBillingDetails({
-              frequency: action.payload?.value?.value || null,
+              ...state.values,
+              frequency: action.payload?.value,
             });
 
-            return next;
-          }
-          case 'renewalCycle': {
-            if (shouldPreventFrequencyOptionSave) {
-              return next;
-            }
-
-            const renewalCycle = action.payload?.value?.value;
-            const renewalCycleStart = state.values.renewalCycleStart;
-
-            if (!renewalCycle && renewalCycleStart !== null) {
-              handleUpdateBillingDetails({
-                renewalCycle: null,
-                renewalCycleStart: null,
-              });
-              return {
-                ...next,
-                values: {
-                  ...next.values,
-                  renewalCycleStart: null,
-                },
-              };
-            }
-            handleUpdateBillingDetails({
-              renewalCycle,
-            });
-            return next;
-          }
-          case 'renewalCycleStart': {
-            const shouldPreventSave =
-              //@ts-expect-error fixme
-              action.payload?.value === defaultValues?.[action.payload.name];
-            if (shouldPreventSave) return next;
-            handleUpdateBillingDetails({
-              renewalCycleStart: action.payload?.value || null,
-            });
             return next;
           }
           default:
@@ -117,8 +70,8 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
       }
 
       if (action.type === 'FIELD_BLUR' && action.payload.name === 'amount') {
-        if (defaultValues.amount === action.payload.value) return next;
         handleUpdateBillingDetails({
+          ...state.values,
           amount: action.payload.value,
         });
       }
@@ -129,26 +82,26 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
 
   return (
     <Card
-      size='sm'
-      width='full'
-      borderRadius='xl'
-      border='1px solid'
-      borderColor='gray.200'
+      p='4'
+      w='full'
+      size='lg'
       boxShadow='xs'
+      variant='outline'
+      cursor='default'
     >
-      <CardHeader display='flex' alignItems='center'>
-        <BillingDetails />
-        <Heading ml={5} size='sm' color='gray.700'>
+      <CardBody as={Flex} p='0' w='full' align='center'>
+        <FeaturedIcon>
+          <Icons.Coin1 />
+        </FeaturedIcon>
+        <Heading ml='5' size='sm' color='gray.700'>
           Billing details
         </Heading>
-      </CardHeader>
-      <Box px={4}>
-        <Divider color='gray.200' />
-      </Box>
+      </CardBody>
 
-      <CardBody padding={4}>
-        <VStack spacing='4' w='full'>
-          <Flex justifyItems='space-between' w='full' gap={4}>
+      <CardFooter as={Flex} flexDir='column' padding={0}>
+        <Divider color='gray.200' my='4' />
+        <Flex w='full' flexDir='column'>
+          <Flex justifyItems='space-between' w='full' gap='4'>
             <FormCurrencyInput
               label='Billing amount'
               color='gray.700'
@@ -179,29 +132,8 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
               }
             />
           </Flex>
-          <Flex justifyItems='space-between' w='full' gap={4}>
-            <FormSelect
-              isClearable
-              label='Renewal cycle'
-              isLabelVisible
-              name='renewalCycle'
-              placeholder='Monthly'
-              options={frequencyOptions}
-              formId={formId}
-              leftElement={
-                <Box mr={3} color='gray.500'>
-                  <ClockCheck height={16} />
-                </Box>
-              }
-            />
-            <DatePicker
-              label='Renewal cycle start'
-              formId={formId}
-              name='renewalCycleStart'
-            />
-          </Flex>
-        </VStack>
-      </CardBody>
+        </Flex>
+      </CardFooter>
     </Card>
   );
 };
