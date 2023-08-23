@@ -818,26 +818,6 @@ func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
-func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, contactId, subject string, startedAt time.Time) string {
-	var conversationId, _ = uuid.NewRandom()
-	query := `MATCH (c:Contact {id:$contactId}),
-			        (u:User {id:$userId})
-			MERGE (u)-[:PARTICIPATES]->(o:Conversation:Conversation_%s:TimelineEvent:TimelineEvent_%s {id:$conversationId})<-[:PARTICIPATES]-(c)
-			ON CREATE SET 	o.startedAt=$startedAt, 
-							o.status="ACTIVE", 
-							o.channel="VOICE",
-							o.subject=$subject,
-							o.messageCount=0 `
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
-		"contactId":      contactId,
-		"userId":         userId,
-		"subject":        subject,
-		"startedAt":      startedAt,
-		"conversationId": conversationId.String(),
-	})
-	return conversationId.String()
-}
-
 func UserHasCalendar(ctx context.Context, driver *neo4j.DriverWithContext, userId, link, calType string, primary bool) string {
 	var calId, _ = uuid.NewRandom()
 	query := `MATCH (u:User {id:$userId})

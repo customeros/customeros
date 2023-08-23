@@ -972,21 +972,17 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 
 	now := time.Now().UTC()
 	secAgo1 := now.Add(time.Duration(-1) * time.Second)
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
-	secAgo20 := now.Add(time.Duration(-20) * time.Second)
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
 	secAgo40 := now.Add(time.Duration(-40) * time.Second)
 	secAgo50 := now.Add(time.Duration(-50) * time.Second)
 	secAgo55 := now.Add(time.Duration(-55) * time.Second)
 	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	minAgo5 := now.Add(time.Duration(-5) * time.Minute)
-
-	// prepare conversations
-	conversationId := neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", secAgo20)
 
 	// prepare page views
 	pageViewId1 := neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
@@ -1040,7 +1036,6 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
@@ -1086,13 +1081,6 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, "http://app-2.ai", timelineEvent2["pageUrl"].(string))
 	require.Equal(t, float64(2), timelineEvent2["orderInSession"].(float64))
 	require.Equal(t, float64(20), timelineEvent2["engagedTime"].(float64))
-
-	timelineEvent3 := timelineEvents[2].(map[string]interface{})
-	require.Equal(t, "Conversation", timelineEvent3["__typename"].(string))
-	require.Equal(t, conversationId, timelineEvent3["id"].(string))
-	require.NotNil(t, timelineEvent3["startedAt"].(string))
-	require.Equal(t, "subject", timelineEvent3["subject"].(string))
-	require.Equal(t, "VOICE", timelineEvent3["channel"].(string))
 
 	timelineEvent4 := timelineEvents[3].(map[string]interface{})
 	require.Equal(t, "Note", timelineEvent4["__typename"].(string))
@@ -1174,12 +1162,9 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 
 	now := time.Now().UTC()
-
-	// prepare conversations
-	neo4jt.CreateConversation(ctx, driver, tenantName, userId, contactId, "subject", now)
 
 	// prepare page views
 	neo4jt.CreatePageView(ctx, driver, contactId, entity.PageViewEntity{
