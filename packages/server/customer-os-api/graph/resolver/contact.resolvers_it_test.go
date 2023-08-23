@@ -1053,7 +1053,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 8, len(timelineEvents))
+	require.Equal(t, 7, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, "PageView", timelineEvent1["__typename"].(string))
@@ -1198,7 +1198,7 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
-	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse := callGraphQL(t, "contact/get_contact_with_timeline_events_total_count", map[string]interface{}{"contactId": contactId})
 
