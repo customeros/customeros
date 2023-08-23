@@ -6,7 +6,7 @@ spec:
   type: LoadBalancer
   ports:
     - name: http
-      port: 14001
-      targetPort: 14001
+      port: 4001
+      targetPort: 4001
   selector:
     app: user-admin-api

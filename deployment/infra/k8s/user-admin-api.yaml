@@ -17,11 +17,11 @@ spec:
           name: user-admin-api
           imagePullPolicy: Never
           ports:
-            - containerPort: 14001
+            - containerPort: 4001
           livenessProbe:
             httpGet:
               path: /health
-              port: 14001
+              port: 4001
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 15
@@ -29,7 +29,7 @@ spec:
           readinessProbe: # To check if the Pod is ready to serve traffic or not
             httpGet:
               path: /readiness
-              port: 14001
+              port: 4001
               scheme: HTTP
             initialDelaySeconds: 5
             timeoutSeconds: 1
@@ -54,7 +54,7 @@ spec:
               value: "INFO"
 
             - name: PORT
-              value: "14001"
+              value: "4001"
 
             - name: USER_ADMIN_API_CORS_URL
               value: "http://localhost:3000 http://localhost:3001"
