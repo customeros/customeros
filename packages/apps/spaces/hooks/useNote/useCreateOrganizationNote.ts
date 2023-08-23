@@ -10,7 +10,6 @@ import { gql } from '@apollo/client';
 import { ApolloCache } from '@apollo/client/cache';
 import { useSetRecoilState } from 'recoil';
 import { organizationNewItemsToEdit } from '../../state/organizationDetails';
-import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 
 interface Props {
   organizationId: string;
@@ -26,7 +25,6 @@ export const useCreateOrganizationNote = ({
   organizationId,
 }: Props): Result => {
   const setNoteToEditMode = useSetRecoilState(organizationNewItemsToEdit);
-  const { onScrollToBottom } = useTimeline();
 
   const [createOrganizationNoteMutation, { loading }] =
     useCreateOrganizationNoteMutation({
@@ -42,9 +40,6 @@ export const useCreateOrganizationNote = ({
             { id: note_CreateForOrganization.id },
           ],
         }));
-        setTimeout(() => {
-          onScrollToBottom();
-        }, 300);
       },
     });
 
