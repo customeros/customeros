@@ -15,3 +15,8 @@ import (
 func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error) {
 	panic(fmt.Errorf("not implemented: SocialUpdate - social_Update"))
 }
+
+// SocialRemove is the resolver for the social_Remove field.
+func (r *mutationResolver) SocialRemove(ctx context.Context, socialID string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: SocialRemove - social_Remove"))
+}

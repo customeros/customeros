@@ -223,11 +223,10 @@ type Contact struct {
 	// Contact owner (user)
 	Owner *User `json:"owner,omitempty"`
 	// Contact notes
-	Notes                    *NotePage         `json:"notes"`
-	NotesByTime              []*Note           `json:"notesByTime"`
-	Conversations            *ConversationPage `json:"conversations"`
-	TimelineEvents           []TimelineEvent   `json:"timelineEvents"`
-	TimelineEventsTotalCount int64             `json:"timelineEventsTotalCount"`
+	Notes                    *NotePage       `json:"notes"`
+	NotesByTime              []*Note         `json:"notesByTime"`
+	TimelineEvents           []TimelineEvent `json:"timelineEvents"`
+	TimelineEventsTotalCount int64           `json:"timelineEventsTotalCount"`
 }
 
 func (Contact) IsExtensibleEntity()               {}
@@ -333,67 +332,6 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
-
-type Conversation struct {
-	ID                 string             `json:"id"`
-	StartedAt          time.Time          `json:"startedAt"`
-	UpdatedAt          time.Time          `json:"updatedAt"`
-	EndedAt            *time.Time         `json:"endedAt,omitempty"`
-	Status             ConversationStatus `json:"status"`
-	Channel            *string            `json:"channel,omitempty"`
-	Subject            *string            `json:"subject,omitempty"`
-	MessageCount       int64              `json:"messageCount"`
-	Contacts           []*Contact         `json:"contacts,omitempty"`
-	Users              []*User            `json:"users,omitempty"`
-	Source             DataSource         `json:"source"`
-	SourceOfTruth      DataSource         `json:"sourceOfTruth"`
-	AppSource          *string            `json:"appSource,omitempty"`
-	InitiatorFirstName *string            `json:"initiatorFirstName,omitempty"`
-	InitiatorLastName  *string            `json:"initiatorLastName,omitempty"`
-	InitiatorUsername  *string            `json:"initiatorUsername,omitempty"`
-	InitiatorType      *string            `json:"initiatorType,omitempty"`
-	ThreadID           *string            `json:"threadId,omitempty"`
-}
-
-func (Conversation) IsNode()            {}
-func (this Conversation) GetID() string { return this.ID }
-
-func (Conversation) IsTimelineEvent() {}
-
-type ConversationInput struct {
-	ID         *string            `json:"id,omitempty"`
-	StartedAt  *time.Time         `json:"startedAt,omitempty"`
-	ContactIds []string           `json:"contactIds,omitempty"`
-	UserIds    []string           `json:"userIds,omitempty"`
-	Status     ConversationStatus `json:"status"`
-	Channel    *string            `json:"channel,omitempty"`
-	AppSource  *string            `json:"appSource,omitempty"`
-}
-
-type ConversationPage struct {
-	Content       []*Conversation `json:"content"`
-	TotalPages    int             `json:"totalPages"`
-	TotalElements int64           `json:"totalElements"`
-}
-
-func (ConversationPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this ConversationPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this ConversationPage) GetTotalElements() int64 { return this.TotalElements }
-
-type ConversationUpdateInput struct {
-	ID                        string              `json:"id"`
-	ContactIds                []string            `json:"contactIds,omitempty"`
-	UserIds                   []string            `json:"userIds,omitempty"`
-	Status                    *ConversationStatus `json:"status,omitempty"`
-	Channel                   *string             `json:"channel,omitempty"`
-	SkipMessageCountIncrement bool                `json:"skipMessageCountIncrement"`
-}
 
 type Country struct {
 	ID        string `json:"id"`
@@ -1508,14 +1446,13 @@ type User struct {
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
 	// Timestamp of user creation.
 	// **Required**
-	CreatedAt     time.Time         `json:"createdAt"`
-	UpdatedAt     time.Time         `json:"updatedAt"`
-	JobRoles      []*JobRole        `json:"jobRoles"`
-	Calendars     []*Calendar       `json:"calendars"`
-	Source        DataSource        `json:"source"`
-	SourceOfTruth DataSource        `json:"sourceOfTruth"`
-	AppSource     string            `json:"appSource"`
-	Conversations *ConversationPage `json:"conversations"`
+	CreatedAt     time.Time   `json:"createdAt"`
+	UpdatedAt     time.Time   `json:"updatedAt"`
+	JobRoles      []*JobRole  `json:"jobRoles"`
+	Calendars     []*Calendar `json:"calendars"`
+	Source        DataSource  `json:"source"`
+	SourceOfTruth DataSource  `json:"sourceOfTruth"`
+	AppSource     string      `json:"appSource"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
@@ -1723,47 +1660,6 @@ func (e *ComparisonOperator) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ComparisonOperator) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type ConversationStatus string
-
-const (
-	ConversationStatusActive ConversationStatus = "ACTIVE"
-	ConversationStatusClosed ConversationStatus = "CLOSED"
-)
-
-var AllConversationStatus = []ConversationStatus{
-	ConversationStatusActive,
-	ConversationStatusClosed,
-}
-
-func (e ConversationStatus) IsValid() bool {
-	switch e {
-	case ConversationStatusActive, ConversationStatusClosed:
-		return true
-	}
-	return false
-}
-
-func (e ConversationStatus) String() string {
-	return string(e)
-}
-
-func (e *ConversationStatus) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ConversationStatus(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ConversationStatus", str)
-	}
-	return nil
-}
-
-func (e ConversationStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -2722,7 +2618,6 @@ type TimelineEventType string
 const (
 	TimelineEventTypePageView           TimelineEventType = "PAGE_VIEW"
 	TimelineEventTypeInteractionSession TimelineEventType = "INTERACTION_SESSION"
-	TimelineEventTypeConversation       TimelineEventType = "CONVERSATION"
 	TimelineEventTypeNote               TimelineEventType = "NOTE"
 	TimelineEventTypeInteractionEvent   TimelineEventType = "INTERACTION_EVENT"
 	TimelineEventTypeAnalysis           TimelineEventType = "ANALYSIS"
@@ -2733,7 +2628,6 @@ const (
 var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypePageView,
 	TimelineEventTypeInteractionSession,
-	TimelineEventTypeConversation,
 	TimelineEventTypeNote,
 	TimelineEventTypeInteractionEvent,
 	TimelineEventTypeAnalysis,
@@ -2743,7 +2637,7 @@ var AllTimelineEventType = []TimelineEventType{
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting:
 		return true
 	}
 	return false

@@ -70,8 +70,6 @@ type User {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
-
-    conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true) @deprecated(reason: "Conversations replaced by interaction events")
 }
 
 """

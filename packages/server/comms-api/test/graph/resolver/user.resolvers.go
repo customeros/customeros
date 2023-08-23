@@ -107,11 +107,6 @@ func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model
 	panic(fmt.Errorf("not implemented: Calendars - calendars"))
 }
 
-// Conversations is the resolver for the conversations field.
-func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
-	panic(fmt.Errorf("not implemented: Conversations - conversations"))
-}
-
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 

@@ -223,30 +223,6 @@ func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, p
 	return mapper.MapEntitiesToNotes(noteEntities), err
 }
 
-// Conversations is the resolver for the conversations field.
-func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Conversations", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
-	if pagination == nil {
-		pagination = &model.Pagination{Page: 0, Limit: 0}
-	}
-	span.LogFields(log.Int("request.page", pagination.Page), log.Int("request.limit", pagination.Limit))
-	paginatedResult, err := r.Services.ConversationService.GetConversationsForContact(ctx, obj.ID, pagination.Page, pagination.Limit, sort)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get contact %s conversations", obj.ID)
-		return nil, err
-	}
-	return &model.ConversationPage{
-		Content:       mapper.MapEntitiesToConversations(paginatedResult.Rows.(*entity.ConversationEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
-	}, err
-}
-
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.TimelineEvents", graphql.GetOperationContext(ctx))

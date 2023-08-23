@@ -8,13 +8,11 @@ import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
 import { DataSource, GetContactTimelineQuery } from '@spaces/graphql';
 import client from '../../apollo-client';
-import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 
 export interface Props {
   contactId?: string;
 }
 export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
-  const { onScrollToBottom } = useTimeline();
   const [createMeetingMutation, { loading, error, data }] =
     useCreateMeetingMutation({
       onError: () => {
@@ -23,8 +21,7 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
         );
       },
       onCompleted: () => {
-        setTimeout(() => {
-          onScrollToBottom();
+        setTimeout(() => ~{
         }, 0);
       },
     });

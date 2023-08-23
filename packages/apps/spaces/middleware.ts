@@ -6,7 +6,6 @@ const apiPaths = [
   '/sa/',
   '/fs/',
   '/comms-api/',
-  '/oasis-api/',
   '/transcription-api/',
   '/validation-api/',
 ];
@@ -83,17 +82,6 @@ function getRedirectUrl(
     requestHeaders.set(
       'X-Openline-Mail-Api-Key',
       process.env.COMMS_MAIL_API_KEY as string,
-    );
-  } else if (request.nextUrl.pathname.startsWith('/oasis-api/')) {
-    requestHeaders.set('X-Openline-USERNAME', userName);
-    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
-    newURL =
-      process.env.OASIS_API_PATH +
-      '/' +
-      request.nextUrl.pathname.substring('/oasis-api/'.length);
-    requestHeaders.set(
-      'X-Openline-API-KEY',
-      process.env.OASIS_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/transcription-api/')) {
     requestHeaders.set('X-Openline-USERNAME', userName);

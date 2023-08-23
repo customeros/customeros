@@ -17,6 +17,11 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 	panic(fmt.Errorf("not implemented: InteractionSession - interactionSession"))
 }
 
+// Issue is the resolver for the issue field.
+func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.InteractionEvent) (*model.Issue, error) {
+	panic(fmt.Errorf("not implemented: Issue - issue"))
+}
+
 // Meeting is the resolver for the meeting field.
 func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: Meeting - meeting"))
@@ -40,6 +45,16 @@ func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.Int
 // Includes is the resolver for the includes field.
 func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error) {
 	panic(fmt.Errorf("not implemented: Includes - includes"))
+}
+
+// Summary is the resolver for the summary field.
+func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.InteractionEvent) (*model.Analysis, error) {
+	panic(fmt.Errorf("not implemented: Summary - summary"))
+}
+
+// ActionItems is the resolver for the actionItems field.
+func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.InteractionEvent) ([]*model.ActionItem, error) {
+	panic(fmt.Errorf("not implemented: ActionItems - actionItems"))
 }
 
 // Events is the resolver for the events field.

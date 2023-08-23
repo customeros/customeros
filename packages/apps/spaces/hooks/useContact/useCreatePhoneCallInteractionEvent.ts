@@ -7,7 +7,6 @@ import {
 import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
-import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 
 interface Props {
   contactId: string;
@@ -24,7 +23,6 @@ export const useCreatePhoneCallInteractionEvent = ({
   contactId,
   onSuccess,
 }: Props): Result => {
-  const { onScrollToBottom } = useTimeline();
   const [createPhoneCallInteractionEvent] =
     useCreatePhoneCallInteractionEventMutation({
       onError: () => {
@@ -34,7 +32,6 @@ export const useCreatePhoneCallInteractionEvent = ({
       },
       onCompleted: (res) => {
         onSuccess(res);
-        setTimeout(() => onScrollToBottom(), 0);
       },
     });
 
