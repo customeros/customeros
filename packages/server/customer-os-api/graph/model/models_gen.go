@@ -713,12 +713,6 @@ type GlobalCache struct {
 	GCliCache []*GCliItem `json:"gCliCache"`
 }
 
-type HealthIndicator struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Order int64  `json:"order"`
-}
-
 type InteractionEvent struct {
 	ID                 string                        `json:"id"`
 	CreatedAt          time.Time                     `json:"createdAt"`
@@ -1166,7 +1160,6 @@ type Organization struct {
 	LastTouchPointAt              *time.Time                       `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointTimelineEventID *string                          `json:"lastTouchPointTimelineEventId,omitempty"`
 	LastTouchPointTimelineEvent   TimelineEvent                    `json:"lastTouchPointTimelineEvent,omitempty"`
-	HealthIndicator               *HealthIndicator                 `json:"healthIndicator,omitempty"`
 	IssueSummaryByStatus          []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
 	AccountDetails                *OrgAccountDetails               `json:"accountDetails,omitempty"`
 }

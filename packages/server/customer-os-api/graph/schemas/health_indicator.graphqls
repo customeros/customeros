@@ -1,9 +1,0 @@
-extend type Query {
-    healthIndicators: [HealthIndicator!]! @hasRole(roles: [USER, ADMIN]) @hasTenant
-}
-
-type HealthIndicator {
-    id: ID!
-    name: String!
-    order: Int64!
-}

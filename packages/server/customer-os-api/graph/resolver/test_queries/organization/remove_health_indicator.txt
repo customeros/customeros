@@ -1,9 +1,0 @@
-mutation RemoveHealthIndicator($organizationId: ID!) {
-  organization_RemoveHealthIndicator(organizationId: $organizationId) {
-    id
-    updatedAt
-    healthIndicator {
-        id
-    }
-  }
-}

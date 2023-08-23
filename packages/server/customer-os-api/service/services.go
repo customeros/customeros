@@ -48,7 +48,6 @@ type Services struct {
 	PlayerService                   PlayerService
 	OrganizationRelationshipService OrganizationRelationshipService
 	ExternalSystemService           ExternalSystemService
-	HealthIndicatorService          HealthIndicatorService
 	ActionService                   ActionService
 	CountryService                  CountryService
 	ActionItemService               ActionItemService
@@ -78,7 +77,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		SocialService:                   NewSocialService(log, repositories),
 		OrganizationRelationshipService: NewOrganizationRelationshipService(log, repositories),
 		ExternalSystemService:           NewExternalSystemService(log, repositories),
-		HealthIndicatorService:          NewHealthIndicatorService(log, repositories),
 		ActionService:                   NewActionService(log, repositories),
 		CountryService:                  NewCountryService(log, repositories),
 		ActionItemService:               NewActionItemService(log, repositories),

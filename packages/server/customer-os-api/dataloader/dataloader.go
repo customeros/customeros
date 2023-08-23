@@ -67,7 +67,6 @@ type Loaders struct {
 	ContactForJobRole                           *dataloader.Loader
 	IssueForInteractionEvent                    *dataloader.Loader
 	MeetingForInteractionEvent                  *dataloader.Loader
-	HealthIndicatorForOrganization              *dataloader.Loader
 	CountryForPhoneNumber                       *dataloader.Loader
 	ActionItemsForInteractionEvent              *dataloader.Loader
 }
@@ -149,9 +148,6 @@ type issueBatcher struct {
 }
 type meetingBatcher struct {
 	meetingService service.MeetingService
-}
-type healthIndicatorBatcher struct {
-	healthIndicatorService service.HealthIndicatorService
 }
 type countryBatcher struct {
 	countryService service.CountryService
@@ -240,9 +236,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 	meetingBatcher := meetingBatcher{
 		meetingService: services.MeetingService,
 	}
-	healthIndicatorBatcher := healthIndicatorBatcher{
-		healthIndicatorService: services.HealthIndicatorService,
-	}
 	countryBatcher := countryBatcher{
 		countryService: services.CountryService,
 	}
@@ -305,7 +298,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ContactForJobRole:                           dataloader.NewBatchedLoader(contactBatcher.getContactsForJobRoles, dataloader.WithClearCacheOnBatch()),
 		IssueForInteractionEvent:                    dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		MeetingForInteractionEvent:                  dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
-		HealthIndicatorForOrganization:              dataloader.NewBatchedLoader(healthIndicatorBatcher.getHealthIndicatorsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		CountryForPhoneNumber:                       dataloader.NewBatchedLoader(countryBatcher.getCountriesForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		ActionItemsForInteractionEvent:              dataloader.NewBatchedLoader(actionItemBatcher.getActionItemsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 	}

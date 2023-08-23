@@ -52,8 +52,6 @@ type OrganizationService interface {
 	UpdateLastTouchpointSyncByPhoneNumberId(ctx context.Context, phoneNumberId string)
 	UpdateLastTouchpointSyncByEmail(ctx context.Context, email string)
 	UpdateLastTouchpointSyncByPhoneNumber(ctx context.Context, phoneNumber string)
-	ReplaceHealthIndicator(ctx context.Context, organizationId, healthIndicatorId string) (*entity.OrganizationEntity, error)
-	RemoveHealthIndicator(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
@@ -744,34 +742,6 @@ func (s *organizationService) RemoveRelationshipStage(ctx context.Context, organ
 	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()))
 
 	dbNode, err := s.repositories.OrganizationRepository.RemoveRelationshipStage(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) ReplaceHealthIndicator(ctx context.Context, organizationId, healthIndicatorId string) (*entity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ReplaceHealthIndicator")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.String("healthIndicatorId", healthIndicatorId))
-
-	dbNode, err := s.repositories.OrganizationRepository.ReplaceHealthIndicator(ctx, organizationId, healthIndicatorId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) RemoveHealthIndicator(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveHealthIndicator")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
-
-	dbNode, err := s.repositories.OrganizationRepository.RemoveHealthIndicator(ctx, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
