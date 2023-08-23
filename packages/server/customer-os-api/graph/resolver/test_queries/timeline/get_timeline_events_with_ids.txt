@@ -25,12 +25,6 @@ query GetTimelineEvents($ids: [ID!]!) {
       sourceOfTruth
       appSource
     }
-    ... on Conversation {
-      id
-      startedAt
-      subject
-      channel
-    }
     ... on Note {
       id
       html

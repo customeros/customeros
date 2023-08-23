@@ -78,11 +78,6 @@ func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, p
 	panic(fmt.Errorf("not implemented: NotesByTime - notesByTime"))
 }
 
-// Conversations is the resolver for the conversations field.
-func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
-	panic(fmt.Errorf("not implemented: Conversations - conversations"))
-}
-
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))

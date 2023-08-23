@@ -7,7 +7,6 @@ import { default as Reply } from '@spaces/atoms/icons/Reply';
 import { default as ReplyLeft } from '@spaces/atoms/icons/ReplyLeft';
 import { default as ReplyMany } from '@spaces/atoms/icons/ReplyMany';
 import classNames from 'classnames';
-import { SendMailRequest } from '../../conversation-timeline-item/types';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   editorEmail,
@@ -18,6 +17,7 @@ import {
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { showLegacyEditor } from '../../../../../state/editor';
+import { SendMailRequest } from "@organization/components/Timeline/events/email/compose-email/utils";
 
 interface Props {
   from: string;

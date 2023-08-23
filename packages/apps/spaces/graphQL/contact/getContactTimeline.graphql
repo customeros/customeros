@@ -35,34 +35,6 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
           name
         }
       }
-      ... on Conversation {
-        id
-        startedAt
-        subject
-        channel
-        updatedAt
-        messageCount
-        contacts {
-          id
-          lastName
-          firstName
-        }
-        users {
-          id
-          lastName
-          firstName
-          emails {
-            email
-          }
-        }
-        source
-        appSource
-        initiatorFirstName
-        initiatorLastName
-        initiatorUsername
-        initiatorType
-        threadId
-      }
       ... on Analysis {
         id
         createdAt

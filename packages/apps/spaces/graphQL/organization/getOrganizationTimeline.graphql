@@ -57,34 +57,6 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         source
         sourceOfTruth
       }
-      ... on Conversation {
-        id
-        startedAt
-        subject
-        channel
-        updatedAt
-        messageCount
-        contacts {
-          id
-          lastName
-          firstName
-        }
-        users {
-          id
-          lastName
-          firstName
-          emails {
-            email
-          }
-        }
-        source
-        appSource
-        initiatorFirstName
-        initiatorLastName
-        initiatorUsername
-        initiatorType
-        threadId
-      }
       ... on InteractionSession {
         ...InteractionSessionFragment
         source

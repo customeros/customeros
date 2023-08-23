@@ -32,6 +32,10 @@ type MeetingParticipant interface {
 	IsMeetingParticipant()
 }
 
+type MentionedEntity interface {
+	IsMentionedEntity()
+}
+
 type Node interface {
 	IsNode()
 	GetID() string
@@ -64,6 +68,25 @@ type SourceFields interface {
 
 type TimelineEvent interface {
 	IsTimelineEvent()
+}
+
+type Action struct {
+	ID         string     `json:"id"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	Source     DataSource `json:"source"`
+	AppSource  string     `json:"appSource"`
+	CreatedBy  *User      `json:"createdBy,omitempty"`
+	ActionType ActionType `json:"actionType"`
+}
+
+func (Action) IsTimelineEvent() {}
+
+type ActionItem struct {
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	Content   string     `json:"content"`
+	Source    DataSource `json:"source"`
+	AppSource string     `json:"appSource"`
 }
 
 type Analysis struct {
@@ -120,6 +143,36 @@ type AttachmentInput struct {
 	AppSource string `json:"appSource"`
 }
 
+type BillingDetails struct {
+	Amount            *float64      `json:"amount,omitempty"`
+	Frequency         *RenewalCycle `json:"frequency,omitempty"`
+	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
+	RenewalCycleNext  *time.Time    `json:"renewalCycleNext,omitempty"`
+}
+
+type BillingDetailsInput struct {
+	ID                string        `json:"id"`
+	Amount            *float64      `json:"amount,omitempty"`
+	Frequency         *RenewalCycle `json:"frequency,omitempty"`
+	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
+}
+
+// Describes the relationship a Contact has with a Organization.
+// **A `return` object**
+type Calendar struct {
+	ID            string       `json:"id"`
+	CalType       CalendarType `json:"calType"`
+	CreatedAt     time.Time    `json:"createdAt"`
+	UpdatedAt     time.Time    `json:"updatedAt"`
+	Link          *string      `json:"link,omitempty"`
+	Primary       bool         `json:"primary"`
+	Source        DataSource   `json:"source"`
+	SourceOfTruth DataSource   `json:"sourceOfTruth"`
+	AppSource     string       `json:"appSource"`
+}
+
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
@@ -134,8 +187,10 @@ type Contact struct {
 	// The first name of the contact in customerOS.
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact in customerOS.
-	LastName    *string `json:"lastName,omitempty"`
-	Description *string `json:"description,omitempty"`
+	LastName        *string `json:"lastName,omitempty"`
+	Description     *string `json:"description,omitempty"`
+	Timezone        *string `json:"timezone,omitempty"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt     time.Time  `json:"createdAt"`
@@ -168,11 +223,10 @@ type Contact struct {
 	// Contact owner (user)
 	Owner *User `json:"owner,omitempty"`
 	// Contact notes
-	Notes                    *NotePage         `json:"notes"`
-	NotesByTime              []*Note           `json:"notesByTime"`
-	Conversations            *ConversationPage `json:"conversations"`
-	TimelineEvents           []TimelineEvent   `json:"timelineEvents"`
-	TimelineEventsTotalCount int64             `json:"timelineEventsTotalCount"`
+	Notes                    *NotePage       `json:"notes"`
+	NotesByTime              []*Note         `json:"notesByTime"`
+	TimelineEvents           []TimelineEvent `json:"timelineEvents"`
+	TimelineEventsTotalCount int64           `json:"timelineEventsTotalCount"`
 }
 
 func (Contact) IsExtensibleEntity()               {}
@@ -194,7 +248,9 @@ type ContactInput struct {
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact.
 	LastName    *string `json:"lastName,omitempty"`
+	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
 	Label       *string `json:"label,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
@@ -243,7 +299,9 @@ type ContactUpdateInput struct {
 	Prefix *string `json:"prefix,omitempty"`
 	// The first name of the contact in customerOS.
 	FirstName   *string `json:"firstName,omitempty"`
+	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
 	// The last name of the contact in customerOS.
 	LastName *string `json:"lastName,omitempty"`
 	Label    *string `json:"label,omitempty"`
@@ -274,67 +332,6 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
-
-type Conversation struct {
-	ID                 string             `json:"id"`
-	StartedAt          time.Time          `json:"startedAt"`
-	UpdatedAt          time.Time          `json:"updatedAt"`
-	EndedAt            *time.Time         `json:"endedAt,omitempty"`
-	Status             ConversationStatus `json:"status"`
-	Channel            *string            `json:"channel,omitempty"`
-	Subject            *string            `json:"subject,omitempty"`
-	MessageCount       int64              `json:"messageCount"`
-	Contacts           []*Contact         `json:"contacts,omitempty"`
-	Users              []*User            `json:"users,omitempty"`
-	Source             DataSource         `json:"source"`
-	SourceOfTruth      DataSource         `json:"sourceOfTruth"`
-	AppSource          *string            `json:"appSource,omitempty"`
-	InitiatorFirstName *string            `json:"initiatorFirstName,omitempty"`
-	InitiatorLastName  *string            `json:"initiatorLastName,omitempty"`
-	InitiatorUsername  *string            `json:"initiatorUsername,omitempty"`
-	InitiatorType      *string            `json:"initiatorType,omitempty"`
-	ThreadID           *string            `json:"threadId,omitempty"`
-}
-
-func (Conversation) IsNode()            {}
-func (this Conversation) GetID() string { return this.ID }
-
-func (Conversation) IsTimelineEvent() {}
-
-type ConversationInput struct {
-	ID         *string            `json:"id,omitempty"`
-	StartedAt  *time.Time         `json:"startedAt,omitempty"`
-	ContactIds []string           `json:"contactIds,omitempty"`
-	UserIds    []string           `json:"userIds,omitempty"`
-	Status     ConversationStatus `json:"status"`
-	Channel    *string            `json:"channel,omitempty"`
-	AppSource  *string            `json:"appSource,omitempty"`
-}
-
-type ConversationPage struct {
-	Content       []*Conversation `json:"content"`
-	TotalPages    int             `json:"totalPages"`
-	TotalElements int64           `json:"totalElements"`
-}
-
-func (ConversationPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this ConversationPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this ConversationPage) GetTotalElements() int64 { return this.TotalElements }
-
-type ConversationUpdateInput struct {
-	ID                        string              `json:"id"`
-	ContactIds                []string            `json:"contactIds,omitempty"`
-	UserIds                   []string            `json:"userIds,omitempty"`
-	Status                    *ConversationStatus `json:"status,omitempty"`
-	Channel                   *string             `json:"channel,omitempty"`
-	SkipMessageCountIncrement bool                `json:"skipMessageCountIncrement"`
-}
 
 type Country struct {
 	ID        string `json:"id"`
@@ -446,7 +443,9 @@ type CustomerContactInput struct {
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact.
 	LastName    *string `json:"lastName,omitempty"`
+	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
 	// An email addresses associted with the contact.
 	Email *EmailInput `json:"email,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -456,6 +455,15 @@ type CustomerContactInput struct {
 
 type CustomerEmail struct {
 	ID string `json:"id"`
+}
+
+type CustomerJobRole struct {
+	ID string `json:"id"`
+}
+
+type CustomerUser struct {
+	ID      string           `json:"id"`
+	JobRole *CustomerJobRole `json:"jobRole"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -530,6 +538,7 @@ type EmailValidationDetails struct {
 	IsCatchAll     *bool   `json:"isCatchAll,omitempty"`
 	IsDeliverable  *bool   `json:"isDeliverable,omitempty"`
 	IsDisabled     *bool   `json:"isDisabled,omitempty"`
+	Error          *string `json:"error,omitempty"`
 }
 
 type EntityTemplate struct {
@@ -554,16 +563,19 @@ type EntityTemplateInput struct {
 }
 
 type ExternalSystem struct {
-	Type        ExternalSystemType `json:"type"`
-	SyncDate    *time.Time         `json:"syncDate,omitempty"`
-	ExternalID  *string            `json:"externalId,omitempty"`
-	ExternalURL *string            `json:"externalUrl,omitempty"`
+	Type           ExternalSystemType `json:"type"`
+	SyncDate       *time.Time         `json:"syncDate,omitempty"`
+	ExternalID     *string            `json:"externalId,omitempty"`
+	ExternalURL    *string            `json:"externalUrl,omitempty"`
+	ExternalSource *string            `json:"externalSource,omitempty"`
 }
 
 type ExternalSystemReferenceInput struct {
-	ExternalID string             `json:"externalId"`
-	SyncDate   *time.Time         `json:"syncDate,omitempty"`
-	Type       ExternalSystemType `json:"type"`
+	ExternalID     string             `json:"externalId"`
+	SyncDate       *time.Time         `json:"syncDate,omitempty"`
+	Type           ExternalSystemType `json:"type"`
+	ExternalURL    *string            `json:"externalUrl,omitempty"`
+	ExternalSource *string            `json:"externalSource,omitempty"`
 }
 
 type FieldSet struct {
@@ -639,6 +651,12 @@ type GlobalCache struct {
 	GCliCache []*GCliItem `json:"gCliCache"`
 }
 
+type HealthIndicator struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Order int64  `json:"order"`
+}
+
 type InteractionEvent struct {
 	ID                 string                        `json:"id"`
 	CreatedAt          time.Time                     `json:"createdAt"`
@@ -648,15 +666,18 @@ type InteractionEvent struct {
 	Channel            *string                       `json:"channel,omitempty"`
 	ChannelData        *string                       `json:"channelData,omitempty"`
 	InteractionSession *InteractionSession           `json:"interactionSession,omitempty"`
+	Issue              *Issue                        `json:"issue,omitempty"`
 	Meeting            *Meeting                      `json:"meeting,omitempty"`
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
 	RepliesTo          *InteractionEvent             `json:"repliesTo,omitempty"`
+	Includes           []*Attachment                 `json:"includes"`
+	Summary            *Analysis                     `json:"summary,omitempty"`
+	ActionItems        []*ActionItem                 `json:"actionItems,omitempty"`
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
 	EventType          *string                       `json:"eventType,omitempty"`
-	Includes           []*Attachment                 `json:"includes"`
 }
 
 func (InteractionEvent) IsDescriptionNode() {}
@@ -762,6 +783,8 @@ func (this Issue) GetAppSource() string         { return this.AppSource }
 
 func (Issue) IsNode() {}
 
+func (Issue) IsMentionedEntity() {}
+
 func (Issue) IsTimelineEvent() {}
 
 type IssueSummaryByStatus struct {
@@ -780,38 +803,48 @@ type JobRole struct {
 	Organization *Organization `json:"organization,omitempty"`
 	Contact      *Contact      `json:"contact,omitempty"`
 	// The Contact's job title.
-	JobTitle            *string    `json:"jobTitle,omitempty"`
-	Primary             bool       `json:"primary"`
-	ResponsibilityLevel int64      `json:"responsibilityLevel"`
-	StartedAt           *time.Time `json:"startedAt,omitempty"`
-	EndedAt             *time.Time `json:"endedAt,omitempty"`
-	Source              DataSource `json:"source"`
-	SourceOfTruth       DataSource `json:"sourceOfTruth"`
-	AppSource           string     `json:"appSource"`
+	JobTitle      *string    `json:"jobTitle,omitempty"`
+	Primary       bool       `json:"primary"`
+	Description   *string    `json:"description,omitempty"`
+	Company       *string    `json:"company,omitempty"`
+	StartedAt     *time.Time `json:"startedAt,omitempty"`
+	EndedAt       *time.Time `json:"endedAt,omitempty"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
 }
 
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleInput struct {
-	OrganizationID      *string    `json:"organizationId,omitempty"`
-	JobTitle            *string    `json:"jobTitle,omitempty"`
-	Primary             *bool      `json:"primary,omitempty"`
-	StartedAt           *time.Time `json:"startedAt,omitempty"`
-	EndedAt             *time.Time `json:"endedAt,omitempty"`
-	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
-	AppSource           *string    `json:"appSource,omitempty"`
+	OrganizationID *string    `json:"organizationId,omitempty"`
+	JobTitle       *string    `json:"jobTitle,omitempty"`
+	Primary        *bool      `json:"primary,omitempty"`
+	StartedAt      *time.Time `json:"startedAt,omitempty"`
+	EndedAt        *time.Time `json:"endedAt,omitempty"`
+	AppSource      *string    `json:"appSource,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Company        *string    `json:"company,omitempty"`
 }
+
+type JobRoleParticipant struct {
+	JobRoleParticipant *JobRole `json:"jobRoleParticipant"`
+	Type               *string  `json:"type,omitempty"`
+}
+
+func (JobRoleParticipant) IsInteractionEventParticipant() {}
 
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleUpdateInput struct {
-	ID                  string     `json:"id"`
-	StartedAt           *time.Time `json:"startedAt,omitempty"`
-	EndedAt             *time.Time `json:"endedAt,omitempty"`
-	OrganizationID      *string    `json:"organizationId,omitempty"`
-	JobTitle            *string    `json:"jobTitle,omitempty"`
-	Primary             *bool      `json:"primary,omitempty"`
-	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
+	ID             string     `json:"id"`
+	StartedAt      *time.Time `json:"startedAt,omitempty"`
+	EndedAt        *time.Time `json:"endedAt,omitempty"`
+	OrganizationID *string    `json:"organizationId,omitempty"`
+	JobTitle       *string    `json:"jobTitle,omitempty"`
+	Primary        *bool      `json:"primary,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Company        *string    `json:"company,omitempty"`
 }
 
 type LinkOrganizationsInput struct {
@@ -907,6 +940,8 @@ type Meeting struct {
 	SourceOfTruth      DataSource           `json:"sourceOfTruth"`
 	Agenda             *string              `json:"agenda,omitempty"`
 	AgendaContentType  *string              `json:"agendaContentType,omitempty"`
+	ExternalSystem     []*ExternalSystem    `json:"externalSystem"`
+	Status             MeetingStatus        `json:"status"`
 }
 
 func (Meeting) IsDescriptionNode() {}
@@ -917,17 +952,19 @@ func (this Meeting) GetID() string { return this.ID }
 func (Meeting) IsTimelineEvent() {}
 
 type MeetingInput struct {
-	Name               *string                    `json:"name,omitempty"`
-	AttendedBy         []*MeetingParticipantInput `json:"attendedBy,omitempty"`
-	CreatedBy          []*MeetingParticipantInput `json:"createdBy,omitempty"`
-	StartedAt          *time.Time                 `json:"startedAt,omitempty"`
-	EndedAt            *time.Time                 `json:"endedAt,omitempty"`
-	ConferenceURL      *string                    `json:"conferenceUrl,omitempty"`
-	MeetingExternalURL *string                    `json:"meetingExternalUrl,omitempty"`
-	Agenda             *string                    `json:"agenda,omitempty"`
-	AgendaContentType  *string                    `json:"agendaContentType,omitempty"`
-	Note               *NoteInput                 `json:"note,omitempty"`
-	AppSource          string                     `json:"appSource"`
+	Name               *string                       `json:"name,omitempty"`
+	AttendedBy         []*MeetingParticipantInput    `json:"attendedBy,omitempty"`
+	CreatedBy          []*MeetingParticipantInput    `json:"createdBy,omitempty"`
+	StartedAt          *time.Time                    `json:"startedAt,omitempty"`
+	EndedAt            *time.Time                    `json:"endedAt,omitempty"`
+	ConferenceURL      *string                       `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string                       `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string                       `json:"agenda,omitempty"`
+	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
+	Note               *NoteInput                    `json:"note,omitempty"`
+	AppSource          string                        `json:"appSource"`
+	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
+	Status             *MeetingStatus                `json:"status,omitempty"`
 }
 
 type MeetingParticipantInput struct {
@@ -937,28 +974,55 @@ type MeetingParticipantInput struct {
 }
 
 type MeetingUpdateInput struct {
-	Name               *string          `json:"name,omitempty"`
-	StartedAt          *time.Time       `json:"startedAt,omitempty"`
-	EndedAt            *time.Time       `json:"endedAt,omitempty"`
-	ConferenceURL      *string          `json:"conferenceUrl,omitempty"`
-	MeetingExternalURL *string          `json:"meetingExternalUrl,omitempty"`
-	Agenda             *string          `json:"agenda,omitempty"`
-	AgendaContentType  *string          `json:"agendaContentType,omitempty"`
-	Note               *NoteUpdateInput `json:"note,omitempty"`
-	AppSource          string           `json:"appSource"`
+	Name               *string                       `json:"name,omitempty"`
+	StartedAt          *time.Time                    `json:"startedAt,omitempty"`
+	EndedAt            *time.Time                    `json:"endedAt,omitempty"`
+	ConferenceURL      *string                       `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string                       `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string                       `json:"agenda,omitempty"`
+	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
+	Note               *NoteUpdateInput              `json:"note,omitempty"`
+	AppSource          string                        `json:"appSource"`
+	Status             *MeetingStatus                `json:"status,omitempty"`
+	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
 }
 
+// Specifies how many pages of meeting information has been returned in the query response.
+// **A `response` object.**
+type MeetingsPage struct {
+	// A contact entity in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Content []*Meeting `json:"content"`
+	// Total number of pages in the query response.
+	// **Required.**
+	TotalPages int `json:"totalPages"`
+	// Total number of elements in the query response.
+	// **Required.**
+	TotalElements int64 `json:"totalElements"`
+}
+
+func (MeetingsPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
+
 type Note struct {
-	ID            string        `json:"id"`
-	HTML          string        `json:"html"`
-	CreatedAt     time.Time     `json:"createdAt"`
-	UpdatedAt     time.Time     `json:"updatedAt"`
-	CreatedBy     *User         `json:"createdBy,omitempty"`
-	Noted         []NotedEntity `json:"noted"`
-	Includes      []*Attachment `json:"includes"`
-	Source        DataSource    `json:"source"`
-	SourceOfTruth DataSource    `json:"sourceOfTruth"`
-	AppSource     string        `json:"appSource"`
+	ID            string            `json:"id"`
+	HTML          string            `json:"html"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	CreatedBy     *User             `json:"createdBy,omitempty"`
+	Noted         []NotedEntity     `json:"noted"`
+	Mentioned     []MentionedEntity `json:"mentioned"`
+	Includes      []*Attachment     `json:"includes"`
+	Source        DataSource        `json:"source"`
+	SourceOfTruth DataSource        `json:"sourceOfTruth"`
+	AppSource     string            `json:"appSource"`
 }
 
 func (Note) IsTimelineEvent() {}
@@ -989,6 +1053,12 @@ type NoteUpdateInput struct {
 	HTML string `json:"html"`
 }
 
+type OrgAccountDetails struct {
+	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	RenewalForecast   *RenewalForecast   `json:"renewalForecast,omitempty"`
+	BillingDetails    *BillingDetails    `json:"billingDetails,omitempty"`
+}
+
 type Organization struct {
 	ID                            string                           `json:"id"`
 	CreatedAt                     time.Time                        `json:"createdAt"`
@@ -999,9 +1069,15 @@ type Organization struct {
 	Domains                       []string                         `json:"domains"`
 	Website                       *string                          `json:"website,omitempty"`
 	Industry                      *string                          `json:"industry,omitempty"`
+	SubIndustry                   *string                          `json:"subIndustry,omitempty"`
+	IndustryGroup                 *string                          `json:"industryGroup,omitempty"`
+	TargetAudience                *string                          `json:"targetAudience,omitempty"`
+	ValueProposition              *string                          `json:"valueProposition,omitempty"`
 	IsPublic                      *bool                            `json:"isPublic,omitempty"`
 	Market                        *Market                          `json:"market,omitempty"`
 	Employees                     *int64                           `json:"employees,omitempty"`
+	LastFundingRound              *FundingRound                    `json:"lastFundingRound,omitempty"`
+	LastFundingAmount             *string                          `json:"lastFundingAmount,omitempty"`
 	Source                        DataSource                       `json:"source"`
 	SourceOfTruth                 DataSource                       `json:"sourceOfTruth"`
 	AppSource                     string                           `json:"appSource"`
@@ -1015,6 +1091,7 @@ type Organization struct {
 	PhoneNumbers                  []*PhoneNumber                   `json:"phoneNumbers"`
 	Subsidiaries                  []*LinkedOrganization            `json:"subsidiaries"`
 	SubsidiaryOf                  []*LinkedOrganization            `json:"subsidiaryOf"`
+	SuggestedMergeTo              []*SuggestedMergeOrganization    `json:"suggestedMergeTo"`
 	CustomFields                  []*CustomField                   `json:"customFields"`
 	FieldSets                     []*FieldSet                      `json:"fieldSets"`
 	EntityTemplate                *EntityTemplate                  `json:"entityTemplate,omitempty"`
@@ -1027,7 +1104,9 @@ type Organization struct {
 	LastTouchPointAt              *time.Time                       `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointTimelineEventID *string                          `json:"lastTouchPointTimelineEventId,omitempty"`
 	LastTouchPointTimelineEvent   TimelineEvent                    `json:"lastTouchPointTimelineEvent,omitempty"`
+	HealthIndicator               *HealthIndicator                 `json:"healthIndicator,omitempty"`
 	IssueSummaryByStatus          []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
+	AccountDetails                *OrgAccountDetails               `json:"accountDetails,omitempty"`
 }
 
 func (Organization) IsNotedEntity() {}
@@ -1040,7 +1119,6 @@ type OrganizationInput struct {
 	// **Required.**
 	Name         string              `json:"name"`
 	Description  *string             `json:"description,omitempty"`
-	Domain       *string             `json:"domain,omitempty"`
 	Domains      []string            `json:"domains,omitempty"`
 	Website      *string             `json:"website,omitempty"`
 	Industry     *string             `json:"industry,omitempty"`
@@ -1076,8 +1154,6 @@ type OrganizationParticipant struct {
 
 func (OrganizationParticipant) IsInteractionEventParticipant() {}
 
-func (OrganizationParticipant) IsInteractionSessionParticipant() {}
-
 func (OrganizationParticipant) IsMeetingParticipant() {}
 
 type OrganizationRelationshipStage struct {
@@ -1086,16 +1162,21 @@ type OrganizationRelationshipStage struct {
 }
 
 type OrganizationUpdateInput struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Description *string  `json:"description,omitempty"`
-	Domain      *string  `json:"domain,omitempty"`
-	Domains     []string `json:"domains,omitempty"`
-	Website     *string  `json:"website,omitempty"`
-	Industry    *string  `json:"industry,omitempty"`
-	IsPublic    *bool    `json:"isPublic,omitempty"`
-	Market      *Market  `json:"market,omitempty"`
-	Employees   *int64   `json:"employees,omitempty"`
+	ID                string        `json:"id"`
+	Name              string        `json:"name"`
+	Description       *string       `json:"description,omitempty"`
+	Domains           []string      `json:"domains,omitempty"`
+	Website           *string       `json:"website,omitempty"`
+	Industry          *string       `json:"industry,omitempty"`
+	SubIndustry       *string       `json:"subIndustry,omitempty"`
+	IndustryGroup     *string       `json:"industryGroup,omitempty"`
+	IsPublic          *bool         `json:"isPublic,omitempty"`
+	Market            *Market       `json:"market,omitempty"`
+	Employees         *int64        `json:"employees,omitempty"`
+	TargetAudience    *string       `json:"targetAudience,omitempty"`
+	ValueProposition  *string       `json:"valueProposition,omitempty"`
+	LastFundingRound  *FundingRound `json:"lastFundingRound,omitempty"`
+	LastFundingAmount *string       `json:"lastFundingAmount,omitempty"`
 }
 
 type PageView struct {
@@ -1141,9 +1222,10 @@ type PhoneNumber struct {
 	// **Required**
 	ID string `json:"id"`
 	// The phone number in e164 format.
-	E164           *string `json:"e164,omitempty"`
-	RawPhoneNumber *string `json:"rawPhoneNumber,omitempty"`
-	Validated      *bool   `json:"validated,omitempty"`
+	E164           *string  `json:"e164,omitempty"`
+	RawPhoneNumber *string  `json:"rawPhoneNumber,omitempty"`
+	Validated      *bool    `json:"validated,omitempty"`
+	Country        *Country `json:"country,omitempty"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
@@ -1163,7 +1245,8 @@ type PhoneNumber struct {
 type PhoneNumberInput struct {
 	// The phone number in e164 format.
 	// **Required**
-	PhoneNumber string `json:"phoneNumber"`
+	PhoneNumber   string  `json:"phoneNumber"`
+	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
@@ -1190,8 +1273,9 @@ type PhoneNumberUpdateInput struct {
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary     *bool   `json:"primary,omitempty"`
-	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	Primary       *bool   `json:"primary,omitempty"`
+	PhoneNumber   *string `json:"phoneNumber,omitempty"`
+	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
 type Player struct {
@@ -1223,6 +1307,36 @@ type PlayerUser struct {
 	User    *User  `json:"user"`
 	Default bool   `json:"default"`
 	Tenant  string `json:"tenant"`
+}
+
+type RenewalForecast struct {
+	Amount          *float64   `json:"amount,omitempty"`
+	PotentialAmount *float64   `json:"potentialAmount,omitempty"`
+	Comment         *string    `json:"comment,omitempty"`
+	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
+	UpdatedByID     *string    `json:"updatedById,omitempty"`
+	UpdatedBy       *User      `json:"updatedBy,omitempty"`
+}
+
+type RenewalForecastInput struct {
+	ID      string   `json:"id"`
+	Amount  *float64 `json:"amount,omitempty"`
+	Comment *string  `json:"comment,omitempty"`
+}
+
+type RenewalLikelihood struct {
+	Probability         *RenewalLikelihoodProbability `json:"probability,omitempty"`
+	PreviousProbability *RenewalLikelihoodProbability `json:"previousProbability,omitempty"`
+	Comment             *string                       `json:"comment,omitempty"`
+	UpdatedAt           *time.Time                    `json:"updatedAt,omitempty"`
+	UpdatedByID         *string                       `json:"updatedById,omitempty"`
+	UpdatedBy           *User                         `json:"updatedBy,omitempty"`
+}
+
+type RenewalLikelihoodInput struct {
+	ID          string                        `json:"id"`
+	Probability *RenewalLikelihoodProbability `json:"probability,omitempty"`
+	Comment     *string                       `json:"comment,omitempty"`
 }
 
 // Describes the success or failure of the GraphQL call.
@@ -1277,6 +1391,13 @@ type State struct {
 	Code    string   `json:"code"`
 }
 
+type SuggestedMergeOrganization struct {
+	Organization *Organization `json:"organization"`
+	Confidence   *float64      `json:"confidence,omitempty"`
+	SuggestedAt  *time.Time    `json:"suggestedAt,omitempty"`
+	SuggestedBy  *string       `json:"suggestedBy,omitempty"`
+}
+
 type Tag struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
@@ -1321,21 +1442,24 @@ type User struct {
 	FirstName string `json:"firstName"`
 	// The last name of the customerOS user.
 	// **Required**
-	LastName string  `json:"lastName"`
-	Player   *Player `json:"player"`
-	Roles    []Role  `json:"roles"`
+	LastName        string  `json:"lastName"`
+	Internal        bool    `json:"internal"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
+	Player          *Player `json:"player"`
+	Roles           []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails       []*Email       `json:"emails,omitempty"`
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
 	// Timestamp of user creation.
 	// **Required**
-	CreatedAt     time.Time         `json:"createdAt"`
-	UpdatedAt     time.Time         `json:"updatedAt"`
-	Source        DataSource        `json:"source"`
-	SourceOfTruth DataSource        `json:"sourceOfTruth"`
-	AppSource     string            `json:"appSource"`
-	Conversations *ConversationPage `json:"conversations"`
+	CreatedAt     time.Time   `json:"createdAt"`
+	UpdatedAt     time.Time   `json:"updatedAt"`
+	JobRoles      []*JobRole  `json:"jobRoles"`
+	Calendars     []*Calendar `json:"calendars"`
+	Source        DataSource  `json:"source"`
+	SourceOfTruth DataSource  `json:"sourceOfTruth"`
+	AppSource     string      `json:"appSource"`
 }
 
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
@@ -1356,6 +1480,9 @@ type UserInput struct {
 	// The name of the app performing the create.
 	// **Optional**
 	AppSource *string `json:"appSource,omitempty"`
+	// The Job Roles of the user.
+	// **Optional**
+	JobRoles []*JobRoleInput `json:"jobRoles,omitempty"`
 }
 
 // Specifies how many pages of `User` information has been returned in the query response.
@@ -1420,6 +1547,86 @@ type WorkspaceInput struct {
 	AppSource *string `json:"appSource,omitempty"`
 }
 
+type ActionType string
+
+const (
+	ActionTypeCreated ActionType = "CREATED"
+)
+
+var AllActionType = []ActionType{
+	ActionTypeCreated,
+}
+
+func (e ActionType) IsValid() bool {
+	switch e {
+	case ActionTypeCreated:
+		return true
+	}
+	return false
+}
+
+func (e ActionType) String() string {
+	return string(e)
+}
+
+func (e *ActionType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ActionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ActionType", str)
+	}
+	return nil
+}
+
+func (e ActionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type CalendarType string
+
+const (
+	CalendarTypeCalcom CalendarType = "CALCOM"
+	CalendarTypeGoogle CalendarType = "GOOGLE"
+)
+
+var AllCalendarType = []CalendarType{
+	CalendarTypeCalcom,
+	CalendarTypeGoogle,
+}
+
+func (e CalendarType) IsValid() bool {
+	switch e {
+	case CalendarTypeCalcom, CalendarTypeGoogle:
+		return true
+	}
+	return false
+}
+
+func (e CalendarType) String() string {
+	return string(e)
+}
+
+func (e *CalendarType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CalendarType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CalendarType", str)
+	}
+	return nil
+}
+
+func (e CalendarType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type ComparisonOperator string
 
 const (
@@ -1460,47 +1667,6 @@ func (e *ComparisonOperator) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ComparisonOperator) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type ConversationStatus string
-
-const (
-	ConversationStatusActive ConversationStatus = "ACTIVE"
-	ConversationStatusClosed ConversationStatus = "CLOSED"
-)
-
-var AllConversationStatus = []ConversationStatus{
-	ConversationStatusActive,
-	ConversationStatusClosed,
-}
-
-func (e ConversationStatus) IsValid() bool {
-	switch e {
-	case ConversationStatusActive, ConversationStatusClosed:
-		return true
-	}
-	return false
-}
-
-func (e ConversationStatus) String() string {
-	return string(e)
-}
-
-func (e *ConversationStatus) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ConversationStatus(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ConversationStatus", str)
-	}
-	return nil
-}
-
-func (e ConversationStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -1599,6 +1765,9 @@ const (
 	DataSourceOpenline       DataSource = "OPENLINE"
 	DataSourceHubspot        DataSource = "HUBSPOT"
 	DataSourceZendeskSupport DataSource = "ZENDESK_SUPPORT"
+	DataSourcePipedrive      DataSource = "PIPEDRIVE"
+	DataSourceSLACk          DataSource = "SLACK"
+	DataSourceWebscrape      DataSource = "WEBSCRAPE"
 )
 
 var AllDataSource = []DataSource{
@@ -1606,11 +1775,14 @@ var AllDataSource = []DataSource{
 	DataSourceOpenline,
 	DataSourceHubspot,
 	DataSourceZendeskSupport,
+	DataSourcePipedrive,
+	DataSourceSLACk,
+	DataSourceWebscrape,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport:
+	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceWebscrape:
 		return true
 	}
 	return false
@@ -1771,16 +1943,22 @@ type ExternalSystemType string
 const (
 	ExternalSystemTypeHubspot        ExternalSystemType = "HUBSPOT"
 	ExternalSystemTypeZendeskSupport ExternalSystemType = "ZENDESK_SUPPORT"
+	ExternalSystemTypeCalcom         ExternalSystemType = "CALCOM"
+	ExternalSystemTypePipedrive      ExternalSystemType = "PIPEDRIVE"
+	ExternalSystemTypeSLACk          ExternalSystemType = "SLACK"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeHubspot,
 	ExternalSystemTypeZendeskSupport,
+	ExternalSystemTypeCalcom,
+	ExternalSystemTypePipedrive,
+	ExternalSystemTypeSLACk,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk:
 		return true
 	}
 	return false
@@ -1804,6 +1982,67 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FundingRound string
+
+const (
+	FundingRoundPreSeed          FundingRound = "PRE_SEED"
+	FundingRoundSeed             FundingRound = "SEED"
+	FundingRoundSeriesA          FundingRound = "SERIES_A"
+	FundingRoundSeriesB          FundingRound = "SERIES_B"
+	FundingRoundSeriesC          FundingRound = "SERIES_C"
+	FundingRoundSeriesD          FundingRound = "SERIES_D"
+	FundingRoundSeriesE          FundingRound = "SERIES_E"
+	FundingRoundSeriesF          FundingRound = "SERIES_F"
+	FundingRoundIPO              FundingRound = "IPO"
+	FundingRoundFriendsAndFamily FundingRound = "FRIENDS_AND_FAMILY"
+	FundingRoundAngel            FundingRound = "ANGEL"
+	FundingRoundBridge           FundingRound = "BRIDGE"
+)
+
+var AllFundingRound = []FundingRound{
+	FundingRoundPreSeed,
+	FundingRoundSeed,
+	FundingRoundSeriesA,
+	FundingRoundSeriesB,
+	FundingRoundSeriesC,
+	FundingRoundSeriesD,
+	FundingRoundSeriesE,
+	FundingRoundSeriesF,
+	FundingRoundIPO,
+	FundingRoundFriendsAndFamily,
+	FundingRoundAngel,
+	FundingRoundBridge,
+}
+
+func (e FundingRound) IsValid() bool {
+	switch e {
+	case FundingRoundPreSeed, FundingRoundSeed, FundingRoundSeriesA, FundingRoundSeriesB, FundingRoundSeriesC, FundingRoundSeriesD, FundingRoundSeriesE, FundingRoundSeriesF, FundingRoundIPO, FundingRoundFriendsAndFamily, FundingRoundAngel, FundingRoundBridge:
+		return true
+	}
+	return false
+}
+
+func (e FundingRound) String() string {
+	return string(e)
+}
+
+func (e *FundingRound) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FundingRound(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FundingRound", str)
+	}
+	return nil
+}
+
+func (e FundingRound) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -1853,22 +2092,24 @@ func (e GCliCacheItemType) MarshalGQL(w io.Writer) {
 type GCliSearchResultType string
 
 const (
-	GCliSearchResultTypeEmail        GCliSearchResultType = "EMAIL"
-	GCliSearchResultTypeContact      GCliSearchResultType = "CONTACT"
-	GCliSearchResultTypeOrganization GCliSearchResultType = "ORGANIZATION"
-	GCliSearchResultTypeState        GCliSearchResultType = "STATE"
+	GCliSearchResultTypeEmail                    GCliSearchResultType = "EMAIL"
+	GCliSearchResultTypeContact                  GCliSearchResultType = "CONTACT"
+	GCliSearchResultTypeOrganization             GCliSearchResultType = "ORGANIZATION"
+	GCliSearchResultTypeOrganizationRelationship GCliSearchResultType = "ORGANIZATION_RELATIONSHIP"
+	GCliSearchResultTypeState                    GCliSearchResultType = "STATE"
 )
 
 var AllGCliSearchResultType = []GCliSearchResultType{
 	GCliSearchResultTypeEmail,
 	GCliSearchResultTypeContact,
 	GCliSearchResultTypeOrganization,
+	GCliSearchResultTypeOrganizationRelationship,
 	GCliSearchResultTypeState,
 }
 
 func (e GCliSearchResultType) IsValid() bool {
 	switch e {
-	case GCliSearchResultTypeEmail, GCliSearchResultTypeContact, GCliSearchResultTypeOrganization, GCliSearchResultTypeState:
+	case GCliSearchResultTypeEmail, GCliSearchResultTypeContact, GCliSearchResultTypeOrganization, GCliSearchResultTypeOrganizationRelationship, GCliSearchResultTypeState:
 		return true
 	}
 	return false
@@ -1898,20 +2139,20 @@ func (e GCliSearchResultType) MarshalGQL(w io.Writer) {
 type Market string
 
 const (
-	MarketB2b   Market = "B2B"
-	MarketB2c   Market = "B2C"
-	MarketB2b2c Market = "B2B2C"
+	MarketB2b         Market = "B2B"
+	MarketB2c         Market = "B2C"
+	MarketMarketplace Market = "MARKETPLACE"
 )
 
 var AllMarket = []Market{
 	MarketB2b,
 	MarketB2c,
-	MarketB2b2c,
+	MarketMarketplace,
 }
 
 func (e Market) IsValid() bool {
 	switch e {
-	case MarketB2b, MarketB2c, MarketB2b2c:
+	case MarketB2b, MarketB2c, MarketMarketplace:
 		return true
 	}
 	return false
@@ -1935,6 +2176,49 @@ func (e *Market) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Market) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type MeetingStatus string
+
+const (
+	MeetingStatusUndefined MeetingStatus = "UNDEFINED"
+	MeetingStatusAccepted  MeetingStatus = "ACCEPTED"
+	MeetingStatusCanceled  MeetingStatus = "CANCELED"
+)
+
+var AllMeetingStatus = []MeetingStatus{
+	MeetingStatusUndefined,
+	MeetingStatusAccepted,
+	MeetingStatusCanceled,
+}
+
+func (e MeetingStatus) IsValid() bool {
+	switch e {
+	case MeetingStatusUndefined, MeetingStatusAccepted, MeetingStatusCanceled:
+		return true
+	}
+	return false
+}
+
+func (e MeetingStatus) String() string {
+	return string(e)
+}
+
+func (e *MeetingStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MeetingStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MeetingStatus", str)
+	}
+	return nil
+}
+
+func (e MeetingStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -2156,6 +2440,100 @@ func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type RenewalCycle string
+
+const (
+	RenewalCycleWeekly     RenewalCycle = "WEEKLY"
+	RenewalCycleBiweekly   RenewalCycle = "BIWEEKLY"
+	RenewalCycleMonthly    RenewalCycle = "MONTHLY"
+	RenewalCycleQuarterly  RenewalCycle = "QUARTERLY"
+	RenewalCycleBiannually RenewalCycle = "BIANNUALLY"
+	RenewalCycleAnnually   RenewalCycle = "ANNUALLY"
+)
+
+var AllRenewalCycle = []RenewalCycle{
+	RenewalCycleWeekly,
+	RenewalCycleBiweekly,
+	RenewalCycleMonthly,
+	RenewalCycleQuarterly,
+	RenewalCycleBiannually,
+	RenewalCycleAnnually,
+}
+
+func (e RenewalCycle) IsValid() bool {
+	switch e {
+	case RenewalCycleWeekly, RenewalCycleBiweekly, RenewalCycleMonthly, RenewalCycleQuarterly, RenewalCycleBiannually, RenewalCycleAnnually:
+		return true
+	}
+	return false
+}
+
+func (e RenewalCycle) String() string {
+	return string(e)
+}
+
+func (e *RenewalCycle) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = RenewalCycle(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid RenewalCycle", str)
+	}
+	return nil
+}
+
+func (e RenewalCycle) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type RenewalLikelihoodProbability string
+
+const (
+	RenewalLikelihoodProbabilityHigh   RenewalLikelihoodProbability = "HIGH"
+	RenewalLikelihoodProbabilityMedium RenewalLikelihoodProbability = "MEDIUM"
+	RenewalLikelihoodProbabilityLow    RenewalLikelihoodProbability = "LOW"
+	RenewalLikelihoodProbabilityZero   RenewalLikelihoodProbability = "ZERO"
+)
+
+var AllRenewalLikelihoodProbability = []RenewalLikelihoodProbability{
+	RenewalLikelihoodProbabilityHigh,
+	RenewalLikelihoodProbabilityMedium,
+	RenewalLikelihoodProbabilityLow,
+	RenewalLikelihoodProbabilityZero,
+}
+
+func (e RenewalLikelihoodProbability) IsValid() bool {
+	switch e {
+	case RenewalLikelihoodProbabilityHigh, RenewalLikelihoodProbabilityMedium, RenewalLikelihoodProbabilityLow, RenewalLikelihoodProbabilityZero:
+		return true
+	}
+	return false
+}
+
+func (e RenewalLikelihoodProbability) String() string {
+	return string(e)
+}
+
+func (e *RenewalLikelihoodProbability) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = RenewalLikelihoodProbability(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid RenewalLikelihoodProbability", str)
+	}
+	return nil
+}
+
+func (e RenewalLikelihoodProbability) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type Role string
 
 const (
@@ -2247,7 +2625,6 @@ type TimelineEventType string
 const (
 	TimelineEventTypePageView           TimelineEventType = "PAGE_VIEW"
 	TimelineEventTypeInteractionSession TimelineEventType = "INTERACTION_SESSION"
-	TimelineEventTypeConversation       TimelineEventType = "CONVERSATION"
 	TimelineEventTypeNote               TimelineEventType = "NOTE"
 	TimelineEventTypeInteractionEvent   TimelineEventType = "INTERACTION_EVENT"
 	TimelineEventTypeAnalysis           TimelineEventType = "ANALYSIS"
@@ -2258,7 +2635,6 @@ const (
 var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypePageView,
 	TimelineEventTypeInteractionSession,
-	TimelineEventTypeConversation,
 	TimelineEventTypeNote,
 	TimelineEventTypeInteractionEvent,
 	TimelineEventTypeAnalysis,
@@ -2268,7 +2644,7 @@ var AllTimelineEventType = []TimelineEventType{
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting:
 		return true
 	}
 	return false

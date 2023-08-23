@@ -1,7 +1,16 @@
-import { SendMailRequest } from '@spaces/molecules/conversation-timeline-item/types';
 import axios from 'axios';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { useOrganizationQuery } from '@organization/graphql/organization.generated';
+export type SendMailRequest = {
+  username: string;
+  content: string;
+  channel: string;
+  direction: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject?: string;
+  replyTo?: string;
+};
 
 export const handleSendEmail = (
   textEmailContent: string,

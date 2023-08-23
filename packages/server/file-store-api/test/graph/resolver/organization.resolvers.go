@@ -23,9 +23,29 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	panic(fmt.Errorf("not implemented: OrganizationUpdate - organization_Update"))
 }
 
-// OrganizationDelete is the resolver for the organization_Delete field.
-func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: OrganizationDelete - organization_Delete"))
+// OrganizationUpdateRenewalLikelihood is the resolver for the organization_UpdateRenewalLikelihood field.
+func (r *mutationResolver) OrganizationUpdateRenewalLikelihood(ctx context.Context, input model.RenewalLikelihoodInput) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalLikelihood - organization_UpdateRenewalLikelihood"))
+}
+
+// OrganizationUpdateRenewalForecast is the resolver for the organization_UpdateRenewalForecast field.
+func (r *mutationResolver) OrganizationUpdateRenewalForecast(ctx context.Context, input model.RenewalForecastInput) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalForecast - organization_UpdateRenewalForecast"))
+}
+
+// OrganizationUpdateBillingDetails is the resolver for the organization_UpdateBillingDetails field.
+func (r *mutationResolver) OrganizationUpdateBillingDetails(ctx context.Context, input model.BillingDetailsInput) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateBillingDetails - organization_UpdateBillingDetails"))
+}
+
+// OrganizationArchive is the resolver for the organization_Archive field.
+func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: OrganizationArchive - organization_Archive"))
+}
+
+// OrganizationArchiveAll is the resolver for the organization_ArchiveAll field.
+func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: OrganizationArchiveAll - organization_ArchiveAll"))
 }
 
 // OrganizationMerge is the resolver for the organization_Merge field.
@@ -83,6 +103,16 @@ func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Conte
 	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationshipStage - organization_RemoveRelationshipStage"))
 }
 
+// OrganizationSetHealthIndicator is the resolver for the organization_SetHealthIndicator field.
+func (r *mutationResolver) OrganizationSetHealthIndicator(ctx context.Context, organizationID string, healthIndicatorID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationSetHealthIndicator - organization_SetHealthIndicator"))
+}
+
+// OrganizationRemoveHealthIndicator is the resolver for the organization_RemoveHealthIndicator field.
+func (r *mutationResolver) OrganizationRemoveHealthIndicator(ctx context.Context, organizationID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveHealthIndicator - organization_RemoveHealthIndicator"))
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))
@@ -138,6 +168,11 @@ func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Orga
 	panic(fmt.Errorf("not implemented: SubsidiaryOf - subsidiaryOf"))
 }
 
+// SuggestedMergeTo is the resolver for the suggestedMergeTo field.
+func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.Organization) ([]*model.SuggestedMergeOrganization, error) {
+	panic(fmt.Errorf("not implemented: SuggestedMergeTo - suggestedMergeTo"))
+}
+
 // CustomFields is the resolver for the customFields field.
 func (r *organizationResolver) CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error) {
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
@@ -188,6 +223,11 @@ func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, 
 	panic(fmt.Errorf("not implemented: LastTouchPointTimelineEvent - lastTouchPointTimelineEvent"))
 }
 
+// HealthIndicator is the resolver for the healthIndicator field.
+func (r *organizationResolver) HealthIndicator(ctx context.Context, obj *model.Organization) (*model.HealthIndicator, error) {
+	panic(fmt.Errorf("not implemented: HealthIndicator - healthIndicator"))
+}
+
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
 func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error) {
 	panic(fmt.Errorf("not implemented: IssueSummaryByStatus - issueSummaryByStatus"))
@@ -208,7 +248,39 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 	panic(fmt.Errorf("not implemented: OrganizationDistinctOwners - organization_DistinctOwners"))
 }
 
+// UpdatedBy is the resolver for the updatedBy field.
+func (r *renewalForecastResolver) UpdatedBy(ctx context.Context, obj *model.RenewalForecast) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UpdatedBy - updatedBy"))
+}
+
+// UpdatedBy is the resolver for the updatedBy field.
+func (r *renewalLikelihoodResolver) UpdatedBy(ctx context.Context, obj *model.RenewalLikelihood) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UpdatedBy - updatedBy"))
+}
+
 // Organization returns generated.OrganizationResolver implementation.
 func (r *Resolver) Organization() generated.OrganizationResolver { return &organizationResolver{r} }
 
+// RenewalForecast returns generated.RenewalForecastResolver implementation.
+func (r *Resolver) RenewalForecast() generated.RenewalForecastResolver {
+	return &renewalForecastResolver{r}
+}
+
+// RenewalLikelihood returns generated.RenewalLikelihoodResolver implementation.
+func (r *Resolver) RenewalLikelihood() generated.RenewalLikelihoodResolver {
+	return &renewalLikelihoodResolver{r}
+}
+
 type organizationResolver struct{ *Resolver }
+type renewalForecastResolver struct{ *Resolver }
+type renewalLikelihoodResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: OrganizationDelete - organization_Delete"))
+}

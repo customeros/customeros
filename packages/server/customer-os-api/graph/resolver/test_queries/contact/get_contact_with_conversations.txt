@@ -1,20 +1,5 @@
 query GetContactById($contactId: ID!){
   contact(id: $contactId) {
     id
-    conversations(sort:[{by:"STARTED_AT"}]) {
-        totalPages
-        totalElements
-        content {
-            id
-            startedAt
-            subject
-            contacts {
-                id
-            }
-            users {
-                id
-            }
-        }
-    }
   }
 }
