@@ -1082,33 +1082,33 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, float64(2), timelineEvent2["orderInSession"].(float64))
 	require.Equal(t, float64(20), timelineEvent2["engagedTime"].(float64))
 
+	timelineEvent3 := timelineEvents[2].(map[string]interface{})
+	require.Equal(t, "Note", timelineEvent3["__typename"].(string))
+	require.Equal(t, contactNoteId, timelineEvent3["id"].(string))
+	require.NotNil(t, timelineEvent3["createdAt"].(string))
+	require.Equal(t, "contact note 1", timelineEvent3["html"].(string))
+
 	timelineEvent4 := timelineEvents[3].(map[string]interface{})
-	require.Equal(t, "Note", timelineEvent4["__typename"].(string))
-	require.Equal(t, contactNoteId, timelineEvent4["id"].(string))
+	require.Equal(t, "InteractionEvent", timelineEvent4["__typename"].(string))
+	require.Equal(t, interactionEventId1, timelineEvent4["id"].(string))
 	require.NotNil(t, timelineEvent4["createdAt"].(string))
-	require.Equal(t, "contact note 1", timelineEvent4["html"].(string))
+	require.Equal(t, "IE text 1", timelineEvent4["content"].(string))
+	require.Equal(t, "application/json", timelineEvent4["contentType"].(string))
+	require.Equal(t, "EMAIL", timelineEvent4["channel"].(string))
 
 	timelineEvent5 := timelineEvents[4].(map[string]interface{})
 	require.Equal(t, "InteractionEvent", timelineEvent5["__typename"].(string))
-	require.Equal(t, interactionEventId1, timelineEvent5["id"].(string))
+	require.Equal(t, interactionEventId2, timelineEvent5["id"].(string))
 	require.NotNil(t, timelineEvent5["createdAt"].(string))
-	require.Equal(t, "IE text 1", timelineEvent5["content"].(string))
+	require.Equal(t, "IE text 2", timelineEvent5["content"].(string))
 	require.Equal(t, "application/json", timelineEvent5["contentType"].(string))
 	require.Equal(t, "EMAIL", timelineEvent5["channel"].(string))
 
 	timelineEvent6 := timelineEvents[5].(map[string]interface{})
-	require.Equal(t, "InteractionEvent", timelineEvent6["__typename"].(string))
-	require.Equal(t, interactionEventId2, timelineEvent6["id"].(string))
+	require.Equal(t, "Meeting", timelineEvent6["__typename"].(string))
+	require.Equal(t, meetingId, timelineEvent6["id"].(string))
 	require.NotNil(t, timelineEvent6["createdAt"].(string))
-	require.Equal(t, "IE text 2", timelineEvent6["content"].(string))
-	require.Equal(t, "application/json", timelineEvent6["contentType"].(string))
-	require.Equal(t, "EMAIL", timelineEvent6["channel"].(string))
-
-	timelineEvent7 := timelineEvents[6].(map[string]interface{})
-	require.Equal(t, "Meeting", timelineEvent7["__typename"].(string))
-	require.Equal(t, meetingId, timelineEvent7["id"].(string))
-	require.NotNil(t, timelineEvent7["createdAt"].(string))
-	require.Equal(t, "meeting-name", timelineEvent7["name"].(string))
+	require.Equal(t, "meeting-name", timelineEvent6["name"].(string))
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {
@@ -1204,7 +1204,7 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
-	require.Equal(t, float64(10), contact.(map[string]interface{})["timelineEventsTotalCount"].(float64))
+	require.Equal(t, float64(9), contact.(map[string]interface{})["timelineEventsTotalCount"].(float64))
 }
 
 func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
