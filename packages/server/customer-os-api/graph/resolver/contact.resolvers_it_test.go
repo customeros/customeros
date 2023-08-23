@@ -1041,7 +1041,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
-	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 8, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
 		client.Var("contactId", contactId),
@@ -1194,7 +1194,6 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PageView"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
