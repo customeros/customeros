@@ -2326,13 +2326,14 @@ export const IntegrationsPanel = () => {
         position='relative'
         background='gray.25'
         minWidth={609}
+        maxHeight='calc(100vh - 1rem)'
       >
         <CardHeader px={6} pb={2}>
           <Heading as='h1' fontSize='lg' color='gray.700'>
             <b>Data Integrations</b>
           </Heading>
         </CardHeader>
-        <CardBody>
+        <CardBody overflow='auto'>
           <div>
             <DebouncedInput
               className={'wfull'}
