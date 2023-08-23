@@ -57,10 +57,6 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEnt
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	err = s.repositories.HealthIndicatorRepository.CreateDefaultHealthIndicatorsForNewTenant(ctx, tenantEntity.Name)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
 	return s.mapDbNodeToTenantEntity(tenant), nil
 }
 

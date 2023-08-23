@@ -44,8 +44,6 @@ type OrganizationRepository interface {
 	RemoveRelationship(ctx context.Context, tenant, organizationId, relationship string) (*dbtype.Node, error)
 	SetRelationshipWithStage(ctx context.Context, tenant, organizationId, relationship, stage string) (*dbtype.Node, error)
 	RemoveRelationshipStage(ctx context.Context, tenant, organizationId, relationship string) (*dbtype.Node, error)
-	ReplaceHealthIndicator(ctx context.Context, organizationId, healthIndicatorId string) (*dbtype.Node, error)
-	RemoveHealthIndicator(ctx context.Context, organizationId string) (*dbtype.Node, error)
 
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
@@ -572,19 +570,6 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WHERE existing IS NULL "+
 		" MATCH (merged)<-[rel:OWNS]-(u:User) "+
 		" MERGE (primary)<-[newRel:OWNS]-(u) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
-		return err
-	}
-
-	if _, err := tx.Run(ctx, matchQuery+
-		" WITH primary, merged "+
-		" OPTIONAL MATCH (primary)-[:HAS_INDICATOR]->(existing:HealthIndicator) "+
-		" WITH primary, merged, existing "+
-		" WHERE existing IS NULL "+
-		" MATCH (merged)-[rel:HAS_INDICATOR]->(h:HealthIndicator) "+
-		" MERGE (primary)-[newRel:HAS_INDICATOR]->(h) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
@@ -1154,70 +1139,6 @@ func (r *organizationRepository) UpdateLastTouchpointInTx(ctx context.Context, t
 		})
 
 	return err
-}
-
-func (r *organizationRepository) ReplaceHealthIndicator(ctx context.Context, organizationId, healthIndicatorId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceHealthIndicator")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			OPTIONAL MATCH (org)-[rel:HAS_INDICATOR]->(:HealthIndicator)
-			DELETE rel
-			WITH org, t
-			MATCH (t)<-[:HEALTH_INDICATOR_BELONGS_TO_TENANT]-(h:HealthIndicator {id:$healthIndicatorId})
-			MERGE (org)-[:HAS_INDICATOR]->(h)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source			
-			RETURN org`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":            common.GetTenantFromContext(ctx),
-				"organizationId":    organizationId,
-				"healthIndicatorId": healthIndicatorId,
-				"source":            entity.DataSourceOpenline,
-				"now":               utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
-func (r *organizationRepository) RemoveHealthIndicator(ctx context.Context, organizationID string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveHealthIndicator")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			OPTIONAL MATCH (:HealthIndicator)<-[r:HAS_INDICATOR]->(org)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source
-			DELETE r
-			RETURN org`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         common.GetTenantFromContext(ctx),
-				"organizationId": organizationID,
-				"source":         entity.DataSourceOpenline,
-				"now":            utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
 }
 
 func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error) {

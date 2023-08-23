@@ -343,12 +343,6 @@ type ComplexityRoot struct {
 		User      func(childComplexity int) int
 	}
 
-	HealthIndicator struct {
-		ID    func(childComplexity int) int
-		Name  func(childComplexity int) int
-		Order func(childComplexity int) int
-	}
-
 	InteractionEvent struct {
 		ActionItems        func(childComplexity int) int
 		AppSource          func(childComplexity int) int
@@ -581,11 +575,9 @@ type ComplexityRoot struct {
 		OrganizationArchiveAll                  func(childComplexity int, ids []string) int
 		OrganizationCreate                      func(childComplexity int, input model.OrganizationInput) int
 		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationRemoveHealthIndicator       func(childComplexity int, organizationID string) int
 		OrganizationRemoveRelationship          func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
 		OrganizationRemoveRelationshipStage     func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
 		OrganizationRemoveSubsidiary            func(childComplexity int, organizationID string, subsidiaryID string) int
-		OrganizationSetHealthIndicator          func(childComplexity int, organizationID string, healthIndicatorID string) int
 		OrganizationSetOwner                    func(childComplexity int, organizationID string, userID string) int
 		OrganizationSetRelationshipStage        func(childComplexity int, organizationID string, relationship model.OrganizationRelationship, stage string) int
 		OrganizationUnsetOwner                  func(childComplexity int, organizationID string) int
@@ -667,7 +659,6 @@ type ComplexityRoot struct {
 		EntityTemplate                func(childComplexity int) int
 		ExternalLinks                 func(childComplexity int) int
 		FieldSets                     func(childComplexity int) int
-		HealthIndicator               func(childComplexity int) int
 		ID                            func(childComplexity int) int
 		Industry                      func(childComplexity int) int
 		IndustryGroup                 func(childComplexity int) int
@@ -789,7 +780,6 @@ type ComplexityRoot struct {
 		ExternalMeetings                      func(childComplexity int, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
 		GlobalCache                           func(childComplexity int) int
-		HealthIndicators                      func(childComplexity int) int
 		InteractionEvent                      func(childComplexity int, id string) int
 		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
 		InteractionSession                    func(childComplexity int, id string) int
@@ -1080,8 +1070,6 @@ type MutationResolver interface {
 	OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
 	OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage string) (*model.Organization, error)
 	OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
-	OrganizationSetHealthIndicator(ctx context.Context, organizationID string, healthIndicatorID string) (*model.Organization, error)
-	OrganizationRemoveHealthIndicator(ctx context.Context, organizationID string) (*model.Organization, error)
 	PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
 	PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error)
@@ -1147,7 +1135,6 @@ type OrganizationResolver interface {
 	ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error)
 
 	LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error)
-	HealthIndicator(ctx context.Context, obj *model.Organization) (*model.HealthIndicator, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
@@ -1172,7 +1159,6 @@ type QueryResolver interface {
 	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
-	HealthIndicators(ctx context.Context) ([]*model.HealthIndicator, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
@@ -2594,27 +2580,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalCache.User(childComplexity), true
-
-	case "HealthIndicator.id":
-		if e.complexity.HealthIndicator.ID == nil {
-			break
-		}
-
-		return e.complexity.HealthIndicator.ID(childComplexity), true
-
-	case "HealthIndicator.name":
-		if e.complexity.HealthIndicator.Name == nil {
-			break
-		}
-
-		return e.complexity.HealthIndicator.Name(childComplexity), true
-
-	case "HealthIndicator.order":
-		if e.complexity.HealthIndicator.Order == nil {
-			break
-		}
-
-		return e.complexity.HealthIndicator.Order(childComplexity), true
 
 	case "InteractionEvent.actionItems":
 		if e.complexity.InteractionEvent.ActionItems == nil {
@@ -4413,18 +4378,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationMerge(childComplexity, args["primaryOrganizationId"].(string), args["mergedOrganizationIds"].([]string)), true
 
-	case "Mutation.organization_RemoveHealthIndicator":
-		if e.complexity.Mutation.OrganizationRemoveHealthIndicator == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_RemoveHealthIndicator_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationRemoveHealthIndicator(childComplexity, args["organizationId"].(string)), true
-
 	case "Mutation.organization_RemoveRelationship":
 		if e.complexity.Mutation.OrganizationRemoveRelationship == nil {
 			break
@@ -4460,18 +4413,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OrganizationRemoveSubsidiary(childComplexity, args["organizationId"].(string), args["subsidiaryId"].(string)), true
-
-	case "Mutation.organization_SetHealthIndicator":
-		if e.complexity.Mutation.OrganizationSetHealthIndicator == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_SetHealthIndicator_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationSetHealthIndicator(childComplexity, args["organizationId"].(string), args["healthIndicatorId"].(string)), true
 
 	case "Mutation.organization_SetOwner":
 		if e.complexity.Mutation.OrganizationSetOwner == nil {
@@ -5155,13 +5096,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.FieldSets(childComplexity), true
-
-	case "Organization.healthIndicator":
-		if e.complexity.Organization.HealthIndicator == nil {
-			break
-		}
-
-		return e.complexity.Organization.HealthIndicator(childComplexity), true
 
 	case "Organization.id":
 		if e.complexity.Organization.ID == nil {
@@ -5895,13 +5829,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GlobalCache(childComplexity), true
-
-	case "Query.healthIndicators":
-		if e.complexity.Query.HealthIndicators == nil {
-			break
-		}
-
-		return e.complexity.Query.HealthIndicators(childComplexity), true
 
 	case "Query.interactionEvent":
 		if e.complexity.Query.InteractionEvent == nil {
@@ -7750,15 +7677,6 @@ enum ComparisonOperator {
     CONTAINS
     STARTS_WITH
 }`, BuiltIn: false},
-	{Name: "../schemas/health_indicator.graphqls", Input: `extend type Query {
-    healthIndicators: [HealthIndicator!]! @hasRole(roles: [USER, ADMIN]) @hasTenant
-}
-
-type HealthIndicator {
-    id: ID!
-    name: String!
-    order: Int64!
-}`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
 union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
@@ -8275,8 +8193,6 @@ extend type Mutation {
     organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_SetHealthIndicator(organizationId: ID!, healthIndicatorId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_RemoveHealthIndicator(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
@@ -8331,7 +8247,6 @@ type Organization implements Node {
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true)
 
-    healthIndicator: HealthIndicator @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 
     accountDetails: OrgAccountDetails
@@ -10847,21 +10762,6 @@ func (ec *executionContext) field_Mutation_organization_Merge_args(ctx context.C
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_organization_RemoveHealthIndicator_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["organizationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["organizationId"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_organization_RemoveRelationshipStage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -10931,30 +10831,6 @@ func (ec *executionContext) field_Mutation_organization_RemoveSubsidiary_args(ct
 		}
 	}
 	args["subsidiaryId"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_SetHealthIndicator_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["organizationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["organizationId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["healthIndicatorId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("healthIndicatorId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["healthIndicatorId"] = arg1
 	return args, nil
 }
 
@@ -19580,8 +19456,6 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -21817,138 +21691,6 @@ func (ec *executionContext) fieldContext_GlobalCache_gCliCache(ctx context.Conte
 				return ec.fieldContext_GCliItem_data(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _HealthIndicator_id(ctx context.Context, field graphql.CollectedField, obj *model.HealthIndicator) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_HealthIndicator_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_HealthIndicator_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "HealthIndicator",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _HealthIndicator_name(ctx context.Context, field graphql.CollectedField, obj *model.HealthIndicator) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_HealthIndicator_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_HealthIndicator_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "HealthIndicator",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _HealthIndicator_order(ctx context.Context, field graphql.CollectedField, obj *model.HealthIndicator) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_HealthIndicator_order(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Order, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int64)
-	fc.Result = res
-	return ec.marshalNInt642int64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_HealthIndicator_order(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "HealthIndicator",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -24905,8 +24647,6 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -25646,8 +25386,6 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -32929,8 +32667,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -34590,8 +34326,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -34771,8 +34505,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -34952,8 +34684,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateRenewalLike
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -35133,8 +34863,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateRenewalFore
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -35314,8 +35042,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateBillingDeta
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -35667,8 +35393,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -35848,8 +35572,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -36029,8 +35751,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -36452,8 +36172,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -36633,8 +36351,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -36814,8 +36530,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -36995,8 +36709,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -37176,8 +36888,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -37357,8 +37067,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -37375,368 +37083,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_RemoveRelationshipStage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_SetHealthIndicator(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_SetHealthIndicator(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationSetHealthIndicator(rctx, fc.Args["organizationId"].(string), fc.Args["healthIndicatorId"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Organization); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Organization)
-	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_SetHealthIndicator(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Organization_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Organization_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_Organization_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
-			case "domains":
-				return ec.fieldContext_Organization_domains(ctx, field)
-			case "website":
-				return ec.fieldContext_Organization_website(ctx, field)
-			case "industry":
-				return ec.fieldContext_Organization_industry(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
-			case "industryGroup":
-				return ec.fieldContext_Organization_industryGroup(ctx, field)
-			case "targetAudience":
-				return ec.fieldContext_Organization_targetAudience(ctx, field)
-			case "valueProposition":
-				return ec.fieldContext_Organization_valueProposition(ctx, field)
-			case "isPublic":
-				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "market":
-				return ec.fieldContext_Organization_market(ctx, field)
-			case "employees":
-				return ec.fieldContext_Organization_employees(ctx, field)
-			case "lastFundingRound":
-				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
-			case "lastFundingAmount":
-				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
-			case "source":
-				return ec.fieldContext_Organization_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "locations":
-				return ec.fieldContext_Organization_locations(ctx, field)
-			case "socials":
-				return ec.fieldContext_Organization_socials(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Organization_contacts(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_Organization_jobRoles(ctx, field)
-			case "notes":
-				return ec.fieldContext_Organization_notes(ctx, field)
-			case "tags":
-				return ec.fieldContext_Organization_tags(ctx, field)
-			case "emails":
-				return ec.fieldContext_Organization_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
-			case "subsidiaries":
-				return ec.fieldContext_Organization_subsidiaries(ctx, field)
-			case "subsidiaryOf":
-				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
-			case "suggestedMergeTo":
-				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "customFields":
-				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
-			case "timelineEvents":
-				return ec.fieldContext_Organization_timelineEvents(ctx, field)
-			case "timelineEventsTotalCount":
-				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "owner":
-				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Organization_externalLinks(ctx, field)
-			case "lastTouchPointAt":
-				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
-			case "lastTouchPointTimelineEventId":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
-			case "lastTouchPointTimelineEvent":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
-			case "issueSummaryByStatus":
-				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
-			case "accountDetails":
-				return ec.fieldContext_Organization_accountDetails(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_SetHealthIndicator_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_RemoveHealthIndicator(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_RemoveHealthIndicator(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationRemoveHealthIndicator(rctx, fc.Args["organizationId"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Organization); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Organization)
-	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_RemoveHealthIndicator(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Organization_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Organization_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_Organization_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
-			case "domains":
-				return ec.fieldContext_Organization_domains(ctx, field)
-			case "website":
-				return ec.fieldContext_Organization_website(ctx, field)
-			case "industry":
-				return ec.fieldContext_Organization_industry(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
-			case "industryGroup":
-				return ec.fieldContext_Organization_industryGroup(ctx, field)
-			case "targetAudience":
-				return ec.fieldContext_Organization_targetAudience(ctx, field)
-			case "valueProposition":
-				return ec.fieldContext_Organization_valueProposition(ctx, field)
-			case "isPublic":
-				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "market":
-				return ec.fieldContext_Organization_market(ctx, field)
-			case "employees":
-				return ec.fieldContext_Organization_employees(ctx, field)
-			case "lastFundingRound":
-				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
-			case "lastFundingAmount":
-				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
-			case "source":
-				return ec.fieldContext_Organization_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "locations":
-				return ec.fieldContext_Organization_locations(ctx, field)
-			case "socials":
-				return ec.fieldContext_Organization_socials(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Organization_contacts(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_Organization_jobRoles(ctx, field)
-			case "notes":
-				return ec.fieldContext_Organization_notes(ctx, field)
-			case "tags":
-				return ec.fieldContext_Organization_tags(ctx, field)
-			case "emails":
-				return ec.fieldContext_Organization_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
-			case "subsidiaries":
-				return ec.fieldContext_Organization_subsidiaries(ctx, field)
-			case "subsidiaryOf":
-				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
-			case "suggestedMergeTo":
-				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "customFields":
-				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
-			case "timelineEvents":
-				return ec.fieldContext_Organization_timelineEvents(ctx, field)
-			case "timelineEventsTotalCount":
-				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "owner":
-				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Organization_externalLinks(ctx, field)
-			case "lastTouchPointAt":
-				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
-			case "lastTouchPointTimelineEventId":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
-			case "lastTouchPointTimelineEvent":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
-			case "issueSummaryByStatus":
-				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
-			case "accountDetails":
-				return ec.fieldContext_Organization_accountDetails(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_RemoveHealthIndicator_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -44085,55 +43431,6 @@ func (ec *executionContext) fieldContext_Organization_lastTouchPointTimelineEven
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_healthIndicator(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_healthIndicator(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().HealthIndicator(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.HealthIndicator)
-	fc.Result = res
-	return ec.marshalOHealthIndicator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicator(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_healthIndicator(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_HealthIndicator_id(ctx, field)
-			case "name":
-				return ec.fieldContext_HealthIndicator_name(ctx, field)
-			case "order":
-				return ec.fieldContext_HealthIndicator_order(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type HealthIndicator", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 	if err != nil {
@@ -44360,8 +43657,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -44588,8 +43883,6 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -46048,8 +45341,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -47716,88 +47007,6 @@ func (ec *executionContext) fieldContext_Query_email(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_healthIndicators(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_healthIndicators(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().HealthIndicators(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"USER", "ADMIN"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*model.HealthIndicator); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.HealthIndicator`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.HealthIndicator)
-	fc.Result = res
-	return ec.marshalNHealthIndicator2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicatorᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_healthIndicators(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_HealthIndicator_id(ctx, field)
-			case "name":
-				return ec.fieldContext_HealthIndicator_name(ctx, field)
-			case "order":
-				return ec.fieldContext_HealthIndicator_order(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type HealthIndicator", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_interactionSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_interactionSession(ctx, field)
 	if err != nil {
@@ -48704,8 +47913,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -51104,8 +50311,6 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "healthIndicator":
-				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "accountDetails":
@@ -61765,55 +60970,6 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
-var healthIndicatorImplementors = []string{"HealthIndicator"}
-
-func (ec *executionContext) _HealthIndicator(ctx context.Context, sel ast.SelectionSet, obj *model.HealthIndicator) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, healthIndicatorImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("HealthIndicator")
-		case "id":
-			out.Values[i] = ec._HealthIndicator_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "name":
-			out.Values[i] = ec._HealthIndicator_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "order":
-			out.Values[i] = ec._HealthIndicator_order(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
 var interactionEventImplementors = []string{"InteractionEvent", "DescriptionNode", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.SelectionSet, obj *model.InteractionEvent) graphql.Marshaler {
@@ -64048,20 +63204,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "organization_SetHealthIndicator":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_SetHealthIndicator(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_RemoveHealthIndicator":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_RemoveHealthIndicator(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "phoneNumberMergeToContact":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_phoneNumberMergeToContact(ctx, field)
@@ -65465,39 +64607,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "healthIndicator":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Organization_healthIndicator(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "issueSummaryByStatus":
 			field := field
 
@@ -66436,28 +65545,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_email(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "healthIndicators":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_healthIndicators(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -69385,60 +68472,6 @@ func (ec *executionContext) marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._GlobalCache(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNHealthIndicator2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicatorᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.HealthIndicator) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNHealthIndicator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicator(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNHealthIndicator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicator(ctx context.Context, sel ast.SelectionSet, v *model.HealthIndicator) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._HealthIndicator(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -71970,13 +71003,6 @@ func (ec *executionContext) marshalOGCliAttributeKeyValuePair2ᚕᚖgithubᚗcom
 	}
 
 	return ret
-}
-
-func (ec *executionContext) marshalOHealthIndicator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicator(ctx context.Context, sel ast.SelectionSet, v *model.HealthIndicator) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._HealthIndicator(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {

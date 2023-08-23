@@ -1448,31 +1448,6 @@ func LinkOrganizationWithRelationshipAndStage(ctx context.Context, driver *neo4j
 	})
 }
 
-func CreateHealthIndicator(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string, order int64) string {
-	var id, _ = uuid.NewRandom()
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:HEALTH_INDICATOR_BELONGS_TO_TENANT]-(h:HealthIndicator {id:$id})
-			ON CREATE SET h:HealthIndicator_%s, h.name=$name, h.order=$order, h.createdAt=$now, h.updatedAt=$now`, tenant)
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":     id.String(),
-		"tenant": tenant,
-		"name":   name,
-		"order":  order,
-		"now":    utils.Now(),
-	})
-	return id.String()
-}
-
-func SetHealthIndicatorForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, healthIndicatorId string) {
-	query := `MATCH (o:Organization {id:$organizationId}),
-			        (h:HealthIndicator {id:$healthIndicatorId})
-			MERGE (o)-[:HAS_INDICATOR]->(h)`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"organizationId":    organizationId,
-		"healthIndicatorId": healthIndicatorId,
-	})
-}
-
 func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType entity.ActionType, createdAt time.Time) string {
 	var actionId, _ = uuid.NewRandom()
 

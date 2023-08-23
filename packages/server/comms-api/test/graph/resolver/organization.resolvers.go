@@ -103,16 +103,6 @@ func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Conte
 	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationshipStage - organization_RemoveRelationshipStage"))
 }
 
-// OrganizationSetHealthIndicator is the resolver for the organization_SetHealthIndicator field.
-func (r *mutationResolver) OrganizationSetHealthIndicator(ctx context.Context, organizationID string, healthIndicatorID string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationSetHealthIndicator - organization_SetHealthIndicator"))
-}
-
-// OrganizationRemoveHealthIndicator is the resolver for the organization_RemoveHealthIndicator field.
-func (r *mutationResolver) OrganizationRemoveHealthIndicator(ctx context.Context, organizationID string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationRemoveHealthIndicator - organization_RemoveHealthIndicator"))
-}
-
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))
@@ -221,11 +211,6 @@ func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Org
 // LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
 func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error) {
 	panic(fmt.Errorf("not implemented: LastTouchPointTimelineEvent - lastTouchPointTimelineEvent"))
-}
-
-// HealthIndicator is the resolver for the healthIndicator field.
-func (r *organizationResolver) HealthIndicator(ctx context.Context, obj *model.Organization) (*model.HealthIndicator, error) {
-	panic(fmt.Errorf("not implemented: HealthIndicator - healthIndicator"))
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
