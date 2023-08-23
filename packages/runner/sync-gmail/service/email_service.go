@@ -242,13 +242,13 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			sessionIdentifier = rawEmailData.MessageId
 		}
 
-		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, sessionIdentifier, now, emailForCustomerOS)
+		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, sessionIdentifier, now, emailForCustomerOS, Source, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction session for raw email id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
 		}
 
-		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS)
+		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS, Source, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction event for raw email id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
@@ -259,6 +259,8 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			logrus.Errorf("failed to associate interaction event to session for raw email id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
 		}
+
+		emailidList := []string{}
 
 		//from
 		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
@@ -277,6 +279,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			logrus.Errorf("unable to link email to interaction event: %v", err)
 			return entity.ERROR, nil, err
 		}
+		emailidList = append(emailidList, fromEmailId)
 
 		//to
 		for _, toEmail := range to {
@@ -295,6 +298,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 				logrus.Errorf("unable to link email to interaction event: %v", err)
 				return entity.ERROR, nil, err
 			}
+			emailidList = append(emailidList, toEmailId)
 		}
 
 		//cc
@@ -314,6 +318,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 				logrus.Errorf("unable to link email to interaction event: %v", err)
 				return entity.ERROR, nil, err
 			}
+			emailidList = append(emailidList, ccEmailId)
 		}
 
 		//bcc
@@ -333,6 +338,30 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			if err != nil {
 				logrus.Errorf("unable to link email to interaction event: %v", err)
 				return entity.ERROR, nil, err
+			}
+
+			emailidList = append(emailidList, bccEmailId)
+		}
+
+		organizationIdList, err := s.repositories.OrganizationRepository.GetOrganizationsLinkedToEmailsInTx(ctx, tx, tenant, emailidList)
+		if err != nil {
+			logrus.Errorf("unable to retrieve organization id list for tenant: %v", err)
+			return entity.ERROR, nil, err
+		}
+
+		for _, organizationId := range organizationIdList {
+			lastTouchpointAt, lastTouchpointId, err := s.repositories.TimelineEventRepository.CalculateAndGetLastTouchpointInTx(ctx, tx, tenant, organizationId)
+			if err != nil {
+				logrus.Errorf("unable to calculate last touchpoint for organization: %v", err)
+				return entity.ERROR, nil, err
+			}
+
+			if lastTouchpointAt != nil && lastTouchpointId != "" {
+				err := s.repositories.OrganizationRepository.UpdateLastTouchpointInTx(ctx, tx, tenant, organizationId, *lastTouchpointAt, lastTouchpointId)
+				if err != nil {
+					logrus.Errorf("unable to update last touchpoint for organization: %v", err)
+					return entity.ERROR, nil, err
+				}
 			}
 		}
 

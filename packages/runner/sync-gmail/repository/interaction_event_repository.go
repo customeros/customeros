@@ -13,8 +13,8 @@ import (
 type InteractionEventRepository interface {
 	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalId string) (string, error)
 
-	MergeInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message entity.EmailMessageData) (string, error)
-	MergeEmailInteractionEvent(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error)
+	MergeInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message entity.EmailMessageData, source, appSource string) (string, error)
+	MergeEmailInteractionEvent(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, syncDate time.Time, message entity.EmailMessageData, source, appSource string) (string, error)
 	LinkInteractionEventToSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error
 
 	InteractionEventSentByEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, emailId string) error
@@ -61,9 +61,9 @@ func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx conte
 	return dbRecord.(*db.Record).Values[0].(string), nil
 }
 
-func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
+func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message entity.EmailMessageData, source, appSource string) (string, error) {
 	query := "MATCH (:Tenant {name:$tenant}) " +
-		" MERGE (is:InteractionSession_%s {identifier:$identifier, source:$source, channel:$channel}) " +
+		" MERGE (is:InteractionSession_%s {identifier:$identifier, channel:$channel}) " +
 		" ON CREATE SET " +
 		"  is:InteractionSession, " +
 		"  is.id=randomUUID(), " +
@@ -80,9 +80,9 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
-			"source":        "gmail",
+			"source":        source,
 			"sourceOfTruth": "openline",
-			"appSource":     "sync-gmail",
+			"appSource":     appSource,
 			"identifier":    identifier,
 			"name":          message.Subject,
 			"syncDate":      syncDate,
@@ -101,7 +101,7 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 	return record.Values[0].(string), nil
 }
 
-func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
+func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, syncDate time.Time, message entity.EmailMessageData, source, appSource string) (string, error) {
 	query := "MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) " +
 		" MERGE (ie:InteractionEvent_%s {source:$source, channel:$channel})-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
 		" ON CREATE SET " +
@@ -124,9 +124,9 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 	params := map[string]interface{}{
 		"tenant":           tenant,
 		"identifier":       message.ExternalId,
-		"source":           "gmail",
+		"source":           source,
 		"sourceOfTruth":    "openline",
-		"appSource":        "sync-gmail",
+		"appSource":        appSource,
 		"externalId":       message.ExternalId,
 		"externalSystemId": message.ExternalSystem,
 		"syncDate":         syncDate,
