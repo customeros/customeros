@@ -103,16 +103,6 @@ func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Conte
 	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationshipStage - organization_RemoveRelationshipStage"))
 }
 
-// OrganizationSetHealthIndicator is the resolver for the organization_SetHealthIndicator field.
-func (r *mutationResolver) OrganizationSetHealthIndicator(ctx context.Context, organizationID string, healthIndicatorID string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationSetHealthIndicator - organization_SetHealthIndicator"))
-}
-
-// OrganizationRemoveHealthIndicator is the resolver for the organization_RemoveHealthIndicator field.
-func (r *mutationResolver) OrganizationRemoveHealthIndicator(ctx context.Context, organizationID string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationRemoveHealthIndicator - organization_RemoveHealthIndicator"))
-}
-
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))
@@ -223,11 +213,6 @@ func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, 
 	panic(fmt.Errorf("not implemented: LastTouchPointTimelineEvent - lastTouchPointTimelineEvent"))
 }
 
-// HealthIndicator is the resolver for the healthIndicator field.
-func (r *organizationResolver) HealthIndicator(ctx context.Context, obj *model.Organization) (*model.HealthIndicator, error) {
-	panic(fmt.Errorf("not implemented: HealthIndicator - healthIndicator"))
-}
-
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
 func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error) {
 	panic(fmt.Errorf("not implemented: IssueSummaryByStatus - issueSummaryByStatus"))
@@ -274,13 +259,3 @@ func (r *Resolver) RenewalLikelihood() generated.RenewalLikelihoodResolver {
 type organizationResolver struct{ *Resolver }
 type renewalForecastResolver struct{ *Resolver }
 type renewalLikelihoodResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: OrganizationDelete - organization_Delete"))
-}
