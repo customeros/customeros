@@ -1,51 +1,162 @@
 import React from 'react';
-import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
-import { BillingDetails as BillingDetailsT } from '@graphql/types';
-import { Text } from '@chakra-ui/react';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { getTimeToNextRenewal } from '../../../shared/util';
+import { useForm } from 'react-inverted-form';
 
-export type BillingDetailsType = BillingDetailsT & { amount?: string | null };
-interface BillingDetailsCardBProps {
-  renewalCycleStart: BillingDetailsType['renewalCycleStart'];
-  renewalCycle: BillingDetailsType['renewalCycle'];
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { Heading } from '@ui/typography/Heading';
+import { BillingDetails } from '@graphql/types';
+import { FeaturedIcon, Icons } from '@ui/media/Icon';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { Divider } from '@ui/presentation/Divider';
+import { FormSelect } from '@ui/form/SyncSelect';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { DatePicker } from '@ui/form/DatePicker/DatePicker';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
+import { useQueryClient } from '@tanstack/react-query';
+import { useUpdateBillingDetailsMutation } from '@organization/graphql/updateBillingDetails.generated';
+
+import { getTimeToRenewal } from '../../../shared/util';
+import { frequencyOptions } from '../utils';
+import { TimeToRenewalDTO } from './TimeToRenewal.dto';
+
+interface TimeToRenewalsCardProps {
+  id: string;
+  data?: BillingDetails | null;
 }
-export const TimeToRenewal: React.FC<BillingDetailsCardBProps> = ({
-  renewalCycle,
-  renewalCycleStart,
-}) => {
-  if (!renewalCycle || !renewalCycleStart) return null;
-  const [numberValue, unit] = getTimeToNextRenewal(
-    new Date(renewalCycleStart),
-    renewalCycle,
-  );
+export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
+  const queryClient = useQueryClient();
+  const client = getGraphQLClient();
+  const updateBillingDetails = useUpdateBillingDetailsMutation(client, {
+    onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
+  });
+  const defaultValues = TimeToRenewalDTO.toForm(data);
+
+  useForm({
+    formId: 'time-to-renewal',
+    defaultValues,
+    stateReducer: (state, action, next) => {
+      if (action.type === 'FIELD_CHANGE') {
+        switch (action.payload.name) {
+          case 'renewalCycle': {
+            const renewalCycle = action.payload?.value;
+            const renewalCycleStart = state.values.renewalCycleStart;
+
+            if (!renewalCycle && renewalCycleStart !== null) {
+              updateBillingDetails.mutate({
+                input: {
+                  ...TimeToRenewalDTO.toPayload({
+                    id,
+                    ...data,
+                    renewalCycle: null,
+                    renewalCycleStart: null,
+                  }),
+                },
+              });
+              return {
+                ...next,
+                values: {
+                  ...next.values,
+                  renewalCycleStart: null,
+                },
+              };
+            }
+            updateBillingDetails.mutate({
+              input: {
+                ...TimeToRenewalDTO.toPayload({
+                  id,
+                  ...data,
+                  renewalCycle,
+                  renewalCycleStart,
+                }),
+              },
+            });
+            break;
+          }
+          case 'renewalCycleStart': {
+            updateBillingDetails.mutate({
+              input: {
+                ...TimeToRenewalDTO.toPayload({
+                  id,
+                  ...data,
+                  ...state.values,
+                  renewalCycleStart: action.payload?.value || null,
+                }),
+              },
+            });
+            break;
+          }
+        }
+      }
+
+      return next;
+    },
+  });
+
+  const [value, label] = getTimeToRenewal(data?.renewalCycleNext);
+
   return (
-    <Flex
-      width='full'
-      p={4}
-      borderRadius='xl'
-      border='1px solid'
-      borderColor='gray.200'
+    <Card
+      p='4'
+      w='full'
+      size='lg'
       boxShadow='xs'
-      justifyContent='space-between'
-      bg='white'
+      variant='outline'
+      cursor='default'
     >
-      <Flex alignItems='center'>
-        <FeaturedIcon>
+      <CardBody as={Flex} p='0' justify='space-between' align='center' w='full'>
+        <FeaturedIcon size='md' minW='10'>
           <Icons.ClockFastForward />
         </FeaturedIcon>
-        <Heading size='sm' color='gray.700' ml={4}>
-          Time to renewal
-        </Heading>
-      </Flex>
+        <Flex ml='5' align='center' justify='space-between' w='full'>
+          <Flex flexDir='column'>
+            <Heading size='sm' color='gray.700'>
+              Time to renewal
+            </Heading>
+            <Text fontSize='xs' color='gray.500'>
+              {data?.renewalCycleNext
+                ? `Renews on ${DateTimeUtils.format(
+                    data?.renewalCycleNext,
+                    DateTimeUtils.dateWithFullMonth,
+                  )}`
+                : 'Add a renewal cycle and start date'}
+            </Text>
+          </Flex>
 
-      <Flex direction='column' alignItems='flex-end' justifyItems='center'>
-        <Text fontSize='2xl' fontWeight='bold' lineHeight='1' color='gray.700'>
-          {numberValue}
-        </Text>
-        <Text color='gray.500'>{unit}</Text>
-      </Flex>
-    </Flex>
+          <Flex direction='column' alignItems='flex-end' justifyItems='center'>
+            <Text
+              fontSize='2xl'
+              fontWeight='bold'
+              lineHeight='1'
+              color={!data?.renewalCycleNext ? 'gray.400' : 'gray.700'}
+            >
+              {data?.renewalCycleNext ? value : 'Unknown'}
+            </Text>
+            {data?.renewalCycleNext && <Text color='gray.500'>{label}</Text>}
+          </Flex>
+        </Flex>
+      </CardBody>
+
+      <CardFooter as={Flex} p='0' w='full' flexDir='column'>
+        <Divider my='4' />
+        <Flex gap='4'>
+          <FormSelect
+            isClearable
+            label='Renewal cycle'
+            isLabelVisible
+            name='renewalCycle'
+            placeholder='Monthly'
+            options={frequencyOptions}
+            formId='time-to-renewal'
+            leftElement={<Icons.ClockFastForward mr='3' color='gray.500' />}
+          />
+          <DatePicker
+            label='Renewal cycle start'
+            formId='time-to-renewal'
+            name='renewalCycleStart'
+          />
+        </Flex>
+      </CardFooter>
+    </Card>
   );
 };

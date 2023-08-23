@@ -1,176 +1,164 @@
 import React from 'react';
 import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
-import { Card, CardBody } from '@ui/presentation/Card';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { Heading } from '@ui/typography/Heading';
 import { Divider } from '@ui/presentation/Divider';
-import { FormLabel, Skeleton } from '@chakra-ui/react';
-import { CardHeader } from '@ui/layout/Card';
-import BillingDetails from '@spaces/atoms/icons/BillingDetails';
-import { Box } from '@ui/layout/Box';
+import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
 import { VStack } from '@ui/layout/Stack';
-import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
-import CoinsSwap from '@spaces/atoms/icons/CoinsSwap';
-import ClockCheck from '@spaces/atoms/icons/ClockCheck';
-import Calendar from '@spaces/atoms/icons/Calendar';
 
 export const AccountPanelSkeleton: React.FC = () => {
   return (
     <OrganizationPanel title='Account'>
-      <Card p='4' w='full' size='lg' boxShadow='xs' variant='outline'>
-        <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' colorScheme='gray'>
-            <Icons.Building7 />
-          </FeaturedIcon>
-          <Flex ml='5' align='center' justify='space-between' w='full'>
-            <Flex flexDir='column'>
-              <Flex align='center'>
-                <Heading size='sm' fontWeight='semibold' color='gray.700'>
-                  Renewal likelihood
-                </Heading>
-              </Flex>
-              <Skeleton height='10px' width='90px' borderRadius='md' mt={1} />
-            </Flex>
-
-            <Heading fontSize='2xl' color='gray'>
-              <Skeleton height='40px' width='73px' borderRadius='md' />
-            </Heading>
-          </Flex>
-        </CardBody>
-      </Card>
-
-      <Card p='4' w='full' size='lg' boxShadow='xs' variant='outline'>
-        <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' colorScheme='gray'>
-            <Icons.Building7 />
-          </FeaturedIcon>
-          <Flex ml='5' align='center' justify='space-between' w='full'>
-            <Flex flexDir='column'>
-              <Flex align='center'>
-                <Heading size='sm' fontWeight='semibold' color='gray.700'>
-                  Renewal Forecast
-                </Heading>
-              </Flex>
-              <Skeleton height='10px' width='90px' borderRadius='md' mt={1} />
-            </Flex>
-
-            <Skeleton height='40px' width='96px' borderRadius='md' />
-          </Flex>
-        </CardBody>
-      </Card>
-
-      <Card
-        size='sm'
-        width='full'
-        borderRadius='xl'
-        border='1px solid'
-        borderColor='gray.200'
-        boxShadow='xs'
-      >
-        <CardHeader display='flex' alignItems='center'>
-          <BillingDetails />
-          <Heading ml={5} size='sm' color='gray.700'>
-            Billing details
-          </Heading>
-        </CardHeader>
-        <Box px={4}>
-          <Divider color='gray.200' />
-        </Box>
-
-        <CardBody padding={4}>
-          <VStack spacing='4' w='full'>
-            <Flex justifyItems='space-between' w='full'>
-              <Flex direction='column'>
-                <FormLabel
-                  mb={2}
-                  fontWeight={600}
-                  color='gray.700'
-                  fontSize='sm'
-                >
-                  Billing amounts
-                  <Flex alignItems='center'>
-                    <Box color='gray.500' mr={4}>
-                      <CurrencyDollar height='16px' />
-                    </Box>
-                    <Skeleton
-                      height='12px'
-                      width='140px'
-                      borderRadius='md'
-                      mt={1}
-                    />
-                  </Flex>
-                </FormLabel>
-              </Flex>
-              <Flex direction='column'>
-                <FormLabel
-                  mb={2}
-                  fontWeight={600}
-                  color='gray.700'
-                  fontSize='sm'
-                >
-                  Billing frequency
-                  <Flex alignItems='center'>
-                    <Box color='gray.500' mr={4}>
-                      <CoinsSwap height={16} />
-                    </Box>
-                    <Skeleton
-                      height='12px'
-                      width='140px'
-                      borderRadius='md'
-                      mt={1}
-                    />
-                  </Flex>
-                </FormLabel>
-              </Flex>
-            </Flex>
-            <Flex justifyItems='space-between' w='full'>
-              <Flex direction='column'>
-                <FormLabel
-                  mb={2}
-                  fontWeight={600}
-                  color='gray.700'
-                  fontSize='sm'
-                >
-                  Renewal cycle
-                  <Flex alignItems='center'>
-                    <Box mr={3} color='gray.500'>
-                      <ClockCheck height={16} />
-                    </Box>
-                    <Skeleton
-                      height='12px'
-                      width='140px'
-                      borderRadius='md'
-                      mt={1}
-                    />
-                  </Flex>
-                </FormLabel>
-              </Flex>{' '}
-              <Flex direction='column'>
-                <FormLabel
-                  mb={2}
-                  fontWeight={600}
-                  color='gray.700'
-                  fontSize='sm'
-                >
-                  Renewal cycle start
-                  <Flex alignItems='center'>
-                    <Box mr={4} color='gray.500'>
-                      <Calendar height={16} />
-                    </Box>
-                    <Skeleton
-                      height='12px'
-                      width='140px'
-                      borderRadius='md'
-                      mt={1}
-                    />
-                  </Flex>
-                </FormLabel>
-              </Flex>
-            </Flex>
-          </VStack>
-        </CardBody>
-      </Card>
+      <SkeletonCard>
+        <SkeletonCardFooter2 />
+      </SkeletonCard>
+      <SkeletonCard />
+      <SkeletonCard>
+        <SkeletonCardFooter1 />
+      </SkeletonCard>
+      <SkeletonCard withValue={false}>
+        <SkeletonCardFooter1 />
+      </SkeletonCard>
     </OrganizationPanel>
+  );
+};
+
+const SkeletonCard = ({
+  children,
+  withValue = true,
+}: {
+  children?: React.ReactNode;
+  withValue?: boolean;
+}) => {
+  return (
+    <Card
+      size='sm'
+      width='full'
+      borderRadius='xl'
+      border='1px solid'
+      borderColor='gray.200'
+      boxShadow='xs'
+      p='0'
+    >
+      <CardBody as={Flex} align='center' w='full' p='4'>
+        <Flex justify='space-between' w='full' align='center'>
+          <SkeletonCircle size='10' startColor='gray.300' endColor='gray.100' />
+          <Flex
+            ml='5'
+            flexDir='column'
+            align='flex-start'
+            gap='1'
+            flex='1'
+            w='full'
+          >
+            <Skeleton
+              w='45%'
+              h='4'
+              borderRadius='full'
+              startColor='gray.300'
+              endColor='gray.100'
+            />
+            <Skeleton
+              w='35%'
+              h='3'
+              borderRadius='full'
+              startColor='gray.300'
+              endColor='gray.100'
+            />
+          </Flex>
+
+          {withValue && (
+            <Skeleton
+              h='32px'
+              w='32px'
+              borderRadius='xl'
+              startColor='gray.300'
+              endColor='gray.100'
+            />
+          )}
+        </Flex>
+      </CardBody>
+
+      {children}
+    </Card>
+  );
+};
+
+const SkeletonCardFooter1 = () => {
+  return (
+    <CardFooter as={Flex} flexDir='column' p='4' pt='0'>
+      <Divider mb='4' mt='0' />
+
+      <Flex justify='space-between' gap='4' align='center' w='full'>
+        <VStack spacing='1' flex='1' align='flex-start'>
+          <Skeleton
+            w='65%'
+            h='3'
+            borderRadius='full'
+            startColor='gray.300'
+            endColor='gray.100'
+          />
+          <Flex w='full' gap='3' align='center' h='10'>
+            <SkeletonCircle
+              h='5'
+              w='5'
+              startColor='gray.300'
+              endColor='gray.100'
+            />
+            <Skeleton
+              w='full'
+              h='4'
+              borderRadius='full'
+              startColor='gray.300'
+              endColor='gray.100'
+            />
+          </Flex>
+        </VStack>
+
+        <VStack spacing='1' flex='1' align='flex-start'>
+          <Skeleton
+            w='65%'
+            h='3'
+            borderRadius='full'
+            startColor='gray.300'
+            endColor='gray.100'
+          />
+          <Flex w='full' gap='3' align='center' h='10'>
+            <SkeletonCircle
+              w='5'
+              h='5'
+              startColor='gray.300'
+              endColor='gray.100'
+            />
+            <Skeleton
+              w='full'
+              h='4'
+              borderRadius='full'
+              startColor='gray.300'
+              endColor='gray.100'
+            />
+          </Flex>
+        </VStack>
+      </Flex>
+    </CardFooter>
+  );
+};
+
+const SkeletonCardFooter2 = () => {
+  return (
+    <CardFooter as={Flex} flexDir='column' p='4' pt='0'>
+      <Divider mb='4' mt='0' />
+
+      <Flex w='full' gap='1' align='center'>
+        <SkeletonCircle w='5' h='5' startColor='gray.300' endColor='gray.100' />
+        <Skeleton
+          w='45%'
+          h='3'
+          borderRadius='full'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
+      </Flex>
+    </CardFooter>
   );
 };

@@ -1,6 +1,12 @@
-import { useOrganizationAccountDetailsQuery } from '@organization/graphql/getAccountPanelDetails.generated';
 import { QueryClient } from '@tanstack/react-query';
-import { Maybe, RenewalLikelihoodProbability } from '@graphql/types';
+
+import {
+  Maybe,
+  RenewalLikelihoodProbability,
+  RenewalCycle,
+} from '@graphql/types';
+import { SelectOption } from '@shared/types/SelectOptions';
+import { useOrganizationAccountDetailsQuery } from '@organization/graphql/getAccountPanelDetails.generated';
 
 export const invalidateAccountDetailsQuery = (
   queryClient: QueryClient,
@@ -26,3 +32,12 @@ export function getFeatureIconColor(
       return 'gray';
   }
 }
+
+export const frequencyOptions: SelectOption<RenewalCycle>[] = [
+  { label: 'Weekly', value: RenewalCycle.Weekly },
+  { label: 'Biweekly', value: RenewalCycle.Biweekly },
+  { label: 'Monthly', value: RenewalCycle.Monthly },
+  { label: 'Quarterly', value: RenewalCycle.Quarterly },
+  { label: 'Biannually', value: RenewalCycle.Biannually },
+  { label: 'Annually', value: RenewalCycle.Annually },
+];

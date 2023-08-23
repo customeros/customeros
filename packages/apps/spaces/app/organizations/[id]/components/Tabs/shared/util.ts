@@ -1,12 +1,6 @@
-import {
-  addWeeks,
-  addMonths,
-  addYears,
-  differenceInWeeks,
-  differenceInMonths,
-  differenceInYears,
-  formatDistanceToNowStrict,
-} from 'date-fns';
+import differenceInMonths from 'date-fns/differenceInMonths';
+import differenceInDays from 'date-fns/differenceInDays';
+import differenceInWeeks from 'date-fns/differenceInWeeks';
 
 export function formatSocialUrl(value = '') {
   let url = value;
@@ -38,44 +32,24 @@ export type RenewalFrequency =
   | 'BIANNUALLY'
   | 'ANNUALLY';
 
-export function getTimeToNextRenewal(
-  renewalStart: Date,
-  renewalFrequency: RenewalFrequency,
-): string[] {
+export function getTimeToRenewal(renewalDate: string) {
   const now = new Date();
-  let totalRenewals: number;
-  let nextRenewalDate: Date;
+  const next = new Date(renewalDate);
 
-  switch (renewalFrequency) {
-    case 'WEEKLY':
-      totalRenewals = differenceInWeeks(now, renewalStart);
-      nextRenewalDate = addWeeks(renewalStart, totalRenewals + 1);
-      break;
-    case 'BIWEEKLY':
-      totalRenewals = differenceInWeeks(now, renewalStart) / 2;
-      nextRenewalDate = addWeeks(renewalStart, 2 * (totalRenewals + 1));
-      break;
-    case 'MONTHLY':
-      totalRenewals = differenceInMonths(now, renewalStart);
-      nextRenewalDate = addMonths(renewalStart, totalRenewals + 1);
-      break;
-    case 'QUARTERLY':
-      totalRenewals = differenceInMonths(now, renewalStart) / 3;
-      nextRenewalDate = addMonths(renewalStart, 3 * (totalRenewals + 1));
-      break;
-    case 'BIANNUALLY':
-      totalRenewals = differenceInMonths(now, renewalStart) / 6;
-      nextRenewalDate = addMonths(renewalStart, 6 * (totalRenewals + 1));
-      break;
-    case 'ANNUALLY':
-      totalRenewals = differenceInYears(now, renewalStart);
-      nextRenewalDate = addYears(renewalStart, totalRenewals + 1);
-      break;
-    default:
-      throw new Error('Unrecognized renewal frequency');
-  }
+  const months = differenceInMonths(next, now);
+  const weeks = differenceInWeeks(next, now);
+  const days = differenceInDays(next, now);
 
-  const distanceToNextRenewal = formatDistanceToNowStrict(nextRenewalDate);
+  if (days === 0) return ['0', 'days'];
 
-  return distanceToNextRenewal?.split(' ');
+  if (days === 1) return [days, 'day'];
+  if (days < 7 && days !== 1) return [days, 'days'];
+
+  if (weeks === 1) return [weeks, 'week'];
+  if (weeks <= 4 && weeks !== 1 && months === 0) return [weeks, 'weeks'];
+
+  if (months === 1) return [months, 'month'];
+
+  const roundedMonths = weeks % 4 > 2 ? months + 1 : months;
+  return [roundedMonths, 'months'];
 }

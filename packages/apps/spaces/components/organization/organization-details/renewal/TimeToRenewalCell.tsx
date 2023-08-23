@@ -1,10 +1,7 @@
 import { Text } from '@ui/typography/Text';
 import { RenewalCycle } from '@spaces/graphql';
 
-import {
-  getTimeToNextRenewal,
-  RenewalFrequency,
-} from '@organization/components/Tabs/shared/util';
+import { getTimeToRenewal } from '@organization/components/Tabs/shared/util';
 
 interface TimeToRenewalCellProps {
   renewalDate: string | null;
@@ -22,14 +19,11 @@ export const TimeToRenewalCell = ({
       </Text>
     );
 
-  const [numberValue, unit] = getTimeToNextRenewal(
-    new Date(renewalDate ?? ''),
-    renewalFrequency as RenewalFrequency,
-  );
+  const [value, unit] = getTimeToRenewal(renewalDate);
 
   return (
     <Text fontSize='sm' color='gray.700'>
-      {numberValue} {unit}
+      {value} {unit}
     </Text>
   );
 };

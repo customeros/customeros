@@ -49,7 +49,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <FormLabel fontWeight={600} color='gray.700' fontSize='sm' mb={-1}>
         {label}
       </FormLabel>
-      <Flex>
+      <Flex
+        sx={{
+          '& .react-date-picker__calendar-button': {
+            pl: 0,
+          },
+          '& .react-date-picker__clear-button': {
+            top: '7px',
+          },
+        }}
+      >
         <ReactDatePicker
           id={id}
           clearIcon={
@@ -68,7 +77,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 {value
                   ? DateTimeUtils.format(
                       value.toISOString(),
-                      DateTimeUtils.dateWithFullMonth,
+                      DateTimeUtils.dateWithAbreviatedMonth,
                     )
                   : 'Start date'}
               </Text>
