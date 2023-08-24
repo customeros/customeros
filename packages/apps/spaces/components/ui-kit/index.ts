@@ -156,4 +156,3 @@ export {
   Youtube,
 } from './atoms';
 
-export { ErrorPage } from './organisms';

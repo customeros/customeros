@@ -10,7 +10,6 @@ export {
   MessageDeprecate,
   Address,
   DeleteConfirmationDialog,
-  ErrorPage,
   DebouncedInput,
   Input,
   Link,

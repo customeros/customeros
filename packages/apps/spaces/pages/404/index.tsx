@@ -1,27 +1,71 @@
 import React from 'react';
-import { ErrorPage } from '@spaces/organisms/error-page';
+import { Box, Flex, Heading, Text } from '@chakra-ui/react';
+import HalfCirclePattern from '@spaces/atoms/icons/HalfCirclePattern';
+import { FeaturedIcon } from '@ui/media/Icon';
+import Search from '@spaces/atoms/icons/Search';
+import { Button } from '@ui/form/Button';
+import {useRouter} from "next/router";
 
-const blurredSrc =
-  'data:image/webp;base64,UklGRhwCAABXRUJQVlA4WAoAAAAgAAAABQAAAwAASUNDUMgBAAAAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADZWUDggLgAAANABAJ0BKgYABAADgFoliAJ0APSMe7cAAP6I+kEz7c6Pts7AUGA/7+fd60VkAAA=';
 export const NotFound: React.FC = () => {
+  const { push } = useRouter();
+
   return (
-    <ErrorPage
-      imageSrc={`/backgrounds/blueprint/not-found-4.webp`}
-      blurredSrc={blurredSrc}
-      title='404'
+    <Box
+      p={0}
+      flex={1}
+      as={Flex}
+      flexDirection='column'
+      bgImage='/backgrounds/organization/half-circle-pattern.svg'
+      backgroundRepeat='no-repeat'
+      backgroundSize='contain'
+      h='100vh'
+      w='100vw'
+      position='relative'
+      alignItems='center'
+      justifyContent='center'
     >
-      <>
-        <p>{`We're sorry, but the page you're trying to access doesn't exist.`}</p>
-        <p>
-          {`This might be because you've entered an incorrect URL or the page was
-          recently removed.`}
-        </p>
-        <p>
-          {`You can try checking the spelling of the URL or navigate back to home
-          page.`}
-        </p>
-      </>
-    </ErrorPage>
+      <Box
+        position='absolute'
+        height='50vh'
+        maxH='768px'
+        width='768px'
+        top='50%'
+        left='50%'
+        style={{
+          transform: 'translate(-50%, -90%) rotate(180deg)',
+        }}
+      >
+        <HalfCirclePattern />
+      </Box>
+      <Flex
+        position='relative'
+        direction='column'
+        alignItems='center'
+        justifyContent='center'
+        h='50vh'
+      >
+        <FeaturedIcon colorScheme='primary' size='lg'>
+          <Box>
+            <Search />
+          </Box>
+        </FeaturedIcon>
+        <Heading fontWeight={600} fontSize='6xl' color='gray.900' py={6}>
+          We lost this page
+        </Heading>
+        <Text color='gray.600' fontSize='xl' pb={12} px={8}>
+          There was a small hiccup in the success plan. Let’s get you back to a
+          familiar place.
+        </Text>
+        <Button
+          colorScheme='primary'
+          variant='outline'
+          size='lg'
+          onClick={() => push('/')}
+        >
+          Take me home
+        </Button>
+      </Flex>
+    </Box>
   );
 };
 
