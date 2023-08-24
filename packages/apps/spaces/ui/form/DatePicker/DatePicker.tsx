@@ -57,6 +57,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           '& .react-date-picker__clear-button': {
             top: '7px',
           },
+          '& .react-calendar__month-view__weekdays__weekday': {
+            textTransform: 'capitalize',
+          },
         }}
       >
         <ReactDatePicker
@@ -68,6 +71,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           }
           onChange={(val) => handleDateInputChange(val as DateInputValue)}
           defaultValue={value}
+          formatShortWeekday={(_, date) =>
+            DateTimeUtils.format(date.toISOString(), DateTimeUtils.shortWeekday)
+          }
+          formatMonth={(_, date) =>
+            DateTimeUtils.format(
+              date.toISOString(),
+              DateTimeUtils.abreviatedMonth,
+            )
+          }
           calendarIcon={
             <Flex alignItems='center'>
               <Box mr={3} color='gray.500'>

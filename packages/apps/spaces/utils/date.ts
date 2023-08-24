@@ -12,6 +12,8 @@ export class DateTimeUtils {
   public static defaultFormatShortString = 'dd MMM `yy'; // Output: "Wed 08 Mar - 14h30CET"
   public static dateWithHour = 'd MMM yyyy • HH:mm'; // Output: "19 Jun 2023 • 14:34"
   public static dateWithAbreviatedMonth = 'd MMM yyyy'; // Output: "1 Aug 2024"
+  public static abreviatedMonth = 'MMM'; // Output: "Aug"
+  public static shortWeekday = 'iiiiii'; // Output: "We"
   private static defaultTimeFormatString = 'HH:mm';
   private static defaultDurationFormat = { format: ['minutes'] };
 
