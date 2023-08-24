@@ -47,6 +47,7 @@ export function getTimeToRenewal(renewalDate: string) {
 
   if (weeks === 1) return [weeks, 'week'];
   if (weeks <= 4 && weeks !== 1 && months === 0) return [weeks, 'weeks'];
+  if (weeks % 4 === 0) return [weeks / 4, 'months'];
 
   if (months === 1) return [months, 'month'];
 
