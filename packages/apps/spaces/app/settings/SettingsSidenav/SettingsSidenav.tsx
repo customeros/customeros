@@ -1,5 +1,5 @@
 'use client';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
 import { VStack } from '@ui/layout/Stack';
@@ -7,26 +7,26 @@ import { Icons } from '@ui/media/Icon';
 import { GridItem } from '@ui/layout/Grid';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
-import { Tooltip } from '@ui/overlay/Tooltip';
 
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/SidenavItem';
-import { useOrganizationQuery } from '@organization/graphql/organization.generated';
+import { useLocalStorage } from 'usehooks-ts';
 
 export const SettingsSidenav = () => {
   const router = useRouter();
-  const params = useParams();
   const searchParams = useSearchParams();
-  const graphqlClient = getGraphQLClient();
-  const { data } = useOrganizationQuery(graphqlClient, {
-    id: params?.id as string,
-  });
+  const [activeTab, setActiveTab] = useLocalStorage(
+    `customeros-player-last-position`,
+    { ['settings']: 'oauth',
+      root: "organization"
+    },
+  );
 
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
   const handleItemClick = (tab: string) => () => {
     const params = new URLSearchParams(searchParams ?? '');
     params.set('tab', tab);
+    setActiveTab({ ...activeTab, settings: tab });
     // todo remove, for now needed
     router.push(`?${params}`);
   };
@@ -38,7 +38,6 @@ export const SettingsSidenav = () => {
       h='full'
       w='200px'
       background='gray.25'
-
       display='flex'
       flexDir='column'
       gridArea='sidebar'
@@ -52,7 +51,7 @@ export const SettingsSidenav = () => {
           size='xs'
           variant='ghost'
           aria-label='Go back'
-          onClick={() => router.push('/organization')}
+          onClick={() => router.push(`/${activeTab.root}`)}
           icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
         />
 
@@ -91,15 +90,15 @@ export const SettingsSidenav = () => {
           }
         />
         <SidenavItem
-            label='Integrations'
-            isActive={checkIsActive('integrations')}
-            onClick={handleItemClick('integrations')}
-            icon={
-              <Icons.DataFlow3
-                  color={checkIsActive('integrations') ? 'gray.700' : 'gray.500'}
-                  boxSize='6'
-              />
-            }
+          label='Integrations'
+          isActive={checkIsActive('integrations')}
+          onClick={handleItemClick('integrations')}
+          icon={
+            <Icons.DataFlow3
+              color={checkIsActive('integrations') ? 'gray.700' : 'gray.500'}
+              boxSize='6'
+            />
+          }
         />
       </VStack>
     </GridItem>

@@ -15,7 +15,7 @@ import { TimeToRenewalCell } from '../organization-details/renewal/TimeToRenewal
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
 
-export const columns = [
+export const columns = (tabs?: { [key: string]: string } | null) => [
   columnHelper.accessor((row) => row, {
     id: 'ORGANIZATION',
     cell: (props) => {
@@ -23,6 +23,7 @@ export const columns = [
         <OrganizationTableCell
           key={props.getValue().id}
           organization={props.getValue()}
+          activeTab={tabs?.[props.getValue()?.id]}
         />
       );
     },

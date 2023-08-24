@@ -8,12 +8,27 @@ import { GridItem } from '@ui/layout/Grid';
 
 import { SidenavItem } from './SidenavItem';
 import React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useLocalStorage } from 'usehooks-ts';
 
 interface RootSidenavProps {
   isOwner: boolean;
 }
 
 export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [activeTab, setActiveTab] = useLocalStorage(
+    `customeros-player-last-position`,
+    { root: 'organization' },
+  );
+  const handleItemClick = (path: string) => {
+    setActiveTab({ ...activeTab, root: path });
+    router.push(`/${path}`);
+  };
+
+  const checkIsActive = (path: string) => pathname?.startsWith(`/${path}`);
+
   return (
     <GridItem
       px='2'
@@ -52,8 +67,9 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
 
       <VStack spacing='2' w='full'>
         <SidenavItem
-          href='/organization'
           label='Organizations'
+          isActive={checkIsActive('organization')}
+          onClick={() => handleItemClick('organization')}
           icon={(isActive) => (
             <Icons.Building7
               boxSize='6'
@@ -62,8 +78,9 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
           )}
         />
         <SidenavItem
-          href='/customers'
           label='Customers'
+          isActive={checkIsActive('customers')}
+          onClick={() => handleItemClick('customers')}
           icon={(isActive) => (
             <Icons.CheckHeart
               boxSize='6'
@@ -73,8 +90,9 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
         />
         {isOwner && (
           <SidenavItem
-            href='/portfolio'
             label='My portfolio'
+            isActive={checkIsActive('portfolio')}
+            onClick={() => handleItemClick('portfolio')}
             icon={(isActive) => (
               <Icons.Briefcase1
                 boxSize='6'
@@ -93,8 +111,9 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
         justifyContent='flex-end'
       >
         <SidenavItem
-          href='/settings'
           label='Settings'
+          isActive={checkIsActive('settings')}
+          onClick={() => handleItemClick('settings')}
           icon={(isActive) => (
             <Icons.Settings
               boxSize='6'

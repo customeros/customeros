@@ -34,6 +34,7 @@ import { useRouter } from 'next/router';
 import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { Text } from '@chakra-ui/react';
+import { useReadLocalStorage } from 'usehooks-ts';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 
@@ -49,6 +50,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   icon,
 }: OrganizationListProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const tabs = useReadLocalStorage<{ [key: string]: string }>(`customeros-player-last-position`);
   const [idsToRemove, setIdsToRemove] = useState<Array<string>>([]);
 
   const [tableInstance, setTableInstance] =
@@ -217,7 +219,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
 
       <Table<Organization>
         data={data ?? []}
-        columns={columns}
+        columns={columns(tabs)}
         sorting={sorting}
         enableTableActions
         isLoading={loading}
