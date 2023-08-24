@@ -8,7 +8,6 @@ import { RenewalForecast, RenewalForecastType } from './RenewalForecast';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
 import { BillingDetailsCard } from './BillingDetailsCard/BillingDetailsCard';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
-import { Fade } from '@ui/transitions/Fade';
 import { TimeToRenewal } from '@organization/components/Tabs/panels/AccountPanel/TimeToRenewal/TimeToRenewal';
 
 export const AccountPanel = () => {
@@ -25,34 +24,32 @@ export const AccountPanel = () => {
   }
 
   return (
-    <Fade in={!isInitialLoading}>
-      <OrganizationPanel title='Account'>
-        <RenewalLikelihood
-          name={data?.organization?.name || ''}
-          renewalLikelihood={
-            data?.organization?.accountDetails
-              ?.renewalLikelihood as RenewalLikelihoodType
-          }
-        />
-        <RenewalForecast
-          name={data?.organization?.name || ''}
-          renewalProbability={
-            data?.organization?.accountDetails?.renewalLikelihood?.probability
-          }
-          renewalForecast={
-            data?.organization?.accountDetails
-              ?.renewalForecast as RenewalForecastType
-          }
-        />
-        <TimeToRenewal
-          id={data?.organization?.id || ''}
-          data={data?.organization?.accountDetails?.billingDetails}
-        />
-        <BillingDetailsCard
-          id={id}
-          data={data?.organization?.accountDetails?.billingDetails}
-        />
-      </OrganizationPanel>
-    </Fade>
+    <OrganizationPanel title='Account' withFade>
+      <RenewalLikelihood
+        name={data?.organization?.name || ''}
+        renewalLikelihood={
+          data?.organization?.accountDetails
+            ?.renewalLikelihood as RenewalLikelihoodType
+        }
+      />
+      <RenewalForecast
+        name={data?.organization?.name || ''}
+        renewalProbability={
+          data?.organization?.accountDetails?.renewalLikelihood?.probability
+        }
+        renewalForecast={
+          data?.organization?.accountDetails
+            ?.renewalForecast as RenewalForecastType
+        }
+      />
+      <TimeToRenewal
+        id={data?.organization?.id || ''}
+        data={data?.organization?.accountDetails?.billingDetails}
+      />
+      <BillingDetailsCard
+        id={id}
+        data={data?.organization?.accountDetails?.billingDetails}
+      />
+    </OrganizationPanel>
   );
 };

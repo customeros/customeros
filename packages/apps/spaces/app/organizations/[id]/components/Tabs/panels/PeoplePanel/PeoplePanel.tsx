@@ -60,6 +60,7 @@ export const PeoplePanel = () => {
   return (
     <OrganizationPanel
       title='People'
+      withFade
       bgImage={
         !contacts?.length
           ? '/backgrounds/organization/half-circle-pattern.svg'

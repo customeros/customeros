@@ -1,22 +1,32 @@
 'use client';
-import { FC, PropsWithChildren, ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
-import { Box } from '@ui/layout/Box';
+import { Box, BoxProps } from '@ui/layout/Box';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 
-interface OrganizationPanelProps extends PropsWithChildren {
+interface OrganizationPanelProps extends BoxProps {
   title: string;
   bgImage?: string;
   actionItem?: ReactNode;
+  withFade?: boolean;
 }
-export const OrganizationPanel: FC<OrganizationPanelProps> = ({
+export const OrganizationPanel = ({
   bgImage,
   title,
   actionItem,
   children,
-}) => {
+  withFade = false,
+  ...props
+}: OrganizationPanelProps) => {
+  const [isMounted, setIsMounted] = useState(!withFade);
+
+  useEffect(() => {
+    if (!withFade) return;
+    setIsMounted(true);
+  }, []);
+
   return (
     <Box
       p={0}
@@ -27,6 +37,7 @@ export const OrganizationPanel: FC<OrganizationPanelProps> = ({
       backgroundImage={bgImage ? bgImage : ''}
       backgroundRepeat='no-repeat'
       backgroundSize='contain'
+      {...props}
     >
       <Flex justify='space-between' pt='4' pb='4' px='6'>
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
@@ -43,6 +54,8 @@ export const OrganizationPanel: FC<OrganizationPanelProps> = ({
         overflowY='auto'
         px='6'
         pb={8}
+        opacity={isMounted ? 1 : 0}
+        transition='opacity 0.3s ease-in-out'
       >
         {children}
       </VStack>
