@@ -19,9 +19,9 @@ export const OrganizationSidenav = () => {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useLocalStorage(
+  const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
-    { [params?.id as string]: 'about' },
+    { [params?.id as string]: 'tab=about' },
   );
 
   const graphqlClient = getGraphQLClient();
@@ -35,7 +35,10 @@ export const OrganizationSidenav = () => {
     const urlSearchParams = new URLSearchParams(searchParams ?? '');
     urlSearchParams.set('tab', tab);
 
-    setActiveTab({ ...activeTab, [params?.id as string]: tab });
+    setLastActivePosition({
+      ...lastActivePosition,
+      [params?.id as string]: urlSearchParams.toString(),
+    });
     // todo remove, for now needed
     router.push(`?${urlSearchParams}`);
   };
@@ -61,7 +64,7 @@ export const OrganizationSidenav = () => {
             size='xs'
             variant='ghost'
             aria-label='Go back'
-            onClick={() => router.push(`/${activeTab?.root || 'organization'}`)}
+            onClick={() => router.push(`/${lastActivePosition?.root || 'organization'}`)}
             icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
           />
 
