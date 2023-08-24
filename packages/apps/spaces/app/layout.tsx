@@ -6,10 +6,10 @@ import { PageLayout } from './components/PageLayout';
 import { Providers } from './components/Providers/Providers';
 import { ThemeProvider } from './components/Providers/ThemeProvider';
 
-
 import 'react-toastify/dist/ReactToastify.css';
 import './../styles/globals.scss';
 import './../styles/date-picker.scss';
+import './../styles/remirror-editor.scss';
 import React from 'react';
 import { ToastContainer } from 'react-toastify';
 

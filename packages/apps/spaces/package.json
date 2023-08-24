@@ -8,6 +8,7 @@
     "build:cluster": "env-cmd -f .env.cluster next build",
     "start": "next start",
     "icons": "npx @svgr/cli --typescript --out-dir components/ui-kit/atoms/icons --ignore-existing -- public/icons",
+    "new": "npx @svgr/cli --typescript --out-dir components/ui/media/icons -- public/icons/new",
     "codegen": "graphql-codegen --require dotenv/config --config codegen.ts",
     "codegen:graphql": "graphql-codegen --require dotenv/config --config graphql-codegen.ts",
     "preatify": "yarn prettier --write ."
@@ -68,7 +69,7 @@
     "react-use-websocket": "^4.3.1",
     "react-virtuoso": "4.4.2",
     "recoil": "^0.7.6",
-    "remirror": "^2.0.26",
+    "remirror": "^2.0.36",
     "sanitize-html": "^2.9.0",
     "sass": "^1.58.0",
     "use-debounce": "^9.0.3",

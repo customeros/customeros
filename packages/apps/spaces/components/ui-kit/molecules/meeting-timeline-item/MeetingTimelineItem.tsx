@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import styles from './meeting-timeline-item.module.scss';
-import { extraAttributes } from '../editor/SocialEditor';
+import { extraAttributes } from '@ui/form/RichTextEditor/SocialEditor';
 import { TableExtension } from '@remirror/extension-react-tables';
 import {
   AnnotationExtension,

@@ -4,7 +4,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   extraAttributes,
   SocialEditor,
-} from '@spaces/molecules/editor/SocialEditor';
+} from '@ui/form/RichTextEditor/SocialEditor';
 import {
   AnnotationExtension,
   BlockquoteExtension,

@@ -26,7 +26,7 @@ import {
 import linkifyHtml from 'linkify-html';
 import { getContactDisplayName } from '../../../../utils';
 import classNames from 'classnames';
-import { extraAttributes, SocialEditor } from '../editor/SocialEditor';
+import { extraAttributes, SocialEditor } from '@ui/form/RichTextEditor/SocialEditor';
 import { TableExtension } from '@remirror/extension-react-tables';
 import {
   AnnotationExtension,
