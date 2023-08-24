@@ -50,9 +50,10 @@ const extensions = () => [
 const IndentButtons = () => {
   const commands = useCommands();
   return (
-    <>
+    <Flex gap={2}>
       <IconButton
         className='customeros-remirror-button'
+        bg='transparent'
         variant='ghost'
         aria-label='Italic'
         onClick={() => {
@@ -62,6 +63,7 @@ const IndentButtons = () => {
       />
       <IconButton
         className='customeros-remirror-button'
+        bg='transparent'
         variant='ghost'
         aria-label='Strikethrough'
         onClick={() => {
@@ -69,7 +71,7 @@ const IndentButtons = () => {
         }}
         icon={<LeftIndent currentColor='inherit' />}
       />
-    </>
+    </Flex>
   );
 };
 
@@ -77,9 +79,10 @@ const ListButtons = () => {
   const { toggleOrderedList, toggleBulletList, focus } = useCommands();
   const active = useActive();
   return (
-    <>
+    <Flex gap={2}>
       <IconButton
         className='customeros-remirror-button'
+        bg='transparent'
         variant='ghost'
         aria-label='Strikethrough'
         onClick={() => {
@@ -91,6 +94,7 @@ const ListButtons = () => {
       />
       <IconButton
         className='customeros-remirror-button'
+        bg='transparent'
         variant='ghost'
         aria-label='Underline'
         onClick={() => {
@@ -100,7 +104,7 @@ const ListButtons = () => {
         isActive={active.bulletList()}
         icon={<UnorderedList currentColor='inherit' />}
       />
-    </>
+    </Flex>
   );
 };
 
@@ -109,9 +113,10 @@ const TextFormatButtons = () => {
     useCommands();
   const active = useActive();
   return (
-    <>
+    <Flex gap={2}>
       <IconButton
         className='customeros-remirror-button'
+        bg='transparent'
         variant='ghost'
         aria-label='Bold'
         onClick={() => {
@@ -123,6 +128,7 @@ const TextFormatButtons = () => {
       />
       <IconButton
         className='customeros-remirror-button'
+        bg='transparent'
         variant='ghost'
         aria-label='Italic'
         onClick={() => {
@@ -134,6 +140,7 @@ const TextFormatButtons = () => {
       />
       <IconButton
         className='customeros-remirror-button'
+        bg='transparent'
         variant='ghost'
         aria-label='Strikethrough'
         onClick={() => {
@@ -145,6 +152,7 @@ const TextFormatButtons = () => {
       />
       <IconButton
         className='customeros-remirror-button'
+        bg='transparent'
         variant='ghost'
         aria-label='Underline'
         onClick={() => {
@@ -154,7 +162,7 @@ const TextFormatButtons = () => {
         isActive={active.underline()}
         icon={<Underline currentColor='inherit' />}
       />
-    </>
+    </Flex>
   );
 };
 export const Menu = () => {
@@ -162,20 +170,28 @@ export const Menu = () => {
   const active = useActive();
 
   return (
-    <Flex gap={2}>
-      <HStack w='full' divider={<StackDivider borderColor='gray.200' />}>
+    <Flex>
+      <HStack
+        w='full'
+        bg='transparent'
+        divider={
+          <StackDivider
+            m={0}
+            borderColor='gray.200'
+            marginInlineStart={0}
+            marginInlineEnd={0}
+          />
+        }
+      >
         <TextFormatButtons />
 
-        <Divider orientation='vertical' />
-
         <ListButtons />
-        <Center height='16px'>
-          <Divider orientation='vertical' color='gray.500' />
-        </Center>
+
         <IndentButtons />
-        <Divider orientation='vertical' />
+
         <IconButton
           className='customeros-remirror-button'
+          bg='transparent'
           variant='ghost'
           aria-label='Quote'
           onClick={() => {

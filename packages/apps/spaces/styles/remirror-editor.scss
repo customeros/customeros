@@ -506,12 +506,7 @@ button:active .remirror-menu-pane-shortcut,
 }
 
 .remirror-tooltip {
-  background-color: var(--rmr-color-faded);
-  color: white;
-  font-size: 0.8em;
-  padding: 0.5rem;
-  border-radius: var(--rmr-radius-border);
-  z-index: 999;
+display: none
 }
 
 .remirror-tooltip [data-arrow] {
@@ -588,6 +583,11 @@ button:active .remirror-menu-pane-shortcut,
   font-variant-ligatures: none;
   font-feature-settings: 'liga' 0;
   overflow-y: scroll;
+
+  & ul,
+  & ol {
+    padding-left: 20px; // important, without it lists are not visible
+  }
 }
 
 .remirror-editor.ProseMirror pre {
@@ -646,11 +646,21 @@ button:active .remirror-menu-pane-shortcut,
  * Styles extracted from: packages/remirror__theme/src/extension-blockquote-theme.ts
  */
 .remirror-editor.ProseMirror blockquote {
-  border-left: 3px solid var(--rmr-hue-gray-3);
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 10px;
   font-style: italic;
+  position: relative;
+  padding-left: 10px;
+  border-radius: 0;
+
+  &:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    background: var(--chakra-colors-gray-300);
+    width: 3px;
+    height: 100%;
+    border-radius: 8px;
+  }
+
 }
 .remirror-editor.ProseMirror blockquote p {
   color: #888;
@@ -3175,7 +3185,7 @@ button:active .remirror-menu-pane-shortcut,
   margin: 0.5em 0;
   overflow: auto;
   border: 1px solid #dddddd;
-  background-color: white;
+  background-color: transparent;
 }
 
 .remirror-vs :has(.remirror-language-select-positioner) ~ pre[class*='language-'] {
@@ -3655,19 +3665,19 @@ button:active .remirror-menu-pane-shortcut,
  */
 /* don't show the custom markers in a ordered list */
 .remirror-editor ol > li > .remirror-list-item-marker-container {
-  display: none;
+  //display: none;
 }
 /* don't show the origin markers when using custom markers (checkbox / collapsible) */
 .remirror-editor ul > li.remirror-list-item-with-custom-mark {
-  list-style: none;
+  //list-style: none;
 }
 .remirror-editor .remirror-ul-list-content > li.remirror-list-item-with-custom-mark {
-  list-style: none;
+  //list-style: none;
 }
 /* override the browser's default styles */
 .remirror-editor ul ul + ul {
-  -webkit-margin-before: 1em;
-  margin-block-start: 1em;
+  //-webkit-margin-before: 1em;
+  //margin-block-start: 1em;
 }
 
 .remirror-list-item-marker-container {
@@ -3690,6 +3700,7 @@ button:active .remirror-menu-pane-shortcut,
 
 .remirror-collapsible-list-item-closed li {
   display: none;
+
 }
 
 .remirror-collapsible-list-item-closed .remirror-collapsible-list-item-button {
@@ -3856,6 +3867,7 @@ button:active .remirror-menu-pane-shortcut,
  * Styles extracted from: packages/remirror__theme/src/extension-tables-theme.ts
  */
 .remirror-editor.ProseMirror {
+  padding: 2px;
   /* Give selected cells a blue overlay */
   /* We don't need this anymore -- 2021-04-03 ocavue */
 }
@@ -4308,7 +4320,7 @@ div.remirror-table-controller-mark-column-corner {
 }
 
 .remirror-theme {
-  --rmr-color-background: #ffffff;
+  --rmr-color-background: transparent;
   --rmr-color-border: rgba(0, 0, 0, 0.25);
   --rmr-color-foreground: #000000;
   --rmr-color-muted: #f1f3f5;
@@ -4536,6 +4548,10 @@ div.remirror-table-controller-mark-column-corner {
   // Toolbar at the bottom
   display: flex;
   flex-direction: column-reverse;
+
+  & > div {
+    background: transparent !important;
+  }
 }
 
 .remirror-theme h1,
