@@ -16,9 +16,7 @@ export const SettingsSidenav = () => {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useLocalStorage(
     `customeros-player-last-position`,
-    { ['settings']: 'oauth',
-      root: "organization"
-    },
+    { ['settings']: 'oauth', root: 'organization' },
   );
 
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;

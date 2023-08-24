@@ -7,7 +7,7 @@ import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 
 import { SidenavItem } from './SidenavItem';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -22,6 +22,16 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
     `customeros-player-last-position`,
     { root: 'organization' },
   );
+
+  useEffect(() => {
+    console.log('🏷️ ----- pathname: ', pathname);
+    if (pathname === '/') {
+      setActiveTab({ ...activeTab, root: 'organization' });
+    }
+    if (pathname && pathname !== '/') {
+      setActiveTab({ ...activeTab, root: pathname.substring(1) });
+    }
+  }, []);
   const handleItemClick = (path: string) => {
     setActiveTab({ ...activeTab, root: path });
     router.push(`/${path}`);
@@ -113,7 +123,7 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
         <SidenavItem
           label='Settings'
           isActive={checkIsActive('settings')}
-          onClick={() => handleItemClick('settings')}
+          onClick={() => router.push('/settings')}
           icon={(isActive) => (
             <Icons.Settings
               boxSize='6'
