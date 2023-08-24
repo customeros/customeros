@@ -70,9 +70,15 @@ spec:
             - name: USER_ADMIN_API_KEY
               value: "cad7ccb6-d8ff-4bae-a048-a42db33a217e"
             - name: GOOGLE_OAUTH_CLIENT_ID
-              value: $(GOOGLE_OAUTH_CLIENT_ID)
+              valueFrom:
+                secretKeyRef:
+                  name: user-admin-api-secret
+                  key: GOOGLE_OAUTH_CLIENT_ID
             - name: GOOGLE_OAUTH_CLIENT_SECRET
-              value: $(GOOGLE_OAUTH_CLIENT_SECRET)
+              valueFrom:
+                secretKeyRef:
+                  name: user-admin-api-secret
+                  key: GOOGLE_OAUTH_CLIENT_SECRET
 
               # valid log values (PANIC, FATAL, ERROR, WARN, INFO, DEBUG)
             - name: LOGGER_LEVEL

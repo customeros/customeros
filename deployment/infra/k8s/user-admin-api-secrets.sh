@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Secret name 
-SECRET_NAME=user-admin-api
+SECRET_NAME=user-admin-api-secret
 
 # Get secret data from env vars
 GOOGLE_OAUTH_CLIENT_ID_BASE64_ENCODED=$(echo "$GOOGLE_OAUTH_CLIENT_ID" | tr -d '\n' | base64)
 GOOGLE_OAUTH_CLIENT_SECRET_BASE64_ENCODED=$(echo "$GOOGLE_OAUTH_CLIENT_SECRET" | tr -d '\n' | base64)
 
 # Generate secret YAML 
-cat <<EOF > ${SECRET_NAME}-secret.yaml
+cat <<EOF > ${SECRET_NAME}.yaml
 apiVersion: v1
 kind: Secret
 metadata:
