@@ -1,5 +1,5 @@
 'use client';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
 import { VStack } from '@ui/layout/Stack';
@@ -12,11 +12,18 @@ import { Tooltip } from '@ui/overlay/Tooltip';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/SidenavItem';
 import { useOrganizationQuery } from '@organization/graphql/organization.generated';
+import { useLocalStorage } from 'usehooks-ts';
 
 export const OrganizationSidenav = () => {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
+
+  const [activeTab, setActiveTab] = useLocalStorage(
+    `customeros-player-last-position`,
+    { [params?.id as string]: 'about' },
+  );
+
   const graphqlClient = getGraphQLClient();
   const { data } = useOrganizationQuery(graphqlClient, {
     id: params?.id as string,
@@ -25,10 +32,12 @@ export const OrganizationSidenav = () => {
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
   const handleItemClick = (tab: string) => () => {
-    const params = new URLSearchParams(searchParams ?? '');
-    params.set('tab', tab);
+    const urlSearchParams = new URLSearchParams(searchParams ?? '');
+    urlSearchParams.set('tab', tab);
+
+    setActiveTab({ ...activeTab, [params?.id as string]: tab });
     // todo remove, for now needed
-    router.push(`?${params}`);
+    router.push(`?${urlSearchParams}`);
   };
 
   return (
@@ -52,7 +61,7 @@ export const OrganizationSidenav = () => {
             size='xs'
             variant='ghost'
             aria-label='Go back'
-            onClick={() => router.push('/organization')}
+            onClick={() => router.push(`/${activeTab?.root || 'organization'}`)}
             icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
           />
 

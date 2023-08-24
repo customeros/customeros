@@ -1,8 +1,6 @@
-
-import {BillingPanel} from "./panels/BillingPanel";
-import {AuthPanel} from "./panels/AuthPanel/AuthPanel";
-import {IntegrationsPanel} from "./panels/IntegrationsPanel";
-
+import { BillingPanel } from './panels/BillingPanel';
+import { AuthPanel } from './panels/AuthPanel';
+import { IntegrationsPanel } from './panels/IntegrationsPanel';
 
 interface PanelsProps {
   tab: string;

@@ -1,14 +1,12 @@
 import { Flex } from '@ui/layout/Flex';
 import { GridItem } from '@ui/layout/Grid';
-import {SettingsSidenav} from "./SettingsSidenav/SettingsSidenav";
-
+import { SettingsSidenav } from './SettingsSidenav';
 
 export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-
   return (
     <>
       <SettingsSidenav />
