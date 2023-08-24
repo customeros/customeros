@@ -11,7 +11,6 @@ import {
 import { DateTimeUtils } from '@spaces/utils/date';
 import Delete from '@spaces/atoms/icons/Delete';
 import { useField } from 'react-inverted-form';
-import { Icons } from 'react-toastify';
 
 interface DatePickerProps extends ReactDatePickerProps {
   label: string;
