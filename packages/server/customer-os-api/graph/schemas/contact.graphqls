@@ -149,9 +149,6 @@ type Contact implements ExtensibleEntity & Node {
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
     notesByTime(pagination: TimeRange): [Note!]! @goField(forceResolver: true)
 
-
-    conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true)
-
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
 }

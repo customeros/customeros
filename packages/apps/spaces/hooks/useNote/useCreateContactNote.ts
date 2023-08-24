@@ -8,7 +8,6 @@ import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
-import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 import { useSetRecoilState } from 'recoil';
 import { contactNewItemsToEdit } from '../../state';
 
@@ -24,7 +23,6 @@ interface Result {
 const NOW_DATE = new Date().toISOString();
 
 export const useCreateContactNote = ({ contactId }: Props): Result => {
-  const { onScrollToBottom } = useTimeline();
   const setNoteToEditMode = useSetRecoilState(contactNewItemsToEdit);
   const [createContactNoteMutation, { loading }] = useCreateContactNoteMutation(
     {
@@ -43,7 +41,6 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         }));
 
         setTimeout(() => {
-          onScrollToBottom();
         }, 300);
       },
     },

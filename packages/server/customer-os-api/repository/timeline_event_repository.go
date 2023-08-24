@@ -345,7 +345,7 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 	params := map[string]any{
 		"tenant":                             tenant,
 		"organizationId":                     organizationId,
-		"nodeLabels":                         []string{entity.NodeLabel_InteractionSession, entity.NodeLabel_Issue, entity.NodeLabel_Conversation, entity.NodeLabel_InteractionEvent, entity.NodeLabel_Meeting},
+		"nodeLabels":                         []string{entity.NodeLabel_InteractionSession, entity.NodeLabel_Issue, entity.NodeLabel_InteractionEvent, entity.NodeLabel_Meeting},
 		"excludeInteractionEventContentType": []string{"x-openline-transcript-element"},
 		"contactRelationTypes":               []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
 		"organizationRelationTypes":          []string{"REPORTED_BY", "SENT_TO", "SENT_BY"},

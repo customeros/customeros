@@ -8,7 +8,6 @@ import {
 import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
-import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 import { DataSource } from '@spaces/graphql';
 export interface Props {
   organizationId?: string;
@@ -16,18 +15,12 @@ export interface Props {
 export const useCreateMeetingFromOrganization = ({
   organizationId,
 }: Props): Result => {
-  const { onScrollToBottom } = useTimeline();
   const [createMeetingMutation, { loading, error, data }] =
     useCreateMeetingMutation({
       onError: () => {
         toast.error(
           `Something went wrong while adding draft meeting to the timeline`,
         );
-      },
-      onCompleted: () => {
-        setTimeout(() => {
-          onScrollToBottom();
-        }, 300);
       },
     });
 

@@ -57,6 +57,11 @@ func (r *mutationResolver) UserDeleteInTenant(ctx context.Context, id string, te
 	panic(fmt.Errorf("not implemented: UserDeleteInTenant - user_DeleteInTenant"))
 }
 
+// CustomerUserAddJobRole is the resolver for the customer_user_AddJobRole field.
+func (r *mutationResolver) CustomerUserAddJobRole(ctx context.Context, id string, jobRoleInput model.JobRoleInput) (*model.CustomerUser, error) {
+	panic(fmt.Errorf("not implemented: CustomerUserAddJobRole - customer_user_AddJobRole"))
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))
@@ -92,9 +97,14 @@ func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*mo
 	panic(fmt.Errorf("not implemented: PhoneNumbers - phoneNumbers"))
 }
 
-// Conversations is the resolver for the conversations field.
-func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
-	panic(fmt.Errorf("not implemented: Conversations - conversations"))
+// JobRoles is the resolver for the jobRoles field.
+func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error) {
+	panic(fmt.Errorf("not implemented: JobRoles - jobRoles"))
+}
+
+// Calendars is the resolver for the calendars field.
+func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error) {
+	panic(fmt.Errorf("not implemented: Calendars - calendars"))
 }
 
 // User returns generated.UserResolver implementation.

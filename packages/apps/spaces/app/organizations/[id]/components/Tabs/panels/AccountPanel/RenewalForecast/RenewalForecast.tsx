@@ -63,6 +63,7 @@ export const RenewalForecast: FC<{
         <CardBody as={Flex} p='0' align='center'>
           <FeaturedIcon
             size='md'
+            minW='10'
             colorScheme={
               amount && !updatedBy
                 ? getFeatureIconColor(renewalProbability)
@@ -73,10 +74,10 @@ export const RenewalForecast: FC<{
           </FeaturedIcon>
           <Flex
             ml='5'
-            align='center'
-            justify='space-between'
             w='full'
+            align='center'
             columnGap={4}
+            justify='space-between'
           >
             <Flex flexDir='column'>
               <Flex align='center'>

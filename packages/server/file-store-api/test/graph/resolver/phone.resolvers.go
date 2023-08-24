@@ -72,6 +72,11 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromUserByID - phoneNumberRemoveFromUserById"))
 }
 
+// Country is the resolver for the country field.
+func (r *phoneNumberResolver) Country(ctx context.Context, obj *model.PhoneNumber) (*model.Country, error) {
+	panic(fmt.Errorf("not implemented: Country - country"))
+}
+
 // Users is the resolver for the users field.
 func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))
@@ -85,6 +90,11 @@ func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumb
 // Organizations is the resolver for the organizations field.
 func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: Organizations - organizations"))
+}
+
+// PhoneNumber is the resolver for the phoneNumber field.
+func (r *queryResolver) PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumber - phoneNumber"))
 }
 
 // PhoneNumber returns generated.PhoneNumberResolver implementation.

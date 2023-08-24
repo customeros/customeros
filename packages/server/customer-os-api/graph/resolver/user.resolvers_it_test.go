@@ -461,53 +461,6 @@ func TestQueryResolver_User(t *testing.T) {
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", *user.User.ProfilePhotoURL)
 }
 
-func TestQueryResolver_User_WithConversations(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-
-	user1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	user2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	contact1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	contact2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	contact3 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-
-	conv1_1 := neo4jt.CreateConversation(ctx, driver, tenantName, user1, contact1, "subject 1", utils.Now())
-	conv1_2 := neo4jt.CreateConversation(ctx, driver, tenantName, user1, contact2, "subject 2", utils.Now())
-	conv2_1 := neo4jt.CreateConversation(ctx, driver, tenantName, user2, contact1, "subject 3", utils.Now())
-	conv2_3 := neo4jt.CreateConversation(ctx, driver, tenantName, user2, contact3, "subject 4", utils.Now())
-
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Conversation"))
-
-	rawResponse, err := c.RawPost(getQuery("user/get_user_with_conversations"),
-		client.Var("userId", user1))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var user struct {
-		User model.User
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
-	require.Nil(t, err)
-	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
-	require.Nil(t, err)
-	require.NotNil(t, user)
-	require.Equal(t, user1, user.User.ID)
-	require.Equal(t, 1, user.User.Conversations.TotalPages)
-	require.Equal(t, int64(2), user.User.Conversations.TotalElements)
-	require.Equal(t, 2, len(user.User.Conversations.Content))
-	conversations := user.User.Conversations.Content
-	require.ElementsMatch(t, []string{conv1_1, conv1_2}, []string{conversations[0].ID, conversations[1].ID})
-	require.ElementsMatch(t, []string{contact1, contact2}, []string{conversations[0].Contacts[0].ID, conversations[1].Contacts[0].ID})
-	require.Equal(t, user1, conversations[0].Users[0].ID)
-	require.Equal(t, user1, conversations[1].Users[0].ID)
-
-	require.NotNil(t, conv2_1)
-	require.NotNil(t, conv2_3)
-}
-
 func TestQueryResolver_User_WithPhoneNumbers(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

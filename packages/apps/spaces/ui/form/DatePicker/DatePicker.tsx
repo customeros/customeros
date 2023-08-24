@@ -49,7 +49,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <FormLabel fontWeight={600} color='gray.700' fontSize='sm' mb={-1}>
         {label}
       </FormLabel>
-      <Flex>
+      <Flex
+        sx={{
+          '& .react-date-picker__calendar-button': {
+            pl: 0,
+          },
+          '& .react-date-picker__clear-button': {
+            top: '7px',
+          },
+          '& .react-calendar__month-view__weekdays__weekday': {
+            textTransform: 'capitalize',
+          },
+        }}
+      >
         <ReactDatePicker
           id={id}
           clearIcon={
@@ -59,6 +71,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           }
           onChange={(val) => handleDateInputChange(val as DateInputValue)}
           defaultValue={value}
+          formatShortWeekday={(_, date) =>
+            DateTimeUtils.format(date.toISOString(), DateTimeUtils.shortWeekday)
+          }
+          formatMonth={(_, date) =>
+            DateTimeUtils.format(
+              date.toISOString(),
+              DateTimeUtils.abreviatedMonth,
+            )
+          }
           calendarIcon={
             <Flex alignItems='center'>
               <Box mr={3} color='gray.500'>
@@ -68,7 +89,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 {value
                   ? DateTimeUtils.format(
                       value.toISOString(),
-                      DateTimeUtils.dateWithFullMonth,
+                      DateTimeUtils.dateWithAbreviatedMonth,
                     )
                   : 'Start date'}
               </Text>

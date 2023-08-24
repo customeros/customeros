@@ -6,10 +6,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationAccountDetailsQuery } from '@organization/graphql/getAccountPanelDetails.generated';
 import { RenewalForecast, RenewalForecastType } from './RenewalForecast';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
-import {
-  BillingDetailsCard,
-  BillingDetailsType,
-} from './BillingDetailsCard/BillingDetailsCard';
+import { BillingDetailsCard } from './BillingDetailsCard/BillingDetailsCard';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
 import { TimeToRenewal } from '@organization/components/Tabs/panels/AccountPanel/TimeToRenewal/TimeToRenewal';
 
@@ -27,7 +24,7 @@ export const AccountPanel = () => {
   }
 
   return (
-    <OrganizationPanel title='Account'>
+    <OrganizationPanel title='Account' withFade>
       <RenewalLikelihood
         name={data?.organization?.name || ''}
         renewalLikelihood={
@@ -46,19 +43,12 @@ export const AccountPanel = () => {
         }
       />
       <TimeToRenewal
-        renewalCycle={
-          data?.organization?.accountDetails?.billingDetails?.renewalCycle
-        }
-        renewalCycleStart={
-          data?.organization?.accountDetails?.billingDetails?.renewalCycleStart
-        }
+        id={data?.organization?.id || ''}
+        data={data?.organization?.accountDetails?.billingDetails}
       />
       <BillingDetailsCard
         id={id}
-        billingDetailsData={
-          data?.organization?.accountDetails
-            ?.billingDetails as BillingDetailsType
-        }
+        data={data?.organization?.accountDetails?.billingDetails}
       />
     </OrganizationPanel>
   );

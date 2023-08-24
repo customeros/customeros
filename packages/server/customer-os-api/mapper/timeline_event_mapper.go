@@ -21,9 +21,6 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 	case entity.NodeLabel_Issue:
 		issueEntity := (*timelineEventEntity).(*entity.IssueEntity)
 		return MapEntityToIssue(issueEntity)
-	case entity.NodeLabel_Conversation:
-		conversationEntity := (*timelineEventEntity).(*entity.ConversationEntity)
-		return MapEntityToConversation(conversationEntity)
 	case entity.NodeLabel_Note:
 		noteEntity := (*timelineEventEntity).(*entity.NoteEntity)
 		return MapEntityToNote(noteEntity)

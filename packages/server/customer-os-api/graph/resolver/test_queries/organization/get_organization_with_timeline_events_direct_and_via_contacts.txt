@@ -33,12 +33,6 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
                 name
               }
             }
-            ... on Conversation {
-                id
-                startedAt
-                subject
-                channel
-            }
             ... on Note {
                 id
                 html

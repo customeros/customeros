@@ -47,6 +47,11 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 	panic(fmt.Errorf("not implemented: Recording - recording"))
 }
 
+// ExternalSystem is the resolver for the externalSystem field.
+func (r *meetingResolver) ExternalSystem(ctx context.Context, obj *model.Meeting) ([]*model.ExternalSystem, error) {
+	panic(fmt.Errorf("not implemented: ExternalSystem - externalSystem"))
+}
+
 // MeetingCreate is the resolver for the meeting_Create field.
 func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: MeetingCreate - meeting_Create"))
@@ -95,6 +100,11 @@ func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID 
 // Meeting is the resolver for the meeting field.
 func (r *queryResolver) Meeting(ctx context.Context, id string) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: Meeting - meeting"))
+}
+
+// ExternalMeetings is the resolver for the externalMeetings field.
+func (r *queryResolver) ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error) {
+	panic(fmt.Errorf("not implemented: ExternalMeetings - externalMeetings"))
 }
 
 // Meeting returns generated.MeetingResolver implementation.

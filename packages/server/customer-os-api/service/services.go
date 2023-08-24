@@ -25,7 +25,6 @@ type Services struct {
 	EntityTemplateService           EntityTemplateService
 	FieldSetTemplateService         FieldSetTemplateService
 	CustomFieldTemplateService      CustomFieldTemplateService
-	ConversationService             ConversationService
 	TimelineEventService            TimelineEventService
 	NoteService                     NoteService
 	JobRoleService                  JobRoleService
@@ -65,7 +64,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		EntityTemplateService:           NewEntityTemplateService(log, repositories),
 		FieldSetTemplateService:         NewFieldSetTemplateService(log, repositories),
 		CustomFieldTemplateService:      NewCustomFieldTemplateService(log, repositories),
-		ConversationService:             NewConversationService(log, repositories),
 		LocationService:                 NewLocationService(log, repositories),
 		TagService:                      NewTagService(log, repositories),
 		DomainService:                   NewDomainService(log, repositories),
