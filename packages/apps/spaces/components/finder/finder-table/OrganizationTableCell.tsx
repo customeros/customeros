@@ -16,17 +16,18 @@ import {
 
 interface OrganizationTableCellProps {
   organization: Organization;
-  activeTab?: string;
+  lastPositionParams?: string;
 }
 
 export const OrganizationTableCell = ({
   organization,
-  activeTab,
+  lastPositionParams,
 }: OrganizationTableCellProps) => {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
-
-  const href = `/organizations/${organization.id}?tab=${activeTab || 'about'}`;
+  const href = `/organizations/${organization.id}?${
+    lastPositionParams || 'tab=about'
+  }`;
   const hasParent = !!organization.subsidiaryOf?.length;
   const fullName = hasParent
     ? organization.subsidiaryOf[0].organization.name
