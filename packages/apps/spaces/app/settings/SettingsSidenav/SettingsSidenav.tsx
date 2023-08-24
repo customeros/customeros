@@ -14,7 +14,7 @@ import { useLocalStorage } from 'usehooks-ts';
 export const SettingsSidenav = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useLocalStorage(
+  const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { ['settings']: 'oauth', root: 'organization' },
   );
@@ -24,7 +24,7 @@ export const SettingsSidenav = () => {
   const handleItemClick = (tab: string) => () => {
     const params = new URLSearchParams(searchParams ?? '');
     params.set('tab', tab);
-    setActiveTab({ ...activeTab, settings: tab });
+    setLastActivePosition({ ...lastActivePosition, settings: tab });
     // todo remove, for now needed
     router.push(`?${params}`);
   };
@@ -49,7 +49,7 @@ export const SettingsSidenav = () => {
           size='xs'
           variant='ghost'
           aria-label='Go back'
-          onClick={() => router.push(`/${activeTab.root}`)}
+          onClick={() => router.push(`/${lastActivePosition.root}`)}
           icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
         />
 

@@ -23,7 +23,7 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
         <OrganizationTableCell
           key={props.getValue().id}
           organization={props.getValue()}
-          activeTab={tabs?.[props.getValue()?.id]}
+          lastPositionParams={tabs?.[props.getValue()?.id]}
         />
       );
     },

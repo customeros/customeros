@@ -111,6 +111,7 @@ export const OrganizationTimeline: FC = () => {
       )}
       <TimelineEventPreviewContextContextProvider
         data={timelineEmailEvents || []}
+        id={id}
       >
         <Virtuoso
           ref={virtuoso}

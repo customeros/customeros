@@ -18,21 +18,24 @@ interface RootSidenavProps {
 export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useLocalStorage(
+  const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { root: 'organization' },
   );
 
   useEffect(() => {
     if (pathname === '/') {
-      setActiveTab({ ...activeTab, root: 'organization' });
+      setLastActivePosition({ ...lastActivePosition, root: 'organization' });
     }
     if (pathname && pathname !== '/') {
-      setActiveTab({ ...activeTab, root: pathname.substring(1) });
+      setLastActivePosition({
+        ...lastActivePosition,
+        root: pathname.substring(1),
+      });
     }
   }, []);
   const handleItemClick = (path: string) => {
-    setActiveTab({ ...activeTab, root: path });
+    setLastActivePosition({ ...lastActivePosition, root: path });
     router.push(`/${path}`);
   };
 

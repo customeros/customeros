@@ -2,6 +2,7 @@ import { PropsWithChildren, RefObject, useContext } from 'react';
 import { createContext, useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { InteractionEvent } from '@graphql/types';
+import { useLocalStorage } from 'usehooks-ts';
 
 export const noop = () => undefined;
 
@@ -31,7 +32,13 @@ export const useTimelineEventPreviewContext = () => {
 export const TimelineEventPreviewContextContextProvider = ({
   children,
   data = [],
-}: PropsWithChildren<{ data: InteractionEvent[] }>) => {
+  id = '',
+}: PropsWithChildren<{ data: InteractionEvent[]; id: string }>) => {
+  const [lastActivePosition, setLastActivePosition] = useLocalStorage(
+    `customeros-player-last-position`,
+    { [id]: 'tab=about' },
+  );
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<InteractionEvent | null>(
     null,
@@ -45,6 +52,10 @@ export const TimelineEventPreviewContextContextProvider = ({
     const params = new URLSearchParams(searchParams ?? '');
     params.set('events', content.id);
     router.push(`?${params}`);
+    setLastActivePosition({
+      ...lastActivePosition,
+      [id]: params.toString(),
+    });
     setModalContent(content);
   };
 
