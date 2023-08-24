@@ -24,7 +24,6 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
   );
 
   useEffect(() => {
-    console.log('🏷️ ----- pathname: ', pathname);
     if (pathname === '/') {
       setActiveTab({ ...activeTab, root: 'organization' });
     }
