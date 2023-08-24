@@ -1,7 +1,0 @@
-bin
-message-store-api
-test/graph/generated/
-test/graph/model/models_gen.go
-
-cover.out
-unit-tests.xml
