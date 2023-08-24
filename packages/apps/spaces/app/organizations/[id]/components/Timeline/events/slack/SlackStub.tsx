@@ -73,7 +73,7 @@ export const SlackStub: FC<{ slackEvent: InteractionEvent }> = ({
 
       return threadSender;
     })
-    ?.filter((v, i, a) => a.findIndex((t) => t?.id === v?.id) === i);
+    ?.filter((v, i, a) => a.findIndex((t) => !!t && t?.id === v?.id) === i);
 
   return (
     <>
@@ -90,13 +90,13 @@ export const SlackStub: FC<{ slackEvent: InteractionEvent }> = ({
           <Flex mt={1}>
             <Flex columnGap={1} mr={1}>
               {uniqThreadParticipants?.map(
-                ({ profilePhotoUrl, id, name, firstName, lastName }) => (
+                ({ id, name, firstName, lastName, ...rest }) => (
                   <Avatar
                     name={name || `${firstName} ${lastName}`}
                     key={`uniq-slack-thread-participant-${slackEvent.id}-${id}`}
                     variant='roundedSquareSmall'
                     size='xs'
-                    src={profilePhotoUrl || undefined}
+                    src={rest?.profilePhotoUrl || undefined}
                   />
                 ),
               )}
