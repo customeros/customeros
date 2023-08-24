@@ -63,7 +63,7 @@ spec:
 
 
             - name: CUSTOMER_OS_API
-              value: "http://customer-os-api-service.openline.svc.cluster.local:10000/query"
+              value: "http://customer-os-api-service.openline.svc.cluster.local:10000/admin/query"
             - name: CUSTOMER_OS_API_KEY
               value: "13604691-6850-4f08-a568-d995fb57b4f3"
 
