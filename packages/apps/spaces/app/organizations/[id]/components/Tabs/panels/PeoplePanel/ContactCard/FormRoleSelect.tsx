@@ -45,7 +45,6 @@ export const FormRoleSelect = ({
             { value: 'Stakeholder', label: 'Stakeholder' },
             { value: 'Gatekeeper', label: 'Gatekeeper' },
             { value: 'Champion', label: 'Champion' },
-            { value: 'Interogator', label: 'Interogator' },
             { value: 'Data Owner', label: 'Data Owner' },
           ]}
           formId={formId}
