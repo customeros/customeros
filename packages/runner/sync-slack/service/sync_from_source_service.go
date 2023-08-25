@@ -272,7 +272,7 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncFromSourceService.syncUser")
 	defer span.Finish()
 	span.SetTag("tenant", tenant)
-	span.LogFields(log.String("tenantDomain", tenantDomain), log.String("userId", userId), log.String("orgId", orgId))
+	span.LogFields(log.String("tenantDomain", tenantDomain), log.String("slackUserId", userId), log.String("organizationId", orgId))
 
 	cachedSlackUser, ok := s.cache.GetSlackUser(tenant, userId)
 	var okContactCheck = true
@@ -287,6 +287,7 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 			return err
 		}
 		if slackUser == nil {
+			span.LogFields(log.String("output", "slack user not found"))
 			return nil
 		}
 		if slackUser.Deleted || slackUser.IsBot || slackUser.IsAppUser {
@@ -295,11 +296,8 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 				UserType: caches.UserType_NonUser,
 				Name:     slackUser.Name,
 			})
+			span.LogFields(log.String("output", "slack user is not real user"))
 			return nil
-		}
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
 		}
 		if strings.HasSuffix(slackUser.Profile.Email, tenantDomain) {
 			// save as user
@@ -313,6 +311,7 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 				UserType: caches.UserType_User,
 				Name:     slackUser.Profile.RealNameNormalized,
 			})
+			span.LogFields(log.String("output", "slack user is user"))
 		} else {
 			// save as contact
 			output := struct {
@@ -334,6 +333,7 @@ func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDoma
 				Name:     slackUser.Profile.RealNameNormalized,
 			})
 			s.cache.SetSlackUserAsContactForOrg(orgId, userId, "contact")
+			span.LogFields(log.String("output", "slack user is contact"))
 		}
 	}
 	return nil
