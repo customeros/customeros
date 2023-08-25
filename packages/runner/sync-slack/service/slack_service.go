@@ -90,8 +90,9 @@ func (s *slackService) FetchUserIdsFromSlackChannel(ctx context.Context, token, 
 }
 
 func (s *slackService) FetchUserInfo(ctx context.Context, token, userId string) (*slack.User, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchUserFromSlackChannel")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchUserInfo")
 	defer span.Finish()
+	span.LogFields(log.String("slackUserId", userId))
 
 	client := slack.New(token)
 
