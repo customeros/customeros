@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
@@ -10,11 +11,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
+	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 	"io"
 	"log"
+	"os"
+	"time"
 )
 
 func main() {
@@ -42,27 +49,37 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not connect to db: %v", err)
 	}
+	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, nil)
 	services := service.InitServices(graphqlClient, redisClient, &config, db)
 	hub := ContactHub.NewContactHub()
 	go hub.Run()
-	routes.Run(&config, hub, services) // run this as a background goroutine
+	routes.Run(&config, hub, services, commonRepositoryContainer) // run this as a background goroutine
 
 }
 
 func InitDB(cfg *commsApiConfig.Config) (db *commsApiConfig.StorageDB, err error) {
-	db, err = commsApiConfig.NewDBConn(
-		cfg.Postgres.Host,
-		cfg.Postgres.Port,
-		cfg.Postgres.Db,
-		cfg.Postgres.User,
-		cfg.Postgres.Password,
-		cfg.Postgres.MaxConn,
-		cfg.Postgres.MaxIdleConn,
-		cfg.Postgres.ConnMaxLifetime)
+	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ", cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Db, cfg.Postgres.User, cfg.Postgres.Password)
+	gormDb, err := gorm.Open(postgres.Open(connectString), initConfig(cfg))
+
+	var sqlDb *sql.DB
 	if err != nil {
-		return nil, fmt.Errorf("InitDB: Coud not open db connection: %s", err.Error())
+		return nil, err
 	}
-	return db, nil
+	if sqlDb, err = gormDb.DB(); err != nil {
+		return nil, err
+	}
+	if err = sqlDb.Ping(); err != nil {
+		return nil, err
+	}
+
+	sqlDb.SetMaxIdleConns(cfg.Postgres.MaxIdleConn)
+	sqlDb.SetMaxOpenConns(cfg.Postgres.MaxConn)
+	sqlDb.SetConnMaxLifetime(time.Duration(cfg.Postgres.ConnMaxLifetime) * time.Second)
+
+	return &commsApiConfig.StorageDB{
+		SqlDB:  sqlDb,
+		GormDB: gormDb,
+	}, nil
 }
 
 func loadConfiguration() commsApiConfig.Config {
@@ -85,4 +102,30 @@ func initTracing(cfg *tracing.JaegerConfig, appLogger logger.Logger) io.Closer {
 	}
 	opentracing.SetGlobalTracer(tracer)
 	return closer
+}
+
+func initConfig(cfg *commsApiConfig.Config) *gorm.Config {
+	return &gorm.Config{
+		AllowGlobalUpdate: true,
+		Logger:            initLog(cfg),
+	}
+}
+
+// initLog Connection Log Configuration
+func initLog(cfg *commsApiConfig.Config) gormLogger.Interface {
+	var logLevel = gormLogger.Silent
+	switch cfg.Postgres.LogLevel {
+	case "ERROR":
+		logLevel = gormLogger.Error
+	case "WARN":
+		logLevel = gormLogger.Warn
+	case "INFO":
+		logLevel = gormLogger.Info
+	}
+	newLogger := gormLogger.New(log.New(io.MultiWriter(os.Stdout), "\r\n", log.LstdFlags), gormLogger.Config{
+		Colorful:      true,
+		LogLevel:      logLevel,
+		SlowThreshold: time.Second,
+	})
+	return newLogger
 }

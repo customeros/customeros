@@ -11,6 +11,7 @@ import (
 
 type Repositories struct {
 	AppKeyRepository                    repository.AppKeyRepository
+	PersonalIntegrationRepository       repository.PersonalIntegrationRepository
 	AiPromptLogRepository               repository.AiPromptLogRepository
 	ImportAllowedOrganizationRepository repository.ImportAllowedOrganizationRepository
 	UserRepository                      neo4jrepo.UserRepository
@@ -22,6 +23,7 @@ type Repositories struct {
 func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
 	repositories := &Repositories{
 		AppKeyRepository:                    repository.NewAppKeyRepo(db),
+		PersonalIntegrationRepository:       repository.NewPersonalIntegrationsRepo(db),
 		AiPromptLogRepository:               repository.NewAiPromptLogRepository(db),
 		ImportAllowedOrganizationRepository: repository.NewImportAllowedOrganizationRepository(db),
 		UserRepository:                      neo4jrepo.NewUserRepository(driver),
@@ -45,6 +47,12 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 	}
 
 	err = db.AutoMigrate(&entity.ImportAllowedOrganization{})
+	if err != nil {
+		log.Print(err)
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.PersonalIntegration{})
 	if err != nil {
 		log.Print(err)
 		panic(err)

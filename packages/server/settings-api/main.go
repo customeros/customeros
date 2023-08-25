@@ -51,6 +51,7 @@ func main() {
 
 	routes.InitIntegrationRoutes(r, ctx, commonRepositoryContainer, services)
 	routes.InitUserSettingsRoutes(r, ctx, commonRepositoryContainer, services)
+	routes.InitPersonalIntegrationRoutes(r, ctx, commonRepositoryContainer, services)
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
