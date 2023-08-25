@@ -2,11 +2,13 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func addHealthRoutes(rg *gin.RouterGroup) {
-	rg.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+	rg.GET("/health", healthCheckHandler)
+	rg.GET("/readiness", healthCheckHandler)
+}
+
+func healthCheckHandler(c *gin.Context) {
+	c.JSON(200, gin.H{"status": "OK"})
 }
