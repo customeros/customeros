@@ -307,7 +307,7 @@ const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
             background: 'transparent',
           },
           '&::-webkit-scrollbar-thumb': {
-            background: 'gray.200',
+            background: 'gray.300',
             borderRadius: '24px',
           },
         }}
