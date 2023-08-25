@@ -661,6 +661,11 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 		if err != nil {
 			return "", fmt.Errorf("unable to link domain to organization: %v", err)
 		}
+
+		_, err := s.repositories.ActionRepository.Create(ctx, tx, tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated, Source, AppSource)
+		if err != nil {
+			return "", fmt.Errorf("unable to create action: %v", err)
+		}
 	} else {
 
 		organizationNode, err = s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
@@ -695,6 +700,12 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 			if err != nil {
 				return "", fmt.Errorf("unable to link domain to organization: %v", err)
 			}
+
+			_, err := s.repositories.ActionRepository.Create(ctx, tx, tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated, Source, AppSource)
+			if err != nil {
+				return "", fmt.Errorf("unable to create action: %v", err)
+			}
+
 		} else {
 			organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
 		}

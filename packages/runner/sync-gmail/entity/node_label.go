@@ -6,4 +6,5 @@ const (
 	NodeLabel_InteractionSession = "InteractionSession"
 	NodeLabel_Issue              = "Issue"
 	NodeLabel_Meeting            = "Meeting"
+	NodeLabel_Organization       = "Organization"
 )
