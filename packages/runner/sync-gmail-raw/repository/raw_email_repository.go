@@ -7,6 +7,7 @@ import (
 )
 
 type RawEmailRepository interface {
+	EmailExistsByMessageId(externalSystem, tenant, usernameSource, messageId string) (bool, error)
 	Store(externalSystem, tenantName, usernameSource, messageId, rawEmail string) error
 }
 
@@ -16,6 +17,18 @@ type rawEmailRepositoryImpl struct {
 
 func NewRawEmailRepository(gormDb *gorm.DB) RawEmailRepository {
 	return &rawEmailRepositoryImpl{gormDb: gormDb}
+}
+
+func (repo *rawEmailRepositoryImpl) EmailExistsByMessageId(externalSystem, tenant, usernameSource, messageId string) (bool, error) {
+	var result int64
+	err := repo.gormDb.Model(entity.RawEmail{}).Where("external_system = ? AND tenant_name = ? AND username_source = ? AND message_id = ?", externalSystem, tenant, usernameSource, messageId).Count(&result).Error
+
+	if err != nil {
+		logrus.Errorf("Failed getting rawEmail: %s; %s; %s", externalSystem, tenant, messageId)
+		return false, err
+	}
+
+	return result > 0, nil
 }
 
 func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenantName, usernameSource, messageId, rawEmail string) error {
