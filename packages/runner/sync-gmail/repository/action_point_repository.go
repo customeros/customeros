@@ -9,21 +9,21 @@ import (
 	"time"
 )
 
-type ActionItemRepository interface {
+type ActionPointRepository interface {
 	ActionsItemsExistsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) (bool, error)
 	CreateActionItemForEmail(ctx context.Context, tenant, interactionEventId, content, source, appSource string, createdAt time.Time) (*dbtype.Node, error)
 }
 
-type actionItemRepository struct {
+type actionPointRepository struct {
 	driver *neo4j.DriverWithContext
 }
 
-func NewActionItemRepository(driver *neo4j.DriverWithContext) ActionItemRepository {
-	return &actionItemRepository{
+func NewActionPointRepository(driver *neo4j.DriverWithContext) ActionPointRepository {
+	return &actionPointRepository{
 		driver: driver,
 	}
 }
-func (r *actionItemRepository) ActionsItemsExistsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) (bool, error) {
+func (r *actionPointRepository) ActionsItemsExistsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) (bool, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -51,7 +51,7 @@ func (r *actionItemRepository) ActionsItemsExistsForInteractionEvent(ctx context
 	return result.(int64) > 0, nil
 }
 
-func (r *actionItemRepository) CreateActionItemForEmail(ctx context.Context, tenant, interactionEventId, content, source, appSource string, createdAt time.Time) (*dbtype.Node, error) {
+func (r *actionPointRepository) CreateActionItemForEmail(ctx context.Context, tenant, interactionEventId, content, source, appSource string, createdAt time.Time) (*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

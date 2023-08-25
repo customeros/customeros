@@ -5,6 +5,7 @@ type DataSource string
 const (
 	DataSourceNA             DataSource = ""
 	DataSourceOpenline       DataSource = "openline"
+	DataSourceGmail          DataSource = "gmail"
 	DataSourceHubspot        DataSource = "hubspot"
 	DataSourceZendeskSupport DataSource = "zendesk_support"
 	DataSourcePipedrive      DataSource = "pipedrive"
