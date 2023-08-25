@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-admin-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-admin-api
+  template:
+    metadata:
+      labels:
+        app: user-admin-api
+    spec:
+      containers:
+        - image: ghcr.io/openline-ai/openline-customer-os/user-admin-api:latest
+          name: user-admin-api
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 4001
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4001
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe: # To check if the Pod is ready to serve traffic or not
+            httpGet:
+              path: /readiness
+              port: 4001
+              scheme: HTTP
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          env:
+            - name: POSTGRES_USER
+              value: "openline"
+            - name: POSTGRES_PASSWORD
+              value: "password"
+            - name: POSTGRES_DB
+              value: "openline"
+            - name: POSTGRES_HOST
+              value: "customer-db-postgresql.openline.svc.cluster.local"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_MAX_CONN
+              value: "100"
+            - name: POSTGRES_MAX_IDLE_CONN
+              value: "10"
+            - name: POSTGRES_CONN_MAX_LIFETIME
+              value: "0"
+            - name: POSTGRES_LOG_LEVEL
+              value: "INFO"
+
+            - name: PORT
+              value: "4001"
+
+            - name: USER_ADMIN_API_CORS_URL
+              value: "http://localhost:3000 http://localhost:3001"
+            - name: USER_ADMIN_API_SERVER_ADDRESS
+              value: ":4001"
+
+
+            - name: CUSTOMER_OS_API
+              value: "http://customer-os-api-service.openline.svc.cluster.local:10000/admin/query"
+            - name: CUSTOMER_OS_API_KEY
+              value: "13604691-6850-4f08-a568-d995fb57b4f3"
+
+            - name: USER_ADMIN_API_KEY
+              value: "cad7ccb6-d8ff-4bae-a048-a42db33a217e"
+            - name: GOOGLE_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: user-admin-api-secret
+                  key: GOOGLE_OAUTH_CLIENT_ID
+            - name: GOOGLE_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: user-admin-api-secret
+                  key: GOOGLE_OAUTH_CLIENT_SECRET
+
+              # valid log values (PANIC, FATAL, ERROR, WARN, INFO, DEBUG)
+            - name: LOGGER_LEVEL
+              value: "DEBUG"
+            - name: LOGGER_DEV_MODE
+              value: "true"
+            - name: LOGGER_ENCODER
+              value: "console"
