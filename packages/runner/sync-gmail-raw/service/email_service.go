@@ -73,14 +73,6 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		return fmt.Errorf("unable to retrieve history id for username: %v", err)
 	}
 
-	//empty cursor means all messages have been read already
-	if forUsername != nil && *forUsername == "" {
-		return nil
-	} else if forUsername == nil {
-		emptyString := ""
-		forUsername = &emptyString
-	}
-
 	userMessages, err := googleServer.Users.Messages.List(username).MaxResults(s.cfg.SyncData.BatchSize).PageToken(*forUsername).Do()
 	if err != nil {
 		return fmt.Errorf("unable to retrieve emails for user: %v", err)
@@ -93,6 +85,31 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		}
 
 		messageId := ""
+
+		for i := range email.Payload.Headers {
+			headerName := strings.ToLower(email.Payload.Headers[i].Name)
+			if headerName == "message-id" {
+				messageId = email.Payload.Headers[i].Value
+			}
+		}
+
+		if messageId == "" {
+			continue
+		}
+
+		emailExists, err := s.repositories.RawEmailRepository.EmailExistsByMessageId("gmail", tenant, username, messageId)
+		if err != nil {
+			return fmt.Errorf("unable to check if email exists: %v", err)
+		}
+
+		if emailExists {
+			err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, "")
+			if err != nil {
+				return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+			}
+			return nil
+		}
+
 		emailSubject := ""
 		emailHtml := ""
 		emailText := ""
@@ -176,11 +193,9 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 
 	}
 
-	if userMessages.NextPageToken != "" {
-		err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, userMessages.NextPageToken)
-		if err != nil {
-			return fmt.Errorf("unable to update the gmail page token for username: %v", err)
-		}
+	err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, userMessages.NextPageToken)
+	if err != nil {
+		return fmt.Errorf("unable to update the gmail page token for username: %v", err)
 	}
 
 	return nil
