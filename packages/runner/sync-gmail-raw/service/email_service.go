@@ -73,124 +73,131 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		return fmt.Errorf("unable to retrieve history id for username: %v", err)
 	}
 
+	if forUsername == nil {
+		emptyString := ""
+		forUsername = &emptyString
+	}
+
 	userMessages, err := googleServer.Users.Messages.List(username).MaxResults(s.cfg.SyncData.BatchSize).PageToken(*forUsername).Do()
 	if err != nil {
 		return fmt.Errorf("unable to retrieve emails for user: %v", err)
 	}
 
-	for _, message := range userMessages.Messages {
-		email, err := googleServer.Users.Messages.Get(username, message.Id).Format("full").Do()
-		if err != nil {
-			return fmt.Errorf("unable to retrieve email: %v", err)
-		}
-
-		messageId := ""
-
-		for i := range email.Payload.Headers {
-			headerName := strings.ToLower(email.Payload.Headers[i].Name)
-			if headerName == "message-id" {
-				messageId = email.Payload.Headers[i].Value
-			}
-		}
-
-		if messageId == "" {
-			continue
-		}
-
-		emailExists, err := s.repositories.RawEmailRepository.EmailExistsByMessageId("gmail", tenant, username, messageId)
-		if err != nil {
-			return fmt.Errorf("unable to check if email exists: %v", err)
-		}
-
-		if emailExists {
-			err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, "")
+	if userMessages != nil && len(userMessages.Messages) > 0 {
+		for _, message := range userMessages.Messages {
+			email, err := googleServer.Users.Messages.Get(username, message.Id).Format("full").Do()
 			if err != nil {
-				return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+				return fmt.Errorf("unable to retrieve email: %v", err)
 			}
-			return nil
-		}
 
-		emailSubject := ""
-		emailHtml := ""
-		emailText := ""
-		emailSentDate := ""
+			messageId := ""
 
-		from := ""
-		to := ""
-		cc := ""
-		bcc := ""
-
-		threadId := message.ThreadId
-		references := ""
-		inReplyTo := ""
-
-		emailHeaders := make(map[string]string)
-
-		for i := range email.Payload.Headers {
-			headerName := strings.ToLower(email.Payload.Headers[i].Name)
-			emailHeaders[email.Payload.Headers[i].Name] = email.Payload.Headers[i].Value
-			if headerName == "message-id" {
-				messageId = email.Payload.Headers[i].Value
-			} else if headerName == "subject" {
-				emailSubject = email.Payload.Headers[i].Value
-				if emailSubject == "" {
-					emailSubject = "No Subject"
-				} else if strings.HasPrefix(emailSubject, "Re: ") {
-					emailSubject = emailSubject[4:]
+			for i := range email.Payload.Headers {
+				headerName := strings.ToLower(email.Payload.Headers[i].Name)
+				if headerName == "message-id" {
+					messageId = email.Payload.Headers[i].Value
 				}
-			} else if headerName == "from" {
-				from = email.Payload.Headers[i].Value
-			} else if headerName == "to" {
-				to = email.Payload.Headers[i].Value
-			} else if headerName == "cc" {
-				cc = email.Payload.Headers[i].Value
-			} else if headerName == "bcc" {
-				bcc = email.Payload.Headers[i].Value
-			} else if headerName == "references" {
-				references = email.Payload.Headers[i].Value
-			} else if headerName == "in-reply-to" {
-				inReplyTo = email.Payload.Headers[i].Value
-			} else if headerName == "date" {
-				emailSentDate = email.Payload.Headers[i].Value
 			}
-		}
 
-		for i := range email.Payload.Parts {
-			if email.Payload.Parts[i].MimeType == "text/html" {
-				emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
-				emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
-			} else if email.Payload.Parts[i].MimeType == "text/plain" {
-				emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
-				emailText = fmt.Sprintf("%s", string(emailTextBytes))
+			if messageId == "" {
+				continue
 			}
-		}
 
-		rawEmailData := &EmailRawData{
-			MessageId: messageId,
-			Sent:      emailSentDate,
-			Subject:   emailSubject,
-			From:      from,
-			To:        to,
-			Cc:        cc,
-			Bcc:       bcc,
-			Html:      emailHtml,
-			Text:      emailText,
-			ThreadId:  threadId,
-			InReplyTo: inReplyTo,
-			Reference: references,
-			Headers:   emailHeaders,
-		}
+			emailExists, err := s.repositories.RawEmailRepository.EmailExistsByMessageId("gmail", tenant, username, messageId)
+			if err != nil {
+				return fmt.Errorf("unable to check if email exists: %v", err)
+			}
 
-		jsonContent, err := JSONMarshal(rawEmailData)
-		if err != nil {
-			return fmt.Errorf("failed to marshal email content: %v", err)
-		}
+			if emailExists {
+				err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, "")
+				if err != nil {
+					return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+				}
+				return nil
+			}
 
-		err = s.repositories.RawEmailRepository.Store("gmail", tenant, username, messageId, string(jsonContent))
-		if err != nil {
-			return fmt.Errorf("failed to store email content: %v", err)
-		}
+			emailSubject := ""
+			emailHtml := ""
+			emailText := ""
+			emailSentDate := ""
 
+			from := ""
+			to := ""
+			cc := ""
+			bcc := ""
+
+			threadId := message.ThreadId
+			references := ""
+			inReplyTo := ""
+
+			emailHeaders := make(map[string]string)
+
+			for i := range email.Payload.Headers {
+				headerName := strings.ToLower(email.Payload.Headers[i].Name)
+				emailHeaders[email.Payload.Headers[i].Name] = email.Payload.Headers[i].Value
+				if headerName == "message-id" {
+					messageId = email.Payload.Headers[i].Value
+				} else if headerName == "subject" {
+					emailSubject = email.Payload.Headers[i].Value
+					if emailSubject == "" {
+						emailSubject = "No Subject"
+					} else if strings.HasPrefix(emailSubject, "Re: ") {
+						emailSubject = emailSubject[4:]
+					}
+				} else if headerName == "from" {
+					from = email.Payload.Headers[i].Value
+				} else if headerName == "to" {
+					to = email.Payload.Headers[i].Value
+				} else if headerName == "cc" {
+					cc = email.Payload.Headers[i].Value
+				} else if headerName == "bcc" {
+					bcc = email.Payload.Headers[i].Value
+				} else if headerName == "references" {
+					references = email.Payload.Headers[i].Value
+				} else if headerName == "in-reply-to" {
+					inReplyTo = email.Payload.Headers[i].Value
+				} else if headerName == "date" {
+					emailSentDate = email.Payload.Headers[i].Value
+				}
+			}
+
+			for i := range email.Payload.Parts {
+				if email.Payload.Parts[i].MimeType == "text/html" {
+					emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
+					emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
+				} else if email.Payload.Parts[i].MimeType == "text/plain" {
+					emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
+					emailText = fmt.Sprintf("%s", string(emailTextBytes))
+				}
+			}
+
+			rawEmailData := &EmailRawData{
+				MessageId: messageId,
+				Sent:      emailSentDate,
+				Subject:   emailSubject,
+				From:      from,
+				To:        to,
+				Cc:        cc,
+				Bcc:       bcc,
+				Html:      emailHtml,
+				Text:      emailText,
+				ThreadId:  threadId,
+				InReplyTo: inReplyTo,
+				Reference: references,
+				Headers:   emailHeaders,
+			}
+
+			jsonContent, err := JSONMarshal(rawEmailData)
+			if err != nil {
+				return fmt.Errorf("failed to marshal email content: %v", err)
+			}
+
+			err = s.repositories.RawEmailRepository.Store("gmail", tenant, username, messageId, string(jsonContent))
+			if err != nil {
+				return fmt.Errorf("failed to store email content: %v", err)
+			}
+
+		}
 	}
 
 	err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, userMessages.NextPageToken)
