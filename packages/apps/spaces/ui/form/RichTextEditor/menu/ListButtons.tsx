@@ -1,7 +1,7 @@
 import { useActive, useCommands } from '@remirror/react';
 import { Flex } from '@chakra-ui/react';
-import OrderedList from '../../../../components/ui/media/icons/OrderedList';
-import UnorderedList from '../../../../components/ui/media/icons/UnorderedList';
+import OrderedList from '@ui/media/icons/OrderedList';
+import UnorderedList from '@ui/media/icons/UnorderedList';
 import React from 'react';
 import { ToolbarButton } from './ToolbarButton';
 

@@ -8,7 +8,6 @@
     "build:cluster": "env-cmd -f .env.cluster next build",
     "start": "next start",
     "icons": "npx @svgr/cli --typescript --out-dir components/ui-kit/atoms/icons --ignore-existing -- public/icons",
-    "new": "npx @svgr/cli --typescript --out-dir components/ui/media/icons -- public/icons/new",
     "codegen": "graphql-codegen --require dotenv/config --config codegen.ts",
     "codegen:graphql": "graphql-codegen --require dotenv/config --config graphql-codegen.ts",
     "preatify": "yarn prettier --write ."

@@ -1,9 +1,9 @@
 import { useActive, useCommands } from '@remirror/react';
 import { Flex } from '@chakra-ui/react';
-import Bold from '../../../../components/ui/media/icons/Bold';
-import Italic from '../../../../components/ui/media/icons/Italic';
-import Strikethrough from '../../../../components/ui/media/icons/Strikethrough';
-import Underline from '../../../../components/ui/media/icons/Underline';
+import Bold from '@ui/media/icons/Bold';
+import Italic from '@ui/media/icons/Italic';
+import Strikethrough from '@ui/media/icons/Strikethrough';
+import Underline from '@ui/media/icons/Underline';
 import React from 'react';
 import { ToolbarButton } from './ToolbarButton';
 

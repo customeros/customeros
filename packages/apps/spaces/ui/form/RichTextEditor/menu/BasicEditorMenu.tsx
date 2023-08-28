@@ -1,13 +1,12 @@
 import React, { FC } from 'react';
 import { useActive, useCommands } from '@remirror/react';
 import { Flex, HStack, StackDivider } from '@chakra-ui/react';
-import { IconButton } from '@ui/form/IconButton';
-import Quote from '../../../../components/ui/media/icons/Quote';
+import Quote from '@ui/media/icons/Quote';
 import { TextFormatButtons } from './TextFormatButtons';
 import { ListButtons } from './ListButtons';
 import { IndentButtons } from './IndentButtons';
 import { Button } from '@ui/form/Button';
-import {ToolbarButton} from "@ui/form/RichTextEditor/menu/ToolbarButton";
+import { ToolbarButton } from './ToolbarButton';
 
 export const BasicEditorMenu: FC<{
   isSending: boolean;
