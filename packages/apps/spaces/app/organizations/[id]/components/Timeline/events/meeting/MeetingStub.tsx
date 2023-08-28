@@ -32,11 +32,14 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
     return '';
   })();
 
+  const note = convert(data?.note?.[0]?.html);
+  const agenda = data?.agenda ?? '';
+
   const [participants, remaining] = (() => {
     const count = data?.attendedBy?.length;
 
     if (data?.attendedBy?.length) {
-      return data?.attendedBy
+      const fullArray = data?.attendedBy
         ?.map((participant) => {
           if (participant?.__typename === 'ContactParticipant') {
             return (
@@ -46,18 +49,23 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
           }
           return '';
         })
+        .filter(Boolean);
+
+      if (!note || !agenda)
+        return [fullArray.join(count > 2 ? ', ' : ' and '), ''];
+
+      return fullArray
         .filter((v, i) => {
           if (!owner && i === 0 && v) return false; // skip 1st participant if there's no owner
-          return v && i < 2;
+          return v && i < (!owner ? 3 : 2);
         })
         .join(count > 2 ? ', ' : ' and ')
         .concat(count > 2 ? ` + ${count - (!owner ? 3 : 2)}` : '')
         .split(' + ');
     }
+
     return [];
   })();
-
-  const note = convert(data?.note?.[0]?.html);
 
   return (
     <Card
@@ -71,7 +79,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
       borderRadius='lg'
     >
       <CardBody p='3'>
-        <Flex w='full' justify='space-between' position='relative'>
+        <Flex w='full' justify='space-between' position='relative' gap='3'>
           <VStack spacing='0' alignItems='flex-start'>
             <Text
               fontSize='sm'
@@ -81,27 +89,42 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
             >
               {data?.name ?? '(No title)'}
             </Text>
-            <Text fontSize='sm' color='gray.700'>
-              {owner || firstParticipant}{' '}
-              <Text as='span' color='gray.500'>
-                met
-              </Text>{' '}
-              {participants}
-              {remaining && (
+            <Flex>
+              <Text
+                fontSize='sm'
+                color='gray.700'
+                noOfLines={note || agenda ? 1 : 3}
+                maxW='463px'
+              >
+                {owner || firstParticipant}{' '}
                 <Text as='span' color='gray.500'>
+                  met
+                </Text>{' '}
+                {participants}
+              </Text>
+              {remaining && (
+                <Text
+                  ml='1'
+                  fontSize='sm'
+                  as='span'
+                  color='gray.500'
+                  whiteSpace='nowrap'
+                >
                   {` + ${remaining}`}
                 </Text>
               )}
-            </Text>
-
-            <Flex align='flex-start'>
-              {note && (
-                <Icons.File2 boxSize='3' mt='1' mr='1' color='gray.500' />
-              )}
-              <Text fontSize='sm' color='gray.500' noOfLines={2}>
-                {note ?? data?.agenda}
-              </Text>
             </Flex>
+
+            {(note || agenda) && (
+              <Flex align='flex-start'>
+                {note && (
+                  <Icons.File2 boxSize='3' mt='1' mr='1' color='gray.500' />
+                )}
+                <Text fontSize='sm' color='gray.500' noOfLines={2}>
+                  {note || agenda}
+                </Text>
+              </Flex>
+            )}
           </VStack>
 
           <Center minW='12' h='10'>
