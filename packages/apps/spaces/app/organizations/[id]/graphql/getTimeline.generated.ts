@@ -37,7 +37,6 @@ export type GetTimelineQuery = {
     timelineEvents: Array<
       | { __typename: 'Action' }
       | { __typename: 'Analysis' }
-      | { __typename: 'Conversation' }
       | {
           __typename: 'InteractionEvent';
           id: string;
@@ -310,7 +309,50 @@ export type GetTimelineQuery = {
         }
       | { __typename: 'InteractionSession' }
       | { __typename: 'Issue' }
-      | { __typename: 'Meeting' }
+      | {
+          __typename: 'Meeting';
+          id: string;
+          name?: string | null;
+          createdAt: any;
+          updatedAt: any;
+          startedAt?: any | null;
+          endedAt?: any | null;
+          agenda?: string | null;
+          status: Types.MeetingStatus;
+          attendedBy: Array<
+            | {
+                __typename: 'ContactParticipant';
+                type?: string | null;
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  prefix?: string | null;
+                  firstName?: string | null;
+                  description?: string | null;
+                  timezone?: string | null;
+                };
+              }
+            | { __typename?: 'OrganizationParticipant' }
+            | { __typename?: 'UserParticipant' }
+          >;
+          createdBy: Array<
+            | {
+                __typename: 'ContactParticipant';
+                type?: string | null;
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  prefix?: string | null;
+                  firstName?: string | null;
+                  description?: string | null;
+                  timezone?: string | null;
+                };
+              }
+            | { __typename?: 'OrganizationParticipant' }
+            | { __typename?: 'UserParticipant' }
+          >;
+          note: Array<{ __typename?: 'Note'; id: string; html: string }>;
+        }
       | { __typename: 'Note' }
       | { __typename: 'PageView' }
     >;
@@ -320,11 +362,11 @@ export type GetTimelineQuery = {
 export const GetTimelineDocument = `
     query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
-    timelineEventsTotalCount(timelineEventTypes: [INTERACTION_EVENT])
+    timelineEventsTotalCount(timelineEventTypes: [INTERACTION_EVENT, MEETING])
     timelineEvents(
       from: $from
       size: $size
-      timelineEventTypes: [INTERACTION_EVENT]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING]
     ) {
       __typename
       ... on InteractionEvent {
@@ -561,6 +603,46 @@ export const GetTimelineDocument = `
           }
         }
         source
+      }
+      ... on Meeting {
+        id
+        name
+        createdAt
+        updatedAt
+        startedAt
+        endedAt
+        attendedBy {
+          ... on ContactParticipant {
+            __typename
+            type
+            contactParticipant {
+              id
+              prefix
+              firstName
+              description
+              timezone
+            }
+          }
+        }
+        createdBy {
+          ... on ContactParticipant {
+            __typename
+            type
+            contactParticipant {
+              id
+              prefix
+              firstName
+              description
+              timezone
+            }
+          }
+        }
+        note {
+          id
+          html
+        }
+        agenda
+        status
       }
     }
   }

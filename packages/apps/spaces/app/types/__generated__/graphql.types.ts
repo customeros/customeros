@@ -145,7 +145,6 @@ export type Contact = ExtensibleEntity &
   Node & {
     __typename?: 'Contact';
     appSource?: Maybe<Scalars['String']>;
-    conversations: ConversationPage;
     /**
      * An ISO8601 timestamp recording when the contact was created in customerOS.
      * **Required**
@@ -215,15 +214,6 @@ export type Contact = ExtensibleEntity &
     title?: Maybe<Scalars['String']>;
     updatedAt: Scalars['Time'];
   };
-
-/**
- * A contact represents an individual in customerOS.
- * **A `response` object.**
- */
-export type ContactConversationsArgs = {
-  pagination?: InputMaybe<Pagination>;
-  sort?: InputMaybe<Array<SortBy>>;
-};
 
 /**
  * A contact represents an individual in customerOS.
@@ -365,59 +355,6 @@ export type ContactsPage = Pages & {
    * **Required.**
    */
   totalPages: Scalars['Int'];
-};
-
-export type Conversation = Node & {
-  __typename?: 'Conversation';
-  appSource?: Maybe<Scalars['String']>;
-  channel?: Maybe<Scalars['String']>;
-  contacts?: Maybe<Array<Contact>>;
-  endedAt?: Maybe<Scalars['Time']>;
-  id: Scalars['ID'];
-  initiatorFirstName?: Maybe<Scalars['String']>;
-  initiatorLastName?: Maybe<Scalars['String']>;
-  initiatorType?: Maybe<Scalars['String']>;
-  initiatorUsername?: Maybe<Scalars['String']>;
-  messageCount: Scalars['Int64'];
-  source: DataSource;
-  sourceOfTruth: DataSource;
-  startedAt: Scalars['Time'];
-  status: ConversationStatus;
-  subject?: Maybe<Scalars['String']>;
-  threadId?: Maybe<Scalars['String']>;
-  updatedAt: Scalars['Time'];
-  users?: Maybe<Array<User>>;
-};
-
-export type ConversationInput = {
-  appSource?: InputMaybe<Scalars['String']>;
-  channel?: InputMaybe<Scalars['String']>;
-  contactIds?: InputMaybe<Array<Scalars['ID']>>;
-  id?: InputMaybe<Scalars['ID']>;
-  startedAt?: InputMaybe<Scalars['Time']>;
-  status?: ConversationStatus;
-  userIds?: InputMaybe<Array<Scalars['ID']>>;
-};
-
-export type ConversationPage = Pages & {
-  __typename?: 'ConversationPage';
-  content: Array<Conversation>;
-  totalElements: Scalars['Int64'];
-  totalPages: Scalars['Int'];
-};
-
-export enum ConversationStatus {
-  Active = 'ACTIVE',
-  Closed = 'CLOSED',
-}
-
-export type ConversationUpdateInput = {
-  channel?: InputMaybe<Scalars['String']>;
-  contactIds?: InputMaybe<Array<Scalars['ID']>>;
-  id: Scalars['ID'];
-  skipMessageCountIncrement?: Scalars['Boolean'];
-  status?: InputMaybe<ConversationStatus>;
-  userIds?: InputMaybe<Array<Scalars['ID']>>;
 };
 
 export type Country = {
@@ -873,13 +810,6 @@ export type GlobalCache = {
   user: User;
 };
 
-export type HealthIndicator = {
-  __typename?: 'HealthIndicator';
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  order: Scalars['Int64'];
-};
-
 export type InteractionEvent = Node & {
   __typename?: 'InteractionEvent';
   actionItems?: Maybe<Array<ActionItem>>;
@@ -1261,9 +1191,6 @@ export type Mutation = {
   contact_RemoveTagById: Contact;
   contact_RestoreFromArchive: Result;
   contact_Update: Contact;
-  conversation_Close: Conversation;
-  conversation_Create: Conversation;
-  conversation_Update: Conversation;
   customFieldDeleteFromContactById: Result;
   customFieldDeleteFromContactByName: Result;
   customFieldDeleteFromFieldSetById: Result;
@@ -1324,11 +1251,9 @@ export type Mutation = {
   organization_ArchiveAll?: Maybe<Result>;
   organization_Create: Organization;
   organization_Merge: Organization;
-  organization_RemoveHealthIndicator: Organization;
   organization_RemoveRelationship: Organization;
   organization_RemoveRelationshipStage: Organization;
   organization_RemoveSubsidiary: Organization;
-  organization_SetHealthIndicator: Organization;
   organization_SetOwner: Organization;
   organization_SetRelationshipStage: Organization;
   organization_UnsetOwner: Organization;
@@ -1431,18 +1356,6 @@ export type MutationContact_RestoreFromArchiveArgs = {
 
 export type MutationContact_UpdateArgs = {
   input: ContactUpdateInput;
-};
-
-export type MutationConversation_CloseArgs = {
-  conversationId: Scalars['ID'];
-};
-
-export type MutationConversation_CreateArgs = {
-  input: ConversationInput;
-};
-
-export type MutationConversation_UpdateArgs = {
-  input: ConversationUpdateInput;
 };
 
 export type MutationCustomFieldDeleteFromContactByIdArgs = {
@@ -1734,10 +1647,6 @@ export type MutationOrganization_MergeArgs = {
   primaryOrganizationId: Scalars['ID'];
 };
 
-export type MutationOrganization_RemoveHealthIndicatorArgs = {
-  organizationId: Scalars['ID'];
-};
-
 export type MutationOrganization_RemoveRelationshipArgs = {
   organizationId: Scalars['ID'];
   relationship: OrganizationRelationship;
@@ -1751,11 +1660,6 @@ export type MutationOrganization_RemoveRelationshipStageArgs = {
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
-};
-
-export type MutationOrganization_SetHealthIndicatorArgs = {
-  healthIndicatorId: Scalars['ID'];
-  organizationId: Scalars['ID'];
 };
 
 export type MutationOrganization_SetOwnerArgs = {
@@ -2001,7 +1905,6 @@ export type Organization = Node & {
   entityTemplate?: Maybe<EntityTemplate>;
   externalLinks: Array<ExternalSystem>;
   fieldSets: Array<FieldSet>;
-  healthIndicator?: Maybe<HealthIndicator>;
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
   industryGroup?: Maybe<Scalars['String']>;
@@ -2021,7 +1924,6 @@ export type Organization = Node & {
   phoneNumbers: Array<PhoneNumber>;
   relationshipStages: Array<OrganizationRelationshipStage>;
   relationships: Array<OrganizationRelationship>;
-  slackChannelLink?: Maybe<Scalars['String']>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -2150,7 +2052,6 @@ export type OrganizationUpdateInput = {
   lastFundingRound?: InputMaybe<FundingRound>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
-  slackChannelLink?: InputMaybe<Scalars['String']>;
   subIndustry?: InputMaybe<Scalars['String']>;
   targetAudience?: InputMaybe<Scalars['String']>;
   valueProposition?: InputMaybe<Scalars['String']>;
@@ -2367,14 +2268,13 @@ export type Query = {
   contacts: ContactsPage;
   /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE */
   dashboardView_Contacts?: Maybe<ContactsPage>;
-  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME */
+  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
-  healthIndicators: Array<HealthIndicator>;
   interactionEvent: InteractionEvent;
   interactionEvent_ByEventIdentifier: InteractionEvent;
   interactionSession: InteractionSession;
@@ -2688,7 +2588,6 @@ export type TimeRange = {
 export type TimelineEvent =
   | Action
   | Analysis
-  | Conversation
   | InteractionEvent
   | InteractionSession
   | Issue
@@ -2698,7 +2597,6 @@ export type TimelineEvent =
 
 export enum TimelineEventType {
   Analysis = 'ANALYSIS',
-  Conversation = 'CONVERSATION',
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',
   Issue = 'ISSUE',
@@ -2715,8 +2613,6 @@ export type User = {
   __typename?: 'User';
   appSource: Scalars['String'];
   calendars: Array<Calendar>;
-  /** @deprecated Conversations replaced by interaction events */
-  conversations: ConversationPage;
   /**
    * Timestamp of user creation.
    * **Required**
@@ -2751,15 +2647,6 @@ export type User = {
   source: DataSource;
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time'];
-};
-
-/**
- * Describes the User of customerOS.  A user is the person who logs into the Openline platform.
- * **A `return` object**
- */
-export type UserConversationsArgs = {
-  pagination?: InputMaybe<Pagination>;
-  sort?: InputMaybe<Array<SortBy>>;
 };
 
 /**
