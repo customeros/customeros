@@ -1,5 +1,5 @@
 run: build
-	go run events-processing-platform.go
+	go run github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module
 
 build:
 	go build -v
@@ -12,6 +12,6 @@ install:
 	go install gotest.tools/gotestsum@latest
 
 clean:
-	rm -rf events-processing-platform
+	rm -rf github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module
 
 all: install build
