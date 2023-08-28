@@ -20,7 +20,7 @@ export const ListButtons = () => {
           focus();
         }}
         isActive={active.orderedList()}
-        icon={<OrderedList currentColor='inherit' />}
+        icon={<OrderedList color='inherit' />}
       />
       <IconButton
         className='customeros-remirror-button'
@@ -32,7 +32,7 @@ export const ListButtons = () => {
           focus();
         }}
         isActive={active.bulletList()}
-        icon={<UnorderedList currentColor='inherit' />}
+        icon={<UnorderedList color='inherit' />}
       />
     </Flex>
   );

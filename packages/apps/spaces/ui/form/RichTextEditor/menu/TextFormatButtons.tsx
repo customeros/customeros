@@ -23,7 +23,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.bold()}
-        icon={<Bold currentColor='inherit' />}
+        icon={<Bold color='inherit' />}
       />
       <IconButton
         className='customeros-remirror-button'
@@ -35,7 +35,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.italic()}
-        icon={<Italic currentColor='inherit' />}
+        icon={<Italic color='inherit' />}
       />
       <IconButton
         className='customeros-remirror-button'
@@ -47,7 +47,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.strike()}
-        icon={<Strikethrough currentColor='inherit' />}
+        icon={<Strikethrough color='inherit' />}
       />
       <IconButton
         className='customeros-remirror-button'
@@ -59,7 +59,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.underline()}
-        icon={<Underline currentColor='inherit' />}
+        icon={<Underline color='inherit' />}
       />
     </Flex>
   );

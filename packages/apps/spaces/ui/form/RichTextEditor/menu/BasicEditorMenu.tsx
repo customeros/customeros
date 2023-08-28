@@ -42,7 +42,7 @@ export const BasicEditorMenu: FC<{
             focus();
           }}
           isActive={active.blockquote()}
-          icon={<Quote currentColor='inherit' />}
+          icon={<Quote color='inherit' />}
         />
       </HStack>
       <Button

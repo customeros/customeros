@@ -17,7 +17,7 @@ export const IndentButtons = () => {
         onClick={() => {
           commands.decreaseIndent();
         }}
-        icon={<RightIndent currentColor='inherit' />}
+        icon={<RightIndent color='inherit' />}
       />
       <IconButton
         className='customeros-remirror-button'
@@ -27,7 +27,7 @@ export const IndentButtons = () => {
         onClick={() => {
           commands.increaseIndent();
         }}
-        icon={<LeftIndent currentColor='inherit' />}
+        icon={<LeftIndent color='inherit' />}
       />
     </Flex>
   );
