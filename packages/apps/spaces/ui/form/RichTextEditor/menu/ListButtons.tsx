@@ -1,20 +1,17 @@
 import { useActive, useCommands } from '@remirror/react';
 import { Flex } from '@chakra-ui/react';
-import { IconButton } from '@ui/form/IconButton';
 import OrderedList from '../../../../components/ui/media/icons/OrderedList';
 import UnorderedList from '../../../../components/ui/media/icons/UnorderedList';
 import React from 'react';
+import { ToolbarButton } from './ToolbarButton';
 
 export const ListButtons = () => {
   const { toggleOrderedList, toggleBulletList, focus } = useCommands();
   const active = useActive();
   return (
     <Flex gap={2}>
-      <IconButton
-        className='customeros-remirror-button'
-        bg='transparent'
-        variant='ghost'
-        aria-label='Strikethrough'
+      <ToolbarButton
+        label='Strikethrough'
         onClick={() => {
           toggleOrderedList();
           focus();
@@ -22,11 +19,8 @@ export const ListButtons = () => {
         isActive={active.orderedList()}
         icon={<OrderedList color='inherit' />}
       />
-      <IconButton
-        className='customeros-remirror-button'
-        bg='transparent'
-        variant='ghost'
-        aria-label='Underline'
+      <ToolbarButton
+        label='Underline'
         onClick={() => {
           toggleBulletList();
           focus();

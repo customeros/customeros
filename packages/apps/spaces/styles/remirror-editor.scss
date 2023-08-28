@@ -4062,6 +4062,30 @@ display: none
     &:focus-visible {
     box-shadow: 0 0 0 4px var(--chakra-colors-gray-50),
   }
+}
+
+.customeros-remirror-tooltip {
+  position: relative;
+  transform-origin: var(--popper-transform-origin);
+  opacity: 1;
+  transform: none;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-fg);
+  --tooltip-bg: var(--chakra-colors-gray-700);
+  --tooltip-fg: var(--chakra-colors-whiteAlpha-900);
+  --popper-arrow-bg: var(--tooltip-bg);
+  -webkit-padding-start: var(--chakra-space-3);
+  padding-inline-start: var(--chakra-space-3);
+  -webkit-padding-end: var(--chakra-space-3);
+  padding-inline-end: var(--chakra-space-3);
+  padding-top: var(--chakra-space-2);
+  padding-bottom: var(--chakra-space-2);
+  border-radius: var(--chakra-radii-md);
+  font-weight: var(--chakra-fontWeights-medium);
+  font-size: var(--chakra-fontSizes-md);
+  box-shadow: var(--chakra-shadows-lg);
+  max-width: var(--chakra-sizes-xs);
+  z-index: var(--chakra-zIndices-tooltip);
 
 }
 

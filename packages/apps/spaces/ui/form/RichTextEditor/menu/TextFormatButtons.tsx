@@ -1,11 +1,11 @@
 import { useActive, useCommands } from '@remirror/react';
 import { Flex } from '@chakra-ui/react';
-import { IconButton } from '@ui/form/IconButton';
 import Bold from '../../../../components/ui/media/icons/Bold';
 import Italic from '../../../../components/ui/media/icons/Italic';
 import Strikethrough from '../../../../components/ui/media/icons/Strikethrough';
 import Underline from '../../../../components/ui/media/icons/Underline';
 import React from 'react';
+import { ToolbarButton } from './ToolbarButton';
 
 export const TextFormatButtons = () => {
   const { toggleBold, toggleItalic, toggleStrike, toggleUnderline, focus } =
@@ -13,11 +13,8 @@ export const TextFormatButtons = () => {
   const active = useActive();
   return (
     <Flex gap={2}>
-      <IconButton
-        className='customeros-remirror-button'
-        bg='transparent'
-        variant='ghost'
-        aria-label='Bold'
+      <ToolbarButton
+        label='Bold'
         onClick={() => {
           toggleBold();
           focus();
@@ -25,11 +22,8 @@ export const TextFormatButtons = () => {
         isActive={active.bold()}
         icon={<Bold color='inherit' />}
       />
-      <IconButton
-        className='customeros-remirror-button'
-        bg='transparent'
-        variant='ghost'
-        aria-label='Italic'
+      <ToolbarButton
+        label='Italic'
         onClick={() => {
           toggleItalic();
           focus();
@@ -37,11 +31,8 @@ export const TextFormatButtons = () => {
         isActive={active.italic()}
         icon={<Italic color='inherit' />}
       />
-      <IconButton
-        className='customeros-remirror-button'
-        bg='transparent'
-        variant='ghost'
-        aria-label='Strikethrough'
+      <ToolbarButton
+        label='Strikethrough'
         onClick={() => {
           toggleStrike();
           focus();
@@ -49,11 +40,8 @@ export const TextFormatButtons = () => {
         isActive={active.strike()}
         icon={<Strikethrough color='inherit' />}
       />
-      <IconButton
-        className='customeros-remirror-button'
-        bg='transparent'
-        variant='ghost'
-        aria-label='Underline'
+      <ToolbarButton
+        label='Underline'
         onClick={() => {
           toggleUnderline();
           focus();

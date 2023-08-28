@@ -7,6 +7,7 @@ import { TextFormatButtons } from './TextFormatButtons';
 import { ListButtons } from './ListButtons';
 import { IndentButtons } from './IndentButtons';
 import { Button } from '@ui/form/Button';
+import {ToolbarButton} from "@ui/form/RichTextEditor/menu/ToolbarButton";
 
 export const BasicEditorMenu: FC<{
   isSending: boolean;
@@ -32,11 +33,8 @@ export const BasicEditorMenu: FC<{
         <TextFormatButtons />
         <ListButtons />
         <IndentButtons />
-        <IconButton
-          className='customeros-remirror-button'
-          bg='transparent'
-          variant='ghost'
-          aria-label='Quote'
+        <ToolbarButton
+          label='Quote'
           onClick={() => {
             toggleBlockquote();
             focus();
