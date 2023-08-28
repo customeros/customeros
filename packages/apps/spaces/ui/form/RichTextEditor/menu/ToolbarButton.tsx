@@ -21,6 +21,7 @@ export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
         label={label}
         className='customeros-remirror-tooltip'
         hasArrow
+        placement='bottom'
         portalProps={{ containerRef: ref }}
       >
         <IconButton

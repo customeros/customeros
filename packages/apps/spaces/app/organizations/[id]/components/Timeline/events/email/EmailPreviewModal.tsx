@@ -55,7 +55,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     stringHandler: htmlToProsemirrorNode,
     content: '',
   });
-  const subject = modalContent?.interactionSession?.name || '';
   const [_, copy] = useCopyToClipboard();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
