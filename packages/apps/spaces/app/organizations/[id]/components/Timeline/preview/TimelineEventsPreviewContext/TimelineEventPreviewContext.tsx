@@ -1,18 +1,20 @@
 import { PropsWithChildren, RefObject, useContext } from 'react';
 import { createContext, useState, useEffect, useRef } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { InteractionEvent } from '@graphql/types';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { InteractionEvent, Meeting } from '@graphql/types';
 import { useLocalStorage } from 'usehooks-ts';
 
 export const noop = () => undefined;
 
+type Event = InteractionEvent | Meeting;
+
 interface TimelineEventPreviewContextContextMethods {
   TimelineEventPreviewContextContainerRef: RefObject<HTMLDivElement> | null;
-  openModal: (content: InteractionEvent) => void;
+  openModal: (content: Event) => void;
   closeModal: () => void;
-  modalContent: InteractionEvent | null;
+  modalContent: Event | null;
   isModalOpen: boolean;
-  events: InteractionEvent[];
+  events: Event[];
 }
 
 const TimelineEventPreviewContextContext =
@@ -33,21 +35,19 @@ export const TimelineEventPreviewContextContextProvider = ({
   children,
   data = [],
   id = '',
-}: PropsWithChildren<{ data: InteractionEvent[]; id: string }>) => {
+}: PropsWithChildren<{ data: Event[]; id: string }>) => {
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { [id]: 'tab=about' },
   );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState<InteractionEvent | null>(
-    null,
-  );
+  const [modalContent, setModalContent] = useState<Event | null>(null);
   const TimelineEventPreviewContextContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleOpenModal = (content: InteractionEvent) => {
+  const handleOpenModal = (content: Event) => {
     setIsModalOpen(true);
     const params = new URLSearchParams(searchParams ?? '');
     params.set('events', content.id);

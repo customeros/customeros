@@ -1,12 +1,12 @@
 'use client';
 import React, { FC, useRef } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Virtuoso } from 'react-virtuoso';
+import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { EmailStub, TimelineItem } from './events';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
-import { InteractionEvent } from '@graphql/types';
+import { InteractionEvent, Meeting } from '@graphql/types';
 import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
@@ -15,9 +15,12 @@ import { TimelineItemSkeleton } from '@organization/components/Timeline/events/T
 import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
 import { useQueryClient } from '@tanstack/react-query';
 import { SlackStub } from '@organization/components/Timeline/events/slack/SlackStub';
+import { MeetingStub } from './events/meeting/MeetingStub';
 import { TimelineEventPreviewModal } from '@organization/components/Timeline/preview/TimelineEventPreviewModal';
 
 type InteractionEventWithDate = InteractionEvent & { date: string };
+type Event = InteractionEventWithDate | Meeting;
+
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
     <Button
@@ -39,7 +42,7 @@ const NEW_DATE = new Date();
 
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
-  const virtuoso = useRef(null);
+  const virtuoso = useRef<VirtuosoHandle>(null);
   const queryClient = useQueryClient();
 
   const client = getGraphQLClient();
@@ -84,18 +87,43 @@ export const OrganizationTimeline: FC = () => {
 
   const flattenData = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
-  ) as unknown as InteractionEventWithDate[];
+  ) as unknown as Event[];
 
   const loadedDataCount = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
   )?.length;
 
   const timelineEmailEvents = flattenData
-    ?.filter(
-      (d: InteractionEventWithDate) =>
-        !!d?.id && (d.channel === 'EMAIL' || d.channel === 'SLACK'),
-    )
-    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+    ?.filter((d) => {
+      if (!d) return false;
+      switch (d.__typename) {
+        case 'InteractionEvent':
+          return !!d?.id && ['EMAIL', 'SLACK'].includes(d.channel ?? '');
+        case 'Meeting':
+          return !!d.id;
+        default:
+          return false;
+      }
+    })
+    .sort((a, b) => {
+      const getDate = (a: Event) => {
+        if (!a) return null;
+        switch (a.__typename) {
+          case 'InteractionEvent':
+            return a.date;
+          case 'Meeting':
+            return a.createdAt;
+          default:
+            return null;
+        }
+      };
+      const aDate = getDate(a);
+      const bDate = getDate(b);
+
+      return Date.parse(aDate) - Date.parse(bDate);
+    });
+
+  console.log(timelineEmailEvents);
 
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline invalidateQuery={invalidateQuery} />;
@@ -113,7 +141,7 @@ export const OrganizationTimeline: FC = () => {
         data={timelineEmailEvents || []}
         id={id}
       >
-        <Virtuoso
+        <Virtuoso<Event>
           ref={virtuoso}
           style={{ height: '100%', width: '100%', background: '#F9F9FB' }}
           initialItemCount={timelineEmailEvents?.length}
@@ -125,32 +153,49 @@ export const OrganizationTimeline: FC = () => {
             loadMore: () => fetchNextPage(),
             loading: isFetchingNextPage,
           }}
-          itemContent={(index, timelineEvent: InteractionEvent) => {
-            if (timelineEvent.__typename !== 'InteractionEvent') return null;
-            const showDate =
-              index === 0
-                ? true
-                : !DateTimeUtils.isSameDay(
-                    timelineEmailEvents?.[index - 1]?.date,
-                    // @ts-expect-error this is correct, generated types did not picked up alias correctly
-                    timelineEvent.date,
-                  );
+          itemContent={(index, timelineEvent) => {
+            if (!timelineEvent) return null;
+            switch (timelineEvent.__typename) {
+              case 'InteractionEvent': {
+                const showDate =
+                  index === 0
+                    ? true
+                    : !DateTimeUtils.isSameDay(
+                        (
+                          timelineEmailEvents?.[
+                            index - 1
+                          ] as InteractionEventWithDate
+                        )?.date,
+                        timelineEvent.date,
+                      );
 
-            return (
-              // @ts-expect-error this is correct, generated types did not picked up alias correctly
-              <TimelineItem date={timelineEvent?.date} showDate={showDate}>
-                {timelineEvent.channel === 'EMAIL' && (
-                  <EmailStub
-                    email={timelineEvent as unknown as InteractionEvent}
-                  />
-                )}
-                {timelineEvent.channel === 'SLACK' && (
-                  <SlackStub
-                    slackEvent={timelineEvent as unknown as InteractionEvent}
-                  />
-                )}
-              </TimelineItem>
-            );
+                return (
+                  <TimelineItem date={timelineEvent?.date} showDate={showDate}>
+                    {timelineEvent.channel === 'EMAIL' && (
+                      <EmailStub
+                        email={timelineEvent as unknown as InteractionEvent}
+                      />
+                    )}
+                    {timelineEvent.channel === 'SLACK' && (
+                      <SlackStub
+                        slackEvent={
+                          timelineEvent as unknown as InteractionEvent
+                        }
+                      />
+                    )}
+                  </TimelineItem>
+                );
+              }
+              case 'Meeting': {
+                return (
+                  <TimelineItem date={timelineEvent?.createdAt} showDate>
+                    <MeetingStub data={timelineEvent} />
+                  </TimelineItem>
+                );
+              }
+              default:
+                return null;
+            }
           }}
           components={{
             Header: (rest) => (
@@ -166,7 +211,6 @@ export const OrganizationTimeline: FC = () => {
             Footer: () => (
               <TimelineActions
                 invalidateQuery={invalidateQuery}
-                // @ts-expect-error shouldn't cause error
                 onScrollBottom={() => virtuoso?.current?.scrollBy({ top: 300 })}
               />
             ),
