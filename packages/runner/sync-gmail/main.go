@@ -122,9 +122,7 @@ func main() {
 					panic(err) //todo handle error
 				}
 
-				services.EmailService.SyncEmailsForUser(externalSystemId, "openline", "matt@openline.ai")
-				services.EmailService.SyncEmailsForUser(externalSystemId, "openline", "antoine@openline.ai")
-				services.EmailService.SyncEmailsForUser(externalSystemId, "openline", "jonty@openline.ai")
+				services.EmailService.SyncEmails(externalSystemId, "openline")
 			}
 
 			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
