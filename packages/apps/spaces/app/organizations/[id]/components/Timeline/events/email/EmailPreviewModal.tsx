@@ -55,6 +55,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     stringHandler: htmlToProsemirrorNode,
     content: '',
   });
+  const subject = modalContent?.interactionSession?.name || '';
   const [_, copy] = useCopyToClipboard();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -137,7 +138,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       });
       const prosemirrorNodeValue = htmlToProsemirrorNode({
         schema: remirrorProps.state.schema,
-        content: `<p>${state.values.content} ${modalContent.content}</p>`
+        content: `<p>${state.values.content} ${event.content}</p>`
       });
       remirrorProps.getContext()?.setContent(prosemirrorNodeValue);
     }
