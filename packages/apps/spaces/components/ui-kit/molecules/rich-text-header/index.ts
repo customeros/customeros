@@ -1,1 +1,0 @@
-export { RichTextHeader } from './RichTextHeader';
