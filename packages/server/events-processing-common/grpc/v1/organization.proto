@@ -92,6 +92,11 @@ message OrganizationBillingDetailsRequest {
   optional google.protobuf.Timestamp  cycleStart = 7;
 }
 
+message RequestRenewNextCycleDateRequest {
+  string tenant = 1;
+  string organizationId = 2;
+}
+
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -104,4 +109,5 @@ service organizationGrpcService {
   rpc UpdateOrganizationRenewalLikelihood(OrganizationRenewalLikelihoodRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationRenewalForecast(OrganizationRenewalForecastRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationBillingDetails(OrganizationBillingDetailsRequest) returns (OrganizationIdGrpcResponse);
+  rpc RequestRenewNextCycleDate(RequestRenewNextCycleDateRequest) returns (OrganizationIdGrpcResponse);
 }
