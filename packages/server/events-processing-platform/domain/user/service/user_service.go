@@ -52,6 +52,7 @@ func (s *userService) UpsertUser(ctx context.Context, request *user_grpc_service
 
 	return &user_grpc_service.UserIdGrpcResponse{Id: objectID}, nil
 }
+
 func (s *userService) LinkJobRoleToUser(ctx context.Context, request *user_grpc_service.LinkJobRoleToUserGrpcRequest) (*user_grpc_service.UserIdGrpcResponse, error) {
 	aggregateID := request.UserId
 
