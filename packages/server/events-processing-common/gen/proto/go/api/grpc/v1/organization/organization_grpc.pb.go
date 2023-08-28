@@ -29,6 +29,7 @@ type OrganizationGrpcServiceClient interface {
 	UpdateOrganizationRenewalLikelihood(ctx context.Context, in *OrganizationRenewalLikelihoodRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationRenewalForecast(ctx context.Context, in *OrganizationRenewalForecastRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationBillingDetails(ctx context.Context, in *OrganizationBillingDetailsRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	RequestRenewNextCycleDate(ctx context.Context, in *RequestRenewNextCycleDateRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -102,6 +103,15 @@ func (c *organizationGrpcServiceClient) UpdateOrganizationBillingDetails(ctx con
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) RequestRenewNextCycleDate(ctx context.Context, in *RequestRenewNextCycleDateRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/RequestRenewNextCycleDate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -113,6 +123,7 @@ type OrganizationGrpcServiceServer interface {
 	UpdateOrganizationRenewalLikelihood(context.Context, *OrganizationRenewalLikelihoodRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationRenewalForecast(context.Context, *OrganizationRenewalForecastRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationBillingDetails(context.Context, *OrganizationBillingDetailsRequest) (*OrganizationIdGrpcResponse, error)
+	RequestRenewNextCycleDate(context.Context, *RequestRenewNextCycleDateRequest) (*OrganizationIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -139,6 +150,9 @@ func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationRenewalForec
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationBillingDetails(context.Context, *OrganizationBillingDetailsRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationBillingDetails not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) RequestRenewNextCycleDate(context.Context, *RequestRenewNextCycleDateRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestRenewNextCycleDate not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -278,6 +292,24 @@ func _OrganizationGrpcService_UpdateOrganizationBillingDetails_Handler(srv inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_RequestRenewNextCycleDate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestRenewNextCycleDateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).RequestRenewNextCycleDate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/RequestRenewNextCycleDate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).RequestRenewNextCycleDate(ctx, req.(*RequestRenewNextCycleDateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -312,6 +344,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateOrganizationBillingDetails",
 			Handler:    _OrganizationGrpcService_UpdateOrganizationBillingDetails_Handler,
+		},
+		{
+			MethodName: "RequestRenewNextCycleDate",
+			Handler:    _OrganizationGrpcService_RequestRenewNextCycleDate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -196,6 +196,28 @@ func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Conte
 	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
 }
 
+func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, req *pb.RequestRenewNextCycleDateRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RequestRenewNextCycleDate")
+	defer span.Finish()
+	span.LogFields(log.Object("request", req))
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	command := cmd.NewRequestNextCycleDateCommand(req.Tenant, req.OrganizationId)
+	if err := s.organizationCommands.RequestNextCycleDateCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed request next cycle date for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Requested next cycle date renewal for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+
+	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+}
+
 func (s *organizationService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }
