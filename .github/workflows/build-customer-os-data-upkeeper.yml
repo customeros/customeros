@@ -1,23 +1,23 @@
-name: customer-is-data-upkeeper
+name: customer-os-data-upkeeper
 
 on:
   push:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/runner/customer-is-data-upkeeper/**
-      - .github/workflows/build-customer-is-data-upkeeper.yml
+      - packages/runner/customer-os-data-upkeeper/**
+      - .github/workflows/build-customer-os-data-upkeeper.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/runner/customer-is-data-upkeeper/**
-      - .github/workflows/build-customer-is-data-upkeeper.yml
+      - packages/runner/customer-os-data-upkeeper/**
+      - .github/workflows/build-customer-os-data-upkeeper.yml
   release:
     types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/customer-is-data-upkeeper
+  IMAGE_NAME: ${{ github.repository }}/customer-os-data-upkeeper
 
 permissions:
   contents: read
@@ -26,7 +26,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./packages/runner/customer-is-data-upkeeper
+    working-directory: ./packages/runner/customer-os-data-upkeeper
 
 jobs:
   test:
@@ -40,11 +40,11 @@ jobs:
           go-version: stable
 
       - name: Build
-        working-directory: ./packages/runner/customer-is-data-upkeeper
+        working-directory: ./packages/runner/customer-os-data-upkeeper
         run: make all
 
       - name: Test
-        working-directory: ./packages/runner/customer-is-data-upkeeper
+        working-directory: ./packages/runner/customer-os-data-upkeeper
         run: |
               go install gotest.tools/gotestsum@latest
               gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
@@ -52,13 +52,13 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: success() || failure()    # run this step even if previous step failed
         with:
-          report_paths: packages/runner/customer-is-data-upkeeper/unit-tests.xml    # Path to test results
+          report_paths: packages/runner/customer-os-data-upkeeper/unit-tests.xml    # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
 
       - name: Compute Code Coverage
-        working-directory: ./packages/runner/customer-is-data-upkeeper
+        working-directory: ./packages/runner/customer-os-data-upkeeper
         run: | 
              echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
              echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
@@ -89,7 +89,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
-          context: packages/runner/customer-is-data-upkeeper/.
+          context: packages/runner/customer-os-data-upkeeper/.
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
