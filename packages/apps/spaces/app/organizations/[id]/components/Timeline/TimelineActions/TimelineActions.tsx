@@ -128,7 +128,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
         top='0'
         left={6}
         zIndex={1}
-        translateY='6px'
+        transform='translateY(6px)'
       >
         <Button
           variant='outline'
