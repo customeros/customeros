@@ -24,7 +24,7 @@ import {
   type Filter,
   type Organization,
   type SortBy,
-} from '@spaces/graphql';
+} from '@graphql/types';
 
 import { useRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
@@ -50,7 +50,9 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   icon,
 }: OrganizationListProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const tabs = useReadLocalStorage<{ [key: string]: string }>(`customeros-player-last-position`);
+  const tabs = useReadLocalStorage<{ [key: string]: string }>(
+    `customeros-player-last-position`,
+  );
   const [idsToRemove, setIdsToRemove] = useState<Array<string>>([]);
 
   const [tableInstance, setTableInstance] =
@@ -217,8 +219,9 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
         isLoading={loading}
       />
 
+      {/* TODO: Remove coercion to any type when we get rid of the old graphql types generated which are out of sync */}
       <Table<Organization>
-        data={data ?? []}
+        data={(data as Organization[]) ?? []}
         columns={columns(tabs)}
         sorting={sorting}
         enableTableActions
@@ -232,13 +235,13 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
         renderTableActions={(table) => (
           <Suspense fallback={<div />}>
             <OrganizationListActions
-              table={table}
+              table={table as any}
               selection={selection}
               isSelectionEnabled={enableSelection}
               toggleSelection={setEnableSelection}
               onCreateOrganization={handleCreateOrganization}
-              onMergeOrganizations={handleMergeOrganizations}
-              onArchiveOrganizations={handleOpenConfirmationModal}
+              onMergeOrganizations={handleMergeOrganizations as any}
+              onArchiveOrganizations={handleOpenConfirmationModal as any}
             />
           </Suspense>
         )}

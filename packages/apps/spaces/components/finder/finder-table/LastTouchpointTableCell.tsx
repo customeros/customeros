@@ -1,5 +1,5 @@
 import React from 'react';
-import { Maybe, TimelineEvent } from '@spaces/graphql';
+import { Maybe, TimelineEvent } from '@graphql/types';
 import { Icons } from '@ui/media/Icon';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';

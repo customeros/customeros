@@ -14,6 +14,7 @@ import { SlackMessageCard } from '@organization/components/Timeline/events/slack
 import { getName } from '@spaces/utils/getParticipantsName';
 import {
   ContactParticipant,
+  InteractionEvent,
   InteractionEventParticipant,
   JobRoleParticipant,
   UserParticipant,
@@ -29,12 +30,11 @@ const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
 };
 export const SlackThreadPreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
-  const slackSender = getParticipant(modalContent?.sentBy);
+  const event = modalContent as InteractionEvent;
+  const slackSender = getParticipant(event?.sentBy);
 
   const slackEventReplies =
-    modalContent?.interactionSession?.events?.filter(
-      (e) => e?.id !== modalContent?.id,
-    ) || [];
+    event?.interactionSession?.events?.filter((e) => e?.id !== event?.id) || [];
 
   return (
     <>
@@ -46,7 +46,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
         >
           <Flex mb={2} alignItems='center'>
             <Heading size='sm' fontSize='lg'>
-              {modalContent?.interactionSession?.name || 'Thread'}
+              {event?.interactionSession?.name || 'Thread'}
             </Heading>
             {/* todo uncomment when channel data is available  */}
             {/*{channel && (*/}
@@ -85,9 +85,9 @@ export const SlackThreadPreviewModal: React.FC = () => {
           w='full'
           name={getName(slackSender)}
           profilePhotoUrl={slackSender?.profilePhotoUrl}
-          content={modalContent?.content || ''}
+          content={event?.content || ''}
           // @ts-expect-error typescript does not work well with aliases
-          date={DateTimeUtils.timeAgo(modalContent?.date, { addSuffix: true })}
+          date={DateTimeUtils.timeAgo(event?.date, { addSuffix: true })}
         />
 
         {!!slackEventReplies.length && (

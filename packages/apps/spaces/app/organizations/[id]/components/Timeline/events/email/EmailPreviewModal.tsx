@@ -29,6 +29,7 @@ import { useSession } from 'next-auth/react';
 import { convert } from 'html-to-text';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useDisclosure } from '@ui/utils';
+import { InteractionEvent } from '@graphql/types';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -44,19 +45,16 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     useTimelineEventPreviewContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const subject = modalContent?.interactionSession?.name || '';
+  const event = modalContent as InteractionEvent;
+
+  const subject = event?.interactionSession?.name || '';
   const [_, copy] = useCopyToClipboard();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [mode, setMode] = useState(REPLY_MODE);
   const [isSending, setIsSending] = useState(false);
-  const { to, cc, bcc } = getEmailParticipantsByType(
-    modalContent?.sentTo || [],
-  );
-  const from = getEmailParticipantsNameAndEmail(
-    modalContent?.sentBy || [],
-    'value',
-  );
+  const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
+  const from = getEmailParticipantsNameAndEmail(event?.sentBy || [], 'value');
   const formId = 'compose-email-preview-modal';
 
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
@@ -66,7 +64,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     subject: `Re: ${subject}`,
     content: '',
   });
-  const { state, setDefaultValues, reset } = useForm<ComposeEmailDtoI>({
+  const { state, setDefaultValues } = useForm<ComposeEmailDtoI>({
     formId,
     defaultValues,
 
@@ -87,7 +85,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const handleEmailSendError = () => {
     setIsSending(false);
   };
-  const text = convert(modalContent?.content || '', {
+  const text = convert(event?.content || '', {
     preserveNewlines: false,
     selectors: [
       {
@@ -200,12 +198,12 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             >
               <div>
                 <Heading size='sm' mb={2}>
-                  {modalContent.interactionSession?.name}
+                  {event.interactionSession?.name}
                 </Heading>
                 <Text size='2xs' color='gray.500' fontSize='12px'>
                   {DateTimeUtils.format(
                     // @ts-expect-error this is correct (alias)
-                    modalContent.date,
+                    event.date,
                     DateTimeUtils.dateWithHour,
                   )}
                 </Text>
@@ -258,7 +256,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 )}
                 <EmailMetaDataEntry
                   entryType='Subject'
-                  content={modalContent?.interactionSession?.name || ''}
+                  content={event?.interactionSession?.name || ''}
                 />
               </Flex>
               <div>
@@ -275,11 +273,11 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             </Flex>
 
             <Text color='gray.700' size='sm'>
-              {modalContent?.content && (
+              {event?.content && (
                 <div
                   className={styles.normalize_email}
                   dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(modalContent.content),
+                    __html: sanitizeHtml(event.content),
                   }}
                 />
               )}
