@@ -95,7 +95,7 @@ export const ParticipantsSelectGroup = ({
               onClick={() => handleFocus(0)}
               role='button'
               aria-label='Click to input participant data'
-              flex={!to.length ? 1 : 'unset'}
+              flex={!cc.length && !bcc.length ? 1 : 'unset'}
             >
               <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
                 To:
