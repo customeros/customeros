@@ -10,6 +10,7 @@ import {
   MultiValueGenericProps,
 } from '@ui/form/SyncSelect';
 import { Tooltip } from '@ui/presentation/Tooltip';
+import { emailRegex } from '@organization/components/Timeline/events/email/utils';
 
 interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   name: string;
@@ -70,7 +71,6 @@ const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
             border: '1px solid',
             borderColor: 'gray.200',
             fontSize: 'md',
-
             marginRight: 1,
           }),
           clearIndicator: (base) => ({
@@ -121,6 +121,11 @@ const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
             color: 'gray.500',
             fontWeight: 'regular',
           }),
+          valueContainer: (props) => ({
+            ...props,
+            maxH: '86px',
+            overflowY: 'auto',
+          }),
         }}
         {...props}
       />
@@ -134,6 +139,14 @@ export const EmailFormMultiCreatableSelect = forwardRef<
 >(({ name, formId, ...rest }, ref) => {
   const { getInputProps } = useField(name, formId);
   const { id, onChange, onBlur, value } = getInputProps();
+  const handleBlur = (stringVal: string) => {
+    if (stringVal && emailRegex.test(stringVal)) {
+      onBlur([...value, { label: stringVal, value: stringVal }]);
+      return;
+    }
+    onBlur(value);
+  };
+
   return (
     <MultiCreatableSelect
       ref={ref}
@@ -141,7 +154,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       formId={formId}
       name={name}
       value={value}
-      onBlur={() => onBlur(value)}
+      onBlur={(e) => handleBlur(e.target.value)}
       onChange={onChange}
       {...rest}
     />

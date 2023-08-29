@@ -1,13 +1,15 @@
 'use client';
-import React, { FC, useRef, useState } from 'react';
-import { Button } from '@ui/form/Button';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-// import { FileUpload } from '@spaces/atoms/index';
+import React, { FC, useRef } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
 import { ModeChangeButtons } from '@organization/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
 import { Box } from '@ui/layout/Box';
 import { ParticipantsSelectGroup } from '@organization/components/Timeline/events/email/compose-email/ParticipantsSelectGroup';
+import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
+import { BasicEditorMenu } from '@ui/form/RichTextEditor/menu/BasicEditorMenu';
+import {
+  BasicEditorExtentions,
+  RemirrorProps,
+} from '@ui/form/RichTextEditor/types';
 
 interface ComposeEmail {
   onModeChange?: (status: 'reply' | 'reply-all' | 'forward') => void;
@@ -18,6 +20,7 @@ interface ComposeEmail {
   to: Array<{ label: string; value: string }>;
   cc: Array<{ label: string; value: string }>;
   bcc: Array<{ label: string; value: string }>;
+  remirrorProps: RemirrorProps<BasicEditorExtentions>;
 }
 
 export const ComposeEmail: FC<ComposeEmail> = ({
@@ -29,10 +32,11 @@ export const ComposeEmail: FC<ComposeEmail> = ({
   to,
   cc,
   bcc,
+  remirrorProps,
 }) => {
   const myRef = useRef<HTMLDivElement>(null);
   const height =
-    modal && (myRef?.current?.getBoundingClientRect()?.height || 0) + 100 + 24;
+    modal && (myRef?.current?.getBoundingClientRect()?.height || 0) + 96;
 
   return (
     <Box
@@ -64,121 +68,90 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         />
       </Box>
 
-      <Flex direction='column' align='flex-start' mt={2} flex={1} maxW='100%'>
-        <FormAutoresizeTextarea
-          placeholder='Write something here...'
-          size='md'
-          formId={formId}
-          name='content'
-          mb={3}
-          transform={!modal ? 'translateY(-16px)' : undefined}
-          resize='none'
-          borderBottom='none'
-          outline='none'
-          borderBottomWidth={0}
-          minHeight={modal ? '100px' : '30px'}
-          maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
-          height={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
-          position='initial'
-          overflowY='auto'
-          _focusVisible={{
-            boxShadow: 'none',
-          }}
-        />
-        {/*<Flex>*/}
-        {/*  {data?.length > 0 &&*/}
-        {/*    data.map((file: any, index: number) => {*/}
-        {/*      return (*/}
-        {/*        <FileTemplateUpload*/}
-        {/*          key={`uploaded-file-${file?.name}-${file.extension}-${index}`}*/}
-        {/*          file={file}*/}
-        {/*          fileType={file.extension}*/}
-        {/*          onFileRemove={() => console.log('REMOVE')}*/}
-        {/*        />*/}
-        {/*      );*/}
-        {/*    })}*/}
-        {/*</Flex>*/}
+      {/*<FormAutoresizeTextarea*/}
+      {/*  placeholder='Write something here...'*/}
+      {/*  size='md'*/}
+      {/*  formId={formId}*/}
+      {/*  name='content'*/}
+      {/*  mb={3}*/}
+      {/*  transform={!modal ? 'translateY(-16px)' : undefined}*/}
+      {/*  resize='none'*/}
+      {/*  borderBottom='none'*/}
+      {/*  outline='none'*/}
+      {/*  borderBottomWidth={0}*/}
+      {/*  minHeight={modal ? '100px' : '30px'}*/}
+      {/*  maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}*/}
+      {/*  height={modal ? `calc(50vh - ${height}px) !important` : 'auto'}*/}
+      {/*  position='initial'*/}
+      {/*  overflowY='auto'*/}
+      {/*  _focusVisible={{*/}
+      {/*    boxShadow: 'none',*/}
+      {/*  }}*/}
+      {/*/>*/}
 
-        <Flex
-          justifyContent='flex-end'
-          direction='row'
-          flex={1}
-          mt='lg'
-          width='100%'
-        >
-          {/*<IconButton*/}
-          {/*  size='sm'*/}
-          {/*  mr={2}*/}
-          {/*  borderRadius='lg'*/}
-          {/*  variant='ghost'*/}
-          {/*  aria-label='Add attachement'*/}
-          {/*  onClick={() => {*/}
-          {/*    setUploadAreaOpen(!isUploadAreaOpen);*/}
-          {/*  }}*/}
-          {/*  isDisabled*/}
-          {/*  icon={<Paperclip color='gray.400' height='20px' />}*/}
-          {/*/>*/}
-          <Button
-            variant='outline'
-            fontWeight={600}
-            borderRadius='lg'
-            pt={0}
-            pb={0}
-            pl={3}
-            pr={3}
-            size='sm'
-            fontSize='sm'
-            isDisabled={isSending}
-            isLoading={isSending}
-            loadingText='Sending'
-            onClick={onSubmit}
-          >
-            Send
-          </Button>
-        </Flex>
-        {/*{isUploadAreaOpen && (*/}
-        {/*  <FileUpload*/}
-        {/*    files={files}*/}
-        {/*    onBeginFileUpload={(fileKey: string) => {*/}
-        {/*      setFiles((prevFiles: any) => [*/}
-        {/*        ...prevFiles,*/}
-        {/*        {*/}
-        {/*          key: fileKey,*/}
-        {/*          uploaded: false,*/}
-        {/*        },*/}
-        {/*      ]);*/}
-        {/*    }}*/}
-        {/*    onFileUpload={(newFile: any) => {*/}
-        {/*      setFiles((prevFiles: any) => {*/}
-        {/*        return prevFiles.map((file: any) => {*/}
-        {/*          if (file.key === newFile.key) {*/}
-        {/*            file = {*/}
-        {/*              id: newFile.id,*/}
-        {/*              key: newFile.key,*/}
-        {/*              name: newFile.name,*/}
-        {/*              extension: newFile.extension,*/}
-        {/*              uploaded: true,*/}
-        {/*            };*/}
-        {/*          }*/}
-        {/*          return file;*/}
-        {/*        });*/}
-        {/*      });*/}
-        {/*    }}*/}
-        {/*    onFileUploadError={(fileKey: any) => {*/}
-        {/*      setFiles((prevFiles: any) => {*/}
-        {/*        // TODO do not remove the file from the list*/}
-        {/*        // show the error instead for that particular file*/}
-        {/*        return prevFiles.filter((file: any) => file.key !== fileKey);*/}
-        {/*      });*/}
-        {/*    }}*/}
-        {/*    onFileRemove={(fileId: any) => {*/}
-        {/*      setFiles((prevFiles: any) => {*/}
-        {/*        return prevFiles.filter((file: any) => file.id !== fileId);*/}
-        {/*      });*/}
-        {/*    }}*/}
-        {/*  />*/}
-        {/*)}*/}
-      </Flex>
+      <Box
+        // minHeight={modal ? '100px' : '30px'}
+        maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
+        // style={{'--remirror-editor-max-height': modal ? `calc(50vh - ${height}px) !important` : 'auto'}}
+        // height={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
+        w='full'
+      >
+        <RichTextEditor {...remirrorProps} formId={formId} name='content'>
+          <BasicEditorMenu isSending={isSending} onSubmit={onSubmit} />
+        </RichTextEditor>
+      </Box>
+
+      {/*<Flex*/}
+      {/*  justifyContent='flex-end'*/}
+      {/*  direction='row'*/}
+      {/*  flex={1}*/}
+      {/*  mt='lg'*/}
+      {/*  width='100%'*/}
+      {/*>*/}
+
+      {/*</Flex>*/}
+      {/*{isUploadAreaOpen && (*/}
+      {/*  <FileUpload*/}
+      {/*    files={files}*/}
+      {/*    onBeginFileUpload={(fileKey: string) => {*/}
+      {/*      setFiles((prevFiles: any) => [*/}
+      {/*        ...prevFiles,*/}
+      {/*        {*/}
+      {/*          key: fileKey,*/}
+      {/*          uploaded: false,*/}
+      {/*        },*/}
+      {/*      ]);*/}
+      {/*    }}*/}
+      {/*    onFileUpload={(newFile: any) => {*/}
+      {/*      setFiles((prevFiles: any) => {*/}
+      {/*        return prevFiles.map((file: any) => {*/}
+      {/*          if (file.key === newFile.key) {*/}
+      {/*            file = {*/}
+      {/*              id: newFile.id,*/}
+      {/*              key: newFile.key,*/}
+      {/*              name: newFile.name,*/}
+      {/*              extension: newFile.extension,*/}
+      {/*              uploaded: true,*/}
+      {/*            };*/}
+      {/*          }*/}
+      {/*          return file;*/}
+      {/*        });*/}
+      {/*      });*/}
+      {/*    }}*/}
+      {/*    onFileUploadError={(fileKey: any) => {*/}
+      {/*      setFiles((prevFiles: any) => {*/}
+      {/*        // TODO do not remove the file from the list*/}
+      {/*        // show the error instead for that particular file*/}
+      {/*        return prevFiles.filter((file: any) => file.key !== fileKey);*/}
+      {/*      });*/}
+      {/*    }}*/}
+      {/*    onFileRemove={(fileId: any) => {*/}
+      {/*      setFiles((prevFiles: any) => {*/}
+      {/*        return prevFiles.filter((file: any) => file.id !== fileId);*/}
+      {/*      });*/}
+      {/*    }}*/}
+      {/*  />*/}
+      {/*)}*/}
     </Box>
   );
 };

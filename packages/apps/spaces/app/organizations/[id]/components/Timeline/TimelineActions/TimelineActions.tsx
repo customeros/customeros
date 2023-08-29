@@ -15,6 +15,8 @@ import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useDisclosure } from '@ui/utils';
+import { useRemirror } from '@remirror/react';
+import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 
 interface TimelineActionsProps {
   onScrollBottom: () => void;
@@ -32,6 +34,9 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const formId = 'compose-email-timeline-footer';
+  const remirrorProps = useRemirror({
+    extensions: basicEditorExtensions,
+  });
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
     to: [],
     cc: [],
@@ -123,7 +128,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
         top='0'
         left={6}
         zIndex={1}
-        translateY='6px'
+        transform='translateY(6px)'
       >
         <Button
           variant='outline'
@@ -161,6 +166,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
                 bcc={state.values.bcc}
                 onSubmit={handleSubmit}
                 isSending={isSending}
+                remirrorProps={remirrorProps}
               />
             </Box>
           </SlideFade>

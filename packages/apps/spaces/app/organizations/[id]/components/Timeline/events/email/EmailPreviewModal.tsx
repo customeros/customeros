@@ -26,9 +26,11 @@ import {
 import { handleSendEmail } from '@organization/components/Timeline/events/email/compose-email/utils';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { convert } from 'html-to-text';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useDisclosure } from '@ui/utils';
+import { useRemirror } from '@remirror/react';
+import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
+import { htmlToProsemirrorNode } from 'remirror';
 import { InteractionEvent } from '@graphql/types';
 
 const REPLY_MODE = 'reply';
@@ -48,6 +50,11 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const event = modalContent as InteractionEvent;
 
   const subject = event?.interactionSession?.name || '';
+  const remirrorProps = useRemirror({
+    extensions: basicEditorExtensions,
+    stringHandler: htmlToProsemirrorNode,
+    content: '',
+  });
   const [_, copy] = useCopyToClipboard();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -58,13 +65,16 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const formId = 'compose-email-preview-modal';
 
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
-    to: getEmailParticipantsNameAndEmail(to, 'value'),
+    to: getEmailParticipantsNameAndEmail(
+      [...(event?.sentBy ?? []), ...(to ?? [])],
+      'value',
+    ),
     cc: getEmailParticipantsNameAndEmail(cc, 'value'),
     bcc: getEmailParticipantsNameAndEmail(bcc, 'value'),
     subject: `Re: ${subject}`,
     content: '',
   });
-  const { state, setDefaultValues } = useForm<ComposeEmailDtoI>({
+  const { state, setDefaultValues} = useForm<ComposeEmailDtoI>({
     formId,
     defaultValues,
 
@@ -72,6 +82,13 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       return next;
     },
   });
+
+  const handleResetEditor = () => {
+    const context = remirrorProps.getContext();
+    if (context) {
+      context.commands.resetContent();
+    }
+  };
 
   if (!isModalOpen || !modalContent) {
     return null;
@@ -85,15 +102,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const handleEmailSendError = () => {
     setIsSending(false);
   };
-  const text = convert(event?.content || '', {
-    preserveNewlines: false,
-    selectors: [
-      {
-        selector: 'a',
-        options: { hideLinkHrefIfSameAsText: true, ignoreHref: true },
-      },
-    ],
-  });
 
   const handleModeChange = (newMode: string) => {
     let newDefaultValues = defaultValues;
@@ -117,6 +125,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         subject: `Re: ${subject}`,
         content: mode === FORWARD_MODE ? '' : state.values.content,
       });
+      handleResetEditor();
     }
     if (newMode === FORWARD_MODE) {
       newDefaultValues = new ComposeEmailDto({
@@ -124,8 +133,13 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         cc: [],
         bcc: [],
         subject: `Re: ${subject}`,
-        content: `${state.values.content}\n ${text}`,
+        content: `${state.values.content}${event.content}`,
       });
+      const prosemirrorNodeValue = htmlToProsemirrorNode({
+        schema: remirrorProps.state.schema,
+        content: `<p>${state.values.content} ${event.content}</p>`
+      });
+      remirrorProps.getContext()?.setContent(prosemirrorNodeValue);
     }
     setMode(newMode);
     setDefaultValues(newDefaultValues);
@@ -247,6 +261,10 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 overflow='hidden'
                 textOverflow='ellipsis'
               >
+                <EmailMetaDataEntry
+                  entryType='From'
+                  content={event?.sentBy}
+                />
                 <EmailMetaDataEntry entryType='To' content={to} />
                 {!!cc.length && (
                   <EmailMetaDataEntry entryType='CC' content={cc} />
@@ -256,7 +274,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 )}
                 <EmailMetaDataEntry
                   entryType='Subject'
-                  content={event?.interactionSession?.name || ''}
+                  content={subject}
                 />
               </Flex>
               <div>
@@ -292,6 +310,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             bcc={state.values.bcc}
             onSubmit={handleSubmit}
             isSending={isSending}
+            remirrorProps={remirrorProps}
           />
         </Card>
         <ConfirmDeleteDialog

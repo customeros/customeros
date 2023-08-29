@@ -76,7 +76,6 @@ module.exports = withBundleAnalyzer(
             __SENTRY_TRACING__: false,
           }),
         );
-
         // return the modified config
         return {
           ...config,

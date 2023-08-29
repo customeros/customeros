@@ -1,1 +1,0 @@
-export { EmailParticipants } from './EmailParticipants';
