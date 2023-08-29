@@ -2,10 +2,13 @@ package graph
 
 import (
 	"context"
+	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -161,7 +164,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Co
 			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalLikelihoodUpdated, message, eventData.UpdatedAt)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				h.log.Errorf("Create failed for action: %s", err.Error())
+				h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
 			}
 		}
 
@@ -194,8 +197,42 @@ func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Cont
 		tracing.TraceErr(span, err)
 	}
 
+	// If the amount has changed, create an action
+	if eventData.Amount != nil && !utils.Float64PtrEquals(eventData.Amount, eventData.PreviousAmount) {
+		message := ""
+		strAmount := utils.FormatCurrencyAmount(*eventData.Amount)
+		if eventData.UpdatedBy == "" && string(eventData.RenewalLikelihood) != "" {
+			if eventData.RenewalLikelihood == models.RenewalLikelihoodHIGH {
+				message = fmt.Sprintf("Renewal forecast set by default to $%s based on the billing amount", strAmount)
+			} else {
+				message = fmt.Sprintf("Renewal forecast set by default to $%s, by discounting the billing amount using the renewal likelihood", strAmount)
+			}
+		} else if eventData.UpdatedBy != "" {
+			userDbNode, err := h.Repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedBy)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("GetUser failed for id: %s", eventData.UpdatedBy, err.Error())
+			}
+			message = fmt.Sprintf("Renewal forecast set to $%s", strAmount)
+			if userDbNode != nil {
+				userEntity := graph_db.MapDbNodeToUserEntity(*userDbNode)
+				if userEntity.FirstName != "" || userEntity.LastName != "" {
+					message += " by " + userEntity.FirstName + " " + userEntity.LastName
+				}
+			}
+		}
+
+		if message != "" {
+			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalForecastUpdated, message, eventData.UpdatedAt)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed creating forecast update action for organization %s: %s", organizationId, err.Error())
+			}
+		}
+	}
+
 	if eventData.UpdatedBy != "" && eventData.Amount == nil {
-		err := h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId))
+		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("RequestRenewalForecastCommand failed: %v", err.Error())

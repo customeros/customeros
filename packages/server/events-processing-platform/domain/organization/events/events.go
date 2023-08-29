@@ -280,22 +280,26 @@ func NewOrganizationUpdateRenewalLikelihoodEvent(aggregate eventstore.Aggregate,
 }
 
 type OrganizationUpdateRenewalForecastEvent struct {
-	Tenant          string    `json:"tenant" validate:"required"`
-	Amount          *float64  `json:"amount"`
-	PotentialAmount *float64  `json:"potentialAmount"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	UpdatedBy       string    `json:"updatedBy"`
-	Comment         *string   `json:"comment,omitempty"`
+	Tenant            string                              `json:"tenant" validate:"required"`
+	Amount            *float64                            `json:"amount"`
+	PotentialAmount   *float64                            `json:"potentialAmount"`
+	PreviousAmount    *float64                            `json:"previousAmount,omitempty"`
+	RenewalLikelihood models.RenewalLikelihoodProbability `json:"renewalLikelihood"`
+	UpdatedAt         time.Time                           `json:"updatedAt"`
+	UpdatedBy         string                              `json:"updatedBy"`
+	Comment           *string                             `json:"comment,omitempty"`
 }
 
-func NewOrganizationUpdateRenewalForecastEvent(aggregate eventstore.Aggregate, amount, potentialAmount *float64, updatedBy string, comment *string, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationUpdateRenewalForecastEvent(aggregate eventstore.Aggregate, amount, potentialAmount, previousAmount *float64, updatedBy string, comment *string, updatedAt time.Time, renewalLikelihood models.RenewalLikelihoodProbability) (eventstore.Event, error) {
 	eventData := OrganizationUpdateRenewalForecastEvent{
-		Tenant:          aggregate.GetTenant(),
-		Amount:          amount,
-		PotentialAmount: potentialAmount,
-		UpdatedBy:       updatedBy,
-		UpdatedAt:       updatedAt,
-		Comment:         comment,
+		Tenant:            aggregate.GetTenant(),
+		Amount:            amount,
+		PotentialAmount:   potentialAmount,
+		PreviousAmount:    previousAmount,
+		RenewalLikelihood: renewalLikelihood,
+		UpdatedBy:         updatedBy,
+		UpdatedAt:         updatedAt,
+		Comment:           comment,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

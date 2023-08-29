@@ -244,6 +244,7 @@ func TestOrganizationsService_UpdateRenewalForecast(t *testing.T) {
 	require.Equal(t, "test comment", *eventData.Comment)
 	require.Equal(t, "user-123", eventData.UpdatedBy)
 	require.Equal(t, utils.Float64Ptr(100), eventData.Amount)
+	require.Nil(t, eventData.PreviousAmount)
 	require.Nil(t, eventData.PotentialAmount)
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 }

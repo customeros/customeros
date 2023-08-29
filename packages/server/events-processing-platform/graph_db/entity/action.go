@@ -21,11 +21,13 @@ const (
 	ActionNA                       ActionType = ""
 	ActionCreated                  ActionType = "CREATED"
 	ActionRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionRenewalForecastUpdated   ActionType = "RENEWAL_FORECAST_UPDATED"
 )
 
 var AllActionType = []ActionType{
 	ActionCreated,
 	ActionRenewalLikelihoodUpdated,
+	ActionRenewalForecastUpdated,
 }
 
 func GetActionType(s string) ActionType {

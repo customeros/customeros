@@ -6470,6 +6470,7 @@ var sources = []*ast.Source{
 enum ActionType {
     CREATED
     RENEWAL_LIKELIHOOD_UPDATED
+    RENEWAL_FORECAST_UPDATED
 }`, BuiltIn: false},
 	{Name: "../schemas/action_item.graphqls", Input: `type ActionItem {
     id: ID!
