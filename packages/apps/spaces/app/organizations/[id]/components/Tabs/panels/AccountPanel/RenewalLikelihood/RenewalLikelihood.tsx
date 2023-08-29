@@ -1,5 +1,4 @@
 'use client';
-import { FC } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -21,13 +20,14 @@ import { getFeatureIconColor } from '@organization/components/Tabs/panels/Accoun
 
 export type RenewalLikelihoodType = RenewalLikelihoodT;
 
-export const RenewalLikelihood: FC<{
-  renewalLikelihood: RenewalLikelihoodType;
+interface RenewalLikelihoodProps {
+  data: RenewalLikelihoodType;
   name: string;
-}> = ({ renewalLikelihood, name }) => {
+}
+
+export const RenewalLikelihood = ({ data, name }: RenewalLikelihoodProps) => {
   const updateModal = useDisclosure();
   const infoModal = useDisclosure();
-  const { probability, comment, updatedBy, updatedAt } = renewalLikelihood;
 
   return (
     <>
@@ -44,7 +44,7 @@ export const RenewalLikelihood: FC<{
           <FeaturedIcon
             size='md'
             minW='10'
-            colorScheme={getFeatureIconColor(probability)}
+            colorScheme={getFeatureIconColor(data?.probability)}
           >
             <Icons.HeartActivity />
           </FeaturedIcon>
@@ -71,34 +71,34 @@ export const RenewalLikelihood: FC<{
                 />
               </Flex>
               <Text fontSize='xs' color='gray.500'>
-                {!probability
+                {!data?.probability
                   ? 'Not set yet'
                   : `Set by 
-                ${getUserDisplayData(updatedBy)}
-                 ${DateTimeUtils.timeAgo(updatedAt, {
+                ${getUserDisplayData(data?.updatedBy)}
+                 ${DateTimeUtils.timeAgo(data?.updatedAt, {
                    addSuffix: true,
                  })}`}
               </Text>
             </Flex>
 
-            <Heading fontSize='2xl' color={getRenewalColor(probability)}>
-              {parseRenewalLabel(probability)}
+            <Heading fontSize='2xl' color={getRenewalColor(data?.probability)}>
+              {parseRenewalLabel(data?.probability)}
             </Heading>
           </Flex>
         </CardBody>
 
-        {probability && updatedBy && (
+        {data?.probability && data?.updatedBy && (
           <CardFooter p='0' as={Flex} flexDir='column'>
             <Divider my='4' />
             <Flex align='flex-start'>
-              {comment ? (
+              {data?.comment ? (
                 <Icons.File2 color='gray.400' />
               ) : (
                 <Icons.FileCross viewBox='0 0 16 16' color='gray.400' />
               )}
 
               <Text color='gray.500' fontSize='xs' ml='1' noOfLines={2}>
-                {comment || 'No reason provided'}
+                {data?.comment || 'No reason provided'}
               </Text>
             </Flex>
           </CardFooter>
@@ -107,7 +107,7 @@ export const RenewalLikelihood: FC<{
 
       <RenewalLikelihoodModal
         name={name}
-        renewalLikelihood={renewalLikelihood}
+        renewalLikelihood={data}
         isOpen={updateModal.isOpen}
         onClose={updateModal.onClose}
       />
@@ -134,9 +134,9 @@ export const RenewalLikelihood: FC<{
 };
 
 function parseRenewalLabel(
-  renewalLikelihood?: Maybe<RenewalLikelihoodProbability> | undefined,
+  data?: Maybe<RenewalLikelihoodProbability> | undefined,
 ) {
-  switch (renewalLikelihood) {
+  switch (data) {
     case 'HIGH':
       return 'High';
     case 'MEDIUM':
@@ -151,9 +151,9 @@ function parseRenewalLabel(
 }
 
 function getRenewalColor(
-  renewalLikelihood?: Maybe<RenewalLikelihoodProbability> | undefined,
+  data?: Maybe<RenewalLikelihoodProbability> | undefined,
 ) {
-  switch (renewalLikelihood) {
+  switch (data) {
     case 'HIGH':
       return 'success.500';
     case 'MEDIUM':

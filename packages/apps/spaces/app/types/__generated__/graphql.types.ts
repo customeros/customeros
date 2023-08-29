@@ -1259,8 +1259,11 @@ export type Mutation = {
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
   organization_UpdateBillingDetails: Organization;
+  organization_UpdateBillingDetailsAsync: Scalars['ID'];
   organization_UpdateRenewalForecast: Organization;
+  organization_UpdateRenewalForecastAsync: Scalars['ID'];
   organization_UpdateRenewalLikelihood: Organization;
+  organization_UpdateRenewalLikelihoodAsync: Scalars['ID'];
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
   phoneNumberMergeToUser: PhoneNumber;
@@ -1685,11 +1688,23 @@ export type MutationOrganization_UpdateBillingDetailsArgs = {
   input: BillingDetailsInput;
 };
 
+export type MutationOrganization_UpdateBillingDetailsAsyncArgs = {
+  input: BillingDetailsInput;
+};
+
 export type MutationOrganization_UpdateRenewalForecastArgs = {
   input: RenewalForecastInput;
 };
 
+export type MutationOrganization_UpdateRenewalForecastAsyncArgs = {
+  input: RenewalForecastInput;
+};
+
 export type MutationOrganization_UpdateRenewalLikelihoodArgs = {
+  input: RenewalLikelihoodInput;
+};
+
+export type MutationOrganization_UpdateRenewalLikelihoodAsyncArgs = {
   input: RenewalLikelihoodInput;
 };
 

@@ -1,5 +1,4 @@
 'use client';
-import { FC } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -21,33 +20,38 @@ import { getFeatureIconColor } from '@organization/components/Tabs/panels/Accoun
 
 export type RenewalForecastType = RenewalForecastT & { amount?: string | null };
 
-export const RenewalForecast: FC<{
+interface RenewalForecastProps {
   renewalForecast: RenewalForecastType;
   renewalProbability?: RenewalLikelihoodProbability | null;
   name: string;
-}> = ({ renewalForecast, renewalProbability, name }) => {
+}
+
+export const RenewalForecast = ({
+  renewalForecast,
+  renewalProbability,
+  name,
+}: RenewalForecastProps) => {
   const update = useDisclosure();
   const info = useDisclosure();
-  const { amount, comment, updatedBy, updatedAt } = renewalForecast;
 
   const getForecastMetaInfo = () => {
-    if (!amount) {
+    if (!renewalForecast?.amount) {
       return 'Not calculated yet';
     }
 
-    if (!updatedBy) {
+    if (!renewalForecast?.updatedBy) {
       return 'Calculated from billing amount';
     }
 
-    return `Set by ${getUserDisplayData(updatedBy)} ${DateTimeUtils.timeAgo(
-      updatedAt,
-      {
-        addSuffix: true,
-      },
-    )}`;
+    return `Set by ${getUserDisplayData(
+      renewalForecast?.updatedBy,
+    )} ${DateTimeUtils.timeAgo(renewalForecast?.updatedAt, {
+      addSuffix: true,
+    })}`;
   };
 
-  const isAmountSet = amount !== null && amount !== undefined;
+  const isAmountSet =
+    renewalForecast?.amount !== null && renewalForecast?.amount !== undefined;
 
   return (
     <>
@@ -65,7 +69,7 @@ export const RenewalForecast: FC<{
             size='md'
             minW='10'
             colorScheme={
-              amount && !updatedBy
+              renewalForecast?.amount && !renewalForecast?.updatedBy
                 ? getFeatureIconColor(renewalProbability)
                 : 'gray'
             }
@@ -110,22 +114,24 @@ export const RenewalForecast: FC<{
               fontSize='2xl'
               color={isAmountSet ? 'gray.700' : 'gray.400'}
             >
-              {isAmountSet ? formatCurrency(amount) : 'Unknown'}
+              {isAmountSet
+                ? formatCurrency(renewalForecast?.amount ?? 0)
+                : 'Unknown'}
             </Heading>
           </Flex>
         </CardBody>
-        {!!amount && updatedBy && (
+        {!!renewalForecast?.amount && renewalForecast?.updatedBy && (
           <CardFooter p='0' as={Flex} flexDir='column'>
             <Divider mt='4' mb='2' />
             <Flex align='flex-start'>
-              {comment ? (
+              {renewalForecast?.comment ? (
                 <Icons.File2 color='gray.400' />
               ) : (
                 <Icons.FileCross viewBox='0 0 16 16' color='gray.400' />
               )}
 
               <Text color='gray.500' fontSize='xs' ml='1' noOfLines={2}>
-                {comment || 'No reason provided'}
+                {renewalForecast?.comment || 'No reason provided'}
               </Text>
             </Flex>
           </CardFooter>
@@ -134,8 +140,8 @@ export const RenewalForecast: FC<{
 
       <RenewalForecastModal
         renewalForecast={{
-          amount: renewalForecast.amount,
-          comment: renewalForecast.comment,
+          amount: renewalForecast?.amount,
+          comment: renewalForecast?.comment,
         }}
         name={name}
         isOpen={update.isOpen}

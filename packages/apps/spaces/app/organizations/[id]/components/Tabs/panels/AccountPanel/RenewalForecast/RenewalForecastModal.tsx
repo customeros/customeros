@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
@@ -45,13 +45,19 @@ export const RenewalForecastModal = ({
 }: RenewalForecastModalProps) => {
   const id = useParams()?.id as string;
   const initialRef = useRef(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [amount, setAmount] = useState<string>(renewalForecast?.amount || '');
   const [reason, setReason] = useState<string>(renewalForecast?.comment || '');
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const updateRenewalForecast = useUpdateRenewalForecastMutation(client, {
-    onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
+    onSuccess: () => {
+      timeoutRef.current = setTimeout(
+        () => invalidateAccountDetailsQuery(queryClient, id),
+        500,
+      );
+    },
   });
 
   const handleSet = () => {
@@ -64,6 +70,14 @@ export const RenewalForecastModal = ({
     });
     onClose();
   };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={initialRef}>
