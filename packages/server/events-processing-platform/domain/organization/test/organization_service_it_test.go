@@ -189,6 +189,7 @@ func TestOrganizationsService_UpdateRenewalLikelihood(t *testing.T) {
 	require.NotNil(t, eventData.Comment)
 	require.Equal(t, "test comment", *eventData.Comment)
 	require.Equal(t, "user-123", eventData.UpdatedBy)
+	require.Equal(t, models.RenewalLikelihoodProbability(""), eventData.PreviousLikelihood)
 	require.Equal(t, models.RenewalLikelihoodHIGH, eventData.RenewalLikelihood)
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 }

@@ -223,7 +223,7 @@ func (a *OrganizationAggregate) updateRenewalLikelihood(ctx context.Context, com
 		updatedAt = utils.Now()
 	}
 
-	event, err := events.NewOrganizationUpdateRenewalLikelihoodEvent(a, command.Fields.RenewalLikelihood, command.Fields.UpdatedBy, command.Fields.Comment, updatedAt)
+	event, err := events.NewOrganizationUpdateRenewalLikelihoodEvent(a, command.Fields.RenewalLikelihood, a.Organization.RenewalLikelihood.RenewalLikelihood, command.Fields.UpdatedBy, command.Fields.Comment, updatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

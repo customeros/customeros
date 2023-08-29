@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -24,7 +25,12 @@ func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 
 	aggregateStore := eventstore.NewTestAggregateStore()
 
+	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "new",
+		LastName:  "user",
+	})
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 		RenewalLikelihood: entity.RenewalLikelihood{
@@ -34,33 +40,54 @@ func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 			UpdatedBy:                 "old user",
 		},
 	})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+		"User": 1, "User_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
+
+	// prepare event handler
 	orgEventHandler := &GraphOrganizationEventHandler{
 		Repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
-
-	event, err := events.NewOrganizationUpdateRenewalLikelihoodEvent(orgAggregate, models.RenewalLikelihoodLOW, "new user", utils.StringPtr("new comment"), now)
+	event, err := events.NewOrganizationUpdateRenewalLikelihoodEvent(orgAggregate, models.RenewalLikelihoodLOW, models.RenewalLikelihoodHIGH, userId, utils.StringPtr("new comment"), now)
 	require.Nil(t, err)
+
+	// EXECUTE
 	err = orgEventHandler.OnRenewalLikelihoodUpdate(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+		"User": 1, "User_" + tenantName: 1,
+		"Action": 1, "Action_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 
-	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	orgDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
 	require.Nil(t, err)
-	require.NotNil(t, dbNode)
+	require.NotNil(t, orgDbNode)
 
-	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
+	// verify organization
+	organization := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, string(entity.RenewalLikelihoodZero), organization.RenewalLikelihood.PreviousRenewalLikelihood)
 	require.Equal(t, string(entity.RenewalLikelihoodLow), organization.RenewalLikelihood.RenewalLikelihood)
 	require.Equal(t, now, *organization.RenewalLikelihood.UpdatedAt)
 	require.Equal(t, "new comment", *organization.RenewalLikelihood.Comment)
-	require.Equal(t, "new user", organization.RenewalLikelihood.UpdatedBy)
+	require.Equal(t, userId, organization.RenewalLikelihood.UpdatedBy)
 	require.Equal(t, entity.DataSourceOpenline, organization.SourceOfTruth)
 	require.NotNil(t, organization.UpdatedAt)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, now, action.CreatedAt)
+	require.Equal(t, entity.ActionRenewalLikelihoodUpdated, action.Type)
+	require.Equal(t, "Renewal likelihood set to Low by new user", action.Content)
 
 	// Check request was generated
 	eventsMap := aggregateStore.GetEventMap()

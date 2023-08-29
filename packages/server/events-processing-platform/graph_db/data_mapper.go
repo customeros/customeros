@@ -55,3 +55,33 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 	}
 	return &output
 }
+
+func MapDbNodeToUserEntity(node dbtype.Node) *entity.UserEntity {
+	props := utils.GetPropsFromNode(node)
+	return &entity.UserEntity{
+		Id:              utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
+		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
+		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
+		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
+		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
+	}
+}
+
+func MapDbNodeToActionEntity(node dbtype.Node) *entity.ActionEntity {
+	props := utils.GetPropsFromNode(node)
+	action := entity.ActionEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Type:      entity.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
+		Content:   utils.GetStringPropOrEmpty(props, "content"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+	}
+	return &action
+}

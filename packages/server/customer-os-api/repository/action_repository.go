@@ -27,7 +27,7 @@ func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 }
 
 func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType entity.EntityType, actionType entity.ActionType, source entity.DataSource, appSource string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.LinkWithXXIncludesAttachmentInTx")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
