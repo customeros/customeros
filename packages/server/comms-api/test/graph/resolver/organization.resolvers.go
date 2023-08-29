@@ -28,14 +28,29 @@ func (r *mutationResolver) OrganizationUpdateRenewalLikelihood(ctx context.Conte
 	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalLikelihood - organization_UpdateRenewalLikelihood"))
 }
 
+// OrganizationUpdateRenewalLikelihoodAsync is the resolver for the organization_UpdateRenewalLikelihoodAsync field.
+func (r *mutationResolver) OrganizationUpdateRenewalLikelihoodAsync(ctx context.Context, input model.RenewalLikelihoodInput) (string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalLikelihoodAsync - organization_UpdateRenewalLikelihoodAsync"))
+}
+
 // OrganizationUpdateRenewalForecast is the resolver for the organization_UpdateRenewalForecast field.
 func (r *mutationResolver) OrganizationUpdateRenewalForecast(ctx context.Context, input model.RenewalForecastInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalForecast - organization_UpdateRenewalForecast"))
 }
 
+// OrganizationUpdateRenewalForecastAsync is the resolver for the organization_UpdateRenewalForecastAsync field.
+func (r *mutationResolver) OrganizationUpdateRenewalForecastAsync(ctx context.Context, input model.RenewalForecastInput) (string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalForecastAsync - organization_UpdateRenewalForecastAsync"))
+}
+
 // OrganizationUpdateBillingDetails is the resolver for the organization_UpdateBillingDetails field.
 func (r *mutationResolver) OrganizationUpdateBillingDetails(ctx context.Context, input model.BillingDetailsInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationUpdateBillingDetails - organization_UpdateBillingDetails"))
+}
+
+// OrganizationUpdateBillingDetailsAsync is the resolver for the organization_UpdateBillingDetailsAsync field.
+func (r *mutationResolver) OrganizationUpdateBillingDetailsAsync(ctx context.Context, input model.BillingDetailsInput) (string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateBillingDetailsAsync - organization_UpdateBillingDetailsAsync"))
 }
 
 // OrganizationArchive is the resolver for the organization_Archive field.
