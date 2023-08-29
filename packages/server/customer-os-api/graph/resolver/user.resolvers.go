@@ -236,6 +236,8 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForUser(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get phone numbers for user %s: %s", obj.ID, err.Error())
@@ -247,6 +249,8 @@ func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*mo
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForUser(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get job roles for user %s: %s", obj.ID, err.Error())
@@ -258,6 +262,8 @@ func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.
 
 // Calendars is the resolver for the calendars field.
 func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	calendarsForUser, err := dataloader.For(ctx).GetCalendarsForUser(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get calendars for user %s: %s", obj.ID, err.Error())

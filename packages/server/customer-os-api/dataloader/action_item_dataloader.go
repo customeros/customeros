@@ -24,7 +24,7 @@ func (i *Loaders) GetActionItemsForInteractionEvent(ctx context.Context, interac
 }
 
 func (b *actionItemBatcher) getActionItemsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionItemDataLoader.getActionItemsForInteractionEvents")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionItemDataLoader.getActionItemsForInteractionEvents", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

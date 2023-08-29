@@ -21,6 +21,8 @@ import (
 
 // InteractionSession is the resolver for the interactionSession field.
 func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	interactionSessionEntityNillable, err := dataloader.For(ctx).GetInteractionSessionForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get interaction session for interaction event %s: %s", obj.ID, err.Error())
@@ -32,6 +34,8 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 
 // Issue is the resolver for the issue field.
 func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.InteractionEvent) (*model.Issue, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	issueEntityNillable, err := dataloader.For(ctx).GetIssueForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get issue for interaction event %s: %s", obj.ID, err.Error())
@@ -43,6 +47,8 @@ func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.Interac
 
 // Meeting is the resolver for the meeting field.
 func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	meetingEntityNillable, err := dataloader.For(ctx).GetMeetingForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get meeting for interaction event %s: %s", obj.ID, err.Error())
@@ -54,6 +60,8 @@ func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.Inter
 
 // SentBy is the resolver for the sentBy field.
 func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	participantEntities, err := dataloader.For(ctx).GetSentByParticipantsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get SentBy for interaction event %s: %s", obj.ID, err.Error())
@@ -65,6 +73,8 @@ func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.Intera
 
 // SentTo is the resolver for the sentTo field.
 func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	participantEntities, err := dataloader.For(ctx).GetSentToParticipantsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get SentTo for interaction event %s: %s", obj.ID, err.Error())
@@ -76,6 +86,8 @@ func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.Intera
 
 // RepliesTo is the resolver for the repliesTo field.
 func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get ReplyTo for interaction event %s: %s", obj.ID, err.Error())
@@ -90,6 +102,8 @@ func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.Int
 
 // Includes is the resolver for the includes field.
 func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get attachment entities for Interaction Event %s: %s", obj.ID, err.Error())
@@ -101,6 +115,8 @@ func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.Inte
 
 // Summary is the resolver for the summary field.
 func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.InteractionEvent) (*model.Analysis, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_INTERACTION_EVENT, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get analysis for InteractionEvent %s: %s", obj.ID, err.Error())
@@ -115,6 +131,8 @@ func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.Inter
 
 // ActionItems is the resolver for the actionItems field.
 func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.InteractionEvent) ([]*model.ActionItem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	entities, err := dataloader.For(ctx).GetActionItemsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get action items entities for Interaction Event %s: %s", obj.ID, err.Error())
@@ -126,6 +144,8 @@ func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.I
 
 // Events is the resolver for the events field.
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionSession(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get interaction events for interaction session %s: %s", obj.ID, err.Error())
@@ -137,6 +157,8 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 
 // AttendedBy is the resolver for the attendedBy field.
 func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForInteractionSession(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get AttendedBy for interaction event %s: %s", obj.ID, err.Error())
@@ -148,6 +170,8 @@ func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.
 
 // Includes is the resolver for the includes field.
 func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.InteractionSession) ([]*model.Attachment, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionSession(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get attachment entities for Interaction Session %s: %s", obj.ID, err.Error())
@@ -159,6 +183,8 @@ func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.In
 
 // DescribedBy is the resolver for the describedBy field.
 func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model.InteractionSession) ([]*model.Analysis, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_INTERACTION_SESSION, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get analysis for InteractionSession %s: %s", obj.ID, err.Error())

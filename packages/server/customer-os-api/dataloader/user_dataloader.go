@@ -55,7 +55,7 @@ func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationI
 }
 
 func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForEmails")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForEmails", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -107,7 +107,7 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 }
 
 func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForPhoneNumbers")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForPhoneNumbers", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
@@ -158,7 +158,7 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 }
 
 func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForPlayers")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForPlayers", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -210,7 +210,7 @@ func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Ke
 }
 
 func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserOwnersForOrganizations")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserOwnersForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

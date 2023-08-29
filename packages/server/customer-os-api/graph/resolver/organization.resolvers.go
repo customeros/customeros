@@ -467,6 +467,8 @@ func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Conte
 
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	domainEntities, err := dataloader.For(ctx).GetDomainsForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get domains for organization %s: %s", obj.ID, err.Error())
@@ -478,6 +480,8 @@ func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organizat
 
 // Locations is the resolver for the locations field.
 func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organization) ([]*model.Location, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	locationEntities, err := dataloader.For(ctx).GetLocationsForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get locations for organization %s: %s", obj.ID, err.Error())
@@ -489,6 +493,8 @@ func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organiz
 
 // Socials is the resolver for the socials field.
 func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	socialEntities, err := dataloader.For(ctx).GetSocialsForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get socials for organization %s: %s", obj.ID, err.Error())
@@ -523,6 +529,8 @@ func (r *organizationResolver) Contacts(ctx context.Context, obj *model.Organiza
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organization) ([]*model.JobRole, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get job roles for organization %s: %s", obj.ID, err.Error())
@@ -557,6 +565,8 @@ func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organizatio
 
 // Tags is the resolver for the tags field.
 func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	tagEntities, err := dataloader.For(ctx).GetTagsForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get tags for organization %s: %s", obj.ID, err.Error())
@@ -568,6 +578,8 @@ func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization
 
 // Emails is the resolver for the emails field.
 func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	emailEntities, err := dataloader.For(ctx).GetEmailsForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get emails for organization %s: %s", obj.ID, err.Error())
@@ -579,6 +591,8 @@ func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organizati
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get phone numbers for organization %s: %s", obj.ID, err.Error())
@@ -590,6 +604,8 @@ func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Orga
 
 // Subsidiaries is the resolver for the subsidiaries field.
 func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to fetch subsidiary organizations for orgnization %s: %s", obj.ID, err.Error())
@@ -601,6 +617,8 @@ func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Orga
 
 // SubsidiaryOf is the resolver for the subsidiaryOf field.
 func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesOfForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to fetch parent organizations for organization %s: %s", obj.ID, err.Error())
@@ -612,6 +630,8 @@ func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Orga
 
 // SuggestedMergeTo is the resolver for the suggestedMergeTo field.
 func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.Organization) ([]*model.SuggestedMergeOrganization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	organizationEntities, err := dataloader.For(ctx).GetSuggestedMergeToForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to fetch suggested merge to organizations for input org id %s: %s", obj.ID, err.Error())
@@ -709,6 +729,8 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 
 // Owner is the resolver for the owner field.
 func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organization) (*model.User, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Error fetching user owner for organization %s: %s", obj.ID, err.Error())
@@ -720,6 +742,8 @@ func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organizatio
 
 // Relationships is the resolver for the relationships field.
 func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	orgRelationships, err := dataloader.For(ctx).GetRelationshipsForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Error fetching relationships for organization %s: %s", obj.ID, err.Error())
@@ -731,6 +755,8 @@ func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Org
 
 // RelationshipStages is the resolver for the relationshipStages field.
 func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	serviceResult, err := dataloader.For(ctx).GetRelationshipStagesForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Error fetching relationship stages for organization %s: %s", obj.ID, err.Error())
@@ -752,6 +778,8 @@ func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *mode
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external system for organization %s: %s", obj.ID, err.Error())

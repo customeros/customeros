@@ -223,8 +223,9 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 
 // Country is the resolver for the country field.
 func (r *phoneNumberResolver) Country(ctx context.Context, obj *model.PhoneNumber) (*model.Country, error) {
-	countryEntityNillable, err := dataloader.For(ctx).GetCountryForPhoneNumber(ctx, obj.ID)
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
+	countryEntityNillable, err := dataloader.For(ctx).GetCountryForPhoneNumber(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get country for phone number %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get country for phone number with id %s", obj.ID)
@@ -235,6 +236,8 @@ func (r *phoneNumberResolver) Country(ctx context.Context, obj *model.PhoneNumbe
 
 // Users is the resolver for the users field.
 func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	userEntities, err := dataloader.For(ctx).GetUsersForPhoneNumber(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get users for phone number %s: %s", obj.ID, err.Error())
@@ -246,6 +249,8 @@ func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber)
 
 // Contacts is the resolver for the contacts field.
 func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumber) ([]*model.Contact, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	contactEntities, err := dataloader.For(ctx).GetContactsForPhoneNumber(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get contacts for phone number %s: %s", obj.ID, err.Error())
@@ -257,6 +262,8 @@ func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumb
 
 // Organizations is the resolver for the organizations field.
 func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForPhoneNumber(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get organizations for phone number %s: %s", obj.ID, err.Error())

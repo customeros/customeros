@@ -33,7 +33,7 @@ func (i *Loaders) GetSocialsForOrganization(ctx context.Context, organizationId 
 }
 
 func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialDataLoader.getSocialsForContacts")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialDataLoader.getSocialsForContacts", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -86,7 +86,7 @@ func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataload
 }
 
 func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialDataLoader.getSocialsForOrganizations")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialDataLoader.getSocialsForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

@@ -22,6 +22,8 @@ import (
 
 // Tags is the resolver for the tags field.
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	tagEntities, err := dataloader.For(ctx).GetTagsForContact(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get tags for contact %s: %s", obj.ID, err.Error())
@@ -33,6 +35,8 @@ func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*mode
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForContact(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get job roles for contact %s: %s", obj.ID, err.Error())
@@ -68,6 +72,8 @@ func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact,
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForContact(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get phone numbers for contact %s: %s", obj.ID, err.Error())
@@ -79,6 +85,8 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 
 // Emails is the resolver for the emails field.
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	emailEntities, err := dataloader.For(ctx).GetEmailsForContact(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get emails for contact %s: %s", obj.ID, err.Error())
@@ -90,6 +98,8 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 
 // Locations is the resolver for the locations field.
 func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	locationEntities, err := dataloader.For(ctx).GetLocationsForContact(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get locations for contact %s: %s", obj.ID, err.Error())
@@ -101,6 +111,8 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 
 // Socials is the resolver for the socials field.
 func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	socialEntities, err := dataloader.For(ctx).GetSocialsForContact(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get socials for contact %s: %s", obj.ID, err.Error())

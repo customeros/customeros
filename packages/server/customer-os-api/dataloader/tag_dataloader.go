@@ -43,7 +43,7 @@ func (i *Loaders) GetTagsForIssue(ctx context.Context, issueId string) (*entity.
 }
 
 func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForOrganizations")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -95,7 +95,7 @@ func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloade
 }
 
 func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForContacts")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForContacts", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -147,7 +147,7 @@ func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Key
 }
 
 func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForIssues")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForIssues", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

@@ -32,7 +32,7 @@ func (i *Loaders) GetRelationshipStagesForOrganization(ctx context.Context, orga
 }
 
 func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipDataLoader.getRelationshipsForOrganizations")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipDataLoader.getRelationshipsForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -85,7 +85,7 @@ func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Conte
 }
 
 func (b *relationshipBatcher) getRelationshipStagesForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipDataLoader.getRelationshipStagesForOrganizations")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipDataLoader.getRelationshipStagesForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

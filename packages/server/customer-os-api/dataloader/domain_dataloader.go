@@ -23,7 +23,7 @@ func (i *Loaders) GetDomainsForOrganization(ctx context.Context, organizationId 
 }
 
 func (b *domainBatcher) getDomainsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainDataLoader.getDomainsForOrganizations")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainDataLoader.getDomainsForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
