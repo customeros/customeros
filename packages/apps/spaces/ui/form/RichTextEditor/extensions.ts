@@ -6,6 +6,7 @@ import {
   FontSizeExtension,
   HeadingExtension,
   ItalicExtension,
+  LinkExtension,
   NodeFormattingExtension,
   OrderedListExtension,
   StrikeExtension,
@@ -24,4 +25,5 @@ export const basicEditorExtensions = () => [
   new BlockquoteExtension(),
   new HeadingExtension(),
   new NodeFormattingExtension(),
+  new LinkExtension({ autoLink: true }),
 ];

@@ -32,6 +32,7 @@ import { useRemirror } from '@remirror/react';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { htmlToProsemirrorNode } from 'remirror';
 import { InteractionEvent } from '@graphql/types';
+import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -74,7 +75,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     subject: `Re: ${subject}`,
     content: '',
   });
-  const { state, setDefaultValues} = useForm<ComposeEmailDtoI>({
+  const { state, setDefaultValues } = useForm<ComposeEmailDtoI>({
     formId,
     defaultValues,
 
@@ -137,7 +138,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       });
       const prosemirrorNodeValue = htmlToProsemirrorNode({
         schema: remirrorProps.state.schema,
-        content: `<p>${state.values.content} ${event.content}</p>`
+        content: `<p>${state.values.content} ${event.content}</p>`,
       });
       remirrorProps.getContext()?.setContent(prosemirrorNodeValue);
     }
@@ -261,10 +262,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 overflow='hidden'
                 textOverflow='ellipsis'
               >
-                <EmailMetaDataEntry
-                  entryType='From'
-                  content={event?.sentBy}
-                />
+                <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
                 <EmailMetaDataEntry entryType='To' content={to} />
                 {!!cc.length && (
                   <EmailMetaDataEntry entryType='CC' content={cc} />
@@ -272,10 +270,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                 {!!bcc.length && (
                   <EmailMetaDataEntry entryType='BCC' content={bcc} />
                 )}
-                <EmailMetaDataEntry
-                  entryType='Subject'
-                  content={subject}
-                />
+                <EmailMetaDataEntry entryType='Subject' content={subject} />
               </Flex>
               <div>
                 <Image
@@ -292,11 +287,9 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
             <Text color='gray.700' size='sm'>
               {event?.content && (
-                <div
-                  className={styles.normalize_email}
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizeHtml(event.content),
-                  }}
+                <RichTextPreview
+                  htmlContent={sanitizeHtml(event.content)}
+                  extensions={basicEditorExtensions}
                 />
               )}
             </Text>

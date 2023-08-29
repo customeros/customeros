@@ -4,7 +4,6 @@ import { Flex, HStack, StackDivider } from '@chakra-ui/react';
 import Quote from '@ui/media/icons/Quote';
 import { TextFormatButtons } from './TextFormatButtons';
 import { ListButtons } from './ListButtons';
-import { IndentButtons } from './IndentButtons';
 import { Button } from '@ui/form/Button';
 import { ToolbarButton } from './ToolbarButton';
 
@@ -16,7 +15,7 @@ export const BasicEditorMenu: FC<{
   const active = useActive();
 
   return (
-    <Flex justifyContent='space-between' flex={1} minH={8}>
+    <Flex justifyContent='space-between' alignItems='flex-end' flex={1} minH={8}>
       <HStack
         w='full'
         bg='transparent'
@@ -24,6 +23,7 @@ export const BasicEditorMenu: FC<{
           <StackDivider
             m={0}
             borderColor='gray.200'
+            borderWidth='1px'
             marginInlineStart={0}
             marginInlineEnd={0}
           />
@@ -31,7 +31,6 @@ export const BasicEditorMenu: FC<{
       >
         <TextFormatButtons />
         <ListButtons />
-        <IndentButtons />
         <ToolbarButton
           label='Quote'
           onClick={() => {

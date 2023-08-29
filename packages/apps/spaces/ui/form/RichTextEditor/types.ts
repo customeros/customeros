@@ -11,6 +11,7 @@ import {
   OrderedListExtension,
   StrikeExtension,
   UnderlineExtension,
+    LinkExtension
 } from 'remirror/extensions';
 import { AnyExtension } from 'remirror';
 
@@ -25,6 +26,7 @@ export type BasicEditorExtentions =
   | BulletListExtension
   | FontFamilyExtension
   | FontSizeExtension
+  | LinkExtension
   | HeadingExtension;
 
 export type RemirrorProps<T extends AnyExtension> = UseRemirrorReturn<

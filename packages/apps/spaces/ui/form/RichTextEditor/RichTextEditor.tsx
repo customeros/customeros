@@ -30,8 +30,8 @@ export const RichTextEditor: FC<
           manager={manager}
           onChange={(parameter) => {
             const nextState = parameter.state;
+            const htmlValue = prosemirrorNodeToHtml(nextState?.doc);
 
-            const htmlValue = prosemirrorNodeToHtml(nextState.doc);
             // first update is happening before form store is initialized this change prevents error
             if (value !== undefined) {
               onChange(htmlValue);
