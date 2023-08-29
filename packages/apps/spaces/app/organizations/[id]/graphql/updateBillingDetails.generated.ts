@@ -24,17 +24,12 @@ export type UpdateBillingDetailsMutationVariables = Types.Exact<{
 
 export type UpdateBillingDetailsMutation = {
   __typename?: 'Mutation';
-  organization_UpdateBillingDetails: {
-    __typename?: 'Organization';
-    id: string;
-  };
+  organization_UpdateBillingDetailsAsync: string;
 };
 
 export const UpdateBillingDetailsDocument = `
     mutation updateBillingDetails($input: BillingDetailsInput!) {
-  organization_UpdateBillingDetails(input: $input) {
-    id
-  }
+  organization_UpdateBillingDetailsAsync(input: $input)
 }
     `;
 export const useUpdateBillingDetailsMutation = <

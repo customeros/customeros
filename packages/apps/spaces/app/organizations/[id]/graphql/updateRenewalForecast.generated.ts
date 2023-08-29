@@ -24,17 +24,12 @@ export type UpdateRenewalForecastMutationVariables = Types.Exact<{
 
 export type UpdateRenewalForecastMutation = {
   __typename?: 'Mutation';
-  organization_UpdateRenewalForecast: {
-    __typename?: 'Organization';
-    id: string;
-  };
+  organization_UpdateRenewalForecastAsync: string;
 };
 
 export const UpdateRenewalForecastDocument = `
     mutation updateRenewalForecast($input: RenewalForecastInput!) {
-  organization_UpdateRenewalForecast(input: $input) {
-    id
-  }
+  organization_UpdateRenewalForecastAsync(input: $input)
 }
     `;
 export const useUpdateRenewalForecastMutation = <

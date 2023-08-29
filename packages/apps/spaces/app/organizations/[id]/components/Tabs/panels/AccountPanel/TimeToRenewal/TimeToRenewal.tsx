@@ -1,4 +1,4 @@
-import React from 'react';
+import { useRef, useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
 
 import { Flex } from '@ui/layout/Flex';
@@ -25,11 +25,18 @@ interface TimeToRenewalsCardProps {
   data?: BillingDetails | null;
 }
 export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
   const updateBillingDetails = useUpdateBillingDetailsMutation(client, {
-    onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
+    onSuccess: () => {
+      timeoutRef.current = setTimeout(
+        () => invalidateAccountDetailsQuery(queryClient, id),
+        500,
+      );
+    },
   });
+
   const defaultValues = TimeToRenewalDTO.toForm(data);
 
   useForm({
@@ -94,6 +101,14 @@ export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
   });
 
   const [value, label] = getTimeToRenewal(data?.renewalCycleNext);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Card

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
@@ -41,6 +41,7 @@ export const RenewalLikelihoodModal = ({
   onClose,
   name,
 }: RenewalLikelihoodModalProps) => {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const id = useParams()?.id as string;
   const [probability, setLikelihood] = useState<
     RenewalLikelihoodProbability | undefined | null
@@ -51,7 +52,12 @@ export const RenewalLikelihoodModal = ({
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const updateRenewalLikelihood = useUpdateRenewalLikelihoodMutation(client, {
-    onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
+    onSuccess: () => {
+      timeoutRef.current = setTimeout(
+        () => invalidateAccountDetailsQuery(queryClient, id),
+        500,
+      );
+    },
   });
 
   const handleSet = () => {
@@ -60,6 +66,14 @@ export const RenewalLikelihoodModal = ({
     });
     onClose();
   };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -80,11 +94,11 @@ export const RenewalLikelihoodModal = ({
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
             {`${
-              !renewalLikelihood.probability ? 'Set' : 'Update'
+              !renewalLikelihood?.probability ? 'Set' : 'Update'
             } renewal likelihood`}
           </Heading>
           <Text mt='1' fontSize='sm' fontWeight='normal'>
-            {!renewalLikelihood.probability ? 'Setting' : 'Updating'}{' '}
+            {!renewalLikelihood?.probability ? 'Setting' : 'Updating'}{' '}
             <b>{name}</b> renewal likelihood will change how its renewal
             estimates are calculated and actions are prioritised.
           </Text>
@@ -141,7 +155,7 @@ export const RenewalLikelihoodModal = ({
                 spellCheck='false'
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={`What is the reason for ${
-                  !renewalLikelihood.probability ? 'setting' : 'updating'
+                  !renewalLikelihood?.probability ? 'setting' : 'updating'
                 } the renewal likelihood?`}
               />
             </>
@@ -158,7 +172,7 @@ export const RenewalLikelihoodModal = ({
             colorScheme='primary'
             onClick={handleSet}
           >
-            {!renewalLikelihood.probability ? 'Set' : 'Update'}
+            {!renewalLikelihood?.probability ? 'Set' : 'Update'}
           </Button>
         </ModalFooter>
       </ModalContent>

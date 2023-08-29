@@ -1,4 +1,4 @@
-import React from 'react';
+import { useRef, useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
 
 import { Box } from '@ui/layout/Box';
@@ -24,15 +24,18 @@ interface BillingDetailsCardBProps {
   id: string;
   data?: BillingDetails | null;
 }
-export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
-  id,
-  data,
-}) => {
+export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
   const defaultValues = BillingDetailsDTO.toForm(data);
   const client = getGraphQLClient();
   const updateBillingDetails = useUpdateBillingDetailsMutation(client, {
-    onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
+    onSuccess: () => {
+      timeoutRef.current = setTimeout(
+        () => invalidateAccountDetailsQuery(queryClient, id),
+        500,
+      );
+    },
   });
   const formId = 'billing-details-form';
 
@@ -79,6 +82,14 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
       return next;
     },
   });
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Card
