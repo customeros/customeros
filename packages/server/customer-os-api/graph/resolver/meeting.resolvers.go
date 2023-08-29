@@ -22,6 +22,8 @@ import (
 
 // AttendedBy is the resolver for the attendedBy field.
 func (r *meetingResolver) AttendedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForMeeting(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get participants for meeting %s: %s", obj.ID, err.Error())
@@ -33,6 +35,8 @@ func (r *meetingResolver) AttendedBy(ctx context.Context, obj *model.Meeting) ([
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *meetingResolver) CreatedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	participantEntities, err := dataloader.For(ctx).GetCreatedByParticipantsForMeeting(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get participants for meeting %s: %s", obj.ID, err.Error())
@@ -44,6 +48,8 @@ func (r *meetingResolver) CreatedBy(ctx context.Context, obj *model.Meeting) ([]
 
 // Includes is the resolver for the includes field.
 func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*model.Attachment, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	entities, err := dataloader.For(ctx).GetAttachmentsForMeeting(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get attachment entities for meeting %s: %s", obj.ID, err.Error())
@@ -55,6 +61,8 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 
 // DescribedBy is the resolver for the describedBy field.
 func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) ([]*model.Analysis, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_MEETING, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get analysis for meeting %s: %s", obj.ID, err.Error())
@@ -66,6 +74,8 @@ func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) (
 
 // Note is the resolver for the note field.
 func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	notesForMeeting, err := dataloader.For(ctx).GetNotesForMeeting(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get notes for meeting %s: %s", obj.ID, err.Error())
@@ -77,6 +87,8 @@ func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*mode
 
 // Events is the resolver for the events field.
 func (r *meetingResolver) Events(ctx context.Context, obj *model.Meeting) ([]*model.InteractionEvent, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForMeeting(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get interaction events for meeting %s: %s", obj.ID, err.Error())
@@ -111,6 +123,8 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 
 // ExternalSystem is the resolver for the externalSystem field.
 func (r *meetingResolver) ExternalSystem(ctx context.Context, obj *model.Meeting) ([]*model.ExternalSystem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	externalSystemForMeeting, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external systems for meeting %s: %s", obj.ID, err.Error())

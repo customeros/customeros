@@ -19,6 +19,8 @@ import (
 
 // Users is the resolver for the users field.
 func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.User, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	userEntities, err := dataloader.For(ctx).GetUsersForEmail(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get users for email %s: %s", obj.ID, err.Error())
@@ -30,6 +32,8 @@ func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.U
 
 // Contacts is the resolver for the contacts field.
 func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	contactEntities, err := dataloader.For(ctx).GetContactsForEmail(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get contacts for email %s: %s", obj.ID, err.Error())
@@ -41,6 +45,8 @@ func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*mode
 
 // Organizations is the resolver for the organizations field.
 func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForEmail(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get organizations for email %s: %s", obj.ID, err.Error())

@@ -18,6 +18,8 @@ import (
 
 // Organization is the resolver for the organization field.
 func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	organizationEntityNillable, err := dataloader.For(ctx).GetOrganizationForJobRole(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get organization for job role %s: %s", obj.ID, err.Error())
@@ -29,6 +31,8 @@ func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) 
 
 // Contact is the resolver for the contact field.
 func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*model.Contact, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	contactEntity, err := dataloader.For(ctx).GetContactForJobRole(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get contact for job role %s: %s", obj.ID, err.Error())

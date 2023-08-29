@@ -23,7 +23,7 @@ func (i *Loaders) GetMentionedByNotesForIssue(ctx context.Context, noteId string
 }
 
 func (b *noteBatcher) getMentionedByNotesForIssue(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteDataLoader.getMentionedByNotesForIssue")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteDataLoader.getMentionedByNotesForIssue", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -85,7 +85,7 @@ func (i *Loaders) GetNotesForMeeting(ctx context.Context, meetingId string) (*en
 }
 
 func (b *noteBatcher) getNotesForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteDataLoader.getNotesForMeetings")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteDataLoader.getNotesForMeetings", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

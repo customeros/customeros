@@ -1,5 +1,5 @@
 run: build
-	go run customer-os-api.go
+	go run customer_os_api_main.go
 
 generate:
 	go run github.com/99designs/gqlgen generate

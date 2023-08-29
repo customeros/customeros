@@ -18,6 +18,8 @@ import (
 
 // Tags is the resolver for the tags field.
 func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	tagEntities, err := dataloader.For(ctx).GetTagsForIssue(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get tags for issue %s: %s", obj.ID, err.Error())
@@ -29,6 +31,8 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 
 // MentionedByNotes is the resolver for the mentionedByNotes field.
 func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	noteEntities, err := dataloader.For(ctx).GetMentionedByNotesForIssue(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get mentioned by notes for issue %s: %s", obj.ID, err.Error())
@@ -40,6 +44,8 @@ func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) 
 
 // InteractionEvents is the resolver for the interactionEvents field.
 func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForIssue(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get interaction events for issue %s: %s", obj.ID, err.Error())
@@ -51,6 +57,8 @@ func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue)
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]*model.ExternalSystem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external system for issue %s: %s", obj.ID, err.Error())

@@ -65,6 +65,8 @@ func (r *mutationResolver) PlayerSetDefaultUser(ctx context.Context, id string, 
 
 // Users is the resolver for the users field.
 func (r *playerResolver) Users(ctx context.Context, obj *model.Player) ([]*model.PlayerUser, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	userEntities, err := dataloader.For(ctx).GetUsersForPlayer(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get users for player %s: %s", obj.ID, err.Error())

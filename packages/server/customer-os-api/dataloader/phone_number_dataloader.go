@@ -43,7 +43,7 @@ func (i *Loaders) GetPhoneNumbersForContact(ctx context.Context, contactId strin
 }
 
 func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForOrganizations")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -96,7 +96,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context
 }
 
 func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForUsers")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForUsers", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -149,7 +149,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys d
 }
 
 func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForContacts")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberDataLoader.getPhoneNumbersForContacts", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

@@ -20,6 +20,8 @@ import (
 
 // Describes is the resolver for the describes field.
 func (r *analysisResolver) Describes(ctx context.Context, obj *model.Analysis) ([]model.DescriptionNode, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
 	participantEntities, err := dataloader.For(ctx).GetDescribesForAnalysis(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get participants for interaction event %s: %s", obj.ID, err.Error())

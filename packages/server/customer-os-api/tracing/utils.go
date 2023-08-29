@@ -11,19 +11,41 @@ import (
 	"net/http"
 )
 
+type spanCtxKey struct{}
+
+var activeSpanCtxKey = spanCtxKey{}
+
 const (
 	SpanTagTenant    = "tenant"
 	SpanTagUserId    = "user-id"
 	SpanTagComponent = "component"
 )
 
+func ExtractSpanCtx(ctx context.Context) opentracing.SpanContext {
+	if ctx.Value(activeSpanCtxKey) != nil {
+		return ctx.Value(activeSpanCtxKey).(opentracing.SpanContext)
+	}
+	return nil
+}
+
+func EnrichCtxWithSpanCtxForGraphQL(ctx context.Context, operationContext *graphql.OperationContext) context.Context {
+	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
+	if err != nil {
+		return ctx
+	}
+	if ExtractSpanCtx(ctx) != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, activeSpanCtxKey, spanCtx)
+}
+
 func StartGraphQLTracerSpan(ctx context.Context, operationName string, operationContext *graphql.OperationContext) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
 
 	if err != nil {
-		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
-		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
-		return opentracing.ContextWithSpan(ctx, serverSpan), serverSpan
+		rootSpan := opentracing.GlobalTracer().StartSpan(operationName)
+		opentracing.GlobalTracer().Inject(rootSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
+		return opentracing.ContextWithSpan(ctx, rootSpan), rootSpan
 	}
 
 	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(spanCtx))
