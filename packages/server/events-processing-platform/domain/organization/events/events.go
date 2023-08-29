@@ -246,24 +246,26 @@ func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, tenant, socia
 }
 
 type OrganizationUpdateRenewalLikelihoodEvent struct {
-	Tenant            string                              `json:"tenant" validate:"required"`
-	RenewalLikelihood models.RenewalLikelihoodProbability `json:"renewalLikelihood"`
-	UpdatedAt         time.Time                           `json:"updatedAt"`
-	UpdatedBy         string                              `json:"updatedBy"`
-	Comment           *string                             `json:"comment,omitempty"`
+	Tenant             string                              `json:"tenant" validate:"required"`
+	PreviousLikelihood models.RenewalLikelihoodProbability `json:"previousLikelihood"`
+	RenewalLikelihood  models.RenewalLikelihoodProbability `json:"renewalLikelihood"`
+	UpdatedAt          time.Time                           `json:"updatedAt"`
+	UpdatedBy          string                              `json:"updatedBy"`
+	Comment            *string                             `json:"comment,omitempty"`
 }
 
 func (e OrganizationUpdateRenewalLikelihoodEvent) GetRenewalLikelihoodAsStringForGraphDb() string {
 	return string(mapper.MapRenewalLikelihoodToGraphDb(e.RenewalLikelihood))
 }
 
-func NewOrganizationUpdateRenewalLikelihoodEvent(aggregate eventstore.Aggregate, renewalLikelihood models.RenewalLikelihoodProbability, updatedBy string, comment *string, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationUpdateRenewalLikelihoodEvent(aggregate eventstore.Aggregate, renewalLikelihood, previousLikelihood models.RenewalLikelihoodProbability, updatedBy string, comment *string, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationUpdateRenewalLikelihoodEvent{
-		Tenant:            aggregate.GetTenant(),
-		RenewalLikelihood: renewalLikelihood,
-		UpdatedBy:         updatedBy,
-		UpdatedAt:         updatedAt,
-		Comment:           comment,
+		Tenant:             aggregate.GetTenant(),
+		PreviousLikelihood: previousLikelihood,
+		RenewalLikelihood:  renewalLikelihood,
+		UpdatedBy:          updatedBy,
+		UpdatedAt:          updatedAt,
+		Comment:            comment,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -1,15 +1,14 @@
 type Action {
     id: ID!
     createdAt: Time!
-
+    content: String
     source: DataSource!
     appSource: String!
-
     createdBy: User
-
     actionType: ActionType!
 }
 
 enum ActionType {
     CREATED
+    RENEWAL_LIKELIHOOD_UPDATED
 }

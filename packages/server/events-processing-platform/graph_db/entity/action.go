@@ -6,26 +6,26 @@ import (
 )
 
 type ActionEntity struct {
-	Id        string
-	CreatedAt time.Time
-
-	Type ActionType
-
-	Source    DataSource
-	AppSource string
-
+	Id            string
+	CreatedAt     time.Time
+	Content       string
+	Type          ActionType
+	Source        DataSource
+	AppSource     string
 	DataloaderKey string
 }
 
 type ActionType string
 
 const (
-	ActionNA      ActionType = ""
-	ActionCreated ActionType = "CREATED"
+	ActionNA                       ActionType = ""
+	ActionCreated                  ActionType = "CREATED"
+	ActionRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
 )
 
 var AllActionType = []ActionType{
 	ActionCreated,
+	ActionRenewalLikelihoodUpdated,
 }
 
 func GetActionType(s string) ActionType {

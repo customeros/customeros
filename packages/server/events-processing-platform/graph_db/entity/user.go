@@ -26,8 +26,8 @@ type UserEntity struct {
 	DataloaderKey                        string
 }
 
-func (User UserEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nfirstName: %s\nlastName: %s", User.Id, User.FirstName, User.LastName)
+func (u UserEntity) ToString() string {
+	return fmt.Sprintf("id: %s\nfirstName: %s\nlastName: %s", u.Id, u.FirstName, u.LastName)
 }
 
 type UserEntities []UserEntity

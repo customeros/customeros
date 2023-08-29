@@ -73,6 +73,7 @@ type TimelineEvent interface {
 type Action struct {
 	ID         string     `json:"id"`
 	CreatedAt  time.Time  `json:"createdAt"`
+	Content    *string    `json:"content,omitempty"`
 	Source     DataSource `json:"source"`
 	AppSource  string     `json:"appSource"`
 	CreatedBy  *User      `json:"createdBy,omitempty"`
@@ -1543,16 +1544,18 @@ type WorkspaceInput struct {
 type ActionType string
 
 const (
-	ActionTypeCreated ActionType = "CREATED"
+	ActionTypeCreated                  ActionType = "CREATED"
+	ActionTypeRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
 )
 
 var AllActionType = []ActionType{
 	ActionTypeCreated,
+	ActionTypeRenewalLikelihoodUpdated,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated:
 		return true
 	}
 	return false
@@ -2623,6 +2626,7 @@ const (
 	TimelineEventTypeAnalysis           TimelineEventType = "ANALYSIS"
 	TimelineEventTypeIssue              TimelineEventType = "ISSUE"
 	TimelineEventTypeMeeting            TimelineEventType = "MEETING"
+	TimelineEventTypeAction             TimelineEventType = "ACTION"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -2633,11 +2637,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeAnalysis,
 	TimelineEventTypeIssue,
 	TimelineEventTypeMeeting,
+	TimelineEventTypeAction,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction:
 		return true
 	}
 	return false

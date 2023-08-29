@@ -12,4 +12,5 @@ enum TimelineEventType {
     ANALYSIS
     ISSUE
     MEETING
+    ACTION
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -22,7 +23,7 @@ type GraphOrganizationEventHandler struct {
 	log                  logger.Logger
 }
 
-func (e *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationCreate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -34,12 +35,12 @@ func (e *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.OrganizationRepository.CreateOrganization(ctx, organizationId, eventData)
+	err := h.Repositories.OrganizationRepository.CreateOrganization(ctx, organizationId, eventData)
 
 	return err
 }
 
-func (e *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationUpdate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -52,13 +53,13 @@ func (e *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	if eventData.IgnoreEmptyFields {
-		return e.Repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
+		return h.Repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
 	} else {
-		return e.Repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+		return h.Repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
 	}
 }
 
-func (e *GraphOrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphOrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnPhoneNumberLinkedToOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -70,12 +71,12 @@ func (e *GraphOrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx co
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.PhoneNumberRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.Repositories.PhoneNumberRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err
 }
 
-func (e *GraphOrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphOrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnEmailLinkedToOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -87,12 +88,12 @@ func (e *GraphOrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.EmailRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.Repositories.EmailRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err
 }
 
-func (e *GraphOrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphOrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnDomainLinkedToOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -104,12 +105,12 @@ func (e *GraphOrganizationEventHandler) OnDomainLinkedToOrganization(ctx context
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.OrganizationRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, eventData.Domain)
+	err := h.Repositories.OrganizationRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, eventData.Domain)
 
 	return err
 }
 
-func (e *GraphOrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphOrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnSocialAddedToOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -121,7 +122,7 @@ func (e *GraphOrganizationEventHandler) OnSocialAddedToOrganization(ctx context.
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.SocialRepository.CreateSocialFor(ctx, eventData.Tenant, organizationId, "Organization", eventData)
+	err := h.Repositories.SocialRepository.CreateSocialFor(ctx, eventData.Tenant, organizationId, "Organization", eventData)
 
 	return err
 }
@@ -140,20 +141,31 @@ func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Co
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	orgDbNode, err := h.Repositories.OrganizationRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "GetOrganization")
-	}
-	organizationEntity := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
-
-	err = h.Repositories.OrganizationRepository.UpdateRenewalLikelihood(ctx, organizationId, eventData)
+	err := h.Repositories.OrganizationRepository.UpdateRenewalLikelihood(ctx, organizationId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 
-	if organizationEntity.RenewalLikelihood.RenewalLikelihood != eventData.GetRenewalLikelihoodAsStringForGraphDb() {
-		err := h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId))
+	if eventData.PreviousLikelihood != eventData.RenewalLikelihood {
+		if string(eventData.RenewalLikelihood) != "" {
+			userDbNode, err := h.Repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedBy)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("GetUser failed for id: %s", eventData.UpdatedBy, err.Error())
+			}
+			message := "Renewal likelihood set to " + eventData.RenewalLikelihood.CamelCaseString()
+			if userDbNode != nil {
+				userEntity := graph_db.MapDbNodeToUserEntity(*userDbNode)
+				message += " by " + userEntity.FirstName + " " + userEntity.LastName
+			}
+			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalLikelihoodUpdated, message, eventData.UpdatedAt)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Create failed for action: %s", err.Error())
+			}
+		}
+
+		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("RequestRenewalForecastCommand failed: %v", err.Error())

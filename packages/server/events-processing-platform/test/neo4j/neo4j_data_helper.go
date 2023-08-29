@@ -85,6 +85,27 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 	return orgId
 }
 
+func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user entity.UserEntity) string {
+	userId := user.Id
+	if userId == "" {
+		userId = uuid.New().String()
+	}
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id})
+				SET u:User_%s,
+					u.firstName=$firstName,
+					u.lastName=$lastName
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":    tenant,
+		"id":        userId,
+		"firstName": user.FirstName,
+		"lastName":  user.LastName,
+	})
+	return userId
+}
+
 func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
 	query := `MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
@@ -106,6 +127,28 @@ func GetNodeById(ctx context.Context, driver *neo4j.DriverWithContext, label str
 			map[string]interface{}{
 				"id": id,
 			})
+		record, err := result.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	node := queryResult.(dbtype.Node)
+	return &node, nil
+}
+
+func GetFirstNodeByLabel(ctx context.Context, driver *neo4j.DriverWithContext, label string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *driver)
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (n:%s) RETURN n limit 1`, label),
+			map[string]interface{}{})
 		record, err := result.Single(ctx)
 		if err != nil {
 			return nil, err

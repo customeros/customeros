@@ -15,6 +15,20 @@ const (
 	RenewalLikelihoodZERO   RenewalLikelihoodProbability = "ZERO"
 )
 
+func (r RenewalLikelihoodProbability) CamelCaseString() string {
+	switch r {
+	case RenewalLikelihoodHIGH:
+		return "High"
+	case RenewalLikelihoodMEDIUM:
+		return "Medium"
+	case RenewalLikelihoodLOW:
+		return "Low"
+	case RenewalLikelihoodZERO:
+		return "Zero"
+	}
+	return ""
+}
+
 type Social struct {
 	PlatformName string `json:"platformName"`
 	Url          string `json:"url"`
