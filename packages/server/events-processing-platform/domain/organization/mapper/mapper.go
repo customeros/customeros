@@ -36,6 +36,21 @@ func MapRenewalLikelihoodToGraphDb(likelihood models.RenewalLikelihoodProbabilit
 	return ""
 }
 
+func MapRenewalLikelihoodFromGraphDb(likelihood entity.RenewalLikelihoodProbability) models.RenewalLikelihoodProbability {
+	switch likelihood {
+	case entity.RenewalLikelihoodHigh:
+		return models.RenewalLikelihoodHIGH
+	case entity.RenewalLikelihoodMedium:
+		return models.RenewalLikelihoodMEDIUM
+	case entity.RenewalLikelihoodLow:
+		return models.RenewalLikelihoodLOW
+	case entity.RenewalLikelihoodZero:
+		return models.RenewalLikelihoodZERO
+	}
+
+	return ""
+}
+
 func MapFrequencyToString(frequency *organization_grpc_service.Frequency) string {
 	if frequency == nil {
 		return ""

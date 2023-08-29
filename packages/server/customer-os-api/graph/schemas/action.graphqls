@@ -11,4 +11,5 @@ type Action {
 enum ActionType {
     CREATED
     RENEWAL_LIKELIHOOD_UPDATED
+    RENEWAL_FORECAST_UPDATED
 }

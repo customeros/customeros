@@ -342,3 +342,55 @@ func ExtractAfterColon(s string) string {
 	// Return substring after colon
 	return s[idx+1:]
 }
+
+func Float64PtrEquals(a, b *float64) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a != nil && b != nil {
+		return *a == *b
+	}
+	return false
+}
+
+func FormatCurrencyAmount(value float64) string {
+	// Format to 2 decimals
+	str := fmt.Sprintf("%.2f", value)
+
+	// Split into parts
+	parts := strings.Split(str, ".")
+	intPart := parts[0]
+	fracPart := parts[1]
+
+	// Trim trailing zeros
+	fracPart = strings.TrimRight(fracPart, "0")
+
+	// Add commas to int
+	intPartFormatted := addThousandSeparators(intPart)
+
+	// Join parts
+	if fracPart != "" {
+		return intPartFormatted + "." + fracPart
+	} else {
+		return intPartFormatted
+	}
+}
+
+// Helper to add commas to an integer string
+func addThousandSeparators(value string) string {
+	var newParts []string
+	// Get length of string
+	strlen := len(value)
+
+	for i, char := range value {
+
+		// Insert comma every 3 digits from right
+		if i > 0 && (strlen-i)%3 == 0 {
+			newParts = append(newParts, ",")
+		}
+
+		newParts = append(newParts, string(char))
+	}
+
+	return strings.Join(newParts, "")
+}

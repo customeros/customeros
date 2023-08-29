@@ -15,6 +15,7 @@ import (
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
@@ -395,7 +396,8 @@ func (h *organizationEventHandler) OnRenewalForecastRequested(ctx context.Contex
 				UpdatedBy:       "",
 				UpdatedAt:       utils.Now(),
 				Comment:         utils.StringPtr(""),
-			}))
+			},
+			mapper.MapRenewalLikelihoodFromGraphDb(entity.RenewalLikelihoodProbability(organizationEntity.RenewalLikelihood.RenewalLikelihood))))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "UpdateRenewalForecastCommand")

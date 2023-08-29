@@ -249,7 +249,7 @@ func (a *OrganizationAggregate) updateRenewalForecast(ctx context.Context, comma
 		updatedAt = utils.Now()
 	}
 
-	event, err := events.NewOrganizationUpdateRenewalForecastEvent(a, command.Fields.Amount, command.Fields.PotentialAmount, command.Fields.UpdatedBy, command.Fields.Comment, updatedAt)
+	event, err := events.NewOrganizationUpdateRenewalForecastEvent(a, command.Fields.Amount, command.Fields.PotentialAmount, a.Organization.RenewalForecast.Amount, command.Fields.UpdatedBy, command.Fields.Comment, updatedAt, a.Organization.RenewalLikelihood.RenewalLikelihood)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

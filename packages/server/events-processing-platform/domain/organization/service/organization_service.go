@@ -155,7 +155,7 @@ func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Cont
 		Comment:   req.Comment,
 		UpdatedBy: req.UserId,
 	}
-	command := cmd.NewUpdateRenewalForecastCommand(req.Tenant, req.OrganizationId, fields)
+	command := cmd.NewUpdateRenewalForecastCommand(req.Tenant, req.OrganizationId, fields, "")
 	if err := s.organizationCommands.UpdateRenewalForecastCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed update renewal forecast for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())

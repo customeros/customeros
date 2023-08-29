@@ -124,13 +124,15 @@ func NewRequestRenewalForecastCommand(tenant, orgId string) *RequestRenewalForec
 
 type UpdateRenewalForecastCommand struct {
 	eventstore.BaseCommand
-	Fields models.RenewalForecastFields
+	Fields            models.RenewalForecastFields
+	RenewalLikelihood models.RenewalLikelihoodProbability
 }
 
-func NewUpdateRenewalForecastCommand(tenant, orgId string, fields models.RenewalForecastFields) *UpdateRenewalForecastCommand {
+func NewUpdateRenewalForecastCommand(tenant, orgId string, fields models.RenewalForecastFields, renewalLikelihood models.RenewalLikelihoodProbability) *UpdateRenewalForecastCommand {
 	return &UpdateRenewalForecastCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
-		Fields:      fields,
+		BaseCommand:       eventstore.NewBaseCommand(orgId, tenant),
+		Fields:            fields,
+		RenewalLikelihood: renewalLikelihood,
 	}
 }
 
