@@ -11,7 +11,7 @@ export const ListButtons = () => {
   return (
     <Flex gap={2}>
       <ToolbarButton
-        label='Strikethrough'
+        label='Numbered list'
         onClick={() => {
           toggleOrderedList();
           focus();
@@ -20,7 +20,7 @@ export const ListButtons = () => {
         icon={<OrderedList color='inherit' />}
       />
       <ToolbarButton
-        label='Underline'
+        label='Bullet list'
         onClick={() => {
           toggleBulletList();
           focus();

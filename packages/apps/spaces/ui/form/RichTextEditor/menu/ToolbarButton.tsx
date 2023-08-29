@@ -25,6 +25,7 @@ export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
         portalProps={{ containerRef: ref }}
       >
         <IconButton
+          fontSize={2}
           className='customeros-remirror-button'
           bg='transparent'
           variant='ghost'

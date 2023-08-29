@@ -10,14 +10,14 @@ export const IndentButtons = () => {
   return (
     <Flex gap={2}>
       <ToolbarButton
-        label='Italic'
+        label='Indent'
         onClick={() => {
           commands.decreaseIndent();
         }}
         icon={<RightIndent color='inherit' />}
       />
       <ToolbarButton
-        label='Strikethrough'
+        label='Outdent'
         onClick={() => {
           commands.increaseIndent();
         }}

@@ -4,7 +4,6 @@ import { Flex, HStack, StackDivider } from '@chakra-ui/react';
 import Quote from '@ui/media/icons/Quote';
 import { TextFormatButtons } from './TextFormatButtons';
 import { ListButtons } from './ListButtons';
-import { IndentButtons } from './IndentButtons';
 import { Button } from '@ui/form/Button';
 import { ToolbarButton } from './ToolbarButton';
 
@@ -31,7 +30,6 @@ export const BasicEditorMenu: FC<{
       >
         <TextFormatButtons />
         <ListButtons />
-        <IndentButtons />
         <ToolbarButton
           label='Quote'
           onClick={() => {
