@@ -1,4 +1,4 @@
-import React, { ReactElement, useRef } from 'react';
+import React, { ReactElement } from 'react';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip';
 
@@ -14,27 +14,23 @@ export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
   icon,
   label,
 }) => {
-  const ref = useRef(null);
   return (
-    <div ref={ref}>
-      <Tooltip
-        label={label}
-        className='customeros-remirror-tooltip'
-        hasArrow
-        placement='bottom'
-        portalProps={{ containerRef: ref }}
-      >
-        <IconButton
-          fontSize={2}
-          className='customeros-remirror-button'
-          bg='transparent'
-          variant='ghost'
-          aria-label={label}
-          onClick={onClick}
-          isActive={isActive}
-          icon={icon}
-        />
-      </Tooltip>
-    </div>
+    <Tooltip
+      label={label}
+      className='customeros-remirror-tooltip'
+      hasArrow
+      placement='bottom'
+    >
+      <IconButton
+        fontSize={2}
+        className='customeros-remirror-button'
+        bg='transparent'
+        variant='ghost'
+        aria-label={label}
+        onClick={onClick}
+        isActive={isActive}
+        icon={icon}
+      />
+    </Tooltip>
   );
 };

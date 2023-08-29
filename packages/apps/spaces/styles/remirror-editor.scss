@@ -3792,7 +3792,7 @@ display: none
   font-size: var(--chakra-fontSizes-md);
   box-shadow: var(--chakra-shadows-lg);
   max-width: var(--chakra-sizes-xs);
-  z-index: var(--chakra-zIndices-tooltip);
+  z-index: 9999;
 
 }
 
