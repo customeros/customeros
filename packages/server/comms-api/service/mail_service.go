@@ -150,13 +150,13 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	}
 	if request.Cc != nil {
 		for _, cc := range request.Cc {
-			ccAddress = append(toAddress, &mimemail.Address{Address: cc})
+			ccAddress = append(ccAddress, &mimemail.Address{Address: cc})
 			retMail.Cc = toAddress
 		}
 	}
 	if request.Bcc != nil {
 		for _, bcc := range request.Bcc {
-			bccAddress = append(toAddress, &mimemail.Address{Address: bcc})
+			bccAddress = append(bccAddress, &mimemail.Address{Address: bcc})
 			retMail.Bcc = toAddress
 		}
 	}
