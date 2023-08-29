@@ -56,7 +56,8 @@ export const LastTouchpointTableCell = ({
           !lastTouchPointTimelineEvent.channel &&
           lastTouchPointTimelineEvent.eventType === 'meeting'
         ) {
-          label = '';
+          label = 'Meeting';
+          icon = <Icons.Calendar boxSize='3' color='gray.700' />;
         } else if (lastTouchPointTimelineEvent.channel === 'SLACK') {
           label = 'Slack message';
           icon = <Icons.MessageTextSquare1 boxSize='3' color='gray.700' />;

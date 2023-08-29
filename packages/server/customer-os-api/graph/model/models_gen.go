@@ -950,6 +950,7 @@ type MeetingInput struct {
 	Name               *string                       `json:"name,omitempty"`
 	AttendedBy         []*MeetingParticipantInput    `json:"attendedBy,omitempty"`
 	CreatedBy          []*MeetingParticipantInput    `json:"createdBy,omitempty"`
+	CreatedAt          *time.Time                    `json:"createdAt,omitempty"`
 	StartedAt          *time.Time                    `json:"startedAt,omitempty"`
 	EndedAt            *time.Time                    `json:"endedAt,omitempty"`
 	ConferenceURL      *string                       `json:"conferenceUrl,omitempty"`

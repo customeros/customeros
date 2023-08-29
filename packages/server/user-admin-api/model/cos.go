@@ -31,3 +31,15 @@ type AddRoleResponse struct {
 type CreateTenantResponse struct {
 	Tenant string `json:"tenant_Merge"`
 }
+
+type CreateOrganizationResponse struct {
+	OrganizationCreate struct {
+		Id string `json:"id"`
+	} `json:"organization_Create"`
+}
+
+type CreateMeetingResponse struct {
+	MeetingCreate struct {
+		Id string `json:"id"`
+	} `json:"meeting_Create"`
+}
