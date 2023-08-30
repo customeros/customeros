@@ -213,6 +213,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 				}
 				iigs := iig.String()
 				eventOpts := []service.InteractionEventBuilderOption{
+					service.WithCreatedAt(&email.Date),
 					service.WithSessionId(sessionId),
 					service.WithEventIdentifier(iigs),
 					service.WithChannel(&channelValue),
