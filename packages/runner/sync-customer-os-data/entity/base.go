@@ -12,7 +12,7 @@ import (
   "skipReason": "draft data",
   "id": "1234",
   "externalId": "abcd1234",
-  "externalSystem": "HubSpot",
+  "externalSystem": "hubspot",
   "createdAt": "2022-02-28T19:52:05Z",
   "updatedAt": "2022-03-01T11:23:45Z",
   "syncId": "sync_1234"
