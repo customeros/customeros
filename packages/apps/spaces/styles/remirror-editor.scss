@@ -560,10 +560,13 @@ display: none
   font-feature-settings: 'liga' 0;
   overflow-y: scroll;
 
-  & ul,
   & ol {
-    padding-left: 20px; // important, without it lists are not visible
+    padding-left: 22px; // important, without it lists are not visible, adds 8px left padding
   }
+  & ul{
+    padding-left: 25px; // important, without it lists are not visible, adds 8px left padding
+  }
+
 }
 
 .remirror-editor.ProseMirror pre {
@@ -3695,15 +3698,16 @@ display: none
 }
 
 .remirror-theme h1 {
-  font-size: var(--rmr-font-size-5);
+  font-size: var(--chakra-fontSizes-xl);
 }
 
 .remirror-theme h2 {
-  font-size: var(--rmr-font-size-4);
+  font-size: var(--chakra-fontSizes-lg);
+
 }
 
 .remirror-theme h3 {
-  font-size: var(--rmr-font-size-3);
+  font-size: var(--chakra-fontSizes-md);
 }
 
 .remirror-theme h4 {
@@ -3794,6 +3798,10 @@ display: none
   max-width: var(--chakra-sizes-xs);
   z-index: 9999;
 
+}
+
+.chakra-portal div:has(> .customeros-remirror-tooltip){
+  z-index: 1
 }
 
 .remirror-theme a {
