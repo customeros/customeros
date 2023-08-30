@@ -65,6 +65,10 @@ export const TimelineEventPreviewContextContextProvider = ({
     params.delete('events');
     setIsModalOpen(false);
     setModalContent(null);
+    setLastActivePosition({
+      ...lastActivePosition,
+      [id]: params.toString(),
+    });
     router.push(`?${params}`);
   };
 
