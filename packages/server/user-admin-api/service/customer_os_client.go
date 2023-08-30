@@ -164,6 +164,11 @@ func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error
 	`)
 	graphqlRequest.Var("tenant", *tenant)
 
+	err := s.addHeadersToGraphRequest(graphqlRequest, nil, nil)
+	if err != nil {
+		return "", err
+	}
+
 	ctx, cancel, err := s.contextWithTimeout()
 	if err != nil {
 		return "", err
