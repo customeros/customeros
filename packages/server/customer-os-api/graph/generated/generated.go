@@ -7807,6 +7807,7 @@ input MeetingInput {
     name: String
     attendedBy: [MeetingParticipantInput!]
     createdBy: [MeetingParticipantInput!]
+    createdAt: Time
     startedAt: Time
     endedAt: Time
     conferenceUrl: String
@@ -54711,7 +54712,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalSystem", "status"}
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "createdAt", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalSystem", "status"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -54745,6 +54746,15 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.CreatedBy = data
+		case "createdAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
 		case "startedAt":
 			var err error
 

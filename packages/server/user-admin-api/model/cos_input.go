@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type WorkspaceInput struct {
 	Name      string  `json:"name"`
 	Provider  string  `json:"provider"`
@@ -30,4 +32,67 @@ type UserInput struct {
 type TenantInput struct {
 	Name      string  `json:"name"`
 	AppSource *string `json:"appSource"`
+}
+
+type ContactInput struct {
+	FirstName *string     `json:"firstName,omitempty"`
+	LastName  *string     `json:"lastName,omitempty"`
+	Email     *EmailInput `json:"email,omitempty"`
+}
+
+type InteractionSessionParticipantInput struct {
+	Email       *string `json:"email,omitempty"`
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	ContactID   *string `json:"contactID,omitempty"`
+	UserID      *string `json:"userID,omitempty"`
+	Type        *string `json:"type,omitempty"`
+}
+
+type InteractionEventParticipantInput struct {
+	Email       *string `json:"email,omitempty"`
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	ContactID   *string `json:"contactID,omitempty"`
+	UserID      *string `json:"userID,omitempty"`
+	Type        *string `json:"type,omitempty"`
+}
+
+type EmailChannelData struct {
+	Subject   string   `json:"Subject"`
+	InReplyTo []string `json:"InReplyTo"`
+	Reference []string `json:"Reference"`
+}
+
+type MeetingParticipantInput struct {
+	ContactID      *string `json:"contactId,omitempty"`
+	UserID         *string `json:"userId,omitempty"`
+	OrganizationID *string `json:"organizationId,omitempty"`
+}
+
+type NoteInput struct {
+	HTML      string  `json:"html"`
+	AppSource *string `json:"appSource,omitempty"`
+}
+
+type MeetingStatus string
+
+const (
+	MeetingStatusUndefined MeetingStatus = "UNDEFINED"
+	MeetingStatusAccepted  MeetingStatus = "ACCEPTED"
+	MeetingStatusCanceled  MeetingStatus = "CANCELED"
+)
+
+type MeetingInput struct {
+	Name               string                     `json:"name,omitempty"`
+	AttendedBy         []*MeetingParticipantInput `json:"attendedBy,omitempty"`
+	CreatedBy          []*MeetingParticipantInput `json:"createdBy,omitempty"`
+	CreatedAt          *time.Time                 `json:"createdAt,omitempty"`
+	StartedAt          *time.Time                 `json:"startedAt,omitempty"`
+	EndedAt            *time.Time                 `json:"endedAt,omitempty"`
+	ConferenceURL      *string                    `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string                    `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string                    `json:"agenda,omitempty"`
+	AgendaContentType  *string                    `json:"agendaContentType,omitempty"`
+	Note               *NoteInput                 `json:"note,omitempty"`
+	AppSource          string                     `json:"appSource"`
+	Status             *MeetingStatus             `json:"status,omitempty"`
 }

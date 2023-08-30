@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	autoCommonServices "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes/generate"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	"log"
 	"strings"
@@ -34,9 +35,11 @@ func getRouter(config *config.Config, cosClient service.CustomerOsClient, authSe
 	route := router.Group("/")
 
 	addRegistrationRoutes(route, config, cosClient, authServices)
+	generate.AddDemoTenantRoutes(route, config, cosClient)
 
 	route2 := router.Group("/")
 
 	addHealthRoutes(route2)
+
 	return router
 }

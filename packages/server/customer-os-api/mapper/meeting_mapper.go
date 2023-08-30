@@ -4,6 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"time"
 )
 
 func MapEntityToMeeting(entity *entity.MeetingEntity) *model.Meeting {
@@ -68,8 +69,15 @@ func MapMeetingToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 	if model == nil {
 		return nil
 	}
+	var createdAt time.Time
+	if model.CreatedAt != nil {
+		createdAt = model.CreatedAt.UTC()
+	} else {
+		createdAt = utils.Now()
+	}
+
 	meetingEntity := entity.MeetingEntity{
-		CreatedAt:          utils.Now(),
+		CreatedAt:          createdAt,
 		Name:               model.Name,
 		AppSource:          model.AppSource,
 		ConferenceUrl:      model.ConferenceURL,

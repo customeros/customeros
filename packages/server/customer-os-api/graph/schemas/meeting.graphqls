@@ -57,6 +57,7 @@ input MeetingInput {
     name: String
     attendedBy: [MeetingParticipantInput!]
     createdBy: [MeetingParticipantInput!]
+    createdAt: Time
     startedAt: Time
     endedAt: Time
     conferenceUrl: String
