@@ -7,7 +7,7 @@ import { ListButtons } from './ListButtons';
 import { Button } from '@ui/form/Button';
 import { ToolbarButton } from './ToolbarButton';
 
-export const BasicEditorMenu: FC<{
+export const BasicEditorToolbar: FC<{
   isSending: boolean;
   onSubmit: () => void;
 }> = ({ isSending, onSubmit }) => {
@@ -15,7 +15,12 @@ export const BasicEditorMenu: FC<{
   const active = useActive();
 
   return (
-    <Flex justifyContent='space-between' alignItems='flex-end' flex={1} minH={8}>
+    <Flex
+      justifyContent='space-between'
+      alignItems='flex-end'
+      flex={1}
+      minH={8}
+    >
       <HStack
         w='full'
         bg='transparent'

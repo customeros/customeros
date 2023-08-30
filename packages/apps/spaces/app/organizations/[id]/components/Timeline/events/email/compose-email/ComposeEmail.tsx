@@ -5,7 +5,7 @@ import { ModeChangeButtons } from '@organization/components/Timeline/events/emai
 import { Box } from '@ui/layout/Box';
 import { ParticipantsSelectGroup } from '@organization/components/Timeline/events/email/compose-email/ParticipantsSelectGroup';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
-import { BasicEditorMenu } from '@ui/form/RichTextEditor/menu/BasicEditorMenu';
+import { BasicEditorToolbar } from '@ui/form/RichTextEditor/menu/BasicEditorToolbar';
 import {
   BasicEditorExtentions,
   RemirrorProps,
@@ -97,7 +97,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         w='full'
       >
         <RichTextEditor {...remirrorProps} formId={formId} name='content'>
-          <BasicEditorMenu isSending={isSending} onSubmit={onSubmit} />
+          <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
         </RichTextEditor>
       </Box>
 

@@ -1,6 +1,7 @@
 export { default as Bold } from './Bold';
 export { default as FontFamily } from './FontFamily';
 export { default as FontSize } from './FontSize';
+export { default as Heading } from './Heading';
 export { default as Heading1 } from './Heading1';
 export { default as Heading2 } from './Heading2';
 export { default as Heading3 } from './Heading3';
