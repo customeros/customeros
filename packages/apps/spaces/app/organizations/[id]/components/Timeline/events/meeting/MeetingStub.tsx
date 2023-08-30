@@ -9,63 +9,19 @@ import { Icons } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
 
 import MeetingIcon from './meetingIcon.svg';
+import { getParticipants, getParticipantName } from '../utils';
 
 interface MeetingStubProps {
   data: Meeting;
 }
 
 export const MeetingStub = ({ data }: MeetingStubProps) => {
-  const owner = (() => {
-    if (data?.createdBy?.[0]?.__typename === 'ContactParticipant') {
-      const participant = data?.createdBy?.[0]?.contactParticipant;
-      return participant?.firstName ?? participant.emails?.[0]?.email;
-    }
-    return '';
-  })();
-
-  const firstParticipant = (() => {
-    // use 1st participant as owner if there's no owner
-    if (data?.attendedBy?.[0]?.__typename === 'ContactParticipant') {
-      const participant = data?.attendedBy?.[0]?.contactParticipant;
-      return participant?.firstName ?? participant.emails?.[0]?.email;
-    }
-    return '';
-  })();
+  const owner = getParticipantName(data.createdBy[0]);
+  const firstParticipant = getParticipantName(data.attendedBy?.[0]);
+  const [participants, remaining] = getParticipants(data);
 
   const note = convert(data?.note?.[0]?.html);
   const agenda = data?.agenda ?? '';
-
-  const [participants, remaining] = (() => {
-    const count = data?.attendedBy?.length;
-
-    if (data?.attendedBy?.length) {
-      const fullArray = data?.attendedBy
-        ?.map((participant) => {
-          if (participant?.__typename === 'ContactParticipant') {
-            return (
-              participant?.contactParticipant?.firstName ??
-              participant?.contactParticipant?.emails?.[0]?.email
-            );
-          }
-          return '';
-        })
-        .filter(Boolean);
-
-      if (!note || !agenda)
-        return [fullArray.join(count > 2 ? ', ' : ' and '), ''];
-
-      return fullArray
-        .filter((v, i) => {
-          if (!owner && i === 0 && v) return false; // skip 1st participant if there's no owner
-          return v && i < (!owner ? 3 : 2);
-        })
-        .join(count > 2 ? ', ' : ' and ')
-        .concat(count > 2 ? ` + ${count - (!owner ? 3 : 2)}` : '')
-        .split(' + ');
-    }
-
-    return [];
-  })();
 
   return (
     <Card
@@ -127,7 +83,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
             )}
           </VStack>
 
-          <Center minW='12' h='10'>
+          <Center minW='12' h='10' fontSize='xxx-large'>
             <MeetingIcon />
             <Text
               position='absolute'

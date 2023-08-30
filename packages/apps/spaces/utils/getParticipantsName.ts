@@ -1,66 +1,20 @@
 import {
-  ContactParticipant,
   EmailParticipant,
-  JobRoleParticipant,
-  PhoneNumberParticipant,
-  UserParticipant,
+  Organization,
 } from '@graphql/types';
 import { Contact, InteractionEventParticipant, User } from '@graphql/types';
-
-type Participant =
-  | EmailParticipant
-  | PhoneNumberParticipant
-  | ContactParticipant
-  | UserParticipant;
-
-export const getParticipantNames = (participants: Participant[]): string[] => {
-  return participants.map((participant) => {
-    if (participant.__typename === 'EmailParticipant') {
-      const { emailParticipant } = participant;
-      const { contacts, users } = emailParticipant;
-      if (contacts.length) {
-        return contacts
-          .map((c) => (c?.name ? c.name : `${c.firstName} ${c.lastName}`))
-          .join(' ');
-      }
-      if (users.length) {
-        return users.map((c) => `${c.firstName} ${c.lastName}`).join(' ');
-      }
-
-      const participantName =
-        contacts?.[0]?.name ||
-        users?.[0]?.firstName + ' ' + users?.[0]?.lastName;
-      return participantName || 'Unnamed';
-    } else if (participant.__typename === 'PhoneNumberParticipant') {
-      const { phoneNumberParticipant } = participant;
-      const { contacts, users } = phoneNumberParticipant;
-      const participantName =
-        contacts?.[0]?.name ||
-        users?.[0]?.firstName + ' ' + users?.[0]?.lastName;
-      return participantName || 'name';
-    } else if (participant.__typename === 'ContactParticipant') {
-      const { contactParticipant } = participant;
-      const { name, firstName, lastName } = contactParticipant;
-      return firstName + ' ' + lastName || name || 'Unnamed';
-    } else if (participant.__typename === 'UserParticipant') {
-      const { userParticipant } = participant;
-      const { firstName, lastName } = userParticipant;
-      return firstName + ' ' + lastName || 'Unnamed';
-    }
-    return 'Unnamed';
-  });
-};
-
+// todo cleanup, move those to helper functions in timeline events utils folder
 export const getName = (
-  data: Contact | User,
+  data: Contact | User | Organization,
   email?: string | null | undefined,
   rawEmail?: string | undefined | null,
 ): string => {
-  if ((data as Contact)?.name) {
-    return <string>(data as Contact).name;
+  if ((data as Contact | Organization)?.name) {
+    return <string>(data as Contact | Organization).name;
   }
-  if (data?.firstName || data?.lastName) {
-    return `${data.firstName} ${data.lastName}`;
+  const personData: Contact | User = (data as Contact | User)
+  if (personData?.firstName || personData?.lastName) {
+    return `${personData.firstName} ${personData.lastName}`;
   }
   return email || rawEmail || '';
 };
@@ -82,25 +36,6 @@ export const getEmailParticipantName = (
   }
 
   return email || rawEmail || '';
-};
-
-export const getParticipantName = (
-  participant: ContactParticipant | UserParticipant | JobRoleParticipant,
-): string => {
-  let participantT;
-  if ((participant as ContactParticipant)?.contactParticipant) {
-    participantT = (participant as ContactParticipant).contactParticipant;
-  }
-  if ((participant as UserParticipant)?.userParticipant) {
-    participantT = (participant as UserParticipant).userParticipant;
-  }
-  if ((participant as JobRoleParticipant)?.jobRoleParticipant?.contact) {
-    participantT = (participant as JobRoleParticipant).jobRoleParticipant
-      ?.contact;
-  }
-  if (!participantT) return '';
-
-  return getName(participantT);
 };
 
 export const getEmailParticipantsName = (
