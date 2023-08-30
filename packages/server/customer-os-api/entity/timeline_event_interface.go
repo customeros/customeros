@@ -9,6 +9,7 @@ var NodeLabelsByTimelineEventType = map[string]string{
 	//model.TimelineEventTypeNote.String():               NodeLabel_Note,
 	model.TimelineEventTypeInteractionEvent.String(): NodeLabel_InteractionEvent,
 	model.TimelineEventTypeMeeting.String():          NodeLabel_Meeting,
+	model.TimelineEventTypeAction.String():           NodeLabel_Action,
 }
 
 type TimelineEvent interface {
