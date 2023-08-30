@@ -39,6 +39,7 @@ type Loaders struct {
 	UsersForPhoneNumber                         *dataloader.Loader
 	UsersForPlayer                              *dataloader.Loader
 	UserOwnerForOrganization                    *dataloader.Loader
+	User                                        *dataloader.Loader
 	ContactsForEmail                            *dataloader.Loader
 	ContactsForPhoneNumber                      *dataloader.Loader
 	OrganizationsForEmail                       *dataloader.Loader
@@ -274,6 +275,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		UsersForPhoneNumber:                         dataloader.NewBatchedLoader(userBatcher.getUsersForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		UsersForPlayer:                              dataloader.NewBatchedLoader(userBatcher.getUsersForPlayers, dataloader.WithClearCacheOnBatch()),
 		UserOwnerForOrganization:                    dataloader.NewBatchedLoader(userBatcher.getUserOwnersForOrganizations, dataloader.WithClearCacheOnBatch()),
+		User:                                        dataloader.NewBatchedLoader(userBatcher.getUsers, dataloader.WithClearCacheOnBatch()),
 		ContactsForEmail:                            dataloader.NewBatchedLoader(contactBatcher.getContactsForEmails, dataloader.WithClearCacheOnBatch()),
 		ContactsForPhoneNumber:                      dataloader.NewBatchedLoader(contactBatcher.getContactsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		OrganizationsForEmail:                       dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForEmails, dataloader.WithClearCacheOnBatch()),

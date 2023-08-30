@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type UserRepository interface {
@@ -30,6 +31,7 @@ type UserRepository interface {
 	AddRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error)
 	DeleteRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error)
 	GetDistinctOrganizationOwners(ctx context.Context, tenant string) ([]*dbtype.Node, error)
+	GetUsers(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 }
 
 type userRepository struct {
@@ -477,6 +479,36 @@ func (r *userRepository) GetDistinctOrganizationOwners(parentCtx context.Context
 		if queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecords.([]*dbtype.Node), err
+}
+
+func (r *userRepository) GetUsers(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUsers")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)
+			WHERE u.id IN $ids
+			RETURN u`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": tenant,
+				"ids":    ids,
 			}); err != nil {
 			return nil, err
 		} else {
