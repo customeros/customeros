@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const unknownUserName = "Unknown User"
+
 func MapUser(inputJson string) (string, error) {
 	var input struct {
 		ID      string `json:"id,omitempty"`
@@ -87,6 +89,11 @@ func MapContact(inputJson string) (string, error) {
 	return string(outputJson), nil
 }
 
+type OutputContent struct {
+	Text   string `json:"text,omitempty"`
+	Blocks []any  `json:"blocks,omitempty"`
+}
+
 func MapInteractionEvent(inputJson string) (string, error) {
 	var input struct {
 		Ts                     string            `json:"ts,omitempty"`
@@ -99,6 +106,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		UserNamesById          map[string]string `json:"channel_user_names,omitempty"`
 		ThreadTs               string            `json:"thread_ts,omitempty"`
 		OpenlineOrganizationId string            `json:"openline_organization_id,omitempty"`
+		Blocks                 []any             `json:"blocks,omitempty"`
 	}
 
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
@@ -108,11 +116,20 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	output := model.Output{
 		ExternalId:  input.ChannelId + "/" + input.Ts,
 		CreatedAt:   tsStrToRFC3339Nanos(input.Ts),
-		Content:     replaceUserIDs(input.Text, input.UserNamesById),
-		ContentType: "text/plain",
+		ContentType: "application/json",
 		Type:        "MESSAGE",
 		Channel:     "SLACK",
 	}
+	outputContent := OutputContent{
+		Text:   replaceUserMentionsInText(input.Text, input.UserNamesById),
+		Blocks: addUserNameInBlocks(input.Blocks, input.UserNamesById),
+	}
+	outputContentJson, err := json.Marshal(outputContent)
+	if err != nil {
+		return "", err
+	}
+	output.Content = string(outputContentJson)
+
 	output.SentBy = struct {
 		OpenlineId                string `json:"openlineId,omitempty"`
 		ExternalId                string `json:"externalId,omitempty"`
@@ -195,15 +212,60 @@ func tsStrToRFC3339Nanos(ts string) string {
 	return t.Format(layout)
 }
 
-func replaceUserIDs(text string, userNames map[string]string) string {
+func replaceUserMentionsInText(text string, userNames map[string]string) string {
 	re := regexp.MustCompile("<@(U[A-Z0-9]+)>")
 	replaced := re.ReplaceAllStringFunc(text, func(mention string) string {
 		id := mention[2 : len(mention)-1]
 		name, ok := userNames[id]
 		if !ok || name == "" {
-			return "<Deleted User>"
+			return unknownUserName
 		}
 		return name
 	})
 	return replaced
+}
+
+func addUserNameInBlocks(blocks []any, userNamesById map[string]string) []any {
+	for _, block := range blocks {
+		blockMap, ok := block.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		if elements, exists := blockMap["elements"]; exists {
+			elementsSlice, ok := elements.([]any)
+			if !ok {
+				continue
+			}
+
+			for _, element := range elementsSlice {
+				elementMap, ok := element.(map[string]any)
+				if !ok {
+					continue
+				}
+
+				if innerElements, exists := elementMap["elements"]; exists {
+					innerElementsSlice, ok := innerElements.([]any)
+					if !ok {
+						continue
+					}
+					for _, innerElement := range innerElementsSlice {
+						innerElementMap, ok := innerElement.(map[string]any)
+						if !ok {
+							continue
+						}
+						if innerElementMap["type"] == "user" {
+							userID := innerElementMap["user_id"].(string)
+							if userName, exists := userNamesById[userID]; exists {
+								innerElementMap["user_name"] = userName
+							} else {
+								innerElementMap["user_name"] = unknownUserName
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return blocks
 }
