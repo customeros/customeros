@@ -889,15 +889,14 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 
 // UpdatedBy is the resolver for the updatedBy field.
 func (r *renewalForecastResolver) UpdatedBy(ctx context.Context, obj *model.RenewalForecast) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "RenewalForecastResolver.UpdatedBy", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	if obj.UpdatedByID == nil || *obj.UpdatedByID == "" {
 		return nil, nil
 	}
-	userEntityNillable, err := r.Services.UserService.FindUserById(ctx, *obj.UpdatedByID)
+	userEntityNillable, err := dataloader.For(ctx).GetUser(ctx, *obj.UpdatedByID)
 	if err != nil {
+		r.log.Errorf("Error fetching user %s: %s", obj.UpdatedBy, err.Error())
 		return nil, nil
 	}
 	return mapper.MapEntityToUser(userEntityNillable), nil
@@ -905,15 +904,14 @@ func (r *renewalForecastResolver) UpdatedBy(ctx context.Context, obj *model.Rene
 
 // UpdatedBy is the resolver for the updatedBy field.
 func (r *renewalLikelihoodResolver) UpdatedBy(ctx context.Context, obj *model.RenewalLikelihood) (*model.User, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "RenewalLikelihoodResolver.UpdatedBy", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
 	if obj.UpdatedByID == nil || *obj.UpdatedByID == "" {
 		return nil, nil
 	}
-	userEntityNillable, err := r.Services.UserService.FindUserById(ctx, *obj.UpdatedByID)
+	userEntityNillable, err := dataloader.For(ctx).GetUser(ctx, *obj.UpdatedByID)
 	if err != nil {
+		r.log.Errorf("Error fetching user %s: %s", obj.UpdatedBy, err.Error())
 		return nil, nil
 	}
 	return mapper.MapEntityToUser(userEntityNillable), nil

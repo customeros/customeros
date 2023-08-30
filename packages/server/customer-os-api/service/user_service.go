@@ -36,6 +36,7 @@ type UserService interface {
 	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
 	GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error)
 	GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error)
+	GetUsers(ctx context.Context, userIds []string) (*entity.UserEntities, error)
 	GetDistinctOrganizationOwners(ctx context.Context) (*entity.UserEntities, error)
 
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
@@ -502,6 +503,24 @@ func (s *userService) GetUserOwnersForOrganizations(parentCtx context.Context, o
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUsers(parentCtx context.Context, userIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsers")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("userIds", userIds))
+
+	userDbNodes, err := s.repositories.UserRepository.GetUsers(ctx, common.GetTenantFromContext(ctx), userIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(userDbNodes))
+	for _, dbNode := range userDbNodes {
+		userEntity := s.mapDbNodeToUserEntity(*dbNode)
 		userEntities = append(userEntities, *userEntity)
 	}
 	return &userEntities, nil
