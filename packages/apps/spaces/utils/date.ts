@@ -14,7 +14,9 @@ export class DateTimeUtils {
   public static dateWithAbreviatedMonth = 'd MMM yyyy'; // Output: "1 Aug 2024"
   public static abreviatedMonth = 'MMM'; // Output: "Aug"
   public static shortWeekday = 'iiiiii'; // Output: "We"
-  private static defaultTimeFormatString = 'HH:mm';
+  public static longWeekday = 'iiii'; // Output: "Wednesday"
+  public static defaultTimeFormatString = 'HH:mm';
+  public static usaTimeFormatString = 'Kbbb';
   private static defaultDurationFormat = { format: ['minutes'] };
 
   private static getDate(date: string | number): Date {

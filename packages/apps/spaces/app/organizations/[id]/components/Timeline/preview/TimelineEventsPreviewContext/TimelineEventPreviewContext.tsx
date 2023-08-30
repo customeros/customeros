@@ -1,15 +1,23 @@
-import { PropsWithChildren, RefObject, useContext } from 'react';
-import { createContext, useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { InteractionEvent, Meeting } from '@graphql/types';
+import {
+  useRef,
+  useState,
+  useEffect,
+  RefObject,
+  useContext,
+  createContext,
+  PropsWithChildren,
+} from 'react';
 import { useLocalStorage } from 'usehooks-ts';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+import { InteractionEvent, Meeting } from '@graphql/types';
 
 export const noop = () => undefined;
 
 type Event = InteractionEvent | Meeting;
 
 interface TimelineEventPreviewContextContextMethods {
-  TimelineEventPreviewContextContainerRef: RefObject<HTMLDivElement> | null;
+  containerRef: RefObject<HTMLDivElement> | null;
   openModal: (content: Event) => void;
   closeModal: () => void;
   modalContent: Event | null;
@@ -19,7 +27,7 @@ interface TimelineEventPreviewContextContextMethods {
 
 const TimelineEventPreviewContextContext =
   createContext<TimelineEventPreviewContextContextMethods>({
-    TimelineEventPreviewContextContainerRef: null,
+    containerRef: null,
     openModal: noop,
     closeModal: noop,
     modalContent: null,
@@ -43,7 +51,7 @@ export const TimelineEventPreviewContextContextProvider = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<Event | null>(null);
-  const TimelineEventPreviewContextContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -89,7 +97,7 @@ export const TimelineEventPreviewContextContextProvider = ({
   return (
     <TimelineEventPreviewContextContext.Provider
       value={{
-        TimelineEventPreviewContextContainerRef,
+        containerRef,
         openModal: handleOpenModal,
         closeModal: handleCloseModal,
         isModalOpen,

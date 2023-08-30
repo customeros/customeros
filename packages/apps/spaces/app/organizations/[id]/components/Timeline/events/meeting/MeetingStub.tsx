@@ -8,8 +8,9 @@ import { Text } from '@ui/typography/Text';
 import { Icons } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
 
-import MeetingIcon from './meetingIcon.svg';
 import { getParticipants, getParticipantName } from '../utils';
+import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { MeetingIcon } from './meetingIcon';
 
 interface MeetingStubProps {
   data: Meeting;
@@ -19,6 +20,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
   const owner = getParticipantName(data.createdBy[0]);
   const firstParticipant = getParticipantName(data.attendedBy?.[0]);
   const [participants, remaining] = getParticipants(data);
+  const { openModal } = useTimelineEventPreviewContext();
 
   const note = convert(data?.note?.[0]?.html);
   const agenda = data?.agenda ?? '';
@@ -33,6 +35,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
       boxShadow='xs'
       borderColor='gray.200'
       borderRadius='lg'
+      onClick={() => openModal(data)}
     >
       <CardBody p='3'>
         <Flex w='full' justify='space-between' position='relative' gap='3'>
