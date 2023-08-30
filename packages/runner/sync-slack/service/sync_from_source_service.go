@@ -19,6 +19,7 @@ import (
 	"github.com/slack-go/slack"
 	"gorm.io/gorm"
 	"strings"
+	"sync"
 )
 
 type SyncFromSourceService interface {
@@ -67,17 +68,38 @@ func (s *syncFromSourceService) SyncSlackRawData() {
 		return
 	}
 
-	// Long-running process
+	// Create a wait group to wait for all workers to finish
+	var wg sync.WaitGroup
+	// Create a channel to control the number of concurrent workers
+	maxWorkers := 5
+	workerLimit := make(chan struct{}, maxWorkers)
+
+	// Sync all Slack channels concurrently
 	for _, slackDtls := range slackSyncSettings {
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			// Continue processing tenants
+			// Continue with Slack sync
 		}
-		s.prepareAndSyncSlackChannel(ctx, slackDtls)
+
+		// Acquire a worker slot
+		workerLimit <- struct{}{}
+		wg.Add(1)
+
+		go func(slackDtls entity.SlackSyncSettings) {
+			defer wg.Done()
+			defer func() {
+				// Release the worker slot when done
+				<-workerLimit
+			}()
+
+			s.prepareAndSyncSlackChannel(ctx, slackDtls)
+		}(slackDtls)
 	}
+	// Wait for all workers to finish
+	wg.Wait()
 }
 
 func (s *syncFromSourceService) prepareAndSyncSlackChannel(ctx context.Context, slackStngs entity.SlackSyncSettings) {
