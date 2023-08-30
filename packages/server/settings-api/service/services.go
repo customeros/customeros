@@ -8,8 +8,9 @@ import (
 )
 
 type Services struct {
-	TenantSettingsService    TenantSettingsService
-	OAuthUserSettingsService OAuthUserSettingsService
+	TenantSettingsService       TenantSettingsService
+	PersonalIntegrationsService PersonalIntegrationsService
+	OAuthUserSettingsService    OAuthUserSettingsService
 }
 
 func InitServices(db *gorm.DB, logger logger.Logger) *Services {
@@ -26,7 +27,8 @@ func InitServices(db *gorm.DB, logger logger.Logger) *Services {
 	}
 
 	return &Services{
-		TenantSettingsService:    NewTenantSettingsService(repositories, logger),
-		OAuthUserSettingsService: NewUserSettingsService(repositories, logger),
+		TenantSettingsService:       NewTenantSettingsService(repositories, logger),
+		OAuthUserSettingsService:    NewUserSettingsService(repositories, logger),
+		PersonalIntegrationsService: NewPersonalIntegrationsService(repositories, logger),
 	}
 }

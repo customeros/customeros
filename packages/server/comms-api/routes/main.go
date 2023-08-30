@@ -6,19 +6,20 @@ import (
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
+	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"log"
 	"strings"
 )
 
 // Run will start the server
-func Run(config *c.Config, hub *ContactHub.ContactHub, services *service.Services) {
-	router := getRouter(config, hub, services)
+func Run(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *commonRepository.Repositories) {
+	router := getRouter(config, hub, services, container)
 	if err := router.Run(config.Service.ServerAddress); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }
 
-func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.Services) *gin.Engine {
+func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *commonRepository.Repositories) *gin.Engine {
 	router := gin.New()
 	corsConfig := cors.DefaultConfig()
 
@@ -37,7 +38,7 @@ func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.S
 	addVconRoutes(config, route, services.CustomerOsService, hub)
 	addVoiceApiRoutes(config, route, hub, services)
 
-	AddCalComRoutes(config, route, services.CustomerOsService)
+	AddCalComRoutes(route, services.CustomerOsService, container.PersonalIntegrationRepository)
 	AddQueryRoutes(route, services.CustomerOsService, services.RedisService)
 
 	addWebSocketRoutes(route, config.WebChat.PingInterval, hub)
