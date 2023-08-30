@@ -37,10 +37,30 @@ import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
 const FORWARD_MODE = 'forward';
+declare type FieldProps = {
+  meta: {
+    pristine: boolean;
+    hasError: boolean;
+    isTouched: boolean;
+  };
+  error?: string;
+};
+
+declare type Fields<T> = Record<keyof T, FieldProps>;
+const checkPristine = (
+  fieldsData: Partial<Fields<ComposeEmailDtoI>>,
+): boolean => {
+  return Object.values(fieldsData).every((e) => e.meta.pristine);
+};
+
+const checkEmpty = (values: Partial<ComposeEmailDtoI>): boolean => {
+  return Object.values(values).every((e) => !e.length);
+};
 
 interface EmailPreviewModalProps {
   invalidateQuery: () => void;
 }
+
 export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   invalidateQuery,
 }) => {
@@ -152,17 +172,29 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     closeModal();
   };
 
-  const handleClosePreview = () => {
-    const isFormPristine = Object.values(state.fields)?.every(
-      (e) => e.meta.pristine,
-    );
-    const isFormEmpty = Object.values(state.values)?.every((e) => !e.length);
+  const handleClosePreview = (): void => {
+    const { content, subject, ...values } = state.values;
+    const {
+      content: contentField,
+      subject: subjectField,
+      ...fields
+    } = state.fields;
 
-    const showConfirmationDialog = !isFormPristine && !isFormEmpty;
-    if (showConfirmationDialog) {
-      onOpen();
-    } else {
+    const isFormPristine = checkPristine(state.fields);
+    const areParticipantFieldsPristine = checkPristine(fields);
+
+    const isFormEmpty = !content.length || content === `<p style=""></p>`;
+    const areFieldsEmpty = checkEmpty(values);
+
+    const showConfirmationDialog =
+      (!areParticipantFieldsPristine && !areFieldsEmpty) ||
+      (!subjectField.meta.pristine && !subject.length) ||
+      !isFormEmpty;
+
+    if (isFormPristine || !showConfirmationDialog) {
       handleExitEditorAndCleanData();
+    } else {
+      onOpen();
     }
   };
 
