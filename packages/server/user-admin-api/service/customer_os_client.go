@@ -191,6 +191,8 @@ func (s *customerOsClient) IsPlayer(authId string, provider string) (string, err
 	graphqlRequest.Var("authId", authId)
 	graphqlRequest.Var("provider", provider)
 
+	err := s.addHeadersToGraphRequest(graphqlRequest, nil, nil)
+
 	ctx, cancel, err := s.contextWithTimeout()
 	if err != nil {
 		return "", err
