@@ -79,13 +79,7 @@ export const MeetingPreviewModal = () => {
     return `${start} - ${end}`;
   })();
 
-  const owner = (() => {
-    if (event?.createdBy?.[0]?.__typename === 'ContactParticipant') {
-      const participant = event?.createdBy?.[0]?.contactParticipant;
-      return participant.emails?.[0]?.email ?? participant?.firstName;
-    }
-    return '';
-  })();
+  const owner = getParticipantEmailOrName(event?.createdBy?.[0]);
 
   const participants = event?.attendedBy
     ?.map(getParticipantEmailOrName)
