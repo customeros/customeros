@@ -179,19 +179,24 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	output := model.Output{
 		ExternalId:  input.OpenlineFields.ChannelId + "/" + input.Ts,
 		CreatedAt:   tsStrToRFC3339Nanos(input.Ts),
-		ContentType: "application/json",
+		ContentType: "plain/text",
 		Type:        "MESSAGE",
 		Channel:     "SLACK",
 	}
-	outputContent := OutputContent{
-		Text:   replaceUserMentionsInText(input.Text, input.OpenlineFields.UserNamesById),
-		Blocks: addUserNameInBlocks(input.Blocks, input.OpenlineFields.UserNamesById),
-	}
-	outputContentJson, err := json.Marshal(outputContent)
-	if err != nil {
-		return "", err
-	}
-	output.Content = string(outputContentJson)
+
+	// Do not use blocks in content for now.
+
+	//outputContent := OutputContent{
+	//	Text:   replaceUserMentionsInText(input.Text, input.OpenlineFields.UserNamesById),
+	//	Blocks: addUserNameInBlocks(input.Blocks, input.OpenlineFields.UserNamesById),
+	//}
+	//outputContentJson, err := json.Marshal(outputContent)
+	//if err != nil {
+	//	return "", err
+	//}
+	//output.Content = string(outputContentJson)
+
+	output.Content = replaceUserMentionsInText(input.Text, input.OpenlineFields.UserNamesById)
 
 	output.SentBy = struct {
 		OpenlineId                string `json:"openlineId,omitempty"`
@@ -278,9 +283,15 @@ func replaceUserMentionsInText(text string, userNames map[string]string) string 
 		if !ok || name == "" {
 			return unknownUserName
 		}
-		return name
+		return markdownUserName(name)
 	})
 	return replaced
+}
+
+func markdownUserName(name string) string {
+	// Replace spaces with underscores and add "@" at the beginning
+	formattedName := "@" + strings.ReplaceAll(name, " ", "_")
+	return formattedName
 }
 
 func addUserNameInBlocks(blocks []any, userNamesById map[string]string) []any {
