@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"strconv"
 	"strings"
 )
@@ -365,6 +367,7 @@ func MapContact(inputJSON string) (string, error) {
 			Zipcode             string `json:"zip,omitempty"`
 			Address             string `json:"address,omitempty"`
 			LifecycleStage      string `json:"lifecyclestage,omitempty"`
+			Timezone            string `json:"hs_timezone,omitempty"`
 		} `json:"properties"`
 	}
 	if err := json.Unmarshal([]byte(inputJSON), &input); err != nil {
@@ -391,6 +394,7 @@ func MapContact(inputJSON string) (string, error) {
 	output.Locality = input.Properties.City
 	output.Zip = input.Properties.Zipcode
 	output.Address = input.Properties.Address
+	output.Timezone = convertToStandardTimezoneFormat(input.Properties.Timezone)
 
 	if len(input.Properties.LifecycleStage) > 0 {
 		output.TextCustomFields = append(output.TextCustomFields, struct {
@@ -434,4 +438,23 @@ func isProspectTag(hubspotLifecycleStage string) bool {
 	prospectLifecycleStages := map[string]bool{
 		"lead": true, "subscriber": true, "marketingqualifiedlead": true, "salesqualifiedlead": true, "opportunity": true}
 	return prospectLifecycleStages[hubspotLifecycleStage]
+}
+
+func convertToStandardTimezoneFormat(input string) string {
+	if input == "" {
+		return ""
+	}
+
+	parts := strings.Split(input, "_slash_")
+	if len(parts) != 2 {
+		return ""
+	}
+
+	region, city := parts[0], parts[1]
+	region = cases.Title(language.Und).String(strings.ToLower(region))
+	city = strings.ReplaceAll(city, "_", " ")
+	city = cases.Title(language.Und).String(strings.ToLower(city))
+	city = strings.ReplaceAll(city, " ", "_")
+
+	return fmt.Sprintf("%s/%s", region, city)
 }

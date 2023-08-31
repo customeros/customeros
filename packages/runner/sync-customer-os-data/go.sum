@@ -29,8 +29,16 @@ github.com/neo4j/neo4j-go-driver/v5 v5.11.0 h1:5Tbzmf5uikC8dv2a84uQ+rsXnMg0Bqgw6
 github.com/neo4j/neo4j-go-driver/v5 v5.11.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230815090508-13331c89c341 h1:8c2nK5cVydYhjXFd6qy3fQdV5PkWhxTEsDyIZNCL75Y=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230815090508-13331c89c341/go.mod h1:9po/pzhXWCHbt/z8Z9Rq01woTLv+Ry9+YsPCdsWE0Ms=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230831105353-0b67e49095e5 h1:inEgb+1UitMkgS+ONjONNEVj3LBMGDOx+sw1AZP9v3k=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230831105353-0b67e49095e5/go.mod h1:td+vyi09yaWF3WBDkyDponvy7Qe2hg20eVIlsbXTfUU=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230831120651-b50a568405ea h1:bY51GZCmG92o+5BJ+/BqevDiLnfVU7c9rS2KiY0uyjM=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230831120651-b50a568405ea/go.mod h1:td+vyi09yaWF3WBDkyDponvy7Qe2hg20eVIlsbXTfUU=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230815103618-6c1e940c701c h1:vdB7lCjt4buSUNRyFHmcOXXPIaOL6WCWPk/NZUQx6EY=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230815103618-6c1e940c701c/go.mod h1:N+aVVTKdG7VFcf4vSkSaibawQlqV6XTEypwr7GPc3w4=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230831105353-0b67e49095e5 h1:0+nt2DthAkAZI5vLkD/t1Uo6SORvH2cGPGN/Nz6iNjY=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230831105353-0b67e49095e5/go.mod h1:N+aVVTKdG7VFcf4vSkSaibawQlqV6XTEypwr7GPc3w4=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230831120651-b50a568405ea h1:jx7EumlC44Z6qDFFERk7godqHEw5aavkurlmeZKg/go=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230831120651-b50a568405ea/go.mod h1:N+aVVTKdG7VFcf4vSkSaibawQlqV6XTEypwr7GPc3w4=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

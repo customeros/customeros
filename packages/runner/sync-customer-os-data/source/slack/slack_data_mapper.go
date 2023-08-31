@@ -3,6 +3,7 @@ package slack
 import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -44,21 +45,21 @@ func MapUser(inputJson string) (string, error) {
 			Skip:       true,
 			SkipReason: "User is a bot or app",
 		}
-		return outputToString(output)
+		return utils.ToJson(output)
 	}
 	if input.Deleted {
 		output := model.Output{
 			Skip:       true,
 			SkipReason: "User is deleted",
 		}
-		return outputToString(output)
+		return utils.ToJson(output)
 	}
 	if !slackUserIsTenantUser(input.Profile.Email, input.TeamId, input.OpenlineFields.TenantDomain, input.OpenlineFields.TenantTeamId) {
 		output := model.Output{
 			Skip:       true,
 			SkipReason: "Slack user is not a tenant user",
 		}
-		return outputToString(output)
+		return utils.ToJson(output)
 	}
 
 	output := model.Output{
@@ -74,7 +75,7 @@ func MapUser(inputJson string) (string, error) {
 		output.ProfilePhotoUrl = input.Profile.Image192
 	}
 
-	return outputToString(output)
+	return utils.ToJson(output)
 }
 
 func MapContact(inputJson string) (string, error) {
@@ -110,21 +111,21 @@ func MapContact(inputJson string) (string, error) {
 			Skip:       true,
 			SkipReason: "User is a bot or app",
 		}
-		return outputToString(output)
+		return utils.ToJson(output)
 	}
 	if input.Deleted {
 		output := model.Output{
 			Skip:       true,
 			SkipReason: "User is deleted",
 		}
-		return outputToString(output)
+		return utils.ToJson(output)
 	}
 	if slackUserIsTenantUser(input.Profile.Email, input.TeamId, input.OpenlineFields.TenantDomain, input.OpenlineFields.TenantTeamId) {
 		output := model.Output{
 			Skip:       true,
 			SkipReason: "Slack user is not a contact",
 		}
-		return outputToString(output)
+		return utils.ToJson(output)
 	}
 
 	output := model.Output{
@@ -257,7 +258,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		output.SkipReason = "Not a message type. Type: " + input.Type
 	}
 
-	return outputToString(output)
+	return utils.ToJson(output)
 }
 
 func tsStrToRFC3339Nanos(ts string) string {
@@ -325,14 +326,6 @@ func addUserNameInBlocks(blocks []any, userNamesById map[string]string) []any {
 		}
 	}
 	return blocks
-}
-
-func outputToString(output model.Output) (string, error) {
-	outputJson, err := json.Marshal(output)
-	if err != nil {
-		return "", err
-	}
-	return string(outputJson), nil
 }
 
 func slackUserIsTenantUser(email, userTeamId, tenantDomain, tenantTeamId string) bool {
