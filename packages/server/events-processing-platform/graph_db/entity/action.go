@@ -9,6 +9,7 @@ type ActionEntity struct {
 	Id            string
 	CreatedAt     time.Time
 	Content       string
+	Metadata      string
 	Type          ActionType
 	Source        DataSource
 	AppSource     string
