@@ -17,6 +17,8 @@ import (
 const pageSize = 200
 
 type SlackService interface {
+	FetchChannelInfo(ctx context.Context, token, channelId string) (*slack.Channel, error)
+	AuthTest(ctx context.Context, token string) (*slack.AuthTestResponse, error)
 	FetchUserIdsFromSlackChannel(ctx context.Context, token, channelId string) ([]string, error)
 	FetchUserInfo(ctx context.Context, token, userId string) (*slack.User, error)
 	FetchNewMessagesFromSlackChannel(ctx context.Context, token, channelId string, from, to time.Time) ([]slack.Message, error)
@@ -36,6 +38,40 @@ func NewSlackService(cfg *config.Config, log logger.Logger, repositories *reposi
 		log:          log,
 		repositories: repositories,
 	}
+}
+
+func (s *slackService) FetchChannelInfo(ctx context.Context, token, channelId string) (*slack.Channel, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchChannelInfo")
+	defer span.Finish()
+
+	client := slack.New(token)
+
+	channel, err := client.GetConversationInfo(&slack.GetConversationInfoInput{
+		ChannelID:         channelId,
+		IncludeLocale:     false,
+		IncludeNumMembers: false,
+	})
+	if err != nil {
+		s.log.Error(err)
+		return nil, err
+	}
+
+	return channel, nil
+}
+
+func (s *slackService) AuthTest(ctx context.Context, token string) (*slack.AuthTestResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.AuthTest")
+	defer span.Finish()
+
+	client := slack.New(token)
+
+	authTest, err := client.AuthTest()
+	if err != nil {
+		s.log.Error(err)
+		return nil, err
+	}
+
+	return authTest, nil
 }
 
 func (s *slackService) FetchUserIdsFromSlackChannel(ctx context.Context, token, channelId string) ([]string, error) {

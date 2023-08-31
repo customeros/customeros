@@ -13,22 +13,15 @@ const (
 	expire20Days = 20 * 24 * 60 * 60 // 20 days
 )
 
-type UserType string
-
-const UserType_User UserType = "user"
-const UserType_Contact UserType = "contact"
-const UserType_NonUser UserType = "non-user"
-
 type SlackUser struct {
-	UserType UserType `json:"type,omitempty"`
-	Name     string   `json:"name,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Deleted bool   `json:"deleted,omitempty"`
+	Bot     bool   `json:"bot,omitempty"`
 }
 
 type Cache interface {
 	SetSlackUser(tenant, userId string, user SlackUser)
 	GetSlackUser(tenant, userId string) (SlackUser, bool)
-	SetSlackUserAsContactForOrg(orgId, userId, value string)
-	GetSlackUserAsContactForOrg(orgId, userId string) (string, bool)
 }
 
 type cache struct {

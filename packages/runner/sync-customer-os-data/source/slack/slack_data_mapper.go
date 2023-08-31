@@ -13,8 +13,14 @@ const unknownUserName = "Unknown User"
 
 func MapUser(inputJson string) (string, error) {
 	var input struct {
-		ID      string `json:"id,omitempty"`
-		Profile struct {
+		ID       string `json:"id,omitempty"`
+		Bot      bool   `json:"is_bot,omitempty"`
+		App      bool   `json:"is_app_user,omitempty"`
+		Deleted  bool   `json:"deleted,omitempty"`
+		Admin    bool   `json:"is_admin,omitempty"`
+		Timezone string `json:"tz,omitempty"`
+		TeamId   string `json:"team_id,omitempty"`
+		Profile  struct {
 			Email     string `json:"email,omitempty"`
 			Phone     string `json:"phone,omitempty"`
 			FirstName string `json:"first_name,omitempty"`
@@ -22,10 +28,37 @@ func MapUser(inputJson string) (string, error) {
 			Name      string `json:"real_name_normalized,omitempty"`
 			Image192  string `json:"image_192,omitempty"`
 		} `json:"profile"`
+		OpenlineFields struct {
+			OrganizationId string `json:"organization_id,omitempty"`
+			TenantDomain   string `json:"tenant_domain,omitempty"`
+			TenantTeamId   string `json:"tenant_team_id,omitempty"`
+		} `json:"openline_fields,omitempty"`
 	}
 
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
 		return "", err
+	}
+
+	if input.Bot || input.App {
+		output := model.Output{
+			Skip:       true,
+			SkipReason: "User is a bot or app",
+		}
+		return outputToString(output)
+	}
+	if input.Deleted {
+		output := model.Output{
+			Skip:       true,
+			SkipReason: "User is deleted",
+		}
+		return outputToString(output)
+	}
+	if !slackUserIsTenantUser(input.Profile.Email, input.TeamId, input.OpenlineFields.TenantDomain, input.OpenlineFields.TenantTeamId) {
+		output := model.Output{
+			Skip:       true,
+			SkipReason: "Slack user is not a tenant user",
+		}
+		return outputToString(output)
 	}
 
 	output := model.Output{
@@ -35,25 +68,25 @@ func MapUser(inputJson string) (string, error) {
 		FirstName:   input.Profile.FirstName,
 		LastName:    input.Profile.LastName,
 		Name:        input.Profile.Name,
+		Timezone:    input.Timezone,
 	}
 	if !strings.HasPrefix(input.Profile.Image192, "https://secure.gravatar.com") {
 		output.ProfilePhotoUrl = input.Profile.Image192
 	}
 
-	outputJson, err := json.Marshal(output)
-	if err != nil {
-		return "", err
-	}
-
-	return string(outputJson), nil
+	return outputToString(output)
 }
 
 func MapContact(inputJson string) (string, error) {
 	var input struct {
-		ID                     string `json:"id,omitempty"`
-		Timezone               string `json:"tz,omitempty"`
-		OpenlineOrganizationId string `json:"openline_organization_id,omitempty"`
-		Profile                struct {
+		ID       string `json:"id,omitempty"`
+		Bot      bool   `json:"is_bot,omitempty"`
+		App      bool   `json:"is_app_user,omitempty"`
+		Deleted  bool   `json:"deleted,omitempty"`
+		Admin    bool   `json:"is_admin,omitempty"`
+		Timezone string `json:"tz,omitempty"`
+		TeamId   string `json:"team_id,omitempty"`
+		Profile  struct {
 			Email     string `json:"email,omitempty"`
 			Phone     string `json:"phone,omitempty"`
 			FirstName string `json:"first_name,omitempty"`
@@ -61,10 +94,37 @@ func MapContact(inputJson string) (string, error) {
 			Name      string `json:"real_name_normalized,omitempty"`
 			Image192  string `json:"image_192,omitempty"`
 		} `json:"profile"`
+		OpenlineFields struct {
+			OrganizationId string `json:"organization_id,omitempty"`
+			TenantDomain   string `json:"tenant_domain,omitempty"`
+			TenantTeamId   string `json:"tenant_team_id,omitempty"`
+		} `json:"openline_fields,omitempty"`
 	}
 
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
 		return "", err
+	}
+
+	if input.Bot || input.App {
+		output := model.Output{
+			Skip:       true,
+			SkipReason: "User is a bot or app",
+		}
+		return outputToString(output)
+	}
+	if input.Deleted {
+		output := model.Output{
+			Skip:       true,
+			SkipReason: "User is deleted",
+		}
+		return outputToString(output)
+	}
+	if slackUserIsTenantUser(input.Profile.Email, input.TeamId, input.OpenlineFields.TenantDomain, input.OpenlineFields.TenantTeamId) {
+		output := model.Output{
+			Skip:       true,
+			SkipReason: "Slack user is not a contact",
+		}
+		return outputToString(output)
 	}
 
 	output := model.Output{
@@ -75,7 +135,7 @@ func MapContact(inputJson string) (string, error) {
 		LastName:               input.Profile.LastName,
 		Name:                   input.Profile.Name,
 		Timezone:               input.Timezone,
-		OpenlineOrganizationId: input.OpenlineOrganizationId,
+		OpenlineOrganizationId: input.OpenlineFields.OrganizationId,
 	}
 	if !strings.HasPrefix(input.Profile.Image192, "https://secure.gravatar.com") {
 		output.ProfilePhotoUrl = input.Profile.Image192
@@ -96,17 +156,19 @@ type OutputContent struct {
 
 func MapInteractionEvent(inputJson string) (string, error) {
 	var input struct {
-		Ts                     string            `json:"ts,omitempty"`
-		ChannelId              string            `json:"channel_id,omitempty"`
-		ChannelName            string            `json:"channel_name,omitempty"`
-		Type                   string            `json:"type,omitempty"`
-		SenderUser             string            `json:"user,omitempty"`
-		Text                   string            `json:"text,omitempty"`
-		UserIds                []string          `json:"channel_user_ids,omitempty"`
-		UserNamesById          map[string]string `json:"channel_user_names,omitempty"`
-		ThreadTs               string            `json:"thread_ts,omitempty"`
-		OpenlineOrganizationId string            `json:"openline_organization_id,omitempty"`
-		Blocks                 []any             `json:"blocks,omitempty"`
+		Ts             string `json:"ts,omitempty"`
+		Type           string `json:"type,omitempty"`
+		SenderUser     string `json:"user,omitempty"`
+		Text           string `json:"text,omitempty"`
+		ThreadTs       string `json:"thread_ts,omitempty"`
+		Blocks         []any  `json:"blocks,omitempty"`
+		OpenlineFields struct {
+			OrganizationId string            `json:"organization_id,omitempty"`
+			UserIds        []string          `json:"channel_user_ids,omitempty"`
+			UserNamesById  map[string]string `json:"channel_user_names,omitempty"`
+			ChannelId      string            `json:"channel_id,omitempty"`
+			ChannelName    string            `json:"channel_name,omitempty"`
+		}
 	}
 
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
@@ -114,15 +176,15 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	}
 
 	output := model.Output{
-		ExternalId:  input.ChannelId + "/" + input.Ts,
+		ExternalId:  input.OpenlineFields.ChannelId + "/" + input.Ts,
 		CreatedAt:   tsStrToRFC3339Nanos(input.Ts),
 		ContentType: "application/json",
 		Type:        "MESSAGE",
 		Channel:     "SLACK",
 	}
 	outputContent := OutputContent{
-		Text:   replaceUserMentionsInText(input.Text, input.UserNamesById),
-		Blocks: addUserNameInBlocks(input.Blocks, input.UserNamesById),
+		Text:   replaceUserMentionsInText(input.Text, input.OpenlineFields.UserNamesById),
+		Blocks: addUserNameInBlocks(input.Blocks, input.OpenlineFields.UserNamesById),
 	}
 	outputContentJson, err := json.Marshal(outputContent)
 	if err != nil {
@@ -140,26 +202,26 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	}{
 		ExternalId:                input.SenderUser,
 		ReplaceContactWithJobRole: true,
-		OrganizationId:            input.OpenlineOrganizationId,
+		OrganizationId:            input.OpenlineFields.OrganizationId,
 	}
 	output.PartOfSession.Channel = "SLACK"
 	output.PartOfSession.Type = "THREAD"
 	output.PartOfSession.Status = "ACTIVE"
-	output.PartOfSession.Name = input.ChannelName
+	output.PartOfSession.Name = input.OpenlineFields.ChannelName
 	if input.ThreadTs != "" {
 		if input.ThreadTs != input.Ts {
 			output.Hide = true
 		}
-		output.PartOfSession.ExternalId = "session/" + input.ChannelId + "/" + input.ThreadTs
+		output.PartOfSession.ExternalId = "session/" + input.OpenlineFields.ChannelId + "/" + input.ThreadTs
 		output.PartOfSession.CreatedAt = tsStrToRFC3339Nanos(input.ThreadTs)
-		output.PartOfSession.Identifier = input.ChannelId + "/" + input.ThreadTs
+		output.PartOfSession.Identifier = input.OpenlineFields.ChannelId + "/" + input.ThreadTs
 	} else {
-		output.PartOfSession.ExternalId = "session/" + input.ChannelId + "/" + input.Ts
+		output.PartOfSession.ExternalId = "session/" + input.OpenlineFields.ChannelId + "/" + input.Ts
 		output.PartOfSession.CreatedAt = tsStrToRFC3339Nanos(input.Ts)
-		output.PartOfSession.Identifier = input.ChannelId + "/" + input.Ts
+		output.PartOfSession.Identifier = input.OpenlineFields.ChannelId + "/" + input.Ts
 	}
 
-	for _, user := range input.UserIds {
+	for _, user := range input.OpenlineFields.UserIds {
 		if user != input.SenderUser {
 			output.SentTo = append(output.SentTo,
 				struct {
@@ -172,7 +234,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 				}{
 					ExternalId:                user,
 					ReplaceContactWithJobRole: true,
-					OrganizationId:            input.OpenlineOrganizationId,
+					OrganizationId:            input.OpenlineFields.OrganizationId,
 				})
 		}
 	}
@@ -186,7 +248,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 			ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
 			OrganizationId            string `json:"organizationId,omitempty"`
 		}{
-			OpenlineId:      input.OpenlineOrganizationId,
+			OpenlineId:      input.OpenlineFields.OrganizationId,
 			ParticipantType: "ORGANIZATION",
 		})
 
@@ -195,12 +257,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		output.SkipReason = "Not a message type. Type: " + input.Type
 	}
 
-	outputJson, err := json.Marshal(output)
-	if err != nil {
-		return "", err
-	}
-
-	return string(outputJson), nil
+	return outputToString(output)
 }
 
 func tsStrToRFC3339Nanos(ts string) string {
@@ -268,4 +325,21 @@ func addUserNameInBlocks(blocks []any, userNamesById map[string]string) []any {
 		}
 	}
 	return blocks
+}
+
+func outputToString(output model.Output) (string, error) {
+	outputJson, err := json.Marshal(output)
+	if err != nil {
+		return "", err
+	}
+	return string(outputJson), nil
+}
+
+func slackUserIsTenantUser(email, userTeamId, tenantDomain, tenantTeamId string) bool {
+	if tenantTeamId != "" && userTeamId == tenantTeamId {
+		return true
+	} else if tenantDomain != "" && strings.HasSuffix(email, "@"+tenantDomain) {
+		return true
+	}
+	return false
 }

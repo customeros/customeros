@@ -18,9 +18,24 @@ import (
 	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
 	"gorm.io/gorm"
-	"strings"
 	"sync"
 )
+
+var postgresTablesAutomigrated = false
+
+type MessageOpenlineFields struct {
+	ChannelUserIds   []string          `json:"channel_user_ids"`
+	ChannelUserNames map[string]string `json:"channel_user_names"`
+	ChannelId        string            `json:"channel_id"`
+	ChannelName      string            `json:"channel_name"`
+	OrganizationId   string            `json:"organization_id"`
+}
+
+type UserOpenlineFields struct {
+	OrganizationId string `json:"organization_id"`
+	TenantDomain   string `json:"tenant_domain"`
+	TenantTeamId   string `json:"tenant_team_id"`
+}
 
 type SyncFromSourceService interface {
 	SyncSlackRawData()
@@ -51,18 +66,21 @@ func (s *syncFromSourceService) SyncSlackRawData() {
 
 	defer cancel() // Cancel context on exit
 
-	err := s.repositories.SlackSyncReposiotry.AutoMigrate()
-	if err != nil {
-		s.log.Errorf("Failed to auto migrate slack_sync table: %v", err)
-		return
-	}
-	err = s.repositories.SlackSyncRunRepository.AutoMigrate()
-	if err != nil {
-		s.log.Errorf("Failed to auto migrate slack_sync_run_status table: %v", err)
-		return
+	if !postgresTablesAutomigrated {
+		err := s.repositories.SlackSyncSettingsRepository.AutoMigrate()
+		if err != nil {
+			s.log.Errorf("Failed to auto migrate %s table: %v", entity.SlackSyncSettings{}.TableName(), err)
+			return
+		}
+		err = s.repositories.SlackSyncRunRepository.AutoMigrate()
+		if err != nil {
+			s.log.Errorf("Failed to auto migrate %s table: %v", entity.SlackSyncRunStatus{}.TableName(), err)
+			return
+		}
+		postgresTablesAutomigrated = true
 	}
 
-	slackSyncSettings, err := s.repositories.SlackSyncReposiotry.GetChannelsToSync(ctx)
+	slackSyncSettings, err := s.repositories.SlackSyncSettingsRepository.GetChannelsToSync(ctx)
 	if err != nil {
 		s.log.Errorf("Failed to get tenants for slack sync: %v", err)
 		return
@@ -132,7 +150,7 @@ func (s *syncFromSourceService) prepareAndSyncSlackChannel(ctx context.Context, 
 	organization, err := s.repositories.OrganizationRepository.GetOrganization(ctx, slackStngs.Tenant, slackStngs.OrganizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to get organizations for tenant %s: %v", slackStngs.Tenant, err)
+		s.log.Errorf("Failed to get organization %s for tenant %s: %v", slackStngs.OrganizationId, slackStngs.Tenant, err)
 		return
 	}
 	orgName := utils.GetStringPropOrEmpty(organization.Props, "name")
@@ -171,6 +189,27 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 
 	currentSyncTime := utils.Now()
 
+	if slackStngs.ChannelName == "" {
+		channelInfo, err := s.slackService.FetchChannelInfo(ctx, token, slackStngs.ChannelId)
+		if err != nil {
+			s.log.Errorf("Failed to fetch channel info for channel %s: %s", slackStngs.ChannelId, err.Error())
+		} else {
+			if channelInfo.Name != "" {
+				slackStngs.ChannelName = channelInfo.Name
+			}
+		}
+	}
+	if slackStngs.TeamId == "" {
+		authTest, err := s.slackService.AuthTest(ctx, token)
+		if err != nil {
+			s.log.Errorf("Failed to test auth: %s", err.Error())
+		} else {
+			if authTest.TeamID != "" {
+				slackStngs.TeamId = authTest.TeamID
+			}
+		}
+	}
+
 	// get new messages
 	channelMessages, err := s.slackService.FetchNewMessagesFromSlackChannel(ctx, token, slackStngs.ChannelId, slackStngs.GetSyncStartDate(), currentSyncTime)
 	if err != nil {
@@ -200,7 +239,7 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 
 	// if no new messages, save sync run and return
 	if len(channelMessages) == 0 && len(threadMessages) == 0 {
-		err = s.repositories.SlackSyncReposiotry.SaveSyncRun(ctx, slackStngs.Tenant, slackStngs.ChannelId, currentSyncTime)
+		err = s.repositories.SlackSyncSettingsRepository.SaveSyncRun(ctx, slackStngs, currentSyncTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -217,7 +256,7 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 
 	// get user details if not synced before
 	for _, userId := range channelUserIds {
-		err = s.syncUser(ctx, slackStngs.Tenant, tenantDomain, userId, slackStngs.OrganizationId, token)
+		err = s.syncUser(ctx, slackStngs.Tenant, tenantDomain, userId, slackStngs.OrganizationId, slackStngs.TeamId, token)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -236,18 +275,16 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	for _, message := range channelMessages {
 		output := struct {
 			slack.Message
-			ChannelUserIds         []string          `json:"channel_user_ids"`
-			ChannelUserNames       map[string]string `json:"channel_user_names"`
-			ChannelId              string            `json:"channel_id"`
-			ChannelName            string            `json:"channel_name"`
-			OpenlineOrganizationId string            `json:"openline_organization_id"`
+			MessageOpenlineFields `json:"openline_fields"`
 		}{
-			Message:                message,
-			ChannelUserIds:         channelRealUserIds,
-			ChannelUserNames:       channelUserNames,
-			ChannelId:              slackStngs.ChannelId,
-			ChannelName:            slackStngs.ChannelName,
-			OpenlineOrganizationId: slackStngs.OrganizationId,
+			Message: message,
+			MessageOpenlineFields: MessageOpenlineFields{
+				ChannelUserIds:   channelRealUserIds,
+				ChannelUserNames: channelUserNames,
+				ChannelId:        slackStngs.ChannelId,
+				ChannelName:      slackStngs.ChannelName,
+				OrganizationId:   slackStngs.OrganizationId,
+			},
 		}
 		messageJson, _ := json.Marshal(output)
 		err = rawrepo.RawChannelMessages_Save(ctx, s.getDb(slackStngs.Tenant), string(messageJson))
@@ -260,18 +297,16 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	for _, message := range threadMessages {
 		output := struct {
 			slack.Message
-			ChannelUserIds         []string          `json:"channel_user_ids"`
-			ChannelUserNames       map[string]string `json:"channel_user_names"`
-			ChannelId              string            `json:"channel_id"`
-			ChannelName            string            `json:"channel_name"`
-			OpenlineOrganizationId string            `json:"openline_organization_id"`
+			MessageOpenlineFields `json:"openline_fields"`
 		}{
-			Message:                message,
-			ChannelUserIds:         channelRealUserIds,
-			ChannelUserNames:       channelUserNames,
-			ChannelId:              slackStngs.ChannelId,
-			ChannelName:            slackStngs.ChannelName,
-			OpenlineOrganizationId: slackStngs.OrganizationId,
+			Message: message,
+			MessageOpenlineFields: MessageOpenlineFields{
+				ChannelUserIds:   channelRealUserIds,
+				ChannelUserNames: channelUserNames,
+				ChannelId:        slackStngs.ChannelId,
+				ChannelName:      slackStngs.ChannelName,
+				OrganizationId:   slackStngs.OrganizationId,
+			},
 		}
 		messageJson, _ := json.Marshal(output)
 		err = rawrepo.RawThreadMessages_Save(ctx, s.getDb(slackStngs.Tenant), string(messageJson))
@@ -281,7 +316,7 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 		}
 	}
 
-	err = s.repositories.SlackSyncReposiotry.SaveSyncRun(ctx, slackStngs.Tenant, slackStngs.ChannelId, currentSyncTime)
+	err = s.repositories.SlackSyncSettingsRepository.SaveSyncRun(ctx, slackStngs, currentSyncTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -290,72 +325,62 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	return nil
 }
 
-func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDomain, userId, orgId, token string) error {
+func (s *syncFromSourceService) syncUser(ctx context.Context, tenant, tenantDomain, userId, orgId, teamId, token string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncFromSourceService.syncUser")
 	defer span.Finish()
 	span.SetTag("tenant", tenant)
-	span.LogFields(log.String("tenantDomain", tenantDomain), log.String("slackUserId", userId), log.String("organizationId", orgId))
+	span.LogFields(log.String("userId", userId), log.String("orgId", orgId), log.String("tenantDomain", tenantDomain))
 
-	cachedSlackUser, ok := s.cache.GetSlackUser(tenant, userId)
-	var okContactCheck = true
-	if ok && cachedSlackUser.UserType == caches.UserType_Contact {
-		_, okContactCheck = s.cache.GetSlackUserAsContactForOrg(orgId, userId)
-	}
-	if !ok || !okContactCheck {
+	_, ok := s.cache.GetSlackUser(tenant, userId)
+	if !ok {
 		slackUser, err := s.slackService.FetchUserInfo(ctx, token, userId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Failed to fetch user info for user %s: %v", userId, err)
+			s.log.Errorf("Failed to fetch slack user info for user id %s: %v", userId, err)
 			return err
 		}
 		if slackUser == nil {
 			span.LogFields(log.String("output", "slack user not found"))
 			return nil
 		}
-		if slackUser.Deleted || slackUser.IsBot || slackUser.IsAppUser {
-			// save as non-user
-			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
-				UserType: caches.UserType_NonUser,
-				Name:     slackUser.Name,
-			})
-			span.LogFields(log.String("output", "slack user is not real user"))
-			return nil
-		}
-		if strings.HasSuffix(slackUser.Profile.Email, tenantDomain) {
-			// save as user
-			userJson, err := json.Marshal(slackUser)
-			err = rawrepo.RawUsers_Save(ctx, s.getDb(tenant), string(userJson))
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
-				UserType: caches.UserType_User,
-				Name:     slackUser.Profile.RealNameNormalized,
-			})
-			span.LogFields(log.String("output", "slack user is user"))
-		} else {
-			// save as contact
-			output := struct {
-				slack.User
-				OpenlineOrganizationId string `json:"openline_organization_id"`
-			}{
-				User:                   *slackUser,
-				OpenlineOrganizationId: orgId,
-			}
-			userJson, err := json.Marshal(output)
 
-			err = rawrepo.RawContacts_Save(ctx, s.getDb(tenant), string(userJson))
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
+		output := struct {
+			slack.User
+			UserOpenlineFields `json:"openline_fields"`
+		}{
+			User: *slackUser,
+			UserOpenlineFields: UserOpenlineFields{
+				TenantDomain:   tenantDomain,
+				OrganizationId: orgId,
+				TenantTeamId:   teamId,
+			},
+		}
+		userJson, err := json.Marshal(output)
+
+		err = rawrepo.RawUsers_Save(ctx, s.getDb(tenant), string(userJson))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if slackUser.Deleted {
 			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
-				UserType: caches.UserType_Contact,
-				Name:     slackUser.Profile.RealNameNormalized,
+				Deleted: true,
+				Bot:     false,
+				Name:    slackUser.Name,
 			})
-			s.cache.SetSlackUserAsContactForOrg(orgId, userId, string(caches.UserType_Contact))
-			span.LogFields(log.String("output", "slack user is contact"))
+		} else if slackUser.IsBot || slackUser.IsAppUser {
+			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
+				Deleted: false,
+				Bot:     true,
+				Name:    slackUser.RealName,
+			})
+		} else {
+			s.cache.SetSlackUser(tenant, userId, caches.SlackUser{
+				Deleted: false,
+				Bot:     false,
+				Name:    slackUser.Profile.RealNameNormalized,
+			})
 		}
 	}
 	return nil
@@ -398,10 +423,6 @@ func (s *syncFromSourceService) autoMigrateRawTables(tenant string) error {
 	if err != nil {
 		return err
 	}
-	err = rawrepo.RawContacts_AutoMigrate(s.getDb(tenant))
-	if err != nil {
-		return err
-	}
 	err = rawrepo.RawChannelMessages_AutoMigrate(s.getDb(tenant))
 	if err != nil {
 		return err
@@ -415,7 +436,7 @@ func (s *syncFromSourceService) autoMigrateRawTables(tenant string) error {
 
 func (s *syncFromSourceService) isRealUser(tenant, userId string) bool {
 	user, _ := s.cache.GetSlackUser(tenant, userId)
-	return user.UserType == caches.UserType_User || user.UserType == caches.UserType_Contact
+	return !user.Bot && !user.Deleted
 }
 
 func (s *syncFromSourceService) getUserName(tenant, userId string) string {

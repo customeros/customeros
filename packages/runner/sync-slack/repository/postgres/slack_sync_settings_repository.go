@@ -13,14 +13,14 @@ import (
 type SlackSyncSettingsRepository interface {
 	AutoMigrate() error
 	GetChannelsToSync(ctx context.Context) ([]entity.SlackSyncSettings, error)
-	SaveSyncRun(ctx context.Context, tenant, channelId string, at time.Time) error
+	SaveSyncRun(ctx context.Context, slackStngs entity.SlackSyncSettings, at time.Time) error
 }
 
 type slackSyncRepository struct {
 	db *gorm.DB
 }
 
-func NewSlackSyncRepository(db *gorm.DB) SlackSyncSettingsRepository {
+func NewSlackSyncSettingsRepository(db *gorm.DB) SlackSyncSettingsRepository {
 	return &slackSyncRepository{
 		db: db,
 	}
@@ -48,19 +48,27 @@ func (r *slackSyncRepository) GetChannelsToSync(ctx context.Context) ([]entity.S
 
 }
 
-func (r *slackSyncRepository) SaveSyncRun(ctx context.Context, tenant, channelId string, at time.Time) error {
+func (r *slackSyncRepository) SaveSyncRun(ctx context.Context, slackStngs entity.SlackSyncSettings, at time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackSyncSettingsRepository.SaveSyncRun")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(span)
-	span.LogFields(log.String("tenant", tenant), log.String("channelId", channelId), log.Object("at", at))
+	span.LogFields(log.Object("slackSettings", slackStngs), log.Object("at", at))
 
 	slackSync := entity.SlackSyncSettings{
-		Tenant:    tenant,
-		ChannelId: channelId,
+		Tenant:    slackStngs.Tenant,
+		ChannelId: slackStngs.ChannelId,
 	}
 	r.db.FirstOrCreate(&slackSync, slackSync)
+
 	slackSync.LastSyncAt = &at
+	if slackStngs.TeamId != "" {
+		slackSync.TeamId = slackStngs.TeamId
+	}
+	if slackStngs.ChannelName != "" {
+		slackSync.ChannelName = slackStngs.ChannelName
+	}
+
 	return r.db.Model(&slackSync).
-		Where(&entity.SlackSyncSettings{Tenant: tenant, ChannelId: channelId}).
+		Where(&entity.SlackSyncSettings{Tenant: slackStngs.Tenant, ChannelId: slackStngs.ChannelId}).
 		Save(&slackSync).Error
 }
