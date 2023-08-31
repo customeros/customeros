@@ -4,6 +4,10 @@ import * as Types from '../../../types/__generated__/graphql.types';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
+  InteractionEventParticipantFragmentFragmentDoc,
+  MeetingParticipantFragmentFragmentDoc,
+} from './participantsFragment.generated';
+import {
   useQuery,
   useInfiniteQuery,
   UseQueryOptions,
@@ -137,7 +141,14 @@ export type GetTimelineQuery = {
                       } | null;
                     };
                   }
-                | { __typename?: 'OrganizationParticipant' }
+                | {
+                    __typename: 'OrganizationParticipant';
+                    organizationParticipant: {
+                      __typename?: 'Organization';
+                      id: string;
+                      name: string;
+                    };
+                  }
                 | { __typename?: 'PhoneNumberParticipant' }
                 | {
                     __typename: 'UserParticipant';
@@ -227,8 +238,15 @@ export type GetTimelineQuery = {
                   } | null;
                 };
               }
-            | { __typename?: 'OrganizationParticipant' }
-            | { __typename?: 'PhoneNumberParticipant' }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | { __typename: 'PhoneNumberParticipant' }
             | {
                 __typename: 'UserParticipant';
                 userParticipant: {
@@ -245,10 +263,11 @@ export type GetTimelineQuery = {
                 __typename: 'ContactParticipant';
                 contactParticipant: {
                   __typename?: 'Contact';
-                  name?: string | null;
                   id: string;
+                  name?: string | null;
                   firstName?: string | null;
                   lastName?: string | null;
+                  profilePhotoUrl?: string | null;
                 };
               }
             | {
@@ -293,16 +312,23 @@ export type GetTimelineQuery = {
                   } | null;
                 };
               }
-            | { __typename: 'OrganizationParticipant' }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
             | { __typename: 'PhoneNumberParticipant' }
             | {
                 __typename: 'UserParticipant';
-                type?: string | null;
                 userParticipant: {
                   __typename?: 'User';
                   id: string;
                   firstName: string;
                   lastName: string;
+                  profilePhotoUrl?: string | null;
                 };
               }
           >;
@@ -322,34 +348,64 @@ export type GetTimelineQuery = {
           attendedBy: Array<
             | {
                 __typename: 'ContactParticipant';
-                type?: string | null;
                 contactParticipant: {
                   __typename?: 'Contact';
                   id: string;
-                  prefix?: string | null;
+                  name?: string | null;
                   firstName?: string | null;
-                  description?: string | null;
-                  timezone?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
                 };
               }
-            | { __typename?: 'OrganizationParticipant' }
-            | { __typename?: 'UserParticipant' }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
           >;
           createdBy: Array<
             | {
                 __typename: 'ContactParticipant';
-                type?: string | null;
                 contactParticipant: {
                   __typename?: 'Contact';
                   id: string;
-                  prefix?: string | null;
+                  name?: string | null;
                   firstName?: string | null;
-                  description?: string | null;
-                  timezone?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
                 };
               }
-            | { __typename?: 'OrganizationParticipant' }
-            | { __typename?: 'UserParticipant' }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
           >;
           note: Array<{ __typename?: 'Note'; id: string; html: string }>;
         }
@@ -398,118 +454,12 @@ export const GetTimelineDocument = `
           content
         }
         sentBy {
-          ... on EmailParticipant {
-            __typename
-            type
-            emailParticipant {
-              email
-              id
-              contacts {
-                id
-                name
-                firstName
-                lastName
-              }
-              users {
-                id
-                firstName
-                lastName
-              }
-              organizations {
-                id
-                name
-              }
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            contactParticipant {
-              id
-              name
-              firstName
-              lastName
-              profilePhotoUrl
-            }
-          }
-          ... on JobRoleParticipant {
-            __typename
-            jobRoleParticipant {
-              id
-              contact {
-                id
-                name
-                firstName
-                lastName
-                profilePhotoUrl
-              }
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            userParticipant {
-              id
-              firstName
-              lastName
-              profilePhotoUrl
-            }
-          }
+          __typename
+          ...InteractionEventParticipantFragment
         }
         sentTo {
           __typename
-          ... on EmailParticipant {
-            __typename
-            type
-            emailParticipant {
-              email
-              contacts {
-                id
-                name
-                firstName
-                lastName
-              }
-              users {
-                id
-                firstName
-                lastName
-              }
-              organizations {
-                id
-                name
-              }
-              id
-            }
-          }
-          ... on JobRoleParticipant {
-            __typename
-            jobRoleParticipant {
-              id
-              contact {
-                id
-                name
-                firstName
-                lastName
-                profilePhotoUrl
-              }
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            contactParticipant {
-              name
-              id
-              firstName
-              lastName
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            type
-            userParticipant {
-              id
-              firstName
-              lastName
-            }
-          }
+          ...InteractionEventParticipantFragment
         }
         interactionSession {
           name
@@ -543,61 +493,7 @@ export const GetTimelineDocument = `
                 content
               }
               sentBy {
-                ... on EmailParticipant {
-                  __typename
-                  type
-                  emailParticipant {
-                    email
-                    id
-                    contacts {
-                      id
-                      name
-                      firstName
-                      lastName
-                    }
-                    users {
-                      id
-                      firstName
-                      lastName
-                    }
-                    organizations {
-                      id
-                      name
-                    }
-                  }
-                }
-                ... on ContactParticipant {
-                  __typename
-                  contactParticipant {
-                    id
-                    name
-                    firstName
-                    lastName
-                    profilePhotoUrl
-                  }
-                }
-                ... on JobRoleParticipant {
-                  __typename
-                  jobRoleParticipant {
-                    id
-                    contact {
-                      id
-                      name
-                      firstName
-                      lastName
-                      profilePhotoUrl
-                    }
-                  }
-                }
-                ... on UserParticipant {
-                  __typename
-                  userParticipant {
-                    id
-                    firstName
-                    lastName
-                    profilePhotoUrl
-                  }
-                }
+                ...InteractionEventParticipantFragment
               }
             }
           }
@@ -612,30 +508,10 @@ export const GetTimelineDocument = `
         startedAt
         endedAt
         attendedBy {
-          ... on ContactParticipant {
-            __typename
-            type
-            contactParticipant {
-              id
-              prefix
-              firstName
-              description
-              timezone
-            }
-          }
+          ...MeetingParticipantFragment
         }
         createdBy {
-          ... on ContactParticipant {
-            __typename
-            type
-            contactParticipant {
-              id
-              prefix
-              firstName
-              description
-              timezone
-            }
-          }
+          ...MeetingParticipantFragment
         }
         note {
           id
@@ -647,7 +523,8 @@ export const GetTimelineDocument = `
     }
   }
 }
-    `;
+    ${InteractionEventParticipantFragmentFragmentDoc}
+${MeetingParticipantFragmentFragmentDoc}`;
 export const useGetTimelineQuery = <TData = GetTimelineQuery, TError = unknown>(
   client: GraphQLClient,
   variables: GetTimelineQueryVariables,

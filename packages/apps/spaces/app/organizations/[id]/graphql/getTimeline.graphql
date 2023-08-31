@@ -37,118 +37,12 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         }
 
         sentBy {
-          ... on EmailParticipant {
-            __typename
-            type
-            emailParticipant {
-              email
-              id
-              contacts {
-                id
-                name
-                firstName
-                lastName
-              }
-              users {
-                id
-                firstName
-                lastName
-              }
-              organizations {
-                id
-                name
-              }
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            contactParticipant {
-              id
-              name
-              firstName
-              lastName
-              profilePhotoUrl
-            }
-          }
-          ... on JobRoleParticipant {
-            __typename
-            jobRoleParticipant {
-              id
-              contact {
-                id
-                name
-                firstName
-                lastName
-                profilePhotoUrl
-              }
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            userParticipant {
-              id
-              firstName
-              lastName
-              profilePhotoUrl
-            }
-          }
+          __typename
+        ... InteractionEventParticipantFragment
         }
         sentTo {
           __typename
-          ... on EmailParticipant {
-            __typename
-            type
-            emailParticipant {
-              email
-              contacts {
-                id
-                name
-                firstName
-                lastName
-              }
-              users {
-                id
-                firstName
-                lastName
-              }
-              organizations {
-                id
-                name
-              }
-              id
-            }
-          }
-          ... on JobRoleParticipant {
-            __typename
-            jobRoleParticipant {
-              id
-              contact {
-                id
-                name
-                firstName
-                lastName
-                profilePhotoUrl
-              }
-            }
-          }
-          ... on ContactParticipant {
-            __typename
-            contactParticipant {
-              name
-              id
-              firstName
-              lastName
-            }
-          }
-          ... on UserParticipant {
-            __typename
-            type
-            userParticipant {
-              id
-              firstName
-              lastName
-            }
-          }
+          ...InteractionEventParticipantFragment
         }
         interactionSession {
           name
@@ -183,61 +77,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
               }
 
               sentBy {
-                ... on EmailParticipant {
-                  __typename
-                  type
-                  emailParticipant {
-                    email
-                    id
-                    contacts {
-                      id
-                      name
-                      firstName
-                      lastName
-                    }
-                    users {
-                      id
-                      firstName
-                      lastName
-                    }
-                    organizations {
-                      id
-                      name
-                    }
-                  }
-                }
-                ... on ContactParticipant {
-                  __typename
-                  contactParticipant {
-                    id
-                    name
-                    firstName
-                    lastName
-                    profilePhotoUrl
-                  }
-                }
-                ... on JobRoleParticipant {
-                  __typename
-                  jobRoleParticipant {
-                    id
-                    contact {
-                      id
-                      name
-                      firstName
-                      lastName
-                      profilePhotoUrl
-                    }
-                  }
-                }
-                ... on UserParticipant {
-                  __typename
-                  userParticipant {
-                    id
-                    firstName
-                    lastName
-                    profilePhotoUrl
-                  }
-                }
+                ... InteractionEventParticipantFragment
               }
             }
           }
@@ -252,30 +92,10 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         startedAt
         endedAt
         attendedBy {
-          ... on ContactParticipant {
-            __typename
-            type
-            contactParticipant {
-              id
-              prefix
-              firstName
-              description
-              timezone
-            }
-          }
+          ... MeetingParticipantFragment
         }
         createdBy {
-          ... on ContactParticipant {
-            __typename
-            type
-            contactParticipant {
-              id
-              prefix
-              firstName
-              description
-              timezone
-            }
-          }
+          ... MeetingParticipantFragment
         }
         note {
           id
