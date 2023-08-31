@@ -5,7 +5,8 @@ import "time"
 type SlackSyncSettings struct {
 	Tenant         string     `gorm:"primary_key;type:varchar(255)"`
 	ChannelId      string     `gorm:"primary_key;varchar(50)"`
-	ChannelName    string     `gorm:"primary_key;varchar(1000)"`
+	ChannelName    string     `gorm:"varchar(1000)"`
+	TeamId         string     `gorm:"varchar(50)"`
 	SlackAccess    bool       `gorm:"column:slack_access;not null;default:true"`
 	OrganizationId string     `gorm:"varchar(50)"`
 	Enabled        bool       `gorm:"column:enabled;not null;default:false"`

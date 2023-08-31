@@ -17,7 +17,7 @@ import (
 
 const (
 	UsersTableSuffix           = "users"
-	ContactsTableSuffix        = "contacts"
+	ContactsTableSuffix        = "users"
 	ChannelMessagesTableSuffix = "channel_messages"
 	ThreadMessagesTableSuffix  = "thread_messages"
 )
@@ -99,7 +99,7 @@ func (s *slackDataService) GetUsersForSync(ctx context.Context, batchSize int, r
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		rawRecords, err := repository.GetOpenlineUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range rawRecords {
@@ -131,7 +131,7 @@ func (s *slackDataService) GetContactsForSync(ctx context.Context, batchSize int
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		rawRecords, err := repository.GetOpenlineUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range rawRecords {

@@ -87,7 +87,7 @@ func (s *userSyncService) syncUser(ctx context.Context, userInput entity.UserDat
 	userInput.Normalize()
 
 	if userInput.Skip {
-		if err := dataService.MarkProcessed(ctx, userInput.SyncId, runId, true, true, "Input user marked for skip"); err != nil {
+		if err := dataService.MarkProcessed(ctx, userInput.SyncId, runId, true, true, userInput.SkipReason); err != nil {
 			*failed++
 			span.LogFields(log.Bool("failedSync", true))
 			return
