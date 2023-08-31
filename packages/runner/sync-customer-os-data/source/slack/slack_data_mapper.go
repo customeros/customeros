@@ -169,7 +169,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 			UserNamesById  map[string]string `json:"channel_user_names,omitempty"`
 			ChannelId      string            `json:"channel_id,omitempty"`
 			ChannelName    string            `json:"channel_name,omitempty"`
-		}
+		} `json:"openline_fields,omitempty"`
 	}
 
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
