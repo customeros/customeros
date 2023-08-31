@@ -1,0 +1,5 @@
+mutation updateMeeting($meetingId: ID!, $meeting: MeetingUpdateInput!) {
+  meeting_Update(meetingId: $meetingId, meeting: $meeting) {
+    id
+  }
+}

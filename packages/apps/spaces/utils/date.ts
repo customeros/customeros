@@ -16,6 +16,8 @@ export class DateTimeUtils {
   public static shortWeekday = 'iiiiii'; // Output: "We"
   public static longWeekday = 'iiii'; // Output: "Wednesday"
   public static defaultTimeFormatString = 'HH:mm';
+  public static dateTimeWithGMT = 'd MMM yyyy • Kbbb (z)'; // Output: "19 Jun 2023 • 2pm GMT"
+  public static timeWithGMT = 'Kbbb (z)'; // Output: "2pm GMT"
   public static usaTimeFormatString = 'Kbbb';
   private static defaultDurationFormat = { format: ['minutes'] };
 
