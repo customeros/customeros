@@ -4,7 +4,7 @@ import {
   isBefore,
   isSameDay as isSameDayDateFns,
 } from 'date-fns';
-import { format } from 'date-fns-tz';
+import { format, utcToZonedTime } from 'date-fns-tz';
 
 export class DateTimeUtils {
   private static defaultFormatString = "EEE dd MMM - HH'h' mm zzz"; // Output: "Wed 08 Mar - 14h30CET"
@@ -24,6 +24,7 @@ export class DateTimeUtils {
   private static getDate(date: string | number): Date {
     return new Date(new Date(date).toUTCString());
   }
+
   public static format(date: string | number, formatString?: string): string {
     const formatStr = formatString || this.defaultFormatString;
 
@@ -59,6 +60,7 @@ export class DateTimeUtils {
 
     return { hours, minutes, seconds };
   }
+
   public static formatSecondsDuration(
     seconds: number,
     options?: { format: string[] },
@@ -70,7 +72,21 @@ export class DateTimeUtils {
     const duration = this.toHoursAndMinutes(seconds);
     return formatDurationDateFns(duration, options);
   }
+
   public static isSameDay(dateLeft: string, dateRight: string): boolean {
     return isSameDayDateFns(this.getDate(dateLeft), this.getDate(dateRight));
+  }
+
+  public static convertToTimeZone(
+    date: string | Date,
+    formatString: string,
+    timeZone?: string,
+  ) {
+    const _date = typeof date === 'string' ? new Date(date) : date;
+    const zonedDateStr = timeZone ? utcToZonedTime(date, timeZone ?? '') : null;
+
+    return format(zonedDateStr ?? _date, formatString, {
+      timeZone: timeZone || undefined,
+    });
   }
 }

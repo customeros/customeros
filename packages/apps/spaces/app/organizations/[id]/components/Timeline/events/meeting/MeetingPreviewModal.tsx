@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { convert } from 'html-to-text';
 import { useForm } from 'react-inverted-form';
-import { utcToZonedTime, format } from 'date-fns-tz';
 
 import { Icons } from '@ui/media/Icon';
 import { Flex } from '@ui/layout/Flex';
@@ -23,6 +22,7 @@ import { Card, CardBody, CardHeader, CardFooter } from '@ui/presentation/Card';
 import { useUpdateMeetingMutation } from '@organization/graphql/updateMeeting.generated';
 
 import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { getParticipantEmailOrName } from '../utils';
 import { MeetingIcon, HubspotIcon, CalcomIcon } from './icons';
 
 export const MeetingPreviewModal = () => {
@@ -57,30 +57,24 @@ export const MeetingPreviewModal = () => {
     DateTimeUtils.usaTimeFormatString,
   )}`;
 
-  const zonedStartDateStr = creatorTimeZone
-    ? utcToZonedTime(event?.startedAt, creatorTimeZoneCode)
-    : null;
-  const zonedEndDateStr = creatorTimeZone
-    ? utcToZonedTime(event?.endedAt, creatorTimeZoneCode)
-    : null;
-
   const zoned = (() => {
-    if (!zonedStartDateStr) return null;
-    const start = format(
-      zonedStartDateStr,
-      !zonedEndDateStr
+    if (!event?.startedAt) return null;
+
+    const start = DateTimeUtils.convertToTimeZone(
+      event?.startedAt,
+      !event?.endedAt
         ? DateTimeUtils.timeWithGMT
         : DateTimeUtils.usaTimeFormatString,
-      {
-        timeZone: creatorTimeZoneCode || undefined,
-      },
+      creatorTimeZoneCode,
     );
 
-    if (!zonedEndDateStr) return start;
+    if (!event?.endedAt) return start;
 
-    const end = format(zonedEndDateStr, DateTimeUtils.timeWithGMT, {
-      timeZone: creatorTimeZoneCode || undefined,
-    });
+    const end = DateTimeUtils.convertToTimeZone(
+      event?.endedAt,
+      DateTimeUtils.timeWithGMT,
+      creatorTimeZoneCode,
+    );
 
     return `${start} - ${end}`;
   })();
@@ -94,13 +88,7 @@ export const MeetingPreviewModal = () => {
   })();
 
   const participants = event?.attendedBy
-    ?.map(
-      (c) =>
-        c.__typename === 'ContactParticipant' &&
-        (c.contactParticipant?.emails?.[0]?.email ||
-          c.contactParticipant?.firstName ||
-          'unknown'),
-    )
+    ?.map(getParticipantEmailOrName)
     .filter((c) => c !== owner)
     .sort((a, b) => {
       if (a === 'unknown') return 1;
@@ -227,7 +215,9 @@ export const MeetingPreviewModal = () => {
                   When
                 </Text>
                 <Tooltip
-                  label={`Organizer's time: ${zoned ?? 'unknown'}`}
+                  label={`Organizer's time: ${
+                    creatorTimeZone ? zoned : 'unknown'
+                  }`}
                   fontSize='xs'
                   placement='bottom'
                 >

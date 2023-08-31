@@ -98,6 +98,7 @@ export type MeetingParticipantFragmentContactParticipantFragment = {
     firstName?: string | null;
     lastName?: string | null;
     profilePhotoUrl?: string | null;
+    timezone?: string | null;
     emails: Array<{
       __typename?: 'Email';
       id: string;
@@ -223,6 +224,7 @@ export const MeetingParticipantFragmentFragmentDoc = `
       firstName
       lastName
       profilePhotoUrl
+      timezone
       emails {
         id
         email

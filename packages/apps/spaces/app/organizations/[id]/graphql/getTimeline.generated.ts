@@ -355,6 +355,7 @@ export type GetTimelineQuery = {
                   firstName?: string | null;
                   lastName?: string | null;
                   profilePhotoUrl?: string | null;
+                  timezone?: string | null;
                   emails: Array<{
                     __typename?: 'Email';
                     id: string;
@@ -407,6 +408,7 @@ export type GetTimelineQuery = {
                   firstName?: string | null;
                   lastName?: string | null;
                   profilePhotoUrl?: string | null;
+                  timezone?: string | null;
                   emails: Array<{
                     __typename?: 'Email';
                     id: string;

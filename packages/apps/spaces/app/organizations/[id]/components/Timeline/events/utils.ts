@@ -7,8 +7,7 @@ import {
 } from '@graphql/types';
 import { getName } from '@spaces/utils/getParticipantsName';
 
-
-export const getParticipantName = (
+export const getParticipantEmailOrName = (
   participant:
     | ContactParticipant
     | UserParticipant
@@ -16,23 +15,27 @@ export const getParticipantName = (
     | OrganizationParticipant,
 ): string => {
   let participantT;
-  if ((participant as ContactParticipant)?.contactParticipant) {
-    participantT = (participant as ContactParticipant).contactParticipant;
+
+  switch (participant?.__typename) {
+    case 'ContactParticipant':
+      participantT = participant.contactParticipant;
+      break;
+    case 'UserParticipant':
+      participantT = participant.userParticipant;
+      break;
+    case 'JobRoleParticipant':
+      participantT = participant.jobRoleParticipant?.contact;
+      break;
+    case 'OrganizationParticipant':
+      participantT = participant.organizationParticipant;
+      break;
+    default:
+      participantT = null;
   }
-  if ((participant as UserParticipant)?.userParticipant) {
-    participantT = (participant as UserParticipant).userParticipant;
-  }
-  if ((participant as JobRoleParticipant)?.jobRoleParticipant?.contact) {
-    participantT = (participant as JobRoleParticipant).jobRoleParticipant
-      ?.contact;
-  }
-  if ((participant as OrganizationParticipant)?.organizationParticipant) {
-    participantT = (participant as OrganizationParticipant)
-      .organizationParticipant;
-  }
+
   if (!participantT) return '';
 
-  return getName(participantT);
+  return participantT.emails?.[0]?.email || getName(participantT);
 };
 
 export const getParticipants = (
@@ -40,7 +43,7 @@ export const getParticipants = (
 ): (string | string[] | number)[] => {
   if (data?.attendedBy?.length) {
     const fullArray = data?.attendedBy
-      ?.map((participant) => getParticipantName(participant))
+      ?.map((participant) => getParticipantEmailOrName(participant))
       .filter(Boolean);
 
     if (!data?.note?.[0]?.html || !data?.agenda)

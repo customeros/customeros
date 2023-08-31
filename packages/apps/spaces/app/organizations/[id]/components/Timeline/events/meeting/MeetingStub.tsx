@@ -8,7 +8,7 @@ import { Text } from '@ui/typography/Text';
 import { Icons } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
 
-import { getParticipants, getParticipantName } from '../utils';
+import { getParticipants, getParticipantEmailOrName } from '../utils';
 import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { MeetingIcon } from './icons';
 
@@ -17,8 +17,8 @@ interface MeetingStubProps {
 }
 
 export const MeetingStub = ({ data }: MeetingStubProps) => {
-  const owner = getParticipantName(data.createdBy[0]);
-  const firstParticipant = getParticipantName(data.attendedBy?.[0]);
+  const owner = getParticipantEmailOrName(data.createdBy[0]);
+  const firstParticipant = getParticipantEmailOrName(data.attendedBy?.[0]);
   const [participants, remaining] = getParticipants(data);
   const { openModal } = useTimelineEventPreviewContext();
 
