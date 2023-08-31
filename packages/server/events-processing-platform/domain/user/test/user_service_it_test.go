@@ -63,6 +63,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 		SourceOfTruth:   "N/A",
 		Internal:        true,
 		ProfilePhotoUrl: "https://www.google.com",
+		Timezone:        "America/Los_Angeles",
 		CreatedAt:       timestamppb.New(timeNow),
 		UpdatedAt:       timestamppb.New(timeNow),
 	})
@@ -92,6 +93,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 	require.Equal(t, "ziggy", eventData.Tenant)
 	require.True(t, eventData.Internal)
 	require.Equal(t, "https://www.google.com", eventData.ProfilePhotoUrl)
+	require.Equal(t, "America/Los_Angeles", eventData.Timezone)
 }
 
 func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {

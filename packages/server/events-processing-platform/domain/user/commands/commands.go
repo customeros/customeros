@@ -15,8 +15,8 @@ type UpsertUserCommand struct {
 	UpdatedAt  *time.Time
 }
 
-func UpsertUserCommandToUserDto(command *UpsertUserCommand) *models.UserDto {
-	return &models.UserDto{
+func UpsertUserCommandToUserDto(command *UpsertUserCommand) *models.UserFields {
+	return &models.UserFields{
 		ID:             command.ObjectID,
 		Tenant:         command.Tenant,
 		UserCoreFields: command.CoreFields,

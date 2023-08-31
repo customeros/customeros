@@ -13,6 +13,7 @@ type User struct {
 	LastName        string                     `json:"lastName"`
 	Internal        bool                       `json:"internal"`
 	ProfilePhotoUrl string                     `json:"profilePhotoUrl"`
+	Timezone        string                     `json:"timezone"`
 	Source          common_models.Source       `json:"source"`
 	CreatedAt       time.Time                  `json:"createdAt"`
 	UpdatedAt       time.Time                  `json:"updatedAt"`

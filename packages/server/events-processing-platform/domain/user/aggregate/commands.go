@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (a *UserAggregate) CreateUser(ctx context.Context, userDto *models.UserDto) error {
+func (a *UserAggregate) CreateUser(ctx context.Context, userDto *models.UserFields) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.CreateUser")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", userDto.Tenant), log.String("AggregateID", a.GetID()))
@@ -32,7 +32,7 @@ func (a *UserAggregate) CreateUser(ctx context.Context, userDto *models.UserDto)
 	return a.Apply(event)
 }
 
-func (a *UserAggregate) UpdateUser(ctx context.Context, userDto *models.UserDto) error {
+func (a *UserAggregate) UpdateUser(ctx context.Context, userDto *models.UserFields) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.UpdateUser")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", userDto.Tenant), log.String("AggregateID", a.GetID()))

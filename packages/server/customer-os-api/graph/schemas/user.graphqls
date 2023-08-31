@@ -43,6 +43,7 @@ type User {
     """
     lastName: String!
     internal: Boolean!
+    timezone: String
     profilePhotoUrl: String
 
     player: Player! @goField(forceResolver: true)
@@ -114,6 +115,7 @@ input UserInput {
     **Required**
     """
     lastName: String!
+    timezone: String
 
     """
     The email address of the customerOS user. 
@@ -155,6 +157,7 @@ input UserUpdateInput {
     **Required**
     """
     lastName: String!
+    timezone: String
 }
 
 type CustomerUser {

@@ -27,9 +27,10 @@ type UserCreateEvent struct {
 	UpdatedAt       time.Time `json:"updatedAt"`
 	Internal        bool      `json:"internal"`
 	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
+	Timezone        string    `json:"timezone"`
 }
 
-func NewUserCreateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewUserCreateEvent(aggregate eventstore.Aggregate, userDto *models.UserFields, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UserCreateEvent{
 		Tenant:          userDto.Tenant,
 		Name:            userDto.UserCoreFields.Name,
@@ -37,6 +38,7 @@ func NewUserCreateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto,
 		LastName:        userDto.UserCoreFields.LastName,
 		Internal:        userDto.UserCoreFields.Internal,
 		ProfilePhotoUrl: userDto.UserCoreFields.ProfilePhotoUrl,
+		Timezone:        userDto.UserCoreFields.Timezone,
 		Source:          userDto.Source.Source,
 		SourceOfTruth:   userDto.Source.SourceOfTruth,
 		AppSource:       userDto.Source.AppSource,
@@ -64,15 +66,17 @@ type UserUpdateEvent struct {
 	LastName        string    `json:"lastName"`
 	Internal        bool      `json:"internal"`
 	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
+	Timezone        string    `json:"timezone"`
 }
 
-func NewUserUpdateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto, updatedAt time.Time) (eventstore.Event, error) {
+func NewUserUpdateEvent(aggregate eventstore.Aggregate, userDto *models.UserFields, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UserUpdateEvent{
 		Name:            userDto.UserCoreFields.Name,
 		FirstName:       userDto.UserCoreFields.FirstName,
 		LastName:        userDto.UserCoreFields.LastName,
 		Internal:        userDto.UserCoreFields.Internal,
 		ProfilePhotoUrl: userDto.UserCoreFields.ProfilePhotoUrl,
+		Timezone:        userDto.UserCoreFields.Timezone,
 		Tenant:          userDto.Tenant,
 		UpdatedAt:       updatedAt,
 		SourceOfTruth:   userDto.Source.SourceOfTruth,

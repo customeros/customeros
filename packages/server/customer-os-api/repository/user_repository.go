@@ -49,20 +49,22 @@ func (r *userRepository) Create(parentCtx context.Context, tx neo4j.ManagedTrans
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET u.firstName=$firstName, " +
-		"				u.lastName=$lastName, " +
-		"				u.createdAt=$now, " +
-		"				u.updatedAt=$now, " +
-		" 				u.source=$source, " +
-		"				u.sourceOfTruth=$sourceOfTruth, " +
-		"				u.appSource=$appSource, " +
-		"				u.roles = $roles, " +
-		"				u:%s" +
-		" RETURN u"
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+			MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) 
+		 	ON CREATE SET u.firstName=$firstName, 
+						u.lastName=$lastName, 
+						u.createdAt=$now, 
+						u.updatedAt=$now, 
+		 				u.source=$source, 
+						u.sourceOfTruth=$sourceOfTruth, 
+						u.appSource=$appSource, 
+						u.roles = $roles, 
+						u.timezone = $timezone, 
+						u:User_%s
+	 		RETURN u`, tenant)
+	span.LogFields(log.String("query", query))
 
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "User_"+tenant),
+	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
 			"tenant":        tenant,
 			"firstName":     entity.FirstName,
@@ -71,6 +73,7 @@ func (r *userRepository) Create(parentCtx context.Context, tx neo4j.ManagedTrans
 			"sourceOfTruth": entity.SourceOfTruth,
 			"appSource":     entity.AppSource,
 			"roles":         entity.Roles,
+			"timezone":      entity.Timezone,
 			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
@@ -81,12 +84,14 @@ func (r *userRepository) Update(parentCtx context.Context, session neo4j.Session
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" SET 	u.firstName=$firstName, " +
-		"		u.lastName=$lastName, " +
-		"		u.updatedAt=datetime({timezone: 'UTC'}), " +
-		"		u.sourceOfTruth=$sourceOfTruth " +
-		" RETURN u"
+	query := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+		 	SET u.firstName=$firstName, 
+				u.lastName=$lastName, 
+				u.timezone=$timezone,
+				u.updatedAt=datetime({timezone: 'UTC'}), 
+				u.sourceOfTruth=$sourceOfTruth 
+		 	RETURN u`
+	span.LogFields(log.String("query", query))
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, query,
@@ -96,6 +101,7 @@ func (r *userRepository) Update(parentCtx context.Context, session neo4j.Session
 				"firstName":     entity.FirstName,
 				"lastName":      entity.LastName,
 				"sourceOfTruth": entity.SourceOfTruth,
+				"timezone":      entity.Timezone,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})

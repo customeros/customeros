@@ -70,6 +70,7 @@ func MapDbNodeToUserEntity(node dbtype.Node) *entity.UserEntity {
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
+		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
 	}
 }
 
