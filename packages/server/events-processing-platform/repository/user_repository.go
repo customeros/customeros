@@ -38,19 +38,20 @@ func (r *userRepository) CreateUser(ctx context.Context, userId string, event ev
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant}) 
-		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(p:User:User_%s {id:$id}) 
-		 ON CREATE SET 	p.name = $name,
-						p.firstName = $firstName,
-						p.lastName = $lastName,
-						p.source = $source,
-						p.sourceOfTruth = $sourceOfTruth,
-						p.appSource = $appSource,
-						p.createdAt = $createdAt,
-						p.updatedAt = $updatedAt,
-						p.internal = $internal,
-						p.profilePhotoUrl = $profilePhotoUrl,
-						p.syncedWithEventStore = true 
-		 ON MATCH SET 	p.syncedWithEventStore = true
+		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
+		 ON CREATE SET 	u.name = $name,
+						u.firstName = $firstName,
+						u.lastName = $lastName,
+						u.source = $source,
+						u.sourceOfTruth = $sourceOfTruth,
+						u.appSource = $appSource,
+						u.createdAt = $createdAt,
+						u.updatedAt = $updatedAt,
+						u.internal = $internal,
+						u.profilePhotoUrl = $profilePhotoUrl,
+						u.timezone = $timezone,
+						u.syncedWithEventStore = true 
+		 ON MATCH SET 	u.syncedWithEventStore = true
 `
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -68,6 +69,7 @@ func (r *userRepository) CreateUser(ctx context.Context, userId string, event ev
 				"updatedAt":       event.UpdatedAt,
 				"internal":        event.Internal,
 				"profilePhotoUrl": event.ProfilePhotoUrl,
+				"timezone":        event.Timezone,
 			})
 		return nil, err
 	})
@@ -83,15 +85,16 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(p:User:User_%s {id:$id})
-		 SET	p.name = $name,
-				p.firstName = $firstName,
-				p.lastName = $lastName,
-				p.sourceOfTruth = $sourceOfTruth,
-				p.updatedAt = $updatedAt,
-				p.internal = $internal,
-				p.profilePhotoUrl = $profilePhotoUrl,
-				p.syncedWithEventStore = true`
+	query := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id})
+		 SET	u.name = $name,
+				u.firstName = $firstName,
+				u.lastName = $lastName,
+				u.sourceOfTruth = $sourceOfTruth,
+				u.updatedAt = $updatedAt,
+				u.internal = $internal,
+				u.profilePhotoUrl = $profilePhotoUrl,
+				u.timezone = $timezone,
+				u.syncedWithEventStore = true`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
@@ -105,6 +108,7 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 				"updatedAt":       event.UpdatedAt,
 				"internal":        event.Internal,
 				"profilePhotoUrl": event.ProfilePhotoUrl,
+				"timezone":        event.Timezone,
 			})
 		return nil, err
 	})

@@ -39,6 +39,7 @@ func (s *userService) UpsertUser(ctx context.Context, request *user_grpc_service
 		LastName:        request.LastName,
 		Internal:        request.Internal,
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
+		Timezone:        request.Timezone,
 	}
 	command := commands.NewUpsertUserCommand(objectID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
 		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))

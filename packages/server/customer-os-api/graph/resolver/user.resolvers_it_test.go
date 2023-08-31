@@ -76,6 +76,7 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	require.Equal(t, createdUser.UpdatedAt, createdUser.CreatedAt)
 	require.Equal(t, "first", createdUser.FirstName)
 	require.Equal(t, "last", createdUser.LastName)
+	require.Equal(t, "Europe/London", *createdUser.Timezone)
 	require.False(t, createdUser.Internal)
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].Email)
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].RawEmail)
@@ -137,6 +138,7 @@ func TestMutationResolver_UserUpdate(t *testing.T) {
 	require.Equal(t, userId, updatedUser.ID)
 	require.Equal(t, "firstUpdated", updatedUser.FirstName)
 	require.Equal(t, "lastUpdated", updatedUser.LastName)
+	require.Equal(t, "America/Los_Angeles", *updatedUser.Timezone)
 	require.Equal(t, model.DataSourceOpenline, updatedUser.Source)
 
 	// Check the number of nodes and relationships in the Neo4j database

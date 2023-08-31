@@ -2,6 +2,7 @@ mutation {
   user_Create(input: {
     firstName: "first",
     lastName: "last",
+    timezone: "Europe/London",
     email: {
         email: "user@openline.ai",
         label: WORK,
@@ -17,6 +18,7 @@ mutation {
     id
     firstName
     lastName
+    timezone
     emails {
       email
       rawEmail

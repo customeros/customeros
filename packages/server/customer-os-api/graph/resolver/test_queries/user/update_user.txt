@@ -3,11 +3,13 @@ mutation UpdateUser($userId: ID!) {
     id: $userId
     firstName: "firstUpdated"
     lastName: "lastUpdated"
+    timezone: "America/Los_Angeles"
   }) {
     id
     firstName
     lastName
     source
     updatedAt
+    timezone
   }
 }

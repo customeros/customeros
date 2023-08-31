@@ -11,9 +11,10 @@ type UserCoreFields struct {
 	LastName        string
 	Internal        bool
 	ProfilePhotoUrl string
+	Timezone        string
 }
 
-type UserDto struct {
+type UserFields struct {
 	ID             string
 	Tenant         string
 	UserCoreFields UserCoreFields

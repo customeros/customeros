@@ -13,6 +13,7 @@ func MapUserInputToEntity(input model.UserInput) *entity.UserEntity {
 		LastName:      input.LastName,
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
+		Timezone:      utils.IfNotNilString(input.Timezone),
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &userEntity
@@ -23,6 +24,7 @@ func MapUserUpdateInputToEntity(input model.UserUpdateInput) *entity.UserEntity 
 		Id:            input.ID,
 		FirstName:     input.FirstName,
 		LastName:      input.LastName,
+		Timezone:      utils.IfNotNilString(input.Timezone),
 		SourceOfTruth: entity.DataSourceOpenline,
 		Source:        entity.DataSourceOpenline,
 	}
@@ -37,6 +39,7 @@ func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 		ID:              userEntity.Id,
 		FirstName:       userEntity.FirstName,
 		LastName:        userEntity.LastName,
+		Timezone:        utils.StringPtrNillable(userEntity.Timezone),
 		CreatedAt:       userEntity.CreatedAt,
 		UpdatedAt:       userEntity.UpdatedAt,
 		Source:          MapDataSourceToModel(userEntity.Source),

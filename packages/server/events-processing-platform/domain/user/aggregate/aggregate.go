@@ -73,6 +73,7 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	}
 	a.User.CreatedAt = eventData.CreatedAt
 	a.User.UpdatedAt = eventData.UpdatedAt
+	a.User.Timezone = eventData.Timezone
 	return nil
 }
 
@@ -88,6 +89,7 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 	a.User.LastName = eventData.LastName
 	a.User.Internal = eventData.Internal
 	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+	a.User.Timezone = eventData.Timezone
 	return nil
 }
 

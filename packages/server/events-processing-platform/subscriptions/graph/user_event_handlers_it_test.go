@@ -29,7 +29,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, myUserId.String())
 	curTime := time.Now().UTC()
 
-	event, err := user_events.NewUserCreateEvent(userAggregate, &models.UserDto{
+	event, err := user_events.NewUserCreateEvent(userAggregate, &models.UserFields{
 		ID:     myUserId.String(),
 		Tenant: tenantName,
 		UserCoreFields: models.UserCoreFields{
@@ -38,6 +38,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 			Name:            "Bob Dole",
 			Internal:        true,
 			ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+			Timezone:        "Europe/Paris",
 		},
 		Source: commonModels.Source{
 			Source:        "N/A",
@@ -70,6 +71,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(props, "profilePhotoUrl"))
+	require.Equal(t, "Europe/Paris", utils.GetStringPropOrEmpty(props, "timezone"))
 }
 
 func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
@@ -92,7 +94,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 
 	description := "I clean things"
 
-	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, &models.UserDto{
+	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, &models.UserFields{
 		ID:     myUserId.String(),
 		Tenant: tenantName,
 		UserCoreFields: models.UserCoreFields{
@@ -100,6 +102,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 			LastName:        "Dole",
 			Name:            "Bob Dole",
 			ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+			Timezone:        "Africa/Abidjan",
 		},
 		Source: commonModels.Source{
 			Source:        "N/A",
@@ -150,6 +153,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(userProps, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userProps, "syncedWithEventStore"))
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(userProps, "profilePhotoUrl"))
+	require.Equal(t, "Africa/Abidjan", utils.GetStringPropOrEmpty(userProps, "timezone"))
 
 	dbJobRoleNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, myJobRoleId.String())
 	if err != nil {
@@ -185,7 +189,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 
 	description := "I clean things"
 
-	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, &models.UserDto{
+	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, &models.UserFields{
 		ID:     myUserId.String(),
 		Tenant: tenantName,
 		UserCoreFields: models.UserCoreFields{
