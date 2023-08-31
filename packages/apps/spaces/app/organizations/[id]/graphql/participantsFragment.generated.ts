@@ -98,6 +98,13 @@ export type MeetingParticipantFragmentContactParticipantFragment = {
     firstName?: string | null;
     lastName?: string | null;
     profilePhotoUrl?: string | null;
+    emails: Array<{
+      __typename?: 'Email';
+      id: string;
+      email?: string | null;
+      rawEmail?: string | null;
+      primary: boolean;
+    }>;
   };
 };
 
@@ -107,6 +114,13 @@ export type MeetingParticipantFragmentOrganizationParticipantFragment = {
     __typename?: 'Organization';
     id: string;
     name: string;
+    emails: Array<{
+      __typename?: 'Email';
+      id: string;
+      email?: string | null;
+      rawEmail?: string | null;
+      primary: boolean;
+    }>;
   };
 };
 
@@ -118,6 +132,13 @@ export type MeetingParticipantFragmentUserParticipantFragment = {
     firstName: string;
     lastName: string;
     profilePhotoUrl?: string | null;
+    emails?: Array<{
+      __typename?: 'Email';
+      id: string;
+      email?: string | null;
+      rawEmail?: string | null;
+      primary: boolean;
+    }> | null;
   };
 };
 
@@ -202,6 +223,12 @@ export const MeetingParticipantFragmentFragmentDoc = `
       firstName
       lastName
       profilePhotoUrl
+      emails {
+        id
+        email
+        rawEmail
+        primary
+      }
     }
   }
   ... on UserParticipant {
@@ -211,6 +238,12 @@ export const MeetingParticipantFragmentFragmentDoc = `
       firstName
       lastName
       profilePhotoUrl
+      emails {
+        id
+        email
+        rawEmail
+        primary
+      }
     }
   }
   ... on OrganizationParticipant {
@@ -218,6 +251,12 @@ export const MeetingParticipantFragmentFragmentDoc = `
     organizationParticipant {
       id
       name
+      emails {
+        id
+        email
+        rawEmail
+        primary
+      }
     }
   }
 }
