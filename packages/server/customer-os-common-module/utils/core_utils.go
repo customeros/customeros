@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/pkg/errors"
@@ -393,4 +394,12 @@ func addThousandSeparators(value string) string {
 	}
 
 	return strings.Join(newParts, "")
+}
+
+func ToJson(obj any) (string, error) {
+	outputJson, err := json.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+	return string(outputJson), nil
 }

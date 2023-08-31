@@ -88,6 +88,7 @@ func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 	require.Equal(t, now, action.CreatedAt)
 	require.Equal(t, entity.ActionRenewalLikelihoodUpdated, action.Type)
 	require.Equal(t, "Renewal likelihood set to Low by new user", action.Content)
+	require.Equal(t, `{"likelihood":"LOW"}`, action.Metadata)
 
 	// Check request was generated
 	eventsMap := aggregateStore.GetEventMap()
@@ -170,6 +171,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByUser(t *testing
 	require.Equal(t, now, action.CreatedAt)
 	require.Equal(t, entity.ActionRenewalForecastUpdated, action.Type)
 	require.Equal(t, "Renewal forecast set to $50 by new user", action.Content)
+	require.Equal(t, `{"likelihood":""}`, action.Metadata)
 
 	// Check request was not generated
 	eventsMap := aggregateStore.GetEventMap()
@@ -238,6 +240,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByInternalProcess
 	require.Equal(t, now, action.CreatedAt)
 	require.Equal(t, entity.ActionRenewalForecastUpdated, action.Type)
 	require.Equal(t, "Renewal forecast set by default to $5,000, by discounting the billing amount using the renewal likelihood", action.Content)
+	require.Equal(t, `{"likelihood":"MEDIUM"}`, action.Metadata)
 
 	// Check request was not generated
 	eventsMap := aggregateStore.GetEventMap()

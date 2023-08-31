@@ -16,6 +16,8 @@ func MapEntityToAction(entity *entity.ActionEntity) *model.Action {
 		ActionType: MapActionTypeToModel(entity.Type),
 		AppSource:  entity.AppSource,
 		Source:     MapDataSourceToModel(entity.Source),
+		Content:    utils.StringPtrNillable(entity.Content),
+		Metadata:   utils.StringPtrNillable(entity.Metadata),
 	}
 }
 

@@ -80,6 +80,7 @@ func MapDbNodeToActionEntity(node dbtype.Node) *entity.ActionEntity {
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Type:      entity.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
 		Content:   utils.GetStringPropOrEmpty(props, "content"),
+		Metadata:  utils.GetStringPropOrEmpty(props, "metadata"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

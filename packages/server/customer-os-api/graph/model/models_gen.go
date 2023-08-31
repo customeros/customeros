@@ -78,6 +78,7 @@ type Action struct {
 	AppSource  string     `json:"appSource"`
 	CreatedBy  *User      `json:"createdBy,omitempty"`
 	ActionType ActionType `json:"actionType"`
+	Metadata   *string    `json:"metadata,omitempty"`
 }
 
 func (Action) IsTimelineEvent() {}

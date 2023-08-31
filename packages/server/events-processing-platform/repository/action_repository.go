@@ -15,7 +15,7 @@ import (
 )
 
 type ActionRepository interface {
-	Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content string, createdAt time.Time) (*dbtype.Node, error)
+	Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error)
 }
 
 type actionRepository struct {
@@ -28,7 +28,7 @@ func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 	}
 }
 
-func (r *actionRepository) Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content string, createdAt time.Time) (*dbtype.Node, error) {
+func (r *actionRepository) Create(ctx context.Context, tenant, entityId string, entityType entity.EntityType, actionType entity.ActionType, content, metadata string, createdAt time.Time) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.Create")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
@@ -45,7 +45,8 @@ func (r *actionRepository) Create(ctx context.Context, tenant, entityId string, 
 
 	query += fmt.Sprintf(` MERGE (n)<-[:ACTION_ON]-(a:Action {id:randomUUID()}) 
 				ON CREATE SET 	a.type=$type, 
-								a.content=$content,	
+								a.content=$content,
+								a.metadata=$metadata,
 								a.createdAt=$createdAt, 
 								a.source=$source, 
 								a.appSource=$appSource, 
@@ -65,6 +66,7 @@ func (r *actionRepository) Create(ctx context.Context, tenant, entityId string, 
 				"entityId":  entityId,
 				"type":      actionType,
 				"content":   content,
+				"metadata":  metadata,
 				"source":    constants.SourceOpenline,
 				"appSource": constants.AppSourceEventProcessingPlatform,
 				"createdAt": createdAt,

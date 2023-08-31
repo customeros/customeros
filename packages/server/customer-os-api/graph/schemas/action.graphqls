@@ -6,6 +6,7 @@ type Action {
     appSource: String!
     createdBy: User
     actionType: ActionType!
+    metadata: String
 }
 
 enum ActionType {

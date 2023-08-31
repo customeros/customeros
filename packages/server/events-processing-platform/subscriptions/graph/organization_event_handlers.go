@@ -20,6 +20,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+type ActionForecastMetadata struct {
+	Likelihood string `json:"likelihood"`
+}
+
 type GraphOrganizationEventHandler struct {
 	Repositories         *repository.Repositories
 	organizationCommands *cmdhnd.OrganizationCommands
@@ -161,7 +165,14 @@ func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Co
 				userEntity := graph_db.MapDbNodeToUserEntity(*userDbNode)
 				message += " by " + userEntity.FirstName + " " + userEntity.LastName
 			}
-			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalLikelihoodUpdated, message, eventData.UpdatedAt)
+			metadata, err := utils.ToJson(ActionForecastMetadata{
+				Likelihood: string(eventData.RenewalLikelihood),
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("ToJson failed: %s", err.Error())
+			}
+			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -221,9 +232,15 @@ func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Cont
 				}
 			}
 		}
-
+		metadata, err := utils.ToJson(ActionForecastMetadata{
+			Likelihood: string(eventData.RenewalLikelihood),
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("ToJson failed: %s", err.Error())
+		}
 		if message != "" {
-			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalForecastUpdated, message, eventData.UpdatedAt)
+			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalForecastUpdated, message, metadata, eventData.UpdatedAt)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating forecast update action for organization %s: %s", organizationId, err.Error())
