@@ -6,7 +6,7 @@ import { EmailStub, TimelineItem } from './events';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
-import { InteractionEvent, Meeting } from '@graphql/types';
+import { Action, InteractionEvent, Meeting } from '@graphql/types';
 import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
@@ -17,9 +17,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SlackStub } from '@organization/components/Timeline/events/slack/SlackStub';
 import { MeetingStub } from './events/meeting/MeetingStub';
 import { TimelineEventPreviewModal } from '@organization/components/Timeline/preview/TimelineEventPreviewModal';
-
-type InteractionEventWithDate = InteractionEvent & { date: string };
-type Event = InteractionEventWithDate | Meeting;
+import { InteractionEventWithDate, TimelineEvent } from './types';
+import { UserActionStub } from '@organization/components/Timeline/events/action/UserActionStub';
 
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
@@ -39,7 +38,9 @@ const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
 };
 
 const NEW_DATE = new Date();
-
+function getEventDate(event?: TimelineEvent) {
+  return (event as InteractionEventWithDate)?.date || event?.createdAt;
+}
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
   const virtuoso = useRef<VirtuosoHandle>(null);
@@ -87,7 +88,7 @@ export const OrganizationTimeline: FC = () => {
 
   const flattenData = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
-  ) as unknown as Event[];
+  ) as unknown as TimelineEvent[];
 
   const loadedDataCount = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
@@ -100,19 +101,22 @@ export const OrganizationTimeline: FC = () => {
         case 'InteractionEvent':
           return !!d?.id && ['EMAIL', 'SLACK'].includes(d.channel ?? '');
         case 'Meeting':
+        case 'Action':
           return !!d.id;
         default:
           return false;
       }
     })
     .sort((a, b) => {
-      const getDate = (a: Event) => {
+      const getDate = (a: TimelineEvent) => {
         if (!a) return null;
         switch (a.__typename) {
           case 'InteractionEvent':
             return a.date;
           case 'Meeting':
+          case 'Action':
             return a.createdAt;
+
           default:
             return null;
         }
@@ -122,7 +126,6 @@ export const OrganizationTimeline: FC = () => {
 
       return Date.parse(aDate) - Date.parse(bDate);
     });
-
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
@@ -139,7 +142,7 @@ export const OrganizationTimeline: FC = () => {
         data={timelineEmailEvents || []}
         id={id}
       >
-        <Virtuoso<Event>
+        <Virtuoso<TimelineEvent>
           ref={virtuoso}
           style={{ height: '100%', width: '100%', background: '#F9F9FB' }}
           initialItemCount={timelineEmailEvents?.length}
@@ -153,41 +156,47 @@ export const OrganizationTimeline: FC = () => {
           }}
           itemContent={(index, timelineEvent) => {
             if (!timelineEvent) return null;
+            const showDate =
+              index === 0
+                ? true
+                : !DateTimeUtils.isSameDay(
+                    getEventDate(
+                      timelineEmailEvents?.[
+                        index - 1
+                      ] as InteractionEventWithDate,
+                    ),
+                    getEventDate(timelineEvent as TimelineEvent),
+                  );
             switch (timelineEvent.__typename) {
               case 'InteractionEvent': {
-                const showDate =
-                  index === 0
-                    ? true
-                    : !DateTimeUtils.isSameDay(
-                        (
-                          timelineEmailEvents?.[
-                            index - 1
-                          ] as InteractionEventWithDate
-                        )?.date,
-                        timelineEvent.date,
-                      );
-
                 return (
                   <TimelineItem date={timelineEvent?.date} showDate={showDate}>
                     {timelineEvent.channel === 'EMAIL' && (
-                      <EmailStub
-                        email={timelineEvent as unknown as InteractionEvent}
-                      />
+                      <EmailStub email={timelineEvent} />
                     )}
                     {timelineEvent.channel === 'SLACK' && (
-                      <SlackStub
-                        slackEvent={
-                          timelineEvent as unknown as InteractionEvent
-                        }
-                      />
+                      <SlackStub slackEvent={timelineEvent} />
                     )}
                   </TimelineItem>
                 );
               }
               case 'Meeting': {
                 return (
-                  <TimelineItem date={timelineEvent?.createdAt} showDate>
+                  <TimelineItem
+                    date={timelineEvent?.createdAt}
+                    showDate={showDate}
+                  >
                     <MeetingStub data={timelineEvent} />
+                  </TimelineItem>
+                );
+              }
+              case 'Action': {
+                return (
+                  <TimelineItem
+                    date={timelineEvent?.createdAt}
+                    showDate={showDate}
+                  >
+                    <UserActionStub data={timelineEvent} />
                   </TimelineItem>
                 );
               }

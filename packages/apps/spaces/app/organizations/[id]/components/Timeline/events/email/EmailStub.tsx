@@ -5,12 +5,15 @@ import { Text } from '@ui/typography/Text';
 import { VStack } from '@ui/layout/Stack';
 import { convert } from 'html-to-text';
 import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
-import { EmailParticipant, InteractionEvent } from '@graphql/types';
+import { EmailParticipant } from '@graphql/types';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
 import Image from 'next/image';
+import { InteractionEventWithDate } from '../../types';
 
-export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
+export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
+  email,
+}) => {
   const { openModal } = useTimelineEventPreviewContext();
   const text = convert(email?.content || '', {
     preserveNewlines: true,

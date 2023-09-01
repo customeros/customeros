@@ -39,7 +39,22 @@ export type GetTimelineQuery = {
     __typename?: 'Organization';
     timelineEventsTotalCount: any;
     timelineEvents: Array<
-      | { __typename: 'Action' }
+      | {
+          __typename: 'Action';
+          id: string;
+          actionType: Types.ActionType;
+          appSource: string;
+          createdAt: any;
+          metadata?: string | null;
+          content?: string | null;
+          actionCreatedBy?: {
+            __typename: 'User';
+            id: string;
+            firstName: string;
+            lastName: string;
+            profilePhotoUrl?: string | null;
+          } | null;
+        }
       | { __typename: 'Analysis' }
       | {
           __typename: 'InteractionEvent';
@@ -462,13 +477,33 @@ export type GetTimelineQuery = {
 export const GetTimelineDocument = `
     query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
-    timelineEventsTotalCount(timelineEventTypes: [INTERACTION_EVENT, MEETING])
+    timelineEventsTotalCount(
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION]
+    )
     timelineEvents(
       from: $from
       size: $size
-      timelineEventTypes: [INTERACTION_EVENT, MEETING]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION]
     ) {
       __typename
+      ... on Action {
+        __typename
+        id
+        actionType
+        appSource
+        createdAt
+        metadata
+        actionCreatedBy: createdBy {
+          ... on User {
+            __typename
+            id
+            firstName
+            lastName
+            profilePhotoUrl
+          }
+        }
+        content
+      }
       ... on InteractionEvent {
         id
         date: createdAt
