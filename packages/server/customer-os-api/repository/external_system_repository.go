@@ -65,8 +65,8 @@ func (r *externalSystemRepository) GetForEntities(ctx context.Context, tenant st
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem)<-[rel:IS_LINKED_WITH]-(n)
-			WHERE n.id IN $entityIds and (n:Issue or n:Contact or n:Organization or n:Meeting)
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem)<-[rel:IS_LINKED_WITH]-(n:Issue|Contact|Organization|Meeting|InteractionEvent)
+			WHERE n.id IN $entityIds
 			RETURN e, rel, n.id order by rel.syncDate`
 
 	span.LogFields(log.String("query", query))

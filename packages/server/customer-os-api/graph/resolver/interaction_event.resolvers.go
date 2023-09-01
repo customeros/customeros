@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -140,6 +139,19 @@ func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.I
 		return nil, nil
 	}
 	return mapper.MapEntitiesToActionItem(entities), nil
+}
+
+// ExternalLinks is the resolver for the externalLinks field.
+func (r *interactionEventResolver) ExternalLinks(ctx context.Context, obj *model.InteractionEvent) ([]*model.ExternalSystem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get external system for interaction event %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get external systems for interaction event %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
 // Events is the resolver for the events field.
