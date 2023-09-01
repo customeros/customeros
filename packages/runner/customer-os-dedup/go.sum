@@ -27,8 +27,8 @@ github.com/machinebox/graphql v0.2.2 h1:dWKpJligYKhYKO5A2gvNhkJdQMNZeChZYyBbrZkB
 github.com/machinebox/graphql v0.2.2/go.mod h1:F+kbVMHuwrQ5tYgU9JXlnskM8nOaFxCAEolaQybkjWA=
 github.com/matryer/is v1.4.1 h1:55ehd8zaGABKLXQUe2awZ99BD/PTc2ls+KV/dXphgEQ=
 github.com/matryer/is v1.4.1/go.mod h1:8I/i5uYgLzgsgEloJE1U6xx5HkBQpAZvepWuujKwMRU=
-github.com/neo4j/neo4j-go-driver/v5 v5.11.0 h1:5Tbzmf5uikC8dv2a84uQ+rsXnMg0Bqgw6rtlXYbMi5M=
-github.com/neo4j/neo4j-go-driver/v5 v5.11.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
+github.com/neo4j/neo4j-go-driver/v5 v5.12.0 h1:iuccVe2Wk99zaT6tdJB8k3G/ZZz+oSF0FkcH0B4aguo=
+github.com/neo4j/neo4j-go-driver/v5 v5.12.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803140613-a833e4f9761b h1:k6gDKV1rTBPZmQwE0sa0kC432Kqoemd3cxxOaVoG66c=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803140613-a833e4f9761b/go.mod h1:jcnuArpsD+nvQrhfK7N/XINTYO72+Ij+OdrVjittxhU=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
