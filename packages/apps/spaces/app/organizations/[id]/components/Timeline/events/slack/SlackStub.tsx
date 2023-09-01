@@ -3,7 +3,6 @@ import React, { FC } from 'react';
 import { Card, CardBody } from '@ui/presentation/Card';
 import {
   ContactParticipant,
-  InteractionEvent,
   JobRoleParticipant,
   UserParticipant,
 } from '@graphql/types';
@@ -16,8 +15,9 @@ import Slack from '@spaces/atoms/icons/Slack';
 import { Button } from '@ui/form/Button';
 import { SlackMessageCard } from '@organization/components/Timeline/events/slack/SlackMessageCard';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { InteractionEventWithDate } from '@organization/components/Timeline/types';
 
-export const SlackStub: FC<{ slackEvent: InteractionEvent }> = ({
+export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
   slackEvent,
 }) => {
   const { openModal } = useTimelineEventPreviewContext();
@@ -82,7 +82,6 @@ export const SlackStub: FC<{ slackEvent: InteractionEvent }> = ({
         profilePhotoUrl={slackSender?.profilePhotoUrl}
         content={slackEvent?.content || ''}
         onClick={() => openModal(slackEvent)}
-        // @ts-expect-error typescript does not work well with aliases
         date={DateTimeUtils.formatTime(slackEvent?.date)}
         showDateOnHover
       >
