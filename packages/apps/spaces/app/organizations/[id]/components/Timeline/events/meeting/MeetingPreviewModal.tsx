@@ -22,7 +22,7 @@ import { Card, CardBody, CardHeader, CardFooter } from '@ui/presentation/Card';
 import { useUpdateMeetingMutation } from '@organization/graphql/updateMeeting.generated';
 
 import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
-import { getParticipantEmailOrName } from '../utils';
+import { getParticipantEmail } from '../utils';
 import { MeetingIcon, HubspotIcon, CalcomIcon } from './icons';
 
 export const MeetingPreviewModal = () => {
@@ -79,16 +79,11 @@ export const MeetingPreviewModal = () => {
     return `${start} - ${end}`;
   })();
 
-  const owner = getParticipantEmailOrName(event?.createdBy?.[0]);
+  const owner = getParticipantEmail(event?.createdBy?.[0]);
 
   const participants = event?.attendedBy
-    ?.map(getParticipantEmailOrName)
-    .filter((c) => c !== owner)
-    .sort((a, b) => {
-      if (a === 'unknown') return 1;
-      if (b === 'unknown') return -1;
-      return 0;
-    });
+    ?.map(getParticipantEmail)
+    .filter((c) => c !== owner);
 
   const externalSystem = event?.externalSystem?.[0]?.type;
   const externalUrl = event?.externalSystem?.[0]?.externalUrl;

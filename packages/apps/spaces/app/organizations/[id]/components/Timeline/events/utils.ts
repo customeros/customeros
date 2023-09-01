@@ -7,35 +7,41 @@ import {
 } from '@graphql/types';
 import { getName } from '@spaces/utils/getParticipantsName';
 
-export const getParticipantEmailOrName = (
-  participant:
-    | ContactParticipant
-    | UserParticipant
-    | JobRoleParticipant
-    | OrganizationParticipant,
-): string => {
-  let participantT;
+type Participant =
+  | ContactParticipant
+  | UserParticipant
+  | JobRoleParticipant
+  | OrganizationParticipant;
 
+export const getParticipant = (participant: Participant) => {
   switch (participant?.__typename) {
     case 'ContactParticipant':
-      participantT = participant.contactParticipant;
-      break;
+      return participant.contactParticipant;
     case 'UserParticipant':
-      participantT = participant.userParticipant;
-      break;
+      return participant.userParticipant;
     case 'JobRoleParticipant':
-      participantT = participant.jobRoleParticipant?.contact;
-      break;
+      return participant.jobRoleParticipant?.contact;
     case 'OrganizationParticipant':
-      participantT = participant.organizationParticipant;
-      break;
+      return participant.organizationParticipant;
     default:
-      participantT = null;
+      return null;
   }
+};
 
-  if (!participantT) return '';
+export const getParticipantName = (participant: Participant): string => {
+  const contact = getParticipant(participant);
 
-  return participantT.emails?.[0]?.email || getName(participantT);
+  if (!contact) return '';
+
+  return getName(contact);
+};
+
+export const getParticipantEmail = (participant: Participant): string => {
+  const contact = getParticipant(participant);
+
+  if (!contact) return '';
+
+  return contact.emails?.[0]?.email ?? getName(contact);
 };
 
 export const getParticipants = (
@@ -43,7 +49,7 @@ export const getParticipants = (
 ): (string | string[] | number)[] => {
   if (data?.attendedBy?.length) {
     const fullArray = data?.attendedBy
-      ?.map((participant) => getParticipantEmailOrName(participant))
+      ?.map((participant) => getParticipantName(participant))
       .filter(Boolean);
 
     if (!data?.note?.[0]?.html || !data?.agenda)
