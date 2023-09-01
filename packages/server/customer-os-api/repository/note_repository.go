@@ -221,8 +221,7 @@ func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWi
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (n:%s {id:$noteId}) " +
-		" SET 	n.html=$content, " +
-		"		n.content=$content, " +
+		" SET 	n.content=$content, " +
 		"		n.contentType=$contentType, " +
 		"		n.sourceOfTruth=$sourceOfTruth, " +
 		"		n.updatedAt=$now " +
@@ -252,8 +251,7 @@ func (r *noteRepository) CreateNoteForContact(ctx context.Context, tenant, conta
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()}) " +
-		" ON CREATE SET n.html=$content, " +
-		"				n.content=$content, " +
+		" ON CREATE SET n.content=$content, " +
 		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
@@ -295,8 +293,7 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, tenant, 
 
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (org)-[:NOTED]->(n:Note {id:randomUUID()}) " +
-		" ON CREATE SET n.html=$content, " +
-		"				n.content=$content, " +
+		" ON CREATE SET n.content=$content, " +
 		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
@@ -470,8 +467,7 @@ func (r *noteRepository) GetMentionedEntitiesForNotes(ctx context.Context, tenan
 func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId string, entity *entity.NoteEntity) (map[string]any, string) {
 	query := "MATCH (m:Meeting_%s {id:$meetingId}) " +
 		" MERGE (m)-[:NOTED]->(n:Note {id:randomUUID()}) " +
-		" ON CREATE SET n.html=$content, " +
-		"				n.content=$content, " +
+		" ON CREATE SET n.content=$content, " +
 		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +

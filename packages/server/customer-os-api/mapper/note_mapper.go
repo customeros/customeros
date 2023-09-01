@@ -14,15 +14,12 @@ func MapNoteInputToEntity(input *model.NoteInput) *entity.NoteEntity {
 	noteEntity := entity.NoteEntity{
 		Content:       utils.IfNotNilString(input.Content),
 		ContentType:   utils.IfNotNilString(input.ContentType),
-		Html:          utils.IfNotNilString(input.HTML),
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
-	if noteEntity.Content != "" {
-		noteEntity.Html = noteEntity.Content
-	} else {
-		noteEntity.Content = noteEntity.Html
+	if noteEntity.Content == "" && utils.IfNotNilString(input.HTML) != "" {
+		noteEntity.Content = utils.IfNotNilString(input.HTML)
 	}
 	return &noteEntity
 }
@@ -35,13 +32,10 @@ func MapNoteUpdateInputToEntity(input *model.NoteUpdateInput) *entity.NoteEntity
 		Id:            input.ID,
 		Content:       utils.IfNotNilString(input.Content),
 		ContentType:   utils.IfNotNilString(input.ContentType),
-		Html:          utils.IfNotNilString(input.HTML),
 		SourceOfTruth: entity.DataSourceOpenline,
 	}
-	if noteEntity.Content != "" {
-		noteEntity.Html = noteEntity.Content
-	} else {
-		noteEntity.Content = noteEntity.Html
+	if noteEntity.Content == "" && utils.IfNotNilString(input.HTML) != "" {
+		noteEntity.Content = utils.IfNotNilString(input.HTML)
 	}
 	return &noteEntity
 }
@@ -51,15 +45,12 @@ func MapEntityToNote(entity *entity.NoteEntity) *model.Note {
 		ID:            entity.Id,
 		Content:       entity.Content,
 		ContentType:   entity.ContentType,
-		HTML:          entity.Html,
+		HTML:          entity.Content,
 		CreatedAt:     entity.CreatedAt,
 		UpdatedAt:     entity.UpdatedAt,
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:     entity.AppSource,
-	}
-	if note.Content == "" && note.HTML != "" {
-		note.Content = note.HTML
 	}
 	return &note
 }
