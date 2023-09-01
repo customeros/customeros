@@ -1,62 +1,91 @@
-import React from 'react';
-import { Card } from '@ui/presentation/Card';
+import { useState, useEffect } from 'react';
+
 import { Flex } from '@ui/layout/Flex';
+import { Card } from '@ui/presentation/Card';
 import { ScaleFade } from '@ui/transitions/ScaleFade';
-import styles from '../events/email/EmailPreviewModal.module.scss';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { InteractionEvent, Meeting } from '@graphql/types';
 
-import { EmailPreviewModal } from '@organization/components/Timeline/events/email/EmailPreviewModal';
-import { MeetingPreviewModal } from '@organization/components/Timeline/events/meeting/MeetingPreviewModal';
-import { SlackThreadPreviewModal } from '@organization/components/Timeline/events/slack/SlackThreadPreviewModal';
-import { InteractionEvent, Meeting } from '@spaces/graphql';
+import { EmailPreviewModal } from '../events/email/EmailPreviewModal';
+import { MeetingPreviewModal } from '../events/meeting/MeetingPreviewModal';
+import { SlackThreadPreviewModal } from '../events/slack/SlackThreadPreviewModal';
 
-export const TimelineEventPreviewModal: React.FC<{
+import { useTimelineEventPreviewContext } from './TimelineEventsPreviewContext/TimelineEventPreviewContext';
+
+interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;
-}> = ({ invalidateQuery }) => {
+}
+
+export const TimelineEventPreviewModal = ({
+  invalidateQuery,
+}: TimelineEventPreviewModalProps) => {
+  const [isMounted, setIsMounted] = useState(false); // needed for delaying the backdrop filter
   const { closeModal, isModalOpen, modalContent } =
     useTimelineEventPreviewContext();
 
-  const event = modalContent as InteractionEvent | Meeting;
+  useEffect(() => {
+    setIsMounted(isModalOpen);
+  }, [isModalOpen]);
 
   if (!isModalOpen || !modalContent) {
     return null;
   }
 
+  const event = modalContent as InteractionEvent | Meeting;
   const isMeeting = event?.__typename === 'Meeting';
   const isInteraction = event?.__typename === 'InteractionEvent';
   const isSlack = isInteraction && event?.channel === 'SLACK';
   const isEmail = isInteraction && event?.channel === 'EMAIL';
 
-  if (isMeeting) {
-    return <MeetingPreviewModal />;
-  }
+  const handleCloseModal = () => {
+    if (isEmail) return; // email modal handles closing the modal by itself
+    closeModal();
+  };
 
   if (isEmail) {
     return <EmailPreviewModal invalidateQuery={invalidateQuery} />;
   }
 
   return (
-    <div className={styles.container}>
-      <div
-        className={styles.backdrop}
-        onClick={() => (isModalOpen ? closeModal() : null)}
-      />
-      <ScaleFade initialScale={0.9} in={isModalOpen} unmountOnExit>
-        <Flex justifyContent='center'>
-          <Card
-            maxWidth={800}
-            minWidth={544}
-            w='full'
-            zIndex={7}
-            borderRadius='xl'
-            height='100%'
-            bg='gray.25'
-            maxHeight='calc(100vh - 6rem)'
-          >
-            {isSlack && <SlackThreadPreviewModal />}
-          </Card>
-        </Flex>
+    <Flex
+      position='absolute'
+      top='0'
+      bottom='0'
+      left='0'
+      right='0'
+      zIndex={1}
+      cursor='pointer'
+      backdropFilter='blur(3px)'
+      justify='center'
+      background={isMounted ? 'rgba(16, 24, 40, 0.45)' : 'rgba(16, 24, 40, 0)'}
+      align='center'
+      transition='all 0.1s linear'
+      onClick={handleCloseModal}
+    >
+      <ScaleFade
+        in={isModalOpen}
+        style={{
+          position: 'absolute',
+          marginInline: 'auto',
+          top: '1rem',
+          width: '544px',
+          minWidth: '544px',
+        }}
+      >
+        <Card
+          size='lg'
+          position='absolute'
+          mx='auto'
+          top='4'
+          w='544px'
+          minW='544px'
+          cursor='default'
+          onClick={(e) => e.stopPropagation()}
+        >
+          {isMeeting && <MeetingPreviewModal />}
+          {isSlack && <SlackThreadPreviewModal />}
+          {isEmail && <EmailPreviewModal invalidateQuery={invalidateQuery} />}
+        </Card>
       </ScaleFade>
-    </div>
+    </Flex>
   );
 };
