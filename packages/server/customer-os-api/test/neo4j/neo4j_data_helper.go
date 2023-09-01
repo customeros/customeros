@@ -55,6 +55,17 @@ func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
+func CreateSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
+			SET e.externalSource=$externalSource`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":           tenant,
+		"externalSystemId": "slack",
+		"externalSource":   "Slack",
+	})
+}
+
 func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
@@ -65,11 +76,19 @@ func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithCon
 }
 
 func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, "hubspot", externalUrl, externalSource, syncDate)
+}
+
+func LinkWithSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, "slack", externalUrl, externalSource, syncDate)
+}
+
+func LinkWithExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId, externalSystemId string, externalUrl, externalSource *string, syncDate time.Time) {
 	query := `MATCH (e:ExternalSystem {id:$externalSystemId}), (n {id:$entityId})
 			MERGE (n)-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e)
 			ON CREATE SET rel.externalUrl=$externalUrl, rel.syncDate=$syncDate, rel.externalSource=$externalSource`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"externalSystemId": "hubspot",
+		"externalSystemId": externalSystemId,
 		"entityId":         entityId,
 		"externalId":       externalId,
 		"externalUrl":      externalUrl,

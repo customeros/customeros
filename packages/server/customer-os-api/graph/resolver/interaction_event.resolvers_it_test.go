@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -1204,4 +1205,41 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 	require.Equal(t, "COLLABORATOR", organizationParticipant["type"].(string))
 	require.Equal(t, organizationId, organizationParticipant["organizationParticipant"].(map[string]interface{})["id"].(string))
 	require.Equal(t, "testOrg", organizationParticipant["organizationParticipant"].(map[string]interface{})["name"].(string))
+}
+
+func TestQueryResolver_InteractionEvent_WithExternalLinks(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "event1", "content", "text/plain", utils.StringPtr("slack"), utils.Now())
+
+	neo4jt.CreateSlackExternalSystem(ctx, driver, tenantName)
+	syncDate1 := utils.Now()
+	syncDate2 := syncDate1.Add(time.Hour * 1)
+	neo4jt.LinkWithSlackExternalSystem(ctx, driver, interactionEventId, "111", utils.StringPtr("www.external1.com"), nil, syncDate1)
+	neo4jt.LinkWithSlackExternalSystem(ctx, driver, interactionEventId, "222", utils.StringPtr("www.external2.com"), nil, syncDate2)
+
+	rawResponse := callGraphQL(t, "interaction_event/get_interaction_event_with_external_links",
+		map[string]interface{}{"interactionEventId": interactionEventId})
+
+	var interactionEventStruct struct {
+		InteractionEvent model.InteractionEvent
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &interactionEventStruct)
+	require.Nil(t, err)
+	require.NotNil(t, interactionEventStruct)
+
+	interactionEvent := interactionEventStruct.InteractionEvent
+	require.Equal(t, interactionEventId, interactionEvent.ID)
+	require.Equal(t, 2, len(interactionEvent.ExternalLinks))
+	require.Equal(t, "111", *interactionEvent.ExternalLinks[0].ExternalID)
+	require.Equal(t, "222", *interactionEvent.ExternalLinks[1].ExternalID)
+	require.Equal(t, "www.external1.com", *interactionEvent.ExternalLinks[0].ExternalURL)
+	require.Equal(t, "www.external2.com", *interactionEvent.ExternalLinks[1].ExternalURL)
+	require.Nil(t, interactionEvent.ExternalLinks[0].ExternalSource)
+	require.Nil(t, interactionEvent.ExternalLinks[1].ExternalSource)
+	require.Equal(t, syncDate1, *interactionEvent.ExternalLinks[0].SyncDate)
+	require.Equal(t, syncDate2, *interactionEvent.ExternalLinks[1].SyncDate)
 }

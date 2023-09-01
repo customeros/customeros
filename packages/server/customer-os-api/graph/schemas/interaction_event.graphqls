@@ -110,6 +110,7 @@ type InteractionEvent implements Node {
     sourceOfTruth: DataSource!
     appSource: String!
     eventType: String
+    externalLinks:  [ExternalSystem!]! @goField(forceResolver: true)
 }
 
 type EmailParticipant {

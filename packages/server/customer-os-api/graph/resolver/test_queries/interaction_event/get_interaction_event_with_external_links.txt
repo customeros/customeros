@@ -1,0 +1,11 @@
+query GetInteractionEvent($interactionEventId: ID!){
+  interactionEvent(id: $interactionEventId) {
+    id
+    externalLinks {
+        type
+        syncDate
+        externalId
+        externalUrl
+    }
+  }
+}

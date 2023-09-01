@@ -674,6 +674,7 @@ type InteractionEvent struct {
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
 	EventType          *string                       `json:"eventType,omitempty"`
+	ExternalLinks      []*ExternalSystem             `json:"externalLinks"`
 }
 
 func (InteractionEvent) IsDescriptionNode() {}
