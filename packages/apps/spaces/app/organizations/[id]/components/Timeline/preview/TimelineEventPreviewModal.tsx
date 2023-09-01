@@ -41,10 +41,6 @@ export const TimelineEventPreviewModal = ({
     closeModal();
   };
 
-  if (isEmail) {
-    return <EmailPreviewModal invalidateQuery={invalidateQuery} />;
-  }
-
   return (
     <Flex
       position='absolute'
