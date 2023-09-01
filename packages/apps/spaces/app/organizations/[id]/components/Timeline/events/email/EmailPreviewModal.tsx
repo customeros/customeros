@@ -227,13 +227,14 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   }
 
   return (
-    <>
+    <div ref={cardRef}>
       <CardHeader
         pb={1}
         position='sticky'
         background='white'
         top={0}
         borderRadius='xl'
+        onClick={(e) => e.stopPropagation()}
       >
         <Flex
           direction='row'
@@ -337,6 +338,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         onConfirm={handleExitEditorAndCleanData}
         isLoading={false}
       />
-    </>
+    </div>
   );
 };
