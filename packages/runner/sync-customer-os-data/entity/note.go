@@ -2,7 +2,8 @@ package entity
 
 type NoteData struct {
 	BaseData
-	Html                          string   `json:"html,omitempty"`
+	Content                       string   `json:"content,omitempty"`
+	ContentType                   string   `json:"contentType,omitempty"`
 	Text                          string   `json:"text,omitempty"`
 	CreatorUserExternalId         string   `json:"externalUserId,omitempty"`
 	CreatorUserExternalOwnerId    string   `json:"externalOwnerId,omitempty"`

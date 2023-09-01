@@ -296,6 +296,30 @@ func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID 
 	return mapper.MapEntityToLocation(locationEntity), nil
 }
 
+// MeetingAddNote is the resolver for the meeting_AddNote field.
+func (r *mutationResolver) MeetingAddNote(ctx context.Context, meetingID string, note *model.NoteInput) (*model.Meeting, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingAddNote", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.meetingID", meetingID))
+
+	noteEntity := mapper.MapNoteInputToEntity(note)
+
+	_, err := r.Services.NoteService.CreateNoteForMeeting(ctx, meetingID, noteEntity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error creating note for meeting %s", meetingID)
+		return nil, nil
+	}
+	meetingEntity, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Meeting with id %s not found", meetingID)
+		return nil, err
+	}
+	return mapper.MapEntityToMeeting(meetingEntity), nil
+}
+
 // Meeting is the resolver for the meeting field.
 func (r *queryResolver) Meeting(ctx context.Context, id string) (*model.Meeting, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Meeting", graphql.GetOperationContext(ctx))

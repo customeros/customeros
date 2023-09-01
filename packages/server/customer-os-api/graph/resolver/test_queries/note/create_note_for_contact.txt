@@ -2,11 +2,14 @@ mutation CreateNote($contactId: ID!) {
   note_CreateForContact(
     contactId: $contactId,
     input: {
-      html: "Note content"
+      content: "Note content"
+      contentType: "text/markdown"
     }
   ) {
     id
     html
+    content
+    contentType
     createdAt
     updatedAt
     source

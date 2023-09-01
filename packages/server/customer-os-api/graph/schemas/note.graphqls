@@ -12,7 +12,9 @@ union MentionedEntity = Issue
 
 type Note {
     id: ID!
-    html: String!
+    html: String! @deprecated(reason: "Use content instead")
+    content: String!
+    contentType: String!
     createdAt: Time!
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
@@ -31,11 +33,15 @@ type NotePage implements Pages {
 }
 
 input NoteInput {
-    html: String!
+    content: String
+    contentType: String
+    html: String @deprecated(reason: "Use content instead")
     appSource: String
 }
 
 input NoteUpdateInput {
     id: ID!
-    html: String!
+    html: String @deprecated(reason: "Use content instead")
+    content: String
+    contentType: String
 }

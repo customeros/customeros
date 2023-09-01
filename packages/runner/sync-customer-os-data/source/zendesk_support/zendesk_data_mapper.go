@@ -302,7 +302,8 @@ func MapNote(inputJSON string) (string, error) {
 	// Map fields
 	output.ExternalId = fmt.Sprintf("%d", input.ID)
 	output.CreatedAt = input.CreatedAt
-	output.Html = input.HtmlBody
+	output.Content = input.HtmlBody
+	output.ContentType = "text/html"
 	output.Text = input.Body
 	if input.AuthorId > 0 {
 		output.ExternalCreatorId = fmt.Sprintf("%d", input.AuthorId)

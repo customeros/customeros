@@ -199,10 +199,10 @@ func MapNote(inputJSON string) (string, error) {
 		output.ExternalOrganizationsIds = append(output.ExternalOrganizationsIds, fmt.Sprintf("%d", input.OrgId))
 	}
 	if strings.Contains(input.Content, "<") {
-		output.Html = input.Content
+		output.Content = input.Content
 		output.ContentType = "text/html"
 	} else {
-		output.Text = input.Content
+		output.Content = input.Content
 		output.ContentType = "text/plain"
 	}
 

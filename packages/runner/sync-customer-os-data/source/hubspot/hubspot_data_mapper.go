@@ -172,7 +172,8 @@ func MapNote(inputJSON string) (string, error) {
 	output.ExternalId = input.ID
 	output.CreatedAt = input.CreatedAt
 	output.UpdatedAt = input.UpdatedAt
-	output.Html = input.Properties.Body
+	output.Content = input.Properties.Body
+	output.ContentType = "text/html"
 	output.ExternalOwnerId = input.Properties.OwnerId
 	output.ExternalUserId = strconv.Itoa(input.Properties.CreatedBy)
 

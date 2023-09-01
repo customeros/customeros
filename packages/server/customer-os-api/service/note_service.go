@@ -88,16 +88,12 @@ func (s *noteService) GetNotesForContactPaginated(ctx context.Context, contactId
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.Int("page", page), log.Int("limit", limit))
 
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
 	noteDbNodesWithTotalCount, err := s.repositories.NoteRepository.GetPaginatedNotesForContact(
 		ctx,
-		session,
 		common.GetContext(ctx).Tenant,
 		contactId,
 		paginatedResult.GetSkip(),
@@ -185,10 +181,7 @@ func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId))
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForContact(ctx, session, common.GetContext(ctx).Tenant, contactId, *entity)
+	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForContact(ctx, common.GetContext(ctx).Tenant, contactId, *entity)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +189,7 @@ func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string
 	if len(common.GetUserIdFromContext(ctx)) > 0 {
 		props := utils.GetPropsFromNode(*dbNodePtr)
 		noteId := utils.GetStringPropOrEmpty(props, "id")
-		s.repositories.NoteRepository.SetNoteCreator(ctx, session, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
+		_ = s.repositories.NoteRepository.SetNoteCreator(ctx, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
 	}
 	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }
@@ -207,10 +200,7 @@ func (s *noteService) CreateNoteForOrganization(ctx context.Context, organizatio
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organization", organization))
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForOrganization(ctx, session, common.GetContext(ctx).Tenant, organization, *entity)
+	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForOrganization(ctx, common.GetContext(ctx).Tenant, organization, *entity)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +208,7 @@ func (s *noteService) CreateNoteForOrganization(ctx context.Context, organizatio
 	if len(common.GetUserIdFromContext(ctx)) > 0 {
 		props := utils.GetPropsFromNode(*dbNodePtr)
 		noteId := utils.GetStringPropOrEmpty(props, "id")
-		s.repositories.NoteRepository.SetNoteCreator(ctx, session, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
+		_ = s.repositories.NoteRepository.SetNoteCreator(ctx, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
 	}
 	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }
@@ -246,10 +236,7 @@ func (s *noteService) DeleteNote(ctx context.Context, noteId string) (bool, erro
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("noteId", noteId))
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	err := s.repositories.NoteRepository.Delete(ctx, session, common.GetTenantFromContext(ctx), noteId)
+	err := s.repositories.NoteRepository.Delete(ctx, common.GetTenantFromContext(ctx), noteId)
 	if err != nil {
 		return false, err
 	}
@@ -325,10 +312,7 @@ func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("meetingId", meetingId))
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForMeeting(ctx, session, common.GetContext(ctx).Tenant, meetingId, entity)
+	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForMeeting(ctx, common.GetContext(ctx).Tenant, meetingId, entity)
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +320,7 @@ func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string
 	if len(common.GetUserIdFromContext(ctx)) > 0 {
 		props := utils.GetPropsFromNode(*dbNodePtr)
 		noteId := utils.GetStringPropOrEmpty(props, "id")
-		s.repositories.NoteRepository.SetNoteCreator(ctx, session, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
+		s.repositories.NoteRepository.SetNoteCreator(ctx, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
 	}
 	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }
@@ -365,6 +349,8 @@ func (s *noteService) mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 	result := entity.NoteEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Html:          utils.GetStringPropOrEmpty(props, "html"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

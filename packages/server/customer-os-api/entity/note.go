@@ -7,7 +7,9 @@ import (
 
 type NoteEntity struct {
 	Id            string
-	Html          string
+	Html          string // deprecated
+	Content       string
+	ContentType   string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Source        DataSource
