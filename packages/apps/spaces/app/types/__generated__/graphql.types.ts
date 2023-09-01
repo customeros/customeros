@@ -25,9 +25,11 @@ export type Action = {
   __typename?: 'Action';
   actionType: ActionType;
   appSource: Scalars['String'];
+  content?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
   id: Scalars['ID'];
+  metadata?: Maybe<Scalars['String']>;
   source: DataSource;
 };
 
@@ -42,6 +44,8 @@ export type ActionItem = {
 
 export enum ActionType {
   Created = 'CREATED',
+  RenewalForecastUpdated = 'RENEWAL_FORECAST_UPDATED',
+  RenewalLikelihoodUpdated = 'RENEWAL_LIKELIHOOD_UPDATED',
 }
 
 export type Analysis = Node & {
@@ -1108,6 +1112,7 @@ export type MeetingInput = {
   appSource: Scalars['String'];
   attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
   conferenceUrl?: InputMaybe<Scalars['String']>;
+  createdAt?: InputMaybe<Scalars['Time']>;
   createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
   endedAt?: InputMaybe<Scalars['Time']>;
   externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
@@ -1258,11 +1263,8 @@ export type Mutation = {
   organization_SetRelationshipStage: Organization;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
-  organization_UpdateBillingDetails: Organization;
   organization_UpdateBillingDetailsAsync: Scalars['ID'];
-  organization_UpdateRenewalForecast: Organization;
   organization_UpdateRenewalForecastAsync: Scalars['ID'];
-  organization_UpdateRenewalLikelihood: Organization;
   organization_UpdateRenewalLikelihoodAsync: Scalars['ID'];
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
@@ -1684,24 +1686,12 @@ export type MutationOrganization_UpdateArgs = {
   input: OrganizationUpdateInput;
 };
 
-export type MutationOrganization_UpdateBillingDetailsArgs = {
-  input: BillingDetailsInput;
-};
-
 export type MutationOrganization_UpdateBillingDetailsAsyncArgs = {
   input: BillingDetailsInput;
 };
 
-export type MutationOrganization_UpdateRenewalForecastArgs = {
-  input: RenewalForecastInput;
-};
-
 export type MutationOrganization_UpdateRenewalForecastAsyncArgs = {
   input: RenewalForecastInput;
-};
-
-export type MutationOrganization_UpdateRenewalLikelihoodArgs = {
-  input: RenewalLikelihoodInput;
 };
 
 export type MutationOrganization_UpdateRenewalLikelihoodAsyncArgs = {
@@ -2611,6 +2601,7 @@ export type TimelineEvent =
   | PageView;
 
 export enum TimelineEventType {
+  Action = 'ACTION',
   Analysis = 'ANALYSIS',
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',
@@ -2661,6 +2652,7 @@ export type User = {
   roles: Array<Role>;
   source: DataSource;
   sourceOfTruth: DataSource;
+  timezone?: Maybe<Scalars['String']>;
   updatedAt: Scalars['Time'];
 };
 
@@ -2699,6 +2691,7 @@ export type UserInput = {
    * **Required**
    */
   player: PlayerInput;
+  timezone?: InputMaybe<Scalars['String']>;
 };
 
 /**
@@ -2742,6 +2735,7 @@ export type UserUpdateInput = {
    * **Required**
    */
   lastName: Scalars['String'];
+  timezone?: InputMaybe<Scalars['String']>;
 };
 
 export type Workspace = {

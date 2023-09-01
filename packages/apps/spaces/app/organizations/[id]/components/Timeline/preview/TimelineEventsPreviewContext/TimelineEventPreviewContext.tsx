@@ -1,33 +1,30 @@
 import {
-  useRef,
-  useState,
-  useEffect,
-  RefObject,
-  useContext,
-  createContext,
-  PropsWithChildren,
+    useRef,
+    useState,
+    useEffect,
+    RefObject,
+    useContext,
+    createContext,
+    PropsWithChildren,
 } from 'react';
-import { useLocalStorage } from 'usehooks-ts';
 import { useRouter, useSearchParams } from 'next/navigation';
-
-import { InteractionEvent, Meeting } from '@graphql/types';
+import { useLocalStorage } from 'usehooks-ts';
+import { TimelineEvent } from '../../types';
 
 export const noop = () => undefined;
 
-type Event = InteractionEvent | Meeting;
-
 interface TimelineEventPreviewContextContextMethods {
-  containerRef: RefObject<HTMLDivElement> | null;
-  openModal: (content: Event) => void;
+  TimelineEventPreviewContextContainerRef: RefObject<HTMLDivElement> | null;
+  openModal: (content: TimelineEvent) => void;
   closeModal: () => void;
-  modalContent: Event | null;
+  modalContent: TimelineEvent | null;
   isModalOpen: boolean;
-  events: Event[];
+  events: TimelineEvent[];
 }
 
 const TimelineEventPreviewContextContext =
   createContext<TimelineEventPreviewContextContextMethods>({
-    containerRef: null,
+    TimelineEventPreviewContextContainerRef: null,
     openModal: noop,
     closeModal: noop,
     modalContent: null,
@@ -43,19 +40,19 @@ export const TimelineEventPreviewContextContextProvider = ({
   children,
   data = [],
   id = '',
-}: PropsWithChildren<{ data: Event[]; id: string }>) => {
+}: PropsWithChildren<{ data: TimelineEvent[]; id: string }>) => {
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { [id]: 'tab=about' },
   );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState<Event | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [modalContent, setModalContent] = useState<TimelineEvent | null>(null);
+  const TimelineEventPreviewContextContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleOpenModal = (content: Event) => {
+  const handleOpenModal = (content: TimelineEvent) => {
     setIsModalOpen(true);
     const params = new URLSearchParams(searchParams ?? '');
     params.set('events', content.id);
@@ -97,7 +94,7 @@ export const TimelineEventPreviewContextContextProvider = ({
   return (
     <TimelineEventPreviewContextContext.Provider
       value={{
-        containerRef,
+        TimelineEventPreviewContextContainerRef,
         openModal: handleOpenModal,
         closeModal: handleCloseModal,
         isModalOpen,
