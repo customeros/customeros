@@ -1,8 +1,6 @@
 import {
-  useRef,
   useState,
   useEffect,
-  RefObject,
   useContext,
   createContext,
   PropsWithChildren,
@@ -14,7 +12,6 @@ import { TimelineEvent } from '../../types';
 export const noop = () => undefined;
 
 interface TimelineEventPreviewContextContextMethods {
-  TimelineEventPreviewContextContainerRef: RefObject<HTMLDivElement> | null;
   openModal: (content: TimelineEvent) => void;
   closeModal: () => void;
   modalContent: TimelineEvent | null;
@@ -24,7 +21,6 @@ interface TimelineEventPreviewContextContextMethods {
 
 const TimelineEventPreviewContextContext =
   createContext<TimelineEventPreviewContextContextMethods>({
-    TimelineEventPreviewContextContainerRef: null,
     openModal: noop,
     closeModal: noop,
     modalContent: null,
@@ -48,7 +44,6 @@ export const TimelineEventPreviewContextContextProvider = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<TimelineEvent | null>(null);
-  const TimelineEventPreviewContextContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -94,7 +89,6 @@ export const TimelineEventPreviewContextContextProvider = ({
   return (
     <TimelineEventPreviewContextContext.Provider
       value={{
-        TimelineEventPreviewContextContainerRef,
         openModal: handleOpenModal,
         closeModal: handleCloseModal,
         isModalOpen,

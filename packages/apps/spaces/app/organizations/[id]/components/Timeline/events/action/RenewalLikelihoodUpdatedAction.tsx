@@ -9,7 +9,6 @@ const getLikelihoodDisplayData = (text: string) => {
   const match = text.match(/(.+? to )(.+?)(?: by )(.+)/);
 
   if (!match) {
-    console.error('Invalid text format');
     return { preText: '', likelihood: '', author: '' };
   }
 
