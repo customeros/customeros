@@ -210,7 +210,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 					ExternalId:     string(note.FieldSource) + "-" + orgInput.ExternalId,
 					ExternalSystem: orgInput.ExternalSystem,
 				},
-				Html: note.Note,
+				Content: note.Note,
 			}
 			noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, localNote)
 			if err != nil {

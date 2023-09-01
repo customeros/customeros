@@ -9,6 +9,7 @@ import (
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"io"
 	"log"
 	"net/http"
@@ -283,7 +284,7 @@ func bookingCreatedHandler(cosService s.CustomerOSService, request model.Booking
 		}
 	}
 
-	noteInput := cosModel.NoteInput{HTML: request.Payload.AdditionalNotes, AppSource: &appSource}
+	noteInput := cosModel.NoteInput{HTML: utils.StringPtr(request.Payload.AdditionalNotes), AppSource: &appSource}
 	externalSystem := cosModel.ExternalSystemReferenceInput{
 		ExternalID:     request.Payload.Uid,
 		Type:           "CALCOM",

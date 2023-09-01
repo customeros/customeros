@@ -97,6 +97,11 @@ func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID 
 	panic(fmt.Errorf("not implemented: MeetingAddNewLocation - meeting_AddNewLocation"))
 }
 
+// MeetingAddNote is the resolver for the meeting_AddNote field.
+func (r *mutationResolver) MeetingAddNote(ctx context.Context, meetingID string, note *model.NoteInput) (*model.Meeting, error) {
+	panic(fmt.Errorf("not implemented: MeetingAddNote - meeting_AddNote"))
+}
+
 // Meeting is the resolver for the meeting field.
 func (r *queryResolver) Meeting(ctx context.Context, id string) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: Meeting - meeting"))
