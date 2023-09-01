@@ -7,7 +7,6 @@ import (
 
 type NoteEntity struct {
 	Id            string
-	Html          string // deprecated
 	Content       string
 	ContentType   string
 	CreatedAt     time.Time
@@ -20,7 +19,7 @@ type NoteEntity struct {
 }
 
 func (note NoteEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nhtml: %s", note.Id, note.Html)
+	return fmt.Sprintf("id: %s\ncontent: %s", note.Id, note.Content)
 }
 
 type NoteEntities []NoteEntity
