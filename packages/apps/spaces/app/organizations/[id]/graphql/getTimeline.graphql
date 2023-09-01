@@ -38,7 +38,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
 
         sentBy {
           __typename
-        ... InteractionEventParticipantFragment
+          ...InteractionEventParticipantFragment
         }
         sentTo {
           __typename
@@ -77,7 +77,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
               }
 
               sentBy {
-                ... InteractionEventParticipantFragment
+                ...InteractionEventParticipantFragment
               }
             }
           }
@@ -92,10 +92,10 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         startedAt
         endedAt
         attendedBy {
-          ... MeetingParticipantFragment
+          ...MeetingParticipantFragment
         }
         createdBy {
-          ... MeetingParticipantFragment
+          ...MeetingParticipantFragment
         }
         note {
           id

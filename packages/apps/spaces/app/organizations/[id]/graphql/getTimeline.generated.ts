@@ -355,6 +355,14 @@ export type GetTimelineQuery = {
                   firstName?: string | null;
                   lastName?: string | null;
                   profilePhotoUrl?: string | null;
+                  timezone?: string | null;
+                  emails: Array<{
+                    __typename?: 'Email';
+                    id: string;
+                    email?: string | null;
+                    rawEmail?: string | null;
+                    primary: boolean;
+                  }>;
                 };
               }
             | {
@@ -363,6 +371,13 @@ export type GetTimelineQuery = {
                   __typename?: 'Organization';
                   id: string;
                   name: string;
+                  emails: Array<{
+                    __typename?: 'Email';
+                    id: string;
+                    email?: string | null;
+                    rawEmail?: string | null;
+                    primary: boolean;
+                  }>;
                 };
               }
             | {
@@ -373,6 +388,13 @@ export type GetTimelineQuery = {
                   firstName: string;
                   lastName: string;
                   profilePhotoUrl?: string | null;
+                  emails?: Array<{
+                    __typename?: 'Email';
+                    id: string;
+                    email?: string | null;
+                    rawEmail?: string | null;
+                    primary: boolean;
+                  }> | null;
                 };
               }
           >;
@@ -386,6 +408,14 @@ export type GetTimelineQuery = {
                   firstName?: string | null;
                   lastName?: string | null;
                   profilePhotoUrl?: string | null;
+                  timezone?: string | null;
+                  emails: Array<{
+                    __typename?: 'Email';
+                    id: string;
+                    email?: string | null;
+                    rawEmail?: string | null;
+                    primary: boolean;
+                  }>;
                 };
               }
             | {
@@ -394,6 +424,13 @@ export type GetTimelineQuery = {
                   __typename?: 'Organization';
                   id: string;
                   name: string;
+                  emails: Array<{
+                    __typename?: 'Email';
+                    id: string;
+                    email?: string | null;
+                    rawEmail?: string | null;
+                    primary: boolean;
+                  }>;
                 };
               }
             | {
@@ -404,6 +441,13 @@ export type GetTimelineQuery = {
                   firstName: string;
                   lastName: string;
                   profilePhotoUrl?: string | null;
+                  emails?: Array<{
+                    __typename?: 'Email';
+                    id: string;
+                    email?: string | null;
+                    rawEmail?: string | null;
+                    primary: boolean;
+                  }> | null;
                 };
               }
           >;

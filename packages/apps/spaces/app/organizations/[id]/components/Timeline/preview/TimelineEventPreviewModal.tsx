@@ -6,8 +6,9 @@ import styles from '../events/email/EmailPreviewModal.module.scss';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 
 import { EmailPreviewModal } from '@organization/components/Timeline/events/email/EmailPreviewModal';
+import { MeetingPreviewModal } from '@organization/components/Timeline/events/meeting/MeetingPreviewModal';
 import { SlackThreadPreviewModal } from '@organization/components/Timeline/events/slack/SlackThreadPreviewModal';
-import { InteractionEvent } from '@spaces/graphql';
+import { InteractionEvent, Meeting } from '@spaces/graphql';
 
 export const TimelineEventPreviewModal: React.FC<{
   invalidateQuery: () => void;
@@ -15,12 +16,22 @@ export const TimelineEventPreviewModal: React.FC<{
   const { closeModal, isModalOpen, modalContent } =
     useTimelineEventPreviewContext();
 
-  const event = modalContent as InteractionEvent;
+  const event = modalContent as InteractionEvent | Meeting;
 
   if (!isModalOpen || !modalContent) {
     return null;
   }
-  if (event?.channel === 'EMAIL') {
+
+  const isMeeting = event?.__typename === 'Meeting';
+  const isInteraction = event?.__typename === 'InteractionEvent';
+  const isSlack = isInteraction && event?.channel === 'SLACK';
+  const isEmail = isInteraction && event?.channel === 'EMAIL';
+
+  if (isMeeting) {
+    return <MeetingPreviewModal />;
+  }
+
+  if (isEmail) {
     return <EmailPreviewModal invalidateQuery={invalidateQuery} />;
   }
 
@@ -42,7 +53,7 @@ export const TimelineEventPreviewModal: React.FC<{
             bg='gray.25'
             maxHeight='calc(100vh - 6rem)'
           >
-            {event?.channel === 'SLACK' && <SlackThreadPreviewModal />}
+            {isSlack && <SlackThreadPreviewModal />}
           </Card>
         </Flex>
       </ScaleFade>

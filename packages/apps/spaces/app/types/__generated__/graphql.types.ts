@@ -25,7 +25,6 @@ export type Action = {
   __typename?: 'Action';
   actionType: ActionType;
   appSource: Scalars['String'];
-  content?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
   id: Scalars['ID'];
@@ -43,8 +42,6 @@ export type ActionItem = {
 
 export enum ActionType {
   Created = 'CREATED',
-  RenewalForecastUpdated = 'RENEWAL_FORECAST_UPDATED',
-  RenewalLikelihoodUpdated = 'RENEWAL_LIKELIHOOD_UPDATED',
 }
 
 export type Analysis = Node & {
@@ -1111,7 +1108,6 @@ export type MeetingInput = {
   appSource: Scalars['String'];
   attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
   conferenceUrl?: InputMaybe<Scalars['String']>;
-  createdAt?: InputMaybe<Scalars['Time']>;
   createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
   endedAt?: InputMaybe<Scalars['Time']>;
   externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
@@ -2615,7 +2611,6 @@ export type TimelineEvent =
   | PageView;
 
 export enum TimelineEventType {
-  Action = 'ACTION',
   Analysis = 'ANALYSIS',
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',

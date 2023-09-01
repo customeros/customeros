@@ -7,32 +7,41 @@ import {
 } from '@graphql/types';
 import { getName } from '@spaces/utils/getParticipantsName';
 
+type Participant =
+  | ContactParticipant
+  | UserParticipant
+  | JobRoleParticipant
+  | OrganizationParticipant;
 
-export const getParticipantName = (
-  participant:
-    | ContactParticipant
-    | UserParticipant
-    | JobRoleParticipant
-    | OrganizationParticipant,
-): string => {
-  let participantT;
-  if ((participant as ContactParticipant)?.contactParticipant) {
-    participantT = (participant as ContactParticipant).contactParticipant;
+export const getParticipant = (participant: Participant) => {
+  switch (participant?.__typename) {
+    case 'ContactParticipant':
+      return participant.contactParticipant;
+    case 'UserParticipant':
+      return participant.userParticipant;
+    case 'JobRoleParticipant':
+      return participant.jobRoleParticipant?.contact;
+    case 'OrganizationParticipant':
+      return participant.organizationParticipant;
+    default:
+      return null;
   }
-  if ((participant as UserParticipant)?.userParticipant) {
-    participantT = (participant as UserParticipant).userParticipant;
-  }
-  if ((participant as JobRoleParticipant)?.jobRoleParticipant?.contact) {
-    participantT = (participant as JobRoleParticipant).jobRoleParticipant
-      ?.contact;
-  }
-  if ((participant as OrganizationParticipant)?.organizationParticipant) {
-    participantT = (participant as OrganizationParticipant)
-      .organizationParticipant;
-  }
-  if (!participantT) return '';
+};
 
-  return getName(participantT);
+export const getParticipantName = (participant: Participant): string => {
+  const contact = getParticipant(participant);
+
+  if (!contact) return '';
+
+  return getName(contact);
+};
+
+export const getParticipantEmail = (participant: Participant): string => {
+  const contact = getParticipant(participant);
+
+  if (!contact) return '';
+
+  return contact.emails?.[0]?.email ?? getName(contact);
 };
 
 export const getParticipants = (
