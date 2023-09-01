@@ -249,7 +249,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 					ExternalId:     string(note.FieldSource) + "-" + contactInput.ExternalId,
 					ExternalSystem: contactInput.ExternalSystem,
 				},
-				Html: note.Note,
+				Content: note.Note,
 			}
 			noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, localNote)
 			if err != nil {
