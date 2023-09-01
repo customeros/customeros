@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
 	"time"
 )
@@ -24,6 +25,7 @@ type SlackService interface {
 	FetchNewMessagesFromSlackChannel(ctx context.Context, token, channelId string, from, to time.Time) ([]slack.Message, error)
 	FetchMessagesFromSlackChannelWithReplies(ctx context.Context, token, channelId string, to time.Time, lookbackWindow int) ([]slack.Message, error)
 	FetchNewThreadMessages(ctx context.Context, token, channelId, parentTs string, from, to time.Time) ([]slack.Message, error)
+	GetMessagePermalink(ctx context.Context, token, channelId, messageTs string) (string, error)
 }
 
 type slackService struct {
@@ -304,6 +306,44 @@ func (s *slackService) FetchNewThreadMessages(ctx context.Context, token, channe
 		return nil, ctx.Err()
 	}
 	return messages, nil
+}
+
+func (s *slackService) GetMessagePermalink(ctx context.Context, token, channelId, messageTs string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.GetMessagePermalink")
+	defer span.Finish()
+	span.LogKV("channelId", channelId, "messageTimestamp", messageTs)
+
+	client := slack.New(token)
+
+	params := slack.PermalinkParameters{
+		Channel: channelId,
+		Ts:      messageTs,
+	}
+
+	retryCount, maxRetryCount := 0, 5
+	for {
+		permalink, err := client.GetPermalinkContext(ctx, &params)
+		if err != nil {
+			if retryCount > maxRetryCount {
+				return "", errors.New("max retry count reached")
+			}
+			retryCount++
+			if rlErr, ok := err.(*slack.RateLimitedError); ok {
+				wait := rlErr.RetryAfter
+				select {
+				case <-time.After(wait):
+					// retry after delay
+				case <-ctx.Done():
+					return "", ctx.Err()
+				}
+			} else {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		} else {
+			return permalink, nil
+		}
+	}
 }
 
 func toFloatTs(time time.Time) string {

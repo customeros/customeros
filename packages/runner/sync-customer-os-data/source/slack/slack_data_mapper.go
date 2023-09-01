@@ -169,6 +169,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 			UserNamesById  map[string]string `json:"channel_user_names,omitempty"`
 			ChannelId      string            `json:"channel_id,omitempty"`
 			ChannelName    string            `json:"channel_name,omitempty"`
+			Permalink      string            `json:"permalink"`
 		} `json:"openline_fields,omitempty"`
 	}
 
@@ -182,6 +183,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		ContentType: "plain/text",
 		Type:        "MESSAGE",
 		Channel:     "SLACK",
+		ExternalUrl: input.OpenlineFields.Permalink,
 	}
 
 	// Do not use blocks in content for now.

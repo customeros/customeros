@@ -6,8 +6,6 @@ import (
 
 type IssueData struct {
 	BaseData
-
-	ExternalUrl string   `json:"externalUrl,omitempty"`
 	Subject     string   `json:"subject,omitempty"`
 	Status      string   `json:"status,omitempty"`
 	Priority    string   `json:"priority,omitempty"`

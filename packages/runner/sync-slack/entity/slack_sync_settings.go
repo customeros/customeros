@@ -3,8 +3,8 @@ package entity
 import "time"
 
 type SlackSyncSettings struct {
-	Tenant         string     `gorm:"primary_key;type:varchar(255)"`
-	ChannelId      string     `gorm:"primary_key;varchar(50)"`
+	Tenant         string     `gorm:"type:varchar(255);not null"`
+	ChannelId      string     `gorm:"varchar(50);not null"`
 	ChannelName    string     `gorm:"varchar(1000)"`
 	TeamId         string     `gorm:"varchar(50)"`
 	SlackAccess    bool       `gorm:"column:slack_access;not null;default:true"`
