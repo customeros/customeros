@@ -1,11 +1,11 @@
 import {
-    useRef,
-    useState,
-    useEffect,
-    RefObject,
-    useContext,
-    createContext,
-    PropsWithChildren,
+  useRef,
+  useState,
+  useEffect,
+  RefObject,
+  useContext,
+  createContext,
+  PropsWithChildren,
 } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocalStorage } from 'usehooks-ts';
