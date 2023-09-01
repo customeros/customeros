@@ -10,7 +10,6 @@ export const MainPageWrapper = ({ children }: any) => {
   const analytics = useJune();
   const { data: session } = useSession();
 
-
   useEffect(() => {
     if (analytics && session) {
       analytics.user().then((user) => {
@@ -24,13 +23,5 @@ export const MainPageWrapper = ({ children }: any) => {
     }
   }, [session, analytics]);
 
-  return (
-    <ApolloProvider client={client}>
-      {/*<WebRTCContextProvider>*/}
-      {/*  <WebRTCInboundNotification />*/}
-      {/*  <WebRTCCallProgress />*/}
-      {children}
-      {/*</WebRTCContextProvider>*/}
-    </ApolloProvider>
-  );
+  return <ApolloProvider client={client}>{children}</ApolloProvider>;
 };
