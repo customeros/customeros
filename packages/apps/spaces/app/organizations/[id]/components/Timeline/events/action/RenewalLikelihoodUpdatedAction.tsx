@@ -55,7 +55,7 @@ export const RenewalLikelihoodUpdatedAction: React.FC<
           {likelihood}
         </Text>
         <Text color='gray.500' as='span' ml={1}>
-          {author}
+          by {author}
         </Text>
       </Text>
     </Flex>
