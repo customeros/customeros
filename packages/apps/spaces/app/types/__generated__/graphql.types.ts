@@ -1234,6 +1234,7 @@ export type Mutation = {
   location_RemoveFromOrganization: Organization;
   location_Update: Location;
   meeting_AddNewLocation: Location;
+  meeting_AddNote: Meeting;
   meeting_Create: Meeting;
   meeting_LinkAttachment: Meeting;
   meeting_LinkAttendedBy: Meeting;
@@ -1550,6 +1551,11 @@ export type MutationMeeting_AddNewLocationArgs = {
   meetingId: Scalars['ID'];
 };
 
+export type MutationMeeting_AddNoteArgs = {
+  meetingId: Scalars['ID'];
+  note?: InputMaybe<NoteInput>;
+};
+
 export type MutationMeeting_CreateArgs = {
   meeting: MeetingInput;
 };
@@ -1856,8 +1862,11 @@ export type Node = {
 export type Note = {
   __typename?: 'Note';
   appSource: Scalars['String'];
+  content: Scalars['String'];
+  contentType: Scalars['String'];
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
+  /** @deprecated Use content instead */
   html: Scalars['String'];
   id: Scalars['ID'];
   includes: Array<Attachment>;
@@ -1870,7 +1879,9 @@ export type Note = {
 
 export type NoteInput = {
   appSource?: InputMaybe<Scalars['String']>;
-  html: Scalars['String'];
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  html?: InputMaybe<Scalars['String']>;
 };
 
 export type NotePage = Pages & {
@@ -1881,7 +1892,9 @@ export type NotePage = Pages & {
 };
 
 export type NoteUpdateInput = {
-  html: Scalars['String'];
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  html?: InputMaybe<Scalars['String']>;
   id: Scalars['ID'];
 };
 

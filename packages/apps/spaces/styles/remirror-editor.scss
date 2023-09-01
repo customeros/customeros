@@ -731,9 +731,18 @@ display: none
 .remirror-a11y-dark :not(pre) > code[class*='language-'],
 .remirror-a11y-dark pre[class*='language-'] {
   font-family: Monospace;
-  background: var(--chakra-colors-gray-25);
-  border: 1px solid var(--chakra-colors-gray-200);
-  color: var(--chakra-colors-gray-900);
+  background: white;
+  border: 1px solid var(--chakra-colors-gray-300);
+}
+
+div.slack_code  {
+  color: var(--chakra-colors-gray-700);
+}
+
+span.slack_code {
+  color: var(--chakra-colors-rose-500);
+  display: block;// needed for chakra max lines to work well
+  width: fit-content;
 }
 
 .slack_code {
@@ -3814,10 +3823,9 @@ display: none
 }
 
 a {
-  --native-hyperlink-color: rgb(0, 0, 238);
-  color: var(--native-hyperlink-color);
-  text-decoration: underline;
+  color: var(--chakra-colors-primary-700);
   cursor: pointer;
+  word-break: break-all;
 }
 
 .slack_strikethrough{
@@ -3827,10 +3835,15 @@ a {
 .slack-mention {
   // copied from light theme of slack
   font-weight: 400;
-  background: rgba(29, 155, 209, 0.1);
-  color: rgb(18, 100, 163);
-  font-size: 15px;
+  background: var(--chakra-colors-gray-100);
+  color: var(--chakra-colors-gray-700);
+  border-radius: 2px;
+  font-size: 14px;
   padding-inline-end: 2px;
   padding-inline-start: 2px;
-  padding: 0 2px 1px;
+  padding: 1px 3px;
+}
+
+.slack-container {
+  white-space-collapse: break-spaces
 }

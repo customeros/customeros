@@ -30,7 +30,9 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   showDateOnHover,
 }) => {
   const displayContent: string = (() => {
-    const sanitizeContent = sanitizeHtml(content);
+    const sanitizeContent = sanitizeHtml(
+      content.replace(/\n/g, '<br/>').replace(/ /g, ' '),
+    );
     const slack = escapeForSlackWithMarkdown(sanitizeContent);
     const regex = /(@[\w]+)/g;
     return slack.replace(
@@ -93,7 +95,11 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
 
                 <ViewInSlackButton url='' />
               </Flex>
-              <div dangerouslySetInnerHTML={{ __html: displayContent }}></div>
+              <Text
+                className='slack-container'
+                noOfLines={showDateOnHover ? 4 : undefined}
+                dangerouslySetInnerHTML={{ __html: displayContent }}
+              />
               {children}
             </Flex>
           </Flex>

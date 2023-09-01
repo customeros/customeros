@@ -178,6 +178,13 @@ export type GetTimelineQuery = {
               >;
             }>;
           } | null;
+          includes: Array<{
+            __typename?: 'Attachment';
+            id: string;
+            mimeType: string;
+            name: string;
+            extension: string;
+          }>;
           issue?: {
             __typename?: 'Issue';
             externalLinks: Array<{
@@ -513,6 +520,12 @@ export const GetTimelineDocument = `
         }
         content
         contentType
+        includes {
+          id
+          mimeType
+          name
+          extension
+        }
         issue {
           externalLinks {
             type

@@ -1,7 +1,0 @@
-query GetHealthIndicators {
-  healthIndicators {
-    id
-    name
-    order
-  }
-}
