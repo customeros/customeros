@@ -72,12 +72,12 @@ export const FeaturedIcon = ({
   colorScheme = 'gray',
   ...props
 }: FeaturedIconProps) => {
-  const [color50, color100, color600] = useToken('colors', [
+  const [color50, color100, color500] = useToken('colors', [
     `${colorScheme}.50`,
     `${colorScheme}.100`,
-    `${colorScheme}.600`,
+    `${colorScheme}.500`,
   ]);
-  const iconProps = getIconProps(size, color50, color100, color600);
+  const iconProps = getIconProps(size, color50, color100, color500);
 
   const Icon = isValidElement(children)
     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
