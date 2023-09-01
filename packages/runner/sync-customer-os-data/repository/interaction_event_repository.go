@@ -97,6 +97,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 		  	ie:TimelineEvent, 
 		  	ie:TimelineEvent_%s, 
 		  	rel.syncDate=$syncDate, 
+			rel.externalUrl=$externalUrl,
 		  	ie.createdAt=$createdAt,
 			ie.channel=$channel,
 			ie.eventType=$type, 
@@ -126,6 +127,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 			"sourceOfTruth":    event.ExternalSystem,
 			"appSource":        constants.AppSourceSyncCustomerOsData,
 			"externalId":       event.ExternalId,
+			"externalUrl":      event.ExternalUrl,
 			"syncDate":         syncDate,
 			"channel":          event.Channel,
 			"hide":             event.Hide,
@@ -158,6 +160,7 @@ func (r *interactionEventRepository) MergeEmailInteractionSession(ctx context.Co
 		"  is:InteractionSession, " +
 		"  is.id=randomUUID(), " +
 		"  is.syncDate=$syncDate, " +
+		"  is.externalUrl=$externalUrl, " +
 		"  is.createdAt=$createdAt, " +
 		"  is.name=$name, " +
 		"  is.status=$status," +
@@ -177,6 +180,7 @@ func (r *interactionEventRepository) MergeEmailInteractionSession(ctx context.Co
 				"identifier":    message.EmailThreadId,
 				"name":          message.Subject,
 				"syncDate":      syncDate,
+				"externalUrl":   message.ExternalUrl,
 				"createdAt":     utils.TimePtrFirstNonNilNillableAsAny(message.CreatedAt),
 				"status":        "ACTIVE",
 				"type":          "THREAD",
@@ -212,6 +216,7 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 		"  ie:TimelineEvent, " +
 		"  ie:TimelineEvent_%s, " +
 		"  rel.syncDate=$syncDate, " +
+		"  rel.externalUrl=$externalUrl, " +
 		"  ie.createdAt=$createdAt, " +
 		"  ie.id=randomUUID(), " +
 		"  ie.identifier=$identifier, " +
@@ -231,6 +236,7 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 			"sourceOfTruth":    message.ExternalSystem,
 			"appSource":        constants.AppSourceSyncCustomerOsData,
 			"externalId":       message.ExternalId,
+			"externalUrl":      message.ExternalUrl,
 			"syncDate":         syncDate,
 			"createdAt":        utils.TimePtrFirstNonNilNillableAsAny(message.CreatedAt),
 			"channel":          "EMAIL",
@@ -460,6 +466,7 @@ func (r *interactionEventRepository) MergeInteractionSessionForEvent(ctx context
 									is:InteractionSession,
 									is.id=randomUUID(),
 									rel.syncDate=$syncDate,
+									rel.externalUrl=$externalUrl,
 									is.createdAt=$createdAt,
 									is.updatedAt=$createdAt,
 									is.source=$source,
@@ -483,6 +490,7 @@ func (r *interactionEventRepository) MergeInteractionSessionForEvent(ctx context
 		"sourceOfTruth":      externalSource,
 		"appSource":          constants.AppSourceSyncCustomerOsData,
 		"syncDate":           syncDate,
+		"externalUrl":        session.ExternalUrl,
 		"createdAt":          utils.TimePtrFirstNonNilNillableAsAny(session.CreatedAt),
 		"channel":            session.Channel,
 		"type":               session.Type,

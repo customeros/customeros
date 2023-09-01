@@ -29,6 +29,7 @@ type MessageOpenlineFields struct {
 	ChannelId        string            `json:"channel_id"`
 	ChannelName      string            `json:"channel_name"`
 	OrganizationId   string            `json:"organization_id"`
+	Permalink        string            `json:"permalink"`
 }
 
 type UserOpenlineFields struct {
@@ -273,6 +274,12 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	}
 
 	for _, message := range channelMessages {
+		permalink, err := s.slackService.GetMessagePermalink(ctx, token, slackStngs.ChannelId, message.Timestamp)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to get permalink for channel: %s message %s: %s", slackStngs.ChannelId, message.Timestamp, err.Error())
+			return err
+		}
 		output := struct {
 			slack.Message
 			MessageOpenlineFields `json:"openline_fields"`
@@ -284,6 +291,7 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 				ChannelId:        slackStngs.ChannelId,
 				ChannelName:      slackStngs.ChannelName,
 				OrganizationId:   slackStngs.OrganizationId,
+				Permalink:        permalink,
 			},
 		}
 		messageJson, _ := json.Marshal(output)
@@ -295,6 +303,12 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 	}
 
 	for _, message := range threadMessages {
+		permalink, err := s.slackService.GetMessagePermalink(ctx, token, slackStngs.ChannelId, message.Timestamp)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to get permalink for channel: %s message %s: %s", slackStngs.ChannelId, message.Timestamp, err.Error())
+			return err
+		}
 		output := struct {
 			slack.Message
 			MessageOpenlineFields `json:"openline_fields"`
@@ -306,6 +320,7 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 				ChannelId:        slackStngs.ChannelId,
 				ChannelName:      slackStngs.ChannelName,
 				OrganizationId:   slackStngs.OrganizationId,
+				Permalink:        permalink,
 			},
 		}
 		messageJson, _ := json.Marshal(output)

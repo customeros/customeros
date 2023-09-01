@@ -16,7 +16,6 @@ type ContactData struct {
 	Label                         string            `json:"label,omitempty"`
 	JobTitle                      string            `json:"jobTitle,omitempty"`
 	Notes                         []ContactNote     `json:"notes,omitempty"`
-	ExternalUrl                   string            `json:"externalUrl,omitempty"`
 	Email                         string            `json:"email,omitempty"`
 	AdditionalEmails              []string          `json:"additionalEmails,omitempty"`
 	PhoneNumber                   string            `json:"phoneNumber,omitempty"`

@@ -25,6 +25,7 @@ type BaseData struct {
 	Id             string     `json:"id,omitempty"`
 	ExternalId     string     `json:"externalId,omitempty"`
 	ExternalSystem string     `json:"externalSystem,omitempty"`
+	ExternalUrl    string     `json:"externalUrl,omitempty"`
 	CreatedAtStr   string     `json:"createdAt,omitempty"`
 	UpdatedAtStr   string     `json:"updatedAt,omitempty"`
 	CreatedAt      *time.Time `json:"createdAtTime,omitempty"`
