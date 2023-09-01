@@ -3,11 +3,14 @@ mutation CreateNote($organizationId: ID!) {
     organizationId: $organizationId,
     input: {
       html: "Note content"
+      contentType: "text/html"
       appSource: "test"
     }
   ) {
     id
     html
+    content
+    contentType
     createdAt
     updatedAt
     source

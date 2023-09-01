@@ -950,12 +950,14 @@ func OrganizationAssociatedWithLocation(ctx context.Context, driver *neo4j.Drive
 	})
 }
 
-func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, html string, createdAt time.Time) string {
+func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, content, contentType string, createdAt time.Time) string {
 	var noteId, _ = uuid.NewRandom()
 
 	query := "MATCH (c:Contact {id:$contactId}) " +
 		"		MERGE (c)-[:NOTED]->(n:Note {id:$id}) " +
-		"		ON CREATE SET 	n.html=$html, " +
+		"		ON CREATE SET 	n.html=$content, " +
+		"						n.content=$content, " +
+		"						n.contentType=$contentType, " +
 		"						n.createdAt=$createdAt, " +
 		"						n.updatedAt=$createdAt, " +
 		"						n.source=$source, " +
@@ -965,22 +967,24 @@ func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, 
 		"						n:TimelineEvent, " +
 		"						n:TimelineEvent_%s"
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
-		"id":        noteId.String(),
-		"contactId": contactId,
-		"html":      html,
-		"createdAt": createdAt,
-		"source":    "openline",
-		"appSource": "test",
+		"id":          noteId.String(),
+		"contactId":   contactId,
+		"content":     content,
+		"contentType": contentType,
+		"createdAt":   createdAt,
+		"source":      "openline",
+		"appSource":   "test",
 	})
 	return noteId.String()
 }
 
-func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId, html string, createdAt time.Time) string {
+func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId, content string, createdAt time.Time) string {
 	var noteId, _ = uuid.NewRandom()
 
 	query := "MATCH (org:Organization {id:$organizationId}) " +
 		"		MERGE (org)-[:NOTED]->(n:Note {id:$id}) " +
-		"		ON CREATE SET 	n.html=$html, " +
+		"		ON CREATE SET 	n.html=$content, " +
+		"						n.content=$content, " +
 		"						n.createdAt=$createdAt, " +
 		"						n:Note_%s, " +
 		"						n:TimelineEvent, " +
@@ -988,7 +992,7 @@ func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithCont
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"id":             noteId.String(),
 		"organizationId": organizationId,
-		"html":           html,
+		"content":        content,
 		"createdAt":      createdAt,
 		"source":         "openline",
 		"appSource":      "test",

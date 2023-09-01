@@ -38,6 +38,8 @@ func TestMutationResolver_NoteCreateForContact(t *testing.T) {
 	require.NotNil(t, createdNote.CreatedAt)
 	require.NotNil(t, createdNote.UpdatedAt)
 	require.Equal(t, "Note content", createdNote.HTML)
+	require.Equal(t, "Note content", createdNote.Content)
+	require.Equal(t, "text/markdown", createdNote.ContentType)
 	require.Equal(t, model.DataSourceOpenline, createdNote.Source)
 	require.Equal(t, model.DataSourceOpenline, createdNote.SourceOfTruth)
 	require.Equal(t, constants.AppSourceCustomerOsApi, createdNote.AppSource)
@@ -82,6 +84,8 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 	require.NotNil(t, createdNote.CreatedAt)
 	require.NotNil(t, createdNote.UpdatedAt)
 	require.Equal(t, "Note content", createdNote.HTML)
+	require.Equal(t, "Note content", createdNote.Content)
+	require.Equal(t, "text/html", createdNote.ContentType)
 	require.Equal(t, model.DataSourceOpenline, createdNote.Source)
 	require.Equal(t, model.DataSourceOpenline, createdNote.SourceOfTruth)
 	require.Equal(t, "test", createdNote.AppSource)
@@ -106,7 +110,7 @@ func TestMutationResolver_AddAttachmentToNote(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
@@ -142,7 +146,7 @@ func TestMutationResolver_RemoveAttachmentFromNote(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
@@ -193,7 +197,7 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
 
 	rawResponse, err := c.RawPost(getQuery("note/update_note"),
 		client.Var("noteId", noteId))
@@ -211,6 +215,8 @@ func TestMutationResolver_NoteUpdate(t *testing.T) {
 	require.NotNil(t, updatedNote.ID)
 	require.NotNil(t, updatedNote.UpdatedAt)
 	require.Equal(t, "updated content", updatedNote.HTML)
+	require.Equal(t, "updated content", updatedNote.Content)
+	require.Equal(t, "text/markdown", updatedNote.ContentType)
 	require.Equal(t, model.DataSourceOpenline, updatedNote.SourceOfTruth)
 
 	// Check the number of nodes and relationships in the Neo4j database
@@ -231,7 +237,7 @@ func TestMutationResolver_NoteDelete(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
@@ -269,7 +275,7 @@ func TestQueryResolver_GetNote_WithNotedEntities(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
-	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
 	neo4jt.LinkNoteWithOrganization(ctx, driver, noteId, organizationId)
 
 	rawResponse, err := c.RawPost(getQuery("note/get_note_with_noted_entities_via_organization_query"),

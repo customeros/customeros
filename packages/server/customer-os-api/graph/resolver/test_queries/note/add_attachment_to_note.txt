@@ -4,6 +4,8 @@ mutation AddAttachmentToNote($noteId: ID!, $attachmentId: ID!) {
             attachmentId: $attachmentId) {
       id
       html
+      content
+      contentType
       updatedAt
       sourceOfTruth
       includes {

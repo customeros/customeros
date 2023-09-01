@@ -590,8 +590,8 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1", utils.Now())
-	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2", utils.Now())
+	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1", "text/plain", utils.Now())
+	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2", "text/plain", utils.Now())
 	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
@@ -642,8 +642,8 @@ func TestQueryResolver_Contact_WithNotes_ById_Time_Range(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1", utils.Now())
-	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2", utils.Now())
+	noteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note1", "text/plain", utils.Now())
+	noteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "note2", "text/plain", utils.Now())
 	neo4jt.NoteCreatedByUser(ctx, driver, noteId1, userId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
@@ -1019,8 +1019,8 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	neo4jt.MeetingAttendedBy(ctx, driver, meetingId, contactId)
 
 	// prepare contact notes
-	contactNoteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", secAgo30)
-	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", minAgo5)
+	contactNoteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", "text/plain", secAgo30)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", "text/plain", minAgo5)
 
 	// prepare interaction events
 	channel := "EMAIL"
@@ -1175,11 +1175,11 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 	})
 
 	// prepare contact notes
-	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", now)
-	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", now)
-	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 3", now)
-	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 4", now)
-	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 5", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", "text/plain", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", "text/plain", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 3", "text/plain", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 4", "text/plain", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 5", "text/plain", now)
 
 	// prepare interaction events
 	channel := "EMAIL"

@@ -525,8 +525,8 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	actionId1 := neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, entity.ActionCreated, secAgo5)
 
 	// prepare contact and org notes
-	contactNoteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", secAgo10)
-	contactNoteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", secAgo20)
+	contactNoteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", "text/plain", secAgo10)
+	contactNoteId2 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", "text/plain", secAgo20)
 	orgNoteId3 := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", secAgo30)
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 2", secAgo1000)
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 3", secInFuture10)
@@ -687,8 +687,8 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	// prepare contact amd org notes
 	neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, entity.ActionCreated, now)
 
-	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", now)
-	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", "text/plain", now)
+	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", "text/plain", now)
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", now)
 
 	// prepare contact and org interaction events

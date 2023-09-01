@@ -5,6 +5,8 @@ query GetOrganizationById($organizationId: ID!){
         content {
           id
           html
+          content
+          contentType
           mentioned {
             __typename
             ... on Issue {

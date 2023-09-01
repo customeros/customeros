@@ -1,4 +1,3 @@
-
 """
 Specifies how many pages of meeting information has been returned in the query response.
 **A `response` object.**
@@ -39,6 +38,7 @@ extend type Mutation {
     meeting_LinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_AddNewLocation(meetingId: ID!): Location!
+    meeting_AddNote(meetingId: ID!, note: NoteInput): Meeting!
 }
 
 input MeetingParticipantInput  {

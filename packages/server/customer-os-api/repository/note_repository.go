@@ -24,21 +24,21 @@ type NoteDbNodesWithTotalCount struct {
 }
 
 type NoteRepository interface {
-	GetPaginatedNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
+	GetPaginatedNotesForContact(ctx context.Context, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error)
 	GetPaginatedNotesForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	GetNotesForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetMentionedByNotesForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error)
 
-	CreateNoteForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
-	CreateNoteForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
-	CreateNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meeting string, entity *entity.NoteEntity) (*dbtype.Node, error)
+	CreateNoteForContact(ctx context.Context, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
+	CreateNoteForOrganization(ctx context.Context, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
+	CreateNoteForMeeting(ctx context.Context, tenant, meeting string, entity *entity.NoteEntity) (*dbtype.Node, error)
 	CreateNoteForMeetingTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, meeting string, entity *entity.NoteEntity) (*dbtype.Node, error)
 
 	UpdateNote(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.NoteEntity) (*dbtype.Node, error)
 
-	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, noteId string) error
-	SetNoteCreator(ctx context.Context, session neo4j.SessionWithContext, tenant, userId, noteId string) error
+	Delete(ctx context.Context, tenant, noteId string) error
+	SetNoteCreator(ctx context.Context, tenant, userId, noteId string) error
 
 	GetNotedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetMentionedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
@@ -54,12 +54,15 @@ func NewNoteRepository(driver *neo4j.DriverWithContext) NoteRepository {
 	}
 }
 
-func (r *noteRepository) GetPaginatedNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error) {
+func (r *noteRepository) GetPaginatedNotesForContact(ctx context.Context, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetPaginatedNotesForContact")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	result := new(NoteDbNodesWithTotalCount)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
@@ -218,7 +221,9 @@ func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWi
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (n:%s {id:$noteId}) " +
-		" SET 	n.html=$html, " +
+		" SET 	n.html=$content, " +
+		"		n.content=$content, " +
+		"		n.contentType=$contentType, " +
 		"		n.sourceOfTruth=$sourceOfTruth, " +
 		"		n.updatedAt=$now " +
 		" RETURN n"
@@ -227,7 +232,8 @@ func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWi
 			map[string]interface{}{
 				"tenant":        tenant,
 				"noteId":        entity.Id,
-				"html":          entity.Html,
+				"content":       entity.Content,
+				"contentType":   entity.ContentType,
 				"sourceOfTruth": entity.SourceOfTruth,
 				"now":           utils.Now(),
 			})
@@ -239,14 +245,16 @@ func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWi
 	return queryResult.(*dbtype.Node), nil
 }
 
-func (r *noteRepository) CreateNoteForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+func (r *noteRepository) CreateNoteForContact(ctx context.Context, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.CreateNoteForContact")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()}) " +
-		" ON CREATE SET n.html=$html, " +
+		" ON CREATE SET n.html=$content, " +
+		"				n.content=$content, " +
+		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
 		"				n.source=$source, " +
@@ -257,12 +265,16 @@ func (r *noteRepository) CreateNoteForContact(ctx context.Context, session neo4j
 		"				n:TimelineEvent_%s " +
 		" RETURN n"
 
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 			map[string]any{
 				"tenant":        tenant,
 				"contactId":     contactId,
-				"html":          entity.Html,
+				"content":       entity.Content,
+				"contentType":   entity.ContentType,
 				"now":           utils.Now(),
 				"source":        entity.Source,
 				"sourceOfTruth": entity.SourceOfTruth,
@@ -276,14 +288,16 @@ func (r *noteRepository) CreateNoteForContact(ctx context.Context, session neo4j
 	return result.(*dbtype.Node), nil
 }
 
-func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, entity entity.NoteEntity) (*dbtype.Node, error) {
+func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, tenant, organizationId string, entity entity.NoteEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.CreateNoteForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (org)-[:NOTED]->(n:Note {id:randomUUID()}) " +
-		" ON CREATE SET n.html=$html, " +
+		" ON CREATE SET n.html=$content, " +
+		"				n.content=$content, " +
+		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
 		"				n.source=$source, " +
@@ -294,12 +308,16 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, session 
 		"				n:TimelineEvent_%s " +
 		" RETURN n"
 
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 			map[string]any{
 				"tenant":         tenant,
 				"organizationId": organizationId,
-				"html":           entity.Html,
+				"content":        entity.Content,
+				"contentType":    entity.ContentType,
 				"now":            utils.Now(),
 				"source":         entity.Source,
 				"sourceOfTruth":  entity.SourceOfTruth,
@@ -313,12 +331,15 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, session 
 	return result.(*dbtype.Node), nil
 }
 
-func (r *noteRepository) CreateNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meetingId string, entity *entity.NoteEntity) (*dbtype.Node, error) {
+func (r *noteRepository) CreateNoteForMeeting(ctx context.Context, tenant, meetingId string, entity *entity.NoteEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.CreateNoteForMeeting")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	params, query := r.createMeetingQueryAndParams(tenant, meetingId, entity)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, query, params)
@@ -344,12 +365,16 @@ func (r *noteRepository) CreateNoteForMeetingTx(ctx context.Context, tx neo4j.Ma
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, result, err)
 }
 
-func (r *noteRepository) Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, noteId string) error {
+func (r *noteRepository) Delete(ctx context.Context, tenant, noteId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.Delete")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (n:%s {id:$noteId}) DETACH DELETE n"
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, "Note_"+tenant),
 			map[string]interface{}{
@@ -361,7 +386,7 @@ func (r *noteRepository) Delete(ctx context.Context, session neo4j.SessionWithCo
 	return err
 }
 
-func (r *noteRepository) SetNoteCreator(ctx context.Context, session neo4j.SessionWithContext, tenant, userId, noteId string) error {
+func (r *noteRepository) SetNoteCreator(ctx context.Context, tenant, userId, noteId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.SetNoteCreator")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -369,6 +394,10 @@ func (r *noteRepository) SetNoteCreator(ctx context.Context, session neo4j.Sessi
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), " +
 		" (n:Note {id:$noteId})" +
 		"  MERGE (u)-[:CREATED]->(n) "
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, query,
 			map[string]interface{}{
@@ -441,7 +470,9 @@ func (r *noteRepository) GetMentionedEntitiesForNotes(ctx context.Context, tenan
 func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId string, entity *entity.NoteEntity) (map[string]any, string) {
 	query := "MATCH (m:Meeting_%s {id:$meetingId}) " +
 		" MERGE (m)-[:NOTED]->(n:Note {id:randomUUID()}) " +
-		" ON CREATE SET n.html=$html, " +
+		" ON CREATE SET n.html=$content, " +
+		"				n.content=$content, " +
+		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
 		"				n.source=$source, " +
@@ -454,7 +485,8 @@ func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId st
 	params := map[string]any{
 		"tenant":        tenant,
 		"meetingId":     meetingId,
-		"html":          entity.Html,
+		"content":       entity.Content,
+		"contentType":   entity.ContentType,
 		"now":           utils.Now(),
 		"source":        entity.Source,
 		"sourceOfTruth": entity.SourceOfTruth,

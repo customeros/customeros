@@ -2,10 +2,13 @@ mutation UpdateNote($noteId: ID!) {
   note_Update(
         input: {
             id: $noteId
-            html: "updated content"
+            content: "updated content"
+            contentType: "text/markdown"
         }) {
       id
       html
+      content
+      contentType
       updatedAt
       sourceOfTruth
     }

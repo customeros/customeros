@@ -89,12 +89,16 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 		"              	n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
-		"              	n.html=$html, " +
+		"              	n.html=$content, " +
+		"              	n.content=$content, " +
+		"              	n.contentType=$contentType, " +
 		"              	n.text=$text, " +
 		"				n:Note_%s, " +
 		" 				n:TimelineEvent, " +
 		"				n:TimelineEvent_%s " +
-		" ON MATCH SET 	n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.html is null or n.html = '' THEN $html ELSE n.html END, " +
+		" ON MATCH SET 	n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.html is null or n.html = '' THEN $content ELSE n.html END, " +
+		"             	n.content = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.content is null or n.content = '' THEN $content ELSE n.content END, " +
+		"             	n.contentType = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.contentType is null or n.contentType = '' THEN $contentType ELSE n.contentType END, " +
 		"             	n.text = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.text is null or n.text = '' THEN $text ELSE n.text END, " +
 		"				n.updatedAt = $now " +
 		" WITH n, ext " +
@@ -104,7 +108,7 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 		" WITH n " +
 		" FOREACH (x in CASE WHEN n.sourceOfTruth <> $sourceOfTruth THEN [n] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateNote {source:$source, id:x.id}) " +
-		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.html=$html, alt.text=$text " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.html=$content, alt.content=$content, alt.contentType=$contentType, alt.text=$text " +
 		" ) " +
 		" RETURN n.id"
 
@@ -119,7 +123,8 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 				"externalSystem": note.ExternalSystem,
 				"externalId":     note.ExternalId,
 				"syncDate":       syncDate,
-				"html":           note.Html,
+				"content":        note.Content,
+				"contentType":    note.ContentType,
 				"text":           note.Text,
 				"createdAt":      utils.TimePtrFirstNonNilNillableAsAny(note.CreatedAt),
 				"now":            time.Now().UTC(),
