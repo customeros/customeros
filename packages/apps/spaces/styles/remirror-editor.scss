@@ -624,6 +624,7 @@ display: none
 /**
  * Styles extracted from: packages/remirror__theme/src/extension-blockquote-theme.ts
  */
+.slack_block,
 .remirror-editor.ProseMirror blockquote {
   position: relative;
   padding-left: 10px;
@@ -640,6 +641,7 @@ display: none
   }
 
 }
+.slack_block,
 .remirror-editor.ProseMirror blockquote p {
   color: var(--chakra-colors-gray-500);
 }
@@ -716,24 +718,29 @@ display: none
 
 /* Code blocks */
 
-.remirror-a11y-dark pre[class*='language-'] {
-  padding: 1em;
-  margin: 0.5em 0;
-  overflow: auto;
-  border-radius: 0.3em;
-}
 
+.slack_code,
+.remirror-a11y-dark pre[class*='language-'] {
+  padding: 4px;
+  border-radius: 4px;
+}
 .remirror-a11y-dark :has(.remirror-language-select-positioner) ~ pre[class*='language-'] {
   padding: 2em 1em;
 }
-
+.slack_code,
 .remirror-a11y-dark :not(pre) > code[class*='language-'],
 .remirror-a11y-dark pre[class*='language-'] {
-  background: #2b2b2b;
+  font-family: Monospace;
+  background: var(--chakra-colors-gray-25);
+  border: 1px solid var(--chakra-colors-gray-200);
+  color: var(--chakra-colors-gray-900);
+}
+
+.slack_code {
+  margin-top: 4px !important;
 }
 
 /* Inline code */
-
 .remirror-a11y-dark :not(pre) > code[class*='language-'] {
   padding: 0.1em;
   border-radius: 0.3em;
@@ -798,11 +805,13 @@ display: none
   color: #ffd700;
 }
 
+.slack_bold,
 .remirror-a11y-dark .token.important,
 .remirror-a11y-dark .token.bold {
   font-weight: bold;
 }
 
+.slack_italics,
 .remirror-a11y-dark .token.italic {
   font-style: italic;
 }
@@ -3804,10 +3813,24 @@ display: none
   z-index: 1
 }
 
-.remirror-theme a {
+a {
   --native-hyperlink-color: rgb(0, 0, 238);
   color: var(--native-hyperlink-color);
   text-decoration: underline;
   cursor: pointer;
 }
 
+.slack_strikethrough{
+  text-decoration: line-through;
+}
+
+.slack-mention {
+  // copied from light theme of slack
+  font-weight: 400;
+  background: rgba(29, 155, 209, 0.1);
+  color: rgb(18, 100, 163);
+  font-size: 15px;
+  padding-inline-end: 2px;
+  padding-inline-start: 2px;
+  padding: 0 2px 1px;
+}

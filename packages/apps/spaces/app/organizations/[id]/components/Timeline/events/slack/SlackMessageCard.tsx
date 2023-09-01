@@ -5,6 +5,9 @@ import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
 import User from '@spaces/atoms/icons/User';
 import { ViewInSlackButton } from '@organization/components/Timeline/events/slack/ViewInSlackButton';
+// @ts-expect-error types not available
+import { escapeForSlackWithMarkdown } from 'slack-to-html';
+import sanitizeHtml from 'sanitize-html';
 
 interface SlackMessageCardProps extends PropsWithChildren {
   name: string;
@@ -26,6 +29,17 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   w,
   showDateOnHover,
 }) => {
+  const displayContent: string = (() => {
+    const sanitizeContent = sanitizeHtml(content);
+    const slack = escapeForSlackWithMarkdown(sanitizeContent);
+    const regex = /(@[\w]+)/g;
+    return slack.replace(
+      regex,
+      (matched: string): string =>
+        `<span class='slack-mention'>${matched.replace(/_/g, ' ')}</span>`,
+    );
+  })();
+
   return (
     <>
       <Card
@@ -63,7 +77,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
               src={profilePhotoUrl || undefined}
             />
             <Flex direction='column' flex={1}>
-              <Flex justifyContent='space-between' alignItems='flex-end' flex={1}>
+              <Flex justifyContent='space-between' flex={1}>
                 <Flex>
                   <Text color='gray.700' fontWeight={600}>
                     {name}
@@ -79,8 +93,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
 
                 <ViewInSlackButton url='' />
               </Flex>
-
-              <Text>{content}</Text>
+              <div dangerouslySetInnerHTML={{ __html: displayContent }}></div>
               {children}
             </Flex>
           </Flex>
