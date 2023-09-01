@@ -11,7 +11,10 @@ import {
   OrderedListExtension,
   StrikeExtension,
   UnderlineExtension,
-    LinkExtension
+  LinkExtension,
+  MentionAtomExtension,
+  EmojiExtension,
+  MarkdownExtension,
 } from 'remirror/extensions';
 import { AnyExtension } from 'remirror';
 
@@ -27,7 +30,10 @@ export type BasicEditorExtentions =
   | FontFamilyExtension
   | FontSizeExtension
   | LinkExtension
-  | HeadingExtension;
+  | HeadingExtension
+  | MentionAtomExtension
+  | EmojiExtension
+  | MarkdownExtension;
 
 export type RemirrorProps<T extends AnyExtension> = UseRemirrorReturn<
   ReactExtensions<T>
