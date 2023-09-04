@@ -48,6 +48,9 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
             externalUrl
           }
         }
+        externalLinks {
+          externalUrl
+        }
         repliesTo {
           id
         }
