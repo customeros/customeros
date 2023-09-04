@@ -180,7 +180,7 @@ func bookingRescheduledHandler(cosService s.CustomerOSService, request model.Boo
 			Name:           &request.Payload.Title,
 			StartedAt:      &request.Payload.RescheduleStartTime,
 			EndedAt:        &request.Payload.RescheduleEndTime,
-			AppSource:      appSource,
+			AppSource:      &appSource,
 			ExternalSystem: &externalSystem,
 		}
 		meeting, err := cosService.UpdateMeeting(exMeeting.ID, input, &request.Payload.Organizer.Email)
@@ -299,7 +299,7 @@ func bookingCreatedHandler(cosService s.CustomerOSService, request model.Booking
 		EndedAt:        &request.Payload.EndTime,
 		Note:           &noteInput,
 		ExternalSystem: &externalSystem,
-		AppSource:      appSource,
+		AppSource:      &appSource,
 	}
 	meeting, err := cosService.CreateMeeting(input, &request.Payload.Organizer.Email)
 	if err != nil {
