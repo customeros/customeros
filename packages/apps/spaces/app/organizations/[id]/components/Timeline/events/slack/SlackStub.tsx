@@ -80,6 +80,7 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
       <SlackMessageCard
         name={getName(slackSender)}
         profilePhotoUrl={slackSender?.profilePhotoUrl}
+        sourceUrl={slackEvent?.externalLinks?.[0]?.externalUrl}
         content={slackEvent?.content || ''}
         onClick={() => openModal(slackEvent)}
         date={DateTimeUtils.formatTime(slackEvent?.date)}

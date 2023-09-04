@@ -32,8 +32,6 @@ export const SlackThreadPreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const event = modalContent as InteractionEvent;
   const slackSender = getParticipant(event?.sentBy);
-  console.log('🏷️ ----- modalContent: '
-      , modalContent);
   const slackEventReplies =
     event?.interactionSession?.events?.filter((e) => e?.id !== event?.id) || [];
 
@@ -86,6 +84,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
           w='full'
           name={getName(slackSender)}
           profilePhotoUrl={slackSender?.profilePhotoUrl}
+          sourceUrl={event?.externalLinks?.[0]?.externalUrl}
           content={event?.content || ''}
           // @ts-expect-error typescript does not work well with aliases
           date={DateTimeUtils.timeAgo(event?.date, { addSuffix: true })}

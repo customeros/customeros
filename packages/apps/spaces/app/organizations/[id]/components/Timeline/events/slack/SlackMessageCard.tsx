@@ -7,10 +7,10 @@ import User from '@spaces/atoms/icons/User';
 import { ViewInSlackButton } from '@organization/components/Timeline/events/slack/ViewInSlackButton';
 // @ts-expect-error types not available
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
-import sanitizeHtml from 'sanitize-html';
 
 interface SlackMessageCardProps extends PropsWithChildren {
   name: string;
+  sourceUrl?: string | null;
   profilePhotoUrl?: null | string;
   content: string;
   onClick?: () => void;
@@ -21,6 +21,7 @@ interface SlackMessageCardProps extends PropsWithChildren {
 
 export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   name,
+  sourceUrl,
   profilePhotoUrl,
   content,
   onClick,
@@ -30,9 +31,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   showDateOnHover,
 }) => {
   const displayContent: string = (() => {
-    const sanitizeContent = sanitizeHtml(
-      content.replace(/\n/g, '<br/>'),
-    );
+    const sanitizeContent = content.replace(/\n/g, '<br/>');
     const slack = escapeForSlackWithMarkdown(sanitizeContent);
     const regex = /(@[\w]+)/g;
     return slack.replace(
@@ -54,7 +53,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
         position='unset'
         cursor={onClick ? 'pointer' : 'unset'}
         boxShadow='xs'
-        borderColor='gray.100'
+        borderColor='gray.200'
         onClick={() => onClick?.()}
         _hover={{
           '&:hover .slack-stub-date': {
@@ -78,7 +77,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
               }
               src={profilePhotoUrl || undefined}
             />
-            <Flex direction='column' flex={1}>
+            <Flex direction='column' flex={1} position='relative'>
               <Flex justifyContent='space-between' flex={1}>
                 <Flex>
                   <Text color='gray.700' fontWeight={600}>
@@ -87,16 +86,18 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
                   <Text
                     color={showDateOnHover ? 'transparent' : 'gray.500'}
                     ml={2}
+                    fontSize='xs'
                     className='slack-stub-date'
                   >
                     {date}
                   </Text>
                 </Flex>
 
-                <ViewInSlackButton url='' />
+                <ViewInSlackButton url={sourceUrl} />
               </Flex>
               <Text
                 className='slack-container'
+                pointerEvents={showDateOnHover ? 'none' : 'initial'}
                 noOfLines={showDateOnHover ? 4 : undefined}
                 dangerouslySetInnerHTML={{ __html: displayContent }}
               />

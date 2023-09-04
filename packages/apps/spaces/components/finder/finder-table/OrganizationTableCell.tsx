@@ -84,7 +84,7 @@ export const OrganizationTableCell = ({
                   size='xs'
                   borderRadius='5px'
                   onClick={() =>
-                    window.open(getExternalUrl(organization.website ?? '/'))
+                    window.open(getExternalUrl(organization.website ?? '/'),'_blank','noopener')
                   }
                   aria-label='organization website'
                   icon={<Icons.LinkExternal2 color='gray.500' />}

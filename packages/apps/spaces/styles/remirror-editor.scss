@@ -629,6 +629,7 @@ display: none
   position: relative;
   padding-left: 10px;
   border-radius: 0;
+  vertical-align: bottom;
 
   &:before {
     content: '';
@@ -638,6 +639,7 @@ display: none
     width: 3px;
     height: 100%;
     border-radius: 8px;
+    bottom: 0;
   }
 
 }

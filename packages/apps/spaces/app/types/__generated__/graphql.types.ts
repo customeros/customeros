@@ -825,6 +825,7 @@ export type InteractionEvent = Node & {
   createdAt: Scalars['Time'];
   eventIdentifier?: Maybe<Scalars['String']>;
   eventType?: Maybe<Scalars['String']>;
+  externalLinks: Array<ExternalSystem>;
   id: Scalars['ID'];
   includes: Array<Attachment>;
   interactionSession?: Maybe<InteractionSession>;
