@@ -24,7 +24,7 @@ const SingleValue = (props: SingleValueProps) => {
         {value}
         {` `}
         <Text as='span' color='gray.500'>
-          ({timezone})
+          • {timezone}
         </Text>
       </Text>
     </chakraComponents.SingleValue>
