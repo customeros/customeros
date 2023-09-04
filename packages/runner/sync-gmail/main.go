@@ -3,64 +3,20 @@ package main
 import (
 	"context"
 	"github.com/caarlos0/env/v6"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	syncGmailConfig "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
+	localCron "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
+	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 	"io"
-	"sync"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 )
-
-type TaskQueue struct {
-	name          string
-	taskFunctions []func()
-	mutex         sync.Mutex
-	waitGroup     sync.WaitGroup
-}
-
-func (t *TaskQueue) AddTask(function func()) {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	t.taskFunctions = append(t.taskFunctions, function)
-}
-
-func (t *TaskQueue) RunTasks() {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	if len(t.taskFunctions) == 0 {
-		logrus.Warn("No task found, exiting")
-		return
-	}
-	for _, task := range t.taskFunctions {
-		t.waitGroup.Add(1)
-		go func(fn func()) {
-			defer t.waitGroup.Done()
-			fn()
-		}(task)
-	}
-	t.taskFunctions = nil
-	t.waitGroup.Wait()
-}
-
-func runTaskQueue(taskQueue *TaskQueue, timeoutAfterTaskRun int, taskFuncs []func()) {
-	for {
-		for _, task := range taskFuncs {
-			taskQueue.AddTask(task)
-		}
-
-		taskQueue.RunTasks()
-
-		// Cooldown a fixed amount of time before running the tasks again
-		timeout := time.Second * time.Duration(timeoutAfterTaskRun)
-		logrus.Infof("waiting %v seconds before next run for %s", timeout.Seconds(), taskQueue.name)
-		time.Sleep(timeout)
-	}
-}
 
 func main() {
 	ctx := context.Background()
@@ -92,55 +48,33 @@ func main() {
 
 	services := service.InitServices(neo4jDriver, gormDb, config)
 
-	var taskQueueSyncEmails = &TaskQueue{name: "Sync emails from gmail"}
+	cronJub := localCron.StartCron(config, services)
 
-	go runTaskQueue(taskQueueSyncEmails, config.SyncData.TimeoutAfterTaskRun, []func(){
-		func() {
-			runId, _ := uuid.NewRandom()
-			logrus.Infof("run id: %s syncing emails from gmail into customer-os at %v", runId.String(), time.Now().UTC())
-			//
-			//externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, "openline", "gmail")
-			//if err != nil {
-			//	logrus.Errorf("failed to merge external system: %v", err)
-			//	panic(err) //todo handle error
-			//}
+	if err := run(appLogger, cronJub); err != nil {
+		appLogger.Fatal(err)
+	}
 
-			tenants, err := services.TenantService.GetAllTenants(ctx)
-			if err != nil {
-				panic(err) //todo handle error
-			}
+	// Flush logs and exit
+	appLogger.Sync()
+}
 
-			for _, tenant := range tenants {
+func run(log logger.Logger, cron *cron.Cron) error {
+	defer cron.Stop()
 
-				if tenant.Name != "openline" {
-					continue
-				}
+	// Shutdown handling
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
-				externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, tenant.Name, "gmail")
-				if err != nil {
-					logrus.Errorf("failed to merge external system: %v", err)
-					panic(err) //todo handle error
-				}
+	sig := <-shutdown
+	log.Infof("Received shutdown signal %v", sig)
 
-				services.EmailService.SyncEmails(externalSystemId, "openline")
-			}
+	// Gracefully stop
+	if err := localCron.StopCron(log, cron); err != nil {
+		return err
+	}
+	log.Info("Graceful shutdown complete")
 
-			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
-		},
-	})
-
-	select {}
-
-	//job - read all users and trigger email sync per user ( 5 mintues )
-	//job - read all new emails for a user and sync them ( 1 minute )
-	//1 job per user in thread pool
-
-	//job 1
-	//get tenants
-	//get users in tenant
-	//sync emails
-
-	//get all users from tenant with access enabled to gmail ( all users except blacklisted )
+	return nil
 }
 
 func loadConfiguration() *syncGmailConfig.Config {

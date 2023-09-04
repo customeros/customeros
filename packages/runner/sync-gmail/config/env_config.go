@@ -44,7 +44,7 @@ type Config struct {
 	}
 
 	SyncData struct {
-		TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
+		CronSync string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
 	}
 
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
