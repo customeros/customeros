@@ -69,6 +69,11 @@ func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.I
 	panic(fmt.Errorf("not implemented: ActionItems - actionItems"))
 }
 
+// ExternalLinks is the resolver for the externalLinks field.
+func (r *interactionEventResolver) ExternalLinks(ctx context.Context, obj *model.InteractionEvent) ([]*model.ExternalSystem, error) {
+	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
+}
+
 // Events is the resolver for the events field.
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
 	if r.Resolver.Events != nil {
