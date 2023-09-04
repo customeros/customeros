@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import { Card, CardHeader, CardBody } from '@ui/presentation/Card';
+import React, { useState, useRef } from 'react';
+import { CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { Tooltip } from '@ui/presentation/Tooltip';
-import { ScaleFade } from '@ui/transitions/ScaleFade';
 import { IconButton } from '@ui/form/IconButton';
-import styles from './EmailPreviewModal.module.scss';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { useCopyToClipboard } from '@spaces/hooks/useCopyToClipboard';
@@ -33,6 +31,7 @@ import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { htmlToProsemirrorNode } from 'remirror';
 import { InteractionEvent } from '@graphql/types';
 import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
+import { useOutsideClick } from '@ui/utils';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -67,6 +66,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const { closeModal, isModalOpen, modalContent } =
     useTimelineEventPreviewContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const event = modalContent as InteractionEvent;
 
@@ -95,6 +95,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     subject: `Re: ${subject}`,
     content: '',
   });
+
   const { state, setDefaultValues } = useForm<ComposeEmailDtoI>({
     formId,
     defaultValues,
@@ -111,9 +112,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     }
   };
 
-  if (!isModalOpen || !modalContent) {
-    return null;
-  }
   const handleEmailSendSuccess = () => {
     invalidateQuery();
     setIsSending(false);
@@ -218,136 +216,128 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       session?.user?.email,
     );
   };
+
+  useOutsideClick({
+    ref: cardRef,
+    handler: handleClosePreview,
+  });
+
+  if (!isModalOpen || !modalContent) {
+    return null;
+  }
+
   return (
-    <div className={styles.container}>
-      <div
-        className={styles.backdrop}
-        onClick={() => (isModalOpen ? handleClosePreview() : null)}
-      />
-      <ScaleFade initialScale={0.9} in={isModalOpen} unmountOnExit>
-        <Card
-          zIndex={7}
-          borderRadius='xl'
-          height='100%'
-          maxHeight='calc(100vh - 6rem)'
+    <div ref={cardRef}>
+      <CardHeader
+        pb={1}
+        position='sticky'
+        background='white'
+        top={0}
+        borderRadius='xl'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Flex
+          direction='row'
+          justifyContent='space-between'
+          alignItems='center'
         >
-          <CardHeader
-            pb={1}
-            position='sticky'
-            background='white'
-            top={0}
-            borderRadius='xl'
-          >
-            <Flex
-              direction='row'
-              justifyContent='space-between'
-              alignItems='center'
-            >
-              <div>
-                <Heading size='sm' mb={2}>
-                  {event.interactionSession?.name}
-                </Heading>
-                <Text size='2xs' color='gray.500' fontSize='12px'>
-                  {DateTimeUtils.format(
-                    // @ts-expect-error this is correct (alias)
-                    event.date,
-                    DateTimeUtils.dateWithHour,
-                  )}
-                </Text>
-              </div>
-              <Flex
-                direction='row'
-                justifyContent='flex-end'
-                alignItems='center'
-              >
-                <Tooltip label='Copy link to this email' placement='bottom'>
-                  <IconButton
-                    variant='ghost'
-                    aria-label='Copy link to this email'
-                    color='gray.500'
-                    size='sm'
-                    mr={1}
-                    icon={<CopyLink color='gray.500' height='18px' />}
-                    onClick={() => copy(window.location.href)}
-                  />
-                </Tooltip>
-                <Tooltip label='Close' aria-label='close' placement='bottom'>
-                  <IconButton
-                    variant='ghost'
-                    aria-label='Close preview'
-                    color='gray.500'
-                    size='sm'
-                    icon={<Times color='gray.500' height='24px' />}
-                    onClick={handleClosePreview}
-                  />
-                </Tooltip>
-              </Flex>
-            </Flex>
-          </CardHeader>
-
-          <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6}>
-            <Flex direction='row' justify='space-between' mb={3}>
-              <Flex
-                direction='column'
-                align='flex-start'
-                maxWidth='calc(100% - 70px)'
-                overflow='hidden'
-                textOverflow='ellipsis'
-              >
-                <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
-                <EmailMetaDataEntry entryType='To' content={to} />
-                {!!cc.length && (
-                  <EmailMetaDataEntry entryType='CC' content={cc} />
-                )}
-                {!!bcc.length && (
-                  <EmailMetaDataEntry entryType='BCC' content={bcc} />
-                )}
-                <EmailMetaDataEntry entryType='Subject' content={subject} />
-              </Flex>
-              <div>
-                <Image
-                  src={'/backgrounds/organization/post-stamp.webp'}
-                  alt='Email'
-                  width={54}
-                  height={70}
-                  style={{
-                    filter: 'drop-shadow(0px 0.5px 1px #D8D8D8)',
-                  }}
-                />
-              </div>
-            </Flex>
-
-            <Text color='gray.700' size='sm'>
-              {event?.content && (
-                <RichTextPreview
-                  htmlContent={sanitizeHtml(event.content)}
-                  extensions={basicEditorExtensions}
-                />
+          <div>
+            <Heading size='sm' mb={2}>
+              {event.interactionSession?.name}
+            </Heading>
+            <Text size='2xs' color='gray.500' fontSize='12px'>
+              {DateTimeUtils.format(
+                // @ts-expect-error this is correct (alias)
+                event.date,
+                DateTimeUtils.dateWithHour,
               )}
             </Text>
-          </CardBody>
-          <ComposeEmail
-            formId={formId}
-            onModeChange={handleModeChange}
-            modal
-            to={state.values.to}
-            cc={state.values.cc}
-            bcc={state.values.bcc}
-            onSubmit={handleSubmit}
-            isSending={isSending}
-            remirrorProps={remirrorProps}
-          />
-        </Card>
-        <ConfirmDeleteDialog
-          label='Discard this email?'
-          description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'
-          confirmButtonLabel='Discard email'
-          isOpen={isOpen}
-          onClose={onClose}
-          onConfirm={handleExitEditorAndCleanData}
-          isLoading={false}
-        />
-      </ScaleFade>
+          </div>
+          <Flex direction='row' justifyContent='flex-end' alignItems='center'>
+            <Tooltip label='Copy link to this email' placement='bottom'>
+              <IconButton
+                variant='ghost'
+                aria-label='Copy link to this email'
+                color='gray.500'
+                size='sm'
+                mr={1}
+                icon={<CopyLink color='gray.500' height='18px' />}
+                onClick={() => copy(window.location.href)}
+              />
+            </Tooltip>
+            <Tooltip label='Close' aria-label='close' placement='bottom'>
+              <IconButton
+                variant='ghost'
+                aria-label='Close preview'
+                color='gray.500'
+                size='sm'
+                icon={<Times color='gray.500' height='24px' />}
+                onClick={handleClosePreview}
+              />
+            </Tooltip>
+          </Flex>
+        </Flex>
+      </CardHeader>
+
+      <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6}>
+        <Flex direction='row' justify='space-between' mb={3}>
+          <Flex
+            direction='column'
+            align='flex-start'
+            maxWidth='calc(100% - 70px)'
+            overflow='hidden'
+            textOverflow='ellipsis'
+          >
+            <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
+            <EmailMetaDataEntry entryType='To' content={to} />
+            {!!cc.length && <EmailMetaDataEntry entryType='CC' content={cc} />}
+            {!!bcc.length && (
+              <EmailMetaDataEntry entryType='BCC' content={bcc} />
+            )}
+            <EmailMetaDataEntry entryType='Subject' content={subject} />
+          </Flex>
+          <div>
+            <Image
+              src={'/backgrounds/organization/post-stamp.webp'}
+              alt='Email'
+              width={54}
+              height={70}
+              style={{
+                filter: 'drop-shadow(0px 0.5px 1px #D8D8D8)',
+              }}
+            />
+          </div>
+        </Flex>
+
+        <Text color='gray.700' size='sm'>
+          {event?.content && (
+            <RichTextPreview
+              htmlContent={sanitizeHtml(event.content)}
+              extensions={basicEditorExtensions}
+            />
+          )}
+        </Text>
+      </CardBody>
+      <ComposeEmail
+        formId={formId}
+        onModeChange={handleModeChange}
+        modal
+        to={state.values.to}
+        cc={state.values.cc}
+        bcc={state.values.bcc}
+        onSubmit={handleSubmit}
+        isSending={isSending}
+        remirrorProps={remirrorProps}
+      />
+      <ConfirmDeleteDialog
+        label='Discard this email?'
+        description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'
+        confirmButtonLabel='Discard email'
+        isOpen={isOpen}
+        onClose={onClose}
+        onConfirm={handleExitEditorAndCleanData}
+        isLoading={false}
+      />
     </div>
   );
 };

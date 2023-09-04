@@ -90,7 +90,7 @@ export const ParticipantsSelectGroup = ({
         )}
 
         {!isFocused && (
-          <Flex mt={1} flex={isFocused ? 1 : 'unset'}>
+          <Flex mt='1' flexDir='column' flex={isFocused ? 1 : 'unset'}>
             <Flex
               onClick={() => handleFocus(0)}
               role='button'
@@ -114,13 +114,7 @@ export const ParticipantsSelectGroup = ({
                 aria-label='Click to input participant data'
                 flex={!bcc.length ? 1 : 'unset'}
               >
-                <Text
-                  as={'span'}
-                  color='gray.700'
-                  fontWeight={600}
-                  ml={2}
-                  mr={1}
-                >
+                <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
                   CC:
                 </Text>
                 <Text color='gray.500' noOfLines={1}>
@@ -134,13 +128,7 @@ export const ParticipantsSelectGroup = ({
                 role='button'
                 aria-label='Click to input participant data'
               >
-                <Text
-                  as={'span'}
-                  color='gray.700'
-                  fontWeight={600}
-                  ml={2}
-                  mr={1}
-                >
+                <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
                   BCC:
                 </Text>
                 <Text color='gray.500' noOfLines={1}>
