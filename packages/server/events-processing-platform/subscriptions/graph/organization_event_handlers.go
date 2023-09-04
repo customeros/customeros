@@ -22,6 +22,7 @@ import (
 
 type ActionForecastMetadata struct {
 	Likelihood string `json:"likelihood"`
+	Reason     string `json:"reason"`
 }
 
 type GraphOrganizationEventHandler struct {
@@ -167,6 +168,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Co
 			}
 			metadata, err := utils.ToJson(ActionForecastMetadata{
 				Likelihood: string(eventData.RenewalLikelihood),
+				Reason:     utils.IfNotNilString(eventData.Comment),
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -234,6 +236,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Cont
 		}
 		metadata, err := utils.ToJson(ActionForecastMetadata{
 			Likelihood: string(eventData.RenewalLikelihood),
+			Reason:     utils.IfNotNilString(eventData.Comment),
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

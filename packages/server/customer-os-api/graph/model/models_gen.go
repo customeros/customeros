@@ -960,7 +960,7 @@ type MeetingInput struct {
 	Agenda             *string                       `json:"agenda,omitempty"`
 	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
 	Note               *NoteInput                    `json:"note,omitempty"`
-	AppSource          string                        `json:"appSource"`
+	AppSource          *string                       `json:"appSource,omitempty"`
 	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
 	Status             *MeetingStatus                `json:"status,omitempty"`
 }
@@ -980,7 +980,7 @@ type MeetingUpdateInput struct {
 	Agenda             *string                       `json:"agenda,omitempty"`
 	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
 	Note               *NoteUpdateInput              `json:"note,omitempty"`
-	AppSource          string                        `json:"appSource"`
+	AppSource          *string                       `json:"appSource,omitempty"`
 	Status             *MeetingStatus                `json:"status,omitempty"`
 	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
 }

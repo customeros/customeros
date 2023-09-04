@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -43,7 +44,7 @@ func MapMeetingInputToEntity(model *model.MeetingUpdateInput) *entity.MeetingEnt
 	meetingEntity := entity.MeetingEntity{
 		CreatedAt:          utils.Now(),
 		Name:               model.Name,
-		AppSource:          model.AppSource,
+		AppSource:          utils.IfNotNilStringWithDefault(model.AppSource, constants.AppSourceCustomerOsApi),
 		ConferenceUrl:      model.ConferenceURL,
 		MeetingExternalUrl: model.MeetingExternalURL,
 		StartedAt:          model.StartedAt,
@@ -79,7 +80,7 @@ func MapMeetingToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 	meetingEntity := entity.MeetingEntity{
 		CreatedAt:          createdAt,
 		Name:               model.Name,
-		AppSource:          model.AppSource,
+		AppSource:          utils.IfNotNilStringWithDefault(model.AppSource, constants.AppSourceCustomerOsApi),
 		ConferenceUrl:      model.ConferenceURL,
 		MeetingExternalUrl: model.MeetingExternalURL,
 		StartedAt:          model.StartedAt,
