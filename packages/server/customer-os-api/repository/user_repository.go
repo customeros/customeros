@@ -173,7 +173,7 @@ func (r *userRepository) FindUserByEmail(parentCtx context.Context, session neo4
 		queryResult, err := tx.Run(ctx, `
 			MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email) 
 			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN DISTINCT u limit 1`,
+			RETURN DISTINCT(u) ORDER by u.createdAt ASC limit 1`,
 			map[string]any{
 				"tenant": tenant,
 				"email":  email,

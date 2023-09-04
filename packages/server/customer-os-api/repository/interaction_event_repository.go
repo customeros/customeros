@@ -299,7 +299,7 @@ func (r *interactionEventRepository) GetSentByParticipantsForInteractionEvents(c
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (ie:InteractionEvent_%s)-[rel:SENT_BY]->(p) " +
+	query := "MATCH (ie:InteractionEvent_%s)-[rel:SENT_BY]->(p:Email|PhoneNumber|User|Contact|Organization|JobRole) " +
 		" WHERE ie.id IN $ids " +
 		" RETURN p, rel, ie.id"
 
@@ -404,7 +404,7 @@ func (r *interactionEventRepository) GetSentToParticipantsForInteractionEvents(c
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (ie:InteractionEvent_%s)-[rel:SENT_TO]->(p) " +
+	query := "MATCH (ie:InteractionEvent_%s)-[rel:SENT_TO]->(p:Email|PhoneNumber|User|Contact|Organization|JobRole) " +
 		" WHERE ie.id IN $ids " +
 		" RETURN p, rel, ie.id"
 
