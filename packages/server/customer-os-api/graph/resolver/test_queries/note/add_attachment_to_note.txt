@@ -3,7 +3,6 @@ mutation AddAttachmentToNote($noteId: ID!, $attachmentId: ID!) {
             noteId: $noteId,
             attachmentId: $attachmentId) {
       id
-      html
       content
       contentType
       updatedAt

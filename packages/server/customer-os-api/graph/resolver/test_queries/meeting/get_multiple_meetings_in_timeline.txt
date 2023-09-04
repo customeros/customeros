@@ -5,7 +5,7 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!) {
       __typename
       ... on Note {
         id
-        html
+        content
         createdAt
       }
       __typename

@@ -27,7 +27,7 @@ func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID s
 	result, err := r.Services.NoteService.CreateNoteForContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", *input.HTML, contactID)
+		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", *input.Content, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToNote(result), nil
@@ -43,7 +43,7 @@ func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organi
 	result, err := r.Services.NoteService.CreateNoteForOrganization(ctx, organizationID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add note %v to organization %s", *input.HTML, organizationID)
+		graphql.AddErrorf(ctx, "Could not add note %v to organization %s", *input.Content, organizationID)
 		return nil, err
 	}
 	return mapper.MapEntityToNote(result), nil

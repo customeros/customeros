@@ -623,7 +623,7 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 		noteWithoutUser = notes[0]
 	}
 	require.Equal(t, noteId1, noteWithUser.ID)
-	require.Equal(t, "note1", noteWithUser.HTML)
+	require.Equal(t, "note1", *noteWithUser.Content)
 	require.NotNil(t, noteWithUser.CreatedAt)
 	require.NotNil(t, noteWithUser.CreatedBy)
 	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
@@ -631,7 +631,7 @@ func TestQueryResolver_Contact_WithNotes_ById(t *testing.T) {
 	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
 
 	require.Equal(t, noteId2, noteWithoutUser.ID)
-	require.Equal(t, "note2", noteWithoutUser.HTML)
+	require.Equal(t, "note2", *noteWithoutUser.Content)
 	require.NotNil(t, noteWithoutUser.CreatedAt)
 	require.Nil(t, noteWithoutUser.CreatedBy)
 }
@@ -678,7 +678,7 @@ func TestQueryResolver_Contact_WithNotes_ById_Time_Range(t *testing.T) {
 		noteWithoutUser = notes[0]
 	}
 	require.Equal(t, noteId1, noteWithUser.ID)
-	require.Equal(t, "note1", noteWithUser.HTML)
+	require.Equal(t, "note1", *noteWithUser.Content)
 	require.NotNil(t, noteWithUser.CreatedAt)
 	require.NotNil(t, noteWithUser.CreatedBy)
 	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
@@ -686,7 +686,7 @@ func TestQueryResolver_Contact_WithNotes_ById_Time_Range(t *testing.T) {
 	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
 
 	require.Equal(t, noteId2, noteWithoutUser.ID)
-	require.Equal(t, "note2", noteWithoutUser.HTML)
+	require.Equal(t, "note2", *noteWithoutUser.Content)
 	require.NotNil(t, noteWithoutUser.CreatedAt)
 	require.Nil(t, noteWithoutUser.CreatedBy)
 
@@ -1086,7 +1086,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, "Note", timelineEvent3["__typename"].(string))
 	require.Equal(t, contactNoteId, timelineEvent3["id"].(string))
 	require.NotNil(t, timelineEvent3["createdAt"].(string))
-	require.Equal(t, "contact note 1", timelineEvent3["html"].(string))
+	require.Equal(t, "contact note 1", timelineEvent3["content"].(string))
 
 	timelineEvent4 := timelineEvents[3].(map[string]interface{})
 	require.Equal(t, "InteractionEvent", timelineEvent4["__typename"].(string))

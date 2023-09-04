@@ -4,7 +4,7 @@ query GetOrganizationById($organizationId: ID!){
     notes {
         content {
             id
-            html
+            content
             createdAt
             updatedAt
             createdBy {

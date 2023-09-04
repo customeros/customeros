@@ -27,7 +27,7 @@ query GetTimelineEvents($ids: [ID!]!) {
     }
     ... on Note {
       id
-      html
+      content
       createdAt
     }
     ... on InteractionEvent {

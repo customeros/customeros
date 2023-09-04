@@ -76,7 +76,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 	require.ElementsMatch(t, []string{"critical", "issue-tag"}, []string{issue.Tags[0].Name, issue.Tags[1].Name})
 	require.Equal(t, 1, len(issue.MentionedByNotes))
 	require.Equal(t, noteId, issue.MentionedByNotes[0].ID)
-	require.Equal(t, "note", issue.MentionedByNotes[0].HTML)
+	require.Equal(t, "note", *issue.MentionedByNotes[0].Content)
 	require.Equal(t, 1, len(issue.InteractionEvents))
 	require.Equal(t, interactionEventId, issue.InteractionEvents[0].ID)
 	require.Equal(t, 1, len(issue.ExternalLinks))
