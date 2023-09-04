@@ -35,7 +35,7 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
             }
             ... on Note {
                 id
-                html
+                content
                 createdAt
             }
             ... on InteractionEvent {

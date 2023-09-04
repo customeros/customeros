@@ -18,9 +18,6 @@ func MapNoteInputToEntity(input *model.NoteInput) *entity.NoteEntity {
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
-	if noteEntity.Content == "" && utils.IfNotNilString(input.HTML) != "" {
-		noteEntity.Content = utils.IfNotNilString(input.HTML)
-	}
 	return &noteEntity
 }
 
@@ -34,18 +31,14 @@ func MapNoteUpdateInputToEntity(input *model.NoteUpdateInput) *entity.NoteEntity
 		ContentType:   utils.IfNotNilString(input.ContentType),
 		SourceOfTruth: entity.DataSourceOpenline,
 	}
-	if noteEntity.Content == "" && utils.IfNotNilString(input.HTML) != "" {
-		noteEntity.Content = utils.IfNotNilString(input.HTML)
-	}
 	return &noteEntity
 }
 
 func MapEntityToNote(entity *entity.NoteEntity) *model.Note {
 	note := model.Note{
 		ID:            entity.Id,
-		Content:       entity.Content,
-		ContentType:   entity.ContentType,
-		HTML:          entity.Content,
+		Content:       utils.StringPtr(entity.Content),
+		ContentType:   utils.StringPtr(entity.ContentType),
 		CreatedAt:     entity.CreatedAt,
 		UpdatedAt:     entity.UpdatedAt,
 		Source:        MapDataSourceToModel(entity.Source),

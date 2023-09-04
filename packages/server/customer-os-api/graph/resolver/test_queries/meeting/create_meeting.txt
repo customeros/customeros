@@ -17,7 +17,7 @@ meeting_Create(
               }
         ]
         note: {
-              html: "Note content"
+              content: "Note content"
               appSource: "test"
            }
         externalSystem: {
@@ -73,7 +73,7 @@ meeting_Create(
            }
        note {
             id
-            html
+            content
             createdAt
             updatedAt
             appSource

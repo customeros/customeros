@@ -2,13 +2,12 @@ mutation CreateNote($organizationId: ID!) {
   note_CreateForOrganization(
     organizationId: $organizationId,
     input: {
-      html: "Note content"
+      content: "Note content"
       contentType: "text/html"
       appSource: "test"
     }
   ) {
     id
-    html
     content
     contentType
     createdAt

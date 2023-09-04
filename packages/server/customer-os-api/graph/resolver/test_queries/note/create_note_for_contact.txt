@@ -7,7 +7,6 @@ mutation CreateNote($contactId: ID!) {
     }
   ) {
     id
-    html
     content
     contentType
     createdAt

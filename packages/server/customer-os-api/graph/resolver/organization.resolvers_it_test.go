@@ -261,7 +261,7 @@ func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 		noteWithoutUser = notes[0]
 	}
 	require.Equal(t, noteId1, noteWithUser.ID)
-	require.Equal(t, "note1", noteWithUser.HTML)
+	require.Equal(t, "note1", *noteWithUser.Content)
 	require.NotNil(t, noteWithUser.CreatedAt)
 	require.NotNil(t, noteWithUser.CreatedBy)
 	require.Equal(t, userId, noteWithUser.CreatedBy.ID)
@@ -269,7 +269,7 @@ func TestQueryResolver_Organization_WithNotes_ById(t *testing.T) {
 	require.Equal(t, "last", noteWithUser.CreatedBy.LastName)
 
 	require.Equal(t, noteId2, noteWithoutUser.ID)
-	require.Equal(t, "note2", noteWithoutUser.HTML)
+	require.Equal(t, "note2", *noteWithoutUser.Content)
 	require.NotNil(t, noteWithoutUser.CreatedAt)
 	require.Nil(t, noteWithoutUser.CreatedBy)
 }
@@ -606,19 +606,19 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, "Note", timelineEvent2["__typename"].(string))
 	require.Equal(t, contactNoteId1, timelineEvent2["id"].(string))
 	require.NotNil(t, timelineEvent2["createdAt"].(string))
-	require.Equal(t, "contact note 1", timelineEvent2["html"].(string))
+	require.Equal(t, "contact note 1", timelineEvent2["content"].(string))
 
 	timelineEvent3 := timelineEvents[2].(map[string]interface{})
 	require.Equal(t, "Note", timelineEvent3["__typename"].(string))
 	require.Equal(t, contactNoteId2, timelineEvent3["id"].(string))
 	require.NotNil(t, timelineEvent3["createdAt"].(string))
-	require.Equal(t, "contact note 2", timelineEvent3["html"].(string))
+	require.Equal(t, "contact note 2", timelineEvent3["content"].(string))
 
 	timelineEvent4 := timelineEvents[3].(map[string]interface{})
 	require.Equal(t, "Note", timelineEvent4["__typename"].(string))
 	require.Equal(t, orgNoteId3, timelineEvent4["id"].(string))
 	require.NotNil(t, timelineEvent4["createdAt"].(string))
-	require.Equal(t, "org note 1", timelineEvent4["html"].(string))
+	require.Equal(t, "org note 1", timelineEvent4["content"].(string))
 
 	timelineEvent5 := timelineEvents[4].(map[string]interface{})
 	require.Equal(t, "InteractionEvent", timelineEvent5["__typename"].(string))

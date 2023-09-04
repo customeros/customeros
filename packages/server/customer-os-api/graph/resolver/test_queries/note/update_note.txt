@@ -6,7 +6,6 @@ mutation UpdateNote($noteId: ID!) {
             contentType: "text/markdown"
         }) {
       id
-      html
       content
       contentType
       updatedAt

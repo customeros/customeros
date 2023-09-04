@@ -13,7 +13,7 @@ query GetIssue($issueId: ID!){
        }
        mentionedByNotes {
             id
-            html
+            content
        }
        interactionEvents {
             id

@@ -3,7 +3,7 @@ query GetContactById($contactId: ID!, $start: Time!, $end: Time!) {
     id
     notesByTime(pagination: {from: $start, to: $end}) {
             id
-            html
+            content
             createdAt
             createdBy {
                 id

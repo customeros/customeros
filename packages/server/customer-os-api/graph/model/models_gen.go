@@ -1011,9 +1011,8 @@ func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Note struct {
 	ID            string            `json:"id"`
-	HTML          string            `json:"html"`
-	Content       string            `json:"content"`
-	ContentType   string            `json:"contentType"`
+	Content       *string           `json:"content,omitempty"`
+	ContentType   *string           `json:"contentType,omitempty"`
 	CreatedAt     time.Time         `json:"createdAt"`
 	UpdatedAt     time.Time         `json:"updatedAt"`
 	CreatedBy     *User             `json:"createdBy,omitempty"`
@@ -1030,7 +1029,6 @@ func (Note) IsTimelineEvent() {}
 type NoteInput struct {
 	Content     *string `json:"content,omitempty"`
 	ContentType *string `json:"contentType,omitempty"`
-	HTML        *string `json:"html,omitempty"`
 	AppSource   *string `json:"appSource,omitempty"`
 }
 
@@ -1052,7 +1050,6 @@ func (this NotePage) GetTotalElements() int64 { return this.TotalElements }
 
 type NoteUpdateInput struct {
 	ID          string  `json:"id"`
-	HTML        *string `json:"html,omitempty"`
 	Content     *string `json:"content,omitempty"`
 	ContentType *string `json:"contentType,omitempty"`
 }

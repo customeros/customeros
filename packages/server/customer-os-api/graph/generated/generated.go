@@ -597,7 +597,6 @@ type ComplexityRoot struct {
 		ContentType   func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		CreatedBy     func(childComplexity int) int
-		HTML          func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Includes      func(childComplexity int) int
 		Mentioned     func(childComplexity int) int
@@ -4722,13 +4721,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Note.CreatedBy(childComplexity), true
 
-	case "Note.html":
-		if e.complexity.Note.HTML == nil {
-			break
-		}
-
-		return e.complexity.Note.HTML(childComplexity), true
-
 	case "Note.id":
 		if e.complexity.Note.ID == nil {
 			break
@@ -7893,9 +7885,8 @@ union MentionedEntity = Issue
 
 type Note {
     id: ID!
-    html: String! @deprecated(reason: "Use content instead")
-    content: String!
-    contentType: String!
+    content: String
+    contentType: String
     createdAt: Time!
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
@@ -7916,13 +7907,11 @@ type NotePage implements Pages {
 input NoteInput {
     content: String
     contentType: String
-    html: String @deprecated(reason: "Use content instead")
     appSource: String
 }
 
 input NoteUpdateInput {
     id: ID!
-    html: String @deprecated(reason: "Use content instead")
     content: String
     contentType: String
 }`, BuiltIn: false},
@@ -15537,8 +15526,6 @@ func (ec *executionContext) fieldContext_Contact_notesByTime(ctx context.Context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -22740,8 +22727,6 @@ func (ec *executionContext) fieldContext_Issue_mentionedByNotes(ctx context.Cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -25858,8 +25843,6 @@ func (ec *executionContext) fieldContext_Meeting_note(ctx context.Context, field
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -32310,8 +32293,6 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForContact(ctx cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -32393,8 +32374,6 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForOrganization(ctx
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -32476,8 +32455,6 @@ func (ec *executionContext) fieldContext_Mutation_note_Update(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -32618,8 +32595,6 @@ func (ec *executionContext) fieldContext_Mutation_note_LinkAttachment(ctx contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -32701,8 +32676,6 @@ func (ec *executionContext) fieldContext_Mutation_note_UnlinkAttachment(ctx cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -38668,50 +38641,6 @@ func (ec *executionContext) fieldContext_Note_id(ctx context.Context, field grap
 	return fc, nil
 }
 
-func (ec *executionContext) _Note_html(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Note_html(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.HTML, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Note_html(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Note",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Note_content(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Note_content(ctx, field)
 	if err != nil {
@@ -38733,14 +38662,11 @@ func (ec *executionContext) _Note_content(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Note_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -38777,14 +38703,11 @@ func (ec *executionContext) _Note_contentType(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Note_contentType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -39290,8 +39213,6 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Note_id(ctx, field)
-			case "html":
-				return ec.fieldContext_Note_html(ctx, field)
 			case "content":
 				return ec.fieldContext_Note_content(ctx, field)
 			case "contentType":
@@ -54911,7 +54832,7 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"content", "contentType", "html", "appSource"}
+	fieldsInOrder := [...]string{"content", "contentType", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -54936,15 +54857,6 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 				return it, err
 			}
 			it.ContentType = data
-		case "html":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("html"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.HTML = data
 		case "appSource":
 			var err error
 
@@ -54967,7 +54879,7 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "html", "content", "contentType"}
+	fieldsInOrder := [...]string{"id", "content", "contentType"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -54983,15 +54895,6 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.ID = data
-		case "html":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("html"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.HTML = data
 		case "content":
 			var err error
 
@@ -61491,21 +61394,10 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "html":
-			out.Values[i] = ec._Note_html(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "content":
 			out.Values[i] = ec._Note_content(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "contentType":
 			out.Values[i] = ec._Note_contentType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "createdAt":
 			out.Values[i] = ec._Note_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

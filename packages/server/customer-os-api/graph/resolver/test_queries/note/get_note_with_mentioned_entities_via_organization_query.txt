@@ -4,7 +4,6 @@ query GetOrganizationById($organizationId: ID!){
     notes {
         content {
           id
-          html
           content
           contentType
           mentioned {
