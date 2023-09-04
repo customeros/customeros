@@ -52,7 +52,8 @@ func syncEmails(services *service.Services) {
 
 	tenants, err := services.TenantService.GetAllTenants(ctx)
 	if err != nil {
-		panic(err) //todo handle error
+		logrus.Errorf("failed to get tenants: %v", err)
+		return
 	}
 
 	var wg sync.WaitGroup
@@ -69,25 +70,25 @@ func syncEmails(services *service.Services) {
 			externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, tenant.Name, "gmail")
 			if err != nil {
 				logrus.Errorf("failed to merge external system: %v", err)
-				panic(err) //todo handle error
+				return
 			}
 
 			users, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
 			if err != nil {
 				logrus.Errorf("failed to get users for tenant: %v", err)
-				panic(err) //todo handle error
+				return
 			}
 
 			personalEmailProviderList, err := services.Repositories.PersonalEmailProviderRepository.GetPersonalEmailProviderList()
 			if err != nil {
 				logrus.Errorf("failed to get personal email provider list: %v", err)
-				panic(err) //todo handle error
+				return
 			}
 
 			organizationAllowedForImport, err := services.Repositories.CommonRepositories.ImportAllowedOrganizationRepository.GetOrganizationsAllowedForImport(tenant.Name)
 			if err != nil {
 				logrus.Errorf("failed to check if organization is allowed for import: %v", err)
-				panic(err) //todo handle error
+				return
 			}
 
 			var wgTenant sync.WaitGroup
@@ -105,7 +106,7 @@ func syncEmails(services *service.Services) {
 					email, err := services.EmailService.FindEmailForUser(tenant.Name, user.Id)
 					if err != nil {
 						logrus.Errorf("failed to find email in tenant: %s for user: %s: %v ", tenant.Name, user.Id, err)
-						panic(err) //todo handle error
+						return
 					}
 
 					logrus.Infof("syncing emails in tenant FINISHED: %s for user: %s", tenant.Name, user.Id)
