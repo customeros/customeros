@@ -36,7 +36,10 @@ export const TimelineEventPreviewContextContextProvider = ({
   children,
   data = [],
   id = '',
-}: PropsWithChildren<{ data: TimelineEvent[]; id: string }>) => {
+}: PropsWithChildren<{
+  data: TimelineEvent[];
+  id: string;
+}>) => {
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { [id]: 'tab=about' },

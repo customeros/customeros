@@ -77,7 +77,9 @@ export const TimelineEventPreviewModal = ({
           cursor='default'
           onClick={(e) => e.stopPropagation()}
         >
-          {isMeeting && <MeetingPreviewModal />}
+          {isMeeting && (
+            <MeetingPreviewModal invalidateQuery={invalidateQuery} />
+          )}
           {isSlack && <SlackThreadPreviewModal />}
           {isEmail && <EmailPreviewModal invalidateQuery={invalidateQuery} />}
         </Card>

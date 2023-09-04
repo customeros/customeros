@@ -6,7 +6,6 @@ import { EmailStub, TimelineItem } from './events';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
-import { Action, InteractionEvent, Meeting } from '@graphql/types';
 import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
@@ -38,9 +37,11 @@ const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
 };
 
 const NEW_DATE = new Date();
+
 function getEventDate(event?: TimelineEvent) {
   return (event as InteractionEventWithDate)?.date || event?.createdAt;
 }
+
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
   const virtuoso = useRef<VirtuosoHandle>(null);
@@ -68,13 +69,7 @@ export const OrganizationTimeline: FC = () => {
       },
     );
   const invalidateQuery = () =>
-    queryClient.invalidateQueries(
-      useInfiniteGetTimelineQuery.getKey({
-        organizationId: id,
-        from: NEW_DATE,
-        size: 100,
-      }),
-    );
+    queryClient.invalidateQueries(['GetTimeline.infinite']);
 
   if (isInitialLoading) {
     return (
