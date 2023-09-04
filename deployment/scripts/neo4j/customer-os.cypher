@@ -546,6 +546,7 @@ OPTIONS {
 CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS FOR (t:Tenant) REQUIRE t.name IS UNIQUE;
 CREATE CONSTRAINT domain_domain_unique IF NOT EXISTS FOR (n:Domain) REQUIRE n.domain IS UNIQUE;
 
+CREATE INDEX user_id_idx IF NOT EXISTS FOR (n:User) ON (n.id);
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
 CREATE INDEX tag_id_idx IF NOT EXISTS FOR (n:Tag) ON (n.id);
 CREATE INDEX organization_id_idx IF NOT EXISTS FOR (n:Organization) ON (n.id);
@@ -555,5 +556,10 @@ CREATE INDEX email_id_idx IF NOT EXISTS FOR (n:Email) ON (n.id);
 CREATE INDEX email_email_idx IF NOT EXISTS FOR (n:Email) ON (n.email);
 CREATE INDEX phone_id_idx IF NOT EXISTS FOR (n:PhoneNumber) ON (n.id);
 CREATE INDEX phone_e164_idx IF NOT EXISTS FOR (n:PhoneNumber) ON (n.e164);
+CREATE INDEX action_id_idx IF NOT EXISTS FOR (n:Action) ON (n.id);
+CREATE INDEX interaction_session_id_idx IF NOT EXISTS FOR (n:InteractionSession) ON (n.id);
+CREATE INDEX interaction_event_id_idx IF NOT EXISTS FOR (n:InteractionEvent) ON (n.id);
+CREATE INDEX note_id_idx IF NOT EXISTS FOR (n:Note) ON (n.id);
+CREATE INDEX job_role_id_idx IF NOT EXISTS FOR (n:JobRole) ON (n.id);
 
 :exit;

@@ -10,8 +10,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
 )
 
@@ -292,6 +295,11 @@ func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Cont
 }
 
 func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetSentByParticipantsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
 	records, err := s.repositories.InteractionEventRepository.GetSentByParticipantsForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
@@ -299,16 +307,25 @@ func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx 
 
 	interactionEventParticipants := s.convertDbNodesToInteractionEventParticipants(records)
 
+	span.LogFields(log.Int("result count", len(interactionEventParticipants)))
+
 	return &interactionEventParticipants, nil
 }
 
 func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetSentToParticipantsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
 	records, err := s.repositories.InteractionEventRepository.GetSentToParticipantsForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
 	}
 
 	interactionEventParticipants := s.convertDbNodesToInteractionEventParticipants(records)
+
+	span.LogFields(log.Int("result count", len(interactionEventParticipants)))
 
 	return &interactionEventParticipants, nil
 }

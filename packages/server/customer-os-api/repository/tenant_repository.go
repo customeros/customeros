@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type TenantRepository interface {
@@ -101,11 +102,11 @@ func (r *tenantRepository) GetByName(ctx context.Context, tenant string) (*dbtyp
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	query := `MATCH (t:Tenant {name:$name}) RETURN t`
+	span.LogFields(log.String("query", query))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
-	query := "MATCH (t:Tenant {name:$name}) " +
-		" RETURN t"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
