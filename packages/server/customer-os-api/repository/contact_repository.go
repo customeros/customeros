@@ -635,14 +635,46 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		return err
 	}
 
+	// merge job roles that not sharing same organization
 	if _, err := tx.Run(ctx, matchQuery+
-		" WITH primary, merged "+
-		" MATCH (merged)-[rel:WORKS_AS]->(jb:JobRole) "+
-		" MERGE (primary)-[newRel:WORKS_AS]->(jb) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true, "+
-		"				jb.primary=false", params); err != nil {
+		` WITH primary, merged 
+		MATCH (merged)-[rel:WORKS_AS]->(jb:JobRole)
+		WHERE NOT EXISTS ((primary)-[:WORKS_AS]->(:JobRole)-[:ROLE_IN]->(:Organization)<-[:ROLE_IN]-(jb))
+		MERGE (primary)-[newRel:WORKS_AS]->(jb) 
+		ON CREATE SET 	newRel.mergedFrom = $mergedContactId, 
+						newRel.createdAt = $now
+					SET	rel.merged=true, 
+						jb.primary=false`, params); err != nil {
+		return err
+	}
+
+	// merge job roles that share same organization (happens when merging contacts within same organization)
+	// merge SENT_TO relationships
+	if _, err := tx.Run(ctx, matchQuery+
+		` WITH primary, merged 
+		MATCH (merged)-[:WORKS_AS]->(jb:JobRole)
+		MATCH (primary)-[:WORKS_AS]->(primaryJb:JobRole)-[:ROLE_IN]->(:Organization)<-[:ROLE_IN]-(jb)
+		MATCH (jb)<-[rel:SENT_TO]-(ie:InteractionEvent)
+		MERGE (primaryJb)<-[newRel:SENT_TO]-(ie) 
+		ON CREATE SET 	newRel.mergedFrom = $mergedContactId, 
+						newRel.createdAt = $now,
+						newRel.type = rel.type
+					SET	rel.merged=true`, params); err != nil {
+		return err
+	}
+
+	// merge job roles that share same organization (happens when merging contacts within same organization)
+	// merge SENT_BY relationships
+	if _, err := tx.Run(ctx, matchQuery+
+		` WITH primary, merged 
+		MATCH (merged)-[:WORKS_AS]->(jb:JobRole)
+		MATCH (primary)-[:WORKS_AS]->(primaryJb:JobRole)-[:ROLE_IN]->(:Organization)<-[:ROLE_IN]-(jb)
+		MATCH (jb)<-[rel:SENT_BY]-(ie:InteractionEvent)
+		MERGE (primaryJb)<-[newRel:SENT_BY]-(ie) 
+		ON CREATE SET 	newRel.mergedFrom = $mergedContactId, 
+						newRel.createdAt = $now,
+						newRel.type = rel.type
+					SET	rel.merged=true`, params); err != nil {
 		return err
 	}
 
