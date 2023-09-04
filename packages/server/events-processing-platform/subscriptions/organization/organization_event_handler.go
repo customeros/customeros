@@ -388,23 +388,18 @@ func (h *organizationEventHandler) OnRenewalForecastRequested(ctx context.Contex
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "calculateForecastAmount")
 	}
-	if amount != nil && potentialAmount != nil {
-		err := h.organizationCommands.UpdateRenewalForecastCommand.Handle(ctx, cmd.NewUpdateRenewalForecastCommand(
-			eventData.Tenant, organizationId, models.RenewalForecastFields{
-				Amount:          amount,
-				PotentialAmount: potentialAmount,
-				UpdatedBy:       "",
-				UpdatedAt:       utils.Now(),
-				Comment:         utils.StringPtr(""),
-			},
-			mapper.MapRenewalLikelihoodFromGraphDb(entity.RenewalLikelihoodProbability(organizationEntity.RenewalLikelihood.RenewalLikelihood))))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "UpdateRenewalForecastCommand")
-		}
-		span.LogFields(log.Float64("output - calculated amount", *amount), log.Float64("output - calculated potentialAmount", *potentialAmount))
-	} else {
-		span.LogFields(log.String("output", "amount or potentialAmount is nil"))
+	err = h.organizationCommands.UpdateRenewalForecastCommand.Handle(ctx, cmd.NewUpdateRenewalForecastCommand(
+		eventData.Tenant, organizationId, models.RenewalForecastFields{
+			Amount:          amount,
+			PotentialAmount: potentialAmount,
+			UpdatedBy:       "",
+			UpdatedAt:       utils.Now(),
+			Comment:         utils.StringPtr(""),
+		},
+		mapper.MapRenewalLikelihoodFromGraphDb(entity.RenewalLikelihoodProbability(organizationEntity.RenewalLikelihood.RenewalLikelihood))))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "UpdateRenewalForecastCommand")
 	}
 	return nil
 }

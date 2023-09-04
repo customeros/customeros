@@ -7831,7 +7831,7 @@ input MeetingInput {
     agenda: String
     agendaContentType: String
     note: NoteInput
-    appSource: String!
+    appSource: String
     externalSystem: ExternalSystemReferenceInput
     status: MeetingStatus
 }
@@ -7845,7 +7845,7 @@ input MeetingUpdateInput {
     agenda: String
     agendaContentType: String
     note: NoteUpdateInput
-    appSource: String!
+    appSource: String
     status: MeetingStatus
     externalSystem: ExternalSystemReferenceInput
 }
@@ -54709,7 +54709,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -54875,7 +54875,7 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

@@ -65,7 +65,7 @@ input MeetingInput {
     agenda: String
     agendaContentType: String
     note: NoteInput
-    appSource: String!
+    appSource: String
     externalSystem: ExternalSystemReferenceInput
     status: MeetingStatus
 }
@@ -79,7 +79,7 @@ input MeetingUpdateInput {
     agenda: String
     agendaContentType: String
     note: NoteUpdateInput
-    appSource: String!
+    appSource: String
     status: MeetingStatus
     externalSystem: ExternalSystemReferenceInput
 }
