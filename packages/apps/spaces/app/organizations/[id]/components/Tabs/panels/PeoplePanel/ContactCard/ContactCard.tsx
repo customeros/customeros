@@ -40,6 +40,7 @@ import { Fade } from '@ui/transitions/Fade';
 import { FormSocialInput } from '../../../shared/FormSocialInput';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { FormRoleSelect } from './FormRoleSelect';
+import { FormTimezoneSelect } from './FormTimezoneSelect';
 
 interface ContactCardProps {
   contact: Contact;
@@ -377,7 +378,7 @@ export const ContactCard = ({
                 organizationId={organizationId}
                 leftElement={<Icons.Share7 color='gray.500' />}
               />
-              <FormSelect
+              <FormTimezoneSelect
                 formId={formId}
                 isClearable
                 name='timezone'
