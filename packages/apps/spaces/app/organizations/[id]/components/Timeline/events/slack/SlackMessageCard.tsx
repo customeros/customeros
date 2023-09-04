@@ -31,7 +31,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
 }) => {
   const displayContent: string = (() => {
     const sanitizeContent = sanitizeHtml(
-      content.replace(/\n/g, '<br/>').replace(/ /g, ' '),
+      content.replace(/\n/g, '<br/>'),
     );
     const slack = escapeForSlackWithMarkdown(sanitizeContent);
     const regex = /(@[\w]+)/g;
