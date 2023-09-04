@@ -30,8 +30,7 @@ type emailService struct {
 type EmailService interface {
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 
-	SyncEmails(externalSystemId, tenant string)
-	SyncEmailsForUser(externalSystemId, tenant string, userSource string)
+	SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []entity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.ImportAllowedOrganization)
 
 	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawEmailState, *string, error)
 	SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawEmailState, *string, error)
@@ -52,44 +51,29 @@ func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEnt
 	return s.mapDbNodeToEmailEntity(*email), nil
 }
 
-func (s *emailService) SyncEmails(externalSystemId, tenant string) {
-	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForSync(externalSystemId, tenant)
-	if err != nil {
-		logrus.Errorf("failed to get emails for sync: %v", err)
-	}
-
-	organizationAllowedForImport, err := s.services.Repositories.CommonRepositories.ImportAllowedOrganizationRepository.GetOrganizationsAllowedForImport(tenant)
-	if err != nil {
-		logrus.Errorf("failed to check if organization is allowed for import: %v", err)
-		return
-	}
-
-	s.syncEmails(externalSystemId, tenant, emailsIdsForSync, organizationAllowedForImport)
-}
-
-func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string) {
+func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []entity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.ImportAllowedOrganization) {
 	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForUserForSync(externalSystemId, tenant, userSource)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 	}
 
-	organizationAllowedForImport, err := s.services.Repositories.CommonRepositories.ImportAllowedOrganizationRepository.GetOrganizationsAllowedForImport(tenant)
-	if err != nil {
-		logrus.Errorf("failed to check if organization is allowed for import: %v", err)
-		return
-	}
-
-	s.syncEmails(externalSystemId, tenant, emailsIdsForSync, organizationAllowedForImport)
+	s.syncEmails(externalSystemId, tenant, emailsIdsForSync, personalEmailProviderList, organizationAllowedForImport)
 }
 
 func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawEmailState, *string, error) {
+	personalEmailProviderList, err := s.services.Repositories.PersonalEmailProviderRepository.GetPersonalEmailProviderList()
+	if err != nil {
+		logrus.Errorf("failed to get personal email provider list: %v", err)
+		panic(err) //todo handle error
+	}
+
 	organizationAllowedForImport, err := s.services.Repositories.CommonRepositories.ImportAllowedOrganizationRepository.GetOrganizationsAllowedForImport(tenant)
 	if err != nil {
 		logrus.Errorf("failed to check if organization is allowed for import: %v", err)
 		return entity.ERROR, nil, err
 	}
 
-	return s.syncEmail(externalSystemId, tenant, emailId, organizationAllowedForImport)
+	return s.syncEmail(externalSystemId, tenant, emailId, personalEmailProviderList, organizationAllowedForImport)
 }
 
 func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawEmailState, *string, error) {
@@ -103,18 +87,24 @@ func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSo
 		return entity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
 	}
 
+	personalEmailProviderList, err := s.services.Repositories.PersonalEmailProviderRepository.GetPersonalEmailProviderList()
+	if err != nil {
+		logrus.Errorf("failed to get personal email provider list: %v", err)
+		panic(err) //todo handle error
+	}
+
 	organizationAllowedForImport, err := s.services.Repositories.CommonRepositories.ImportAllowedOrganizationRepository.GetOrganizationsAllowedForImport(tenant)
 	if err != nil {
 		logrus.Errorf("failed to check if organization is allowed for import: %v", err)
 		return entity.ERROR, nil, err
 	}
 
-	return s.syncEmail(externalSystemId, tenant, rawEmail.ID, organizationAllowedForImport)
+	return s.syncEmail(externalSystemId, tenant, rawEmail.ID, personalEmailProviderList, organizationAllowedForImport)
 }
 
-func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail, organizationAllowedForImport []commonEntity.ImportAllowedOrganization) {
+func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail, personalEmailProviderList []entity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.ImportAllowedOrganization) {
 	for _, email := range emails {
-		state, reason, err := s.syncEmail(externalSystemId, tenant, email.ID, organizationAllowedForImport)
+		state, reason, err := s.syncEmail(externalSystemId, tenant, email.ID, personalEmailProviderList, organizationAllowedForImport)
 
 		var errMessage *string
 		if err != nil {
@@ -131,7 +121,7 @@ func (s *emailService) syncEmails(externalSystemId, tenant string, emails []enti
 	}
 }
 
-func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, organizationAllowedForImport []commonEntity.ImportAllowedOrganization) (entity.RawEmailState, *string, error) {
+func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, personalEmailProviderList []entity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.ImportAllowedOrganization) (entity.RawEmailState, *string, error) {
 	ctx := context.Background()
 
 	emailIdString := emailId.String()
@@ -176,13 +166,6 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		references := extractLines(rawEmailData.Reference)
 		inReplyTo := extractLines(rawEmailData.InReplyTo)
-
-		//for personal emails, we don't create contacts, organizations and domains
-		personalEmailProviderList, err := s.repositories.PersonalEmailProviderRepository.GetPersonalEmailProviderList()
-		if err != nil {
-			logrus.Errorf("failed to get personal email provider list: %v", err)
-			return entity.ERROR, nil, err
-		}
 
 		allEmailsString, err := s.buildEmailsListExcludingPersonalEmails(personalEmailProviderList, rawEmail.UsernameSource, from, to, cc, bcc)
 		if err != nil {
