@@ -6,10 +6,15 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { FormSelect, SelectProps } from '@ui/form/SyncSelect';
 
 const SingleValue = (props: SingleValueProps) => {
+  const rawTimezone = props.children as string;
+  const timezone = rawTimezone.includes('UTC')
+    ? rawTimezone.split(' ')[0]
+    : rawTimezone;
+
   const time = DateTimeUtils.convertToTimeZone(
     new Date(),
     DateTimeUtils.defaultTimeFormatString,
-    props.children as string,
+    timezone,
   );
   const value = `${time} local time`;
 
@@ -19,7 +24,7 @@ const SingleValue = (props: SingleValueProps) => {
         {value}
         {` `}
         <Text as='span' color='gray.500'>
-          ({props.children})
+          • {timezone}
         </Text>
       </Text>
     </chakraComponents.SingleValue>

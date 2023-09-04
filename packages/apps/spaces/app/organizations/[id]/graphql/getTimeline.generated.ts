@@ -477,7 +477,7 @@ export type GetTimelineQuery = {
                 };
               }
           >;
-          note: Array<{ __typename?: 'Note'; id: string; html: string }>;
+          note: Array<{ __typename?: 'Note'; id: string; content: string }>;
         }
       | { __typename: 'Note' }
       | { __typename: 'PageView' }
@@ -614,7 +614,7 @@ export const GetTimelineDocument = `
         }
         note {
           id
-          html
+          content
         }
         agenda
         status

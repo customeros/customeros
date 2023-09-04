@@ -16,18 +16,30 @@ import { ExternalSystemType, Meeting } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@spaces/hooks/useCopyToClipboard';
 import { CardBody, CardHeader, CardFooter } from '@ui/presentation/Card';
-// import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { useUpdateMeetingMutation } from '@organization/graphql/updateMeeting.generated';
+import { useAddMeetingNoteMutation } from '@organization/graphql/addMeetingNote.generated';
 
 import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { getParticipantEmail } from '../utils';
 import { MeetingIcon, HubspotIcon, CalcomIcon } from './icons';
 
-export const MeetingPreviewModal = () => {
+interface MeetingPreviewModalProps {
+  invalidateQuery: () => void;
+}
+
+export const MeetingPreviewModal = ({
+  invalidateQuery,
+}: MeetingPreviewModalProps) => {
+  const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const [_, copy] = useCopyToClipboard();
   const client = getGraphQLClient();
-  const updateMeeting = useUpdateMeetingMutation(client);
-  const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const updateMeeting = useUpdateMeetingMutation(client, {
+    onSuccess: invalidateQuery,
+  });
+  const addMeetingNote = useAddMeetingNoteMutation(client, {
+    onSuccess: invalidateQuery,
+  });
 
   const event = modalContent as Meeting;
   const creatorTimeZone =
@@ -89,19 +101,26 @@ export const MeetingPreviewModal = () => {
   useForm<{ note: string }>({
     formId: 'meeting-notes',
     defaultValues: {
-      note: convert(event?.note?.[0]?.html ?? ''),
+      note: convert(event?.note?.[0]?.content ?? ''),
     },
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_BLUR') {
         const { name, value } = action.payload;
         if (name === 'note') {
-          updateMeeting.mutate({
-            meetingId: event?.id,
-            meeting: {
-              appSource: event?.appSource,
-              note: { id: event?.note?.[0]?.id, html: value },
-            },
-          });
+          if (!event?.note.length) {
+            addMeetingNote.mutate({
+              meetingId: event?.id,
+              note: { content: value },
+            });
+          } else {
+            updateMeeting.mutate({
+              meetingId: event?.id,
+              meeting: {
+                appSource: event?.appSource ?? '',
+                note: { id: event?.note?.[0]?.id, content: value },
+              },
+            });
+          }
         }
       }
       return next;
@@ -206,25 +225,14 @@ export const MeetingPreviewModal = () => {
             </Text>
           </Flex>
 
-          {/* Remove this when we have createNote mutation */}
-          <Flex flexDir='column'>
-            <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
-              Note
-            </Text>
-            <Text fontSize='sm' color='gray.700'>
-              {convert(event?.note?.[0]?.html ?? '')}
-            </Text>
-          </Flex>
-
-          {/* Uncomment this when we have createNote mutation */}
-          {/* <FormAutoresizeTextarea
-                size='sm'
-                name='note'
-                label='Notes'
-                isLabelVisible
-                formId='meeting-notes'
-                placeholder='Write some notes from this meeting'
-              /> */}
+          <FormAutoresizeTextarea
+            size='sm'
+            name='note'
+            label='Notes'
+            isLabelVisible
+            formId='meeting-notes'
+            placeholder='Write some notes from this meeting'
+          />
         </VStack>
 
         <Center minW='12' h='10' position='relative'>
