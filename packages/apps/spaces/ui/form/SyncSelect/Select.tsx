@@ -11,7 +11,6 @@ import {
   ChakraStylesConfig,
 } from 'chakra-react-select';
 
-import Delete from '@spaces/atoms/icons/Delete';
 import { Icons } from '@ui/media/Icon';
 import omit from 'lodash/omit';
 
@@ -20,7 +19,7 @@ export interface SelectProps extends Props<any, any, any> {
 }
 
 export const Select = forwardRef<SelectInstance, SelectProps>(
-  ({ leftElement, chakraStyles, ...props }, ref) => {
+  ({ leftElement, chakraStyles, components: _components, ...props }, ref) => {
     const Control = useCallback(({ children, ...rest }: ControlProps) => {
       return (
         <chakraComponents.Control {...rest}>
@@ -63,8 +62,9 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         ClearIndicator,
         LoadingIndicator,
         DropdownIndicator: () => null,
+        ..._components,
       }),
-      [Control],
+      [Control, _components],
     );
 
     return (
