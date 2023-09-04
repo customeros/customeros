@@ -32,7 +32,8 @@ export const SlackThreadPreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const event = modalContent as InteractionEvent;
   const slackSender = getParticipant(event?.sentBy);
-
+  console.log('🏷️ ----- modalContent: '
+      , modalContent);
   const slackEventReplies =
     event?.interactionSession?.events?.filter((e) => e?.id !== event?.id) || [];
 

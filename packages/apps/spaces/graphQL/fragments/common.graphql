@@ -100,11 +100,6 @@ fragment PhoneNumber on PhoneNumber {
   rawPhoneNumber
 }
 
-fragment Conversation on Conversation {
-  id
-  startedAt
-  updatedAt
-}
 
 fragment InteractionSessionFragment on InteractionSession {
   id

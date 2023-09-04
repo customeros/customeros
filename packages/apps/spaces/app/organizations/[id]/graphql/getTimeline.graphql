@@ -35,6 +35,12 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         }
         content
         contentType
+        includes {
+          id
+          mimeType
+          name
+          extension
+        }
         issue {
           externalLinks {
             type
