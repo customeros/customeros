@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jaeger-deployment
+  name: jaeger
   labels:
     app: jaeger
 spec:
@@ -20,29 +20,33 @@ spec:
         prometheus.io/port: "16686"
     spec:
       containers:
-        -   env:
-              - name: COLLECTOR_ZIPKIN_HTTP_PORT
-                value: "9411"
-              - name: MEMORY_MAX_TRACES
-                value: "10000"
-            image: jaegertracing/all-in-one:1.47.0
-            imagePullPolicy: Always
-            name: jaeger
-            ports:
-              - containerPort: 5775
-                protocol: UDP
-              - containerPort: 6831
-                protocol: UDP
-              - containerPort: 6832
-                protocol: UDP
-              - containerPort: 5778
-                protocol: TCP
-              - containerPort: 16686
-                protocol: TCP
-              - containerPort: 9411
-                protocol: TCP
-            readinessProbe:
-              httpGet:
-                path: "/"
-                port: 14269
-              initialDelaySeconds: 5
+        - name: jaeger
+          image: jaegertracing/all-in-one:latest
+          imagePullPolicy: Always
+          env:
+          - name: METRICS_STORAGE_TYPE
+            value: prometheus
+          - name: PROMETHEUS_SERVER_URL
+            value: http://prometheus:9090
+          - name: LOG_LEVEL
+            value: debug
+          ports:
+            - containerPort: 5775
+              protocol: UDP
+            - containerPort: 6831
+              protocol: UDP
+            - containerPort: 6832
+              protocol: UDP
+            - containerPort: 5778
+              protocol: TCP
+            - containerPort: 16676
+              protocol: TCP
+            - containerPort: 14268
+              protocol: TCP
+            - containerPort: 9411
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: "/"
+              port: 14269
+            initialDelaySeconds: 5
