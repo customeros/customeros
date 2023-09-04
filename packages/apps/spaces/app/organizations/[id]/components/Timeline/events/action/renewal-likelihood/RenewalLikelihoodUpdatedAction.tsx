@@ -4,20 +4,8 @@ import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { Text } from '@ui/typography/Text';
 import { Action, RenewalLikelihoodProbability } from '@graphql/types';
-
-const getLikelihoodDisplayData = (text: string) => {
-  const match = text.match(/(.+? to )(.+?)(?: by )(.+)/);
-
-  if (!match) {
-    return { preText: '', likelihood: '', author: '' };
-  }
-
-  return {
-    preText: match?.[1], // "Renewal likelihood set to "
-    likelihood: match?.[2], // "Low"
-    author: match?.[3], // " by Olivia Rhye"
-  };
-};
+import { useTimelineEventPreviewContext } from '../../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { getLikelihoodDisplayData } from '../utils';
 
 interface RenewalForecastUpdatedActionProps {
   data: Action;
@@ -26,12 +14,13 @@ interface RenewalForecastUpdatedActionProps {
 export const RenewalLikelihoodUpdatedAction: React.FC<
   RenewalForecastUpdatedActionProps
 > = ({ data }) => {
+  const { openModal } = useTimelineEventPreviewContext();
   if (!data.content) return null;
   const { preText, likelihood, author } = getLikelihoodDisplayData(
     data.content,
   );
   return (
-    <Flex alignItems='center'>
+    <Flex alignItems='center' onClick={() => openModal(data)}>
       <FeaturedIcon
         size='md'
         minW='10'

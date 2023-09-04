@@ -32,6 +32,7 @@ import { htmlToProsemirrorNode } from 'remirror';
 import { InteractionEvent } from '@graphql/types';
 import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
 import { useOutsideClick } from '@ui/utils';
+import { TimelineEventPreviewHeader } from '@organization/components/Timeline/preview/header/TimelineEventPreviewHeader';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -228,56 +229,13 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
   return (
     <div ref={cardRef}>
-      <CardHeader
-        pb={1}
-        position='sticky'
-        background='white'
-        top={0}
-        borderRadius='xl'
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Flex
-          direction='row'
-          justifyContent='space-between'
-          alignItems='center'
-        >
-          <div>
-            <Heading size='sm' mb={2}>
-              {event.interactionSession?.name}
-            </Heading>
-            <Text size='2xs' color='gray.500' fontSize='12px'>
-              {DateTimeUtils.format(
-                // @ts-expect-error this is correct (alias)
-                event.date,
-                DateTimeUtils.dateWithHour,
-              )}
-            </Text>
-          </div>
-          <Flex direction='row' justifyContent='flex-end' alignItems='center'>
-            <Tooltip label='Copy link to this email' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Copy link to this email'
-                color='gray.500'
-                size='sm'
-                mr={1}
-                icon={<CopyLink color='gray.500' height='18px' />}
-                onClick={() => copy(window.location.href)}
-              />
-            </Tooltip>
-            <Tooltip label='Close' aria-label='close' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Close preview'
-                color='gray.500'
-                size='sm'
-                icon={<Times color='gray.500' height='24px' />}
-                onClick={handleClosePreview}
-              />
-            </Tooltip>
-          </Flex>
-        </Flex>
-      </CardHeader>
+      <TimelineEventPreviewHeader
+        //@ts-expect-error alias
+        date={event.date}
+        name={event.interactionSession?.name ?? ''}
+        onClose={handleClosePreview}
+        copyLabel='Copy link to this email'
+      />
 
       <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6}>
         <Flex direction='row' justify='space-between' mb={3}>
