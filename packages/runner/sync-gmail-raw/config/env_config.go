@@ -23,6 +23,11 @@ type Config struct {
 		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	}
 
+	GoogleOAuth struct {
+		ClientId     string `env:"GOOGLE_OAUTH_CLIENT_ID,required"`
+		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET,required"`
+	}
+
 	SyncData struct {
 		CronSync  string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
 		BatchSize int64  `env:"BATCH_SIZE" envDefault:"100"`

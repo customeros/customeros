@@ -39,9 +39,9 @@ func main() {
 	appLogger.InitLogger()
 	appLogger.WithName("sync-gmail-raw")
 
-	cronJub := localCron.StartCron(config, services)
+	cronJobs := localCron.StartCronJobs(config, services)
 
-	if err := run(appLogger, cronJub); err != nil {
+	if err := run(appLogger, cronJobs); err != nil {
 		appLogger.Fatal(err)
 	}
 
