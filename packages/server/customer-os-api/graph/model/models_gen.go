@@ -1773,6 +1773,7 @@ const (
 	DataSourceHubspot        DataSource = "HUBSPOT"
 	DataSourceZendeskSupport DataSource = "ZENDESK_SUPPORT"
 	DataSourcePipedrive      DataSource = "PIPEDRIVE"
+	DataSourceNotion         DataSource = "NOTION"
 	DataSourceSLACk          DataSource = "SLACK"
 	DataSourceWebscrape      DataSource = "WEBSCRAPE"
 )
@@ -1783,13 +1784,14 @@ var AllDataSource = []DataSource{
 	DataSourceHubspot,
 	DataSourceZendeskSupport,
 	DataSourcePipedrive,
+	DataSourceNotion,
 	DataSourceSLACk,
 	DataSourceWebscrape,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceWebscrape:
+	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceNotion, DataSourceSLACk, DataSourceWebscrape:
 		return true
 	}
 	return false
@@ -1952,6 +1954,7 @@ const (
 	ExternalSystemTypeZendeskSupport ExternalSystemType = "ZENDESK_SUPPORT"
 	ExternalSystemTypeCalcom         ExternalSystemType = "CALCOM"
 	ExternalSystemTypePipedrive      ExternalSystemType = "PIPEDRIVE"
+	ExternalSystemTypeNotion         ExternalSystemType = "NOTION"
 	ExternalSystemTypeSLACk          ExternalSystemType = "SLACK"
 )
 
@@ -1960,12 +1963,13 @@ var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeZendeskSupport,
 	ExternalSystemTypeCalcom,
 	ExternalSystemTypePipedrive,
+	ExternalSystemTypeNotion,
 	ExternalSystemTypeSLACk,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeNotion, ExternalSystemTypeSLACk:
 		return true
 	}
 	return false

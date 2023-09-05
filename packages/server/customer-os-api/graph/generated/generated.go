@@ -7360,6 +7360,7 @@ enum ExternalSystemType {
     ZENDESK_SUPPORT
     CALCOM
     PIPEDRIVE
+    NOTION
     SLACK
 }
 
@@ -8474,6 +8475,7 @@ input SocialUpdateInput {
     HUBSPOT
     ZENDESK_SUPPORT
     PIPEDRIVE
+    NOTION
     SLACK
     WEBSCRAPE
 }`, BuiltIn: false},
