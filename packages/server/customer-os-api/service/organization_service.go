@@ -84,6 +84,11 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 }
 
 func (s *organizationService) Create(ctx context.Context, input *OrganizationCreateData) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Create")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("input", input))
+
 	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -185,7 +190,16 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToOrganizationEntity(*organizationDbNodePtr.(*dbtype.Node)), nil
+
+	organizationEntity := s.mapDbNodeToOrganizationEntity(*organizationDbNodePtr.(*dbtype.Node))
+	if common.GetUserIdFromContext(ctx) != "" {
+		_, err = s.ReplaceOwner(ctx, organizationEntity.ID, common.GetUserIdFromContext(ctx))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to link organization %s with owner %s: %s", organizationEntity.ID, common.GetUserIdFromContext(ctx), err.Error())
+		}
+	}
+	return organizationEntity, nil
 }
 
 func (s *organizationService) Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error) {
