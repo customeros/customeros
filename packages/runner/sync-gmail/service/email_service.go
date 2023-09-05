@@ -143,6 +143,11 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		return entity.ERROR, nil, err
 	}
 
+	if strings.HasSuffix(rawEmailData.Subject, "• lemwarmup") || strings.HasSuffix(rawEmailData.Subject, "• lemwarm") {
+		reason := "warmer email"
+		return entity.SKIPPED, &reason, nil
+	}
+
 	interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.MessageId)
 	if err != nil {
 		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
