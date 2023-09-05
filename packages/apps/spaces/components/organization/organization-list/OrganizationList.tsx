@@ -1,6 +1,13 @@
 'use client';
 
-import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  lazy,
+  Suspense,
+  useCallback,
+} from 'react';
 import styles from './organization-list.module.scss';
 import { columns } from './OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
@@ -113,8 +120,10 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     }
   };
 
-  const handleFetchMore = () => {
-    setPagination(page + 1);
+  const handleFetchMore = useCallback(() => {
+    setPagination((prev) => {
+      return prev + 1;
+    });
     fetchMore({
       variables: {
         pagination: {
@@ -123,7 +132,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
         },
       },
     });
-  };
+  }, [page, fetchMore, variables.pagination.limit]);
 
   const handleMergeOrganizations = (table: TableInstance<Organization>) => {
     const organizationIds = Object.keys(selection)
