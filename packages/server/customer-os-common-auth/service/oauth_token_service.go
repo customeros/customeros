@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 )
@@ -27,18 +26,11 @@ func (o oAuthTokenService) Save(tokenEntity entity.OAuthTokenEntity) (*entity.OA
 }
 
 func (o oAuthTokenService) GetByPlayerIdAndProvider(playerId string, provider string) (*entity.OAuthTokenEntity, error) {
-	qr := o.repositories.OAuthTokenRepository.GetByPlayerIdAndProvider(playerId, provider)
-	var oAuthToken entity.OAuthTokenEntity
-	var ok bool
-	if qr.Error != nil {
-		return nil, qr.Error
-	} else if qr.Result == nil {
-		return nil, nil
-	} else {
-		oAuthToken, ok = qr.Result.(entity.OAuthTokenEntity)
-		if !ok {
-			return nil, fmt.Errorf("GetForTenant: unexpected type %T", qr.Result)
-		}
+	authTokenEntity, err := o.repositories.OAuthTokenRepository.GetByPlayerIdAndProvider(playerId, provider)
+
+	if err != nil {
+		return nil, err
 	}
-	return &oAuthToken, nil
+
+	return authTokenEntity, nil
 }

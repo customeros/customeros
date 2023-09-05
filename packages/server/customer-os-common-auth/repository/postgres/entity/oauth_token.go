@@ -10,8 +10,8 @@ const (
 
 type OAuthTokenEntity struct {
 	Provider                  string    `gorm:"primaryKey;autoIncrement:false;column:provider;size:255;not null"`
-	TenantName                string    `gorm:"index:,size:255;not null"`
 	PlayerIdentityId          string    `gorm:"primaryKey;autoIncrement:false;column:player_identity_id;size:255;not null"`
+	TenantName                string    `gorm:"index:,size:255;not null"`
 	EmailAddress              string    `gorm:"column:email_address;size:255;"`
 	AccessToken               string    `gorm:"column:access_token;type:text"`
 	RefreshToken              string    `gorm:"column:refresh_token;type:text"`

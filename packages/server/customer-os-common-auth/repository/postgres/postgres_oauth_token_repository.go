@@ -4,13 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/helper"
 	"gorm.io/gorm"
+	"time"
 )
 
 type OAuthTokenRepository interface {
-	GetByPlayerIdAndProvider(playerId string, provider string) helper.QueryResult
+	GetAll() ([]entity.OAuthTokenEntity, error)
+	GetByPlayerIdAndProvider(playerId string, provider string) (*entity.OAuthTokenEntity, error)
+
 	Save(oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
+	Update(playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error)
 }
 
 type oAuthTokenRepository struct {
@@ -23,28 +26,61 @@ func NewOAuthTokenRepository(db *gorm.DB) OAuthTokenRepository {
 	}
 }
 
-func (oAuthTokenRepo oAuthTokenRepository) GetByPlayerIdAndProvider(playerId string, provider string) helper.QueryResult {
+func (repo oAuthTokenRepository) GetAll() ([]entity.OAuthTokenEntity, error) {
+	var entities []entity.OAuthTokenEntity
+
+	err := repo.db.Find(&entities).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return entities, nil
+}
+
+func (repo oAuthTokenRepository) GetByPlayerIdAndProvider(playerId, provider string) (*entity.OAuthTokenEntity, error) {
 	var oAuthTokenEntity entity.OAuthTokenEntity
 
-	err := oAuthTokenRepo.db.
+	err := repo.db.
 		Where("player_identity_id = ?", playerId).
 		Where("provider = ?", provider).
 		First(&oAuthTokenEntity).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return helper.QueryResult{Error: err}
+		return nil, err
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return helper.QueryResult{Result: nil}
+		return nil, nil
 	}
 
-	return helper.QueryResult{Result: oAuthTokenEntity}
+	return &oAuthTokenEntity, nil
 }
 
-func (oAuthTokenRepo oAuthTokenRepository) Save(oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error) {
-	result := oAuthTokenRepo.db.Save(&oAuthToken)
+func (repo oAuthTokenRepository) Save(oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error) {
+	result := repo.db.Save(&oAuthToken)
 	if result.Error != nil {
-		return nil, fmt.Errorf("SaveKeys: %w", result.Error)
+		return nil, fmt.Errorf("saving oauth token failed: %w", result.Error)
 	}
 	return &oAuthToken, nil
+}
+
+func (repo oAuthTokenRepository) Update(playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error) {
+	existing, err := repo.GetByPlayerIdAndProvider(playerId, provider)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return nil, fmt.Errorf("oauth token not found")
+	}
+
+	existing.AccessToken = accessToken
+	existing.RefreshToken = refreshToken
+	existing.ExpiresAt = expiresAt
+
+	result := repo.db.Save(&existing)
+	if result.Error != nil {
+		return nil, fmt.Errorf("updating oauth token failed: %w", result.Error)
+	}
+
+	return existing, nil
 }
