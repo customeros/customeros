@@ -101,7 +101,9 @@ export const MeetingPreviewModal = ({
   useForm<{ note: string }>({
     formId: 'meeting-notes',
     defaultValues: {
-      note: convert(event?.note?.[0]?.content ?? ''),
+      note: convert(event?.note?.[0]?.content ?? '', {
+        preserveNewlines: true,
+      }),
     },
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_BLUR') {
@@ -220,8 +222,10 @@ export const MeetingPreviewModal = ({
             <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
               Agenda
             </Text>
-            <Text fontSize='sm' color='gray.700'>
-              {convert(event?.agenda ?? '')}
+            <Text fontSize='sm' color={event?.agenda ? 'gray.700' : 'gray.500'}>
+              {event?.agenda
+                ? convert(event?.agenda ?? '', { preserveNewlines: true })
+                : 'No agenda was added'}
             </Text>
           </Flex>
 
