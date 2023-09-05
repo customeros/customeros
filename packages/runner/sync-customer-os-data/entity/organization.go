@@ -84,14 +84,6 @@ func (o *OrganizationData) IsSubsidiary() bool {
 	return o.ParentOrganization != nil && o.ParentOrganization.OrganizationRelation == Subsidiary
 }
 
-func (o *OrganizationData) HasOwnerByOwnerId() bool {
-	return o.UserExternalOwnerId != ""
-}
-
-func (o *OrganizationData) HasOwnerByUserId() bool {
-	return o.UserExternalId != ""
-}
-
 func (o *OrganizationData) Normalize() {
 	o.SetTimes()
 

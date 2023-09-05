@@ -23,8 +23,6 @@ type OrganizationRepository interface {
 	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
 	MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error
 	LinkToParentOrganizationAsSubsidiary(ctx context.Context, tenant, organizationId, externalSystem string, parentOrganizationDtls *entity.ParentOrganization) error
-	SetOwnerByOwnerExternalId(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystem string) error
-	SetOwnerByUserExternalId(ctx context.Context, tenant, contactId, userExternalId, externalSystem string) error
 	CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error)
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 	GetOrganizationIdsForContact(ctx context.Context, tenant, contactId string) ([]string, error)
@@ -429,72 +427,6 @@ func (r *organizationRepository) LinkToParentOrganizationAsSubsidiary(ctx contex
 				"parentExternalId": parentOrganizationDtls.ExternalId,
 				"organizationId":   organizationId,
 				"type":             parentOrganizationDtls.Type,
-			})
-		return nil, err
-	})
-	return err
-}
-
-func (r *organizationRepository) SetOwnerByOwnerExternalId(ctx context.Context, tenant, organizationId, userExternalOwnerId, externalSystem string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetOwnerByOwnerExternalId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			WHERE org.sourceOfTruth=$sourceOfTruth
-			WITH org, t
-			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
-			DELETE r
-			WITH org, t
-			MATCH (u:User)-[:IS_LINKED_WITH {externalOwnerId:$userExternalOwnerId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
-			MERGE (u)-[:OWNS]->(org)
-			SET org.updatedAt=$now`
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":              tenant,
-				"organizationId":      organizationId,
-				"sourceOfTruth":       externalSystem,
-				"externalSystemId":    externalSystem,
-				"userExternalOwnerId": userExternalOwnerId,
-				"now":                 utils.Now(),
-			})
-		return nil, err
-	})
-	return err
-}
-
-func (r *organizationRepository) SetOwnerByUserExternalId(ctx context.Context, tenant, organizationId, userExternalId, externalSystem string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetOwnerByOwnerExternalId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			WHERE org.sourceOfTruth=$sourceOfTruth
-			WITH org, t
-			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
-			DELETE r
-			WITH org, t
-			MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
-			MERGE (u)-[:OWNS]->(org)
-			SET org.updatedAt=$now`
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":           tenant,
-				"organizationId":   organizationId,
-				"sourceOfTruth":    externalSystem,
-				"externalSystemId": externalSystem,
-				"userExternalId":   userExternalId,
-				"now":              utils.Now(),
 			})
 		return nil, err
 	})
