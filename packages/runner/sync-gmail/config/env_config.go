@@ -47,7 +47,6 @@ type Config struct {
 		CronSync string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
 	}
 
-	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
-	Jaeger   tracing.JaegerConfig
-	Logger   logger.Config
+	Jaeger tracing.JaegerConfig
+	Logger logger.Config
 }

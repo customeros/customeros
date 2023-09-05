@@ -3,10 +3,10 @@ package cron
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/service"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 	"sync"
@@ -19,7 +19,7 @@ func StartCron(config *config.Config, services *service.Services) *cron.Cron {
 	c := cron.New()
 
 	err := c.AddFunc(config.SyncData.CronSync, func() {
-		lockAndRunJob(services, syncEmails)
+		lockAndRunJob(services, syncEmailsForAllTenantsWithServiceAccount)
 	})
 	if err != nil {
 		logrus.Fatalf("Could not add cron job: %v", err.Error())
@@ -44,7 +44,7 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 	return nil
 }
 
-func syncEmails(services *service.Services) {
+func syncEmailsForAllTenantsWithServiceAccount(services *service.Services) {
 	runId, _ := uuid.NewRandom()
 	logrus.Infof("run id: %s syncing emails from gmail into customer-os at %v", runId.String(), time.Now().UTC())
 
@@ -66,27 +66,27 @@ func syncEmails(services *service.Services) {
 
 			logrus.Infof("syncing emails for tenant: %s", tenant)
 
-			externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, tenant.Name, "gmail")
+			serviceAccountExistsForTenant, err := services.EmailService.ServiceAccountCredentialsExistsForTenant(tenant.Name)
 			if err != nil {
-				logrus.Errorf("failed to merge external system: %v", err)
+				logrus.Error(err)
+				logrus.Infof("syncing emails for tenant: %s completed", tenant)
+				return
+			}
+
+			if !serviceAccountExistsForTenant {
+				logrus.Infof("no service account credentials found for tenant: %s", tenant.Name)
+				logrus.Infof("syncing emails for tenant: %s completed", tenant)
+				return
+			}
+
+			if tenant.Name != "openline" {
+				logrus.Infof("syncing emails for tenant: %s skip", tenant)
 				return
 			}
 
 			usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
 			if err != nil {
-				logrus.Errorf("failed to get users for tenant: %v", err)
-				return
-			}
-
-			personalEmailProviderList, err := services.Repositories.PersonalEmailProviderRepository.GetPersonalEmailProviderList()
-			if err != nil {
-				logrus.Errorf("failed to get personal email provider list: %v", err)
-				return
-			}
-
-			organizationAllowedForImport, err := services.Repositories.CommonRepositories.ImportAllowedOrganizationRepository.GetOrganizationsAllowedForImport(tenant.Name)
-			if err != nil {
-				logrus.Errorf("failed to check if organization is allowed for import: %v", err)
+				logrus.Error(err)
 				return
 			}
 
@@ -96,23 +96,22 @@ func syncEmails(services *service.Services) {
 			for _, user := range usersForTenant {
 				go func(user entity.UserEntity) {
 					defer wgTenant.Done()
-					logrus.Infof("syncing emails for user: %s in tenant: %s", user, tenant.Name)
+					logrus.Infof("syncing emails for user: %s in tenant: %s", user, tenant)
 
-					email, err := services.EmailService.FindEmailForUser(tenant.Name, user.Id)
+					emailForUser, err := services.EmailService.FindEmailForUser(tenant.Name, user.Id)
 					if err != nil {
-						logrus.Errorf("failed to find email in tenant: %s for user: %s: %v ", tenant.Name, user.Id, err)
+						logrus.Infof("failed to find email for user: %v", err)
 						return
 					}
-
-					services.EmailService.SyncEmailsForUser(externalSystemId, tenant.Name, email.RawEmail, personalEmailProviderList, organizationAllowedForImport)
+					services.EmailService.ReadNewEmailsForUsername(tenant.Name, emailForUser.RawEmail)
 
 					logrus.Infof("syncing emails for user: %s in tenant: %s completed", user, tenant)
 				}(*user)
 			}
 
 			wgTenant.Wait()
-
 			logrus.Infof("syncing emails for tenant: %s completed", tenant)
+
 		}(*tenant)
 	}
 

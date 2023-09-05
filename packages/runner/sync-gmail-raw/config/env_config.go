@@ -1,5 +1,7 @@
 package config
 
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+
 type Config struct {
 	Neo4jDb struct {
 		Target                string `env:"NEO4J_TARGET,required"`
@@ -22,9 +24,9 @@ type Config struct {
 	}
 
 	SyncData struct {
-		TimeoutAfterTaskRun int   `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
-		BatchSize           int64 `env:"BATCH_SIZE" envDefault:"100"`
+		CronSync  string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
+		BatchSize int64  `env:"BATCH_SIZE" envDefault:"100"`
 	}
 
-	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
+	Logger logger.Config
 }
