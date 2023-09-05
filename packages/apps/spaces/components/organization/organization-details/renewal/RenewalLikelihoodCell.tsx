@@ -41,18 +41,16 @@ export const RenewalLikelihoodCell = ({
     ? { label: capitalize(currentProbability), value: currentProbability }
     : undefined;
 
-  const handleChange = (
+  const handleChange = async (
     newValue: SelectOption<RenewalLikelihoodProbability>,
   ) => {
-    updateRenewalLikelihood({
+    setIsEditing(false);
+    await updateRenewalLikelihood({
       variables: {
         input: {
           id: organizationId,
           probability: newValue.value,
         },
-      },
-      onCompleted: () => {
-        setIsEditing(false);
       },
       update: (cache) => {
         const normalizedId = cache.identify({

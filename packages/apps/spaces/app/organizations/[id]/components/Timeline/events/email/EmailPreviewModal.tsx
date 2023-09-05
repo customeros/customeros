@@ -222,10 +222,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     handler: handleClosePreview,
   });
 
-  if (!isModalOpen || !modalContent) {
-    return null;
-  }
-
   return (
     <div ref={cardRef}>
       <CardHeader
@@ -279,7 +275,12 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         </Flex>
       </CardHeader>
 
-      <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6}>
+      <CardBody
+        mt={0}
+        pb={6}
+        overflow='auto'
+        maxHeight='calc(100vh - 3rem - 32px - 78px - 153px)'
+      >
         <Flex direction='row' justify='space-between' mb={3}>
           <Flex
             direction='column'
