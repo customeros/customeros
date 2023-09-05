@@ -11,7 +11,7 @@ require (
 	github.com/lucasepe/codename v0.2.0
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-00010101000000-000000000000
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230810191455-3928c40ce17f
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230905051222-d17861b89a13
 	golang.org/x/oauth2 v0.11.0
 	golang.org/x/text v0.13.0
 	google.golang.org/api v0.138.0
@@ -47,8 +47,10 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/neo4j/neo4j-go-driver/v5 v5.12.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.opencensus.io v0.24.0 // indirect

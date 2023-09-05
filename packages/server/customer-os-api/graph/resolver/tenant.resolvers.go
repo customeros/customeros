@@ -54,3 +54,20 @@ func (r *queryResolver) TenantByWorkspace(ctx context.Context, workspace model.W
 	}
 	return &tenant.Name, nil
 }
+
+// TenantByEmail is the resolver for the tenant_ByEmail field.
+func (r *queryResolver) TenantByEmail(ctx context.Context, email string) (*string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantByEmail", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.email", email))
+
+	tenant, err := r.Services.TenantService.GetTenantForUserEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	if tenant == nil {
+		return nil, nil
+	}
+	return &tenant.Name, nil
+}

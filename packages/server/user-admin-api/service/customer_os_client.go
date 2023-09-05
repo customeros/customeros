@@ -14,6 +14,7 @@ import (
 
 type CustomerOsClient interface {
 	GetTenantByWorkspace(workspace *model.WorkspaceInput) (*string, error)
+	GetTenantByUserEmail(email string) (*string, error)
 	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
 	MergeTenant(tenant *model.TenantInput) (string, error)
 	IsPlayer(authId string, provider string) (string, error)
@@ -81,6 +82,37 @@ func (s *customerOsClient) GetTenantByWorkspace(workspace *model.WorkspaceInput)
 		return nil, err
 	}
 	return graphqlResponse.Workspace, nil
+}
+
+func (s *customerOsClient) GetTenantByUserEmail(email string) (*string, error) {
+	if email == "" {
+		return nil, errors.New("GetTenantByUserEmail: email is empty")
+	}
+	graphqlRequest := graphql.NewRequest(
+		`
+		query GetTenantByEmail ($email: String!) {
+				tenant_ByEmail(email: $email) 
+		}
+	`)
+	graphqlRequest.Var("email", email)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	var graphqlResponse struct {
+		Tenant_ByEmail *string
+	}
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, err
+	}
+	return graphqlResponse.Tenant_ByEmail, nil
 }
 
 func (s *customerOsClient) MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error) {

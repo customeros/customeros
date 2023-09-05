@@ -1,6 +1,7 @@
 extend type Query {
     tenant: String!
     tenant_ByWorkspace(workspace: WorkspaceInput!): String @hasRole(roles: [USER, ADMIN])
+    tenant_ByEmail(email: String!): String @hasRole(roles: [ADMIN])
 }
 
 input TenantInput {
