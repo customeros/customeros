@@ -47,12 +47,17 @@ export const getParticipantEmail = (participant: Participant): string => {
 export const getParticipants = (
   data: Meeting | undefined,
 ): (string | string[] | number)[] => {
+  const owner = data?.createdBy?.length
+    ? getParticipantName(data?.createdBy?.[0])
+    : null;
+
   if (data?.attendedBy?.length) {
     const fullArray = data?.attendedBy
       ?.map((participant) => getParticipantName(participant))
+      .filter((p) => p !== owner)
       .filter(Boolean);
 
-    if (!data?.note?.[0]?.html || !data?.agenda)
+    if (!data?.note?.[0]?.content || !data?.agenda)
       return [fullArray.join(data.attendedBy.length > 2 ? ', ' : ' and '), ''];
 
     return fullArray

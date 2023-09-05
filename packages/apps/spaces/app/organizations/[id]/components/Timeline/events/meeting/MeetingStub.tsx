@@ -22,8 +22,10 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
   const [participants, remaining] = getParticipants(data);
   const { openModal } = useTimelineEventPreviewContext();
 
-  const note = convert(data?.note?.[0]?.html);
-  const agenda = data?.agenda ?? '';
+  const note = convert(data?.note?.[0]?.content ?? '', {
+    preserveNewlines: true,
+  });
+  const agenda = convert(data?.agenda ?? '', { preserveNewlines: true });
 
   return (
     <Card
