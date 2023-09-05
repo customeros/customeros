@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/notion"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/pipedrive"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/slack"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support"
@@ -136,6 +137,9 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 		},
 		string(entity.AirbyteSourcePipedrive): func() source.SourceDataService {
 			return pipedrive.NewPipedriveDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
+		},
+		string(entity.AirbyteSourceNotion): func() source.SourceDataService {
+			return notion.NewNotionDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
 		},
 		string(entity.OpenlineSourceSlack): func() source.SourceDataService {
 			return slack.NewSlackDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
