@@ -186,22 +186,6 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		}
 	}
 
-	if !failedSync {
-		if orgInput.HasOwnerByOwnerId() {
-			if err = s.repositories.OrganizationRepository.SetOwnerByOwnerExternalId(ctx, tenant, organizationId, orgInput.UserExternalOwnerId, dataService.SourceId()); err != nil {
-				// Do not mark sync as failed in case owner relationship is not set
-				tracing.TraceErr(span, err)
-				s.log.Errorf("failed set owner user for organization %s, tenant %s :%v", organizationId, tenant, err)
-			}
-		} else if orgInput.HasOwnerByUserId() {
-			if err = s.repositories.OrganizationRepository.SetOwnerByUserExternalId(ctx, tenant, organizationId, orgInput.UserExternalId, dataService.SourceId()); err != nil {
-				// Do not mark sync as failed in case owner relationship is not set
-				tracing.TraceErr(span, err)
-				s.log.Errorf("failed set owner user for organization %s, tenant %s :%v", organizationId, tenant, err)
-			}
-		}
-	}
-
 	if orgInput.HasNotes() && !failedSync {
 		for _, note := range orgInput.Notes {
 			localNote := entity.NoteData{
