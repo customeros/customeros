@@ -17,6 +17,7 @@ import (
 
 type TenantService interface {
 	GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*entity.TenantEntity, error)
+	GetTenantForUserEmail(ctx context.Context, email string) (*entity.TenantEntity, error)
 	Merge(ctx context.Context, tenantEntity entity.TenantEntity) (*entity.TenantEntity, error)
 }
 
@@ -61,8 +62,29 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEnt
 }
 
 func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*entity.TenantEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantForWorkspace")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.Object("workspace", workspaceEntity))
+
 	tenant, err := s.repositories.TenantRepository.GetForWorkspace(ctx, workspaceEntity)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
+	}
+
+	return s.mapDbNodeToTenantEntity(tenant), nil
+}
+
+func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string) (*entity.TenantEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetTenantForUserEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.String("email", email))
+
+	tenant, err := s.repositories.TenantRepository.GetForUserEmail(ctx, email)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
 	}
 

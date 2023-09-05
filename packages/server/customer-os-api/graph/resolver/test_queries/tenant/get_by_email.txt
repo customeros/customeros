@@ -1,0 +1,3 @@
+query GetByEmail($email: String!) {
+  tenant_ByEmail(email: $email)
+}

@@ -141,17 +141,32 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 				tenantName = &tenantStr
 			}
 		} else {
-			// no workspace for this e-mail invent a tenant name
-			var appSource = APP_SOURCE
-			tenantStr := utils.GenerateName()
-			log.Printf("user has no workspace, inventing tenant %s", tenantStr)
-
-			id, failed := makeTenantAndUser(ginContext, cosClient, tenantStr, appSource, signInRequest, userInfo)
-			if failed {
-				return
+			// no workspace for this e-mail
+			// check tenant exists for this e-mail
+			if userInfo.Email != "" {
+				var err error
+				tenantName, err = cosClient.GetTenantByUserEmail(userInfo.Email)
+				if err != nil {
+					log.Printf("unable to get tenant: %v", err.Error())
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("unable to get tenant: %v", err.Error()),
+					})
+					return
+				}
 			}
-			log.Printf("user created: %s", id)
-			tenantName = &tenantStr
+			// no tenant for this e-mail, invent a tenant name
+			if tenantName == nil {
+				var appSource = APP_SOURCE
+				tenantStr := utils.GenerateName()
+				log.Printf("user has no workspace, inventing tenant %s", tenantStr)
+
+				id, failed := makeTenantAndUser(ginContext, cosClient, tenantStr, appSource, signInRequest, userInfo)
+				if failed {
+					return
+				}
+				log.Printf("user created: %s", id)
+				tenantName = &tenantStr
+			}
 		}
 
 		if isRequestEnablingOAuthSync(signInRequest) {

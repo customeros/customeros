@@ -15,6 +15,7 @@ import (
 type TenantRepository interface {
 	Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error)
 	GetForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*dbtype.Node, error)
+	GetForUserEmail(ctx context.Context, email string) (*dbtype.Node, error)
 	LinkWithWorkspace(ctx context.Context, tenant string, workspace entity.WorkspaceEntity) (bool, error)
 	GetByName(ctx context.Context, tenant string) (*dbtype.Node, error)
 }
@@ -157,6 +158,43 @@ func (r *tenantRepository) GetForWorkspace(ctx context.Context, workspaceEntity 
 	convertedResult, isOk := result.([]*dbtype.Node)
 	if !isOk {
 		return nil, errors.New("GetForWorkspace: cannot convert result")
+	}
+	if len(convertedResult) == 0 {
+		return nil, nil
+	}
+	return convertedResult[0], err
+}
+
+func (r *tenantRepository) GetForUserEmail(ctx context.Context, email string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetForUserEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("email", email))
+
+	query := `MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(:User)-[:HAS]->(e:Email)
+		WHERE e.email=$email OR e.rawEmail=$email
+		RETURN DISTINCT t order by t.createdAt ASC LIMIT 1`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"email": email,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	convertedResult, isOk := result.([]*dbtype.Node)
+	if !isOk {
+		return nil, errors.New("GetForUserEmail: cannot convert result")
 	}
 	if len(convertedResult) == 0 {
 		return nil, nil
