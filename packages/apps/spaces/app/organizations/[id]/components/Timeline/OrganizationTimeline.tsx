@@ -36,7 +36,7 @@ const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   );
 };
 
-const NEW_DATE = new Date();
+export const NEW_DATE = new Date(new Date().setDate(new Date().getDate() + 1));
 
 function getEventDate(event?: TimelineEvent) {
   return (event as InteractionEventWithDate)?.date || event?.createdAt;

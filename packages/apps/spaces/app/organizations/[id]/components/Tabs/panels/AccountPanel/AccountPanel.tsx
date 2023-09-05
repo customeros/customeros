@@ -18,7 +18,6 @@ export const AccountPanel = () => {
     client,
     { id },
   );
-
   if (isInitialLoading) {
     return <AccountPanelSkeleton />;
   }

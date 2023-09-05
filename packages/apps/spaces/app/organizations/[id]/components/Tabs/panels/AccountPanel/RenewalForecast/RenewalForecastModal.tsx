@@ -24,6 +24,14 @@ import { useParams } from 'next/navigation';
 import { useUpdateRenewalForecastMutation } from '@organization/graphql/updateRenewalForecast.generated';
 import { Box } from '@ui/layout/Box';
 import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
+import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
+import { NEW_DATE } from '@organization/components/Timeline/OrganizationTimeline';
+import { useSession } from 'next-auth/react';
+import { User } from '@graphql/types';
+import {
+  OrganizationAccountDetailsQuery,
+  useOrganizationAccountDetailsQuery,
+} from '@organization/graphql/getAccountPanelDetails.generated';
 
 export type RenewalForecastValue = {
   amount?: string | null;
@@ -46,16 +54,96 @@ export const RenewalForecastModal = ({
   const id = useParams()?.id as string;
   const initialRef = useRef(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { data: session } = useSession();
 
   const [amount, setAmount] = useState<string>(renewalForecast?.amount || '');
   const [reason, setReason] = useState<string>(renewalForecast?.comment || '');
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const updateRenewalForecast = useUpdateRenewalForecastMutation(client, {
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       timeoutRef.current = setTimeout(
         () => invalidateAccountDetailsQuery(queryClient, id),
         500,
+      );
+      queryClient.setQueryData<OrganizationAccountDetailsQuery>(
+        useOrganizationAccountDetailsQuery.getKey({ id }),
+        (oldData) => {
+          if (!oldData || !oldData?.organization) return;
+          return {
+            organization: {
+              ...(oldData?.organization ?? {}),
+              accountDetails: {
+                ...(oldData?.organization?.accountDetails ?? {}),
+                renewalForecast: {
+                  comment: reason,
+                  amount: amount as unknown as number,
+                  potentialAmount: null,
+                  updatedAt: new Date(),
+                  updatedBy: [session?.user] as unknown as User,
+                },
+              },
+            },
+          };
+        },
+      );
+
+      queryClient.setQueryData(
+        useInfiniteGetTimelineQuery.getKey({
+          organizationId: id,
+          from: NEW_DATE,
+          size: 50,
+        }),
+        (oldData: any) => {
+          const newEvent = {
+            __typename: 'Action',
+            id: `timeline-event-action-new-id-${new Date()}`,
+            actionType: 'RENEWAL_FORECAST_UPDATED',
+            appSource: 'customer-os-api',
+            createdAt: new Date(),
+            metadata: JSON.stringify({
+              likelihood: null,
+              reason: reason,
+            }),
+            actionCreatedBy: null,
+            content: `Renewal forecast set to $${amount} by ${session?.user?.name}`,
+          };
+
+          if (!oldData || !oldData.pages?.length) {
+            return {
+              pages: [
+                {
+                  organization: {
+                    id,
+                    timelineEventsTotalCount: 1,
+                    timelineEvents: [newEvent],
+                  },
+                },
+              ],
+            };
+          }
+
+          const firstPage = oldData.pages[0] ?? {};
+          const pages = oldData.pages?.slice(1);
+
+          const firstPageWithEvent = {
+            ...firstPage,
+            organization: {
+              ...firstPage?.organization,
+              timelineEvents: [
+                ...(firstPage?.organization?.timelineEvents ?? []),
+                newEvent,
+              ],
+              timelineEventsTotalCount:
+                (firstPage?.organization?.timelineEventsTotalCount ?? 0) + 1,
+            },
+          };
+
+          return {
+            ...oldData,
+            pages: [firstPageWithEvent, ...pages],
+          };
+        },
       );
     },
   });

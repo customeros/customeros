@@ -18,7 +18,6 @@ import {
 } from '@ui/overlay/Modal';
 import { Dot } from '@ui/media/Dot';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
@@ -26,7 +25,15 @@ import { useUpdateRenewalLikelihoodMutation } from '@organization/graphql/update
 import {
   RenewalLikelihood,
   RenewalLikelihoodProbability,
+  User,
 } from '@graphql/types';
+import {
+  OrganizationAccountDetailsQuery,
+  useOrganizationAccountDetailsQuery,
+} from '@organization/graphql/getAccountPanelDetails.generated';
+import { useSession } from 'next-auth/react';
+import { NEW_DATE } from '@organization/components/Timeline/OrganizationTimeline';
+import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 
 interface RenewalLikelihoodModalProps {
   isOpen: boolean;
@@ -49,13 +56,90 @@ export const RenewalLikelihoodModal = ({
   const [reason, setReason] = useState<string>(
     renewalLikelihood?.comment || '',
   );
+  const { data: session } = useSession();
+
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const updateRenewalLikelihood = useUpdateRenewalLikelihoodMutation(client, {
-    onSuccess: () => {
-      timeoutRef.current = setTimeout(
-        () => invalidateAccountDetailsQuery(queryClient, id),
-        500,
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<OrganizationAccountDetailsQuery>(
+        useOrganizationAccountDetailsQuery.getKey({ id }),
+        (oldData) => {
+          if (!oldData || !oldData?.organization) return;
+          return {
+            organization: {
+              ...(oldData?.organization ?? {}),
+              accountDetails: {
+                ...(oldData?.organization?.accountDetails ?? {}),
+                renewalLikelihood: {
+                  comment: reason,
+                  previousProbability: renewalLikelihood?.probability,
+                  probability: probability,
+                  updatedAt: new Date(),
+                  updatedBy: [session?.user] as unknown as User,
+                },
+              },
+            },
+          };
+        },
+      );
+
+      queryClient.setQueryData(
+        useInfiniteGetTimelineQuery.getKey({
+          organizationId: id,
+          from: NEW_DATE,
+          size: 50,
+        }),
+        (oldData: any) => {
+          const newEvent = {
+            __typename: 'Action',
+            id: `timeline-event-action-new-id-${new Date()}`,
+            actionType: 'RENEWAL_LIKELIHOOD_UPDATED',
+            appSource: 'customer-os-api',
+            createdAt: new Date(),
+            metadata: JSON.stringify({
+              likelihood: probability,
+              reason,
+            }),
+            actionCreatedBy: null,
+            content: `Renewal likelihood set to ${probability} by ${session?.user?.name}`,
+          };
+
+          if (!oldData || !oldData.pages?.length) {
+            return {
+              pages: [
+                {
+                  organization: {
+                    id,
+                    timelineEventsTotalCount: 1,
+                    timelineEvents: [newEvent],
+                  },
+                },
+              ],
+            };
+          }
+
+          const firstPage = oldData.pages[0] ?? {};
+          const pages = oldData.pages?.slice(1);
+
+          const firstPageWithEvent = {
+            ...firstPage,
+            organization: {
+              ...firstPage?.organization,
+              timelineEvents: [
+                ...(firstPage?.organization?.timelineEvents ?? []),
+                newEvent,
+              ],
+              timelineEventsTotalCount:
+                (firstPage?.organization?.timelineEventsTotalCount ?? 0) + 1,
+            },
+          };
+
+          return {
+            ...oldData,
+            pages: [firstPageWithEvent, ...pages],
+          };
+        },
       );
     },
   });
