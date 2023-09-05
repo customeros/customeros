@@ -25,6 +25,8 @@ func strToLogLevel(str string) neo4j.LogLevel {
 		return neo4j.INFO
 	case "DEBUG":
 		return neo4j.DEBUG
+	case "WARNING":
+		return neo4j.WARNING
 	}
 	return neo4j.WARNING
 }

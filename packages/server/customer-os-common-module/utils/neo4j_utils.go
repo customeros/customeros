@@ -72,6 +72,7 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 		ctx,
 		neo4j.SessionConfig{
 			AccessMode: accessMode,
+			//BoltLogger: ConsoleBoltNoLoggerrr(),
 			BoltLogger: neo4j.ConsoleBoltLogger(),
 		},
 	)

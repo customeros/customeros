@@ -3,136 +3,77 @@ package main
 import (
 	"context"
 	"github.com/caarlos0/env/v6"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
+	syncGmailRawConfig "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
+	localCron "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/cron"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/service"
+	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
-	"sync"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 )
-
-type TaskQueue struct {
-	name          string
-	taskFunctions []func()
-	mutex         sync.Mutex
-	waitGroup     sync.WaitGroup
-}
-
-func (t *TaskQueue) AddTask(function func()) {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	t.taskFunctions = append(t.taskFunctions, function)
-}
-
-func (t *TaskQueue) RunTasks() {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	if len(t.taskFunctions) == 0 {
-		logrus.Warn("No task found, exiting")
-		return
-	}
-	for _, task := range t.taskFunctions {
-		t.waitGroup.Add(1)
-		go func(fn func()) {
-			defer t.waitGroup.Done()
-			fn()
-		}(task)
-	}
-	t.taskFunctions = nil
-	t.waitGroup.Wait()
-}
-
-func runTaskQueue(taskQueue *TaskQueue, timeoutAfterTaskRun int, taskFuncs []func()) {
-	for {
-		for _, task := range taskFuncs {
-			taskQueue.AddTask(task)
-		}
-
-		taskQueue.RunTasks()
-
-		// Cooldown a fixed amount of time before running the tasks again
-		timeout := time.Second * time.Duration(timeoutAfterTaskRun)
-		logrus.Infof("waiting %v seconds before next run for %s", timeout.Seconds(), taskQueue.name)
-		time.Sleep(timeout)
-	}
-}
 
 func main() {
 	ctx := context.Background()
 
-	cfg := loadConfiguration()
-	config.InitLogger(cfg)
+	config := loadConfiguration()
 
-	sqlDb, gormDb, errPostgres := config.NewPostgresClient(cfg)
+	sqlDb, gormDb, errPostgres := syncGmailRawConfig.NewPostgresClient(config)
 	if errPostgres != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
 	}
 	defer sqlDb.Close()
 
-	neo4jDriver, errNeo4j := config.NewDriver(cfg)
+	neo4jDriver, errNeo4j := syncGmailRawConfig.NewDriver(config)
 	if errNeo4j != nil {
 		logrus.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
 	defer (*neo4jDriver).Close(ctx)
 
-	services := service.InitServices(neo4jDriver, gormDb, cfg)
+	services := service.InitServices(neo4jDriver, gormDb, config)
 
-	var taskQueueSyncEmails = &TaskQueue{name: "Sync emails from gmail"}
+	// Initialize logger
+	appLogger := logger.NewExtendedAppLogger(&config.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName("sync-gmail-raw")
 
-	go runTaskQueue(taskQueueSyncEmails, cfg.SyncData.TimeoutAfterTaskRun, []func(){
-		func() {
-			runId, _ := uuid.NewRandom()
-			logrus.Infof("run id: %s syncing emails from gmail into customer-os at %v", runId.String(), time.Now().UTC())
+	cronJub := localCron.StartCron(config, services)
 
-			tenants, err := services.TenantService.GetAllTenants(ctx)
-			if err != nil {
-				panic(err)
-			}
+	if err := run(appLogger, cronJub); err != nil {
+		appLogger.Fatal(err)
+	}
 
-			for _, tenant := range tenants {
-
-				gmailCredentialsExists, err := services.EmailService.ServiceAccountCredentialsExistsForTenant(tenant.Name)
-				if err != nil {
-					logrus.Println(err)
-					continue
-				}
-
-				if !gmailCredentialsExists {
-					continue
-				}
-
-				if tenant.Name != "openline" {
-					continue
-				}
-
-				usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, "openline")
-				if err != nil {
-					panic(err)
-				}
-
-				for _, user := range usersForTenant {
-					emailForUser, err := services.EmailService.FindEmailForUser("openline", user.Id)
-					if err != nil {
-						panic(err)
-					}
-					services.EmailService.ReadNewEmailsForUsername("openline", emailForUser.RawEmail)
-				}
-			}
-
-			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
-		},
-	})
-
-	select {}
+	// Flush logs and exit
+	appLogger.Sync()
 }
 
-func loadConfiguration() *config.Config {
+func run(log logger.Logger, cron *cron.Cron) error {
+	defer cron.Stop()
+
+	// Shutdown handling
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
+	sig := <-shutdown
+	log.Infof("Received shutdown signal %v", sig)
+
+	// Gracefully stop
+	if err := localCron.StopCron(log, cron); err != nil {
+		return err
+	}
+	log.Info("Graceful shutdown complete")
+
+	return nil
+}
+
+func loadConfiguration() *syncGmailRawConfig.Config {
 	if err := godotenv.Load(); err != nil {
 		logrus.Warn("Failed loading .env file")
 	}
 
-	cfg := config.Config{}
+	cfg := syncGmailRawConfig.Config{}
 	if err := env.Parse(&cfg); err != nil {
 		logrus.Errorf("%+v", err)
 	}
