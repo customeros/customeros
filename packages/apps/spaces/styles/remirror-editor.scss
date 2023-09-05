@@ -3828,6 +3828,10 @@ a {
   color: var(--chakra-colors-primary-700);
   cursor: pointer;
   word-break: break-all;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .slack_strikethrough{

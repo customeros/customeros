@@ -4,25 +4,12 @@ import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { Text } from '@ui/typography/Text';
 import { Action } from '@graphql/types';
-import { captureException } from '@sentry/nextjs';
+import { useTimelineEventPreviewContext } from '../../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import {
+  getCurrencyString,
+  getMetadata,
+} from '@organization/components/Timeline/events/action/utils';
 const DEFAULT_COLOR_SCHEME = 'gray';
-
-// You may want to tweak this function according to your needs
-const getCurrencyString = (text: string) => {
-  const match = text.split(/(\$[\d,]+(\.\d{2})?)/).filter(Boolean);
-  return match?.[1];
-};
-
-const getMetadata = (metadataString?: string | null) => {
-  let metadata;
-  try {
-    metadata = metadataString && JSON.parse(metadataString);
-  } catch (error) {
-    captureException(error);
-    metadata = '';
-  }
-  return metadata;
-};
 
 interface RenewalForecastUpdatedActionProps {
   data: Action;
@@ -31,10 +18,11 @@ interface RenewalForecastUpdatedActionProps {
 export const RenewalForecastUpdatedAction: React.FC<
   RenewalForecastUpdatedActionProps
 > = ({ data }) => {
+  const { openModal } = useTimelineEventPreviewContext();
   const forecastedAmount = data.content && getCurrencyString(data.content);
   const [preText, postText] = data.content?.split('by ') ?? [];
   const isCreatedBySystem = data.content?.includes('default');
-  const metadata = getMetadata(data?.metadata)
+  const metadata = getMetadata(data?.metadata);
   const colorScheme =
     forecastedAmount && isCreatedBySystem
       ? getFeatureIconColor(metadata?.likelihood)
@@ -43,7 +31,7 @@ export const RenewalForecastUpdatedAction: React.FC<
   const authorText = isCreatedBySystem ? data.content : `${preText} by`;
 
   return (
-    <Flex alignItems='center'>
+    <Flex alignItems='center' onClick={() => openModal(data)}>
       <FeaturedIcon size='md' minW='10' colorScheme={colorScheme}>
         <Icons.Calculator />
       </FeaturedIcon>

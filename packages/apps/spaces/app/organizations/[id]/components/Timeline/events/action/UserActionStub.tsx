@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { Action } from '@graphql/types';
-import { RenewalForecastUpdatedAction } from './RenewalForecastUpdatedAction';
-import { RenewalLikelihoodUpdatedAction } from './RenewalLikelihoodUpdatedAction';
+import { RenewalForecastUpdatedAction } from './renewal-forecast/RenewalForecastUpdatedAction';
+import { RenewalLikelihoodUpdatedAction } from './renewal-likelihood/RenewalLikelihoodUpdatedAction';
 
 interface ActionStubProps {
   data: Action;

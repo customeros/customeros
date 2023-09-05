@@ -3,11 +3,12 @@ import { useState, useEffect } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Card } from '@ui/presentation/Card';
 import { ScaleFade } from '@ui/transitions/ScaleFade';
-import { InteractionEvent, Meeting } from '@graphql/types';
+import { Action, InteractionEvent, Meeting } from '@graphql/types';
 
 import { EmailPreviewModal } from '../events/email/EmailPreviewModal';
 import { MeetingPreviewModal } from '../events/meeting/MeetingPreviewModal';
 import { SlackThreadPreviewModal } from '../events/slack/SlackThreadPreviewModal';
+import { ActionPreviewModal } from '../events/action/ActionPreviewModal';
 
 import { useTimelineEventPreviewContext } from './TimelineEventsPreviewContext/TimelineEventPreviewContext';
 
@@ -30,12 +31,12 @@ export const TimelineEventPreviewModal = ({
     return null;
   }
 
-  const event = modalContent as InteractionEvent | Meeting;
+  const event = modalContent as InteractionEvent | Meeting | Action;
   const isMeeting = event?.__typename === 'Meeting';
+  const isAction = event?.__typename === 'Action';
   const isInteraction = event?.__typename === 'InteractionEvent';
   const isSlack = isInteraction && event?.channel === 'SLACK';
   const isEmail = isInteraction && event?.channel === 'EMAIL';
-
   const handleCloseModal = () => {
     if (isEmail) return; // email modal handles closing the modal by itself
     closeModal();
@@ -82,6 +83,7 @@ export const TimelineEventPreviewModal = ({
           )}
           {isSlack && <SlackThreadPreviewModal />}
           {isEmail && <EmailPreviewModal invalidateQuery={invalidateQuery} />}
+          {isAction && <ActionPreviewModal type={event.actionType} />}
         </Card>
       </ScaleFade>
     </Flex>
