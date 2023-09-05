@@ -2,9 +2,8 @@ module github.com/openline-ai/openline-customer-os/packages/server/settings-api
 
 go 1.20
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
-
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ../customer-os-common-auth
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ../customer-os-common-auth
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
