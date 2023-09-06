@@ -18,7 +18,7 @@ type RequestSummaryCommand struct {
 
 func NewRequestSummaryCommand(tenant, interactionEventId string) *RequestSummaryCommand {
 	return &RequestSummaryCommand{
-		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant, ""),
 	}
 }
 

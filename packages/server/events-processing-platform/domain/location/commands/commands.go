@@ -39,7 +39,7 @@ type LocationValidatedCommand struct {
 
 func NewUpsertLocationCommand(objectId, tenant, name, rawAddress string, addressFields models.LocationAddressFields, source common_models.Source, createdAt, updatedAt *time.Time) *UpsertLocationCommand {
 	return &UpsertLocationCommand{
-		BaseCommand:           eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:           eventstore.NewBaseCommand(objectId, tenant, ""),
 		RawAddress:            rawAddress,
 		Name:                  name,
 		LocationAddressFields: addressFields,
@@ -51,7 +51,7 @@ func NewUpsertLocationCommand(objectId, tenant, name, rawAddress string, address
 
 func NewFailedLocationValidationCommand(objectId, tenant, rawAddress, country, validationError string) *FailedLocationValidationCommand {
 	return &FailedLocationValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant, ""),
 		RawAddress:      rawAddress,
 		Country:         country,
 		ValidationError: validationError,
@@ -60,7 +60,7 @@ func NewFailedLocationValidationCommand(objectId, tenant, rawAddress, country, v
 
 func NewSkippedLocationValidationCommand(objectId, tenant, rawAddress, validationSkipReason string) *SkippedLocationValidationCommand {
 	return &SkippedLocationValidationCommand{
-		BaseCommand:          eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:          eventstore.NewBaseCommand(objectId, tenant, ""),
 		RawAddress:           rawAddress,
 		ValidationSkipReason: validationSkipReason,
 	}
@@ -68,7 +68,7 @@ func NewSkippedLocationValidationCommand(objectId, tenant, rawAddress, validatio
 
 func NewLocationValidatedCommand(objectId, tenant, rawAddress, countryForValidation string, addressFields models.LocationAddressFields) *LocationValidatedCommand {
 	return &LocationValidatedCommand{
-		BaseCommand:           eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:           eventstore.NewBaseCommand(objectId, tenant, ""),
 		RawAddress:            rawAddress,
 		CountryForValidation:  countryForValidation,
 		LocationAddressFields: addressFields,

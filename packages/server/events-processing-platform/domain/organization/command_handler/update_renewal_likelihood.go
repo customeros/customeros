@@ -63,7 +63,7 @@ func (h *updateRenewalLikelihoodCommandHandler) Handle(ctx context.Context, comm
 		if err = organizationAggregate.CreateOrganization(ctx, &models.OrganizationFields{
 			ID:     command.ObjectID,
 			Tenant: command.Tenant,
-		}); err != nil {
+		}, command.UserID); err != nil {
 			err := errors.Wrap(err, "Error while creating organization")
 			tracing.TraceErr(span, err)
 			return err

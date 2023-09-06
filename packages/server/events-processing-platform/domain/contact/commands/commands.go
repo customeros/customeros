@@ -41,7 +41,7 @@ func UpsertContactCommandToContactDto(command *UpsertContactCommand) *models.Con
 
 func NewUpsertContactCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields ContactDataFields, createdAt, updatedAt *time.Time) *UpsertContactCommand {
 	return &UpsertContactCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		DataFields:  coreFields,
 		Source: common_models.Source{
 			Source:        source,
@@ -62,7 +62,7 @@ type LinkPhoneNumberCommand struct {
 
 func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, ""),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -78,7 +78,7 @@ type LinkEmailCommand struct {
 
 func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
@@ -103,7 +103,7 @@ type UpdateContactCommand struct {
 
 func NewContactCreateCommand(objectID, tenant, firstName, lastName, prefix, description, timezone, profilePhotoUrl, source, sourceOfTruth, appSource string, createdAt *time.Time) *CreateContactCommand {
 	return &CreateContactCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		ContactDataFields: ContactDataFields{
 			FirstName:       firstName,
 			LastName:        lastName,

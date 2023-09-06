@@ -21,6 +21,7 @@ const (
 	OrganizationUpdateBillingDetailsV1    = "V1_ORGANIZATION_UPDATE_BILLING_DETAILS"
 	OrganizationRequestRenewalForecastV1  = "V1_ORGANIZATION_RECALCULATE_RENEWAL_FORECAST_REQUEST"
 	OrganizationRequestNextCycleDateV1    = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
+	OrganizationRequestScrapeByWebsiteV1  = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
 )
 
 type OrganizationCreateEvent struct {
@@ -47,7 +48,7 @@ type OrganizationCreateEvent struct {
 
 func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFields *models.OrganizationFields, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationCreateEvent{
-		Tenant:            organizationFields.Tenant,
+		Tenant:            aggregate.GetTenant(),
 		Name:              organizationFields.OrganizationDataFields.Name,
 		Description:       organizationFields.OrganizationDataFields.Description,
 		Website:           organizationFields.OrganizationDataFields.Website,
@@ -102,7 +103,7 @@ type OrganizationUpdateEvent struct {
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *models.OrganizationFields, updatedAt time.Time, ignoreEmptyFields bool) (eventstore.Event, error) {
 	eventData := OrganizationUpdateEvent{
 		IgnoreEmptyFields: ignoreEmptyFields,
-		Tenant:            organizationFields.Tenant,
+		Tenant:            aggregate.GetTenant(),
 		Name:              organizationFields.OrganizationDataFields.Name,
 		Description:       organizationFields.OrganizationDataFields.Description,
 		Website:           organizationFields.OrganizationDataFields.Website,
@@ -139,9 +140,9 @@ type OrganizationLinkPhoneNumberEvent struct {
 	Primary       bool      `json:"primary"`
 }
 
-func NewOrganizationLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phoneNumberId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationLinkPhoneNumberEvent(aggregate eventstore.Aggregate, phoneNumberId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationLinkPhoneNumberEvent{
-		Tenant:        tenant,
+		Tenant:        aggregate.GetTenant(),
 		UpdatedAt:     updatedAt,
 		PhoneNumberId: phoneNumberId,
 		Label:         label,
@@ -167,9 +168,9 @@ type OrganizationLinkEmailEvent struct {
 	Primary   bool      `json:"primary"`
 }
 
-func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, emailId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationLinkEmailEvent{
-		Tenant:    tenant,
+		Tenant:    aggregate.GetTenant(),
 		UpdatedAt: updatedAt,
 		EmailId:   emailId,
 		Label:     label,
@@ -192,9 +193,9 @@ type OrganizationLinkDomainEvent struct {
 	Domain string `json:"domain" validate:"required"`
 }
 
-func NewOrganizationLinkDomainEvent(aggregate eventstore.Aggregate, tenant, domain string) (eventstore.Event, error) {
+func NewOrganizationLinkDomainEvent(aggregate eventstore.Aggregate, domain string) (eventstore.Event, error) {
 	eventData := OrganizationLinkDomainEvent{
-		Tenant: tenant,
+		Tenant: aggregate.GetTenant(),
 		Domain: domain,
 	}
 
@@ -221,9 +222,9 @@ type OrganizationAddSocialEvent struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, tenant, socialId, platformName, url, source, sourceOfTruth, appSource string, createdAt time.Time, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, platformName, url, source, sourceOfTruth, appSource string, createdAt time.Time, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationAddSocialEvent{
-		Tenant:        tenant,
+		Tenant:        aggregate.GetTenant(),
 		SocialId:      socialId,
 		PlatformName:  platformName,
 		Url:           url,
@@ -318,9 +319,9 @@ type OrganizationRequestRenewalForecastEvent struct {
 	RequestedAt time.Time `json:"requestedAt"`
 }
 
-func NewOrganizationRequestRenewalForecastEvent(aggregate eventstore.Aggregate, tenant string) (eventstore.Event, error) {
+func NewOrganizationRequestRenewalForecastEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
 	eventData := OrganizationRequestRenewalForecastEvent{
-		Tenant:      tenant,
+		Tenant:      aggregate.GetTenant(),
 		RequestedAt: utils.Now(),
 	}
 
@@ -372,9 +373,9 @@ type OrganizationRequestNextCycleDateEvent struct {
 	RequestedAt time.Time `json:"requestedAt"`
 }
 
-func NewOrganizationRequestNextCycleDateEvent(aggregate eventstore.Aggregate, tenant string) (eventstore.Event, error) {
+func NewOrganizationRequestNextCycleDateEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
 	eventData := OrganizationRequestNextCycleDateEvent{
-		Tenant:      tenant,
+		Tenant:      aggregate.GetTenant(),
 		RequestedAt: utils.Now(),
 	}
 
@@ -383,6 +384,30 @@ func NewOrganizationRequestNextCycleDateEvent(aggregate eventstore.Aggregate, te
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestNextCycleDateV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationRequestScrapeByWebsite struct {
+	Tenant      string    `json:"tenant" validate:"required"`
+	Website     string    `json:"website" validate:"required"`
+	RequestedAt time.Time `json:"requestedAt"`
+}
+
+func NewOrganizationRequestScrapeByWebsite(aggregate eventstore.Aggregate, website string) (eventstore.Event, error) {
+	eventData := OrganizationRequestScrapeByWebsite{
+		Tenant:      aggregate.GetTenant(),
+		Website:     website,
+		RequestedAt: utils.Now(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestScrapeByWebsiteV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

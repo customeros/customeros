@@ -73,8 +73,8 @@ type organizationEventHandler struct {
 	domainScraper        *DomainScraper
 }
 
-func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebscrapeOrganization")
+func (h *organizationEventHandler) WebscrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebscrapeOrganizationByDomain")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -101,14 +101,45 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		h.log.Infof("Organization %s already webscraped for domain %s", organizationId, eventData.Domain)
 		return nil
 	}
-	result, err := h.domainScraper.Scrape(eventData.Domain, eventData.Tenant, organizationId)
-	if err != nil {
+
+	return h.webscrapeOrganization(ctx, eventData.Tenant, organizationId, eventData.Domain)
+}
+
+func (h *organizationEventHandler) WebscrapeOrganizationByWebsite(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebscrapeOrganizationByWebsite")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationRequestScrapeByWebsite
+	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error scraping domain %s: %v", eventData.Domain, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.LogFields(log.String("organizationId", organizationId))
+	span.LogFields(log.String("website", eventData.Website))
+	if eventData.Website == "" {
+		tracing.TraceErr(span, errors.New("website is empty"))
+		h.log.Errorf("Missing website in event data: %v", eventData)
 		return nil
 	}
 
-	org, err := h.repositories.OrganizationRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	return h.webscrapeOrganization(ctx, eventData.Tenant, organizationId, eventData.Website)
+}
+
+func (h *organizationEventHandler) webscrapeOrganization(ctx context.Context, tenant, organizationId, site string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.webscrapeOrganization")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant), log.String("organizationId", organizationId), log.String("site", site))
+
+	result, err := h.domainScraper.Scrape(site, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error scraping website/domain %s: %v", site, err)
+		return nil
+	}
+
+	org, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
@@ -117,7 +148,7 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 	currentOrgName := utils.GetStringPropOrEmpty(org.Props, "name")
 
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
-		cmd.NewUpdateOrganizationCommand(organizationId, eventData.Tenant, constants.SourceWebscrape,
+		cmd.NewUpdateOrganizationCommand(organizationId, tenant, constants.SourceWebscrape,
 			models.OrganizationDataFields{
 				Name:             h.prepareOrgName(result.CompanyName, currentOrgName),
 				Market:           result.Market,
@@ -134,22 +165,22 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		return nil
 	}
 	if result.Youtube != "" {
-		h.addSocial(ctx, organizationId, eventData.Tenant, "youtube", result.Youtube)
+		h.addSocial(ctx, organizationId, tenant, "youtube", result.Youtube)
 	}
 	if result.Twitter != "" {
-		h.addSocial(ctx, organizationId, eventData.Tenant, "twitter", result.Twitter)
+		h.addSocial(ctx, organizationId, tenant, "twitter", result.Twitter)
 	}
 	if result.Linkedin != "" {
-		h.addSocial(ctx, organizationId, eventData.Tenant, "linkedin", result.Linkedin)
+		h.addSocial(ctx, organizationId, tenant, "linkedin", result.Linkedin)
 	}
 	if result.Github != "" {
-		h.addSocial(ctx, organizationId, eventData.Tenant, "github", result.Github)
+		h.addSocial(ctx, organizationId, tenant, "github", result.Github)
 	}
 	if result.Instagram != "" {
-		h.addSocial(ctx, organizationId, eventData.Tenant, "instagram", result.Instagram)
+		h.addSocial(ctx, organizationId, tenant, "instagram", result.Instagram)
 	}
 	if result.Facebook != "" {
-		h.addSocial(ctx, organizationId, eventData.Tenant, "facebook", result.Facebook)
+		h.addSocial(ctx, organizationId, tenant, "facebook", result.Facebook)
 	}
 
 	return nil
@@ -161,7 +192,7 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("platform", platform), log.String("url", url))
 
 	err := h.organizationCommands.AddSocialCommand.Handle(ctx,
-		command_handler.NewAddSocialCommand(organizationId, tenant, uuid.New().String(),
+		cmd.NewAddSocialCommand(organizationId, tenant, uuid.New().String(),
 			platform, url, constants.SourceWebscrape, constants.SourceWebscrape, constants.AppSourceEventProcessingPlatform, nil, nil))
 	if err != nil {
 		tracing.TraceErr(span, err)

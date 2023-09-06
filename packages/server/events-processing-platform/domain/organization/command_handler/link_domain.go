@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -12,20 +13,8 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type LinkDomainCommand struct {
-	eventstore.BaseCommand
-	Domain string
-}
-
-func NewLinkDomainCommand(objectID, tenant, domain string) *LinkDomainCommand {
-	return &LinkDomainCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
-		Domain:      domain,
-	}
-}
-
 type LinkDomainCommandHandler interface {
-	Handle(ctx context.Context, command *LinkDomainCommand) error
+	Handle(ctx context.Context, command *command.LinkDomainCommand) error
 }
 
 type linkDomainCommandHandler struct {
@@ -38,7 +27,7 @@ func NewLinkDomainCommandHandler(log logger.Logger, cfg *config.Config, es event
 	return &linkDomainCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkDomainCommandHandler) Handle(ctx context.Context, command *LinkDomainCommand) error {
+func (c *linkDomainCommandHandler) Handle(ctx context.Context, command *command.LinkDomainCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LinkDomainCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
@@ -55,7 +44,7 @@ func (c *linkDomainCommandHandler) Handle(ctx context.Context, command *LinkDoma
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if err = organizationAggregate.LinkDomain(ctx, command.Tenant, command.Domain); err != nil {
+	if err = organizationAggregate.HandleCommand(ctx, command); err != nil {
 		return err
 	}
 

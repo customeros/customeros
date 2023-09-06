@@ -24,6 +24,7 @@ type OrganizationRepository interface {
 	UpdateRenewalLikelihood(ctx context.Context, orgId string, event events.OrganizationUpdateRenewalLikelihoodEvent) error
 	UpdateRenewalForecast(ctx context.Context, orgId string, event events.OrganizationUpdateRenewalForecastEvent) error
 	UpdateBillingDetails(ctx context.Context, orgId string, event events.OrganizationUpdateBillingDetailsEvent) error
+	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
 }
 
 type organizationRepository struct {
@@ -369,6 +370,33 @@ func (r *organizationRepository) UpdateBillingDetails(ctx context.Context, orgId
 		"source":            constants.SourceOpenline,
 		"now":               utils.Now(),
 		"updatedBy":         event.UpdatedBy,
+	})
+}
+
+func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceOwner")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("userId", userId))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			OPTIONAL MATCH (:User)-[rel:OWNS]->(org)
+			DELETE rel
+			WITH org, t
+			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+			WHERE u.internal=false or u.internal is null
+			MERGE (u)-[:OWNS]->(org)
+			SET org.updatedAt=$now, org.sourceOfTruth=$source`
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"userId":         userId,
+		"source":         constants.SourceOpenline,
+		"now":            utils.Now(),
 	})
 }
 

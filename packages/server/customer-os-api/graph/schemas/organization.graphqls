@@ -36,7 +36,6 @@ type Organization implements Node {
     updatedAt:   Time!
     name:        String!
     description: String
-    domain:      String @deprecated(reason: "Deprecated in favor of domains")
     domains:     [String!]! @goField(forceResolver: true)
     website:     String
     industry:    String
@@ -130,10 +129,12 @@ input OrganizationInput {
     domains:     [String!]
     website:     String
     industry:    String
+    subIndustry: String
+    industryGroup: String
     isPublic:    Boolean
-    customFields: [CustomFieldInput!]
-    fieldSets: [FieldSetInput!]
-    templateId: ID
+    customFields: [CustomFieldInput!] @deprecated
+    fieldSets: [FieldSetInput!] @deprecated
+    templateId: ID @deprecated
     market:      Market
     employees:   Int64
     appSource: String
@@ -143,7 +144,7 @@ input OrganizationUpdateInput {
     id: ID!
     name: String!
     description: String
-    domains:     [String!]
+    domains:     [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
     website:     String
     industry:    String
     subIndustry: String

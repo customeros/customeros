@@ -45,13 +45,13 @@ func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *com
 		return err
 	}
 
-	if err = organizationAggregate.LinkPhoneNumber(ctx, command.Tenant, command.PhoneNumberId, command.Label, command.Primary); err != nil {
+	if err = organizationAggregate.LinkPhoneNumber(ctx, command.Tenant, command.PhoneNumberId, command.Label, command.Primary, command.UserID); err != nil {
 		return err
 	}
 	if command.Primary {
 		for k, v := range organizationAggregate.Organization.PhoneNumbers {
 			if k != command.PhoneNumberId && v.Primary {
-				if err = organizationAggregate.SetPhoneNumberNonPrimary(ctx, command.Tenant, command.PhoneNumberId); err != nil {
+				if err = organizationAggregate.SetPhoneNumberNonPrimary(ctx, command.Tenant, command.PhoneNumberId, command.UserID); err != nil {
 					return err
 				}
 			}

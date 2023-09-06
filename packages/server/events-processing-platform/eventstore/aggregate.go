@@ -24,6 +24,7 @@ type when func(event Event) error
 // Apply process Aggregate Event
 type Apply interface {
 	Apply(event Event) error
+	ApplyAll(events []Event) error
 }
 
 // Load create Aggregate state from Event's.
@@ -193,6 +194,16 @@ func (a *AggregateBase) Apply(event Event) error {
 	a.Version++
 	event.SetVersion(a.GetVersion())
 	a.UncommittedEvents = append(a.UncommittedEvents, event)
+	return nil
+}
+
+func (a *AggregateBase) ApplyAll(events []Event) error {
+	for _, event := range events {
+		err := a.Apply(event)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

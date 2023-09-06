@@ -44,13 +44,13 @@ func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *command.L
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if err = organizationAggregate.LinkEmail(ctx, command.Tenant, command.EmailId, command.Label, command.Primary); err != nil {
+	if err = organizationAggregate.LinkEmail(ctx, command.Tenant, command.EmailId, command.Label, command.Primary, command.UserID); err != nil {
 		return err
 	}
 	if command.Primary {
 		for k, v := range organizationAggregate.Organization.Emails {
 			if k != command.EmailId && v.Primary {
-				if err = organizationAggregate.SetEmailNonPrimary(ctx, command.Tenant, command.EmailId); err != nil {
+				if err = organizationAggregate.SetEmailNonPrimary(ctx, command.Tenant, command.EmailId, command.UserID); err != nil {
 					return err
 				}
 			}

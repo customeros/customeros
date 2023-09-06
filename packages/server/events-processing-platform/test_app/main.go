@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
+	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"google.golang.org/grpc"
 )
 
@@ -11,6 +12,7 @@ const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 
 type Clients struct {
 	InteractionEventClient interaction_event_grpc_service.InteractionEventGrpcServiceClient
+	OrganizationClient     organization_grpc_service.OrganizationGrpcServiceClient
 }
 
 var clients *Clients
@@ -18,7 +20,9 @@ var clients *Clients
 func main() {
 	InitClients()
 	//testRequestGenerateSummaryRequest()
-	testRequestGenerateActionItemsRequest()
+	//testRequestGenerateActionItemsRequest()
+	testCreateOrganization()
+	//testUpdateOrganization()
 }
 
 func InitClients() {
@@ -28,6 +32,7 @@ func InitClients() {
 		))
 	clients = &Clients{
 		InteractionEventClient: interaction_event_grpc_service.NewInteractionEventGrpcServiceClient(conn),
+		OrganizationClient:     organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
 	}
 }
 
@@ -49,6 +54,31 @@ func testRequestGenerateActionItemsRequest() {
 	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.TODO(), &interaction_event_grpc_service.RequestGenerateActionItensGrpcRequest{
 		Tenant:             tenant,
 		InteractionEventId: interactionEventId,
+	})
+	print(result)
+}
+
+func testCreateOrganization() {
+	tenant := "openline"
+	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
+	website := ""
+
+	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
+		Tenant:  tenant,
+		Website: website,
+		UserId:  userId,
+	})
+	print(result)
+}
+
+func testUpdateOrganization() {
+	tenant := "openline"
+	organizationId := "39852ca1-e61b-4d07-b0a3-5f1306bbba57"
+
+	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
+		Tenant:  tenant,
+		Id:      organizationId,
+		Website: "https://www.google.com",
 	})
 	print(result)
 }

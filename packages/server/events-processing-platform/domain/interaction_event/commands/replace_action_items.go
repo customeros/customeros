@@ -21,7 +21,7 @@ type ReplaceActionItemsCommand struct {
 
 func NewReplaceActionItemsCommand(tenant, interactionEventId string, actionItems []string, updatedAt *time.Time) *ReplaceActionItemsCommand {
 	return &ReplaceActionItemsCommand{
-		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant, ""),
 		ActionItems: actionItems,
 		UpdatedAt:   updatedAt,
 	}

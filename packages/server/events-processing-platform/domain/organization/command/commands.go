@@ -26,9 +26,9 @@ func UpsertOrganizationCommandToOrganizationFields(command *UpsertOrganizationCo
 	}
 }
 
-func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource string, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource, userId string, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
-		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
 		CoreFields:  coreFields,
 		Source: common_models.Source{
 			Source:        source,
@@ -50,7 +50,7 @@ type UpdateOrganizationCommand struct {
 
 func NewUpdateOrganizationCommand(organizationId, tenant, sourceOfTruth string, dataFields models.OrganizationDataFields, updatedAt *time.Time, ignoreEmptyFields bool) *UpdateOrganizationCommand {
 	return &UpdateOrganizationCommand{
-		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant),
+		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant, ""),
 		IgnoreEmptyFields: ignoreEmptyFields,
 		DataFields:        dataFields,
 		SourceOfTruth:     sourceOfTruth,
@@ -67,7 +67,7 @@ type LinkPhoneNumberCommand struct {
 
 func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, ""),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -83,7 +83,7 @@ type LinkEmailCommand struct {
 
 func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
@@ -97,7 +97,7 @@ type UpdateRenewalLikelihoodCommand struct {
 
 func NewUpdateRenewalLikelihoodCommand(tenant, orgId string, fields models.RenewalLikelihoodFields) *UpdateRenewalLikelihoodCommand {
 	return &UpdateRenewalLikelihoodCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, ""),
 		Fields:      fields,
 	}
 }
@@ -108,7 +108,7 @@ type RequestNextCycleDateCommand struct {
 
 func NewRequestNextCycleDateCommand(tenant, orgId string) *RequestNextCycleDateCommand {
 	return &RequestNextCycleDateCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, ""),
 	}
 }
 
@@ -118,7 +118,7 @@ type RequestRenewalForecastCommand struct {
 
 func NewRequestRenewalForecastCommand(tenant, orgId string) *RequestRenewalForecastCommand {
 	return &RequestRenewalForecastCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, ""),
 	}
 }
 
@@ -130,7 +130,7 @@ type UpdateRenewalForecastCommand struct {
 
 func NewUpdateRenewalForecastCommand(tenant, orgId string, fields models.RenewalForecastFields, renewalLikelihood models.RenewalLikelihoodProbability) *UpdateRenewalForecastCommand {
 	return &UpdateRenewalForecastCommand{
-		BaseCommand:       eventstore.NewBaseCommand(orgId, tenant),
+		BaseCommand:       eventstore.NewBaseCommand(orgId, tenant, ""),
 		Fields:            fields,
 		RenewalLikelihood: renewalLikelihood,
 	}
@@ -143,7 +143,45 @@ type UpdateBillingDetailsCommand struct {
 
 func NewUpdateBillingDetailsCommand(tenant, orgId string, fields models.BillingDetailsFields) *UpdateBillingDetailsCommand {
 	return &UpdateBillingDetailsCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, ""),
 		Fields:      fields,
+	}
+}
+
+type LinkDomainCommand struct {
+	eventstore.BaseCommand
+	Domain string
+}
+
+func NewLinkDomainCommand(objectID, tenant, domain, userId string) *LinkDomainCommand {
+	return &LinkDomainCommand{
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
+		Domain:      domain,
+	}
+}
+
+type AddSocialCommand struct {
+	eventstore.BaseCommand
+	SocialId       string
+	SocialPlatform string
+	SocialUrl      string
+	Source         common_models.Source
+	CreatedAt      *time.Time
+	UpdatedAt      *time.Time
+}
+
+func NewAddSocialCommand(objectID, tenant, socialId, socialPlatform, socialUrl, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *AddSocialCommand {
+	return &AddSocialCommand{
+		BaseCommand:    eventstore.NewBaseCommand(objectID, tenant, ""),
+		SocialId:       socialId,
+		SocialPlatform: socialPlatform,
+		SocialUrl:      socialUrl,
+		Source: common_models.Source{
+			Source:        source,
+			SourceOfTruth: sourceOfTruth,
+			AppSource:     appSource,
+		},
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 	}
 }
