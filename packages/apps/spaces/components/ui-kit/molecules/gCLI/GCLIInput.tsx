@@ -7,7 +7,6 @@ import { DebouncedInput } from '@spaces/atoms/input/DebouncedInput';
 import styles from './GCLIInput.module.scss';
 import { uuid4 } from '@sentry/utils';
 import classNames from 'classnames';
-import { SuggestionType } from '@spaces/molecules/gCLI/suggestion-list/types';
 
 // TODO
 // Filtering:
@@ -27,8 +26,6 @@ export const GCLIInput = () => {
     inputPlaceholder,
     existingTerms,
     loadSuggestions,
-    loadingSuggestions,
-    suggestionsLoaded,
     onItemsChange,
     selectedTermFormat,
   } = useGCLI();
@@ -51,37 +48,16 @@ export const GCLIInput = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [suggestions, setSuggestions] = useState<Array<any>>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = React.useRef(null);
-
-  useEffect(() => {
-    if (!loadingSuggestions && suggestionsLoaded) {
-      setSuggestions(
-        suggestionsLoaded.map((item: any) => {
-          return {
-            id: item.id,
-            type: item.type,
-            display: item.display,
-            data: item.data,
-            highlighted: false,
-          } as SuggestionType;
-        }),
-      );
-    }
-  }, [loadingSuggestions, suggestionsLoaded]);
 
   // HANDLERS FOR GENERAL ACTIONS
   const handleSearchResultSelect = (item: any | undefined) => {
     if (item === undefined) {
-      setDropdownOpen(false);
       inputRef.current?.focus();
       return;
     }
-    setDropdownOpen(false);
     const items = [...selectedValues, { ...item, ...{ highlighted: false } }];
     items.sort((a, b) => {
       if (a.type === 'STATE' && b.type === 'GENERIC') {
@@ -102,7 +78,6 @@ export const GCLIInput = () => {
     setSelectedValues(items);
     onItemsChange(items);
     setSearchQuery('');
-    setSuggestions([]);
     inputRef?.current?.focus();
   };
 
@@ -191,7 +166,6 @@ export const GCLIInput = () => {
         setSuggestionListKeyDown(!suggestionListKeyDown);
         break;
       case 'Escape':
-        setDropdownOpen(false);
         exitDeleteTermsMode();
         break;
       default:
@@ -225,13 +199,10 @@ export const GCLIInput = () => {
   const handleInputChange = (event: any) => {
     exitDeleteTermsMode();
     if (!event.target.value) {
-      setDropdownOpen(false);
-      setSuggestions([]);
       return;
     }
     setSearchQuery(event.target.value);
     inputRef.current?.focus();
-    setDropdownOpen(true);
 
     loadSuggestions(event.target.value);
   };
