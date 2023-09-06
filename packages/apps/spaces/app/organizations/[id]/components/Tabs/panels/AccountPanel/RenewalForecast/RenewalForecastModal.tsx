@@ -27,7 +27,7 @@ import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import { NEW_DATE } from '@organization/components/Timeline/OrganizationTimeline';
 import { useSession } from 'next-auth/react';
-import { User } from '@graphql/types';
+import { RenewalLikelihoodProbability, User } from '@graphql/types';
 import {
   OrganizationAccountDetailsQuery,
   useOrganizationAccountDetailsQuery,
@@ -42,11 +42,13 @@ interface RenewalForecastModalProps {
   isOpen: boolean;
   onClose: () => void;
   renewalForecast: RenewalForecastValue;
+  renewalProbability?: RenewalLikelihoodProbability | null;
   name: string;
 }
 
 export const RenewalForecastModal = ({
   renewalForecast,
+  renewalProbability,
   isOpen,
   onClose,
   name,
@@ -61,7 +63,7 @@ export const RenewalForecastModal = ({
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const updateRenewalForecast = useUpdateRenewalForecastMutation(client, {
-    onSuccess: (data, variables) => {
+    onSuccess: () => {
       timeoutRef.current = setTimeout(
         () => invalidateAccountDetailsQuery(queryClient, id),
         500,
@@ -102,7 +104,7 @@ export const RenewalForecastModal = ({
             appSource: 'customer-os-api',
             createdAt: new Date(),
             metadata: JSON.stringify({
-              likelihood: null,
+              likelihood: renewalProbability,
               reason: reason,
             }),
             actionCreatedBy: null,

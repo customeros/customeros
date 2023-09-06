@@ -61,7 +61,7 @@ export const RenewalLikelihoodModal = ({
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const updateRenewalLikelihood = useUpdateRenewalLikelihoodMutation(client, {
-    onSuccess: (data, variables) => {
+    onSuccess: () => {
       queryClient.setQueryData<OrganizationAccountDetailsQuery>(
         useOrganizationAccountDetailsQuery.getKey({ id }),
         (oldData) => {
