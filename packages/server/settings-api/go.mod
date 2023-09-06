@@ -2,9 +2,8 @@ module github.com/openline-ai/openline-customer-os/packages/server/settings-api
 
 go 1.20
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
-
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ../customer-os-common-auth
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ../customer-os-common-auth
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -13,8 +12,8 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.12.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-00010101000000-000000000000
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230810191455-3928c40ce17f
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230905205324-bb882f6be687
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230905205324-bb882f6be687
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.4
 )

@@ -11,10 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/gmail/v1"
-	"google.golang.org/api/option"
 	"strings"
 )
 
@@ -27,7 +24,7 @@ type emailService struct {
 type EmailService interface {
 	ServiceAccountCredentialsExistsForTenant(tenant string) (bool, error)
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
-	ReadNewEmailsForUsername(tenant, username string) error
+	ReadNewEmailsForUsername(gmailService *gmail.Service, tenant, username string) error
 }
 
 func (s *emailService) ServiceAccountCredentialsExistsForTenant(tenant string) (bool, error) {
@@ -62,12 +59,7 @@ func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEnt
 	return s.mapDbNodeToEmailEntity(*email), nil
 }
 
-func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
-	googleServer, err := s.newGmailService(username, tenant)
-	if err != nil {
-		return fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
-	}
-
+func (s *emailService) ReadNewEmailsForUsername(gmailService *gmail.Service, tenant, username string) error {
 	forUsername, err := s.repositories.UserGmailImportPageTokenRepository.GetGmailImportPageTokenForUsername(tenant, username)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve history id for username: %v", err)
@@ -78,14 +70,16 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		forUsername = &emptyString
 	}
 
-	userMessages, err := googleServer.Users.Messages.List(username).MaxResults(s.cfg.SyncData.BatchSize).PageToken(*forUsername).Do()
+	countEmailsExists := int64(0)
+
+	userMessages, err := gmailService.Users.Messages.List(username).MaxResults(s.cfg.SyncData.BatchSize).PageToken(*forUsername).Do()
 	if err != nil {
 		return fmt.Errorf("unable to retrieve emails for user: %v", err)
 	}
 
 	if userMessages != nil && len(userMessages.Messages) > 0 {
 		for _, message := range userMessages.Messages {
-			email, err := googleServer.Users.Messages.Get(username, message.Id).Format("full").Do()
+			email, err := gmailService.Users.Messages.Get(username, message.Id).Format("full").Do()
 			if err != nil {
 				return fmt.Errorf("unable to retrieve email: %v", err)
 			}
@@ -108,12 +102,20 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 				return fmt.Errorf("unable to check if email exists: %v", err)
 			}
 
+			//counting emails that are already imported based on the batch size
+			//if the job is stopped in the middle of execution and we haven't saved the latest token
+			//we are going to loose the history
 			if emailExists {
-				err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, "")
-				if err != nil {
-					return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+				countEmailsExists = countEmailsExists + 1
+
+				if countEmailsExists >= s.cfg.SyncData.BatchSize {
+					err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, "")
+					if err != nil {
+						return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+					}
 				}
-				return nil
+
+				continue
 			}
 
 			emailSubject := ""
@@ -230,38 +232,6 @@ func JSONMarshal(t interface{}) ([]byte, error) {
 	encoder.SetEscapeHTML(false)
 	err := encoder.Encode(t)
 	return buffer.Bytes(), err
-}
-
-func (s *emailService) newGmailService(username string, tenant string) (*gmail.Service, error) {
-	tok, err := s.getMailAuthToken(username, tenant)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
-	}
-	ctx := context.Background()
-	client := tok.Client(ctx)
-
-	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
-	return srv, err
-}
-
-func (s *emailService) getMailAuthToken(identityId, tenant string) (*jwt.Config, error) {
-	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, repository.GSUITE_SERVICE_PRIVATE_KEY)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
-	}
-
-	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, repository.GSUITE_SERVICE_EMAIL_ADDRESS)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
-	}
-	conf := &jwt.Config{
-		Email:      serviceEmail,
-		PrivateKey: []byte(privateKey),
-		TokenURL:   google.JWTTokenURL,
-		Scopes:     []string{"https://mail.google.com/"},
-		Subject:    identityId,
-	}
-	return conf, nil
 }
 
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
