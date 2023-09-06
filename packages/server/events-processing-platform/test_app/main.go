@@ -22,7 +22,7 @@ func main() {
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
 	testCreateOrganization()
-	//testUpdateOrganization()
+	testUpdateOrganization()
 }
 
 func InitClients() {
@@ -61,10 +61,12 @@ func testRequestGenerateActionItemsRequest() {
 func testCreateOrganization() {
 	tenant := "openline"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
+	organizationId := "ccc"
 	website := ""
 
 	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
 		Tenant:  tenant,
+		Id:      organizationId,
 		Website: website,
 		UserId:  userId,
 	})
@@ -73,12 +75,13 @@ func testCreateOrganization() {
 
 func testUpdateOrganization() {
 	tenant := "openline"
-	organizationId := "39852ca1-e61b-4d07-b0a3-5f1306bbba57"
+	organizationId := "ccc"
+	website := ""
 
 	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
 		Tenant:  tenant,
 		Id:      organizationId,
-		Website: "https://www.google.com",
+		Website: website,
 	})
 	print(result)
 }

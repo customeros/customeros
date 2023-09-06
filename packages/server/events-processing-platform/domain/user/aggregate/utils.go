@@ -14,7 +14,7 @@ func GetUserObjectID(aggregateID string, tenant string) string {
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() <= 0
+	return aggregate.GetVersion() < 0
 }
 
 func LoadUserAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*UserAggregate, error) {

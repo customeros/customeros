@@ -24,7 +24,7 @@ func getOrganizationObjectUUID(aggregateID string) string {
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() <= 0
+	return aggregate.GetVersion() < 0
 }
 
 func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*OrganizationAggregate, error) {
