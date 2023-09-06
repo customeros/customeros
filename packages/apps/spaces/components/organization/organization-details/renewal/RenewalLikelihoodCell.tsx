@@ -41,10 +41,10 @@ export const RenewalLikelihoodCell = ({
     ? { label: capitalize(currentProbability), value: currentProbability }
     : undefined;
 
-  const handleChange =(
+  const handleChange = (
     newValue: SelectOption<RenewalLikelihoodProbability>,
   ) => {
-   updateRenewalLikelihood({
+    updateRenewalLikelihood({
       variables: {
         input: {
           id: organizationId,
