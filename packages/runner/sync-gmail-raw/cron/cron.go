@@ -2,21 +2,14 @@ package cron
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/service"
 	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jwt"
-	"google.golang.org/api/gmail/v1"
-	"google.golang.org/api/option"
 	"sync"
 	"time"
 )
@@ -121,7 +114,7 @@ func syncEmailsForAllTenantsWithServiceAccount(config *config.Config, services *
 						return
 					}
 
-					gmailService, err := getGmailServiceWithServiceAccount(services, emailForUser.RawEmail, tenant.Name)
+					gmailService, err := services.EmailService.GetGmailServiceWithServiceAccount(emailForUser.RawEmail, tenant.Name)
 					if err != nil {
 						logrus.Errorf("failed to create gmail service: %v", err)
 						return
@@ -174,7 +167,7 @@ func syncEmailsForOauthTokens(config *config.Config, services *service.Services)
 				return
 			}
 
-			gmailService, err := getGmailServiceWithOauthToken(config, services, tokenEntity)
+			gmailService, err := services.EmailService.GetGmailServiceWithOauthToken(tokenEntity)
 			if err != nil {
 				logrus.Errorf("failed to create gmail service: %v", err)
 				return
@@ -187,79 +180,4 @@ func syncEmailsForOauthTokens(config *config.Config, services *service.Services)
 	wg.Wait()
 	logrus.Infof("syncing emails for all oauth tokens completed")
 	logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
-}
-
-func getGmailServiceWithServiceAccount(services *service.Services, username string, tenant string) (*gmail.Service, error) {
-	tok, err := getServiceAccountAuthToken(services, username, tenant)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
-	}
-	ctx := context.Background()
-	client := tok.Client(ctx)
-
-	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
-	return srv, err
-}
-
-func getServiceAccountAuthToken(services *service.Services, identityId, tenant string) (*jwt.Config, error) {
-	privateKey, err := services.Repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, repository.GSUITE_SERVICE_PRIVATE_KEY)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
-	}
-
-	serviceEmail, err := services.Repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, repository.GSUITE_SERVICE_EMAIL_ADDRESS)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
-	}
-	conf := &jwt.Config{
-		Email:      serviceEmail,
-		PrivateKey: []byte(privateKey),
-		TokenURL:   google.JWTTokenURL,
-		Scopes:     []string{"https://mail.google.com/"},
-		Subject:    identityId,
-	}
-	return conf, nil
-}
-
-func getGmailServiceWithOauthToken(config *config.Config, services *service.Services, tokenEntity authEntity.OAuthTokenEntity) (*gmail.Service, error) {
-	oauth2Config := &oauth2.Config{
-		ClientID:     config.GoogleOAuth.ClientId,
-		ClientSecret: config.GoogleOAuth.ClientSecret,
-		Endpoint:     google.Endpoint,
-	}
-
-	token := oauth2.Token{
-		AccessToken:  tokenEntity.AccessToken,
-		RefreshToken: tokenEntity.RefreshToken,
-		Expiry:       tokenEntity.ExpiresAt,
-	}
-
-	tokenSource := oauth2Config.TokenSource(context.TODO(), &token)
-	reuseTokenSource := oauth2.ReuseTokenSource(&token, tokenSource)
-
-	if !token.Valid() {
-		newToken, err := reuseTokenSource.Token()
-		if err != nil {
-			logrus.Errorf("failed to get new token: %v", err)
-			return nil, err
-		}
-
-		if newToken.AccessToken != tokenEntity.AccessToken {
-
-			_, err := services.Repositories.OAuthRepositories.OAuthTokenRepository.Update(tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
-			if err != nil {
-				logrus.Errorf("failed to update token: %v", err)
-				return nil, err
-			}
-		}
-
-	}
-
-	gmailService, err := gmail.NewService(context.TODO(), option.WithTokenSource(reuseTokenSource))
-	if err != nil {
-		logrus.Errorf("failed to create gmail service for token: %v", err)
-		return nil, err
-	}
-
-	return gmailService, nil
 }
