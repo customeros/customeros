@@ -1,18 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { CardHeader, CardBody } from '@ui/presentation/Card';
-import { Heading } from '@ui/typography/Heading';
+import { CardBody } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { IconButton } from '@ui/form/IconButton';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { useCopyToClipboard } from '@spaces/hooks/useCopyToClipboard';
 import sanitizeHtml from 'sanitize-html';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
-import CopyLink from '@spaces/atoms/icons/CopyLink';
-import Times from '@spaces/atoms/icons/Times';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import Image from 'next/image';
@@ -64,8 +58,7 @@ interface EmailPreviewModalProps {
 export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   invalidateQuery,
 }) => {
-  const { closeModal, isModalOpen, modalContent } =
-    useTimelineEventPreviewContext();
+  const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -259,11 +252,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             <Image
               src={'/backgrounds/organization/post-stamp.webp'}
               alt='Email'
-              width={54}
+              width={48}
               height={70}
-              style={{
-                filter: 'drop-shadow(0px 0.5px 1px #D8D8D8)',
-              }}
             />
           </div>
         </Flex>

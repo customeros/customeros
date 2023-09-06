@@ -40,18 +40,13 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
         flexDirection='row'
         maxWidth={549}
         position='unset'
-        aspectRatio='9/2'
         cursor='pointer'
+        borderRadius='lg'
         onClick={() => openModal(email)}
+        _hover={{ boxShadow: 'md' }}
+        transition='all 0.2s ease-out'
       >
-        <CardBody
-          pt={5}
-          pb={5}
-          pl={5}
-          pr={0}
-          overflow={'hidden'}
-          flexDirection='row'
-        >
+        <CardBody px='3' py='2' pr='0' overflow={'hidden'} flexDirection='row'>
           <VStack align='flex-start' spacing={0}>
             <Text as='p' noOfLines={1}>
               <Text as={'span'} fontWeight={500}>
@@ -84,18 +79,13 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
             </Text>
           </VStack>
         </CardBody>
-        <CardFooter pt={5} pb={5} pr={5} pl={0} ml={1}>
-          <div>
-            <Image
-              src={'/backgrounds/organization/post-stamp.webp'}
-              alt='Email'
-              width={54}
-              height={70}
-              style={{
-                filter: 'drop-shadow(0px 0.5px 1px #D8D8D8)',
-              }}
-            />
-          </div>
+        <CardFooter py='2' pr='3' pl='3' ml='1' display='block'>
+          <Image
+            src={'/backgrounds/organization/post-stamp.webp'}
+            alt='Email'
+            width={48}
+            height={70}
+          />
         </CardFooter>
       </Card>
     </>

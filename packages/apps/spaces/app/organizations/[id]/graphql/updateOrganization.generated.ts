@@ -29,7 +29,6 @@ export type UpdateOrganizationMutation = {
     id: string;
     name: string;
     description?: string | null;
-    domain?: string | null;
     domains: Array<string>;
     website?: string | null;
     industry?: string | null;
@@ -49,7 +48,6 @@ export const UpdateOrganizationDocument = `
     id
     name
     description
-    domain
     domains
     website
     industry

@@ -4,7 +4,7 @@ import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
-import Envelope from '@spaces/atoms/icons/Envelope';
+import { Icons } from '@ui/media/Icon';
 import { useForm } from 'react-inverted-form';
 import {
   ComposeEmailDto,
@@ -15,7 +15,7 @@ import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useDisclosure } from '@ui/utils';
-import { useRemirror } from '@remirror/react';
+import { Icon, useRemirror } from '@remirror/react';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 
 interface TimelineActionsProps {
@@ -118,31 +118,31 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   return (
     <Box bg='gray.25'>
       <ButtonGroup
-        // mt={6}
         position='sticky'
-        py={2}
-        border='1px dashed var(--gray-200, #EAECF0)'
-        p={2}
-        borderRadius={30}
+        border='1px solid'
+        borderColor='gray.200'
+        p='2'
+        borderRadius='full'
         bg='white'
         top='0'
-        left={6}
-        zIndex={1}
-        transform='translateY(6px)'
+        left='6'
+        zIndex='1'
+        transform='translateY(5px)'
       >
         <Button
           variant='outline'
           onClick={() => handleToggle()}
           borderRadius='3xl'
           size='xs'
-          leftIcon={<Envelope color='inherit' height={16} width={16} />}
+          leftIcon={<Icons.Mail1 boxSize='4' />}
         >
           Email
         </Button>
       </ButtonGroup>
       <Box
         bg={'#F9F9FB'}
-        borderTop='1px dashed var(--gray-200, #EAECF0)'
+        borderTop='1px dashed'
+        borderTopColor='gray.200'
         pt={show ? 6 : 0}
         pb={show ? 2 : 8}
         mt={-4}
@@ -154,7 +154,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
               borderRadius={'md'}
               boxShadow={'lg'}
               m={6}
-              mt={0}
+              mt={2}
               bg={'white'}
               border='1px solid var(--gray-100, #F2F4F7)'
             >

@@ -38,8 +38,10 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
       borderColor='gray.200'
       borderRadius='lg'
       onClick={() => openModal(data)}
+      _hover={{ boxShadow: 'md' }}
+      transition='all 0.2s ease-out'
     >
-      <CardBody p='3'>
+      <CardBody px='3' py='2'>
         <Flex w='full' justify='space-between' position='relative' gap='3'>
           <VStack spacing='0' alignItems='flex-start'>
             <Text
@@ -97,7 +99,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
               mt='4px'
               color='gray.700'
             >
-              {new Date(data?.createdAt).getDate()}
+              {new Date(data?.startedAt).getDate()}
             </Text>
           </Center>
         </Flex>
