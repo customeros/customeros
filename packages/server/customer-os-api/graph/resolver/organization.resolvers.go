@@ -31,6 +31,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
 		Tenant:        common.GetTenantFromContext(ctx),
 		UserId:        common.GetUserIdFromContext(ctx),
+		Name:          input.Name,
 		Description:   utils.IfNotNilString(input.Description),
 		Website:       utils.IfNotNilString(input.Website),
 		Industry:      utils.IfNotNilString(input.Industry),
@@ -48,7 +49,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		graphql.AddErrorf(ctx, "Failed to create organization")
 		return nil, nil
 	}
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	if len(input.Domains) > 0 {
 		for _, domain := range input.Domains {
 			if domain != "" {
@@ -69,7 +70,6 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, response.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch organization details")
 		return &model.Organization{
 			ID: response.Id,
 		}, err
@@ -87,6 +87,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		Tenant:            common.GetTenantFromContext(ctx),
 		UserId:            common.GetUserIdFromContext(ctx),
 		Id:                input.ID,
+		Name:              input.Name,
 		Description:       utils.IfNotNilString(input.Description),
 		Website:           utils.IfNotNilString(input.Website),
 		Industry:          utils.IfNotNilString(input.Industry),
