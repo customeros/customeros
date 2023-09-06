@@ -143,6 +143,7 @@ export const RenewalForecast = ({
           amount: renewalForecast?.amount,
           comment: renewalForecast?.comment,
         }}
+        renewalProbability={renewalProbability}
         name={name}
         isOpen={update.isOpen}
         onClose={update.onClose}
