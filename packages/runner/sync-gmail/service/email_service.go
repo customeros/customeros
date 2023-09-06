@@ -180,13 +180,21 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		shouldAddInteractionEvent := false
 
-		//check if at least 1 email belongs to an organization that is allowed for import
-		for _, emailString := range allEmailsString {
+		if organizationAllowedForImport != nil && len(organizationAllowedForImport) == 1 {
+			if organizationAllowedForImport[0].Name == "*" && organizationAllowedForImport[0].Domain == "*" {
+				shouldAddInteractionEvent = true
+			}
+		}
 
-			for _, organizationAllowedForImport := range organizationAllowedForImport {
-				if strings.Contains(emailString, organizationAllowedForImport.Domain) {
-					shouldAddInteractionEvent = true
-					break
+		if !shouldAddInteractionEvent {
+			//check if at least 1 email belongs to an organization that is allowed for import
+			for _, emailString := range allEmailsString {
+
+				for _, organizationAllowedForImport := range organizationAllowedForImport {
+					if strings.Contains(emailString, organizationAllowedForImport.Domain) {
+						shouldAddInteractionEvent = true
+						break
+					}
 				}
 			}
 		}
