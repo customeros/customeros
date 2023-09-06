@@ -20,14 +20,10 @@ const (
 )
 
 type OrganizationRepository interface {
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
-	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
 	GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	Archive(ctx context.Context, organizationId string) error
-	LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
-	UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
 	MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth entity.DataSource) error
 	MergeOrganizationRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error
 	UpdateMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error
@@ -60,96 +56,6 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 	return &organizationRepository{
 		driver: driver,
 	}
-}
-
-func (r *organizationRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := "MATCH (t:Tenant {name:$tenant})" +
-		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()})" +
-		" ON CREATE SET org.name=$name, " +
-		"				org.description=$description, " +
-		"				org.readonly=false, " +
-		"				org.website=$website, " +
-		"				org.industry=$industry, " +
-		"				org.isPublic=$isPublic, " +
-		"				org.employees=$employees, " +
-		"				org.market=$market, " +
-		" 				org.source=$source, " +
-		"				org.sourceOfTruth=$sourceOfTruth, " +
-		"				org.appSource=$appSource, " +
-		"				org.createdAt=$now, " +
-		"				org.updatedAt=$now, " +
-		" 				org:%s" +
-		" RETURN org"
-
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Organization_"+tenant),
-		map[string]any{
-			"tenant":        tenant,
-			"name":          organization.Name,
-			"description":   organization.Description,
-			"readonly":      false,
-			"website":       organization.Website,
-			"industry":      organization.Industry,
-			"isPublic":      organization.IsPublic,
-			"employees":     organization.Employees,
-			"market":        organization.Market,
-			"source":        organization.Source,
-			"sourceOfTruth": organization.SourceOfTruth,
-			"appSource":     organization.AppSource,
-			"now":           utils.Now(),
-		})
-	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-}
-
-func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organization.ID))
-
-	query := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			 SET 	org.name=$name, 
-					org.description=$description, 
-					org.website=$website, 
-			 		org.industry=$industry, 
-					org.isPublic=$isPublic, 
-					org.employees=$employees, 
-					org.market=$market, 
-					org.subIndustry=$subIndustry,
-					org.industryGroup=$industryGroup,
-					org.targetAudience=$targetAudience,
-					org.valueProposition=$valueProposition,
-					org.lastFundingRound=$lastFundingRound,
-					org.lastFundingAmount=$lastFundingAmount,
-					org.sourceOfTruth=$sourceOfTruth,
-					org.updatedAt=$now 
-			 RETURN org`
-	span.LogFields(log.String("query", query))
-
-	queryResult, err := tx.Run(ctx, query,
-		map[string]any{
-			"tenant":            tenant,
-			"organizationId":    organization.ID,
-			"name":              organization.Name,
-			"description":       organization.Description,
-			"website":           organization.Website,
-			"industry":          organization.Industry,
-			"isPublic":          organization.IsPublic,
-			"employees":         organization.Employees,
-			"market":            organization.Market,
-			"sourceOfTruth":     organization.SourceOfTruth,
-			"subIndustry":       organization.SubIndustry,
-			"industryGroup":     organization.IndustryGroup,
-			"targetAudience":    organization.TargetAudience,
-			"valueProposition":  organization.ValueProposition,
-			"lastFundingRound":  organization.LastFundingRound,
-			"lastFundingAmount": organization.LastFundingAmount,
-			"now":               utils.Now(),
-		})
-	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *organizationRepository) Archive(ctx context.Context, organizationId string) error {
@@ -306,40 +212,6 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
 	return dbNodesWithTotalCount, nil
-}
-
-func (r *organizationRepository) LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.LinkWithDomainsInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	_, err := tx.Run(ctx, `
-			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-			(d:Domain) WHERE d.domain IN $domains
-			MERGE (org)-[:HAS_DOMAIN]->(d)`,
-		map[string]any{
-			"tenant":         tenant,
-			"organizationId": organizationId,
-			"domains":        domains,
-		})
-	return err
-}
-
-func (r *organizationRepository) UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UnlinkFromDomainsNotInListInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	_, err := tx.Run(ctx, `
-			MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[rel:HAS_DOMAIN]->(d:Domain)
-			WHERE NOT d.domain IN $domains
-			DELETE rel`,
-		map[string]any{
-			"tenant":         tenant,
-			"organizationId": organizationId,
-			"domains":        domains,
-		})
-	return err
 }
 
 func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth entity.DataSource) error {

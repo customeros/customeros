@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	locerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -14,7 +14,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
 )
 
 func (a *OrganizationAggregate) HandleCommand(ctx context.Context, command eventstore.Command) error {
@@ -29,35 +28,52 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, command event
 		return a.updateRenewalForecast(ctx, c)
 	case *cmd.UpdateBillingDetailsCommand:
 		return a.updateBillingDetails(ctx, c)
+	case *cmd.LinkDomainCommand:
+		return a.linkDomain(ctx, c)
+	case *cmd.AddSocialCommand:
+		return a.addSocial(ctx, c)
 	default:
 		return errors.New("invalid command type")
 	}
 }
 
-func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organizationFields *models.OrganizationFields) error {
+func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organizationFields *models.OrganizationFields, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.CreateOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
+	var eventsOnCreate []eventstore.Event
+
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, createdAtNotNil)
-	event, err := events.NewOrganizationCreateEvent(a, organizationFields, createdAtNotNil, updatedAtNotNil)
+
+	createEvent, err := events.NewOrganizationCreateEvent(a, organizationFields, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationCreateEvent")
 	}
+	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, userId)
+	eventsOnCreate = append(eventsOnCreate, createEvent)
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
+	if organizationFields.OrganizationDataFields.Website != "" {
+		webscrapeEvent, err := events.NewOrganizationRequestScrapeByWebsite(a, organizationFields.OrganizationDataFields.Website)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "NewOrganizationCreateEvent")
+		}
+		aggregate.EnrichEventWithMetadata(&webscrapeEvent, &span, a.Tenant, userId)
+		eventsOnCreate = append(eventsOnCreate, webscrapeEvent)
 	}
 
-	return a.Apply(event)
+	return a.ApplyAll(eventsOnCreate)
 }
 
-func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organizationFields *models.OrganizationFields) error {
+func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organizationFields *models.OrganizationFields, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.UpdateOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	var eventsOnUpdate []eventstore.Event
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, utils.Now())
 	if organizationFields.Source.SourceOfTruth == "" {
@@ -69,35 +85,42 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationUpdateEvent")
 	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
+	eventsOnUpdate = append(eventsOnUpdate, event)
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
+	// if website updated, request webscrape
+	if organizationFields.OrganizationDataFields.Website != "" && organizationFields.OrganizationDataFields.Website != a.Organization.Website {
+		webscrapeEvent, err := events.NewOrganizationRequestScrapeByWebsite(a, organizationFields.OrganizationDataFields.Website)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "NewOrganizationCreateEvent")
+		}
+		aggregate.EnrichEventWithMetadata(&webscrapeEvent, &span, a.Tenant, userId)
+		eventsOnUpdate = append(eventsOnUpdate, webscrapeEvent)
 	}
 
-	return a.Apply(event)
+	return a.ApplyAll(eventsOnUpdate)
 }
 
-func (a *OrganizationAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNumberId, label string, primary bool) error {
+func (a *OrganizationAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNumberId, label string, primary bool, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.LinkPhoneNumber")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewOrganizationLinkPhoneNumberEvent(a, tenant, phoneNumberId, label, primary, updatedAtNotNil)
+	event, err := events.NewOrganizationLinkPhoneNumberEvent(a, phoneNumberId, label, primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkPhoneNumberEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
 
 	return a.Apply(event)
 }
 
-func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId string) error {
+func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.SetPhoneNumberNonPrimary")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
@@ -110,41 +133,37 @@ func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, te
 	}
 
 	if phoneNumber.Primary {
-		event, err := events.NewOrganizationLinkPhoneNumberEvent(a, tenant, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
+		event, err := events.NewOrganizationLinkPhoneNumberEvent(a, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationLinkPhoneNumberEvent")
 		}
 
-		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-			tracing.TraceErr(span, err)
-		}
+		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
 		return a.Apply(event)
 	}
 	return nil
 }
 
-func (a *OrganizationAggregate) LinkEmail(ctx context.Context, tenant, emailId, label string, primary bool) error {
+func (a *OrganizationAggregate) LinkEmail(ctx context.Context, tenant, emailId, label string, primary bool, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.LinkEmail")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewOrganizationLinkEmailEvent(a, tenant, emailId, label, primary, updatedAtNotNil)
+	event, err := events.NewOrganizationLinkEmailEvent(a, emailId, label, primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
 
 	return a.Apply(event)
 }
 
-func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId string) error {
+func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.SetEmailNonPrimary")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
@@ -157,58 +176,51 @@ func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, tenant, 
 	}
 
 	if email.Primary {
-		event, err := events.NewOrganizationLinkEmailEvent(a, tenant, emailId, email.Label, false, updatedAtNotNil)
+		event, err := events.NewOrganizationLinkEmailEvent(a, emailId, email.Label, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
 		}
 
-		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-			tracing.TraceErr(span, err)
-		}
+		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
 		return a.Apply(event)
 	}
 	return nil
 }
 
-func (a *OrganizationAggregate) LinkDomain(ctx context.Context, tenant, domain string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.LinkDomain")
+func (a *OrganizationAggregate) linkDomain(ctx context.Context, command *cmd.LinkDomainCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.linkDomain")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewOrganizationLinkDomainEvent(a, tenant, domain)
+	event, err := events.NewOrganizationLinkDomainEvent(a, command.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkDomainEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
 
 	return a.Apply(event)
 }
 
-func (a *OrganizationAggregate) AddSocial(ctx context.Context, tenant, socialId, platformName, url string, source common_models.Source, createdAt *time.Time, updatedAt *time.Time) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.AddSocial")
+func (a *OrganizationAggregate) addSocial(ctx context.Context, command *cmd.AddSocialCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addSocial")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(createdAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, createdAtNotNil)
-	localSource := utils.StringFirstNonEmpty(source.Source, constants.SourceOpenline)
-	localSourceOfTruth := utils.StringFirstNonEmpty(source.SourceOfTruth, constants.SourceOpenline)
-	localAppSource := utils.StringFirstNonEmpty(source.AppSource, constants.AppSourceEventProcessingPlatform)
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(command.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(command.UpdatedAt, createdAtNotNil)
+	localSource := utils.StringFirstNonEmpty(command.Source.Source, constants.SourceOpenline)
+	localSourceOfTruth := utils.StringFirstNonEmpty(command.Source.SourceOfTruth, constants.SourceOpenline)
+	localAppSource := utils.StringFirstNonEmpty(command.Source.AppSource, constants.AppSourceEventProcessingPlatform)
 
-	event, err := events.NewOrganizationAddSocialEvent(a, tenant, socialId, platformName, url, localSource, localSourceOfTruth, localAppSource, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewOrganizationAddSocialEvent(a, command.SocialId, command.SocialPlatform, command.SocialUrl, localSource, localSourceOfTruth, localAppSource, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAddSocialEvent")
 	}
-
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
 
 	return a.Apply(event)
 }
@@ -229,12 +241,7 @@ func (a *OrganizationAggregate) updateRenewalLikelihood(ctx context.Context, com
 		return err
 	}
 
-	metadata := tracing.ExtractTextMapCarrier(span.Context())
-	metadata["tenant"] = a.Tenant
-	metadata["user-id"] = command.Fields.UpdatedBy
-	if err = event.SetMetadata(metadata); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
 
 	return a.Apply(event)
 }
@@ -255,14 +262,7 @@ func (a *OrganizationAggregate) updateRenewalForecast(ctx context.Context, comma
 		return err
 	}
 
-	metadata := tracing.ExtractTextMapCarrier(span.Context())
-	metadata["tenant"] = a.Tenant
-	if command.Fields.UpdatedBy != "" {
-		metadata["user-id"] = command.Fields.UpdatedBy
-	}
-	if err = event.SetMetadata(metadata); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
 
 	return a.Apply(event)
 }
@@ -272,17 +272,13 @@ func (a *OrganizationAggregate) requestRenewalForecast(ctx context.Context, comm
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewOrganizationRequestRenewalForecastEvent(a, a.Tenant)
+	event, err := events.NewOrganizationRequestRenewalForecastEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRequestRenewalForecastEvent")
 	}
 
-	metadata := tracing.ExtractTextMapCarrier(span.Context())
-	metadata["tenant"] = a.Tenant
-	if err = event.SetMetadata(metadata); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
 
 	return a.Apply(event)
 }
@@ -298,14 +294,7 @@ func (a *OrganizationAggregate) updateBillingDetails(ctx context.Context, comman
 		return err
 	}
 
-	metadata := tracing.ExtractTextMapCarrier(span.Context())
-	metadata["tenant"] = a.Tenant
-	if command.Fields.UpdatedBy != "" {
-		metadata["user-id"] = command.Fields.UpdatedBy
-	}
-	if err = event.SetMetadata(metadata); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
 
 	return a.Apply(event)
 }
@@ -315,17 +304,13 @@ func (a *OrganizationAggregate) requestNextCycleDate(ctx context.Context, comman
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewOrganizationRequestNextCycleDateEvent(a, a.Tenant)
+	event, err := events.NewOrganizationRequestNextCycleDateEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRequestNextCycleDateEvent")
 	}
 
-	metadata := tracing.ExtractTextMapCarrier(span.Context())
-	metadata["tenant"] = a.Tenant
-	if err = event.SetMetadata(metadata); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
 
 	return a.Apply(event)
 }

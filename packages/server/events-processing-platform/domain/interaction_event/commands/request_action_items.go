@@ -18,7 +18,7 @@ type RequestActionItemsCommand struct {
 
 func NewRequestActionItemsCommand(tenant, interactionEventId string) *RequestActionItemsCommand {
 	return &RequestActionItemsCommand{
-		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant, ""),
 	}
 }
 

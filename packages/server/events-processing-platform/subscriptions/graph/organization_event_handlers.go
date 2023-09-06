@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -31,6 +32,10 @@ type GraphOrganizationEventHandler struct {
 	log                  logger.Logger
 }
 
+type eventMetadata struct {
+	UserId string `json:"user-id"`
+}
+
 func (h *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationCreate")
 	defer span.Finish()
@@ -44,6 +49,22 @@ func (h *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.Repositories.OrganizationRepository.CreateOrganization(ctx, organizationId, eventData)
+
+	if err == nil {
+		evtMetadata := eventMetadata{}
+		if err = json.Unmarshal(evt.Metadata, &evtMetadata); err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "json.Unmarshal")
+		} else {
+			if evtMetadata.UserId != "" {
+				err = h.Repositories.OrganizationRepository.ReplaceOwner(ctx, eventData.Tenant, organizationId, evtMetadata.UserId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					h.log.Errorf("Failed to replace owner of organization %s with user %s", organizationId, evtMetadata.UserId)
+				}
+			}
+		}
+	}
 
 	return err
 }

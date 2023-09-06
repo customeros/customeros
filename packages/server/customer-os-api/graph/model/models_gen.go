@@ -1066,7 +1066,6 @@ type Organization struct {
 	UpdatedAt                     time.Time                        `json:"updatedAt"`
 	Name                          string                           `json:"name"`
 	Description                   *string                          `json:"description,omitempty"`
-	Domain                        *string                          `json:"domain,omitempty"`
 	Domains                       []string                         `json:"domains"`
 	Website                       *string                          `json:"website,omitempty"`
 	Industry                      *string                          `json:"industry,omitempty"`
@@ -1117,18 +1116,20 @@ func (this Organization) GetID() string { return this.ID }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	Name         string              `json:"name"`
-	Description  *string             `json:"description,omitempty"`
-	Domains      []string            `json:"domains,omitempty"`
-	Website      *string             `json:"website,omitempty"`
-	Industry     *string             `json:"industry,omitempty"`
-	IsPublic     *bool               `json:"isPublic,omitempty"`
-	CustomFields []*CustomFieldInput `json:"customFields,omitempty"`
-	FieldSets    []*FieldSetInput    `json:"fieldSets,omitempty"`
-	TemplateID   *string             `json:"templateId,omitempty"`
-	Market       *Market             `json:"market,omitempty"`
-	Employees    *int64              `json:"employees,omitempty"`
-	AppSource    *string             `json:"appSource,omitempty"`
+	Name          string              `json:"name"`
+	Description   *string             `json:"description,omitempty"`
+	Domains       []string            `json:"domains,omitempty"`
+	Website       *string             `json:"website,omitempty"`
+	Industry      *string             `json:"industry,omitempty"`
+	SubIndustry   *string             `json:"subIndustry,omitempty"`
+	IndustryGroup *string             `json:"industryGroup,omitempty"`
+	IsPublic      *bool               `json:"isPublic,omitempty"`
+	CustomFields  []*CustomFieldInput `json:"customFields,omitempty"`
+	FieldSets     []*FieldSetInput    `json:"fieldSets,omitempty"`
+	TemplateID    *string             `json:"templateId,omitempty"`
+	Market        *Market             `json:"market,omitempty"`
+	Employees     *int64              `json:"employees,omitempty"`
+	AppSource     *string             `json:"appSource,omitempty"`
 }
 
 type OrganizationPage struct {

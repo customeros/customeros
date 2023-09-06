@@ -19,7 +19,7 @@ type CreateJobRoleCommand struct {
 
 func NewCreateJobRoleCommand(objectID, tenant, jobTitle string, description *string, primary bool, source, sourceOfTruth, appSource string, startedAt, endedAt, createdAt *time.Time) *CreateJobRoleCommand {
 	return &CreateJobRoleCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		StartedAt:   startedAt,
 		EndedAt:     endedAt,
 		JobTitle:    jobTitle,

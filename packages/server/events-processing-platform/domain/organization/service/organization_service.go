@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/google/uuid"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
@@ -37,6 +38,9 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 	defer span.Finish()
 
 	organizationId := request.Id
+	if organizationId == "" {
+		organizationId = uuid.New().String()
+	}
 
 	coreFields := models.OrganizationDataFields{
 		Name:              request.Name,
@@ -53,7 +57,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 		LastFundingRound:  request.LastFundingRound,
 		LastFundingAmount: request.LastFundingAmount,
 	}
-	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, request.UserId, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertSyncOrganization.Handle) tenant:%s, organizationID: %s , err: {%v}", request.Tenant, organizationId, err)
@@ -101,7 +105,7 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkDomainToOrganization")
 	defer span.Finish()
 
-	command := command_handler.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain)
+	command := cmd.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, request.UserId)
 	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)

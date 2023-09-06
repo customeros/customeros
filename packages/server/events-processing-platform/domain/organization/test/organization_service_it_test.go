@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestOrganizationsService_UpsertOrganization(t *testing.T) {
+func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -75,7 +75,8 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	require.Equal(t, 1, len(eventsMap))
 	aggregate := organizationAggregate.NewOrganizationAggregateWithTenantAndID(tenant, response.Id)
 	eventList := eventsMap[aggregate.ID]
-	require.Equal(t, 1, len(eventList))
+	require.Equal(t, 2, len(eventList))
+
 	require.Equal(t, organizationEvents.OrganizationCreateV1, eventList[0].GetEventType())
 	require.Equal(t, string(organizationAggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
 	var eventData organizationEvents.OrganizationCreateEvent
@@ -101,6 +102,15 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	require.Equal(t, "Seed", eventData.LastFundingRound)
 	require.Equal(t, "1.000.000", eventData.LastFundingAmount)
 	require.Equal(t, false, eventData.IsPublic)
+
+	require.Equal(t, organizationEvents.OrganizationRequestScrapeByWebsiteV1, eventList[1].GetEventType())
+	var eventDataScrapeRequest organizationEvents.OrganizationRequestScrapeByWebsite
+	if err := eventList[1].GetJsonData(&eventDataScrapeRequest); err != nil {
+		t.Errorf("Failed to unmarshal event data: %v", err)
+	}
+	require.Equal(t, tenant, eventDataScrapeRequest.Tenant)
+	require.Equal(t, "https://www.openline.ai", eventDataScrapeRequest.Website)
+	test.AssertRecentTime(t, eventDataScrapeRequest.RequestedAt)
 }
 
 func TestOrganizationsService_LinkDomain(t *testing.T) {

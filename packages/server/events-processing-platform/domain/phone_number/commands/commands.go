@@ -45,7 +45,7 @@ type PhoneNumberValidatedCommand struct {
 
 func NewCreatePhoneNumberCommand(objectId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreatePhoneNumberCommand {
 	return &CreatePhoneNumberCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant, ""),
 		RawPhoneNumber: rawPhoneNumber,
 		Source: models.Source{
 			Source:        source,
@@ -59,7 +59,7 @@ func NewCreatePhoneNumberCommand(objectId, tenant, rawPhoneNumber, source, sourc
 
 func NewUpsertPhoneNumberCommand(objectId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertPhoneNumberCommand {
 	return &UpsertPhoneNumberCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant, ""),
 		RawPhoneNumber: rawPhoneNumber,
 		Source: models.Source{
 			Source:        source,
@@ -73,7 +73,7 @@ func NewUpsertPhoneNumberCommand(objectId, tenant, rawPhoneNumber, source, sourc
 
 func NewFailedPhoneNumberValidationCommand(objectId, tenant, rawPhoneNumber, countryCodeA2, validationError string) *FailedPhoneNumberValidationCommand {
 	return &FailedPhoneNumberValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant, ""),
 		RawPhoneNumber:  rawPhoneNumber,
 		ValidationError: validationError,
 		CountryCodeA2:   countryCodeA2,
@@ -82,7 +82,7 @@ func NewFailedPhoneNumberValidationCommand(objectId, tenant, rawPhoneNumber, cou
 
 func NewSkippedPhoneNumberValidationCommand(objectId, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason string) *SkippedPhoneNumberValidationCommand {
 	return &SkippedPhoneNumberValidationCommand{
-		BaseCommand:          eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:          eventstore.NewBaseCommand(objectId, tenant, ""),
 		RawPhoneNumber:       rawPhoneNumber,
 		ValidationSkipReason: validationSkipReason,
 		CountryCodeA2:        countryCodeA2,
@@ -91,7 +91,7 @@ func NewSkippedPhoneNumberValidationCommand(objectId, tenant, rawPhoneNumber, co
 
 func NewPhoneNumberValidatedCommand(objectId, tenant, rawPhoneNumber, e164, countryCodeA2 string) *PhoneNumberValidatedCommand {
 	return &PhoneNumberValidatedCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant),
+		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant, ""),
 		E164:           e164,
 		RawPhoneNumber: rawPhoneNumber,
 		CountryCodeA2:  countryCodeA2,

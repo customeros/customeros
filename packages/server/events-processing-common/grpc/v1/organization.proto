@@ -25,6 +25,7 @@ message UpsertOrganizationGrpcRequest {
   string valueProposition = 18;
   string lastFundingRound = 19;
   string lastFundingAmount = 20;
+  string userId = 21;
 }
 
 message LinkPhoneNumberToOrganizationGrpcRequest {
@@ -47,6 +48,7 @@ message LinkDomainToOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
   string domain = 3;
+  string userId = 4;
 }
 
 enum Likelihood {

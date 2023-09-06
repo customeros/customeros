@@ -122,11 +122,13 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 	case orgevts.OrganizationUpdateV1:
 		return s.organizationEventHandler.AdjustUpdatedOrganizationFields(ctx, evt)
 	case orgevts.OrganizationLinkDomainV1:
-		return s.organizationEventHandler.WebscrapeOrganization(ctx, evt)
+		return s.organizationEventHandler.WebscrapeOrganizationByDomain(ctx, evt)
 	case orgevts.OrganizationRequestRenewalForecastV1:
 		return s.organizationEventHandler.OnRenewalForecastRequested(ctx, evt)
 	case orgevts.OrganizationRequestNextCycleDateV1:
 		return s.organizationEventHandler.OnNextCycleDateRequested(ctx, evt)
+	case orgevts.OrganizationRequestScrapeByWebsiteV1:
+		return s.organizationEventHandler.WebscrapeOrganizationByWebsite(ctx, evt)
 	case
 		orgevts.OrganizationPhoneNumberLinkV1,
 		orgevts.OrganizationEmailLinkV1,

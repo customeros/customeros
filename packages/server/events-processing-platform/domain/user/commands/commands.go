@@ -28,7 +28,7 @@ func UpsertUserCommandToUserDto(command *UpsertUserCommand) *models.UserFields {
 
 func NewUpsertUserCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields models.UserCoreFields, createdAt, updatedAt *time.Time) *UpsertUserCommand {
 	return &UpsertUserCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		CoreFields:  coreFields,
 		Source: common_models.Source{
 			Source:        source,
@@ -47,7 +47,7 @@ type LinkJobRoleCommand struct {
 
 func NewLinkJobRoleCommand(objectID, tenant, jobRoleId string) *LinkJobRoleCommand {
 	return &LinkJobRoleCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		JobRoleId:   jobRoleId,
 	}
 }
@@ -61,7 +61,7 @@ type LinkPhoneNumberCommand struct {
 
 func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, ""),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -77,7 +77,7 @@ type LinkEmailCommand struct {
 
 func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,

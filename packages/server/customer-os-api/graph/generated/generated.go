@@ -625,7 +625,6 @@ type ComplexityRoot struct {
 		CreatedAt                     func(childComplexity int) int
 		CustomFields                  func(childComplexity int) int
 		Description                   func(childComplexity int) int
-		Domain                        func(childComplexity int) int
 		Domains                       func(childComplexity int) int
 		Emails                        func(childComplexity int) int
 		Employees                     func(childComplexity int) int
@@ -4861,13 +4860,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Description(childComplexity), true
 
-	case "Organization.domain":
-		if e.complexity.Organization.Domain == nil {
-			break
-		}
-
-		return e.complexity.Organization.Domain(childComplexity), true
-
 	case "Organization.domains":
 		if e.complexity.Organization.Domains == nil {
 			break
@@ -7967,7 +7959,6 @@ type Organization implements Node {
     updatedAt:   Time!
     name:        String!
     description: String
-    domain:      String @deprecated(reason: "Deprecated in favor of domains")
     domains:     [String!]! @goField(forceResolver: true)
     website:     String
     industry:    String
@@ -8061,10 +8052,12 @@ input OrganizationInput {
     domains:     [String!]
     website:     String
     industry:    String
+    subIndustry: String
+    industryGroup: String
     isPublic:    Boolean
-    customFields: [CustomFieldInput!]
-    fieldSets: [FieldSetInput!]
-    templateId: ID
+    customFields: [CustomFieldInput!] @deprecated
+    fieldSets: [FieldSetInput!] @deprecated
+    templateId: ID @deprecated
     market:      Market
     employees:   Int64
     appSource: String
@@ -8074,7 +8067,7 @@ input OrganizationUpdateInput {
     id: ID!
     name: String!
     description: String
-    domains:     [String!]
+    domains:     [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
     website:     String
     industry:    String
     subIndustry: String
@@ -18073,8 +18066,6 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -23328,8 +23319,6 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -24065,8 +24054,6 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -31055,8 +31042,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -32825,8 +32810,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -33004,8 +32987,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -33610,8 +33591,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -33789,8 +33768,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -33968,8 +33945,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -34389,8 +34364,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -34568,8 +34541,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -34747,8 +34718,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -34926,8 +34895,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -35105,8 +35072,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -35284,8 +35249,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -39740,47 +39703,6 @@ func (ec *executionContext) fieldContext_Organization_description(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_domain(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_domain(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Domain, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_domain(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_domains(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_domains(ctx, field)
 	if err != nil {
@@ -41914,8 +41836,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -42140,8 +42060,6 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -43596,8 +43514,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -46166,8 +46082,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -48640,8 +48554,6 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
-			case "domain":
-				return ec.fieldContext_Organization_domain(ctx, field)
 			case "domains":
 				return ec.fieldContext_Organization_domains(ctx, field)
 			case "website":
@@ -55032,7 +54944,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "domains", "website", "industry", "isPublic", "customFields", "fieldSets", "templateId", "market", "employees", "appSource"}
+	fieldsInOrder := [...]string{"name", "description", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "customFields", "fieldSets", "templateId", "market", "employees", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -55084,6 +54996,24 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.Industry = data
+		case "subIndustry":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subIndustry"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubIndustry = data
+		case "industryGroup":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industryGroup"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IndustryGroup = data
 		case "isPublic":
 			var err error
 
@@ -61815,8 +61745,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 		case "description":
 			out.Values[i] = ec._Organization_description(ctx, field, obj)
-		case "domain":
-			out.Values[i] = ec._Organization_domain(ctx, field, obj)
 		case "domains":
 			field := field
 

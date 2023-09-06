@@ -51,7 +51,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	case events.OrganizationUpdateBillingDetailsV1:
 		return a.onUpdateBillingDetails(event)
 	case events.OrganizationRequestRenewalForecastV1,
-		events.OrganizationRequestNextCycleDateV1:
+		events.OrganizationRequestNextCycleDateV1,
+		events.OrganizationRequestScrapeByWebsiteV1:
 		return nil
 	default:
 		err := eventstore.ErrInvalidEventType

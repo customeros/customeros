@@ -16,10 +16,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	orggrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -29,20 +28,53 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	createdOrganizationEntity, err := r.Services.OrganizationService.Create(ctx,
-		&service.OrganizationCreateData{
-			OrganizationEntity: mapper.MapOrganizationInputToEntity(&input),
-			CustomFields:       mapper.MapCustomFieldInputsToEntities(input.CustomFields),
-			FieldSets:          mapper.MapFieldSetInputsToEntities(input.FieldSets),
-			TemplateId:         input.TemplateID,
-			Domains:            input.Domains,
-		})
+	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
+		Tenant:        common.GetTenantFromContext(ctx),
+		UserId:        common.GetUserIdFromContext(ctx),
+		Description:   utils.IfNotNilString(input.Description),
+		Website:       utils.IfNotNilString(input.Website),
+		Industry:      utils.IfNotNilString(input.Industry),
+		SubIndustry:   utils.IfNotNilString(input.SubIndustry),
+		IndustryGroup: utils.IfNotNilString(input.IndustryGroup),
+		IsPublic:      utils.IfNotNilBool(input.IsPublic),
+		Market:        mapper.MapMarketFromModel(input.Market),
+		Employees:     utils.IfNotNilInt64(input.Employees),
+		Source:        string(entity.DataSourceOpenline),
+		SourceOfTruth: string(entity.DataSourceOpenline),
+		AppSource:     utils.IfNotNilString(input.AppSource),
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create organization %s", input.Name)
-		return nil, err
+		graphql.AddErrorf(ctx, "Failed to create organization")
+		return nil, nil
 	}
-	return mapper.MapEntityToOrganization(createdOrganizationEntity), nil
+	time.Sleep(100 * time.Millisecond)
+	if len(input.Domains) > 0 {
+		for _, domain := range input.Domains {
+			if domain != "" {
+				_, err = r.Clients.OrganizationClient.LinkDomainToOrganization(ctx, &orggrpc.LinkDomainToOrganizationGrpcRequest{
+					Tenant:         common.GetTenantFromContext(ctx),
+					UserId:         common.GetUserIdFromContext(ctx),
+					OrganizationId: response.Id,
+					Domain:         domain,
+				})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					r.log.Errorf("Failed to link domain %s to organization %s", domain, response.Id)
+				}
+			}
+		}
+	}
+
+	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, response.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization details")
+		return &model.Organization{
+			ID: response.Id,
+		}, err
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
 // OrganizationUpdate is the resolver for the organization_Update field.
@@ -51,19 +83,40 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	organizationEntity := mapper.MapOrganizationUpdateInputToEntity(&input)
-
-	updatedOrganizationEntity, err := r.Services.OrganizationService.Update(ctx,
-		&service.OrganizationUpdateData{
-			Organization: organizationEntity,
-			Domains:      input.Domains,
-		})
+	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
+		Tenant:            common.GetTenantFromContext(ctx),
+		UserId:            common.GetUserIdFromContext(ctx),
+		Id:                input.ID,
+		Description:       utils.IfNotNilString(input.Description),
+		Website:           utils.IfNotNilString(input.Website),
+		Industry:          utils.IfNotNilString(input.Industry),
+		SubIndustry:       utils.IfNotNilString(input.SubIndustry),
+		IndustryGroup:     utils.IfNotNilString(input.IndustryGroup),
+		IsPublic:          utils.IfNotNilBool(input.IsPublic),
+		Market:            mapper.MapMarketFromModel(input.Market),
+		Employees:         utils.IfNotNilInt64(input.Employees),
+		TargetAudience:    utils.IfNotNilString(input.TargetAudience),
+		ValueProposition:  utils.IfNotNilString(input.ValueProposition),
+		LastFundingAmount: utils.IfNotNilString(input.LastFundingAmount),
+		LastFundingRound:  mapper.MapFundingRoundFromModel(input.LastFundingRound),
+		SourceOfTruth:     string(entity.DataSourceOpenline),
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update organization %s", input.ID)
-		return nil, err
+		graphql.AddErrorf(ctx, "Failed to create organization")
+		return nil, nil
 	}
-	return mapper.MapEntityToOrganization(updatedOrganizationEntity), nil
+	time.Sleep(100 * time.Millisecond)
+
+	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, response.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization details")
+		return &model.Organization{
+			ID: response.Id,
+		}, err
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
 // OrganizationUpdateRenewalLikelihoodAsync is the resolver for the organization_UpdateRenewalLikelihoodAsync field.
@@ -73,20 +126,20 @@ func (r *mutationResolver) OrganizationUpdateRenewalLikelihoodAsync(ctx context.
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	var likelihood = organization_grpc_service.Likelihood_NONE_LIKELIHOOD
+	var likelihood = orggrpc.Likelihood_NONE_LIKELIHOOD
 	if input.Probability != nil {
 		switch *input.Probability {
 		case model.RenewalLikelihoodProbabilityHigh:
-			likelihood = organization_grpc_service.Likelihood_HIGH
+			likelihood = orggrpc.Likelihood_HIGH
 		case model.RenewalLikelihoodProbabilityMedium:
-			likelihood = organization_grpc_service.Likelihood_MEDIUM
+			likelihood = orggrpc.Likelihood_MEDIUM
 		case model.RenewalLikelihoodProbabilityLow:
-			likelihood = organization_grpc_service.Likelihood_LOW
+			likelihood = orggrpc.Likelihood_LOW
 		case model.RenewalLikelihoodProbabilityZero:
-			likelihood = organization_grpc_service.Likelihood_ZERO
+			likelihood = orggrpc.Likelihood_ZERO
 		}
 	}
-	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalLikelihood(ctx, &organization_grpc_service.OrganizationRenewalLikelihoodRequest{
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalLikelihood(ctx, &orggrpc.OrganizationRenewalLikelihoodRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		Comment:        input.Comment,
@@ -109,7 +162,7 @@ func (r *mutationResolver) OrganizationUpdateRenewalForecastAsync(ctx context.Co
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalForecast(ctx, &organization_grpc_service.OrganizationRenewalForecastRequest{
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalForecast(ctx, &orggrpc.OrganizationRenewalForecastRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		Comment:        input.Comment,
@@ -132,7 +185,7 @@ func (r *mutationResolver) OrganizationUpdateBillingDetailsAsync(ctx context.Con
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	requestObj := organization_grpc_service.OrganizationBillingDetailsRequest{
+	requestObj := orggrpc.OrganizationBillingDetailsRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		UserId:         common.GetUserIdFromContext(ctx),

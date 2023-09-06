@@ -52,7 +52,7 @@ func InitTestDB() (testcontainers.Container, *gorm.DB, *sql.DB) {
 
 	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ", host, port.Port(), "testdb", "postgres", "postgres")
 	var gormDb *gorm.DB
-	maxRetries := 3
+	maxRetries := 5
 	for i := 0; i < maxRetries; i++ {
 		gormDb, err = gorm.Open(postgres.Open(connectString), &gorm.Config{
 			AllowGlobalUpdate: true,

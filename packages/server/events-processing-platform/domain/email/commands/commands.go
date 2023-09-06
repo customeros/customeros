@@ -46,7 +46,7 @@ type EmailValidatedCommand struct {
 
 func NewUpsertEmailCommand(objectID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertEmailCommand {
 	return &UpsertEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
 		RawEmail:    rawEmail,
 		Source: models.Source{
 			Source:        source,
@@ -60,14 +60,14 @@ func NewUpsertEmailCommand(objectID, tenant, rawEmail, source, sourceOfTruth, ap
 
 func NewFailedEmailValidationCommand(objectID, tenant, validationError string) *FailedEmailValidationCommand {
 	return &FailedEmailValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant, ""),
 		ValidationError: validationError,
 	}
 }
 
 func NewEmailValidatedCommand(objectID, tenant, rawEmail, isReachable, validationError, domain, username, emailAddress string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
 	return &EmailValidatedCommand{
-		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant, ""),
 		IsReachable:     isReachable,
 		RawEmail:        rawEmail,
 		ValidationError: validationError,

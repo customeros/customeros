@@ -22,7 +22,7 @@ type ReplaceSummaryCommand struct {
 
 func NewReplaceSummaryCommand(tenant, interactionEventId, summary, contentType string, updatedAt *time.Time) *ReplaceSummaryCommand {
 	return &ReplaceSummaryCommand{
-		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant),
+		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant, ""),
 		Summary:     summary,
 		ContentType: contentType,
 		UpdatedAt:   updatedAt,
