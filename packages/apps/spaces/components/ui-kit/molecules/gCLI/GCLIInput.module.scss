@@ -47,10 +47,12 @@
 
 .selected_term:hover {
   cursor: pointer;
-  background: var(--gray-100);
+  background: var(--chakra-colors-primary-50);
+  color: var(--chakra-colors-primary-800);
 }
 .selected_term_highlighted {
-  background: var(--gray-100);
+  background: var(--chakra-colors-primary-50);
+  color: var(--chakra-colors-primary-800);
 }
 
 .gray {
@@ -73,14 +75,20 @@
 }
 .search_button {
   display: flex;
-  background: var(--chakra-colors-blue-200);
+  background: var(--chakra-colors-primary-50);
+  border:1px solid var(--chakra-colors-primary-200);;
   border-radius: 12px;
   align-items: center;
   align-content: center;
-  border: none;
   padding: 6px 12px;
-  color: var(--chakra-colors-gray-700);
+  color: var(--chakra-colors-primary-700);
   margin-right: 5px;
+  font-weight: 500;
+
+  &:hover,
+  &:focus {
+    background: var(--chakra-colors-primary-100);
+  }
 }
 
 .search_button:hover {

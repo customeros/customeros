@@ -1,1 +1,0 @@
-export { OrganizationOwner } from './OrganizationOwner';

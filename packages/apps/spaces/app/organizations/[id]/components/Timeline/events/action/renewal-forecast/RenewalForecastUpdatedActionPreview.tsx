@@ -2,9 +2,7 @@ import React from 'react';
 import { Action } from '@graphql/types';
 import { Card, CardFooter } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { TimelineEventPreviewHeader } from '../../../preview/header/TimelineEventPreviewHeader';
 import { useTimelineEventPreviewContext } from '../../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { CardBody } from '@chakra-ui/card';
@@ -21,22 +19,15 @@ export const RenewalForecastUpdatedActionPreview = () => {
   const event = modalContent as Action;
   const metadata = getMetadata(event?.metadata);
   const forecastedAmount = event.content && getCurrencyString(event.content);
-  const [_, author] = event.content?.split('by ') ?? [];
   const isCreatedBySystem = event.content?.includes('default');
   const colorScheme =
     forecastedAmount && isCreatedBySystem
       ? getFeatureIconColor(metadata.likelihood)
       : 'gray';
 
-  const getForecastMetaInfo = () => {
-    if (isCreatedBySystem) {
-      return 'Calculated from billing amount';
-    }
+  const [preText, postText] = event.content?.split('by ') ?? [];
+  const authorText = isCreatedBySystem ? event.content : `${preText} by`;
 
-    return `Set by ${author} ${DateTimeUtils.timeAgo(modalContent?.createdAt, {
-      addSuffix: true,
-    })}`;
-  };
   return (
     <>
       <TimelineEventPreviewHeader
@@ -59,34 +50,21 @@ export const RenewalForecastUpdatedActionPreview = () => {
             <FeaturedIcon size='md' minW='10' colorScheme={colorScheme}>
               <Icons.Calculator />
             </FeaturedIcon>
-            <Flex
-              ml='5'
-              w='full'
-              align='center'
-              columnGap={4}
-              justify='space-between'
+            <Text
+              my={1}
+              maxW='500px'
+              noOfLines={2}
+              ml={2}
+              fontSize='sm'
+              color='gray.700'
             >
-              <Flex flexDir='column'>
-                <Flex align='center'>
-                  <Heading
-                    size='sm'
-                    whiteSpace='nowrap'
-                    fontWeight='semibold'
-                    color='gray.700'
-                    mr={2}
-                  >
-                    Renewal forecast
-                  </Heading>
-                </Flex>
-                <Text fontSize='xs' color='gray.500'>
-                  {getForecastMetaInfo()}
+              {authorText}
+              {!isCreatedBySystem && (
+                <Text color='gray.500' as='span' ml={1}>
+                  {postText}
                 </Text>
-              </Flex>
-
-              <Heading fontSize='2xl' color='gray.700'>
-                {forecastedAmount}
-              </Heading>
-            </Flex>
+              )}
+            </Text>
           </CardBody>
           {!isCreatedBySystem && forecastedAmount && (
             <CardFooter p='0' as={Flex} flexDir='column'>

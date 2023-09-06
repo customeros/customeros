@@ -5,9 +5,6 @@ import {
   useDashboardView_OrganizationsQuery,
 } from './types';
 import { Filter, InputMaybe, SortBy } from '@spaces/graphql';
-import { useRecoilValue } from 'recoil';
-import { finderOrganizationsSearchTerms } from '../../state';
-import { mapGCliSearchTermsToFilterList } from '@spaces/utils/mapGCliSearchTerms';
 
 interface Result {
   data: Array<Organization> | null;
@@ -33,28 +30,17 @@ export const useFinderOrganizationTableData = (
     },
     where: undefined as InputMaybe<Filter> | undefined,
   };
-  const organizationsSearchTerms = useRecoilValue(
-    finderOrganizationsSearchTerms,
-  );
-
   const { data, loading, error, refetch, variables, fetchMore, networkStatus } =
     useDashboardView_OrganizationsQuery({
       fetchPolicy: 'network-only',
       notifyOnNetworkStatusChange: true,
       variables: {
         pagination: initialVariables.pagination,
-        where:
-          !organizationsSearchTerms.length && !filters?.length
-            ? (initialVariables.where as Filter)
-            : ({
-                AND: (organizationsSearchTerms.length
-                  ? mapGCliSearchTermsToFilterList(
-                      organizationsSearchTerms,
-                      'ORGANIZATION',
-                    )
-                  : []
-                ).concat(filters || []),
-              } as Filter),
+        where: !filters?.length
+          ? (initialVariables.where as Filter)
+          : ({
+              AND: filters,
+            } as Filter),
         sort: sortBy ?? undefined,
       },
     });

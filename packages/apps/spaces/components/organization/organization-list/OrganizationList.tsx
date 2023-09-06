@@ -33,15 +33,13 @@ import {
   type SortBy,
 } from '@graphql/types';
 
-import { useRecoilState } from 'recoil';
-import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '@spaces/utils/mapGCliSearchTerms';
 import { useRouter } from 'next/router';
 
 import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { Text } from '@chakra-ui/react';
-import { useReadLocalStorage } from 'usehooks-ts';
+import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 
@@ -86,19 +84,21 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   const { onArchiveOrganization } = useArchiveOrganizations();
   const { onCreateOrganization } = useCreateOrganization();
 
-  const [organizationsSearchTerms, setOrganizationsSearchTerms] =
-    useRecoilState(finderOrganizationsSearchTerms);
+  const [organizationFilters, setOrganizationFilters] = useLocalStorage(
+    `customeros-${label}-list-filters`,
+    preFilters,
+  );
   const { data, loading, fetchMore, variables, totalElements } =
-    useFinderOrganizationTableData(preFilters, sortBy);
+    useFinderOrganizationTableData(organizationFilters, sortBy);
 
   const handleFilterResults = (searchTerms: any[]) => {
-    setOrganizationsSearchTerms(searchTerms);
     setPagination(1);
 
     let filters = mapGCliSearchTermsToFilterList(searchTerms, 'ORGANIZATION');
     if (preFilters) {
       filters = [...filters, ...preFilters];
     }
+    setOrganizationFilters(filters);
     fetchMore({
       variables: {
         pagination: {
@@ -182,13 +182,32 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     }
   }, [gcliLoading, gcliData]);
 
+  const existingTerms = useMemo(() => {
+    return organizationFilters?.reduce(
+      (
+        acc: { type: string; display: string; highlighted: boolean }[],
+        item,
+      ) => {
+        if (item?.filter?.property === 'ORGANIZATION') {
+          acc.push({
+            type: 'GENERIC',
+            display: item?.filter?.value,
+            highlighted: false,
+          });
+        }
+        return acc;
+      },
+      [],
+    );
+  }, [organizationFilters]);
+
   return (
     <>
       <div className={styles.inputSection}>
         <GCLIContextProvider
           label={label}
           icon={icon}
-          existingTerms={organizationsSearchTerms}
+          existingTerms={existingTerms}
           loadSuggestions={(searchTerm: string) => {
             refetch && refetch({ limit: 5, keyword: searchTerm });
           }}
