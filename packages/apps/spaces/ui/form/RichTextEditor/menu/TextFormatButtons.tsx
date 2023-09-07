@@ -3,20 +3,12 @@ import { Flex } from '@chakra-ui/react';
 import Bold from '@ui/media/icons/Bold';
 import Italic from '@ui/media/icons/Italic';
 import Strikethrough from '@ui/media/icons/Strikethrough';
-import Underline from '@ui/media/icons/Underline';
-import React from 'react';
 import { ToolbarButton } from './ToolbarButton';
 import Heading from '@ui/media/icons/Heading';
 
 export const TextFormatButtons = () => {
-  const {
-    toggleBold,
-    toggleItalic,
-    toggleHeading,
-    toggleStrike,
-    toggleUnderline,
-    focus,
-  } = useCommands();
+  const { toggleBold, toggleItalic, toggleHeading, toggleStrike, focus } =
+    useCommands();
   const active = useActive();
   return (
     <Flex gap={2}>
@@ -55,16 +47,6 @@ export const TextFormatButtons = () => {
         }}
         isActive={active.heading()}
         icon={<Heading color='inherit' />}
-      />
-
-      <ToolbarButton
-        label='Underline'
-        onClick={() => {
-          toggleUnderline();
-          focus();
-        }}
-        isActive={active.underline()}
-        icon={<Underline color='inherit' />}
       />
     </Flex>
   );

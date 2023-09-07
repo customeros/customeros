@@ -23,18 +23,24 @@ export const TimelineEventPreviewHeader: React.FC<
   const [_, copy] = useCopyToClipboard();
   return (
     <CardHeader
-      pb={1}
+      pb='1'
+      px='6'
+      pt='4'
       position='sticky'
       background='white'
       top={0}
       borderRadius='xl'
       onClick={(e) => e.stopPropagation()}
     >
-      <Flex direction='row' justifyContent='space-between' alignItems='center'>
+      <Flex
+        direction='row'
+        justifyContent='space-between'
+        alignItems='flex-start'
+      >
         <div>
-          <Heading size='sm' mb={2}>
+          <Text fontSize='lg' fontWeight='semibold'>
             {name}
-          </Heading>
+          </Text>
           <Text size='2xs' color='gray.500' fontSize='12px'>
             {DateTimeUtils.format(date, DateTimeUtils.dateWithHour)}
           </Text>

@@ -20,7 +20,7 @@ export const ListButtons = () => {
         icon={<OrderedList color='inherit' />}
       />
       <ToolbarButton
-        label='Bullet list'
+        label='Bulleted list'
         onClick={() => {
           toggleBulletList();
           focus();
