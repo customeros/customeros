@@ -178,8 +178,8 @@ func bookingRescheduledHandler(cosService s.CustomerOSService, request model.Boo
 		}
 		input := cosModel.MeetingUpdateInput{
 			Name:           &request.Payload.Title,
-			StartedAt:      &request.Payload.RescheduleStartTime,
-			EndedAt:        &request.Payload.RescheduleEndTime,
+			StartedAt:      &request.Payload.StartTime,
+			EndedAt:        &request.Payload.EndTime,
 			AppSource:      &appSource,
 			ExternalSystem: &externalSystem,
 		}
