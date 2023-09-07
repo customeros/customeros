@@ -47,11 +47,13 @@ import EmptyState from './EmptyState';
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
   label: string;
+  filterLabel: string;
   icon: React.ReactNode;
 }
 
 export const OrganizationList: React.FC<OrganizationListProps> = ({
   preFilters,
+  filterLabel,
   label,
   icon,
 }: OrganizationListProps) => {
@@ -85,21 +87,24 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   const { onArchiveOrganization } = useArchiveOrganizations();
   const { onCreateOrganization } = useCreateOrganization();
 
-  const [organizationFilters, setOrganizationFilters] = useLocalStorage(
-    `customeros-${label}-list-filters`,
-    preFilters,
-  );
+  const [organizationFilters, setOrganizationFilters] = useLocalStorage<
+    Filter[]
+  >(`customeros-${filterLabel}-list-filters`, []);
   const { data, loading, fetchMore, variables, totalElements } =
-    useFinderOrganizationTableData(organizationFilters, sortBy);
-
+    useFinderOrganizationTableData(
+      preFilters
+        ? [...organizationFilters, ...preFilters]
+        : organizationFilters,
+      sortBy,
+    );
   const handleFilterResults = (searchTerms: any[]) => {
     setPagination(1);
 
     let filters = mapGCliSearchTermsToFilterList(searchTerms, 'ORGANIZATION');
+    setOrganizationFilters(filters);
     if (preFilters) {
       filters = [...filters, ...preFilters];
     }
-    setOrganizationFilters(filters);
     fetchMore({
       variables: {
         pagination: {

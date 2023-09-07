@@ -15,6 +15,7 @@ const OrganizationsPage: NextPage = () => {
         <OrganizationList
           icon={<Company height={24} width={24} style={{ scale: '0.8' }} />}
           label={'Organizations'}
+          filterLabel={'organizations'}
         />
       </PageContentLayout>
     </>

@@ -3,11 +3,9 @@ import React from 'react';
 import { OrganizationList } from '@spaces/organization/organization-list/OrganizationList';
 import Head from 'next/head';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { userData } from '../../state';
+import { useRecoilValue } from 'recoil';
 import { Filter } from '@spaces/graphql';
 import { globalCacheData } from '../../state/globalCache';
-import Customer from '@spaces/atoms/icons/Customer';
 import { Portfolio } from '@spaces/atoms/icons';
 
 const MyPortfolioPage: NextPage = () => {
@@ -33,6 +31,7 @@ const MyPortfolioPage: NextPage = () => {
         <OrganizationList
           icon={<Portfolio height={24} width={24} style={{ scale: '0.8' }} />}
           label={label}
+          filterLabel={'portfolio'}
           preFilters={preFilters}
         />
       </PageContentLayout>
