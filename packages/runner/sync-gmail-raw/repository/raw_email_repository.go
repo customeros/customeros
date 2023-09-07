@@ -4,11 +4,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"time"
 )
 
 type RawEmailRepository interface {
 	EmailExistsByMessageId(externalSystem, tenant, usernameSource, messageId string) (bool, error)
-	Store(externalSystem, tenantName, usernameSource, messageId, rawEmail string) error
+	Store(externalSystem, tenantName, usernameSource, providerMessageId, messageId, rawEmail string) error
 }
 
 type rawEmailRepositoryImpl struct {
@@ -31,7 +32,7 @@ func (repo *rawEmailRepositoryImpl) EmailExistsByMessageId(externalSystem, tenan
 	return result > 0, nil
 }
 
-func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenantName, usernameSource, messageId, rawEmail string) error {
+func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenantName, usernameSource, providerMessageId, messageId, rawEmail string) error {
 	result := entity.RawEmail{}
 	err := repo.gormDb.Find(&result, "external_system = ? AND tenant_name = ? AND username_source = ? AND message_id = ?", externalSystem, tenantName, usernameSource, messageId).Error
 
@@ -45,10 +46,13 @@ func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenantName, usernameSo
 		return nil
 	}
 
+	result.ProviderMessageId = providerMessageId
+	result.MessageId = messageId
+
+	result.CreatedAt = time.Now().UTC()
 	result.ExternalSystem = externalSystem
 	result.TenantName = tenantName
 	result.UsernameSource = usernameSource
-	result.MessageId = messageId
 	result.Data = rawEmail
 	result.SentToEventStoreState = "PENDING"
 
