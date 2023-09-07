@@ -31,13 +31,16 @@ func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repos
 	}
 }
 
-func (ds *DomainScraper) Scrape(domain, tenant, organizationId string) (*WebscrapeResponseV1, error) {
-	domainUrl := "https://" + domain
+func (ds *DomainScraper) Scrape(domainOrWebsite, tenant, organizationId string) (*WebscrapeResponseV1, error) {
+	domainUrl := strings.TrimSpace(domainOrWebsite)
+	if !strings.HasPrefix(domainUrl, "http") && !strings.HasPrefix(domainUrl, "www") {
+		domainUrl = fmt.Sprintf("https://%s", domainUrl)
+	}
 	jsonStruct := jsonStructure()
 
 	html, err := ds.getHtml(domainUrl)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to getHtml domain")
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml domain: %s", domainUrl))
 	}
 	socialLinks, err := ds.extractSocialLinks(html)
 	if err != nil {
