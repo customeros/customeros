@@ -10,6 +10,7 @@ import (
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 	"net/http"
@@ -38,6 +39,7 @@ func AddCalComRoutes(rg *gin.RouterGroup, cosService s.CustomerOSService, secret
 			})
 			return
 		}
+
 		calcom := string(commonService.CALCOM)
 		hSignature := ctx.GetHeader(commonService.CalComHeader)
 
@@ -53,7 +55,7 @@ func AddCalComRoutes(rg *gin.RouterGroup, cosService s.CustomerOSService, secret
 				})
 				return
 			}
-
+			logrus.Info("calcom request body: ", request)
 			meetingId, err := bookingCreatedHandler(cosService, request, body, secretsRepo, hSignature, calcom, appSource)
 			if err != nil {
 				log.Printf("unable to create meeting: %v", err.Error())
@@ -77,6 +79,7 @@ func AddCalComRoutes(rg *gin.RouterGroup, cosService s.CustomerOSService, secret
 				})
 				return
 			}
+			logrus.Info("calcom request body: ", request)
 			meetingId, err := bookingRescheduledHandler(cosService, request, body, secretsRepo, hSignature, calcom, appSource)
 			if err != nil {
 				log.Printf("unable to update meeting: %v", err.Error())
@@ -100,6 +103,7 @@ func AddCalComRoutes(rg *gin.RouterGroup, cosService s.CustomerOSService, secret
 				})
 				return
 			}
+			logrus.Info("calcom request body: ", request)
 			handler, err := bookingCanceledHandler(cosService, request, body, secretsRepo, hSignature, calcom)
 			if err != nil {
 				log.Printf("unable to cancel meeting: %v", err.Error())
@@ -178,8 +182,8 @@ func bookingRescheduledHandler(cosService s.CustomerOSService, request model.Boo
 		}
 		input := cosModel.MeetingUpdateInput{
 			Name:           &request.Payload.Title,
-			StartedAt:      &request.Payload.StartTime,
-			EndedAt:        &request.Payload.EndTime,
+			StartedAt:      &request.Payload.RescheduleStartTime,
+			EndedAt:        &request.Payload.RescheduleEndTime,
 			AppSource:      &appSource,
 			ExternalSystem: &externalSystem,
 		}
