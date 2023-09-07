@@ -27,7 +27,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-
+	var err error
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
 		Tenant:        common.GetTenantFromContext(ctx),
 		UserId:        common.GetUserIdFromContext(ctx),
@@ -49,7 +49,6 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		graphql.AddErrorf(ctx, "Failed to create organization")
 		return nil, nil
 	}
-	time.Sleep(200 * time.Millisecond)
 	if len(input.Domains) > 0 {
 		for _, domain := range input.Domains {
 			if domain != "" {
@@ -67,14 +66,22 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		}
 	}
 
-	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, response.Id)
+	maxRetry := 3
+	err = nil
+	var organizationEntity *entity.OrganizationEntity
+	for i := 0; i < maxRetry; i++ {
+		time.Sleep(200 * time.Millisecond)
+		organizationEntity, err = r.Services.OrganizationService.GetOrganizationById(ctx, response.Id)
+		if organizationEntity != nil && err == nil {
+			return mapper.MapEntityToOrganization(organizationEntity), nil
+		}
+	}
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return &model.Organization{
-			ID: response.Id,
-		}, err
 	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
+	return &model.Organization{
+		ID: response.Id,
+	}, err
 }
 
 // OrganizationUpdate is the resolver for the organization_Update field.
