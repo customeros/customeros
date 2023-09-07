@@ -217,7 +217,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   });
 
   return (
-    <div ref={cardRef}>
+    <Flex ref={cardRef} flexDir='column' maxH='calc(100vh - 4rem - 16px)'>
       <TimelineEventPreviewHeader
         //@ts-expect-error alias
         date={event.date}
@@ -226,12 +226,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         copyLabel='Copy link to this email'
       />
 
-      <CardBody
-        mt={0}
-        pb={6}
-        overflow='auto'
-        maxHeight='calc(100vh - 3rem - 32px - 78px - 153px)'
-      >
+      <CardBody mt={0} pb={6} overflow='auto'>
         <Flex direction='row' justify='space-between' mb={3}>
           <Flex
             direction='column'
@@ -287,6 +282,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         onConfirm={handleExitEditorAndCleanData}
         isLoading={false}
       />
-    </div>
+    </Flex>
   );
 };
