@@ -1,0 +1,121 @@
+---
+title: Salesforce Integration
+description: Overview of Salesforce Integration for CustomerOS
+layout: ../../../layouts/docs.astro
+lang: en
+isMdx: true
+---
+
+import Callout from "../../../components/docs/callout.tsx";
+
+# Salesforce
+
+This guide will take you through how to connect your customer data living in [Salesforce][salesforce] with CustomerOS. CustomerOS will sync all of the selected data via a Salesforce Connected App, which we will run through creating and connecting to CustomerOS in this guide.
+ 
+<Callout type="info">
+To create an app in Salesforce, you'll need Salesforce admin privileges. 
+</Callout>
+
+### Guide to linking your Salesforce account
+
+1. As a Salesforce Admin log into your account to create the Connected App that will connect to CustomerOS.
+
+2. In the drop-down list for account (found in the upper-right corner), select Setup.
+
+![Salesforce Setup button](/images/integrations/salesforce/salesforce-setup.png)
+
+3. In the left-hand pane, navigate to Apps > App Manager.
+
+![Salesforce App Manager](/images/integrations/salesforce/salesforce-app-manager.png)
+
+4. Create the app by clicking on the New Connected App button (in the upper right corner).
+
+![Salesforce New Connected App](/images/integrations/salesforce/salesforce-new-connected-app.png)
+
+5. On the New Connected App page, fill the following required fields under Basic Information:
+
+Connected App Name: ```CustomerOS```
+API Name: ```CustomerOS```
+Contact Email: ```Your own email```
+
+![Salesforce App Basic Information](/images/integrations/salesforce/salesforce-app-basic-information.png)
+
+2. And then in the section titled API (Enable OAuth Settings) tick ```Enable OAuth Settings``` and set the following:
+
+Callback URL: ```https://login.salesforce.com/```
+Selected OAuth Scopes:
+- Manage user data via APIs (api)
+- Manage user data via Web browsers (web)
+- Perform requests at any time (refresh_token, offline_access)
+
+These scopes will allow us to generate the access information required for CustomerOS to connect and sync with your Salesforce data.
+
+![OAuth settings](/images/integrations/salesforce/salesforce-app-oauth-settings.png)
+
+3. Return to the app manager screen and click on the dropdown on the newly created CustomerOS Connected App and select view.
+
+**Note:** Be careful to return to the Manage App screen, and not the Manage Connected App screen!
+
+![Link Salesforce Powerup](/images/integrations/salesforce/salesforce-customeros-app.png)
+
+4. Press the Manage Consumer Details on the App view page. This will open a new page and 
+
+![Generate Salesforce API key](/images/integrations/salesforce/salesforce-manage-consumer-details.png)
+
+5. This will allow you to get the Consumer Key and Consumer Secret for the CustomerOS Connected App. Keep these secret!
+
+The Consumer Key is also known as the Client ID, and the Consumer Secret is also known as the Client Secret for the purposes of the following steps.
+
+![Generate Salesforce API token](/images/integrations/salesforce/salesforce-consumer-details.png)
+
+6. Next we will generate the Salesforce API code required to generate a refresh token required for CustomerOS to continuously sync your customer data as it is updated.
+
+go to the below URL updating ```<YOUR_INSTANCE>``` and ```<CONSUMER_KEY>``` accordingly. ```<YOUR_INSTANCE>``` can be found at the start of your Salesforce URL when you are logged in. For example it could look similar to ```enterprise-efficiency-518```.
+
+**Note:** You may need to also update ```salesforce.com``` if you use a different URL to access Salesforce. This could be something like ```lightning.force.com```
+
+```https://<YOUR_INSTANCE>.salesforce.com/services/oauth2/authorize?response_type=code&client_id=<CONSUMER_KEY>&redirect_uri=https://login.salesforce.com/```
+
+You should then be navigated to an approval page to allow access for the CustomerOS app to your Salesforce account. You should approve this and then copy the URL:
+
+![CustomerOS's Salesforce Code](/images/integrations/salesforce/salesforce-code.png)
+
+Specifically we are interested in the part of the URL after ```code=``` - this is your CustomerOS Code we will use to generate the refresh token.
+
+7. Finally to get the refresh token, we need to either run the following in a terminal, or use Postman.
+
+As previously update the capitalized parts of the URL with your own data. You again may need to update ```salesforce.com``` to whatever you see when you log into Salesforce.
+
+```
+curl -X POST "https://<YOUR_INSTANCE>.salesforce.com/services/oauth2/token?code=<CODE>&grant_type=authorization_code&client_id=<CONSUMER_KEY>&client_secret=<CONSUMER_SECRET>&redirect_uri=https://login.salesforce.com/" -L
+```
+
+This will return something that looks like the following, copy the refresh_token field!
+
+```
+{
+"access_token":"00D2v000001XKxi__SOMETHING",
+"refresh_token":"5Aep861dlMxAL.LhVTuPRa__SOMETHING",
+"signature":"MK/YGMNQhPSSnKtYicXlaU__SOMETHING",
+"scope":"refresh_token web api",
+"instance_url":"https://ap15.salesforce.com",
+"id":"https://login.salesforce.com/id/00D2vKxiEAG/0045Q09vAAL",
+"token_type":"Bearer",
+"issued_at":"1570030000198"
+}
+```
+
+8. Finally you can input your CONSUMER_KEY, CONSUMER_SECRET and refresh_token into your CustomerOS integration page found in the Settings.
+
+### What happens to this data?
+
+- CustomerOS collects your Salesforce data and stores this within your customer graph for easy manipulation into useful aggregations and views
+  - This data includes contacts, interactions, companies, deals and more!
+- Once stored in CustomerOS, this data is linked to all other customer data from other systems and inputs
+  - This allows you to see the full picture about your customer without having to load data from one place to another!
+
+{/* References */}
+
+[salesforce]: https://salesforce.com/
+[customeros]: https://app.customeros.ai
+[help]: mailto:help@openline.ai
