@@ -3635,6 +3635,7 @@ span.slack_code {
 .remirror-theme {
   /* The following makes it easier to measure components within the editor. */
   box-sizing: border-box;
+  z-index: 5;
 }
 
 .remirror-theme *,
@@ -3754,6 +3755,11 @@ span.slack_code {
   overflow:auto;
 }
 
+.customeros-logger .remirror-editor,
+.customeros-logger .remirror-is-empty {
+  min-height: 65px;
+}
+
 .remirror-theme .ProseMirror p,
 .remirror-theme .ProseMirror h1,
 .remirror-theme .ProseMirror h2,
@@ -3852,4 +3858,79 @@ a {
 
 .slack-container {
   white-space-collapse: break-spaces
+}
+.ProseMirror-widget,
+.remirror-positioner {
+  //background: blue;
+}
+.remirror-floating-popover {
+  z-index: 999;
+  transform: unset;
+  top: 23px;
+  //background: blue;
+
+}
+
+.customeros-tag {
+  color: var(--chakra-colors-gray-700);
+  font-weight: var(--chakra-fontWeights-medium);
+  &:before {
+    content: '#';
+  }
+}
+
+.floating-menu {
+  --menu-bg: #fff;
+  --menu-shadow: var(--chakra-shadows-sm);
+  color: inherit;
+  min-width: 100%;
+  z-index: 1;
+  border-radius: var(--chakra-radii-lg);
+  border-width: 1px;
+  background: var(--menu-bg);
+  box-shadow: var(--chakra-shadows-md);
+  max-height: 300px;
+  overflow-y: auto;
+  --input-border-radius: var(--chakra-radii-md);
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--chakra-space-2);
+  border-color: var(--chakra-colors-gray-200);
+}
+
+.floating-menu-option {
+  -webkit-padding-start: var(--chakra-space-3);
+  padding-inline-start: var(--chakra-space-3);
+  -webkit-padding-end: var(--chakra-space-3);
+  padding-inline-end: var(--chakra-space-3);
+  transition-property: var(--chakra-transition-property-background);
+  transition-duration: var(--chakra-transition-duration-ultra-fast);
+  transition-timing-function: var(--chakra-transition-easing-ease-in);
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  width: 100%;
+  text-align: start;
+  font-size: var(--chakra-fontSizes-md);
+  padding: 0.4rem 0.8rem;
+  --menu-bg: var(--chakra-colors-gray-100);
+  color: var(--chakra-colors-gray-700);
+  margin-top: 2px;
+  margin-bottom: 2px;
+  border-radius: var(--chakra-radii-md);
+
+  &:focus,
+  &.highlighted {
+    background: var(--chakra-colors-primary-50);
+    box-shadow: var(--chakra-shadows-menuOptionsFocus);
+  }
+  &:hover,
+  &.hovered {
+    background: var(--chakra-colors-gray-100);
+  }
 }

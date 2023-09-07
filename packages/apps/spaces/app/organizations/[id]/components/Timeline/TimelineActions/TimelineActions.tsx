@@ -15,8 +15,10 @@ import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useDisclosure } from '@ui/utils';
-import { Icon, useRemirror } from '@remirror/react';
+import { useRemirror } from '@remirror/react';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
+import { Logger } from '@organization/components/Timeline/TimelineActions/logger/Logger';
+import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 
 interface TimelineActionsProps {
   onScrollBottom: () => void;
@@ -28,7 +30,8 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   invalidateQuery,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [show, setShow] = React.useState(false);
+  const [showEmailEditor, setShowEmailEditor] = React.useState(false);
+  const [showLogger, setShowLogger] = React.useState(false);
   const [isSending, setIsSending] = useState(false);
   const virtuoso = useRef(null);
   const searchParams = useSearchParams();
@@ -45,10 +48,11 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
     content: '',
   });
   useEffect(() => {
-    if (show) {
+    if (showEmailEditor || showLogger) {
       onScrollBottom();
     }
-  }, [show]);
+  }, [showEmailEditor, showLogger]);
+
   const { state, reset } = useForm<ComposeEmailDtoI>({
     formId,
     defaultValues,
@@ -62,7 +66,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
     invalidateQuery();
     setIsSending(false);
     reset();
-    setShow(false);
+    setShowEmailEditor(false);
   };
   const handleEmailSendError = () => {
     setIsSending(false);
@@ -92,29 +96,36 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   const handleExitEditorAndCleanData = () => {
     reset();
     onClose();
-    setShow(false);
+    setShowEmailEditor(false);
   };
-  const handleCloseEditor = () => {
+  const handleCloseEmailEditor = () => {
     const isFormPristine = Object.values(state.fields)?.every(
       (e) => e.meta.pristine,
     );
     const isFormEmpty = Object.values(state.values)?.every((e) => !e.length);
 
-    const showConfirmationDialog = !isFormPristine && !isFormEmpty;
-    if (showConfirmationDialog) {
+    const showEmailEditorConfirmationDialog = !isFormPristine && !isFormEmpty;
+    if (showEmailEditorConfirmationDialog) {
       onOpen();
     } else {
       handleExitEditorAndCleanData();
     }
   };
 
-  const handleToggle = () => {
-    if (!show) {
-      setShow(true);
+  const handleToggleEmailEditor = () => {
+    if (!showEmailEditor) {
+      setShowLogger(false);
+      setShowEmailEditor(true);
     } else {
-      handleCloseEditor();
+      handleCloseEmailEditor();
     }
   };
+
+  const handleToggleLogger = () => {
+    setShowEmailEditor(false);
+    setShowLogger((prevState) => !prevState);
+  };
+
   return (
     <Box bg='gray.25'>
       <ButtonGroup
@@ -131,23 +142,32 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
       >
         <Button
           variant='outline'
-          onClick={() => handleToggle()}
+          onClick={() => handleToggleEmailEditor()}
           borderRadius='3xl'
           size='xs'
           leftIcon={<Icons.Mail1 boxSize='4' />}
         >
           Email
         </Button>
+        <Button
+          variant='outline'
+          onClick={handleToggleLogger}
+          borderRadius='3xl'
+          size='xs'
+          leftIcon={<MessageChatSquare />}
+        >
+          Log
+        </Button>
       </ButtonGroup>
       <Box
         bg={'#F9F9FB'}
         borderTop='1px dashed'
         borderTopColor='gray.200'
-        pt={show ? 6 : 0}
-        pb={show ? 2 : 8}
+        pt={showEmailEditor || showLogger ? 6 : 0}
+        pb={showEmailEditor || showLogger ? 2 : 8}
         mt={-4}
       >
-        {show && (
+        {showEmailEditor && (
           <SlideFade in={true}>
             <Box
               ref={virtuoso}
@@ -168,6 +188,22 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
                 isSending={isSending}
                 remirrorProps={remirrorProps}
               />
+            </Box>
+          </SlideFade>
+        )}
+        {showLogger && (
+          <SlideFade in={true}>
+            <Box
+              ref={virtuoso}
+              borderRadius={'md'}
+              boxShadow={'lg'}
+              m={6}
+              mt={2}
+              p={6}
+              bg={'white'}
+              border='1px solid var(--gray-100, #F2F4F7)'
+            >
+              <Logger />
             </Box>
           </SlideFade>
         )}

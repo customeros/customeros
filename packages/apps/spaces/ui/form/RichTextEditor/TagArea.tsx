@@ -2,22 +2,29 @@ import React, {
   FC,
   forwardRef,
   PropsWithChildren,
+  useCallback,
   useImperativeHandle,
 } from 'react';
-import { Remirror, ThemeProvider, Toolbar } from '@remirror/react';
+import {
+  Remirror,
+  ThemeProvider,
+  Toolbar,
+  useExtension,
+} from '@remirror/react';
 import { useField } from 'react-inverted-form';
 import { prosemirrorNodeToHtml } from 'remirror';
 import {
   BasicEditorExtentions,
   RemirrorProps,
 } from '@ui/form/RichTextEditor/types';
+import { MentionAtomExtension } from 'remirror/extensions';
 
-export const RichTextEditor: FC<
+export const TagArea: FC<
   {
     name: string;
     formId: string;
-    placeholder?: string;
     showToolbar: boolean;
+    submit: any;
   } & RemirrorProps<BasicEditorExtentions> &
     PropsWithChildren
 > = forwardRef(
@@ -31,7 +38,7 @@ export const RichTextEditor: FC<
       getContext,
       state,
       setState,
-      placeholder = '',
+      submit,
     },
     ref,
   ) => {
@@ -43,7 +50,7 @@ export const RichTextEditor: FC<
       <ThemeProvider>
         <Remirror
           manager={manager}
-          placeholder={placeholder}
+          placeholder='Log conversation you had with a customer'
           onChange={(parameter) => {
             const nextState = parameter.state;
             const htmlValue = prosemirrorNodeToHtml(nextState?.doc);
@@ -57,16 +64,15 @@ export const RichTextEditor: FC<
           initialContent={state}
           autoRender='end'
         >
-          {showToolbar ? (
+          {showToolbar && (
             <Toolbar
               height={'var(--chakra-sizes-8)'}
               style={{ overflowX: 'visible' }}
             >
               {children}
             </Toolbar>
-          ) : (
-            children
           )}
+          {submit && submit}
         </Remirror>
       </ThemeProvider>
     );

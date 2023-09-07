@@ -68,48 +68,20 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         />
       </Box>
 
-      {/*<FormAutoresizeTextarea*/}
-      {/*  placeholder='Write something here...'*/}
-      {/*  size='md'*/}
-      {/*  formId={formId}*/}
-      {/*  name='content'*/}
-      {/*  mb={3}*/}
-      {/*  transform={!modal ? 'translateY(-16px)' : undefined}*/}
-      {/*  resize='none'*/}
-      {/*  borderBottom='none'*/}
-      {/*  outline='none'*/}
-      {/*  borderBottomWidth={0}*/}
-      {/*  minHeight={modal ? '100px' : '30px'}*/}
-      {/*  maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}*/}
-      {/*  height={modal ? `calc(50vh - ${height}px) !important` : 'auto'}*/}
-      {/*  position='initial'*/}
-      {/*  overflowY='auto'*/}
-      {/*  _focusVisible={{*/}
-      {/*    boxShadow: 'none',*/}
-      {/*  }}*/}
-      {/*/>*/}
-
       <Box
-        // minHeight={modal ? '100px' : '30px'}
         maxHeight={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
-        // style={{'--remirror-editor-max-height': modal ? `calc(50vh - ${height}px) !important` : 'auto'}}
-        // height={modal ? `calc(50vh - ${height}px) !important` : 'auto'}
         w='full'
       >
-        <RichTextEditor {...remirrorProps} formId={formId} name='content'>
+        <RichTextEditor
+          {...remirrorProps}
+          formId={formId}
+          name='content'
+          showToolbar
+        >
           <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
         </RichTextEditor>
       </Box>
 
-      {/*<Flex*/}
-      {/*  justifyContent='flex-end'*/}
-      {/*  direction='row'*/}
-      {/*  flex={1}*/}
-      {/*  mt='lg'*/}
-      {/*  width='100%'*/}
-      {/*>*/}
-
-      {/*</Flex>*/}
       {/*{isUploadAreaOpen && (*/}
       {/*  <FileUpload*/}
       {/*    files={files}*/}

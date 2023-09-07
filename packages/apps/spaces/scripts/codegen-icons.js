@@ -1,11 +1,11 @@
 const { readFileSync, readdirSync, writeFileSync } = require('fs');
 const { format } = require('prettier');
 
-const makeIconComponent = (name, content) => `
+const makeIconComponent = (name, content, viewBox) => `
 import { Icon, IconProps } from "@ui/media/Icon";
 
 export const ${name} = (props: IconProps) => (
-  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
+  <Icon viewBox='${viewBox}' fill='none' boxSize='4' {...props}>
     ${content}
   </Icon>
 );
@@ -15,6 +15,11 @@ const files = readdirSync(process.cwd() + '/public/icons/new');
 const prettierConfig = JSON.parse(
   readFileSync(process.cwd() + '/.prettierrc', 'utf8'),
 );
+
+function getSvgViewBox(svgString) {
+  const match = svgString.match(/viewBox="([^"]*)"/);
+  return match ? match[1] : '0 0 24 24';  // return matched viewBox value or null if not found
+}
 
 files.forEach((name) => {
   try {
@@ -32,11 +37,19 @@ files.forEach((name) => {
       .replaceAll('stroke-linecap', 'strokeLinecap')
       .replaceAll('stroke-linejoin', 'strokeLinejoin')
       .replaceAll('fill-rule', 'fillRule')
+      .replaceAll('stop-color', 'stopColor')
+      .replaceAll('clip-path', 'clipPath')
       .replaceAll('clip-rule', 'clipRule');
 
     const componentName = camelize(name.split('.')[0]);
     const outFileName = `${componentName}.tsx`;
-    const outContent = makeIconComponent(componentName, svgInnerContent);
+
+
+
+    const viewBox= getSvgViewBox(file)
+    console.log('🏷️ ----- viewBox: '
+        , viewBox);
+    const outContent = makeIconComponent(componentName, svgInnerContent, viewBox);
 
     const formattedOutContent = format(outContent, {
       ...prettierConfig,
