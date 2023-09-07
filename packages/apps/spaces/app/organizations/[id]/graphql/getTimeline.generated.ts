@@ -477,7 +477,11 @@ export type GetTimelineQuery = {
                 };
               }
           >;
-          note: Array<{ __typename?: 'Note'; id: string; content: string }>;
+          note: Array<{
+            __typename?: 'Note';
+            id: string;
+            content?: string | null;
+          }>;
         }
       | { __typename: 'Note' }
       | { __typename: 'PageView' }

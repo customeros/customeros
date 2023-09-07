@@ -3,7 +3,6 @@ mutation updateOrganization($input: OrganizationUpdateInput!) {
     id
     name
     description
-    domain
     domains
     website
     industry

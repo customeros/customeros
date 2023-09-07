@@ -218,16 +218,21 @@ export const MeetingPreviewModal = ({
             </VStack>
           </Flex>
 
-          <Flex flexDir='column'>
-            <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
-              Agenda
-            </Text>
-            <Text fontSize='sm' color={event?.agenda ? 'gray.700' : 'gray.500'}>
-              {event?.agenda
-                ? convert(event?.agenda ?? '', { preserveNewlines: true })
-                : 'No agenda was added'}
-            </Text>
-          </Flex>
+          {event?.agenda && (
+            <Flex flexDir='column'>
+              <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
+                Description
+              </Text>
+              <Text
+                fontSize='sm'
+                color={event?.agenda ? 'gray.700' : 'gray.500'}
+              >
+                {event?.agenda
+                  ? convert(event?.agenda ?? '', { preserveNewlines: true })
+                  : 'No description was added'}
+              </Text>
+            </Flex>
+          )}
 
           <FormAutoresizeTextarea
             size='sm'

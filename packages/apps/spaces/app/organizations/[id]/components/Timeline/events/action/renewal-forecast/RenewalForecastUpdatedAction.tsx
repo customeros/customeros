@@ -31,7 +31,7 @@ export const RenewalForecastUpdatedAction: React.FC<
   const authorText = isCreatedBySystem ? data.content : `${preText} by`;
 
   return (
-    <Flex alignItems='center' onClick={() => openModal(data)}>
+    <Flex alignItems='center' onClick={() => openModal(data)} cursor='pointer'>
       <FeaturedIcon size='md' minW='10' colorScheme={colorScheme}>
         <Icons.Calculator />
       </FeaturedIcon>

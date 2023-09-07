@@ -1110,7 +1110,7 @@ export type Meeting = Node & {
 export type MeetingInput = {
   agenda?: InputMaybe<Scalars['String']>;
   agendaContentType?: InputMaybe<Scalars['String']>;
-  appSource: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']>;
   attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
   conferenceUrl?: InputMaybe<Scalars['String']>;
   createdAt?: InputMaybe<Scalars['Time']>;
@@ -1144,7 +1144,7 @@ export enum MeetingStatus {
 export type MeetingUpdateInput = {
   agenda?: InputMaybe<Scalars['String']>;
   agendaContentType?: InputMaybe<Scalars['String']>;
-  appSource: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']>;
   conferenceUrl?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
   externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
@@ -1863,12 +1863,10 @@ export type Node = {
 export type Note = {
   __typename?: 'Note';
   appSource: Scalars['String'];
-  content: Scalars['String'];
-  contentType: Scalars['String'];
+  content?: Maybe<Scalars['String']>;
+  contentType?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
-  /** @deprecated Use content instead */
-  html: Scalars['String'];
   id: Scalars['ID'];
   includes: Array<Attachment>;
   mentioned: Array<MentionedEntity>;
@@ -1882,7 +1880,6 @@ export type NoteInput = {
   appSource?: InputMaybe<Scalars['String']>;
   content?: InputMaybe<Scalars['String']>;
   contentType?: InputMaybe<Scalars['String']>;
-  html?: InputMaybe<Scalars['String']>;
 };
 
 export type NotePage = Pages & {
@@ -1895,7 +1892,6 @@ export type NotePage = Pages & {
 export type NoteUpdateInput = {
   content?: InputMaybe<Scalars['String']>;
   contentType?: InputMaybe<Scalars['String']>;
-  html?: InputMaybe<Scalars['String']>;
   id: Scalars['ID'];
 };
 
@@ -1916,8 +1912,6 @@ export type Organization = Node & {
   createdAt: Scalars['Time'];
   customFields: Array<CustomField>;
   description?: Maybe<Scalars['String']>;
-  /** @deprecated Deprecated in favor of domains */
-  domain?: Maybe<Scalars['String']>;
   domains: Array<Scalars['String']>;
   emails: Array<Email>;
   employees?: Maybe<Scalars['Int64']>;
@@ -1987,6 +1981,7 @@ export type OrganizationInput = {
   employees?: InputMaybe<Scalars['Int64']>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   industry?: InputMaybe<Scalars['String']>;
+  industryGroup?: InputMaybe<Scalars['String']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
   market?: InputMaybe<Market>;
   /**
@@ -1994,6 +1989,7 @@ export type OrganizationInput = {
    * **Required.**
    */
   name: Scalars['String'];
+  subIndustry?: InputMaybe<Scalars['String']>;
   templateId?: InputMaybe<Scalars['ID']>;
   website?: InputMaybe<Scalars['String']>;
 };
@@ -2308,6 +2304,7 @@ export type Query = {
   player_GetUsers: Array<PlayerUser>;
   tags: Array<Tag>;
   tenant: Scalars['String'];
+  tenant_ByEmail?: Maybe<Scalars['String']>;
   tenant_ByWorkspace?: Maybe<Scalars['String']>;
   timelineEvents: Array<TimelineEvent>;
   user: User;
@@ -2415,6 +2412,10 @@ export type QueryPhoneNumberArgs = {
 export type QueryPlayer_ByAuthIdProviderArgs = {
   authId: Scalars['String'];
   provider: Scalars['String'];
+};
+
+export type QueryTenant_ByEmailArgs = {
+  email: Scalars['String'];
 };
 
 export type QueryTenant_ByWorkspaceArgs = {

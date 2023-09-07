@@ -20,7 +20,7 @@ export const RenewalLikelihoodUpdatedAction: React.FC<
     data.content,
   );
   return (
-    <Flex alignItems='center' onClick={() => openModal(data)}>
+    <Flex alignItems='center' onClick={() => openModal(data)} cursor='pointer'>
       <FeaturedIcon
         size='md'
         minW='10'

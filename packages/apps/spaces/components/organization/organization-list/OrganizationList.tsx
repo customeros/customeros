@@ -42,6 +42,7 @@ import { Text } from '@chakra-ui/react';
 import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
+import EmptyState from './EmptyState';
 
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
@@ -201,6 +202,10 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     );
   }, [organizationFilters]);
 
+  if (totalElements === 0) {
+    return <EmptyState onClick={handleCreateOrganization} />;
+  }
+
   return (
     <>
       <div className={styles.inputSection}>
@@ -249,7 +254,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
 
       {/* TODO: Remove coercion to any type when we get rid of the old graphql types generated which are out of sync */}
       <Table<Organization>
-        data={(data as Organization[]) ?? []}
+        data={(data as unknown as Organization[]) ?? []}
         columns={columns(tabs)}
         sorting={sorting}
         enableTableActions

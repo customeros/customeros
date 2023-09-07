@@ -15,12 +15,7 @@ export const BasicEditorToolbar: FC<{
   const active = useActive();
 
   return (
-    <Flex
-      justifyContent='space-between'
-      alignItems='flex-end'
-      flex={1}
-      minH={8}
-    >
+    <Flex justifyContent='space-between' alignItems='center' flex={1} minH={8}>
       <HStack
         w='full'
         bg='transparent'

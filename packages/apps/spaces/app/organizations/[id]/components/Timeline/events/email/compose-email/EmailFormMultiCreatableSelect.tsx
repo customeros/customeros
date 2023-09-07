@@ -2,6 +2,7 @@ import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { SelectInstance } from '@ui/form/SyncSelect/Select';
 import { useField } from 'react-inverted-form';
+import { GroupBase, ChakraStylesConfig } from 'chakra-react-select';
 import {
   AsyncCreatableSelect,
   chakraComponents,
@@ -11,6 +12,7 @@ import {
 } from '@ui/form/SyncSelect';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { emailRegex } from '@organization/components/Timeline/events/email/utils';
+import omit from 'lodash/omit';
 
 interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   name: string;
@@ -18,7 +20,7 @@ interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
 }
 
 const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
-  ({ ...props }, ref) => {
+  ({ chakraStyles, ...props }, ref) => {
     const Control = useCallback(({ children, ...rest }: ControlProps) => {
       return (
         <chakraComponents.Control {...rest}>
@@ -72,6 +74,7 @@ const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
             borderColor: 'gray.200',
             fontSize: 'md',
             marginRight: 1,
+            cursor: 'default',
           }),
           clearIndicator: (base) => ({
             ...base,
@@ -126,6 +129,20 @@ const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
             maxH: '86px',
             overflowY: 'auto',
           }),
+          ...omit<ChakraStylesConfig<unknown, false, GroupBase<unknown>>>(
+            chakraStyles,
+            [
+              'container',
+              'multiValueRemove',
+              'multiValue',
+              'clearIndicator',
+              'menuList',
+              'option',
+              'groupHeading',
+              'input',
+              'valueContainer',
+            ],
+          ),
         }}
         {...props}
       />
