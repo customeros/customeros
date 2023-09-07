@@ -68,8 +68,8 @@ func TestMutationResolver_TenantMerge_AccessControlled(t *testing.T) {
 func TestMutationResolver_TenantMerge_CheckDefaultData(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateOrganizationRelationship(ctx, driver, "R1")
-	neo4jt.CreateOrganizationRelationship(ctx, driver, "R2")
+	neo4jt.CreateOrganizationRelationship(ctx, driver, "Customer")
+	neo4jt.CreateOrganizationRelationship(ctx, driver, "Supplier")
 
 	newTenantName := "test_tenant"
 	rawResponse, err := cAdmin.RawPost(getQuery("tenant/merge_tenant"),
@@ -79,10 +79,10 @@ func TestMutationResolver_TenantMerge_CheckDefaultData(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
-	require.Equal(t, 16, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
-	require.Equal(t, 16, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage_"+newTenantName))
-	require.Equal(t, 16, neo4jt.GetCountOfRelationships(ctx, driver, "HAS_STAGE"))
-	require.Equal(t, 16, neo4jt.GetCountOfRelationships(ctx, driver, "STAGE_BELONGS_TO_TENANT"))
+	require.Equal(t, 11, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
+	require.Equal(t, 11, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage_"+newTenantName))
+	require.Equal(t, 11, neo4jt.GetCountOfRelationships(ctx, driver, "HAS_STAGE"))
+	require.Equal(t, 11, neo4jt.GetCountOfRelationships(ctx, driver, "STAGE_BELONGS_TO_TENANT"))
 }
 
 func TestMutationResolver_GetByWorkspace(t *testing.T) {

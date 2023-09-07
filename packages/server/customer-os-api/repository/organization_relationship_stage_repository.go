@@ -90,34 +90,48 @@ func (r *organizationRelationshipRepository) CreateDefaultStagesForNewTenant(ctx
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := fmt.Sprintf(`WITH [{name:"Target",order:10},
-					{name:"Lead",order:20},
-					{name:"Prospect",order:30},
+	queryCustomers := fmt.Sprintf(`WITH [{name:"Lead",order:10},
+					{name:"MQL",order:20},
+					{name:"SQL",order:30},
 					{name:"Trial",order:40},
-					{name:"Lost",order:50},
+					{name:"Proposal",order:50},
 					{name:"Live",order:60},
-					{name:"Former",order:70},
-					{name:"Unqualified",order:80}] AS stages
+					{name:"Lost",order:70},
+					{name:"Former",order:80},
+					{name:"Not a fit",order:90}] AS stages
 				UNWIND stages AS stage
 				MATCH (t:Tenant {name:$tenant}), (or:OrganizationRelationship)
+				WHERE or.name='Customer'
 				MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name:stage.name})<-[:HAS_STAGE]-(or)
 				ON CREATE SET 	s.id=randomUUID(), 
 								s.order=stage.order,
 								s.createdAt=$now, 
 								s:OrganizationRelationshipStage_%s`, tenant)
+	span.LogFields(log.String("query for Customer relationships", queryCustomers))
 
-	span.LogFields(log.String("query", query))
+	queryNonCustomers := fmt.Sprintf(`WITH [{name:"Active",order:110},
+					{name:"Inactive",order:120}] AS stages
+				UNWIND stages AS stage
+				MATCH (t:Tenant {name:$tenant}), (or:OrganizationRelationship)
+				WHERE or.name <> 'Customer'
+				MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name:stage.name})<-[:HAS_STAGE]-(or)
+				ON CREATE SET 	s.id=randomUUID(), 
+								s.order=stage.order,
+								s.createdAt=$now, 
+								s:OrganizationRelationshipStage_%s`, tenant)
+	span.LogFields(log.String("query for non-Customer relationships", queryNonCustomers))
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant": tenant,
-				"now":    utils.Now(),
-			})
-		return nil, err
+	err := utils.ExecuteQuery(ctx, *r.driver, queryCustomers, map[string]any{
+		"tenant": tenant,
+		"now":    utils.Now(),
+	})
+	if err != nil {
+		return err
+	}
+
+	err = utils.ExecuteQuery(ctx, *r.driver, queryNonCustomers, map[string]any{
+		"tenant": tenant,
+		"now":    utils.Now(),
 	})
 	return err
 }
