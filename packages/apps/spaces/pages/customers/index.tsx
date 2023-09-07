@@ -27,6 +27,7 @@ const CustomersPage: NextPage = () => {
         <OrganizationList
           icon={<Customer height={24} width={24} style={{ scale: '0.8' }} />}
           label={'Customers'}
+          filterLabel={'customeros'}
           preFilters={preFilters}
         />
       </PageContentLayout>
