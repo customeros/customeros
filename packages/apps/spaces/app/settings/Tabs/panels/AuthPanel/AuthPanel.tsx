@@ -100,7 +100,8 @@ export const AuthPanel = () => {
           <br />
           <Text>
             Enable OAuth Integration to get access to your google workspace
-            emails and calendar events
+            emails
+            {/*and calendar events*/}
           </Text>
           <br />
           <Flex direction={'column'} gap={2} width={'250px'}>
@@ -118,23 +119,23 @@ export const AuthPanel = () => {
                 onChange={(event) => handleSyncGoogleMailClick(event)}
               ></Switch>
             </Flex>
-            <Flex justifyContent={'space-between'}>
-              <Flex gap='1' align='center'>
-                <Icons.GOOGLE_CALENDAR boxSize='6' />
-                <FormLabel
-                  htmlFor={'changeGoogleCalendarSyncSwitchButton'}
-                  mb='0'
-                >
-                  Sync Google Calendar
-                </FormLabel>
-              </Flex>
-              <Switch
-                id={'changeGoogleCalendarSyncSwitchButton'}
-                isChecked={oAuthSettings.googleCalendarSyncEnabled}
-                colorScheme='green'
-                onChange={(event) => handleSyncGoogleCalendarClick(event)}
-              ></Switch>
-            </Flex>
+            {/*<Flex justifyContent={'space-between'}>*/}
+            {/*  <Flex gap='1' align='center'>*/}
+            {/*    <Icons.GOOGLE_CALENDAR boxSize='6' />*/}
+            {/*    <FormLabel*/}
+            {/*      htmlFor={'changeGoogleCalendarSyncSwitchButton'}*/}
+            {/*      mb='0'*/}
+            {/*    >*/}
+            {/*      Sync Google Calendar*/}
+            {/*    </FormLabel>*/}
+            {/*  </Flex>*/}
+            {/*  <Switch*/}
+            {/*    id={'changeGoogleCalendarSyncSwitchButton'}*/}
+            {/*    isChecked={oAuthSettings.googleCalendarSyncEnabled}*/}
+            {/*    colorScheme='green'*/}
+            {/*    onChange={(event) => handleSyncGoogleCalendarClick(event)}*/}
+            {/*  ></Switch>*/}
+            {/*</Flex>*/}
           </Flex>
         </CardBody>
       </Card>
