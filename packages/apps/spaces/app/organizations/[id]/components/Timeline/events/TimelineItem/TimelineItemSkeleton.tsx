@@ -10,7 +10,7 @@ export const TimelineItemSkeleton: FC = () => {
   return (
     <Box mt={4} mr={6}>
       <Skeleton
-        height='0.75rem'
+        height='0.5rem'
         width='100px'
         borderRadius='md'
         mb={4}
@@ -43,23 +43,23 @@ export const TimelineItemSkeleton: FC = () => {
             h='100%'
           >
             <Skeleton
-              width='80%'
+              width='33%'
               height='0.75rem'
               borderRadius='md'
               startColor='gray.300'
               endColor='gray.100'
             />
             <Skeleton
-              width='80%'
-              height='0.75rem'
+              width='95%'
+              height='0.5rem'
               borderRadius='md'
               startColor='gray.300'
               endColor='gray.100'
-              mb={1}
+              // mb={1}
             />
 
             <Skeleton
-              width='90%'
+              width='95%'
               height='0.5rem'
               borderRadius='md'
               startColor='gray.300'
@@ -75,15 +75,12 @@ export const TimelineItemSkeleton: FC = () => {
           </VStack>
         </CardBody>
         <CardFooter pt={5} pb={5} pr={5} pl={0} ml={1}>
-          <Image
-            src={'/backgrounds/organization/post-stamp.webp'}
-            alt='Email'
-            width={54}
-            height={70}
-            style={{
-              filter:
-                'drop-shadow(0px 0.5px 1px #D8D8D8) brightness(1) grayscale(1)',
-            }}
+          <Skeleton
+            h='70px'
+            w='54px'
+            borderRadius='4px'
+            startColor='gray.300'
+            endColor='gray.100'
           />
         </CardFooter>
       </Card>

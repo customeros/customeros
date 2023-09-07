@@ -31,10 +31,20 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
     header: (props) => <THead<Organization> title='Company' {...props} />,
     skeleton: () => (
       <Flex align='center' h='full'>
-        <SkeletonCircle size='48px' />
+        <SkeletonCircle size='48px' startColor='gray.300' endColor='gray.100' />
         <Flex ml='2' flexDir='column' h='42px' align='center' gap='1'>
-          <Skeleton width='100px' height='18px' />
-          <Skeleton width='100px' height='18px' />
+          <Skeleton
+            width='100px'
+            height='18px'
+            startColor='gray.300'
+            endColor='gray.100'
+          />
+          <Skeleton
+            width='100px'
+            height='18px'
+            startColor='gray.300'
+            endColor='gray.100'
+          />
         </Flex>
       </Flex>
     ),
@@ -67,8 +77,18 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
     },
     skeleton: () => (
       <Flex gap='1' flexDir='column'>
-        <Skeleton width='100%' height='18px' />
-        <Skeleton width='25%' height='18px' />
+        <Skeleton
+          width='100%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
+        <Skeleton
+          width='25%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
       </Flex>
     ),
   }),
@@ -96,8 +116,18 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
     ),
     skeleton: () => (
       <Flex flexDir='column' gap='1'>
-        <Skeleton width='25%' height='18px' />
-        <Skeleton width='75%' height='18px' />
+        <Skeleton
+          width='25%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
+        <Skeleton
+          width='75%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
       </Flex>
     ),
   }),
@@ -119,7 +149,14 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
     header: (props) => (
       <THead<Organization> title='Time to Renewal' {...props} />
     ),
-    skeleton: () => <Skeleton width='50%' height='18px' />,
+    skeleton: () => (
+      <Skeleton
+        width='50%'
+        height='18px'
+        startColor='gray.300'
+        endColor='gray.100'
+      />
+    ),
   }),
   columnHelper.accessor('accountDetails', {
     id: 'FORECAST_AMOUNT',
@@ -142,8 +179,18 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
     ),
     skeleton: () => (
       <Flex flexDir='column' gap='1'>
-        <Skeleton width='50%' height='18px' />
-        <Skeleton width='25%' height='18px' />
+        <Skeleton
+          width='50%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
+        <Skeleton
+          width='25%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
       </Flex>
     ),
   }),
@@ -157,7 +204,14 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
       />
     ),
     header: (props) => <THead<Organization> title='Owner' {...props} />,
-    skeleton: () => <Skeleton width='75%' height='18px' />,
+    skeleton: () => (
+      <Skeleton
+        width='75%'
+        height='18px'
+        startColor='gray.300'
+        endColor='gray.100'
+      />
+    ),
   }),
   columnHelper.accessor('market', {
     id: 'LAST_TOUCHPOINT',
@@ -175,8 +229,18 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
     ),
     skeleton: () => (
       <Flex flexDir='column' gap='1'>
-        <Skeleton width='75%' height='18px' />
-        <Skeleton width='100%' height='18px' />
+        <Skeleton
+          width='75%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
+        <Skeleton
+          width='100%'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.100'
+        />
       </Flex>
     ),
   }),
