@@ -218,7 +218,7 @@ func (s *emailService) ReadNewEmailsForUsername(gmailService *gmail.Service, ten
 				return fmt.Errorf("failed to marshal email content: %v", err)
 			}
 
-			err = s.repositories.RawEmailRepository.Store("gmail", tenant, username, message.Id, string(jsonContent))
+			err = s.repositories.RawEmailRepository.Store("gmail", tenant, username, emailRawData.ProviderMessageId, emailRawData.MessageId, string(jsonContent))
 			if err != nil {
 				return fmt.Errorf("failed to store email content: %v", err)
 			}
