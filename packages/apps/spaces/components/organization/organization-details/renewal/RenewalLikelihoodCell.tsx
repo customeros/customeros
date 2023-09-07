@@ -111,7 +111,7 @@ export const RenewalLikelihoodCell = ({
             }),
             placeholder: (props) => ({
               ...props,
-              color: 'gray.500',
+              color: 'gray.400',
             }),
             valueContainer: (props) => ({
               ...props,
@@ -138,7 +138,7 @@ export const RenewalLikelihoodCell = ({
         >
           <Text
             cursor='default'
-            color={value ? getLikelihoodColor(currentProbability) : 'gray.500'}
+            color={value ? getLikelihoodColor(currentProbability) : 'gray.400'}
             onDoubleClick={() => setIsEditing(true)}
           >
             {value?.label ?? 'Not set'}

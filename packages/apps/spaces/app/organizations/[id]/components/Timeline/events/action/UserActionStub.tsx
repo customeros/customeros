@@ -14,6 +14,10 @@ export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
   if (data.actionType === 'RENEWAL_LIKELIHOOD_UPDATED') {
     return <RenewalLikelihoodUpdatedAction data={data} />;
   }
+  // This should be handled too as it currently appears in the timeline
+  // if (data.actionType === 'CREATED') {
+  //   return <p>CREATED</p>;
+  // }
 
   return null;
 };

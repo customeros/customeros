@@ -145,7 +145,7 @@ export const OrganizationRelationship = ({
       >
         <Text
           cursor='default'
-          color={value ? 'gray.700' : 'gray.500'}
+          color={value ? 'gray.700' : 'gray.400'}
           onDoubleClick={() => setIsEditing(true)}
         >
           {value?.label ?? 'Relationship'}
@@ -209,7 +209,7 @@ export const OrganizationRelationship = ({
         placeholder: (props) => ({
           ...props,
           ml: 0,
-          color: 'gray.500',
+          color: 'gray.400',
         }),
         inputContainer: (props) => ({
           ...props,

@@ -121,6 +121,7 @@ export const OrganizationTimeline: FC = () => {
 
       return Date.parse(aDate) - Date.parse(bDate);
     });
+
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
