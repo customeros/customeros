@@ -217,7 +217,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   });
 
   return (
-    <Flex ref={cardRef} flexDir='column' maxH='calc(100vh - 4rem - 16px)'>
+    <Flex ref={cardRef} flexDir='column' maxH='calc(100vh - 5rem)'>
       <TimelineEventPreviewHeader
         //@ts-expect-error alias
         date={event.date}
