@@ -25,3 +25,8 @@ func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 func (r *queryResolver) TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error) {
 	panic(fmt.Errorf("not implemented: TenantByWorkspace - tenant_ByWorkspace"))
 }
+
+// TenantByEmail is the resolver for the tenant_ByEmail field.
+func (r *queryResolver) TenantByEmail(ctx context.Context, email string) (*string, error) {
+	panic(fmt.Errorf("not implemented: TenantByEmail - tenant_ByEmail"))
+}

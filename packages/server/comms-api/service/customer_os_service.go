@@ -543,7 +543,7 @@ func (cosService *customerOSService) CreateContact(user *string, email *string) 
 
 func (cosService *customerOSService) GetContactByEmail(user *string, email *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`query GetUserByEmail($email: String!){ contact_ByEmail(email: $email) { id } }`)
+		`query GetContactByEmail($email: String!){ contact_ByEmail(email: $email) { id } }`)
 
 	graphqlRequest.Var("email", *email)
 
@@ -643,7 +643,7 @@ func (cosService *customerOSService) ExternalMeeting(externalSystemId string, ex
       					id
 						note {
 							id
-							html
+							content
 					    }
 						attendedBy {
 							 ... on ContactParticipant {
