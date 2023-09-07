@@ -10,6 +10,10 @@ import { SidenavItem } from './SidenavItem';
 import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocalStorage } from 'usehooks-ts';
+import { signOut } from 'next-auth/react';
+import { useJune } from '@spaces/hooks/useJune';
+import { SignOut } from '@spaces/atoms/icons';
+import { Box } from '@chakra-ui/react';
 
 interface RootSidenavProps {
   isOwner: boolean;
@@ -18,6 +22,7 @@ interface RootSidenavProps {
 export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
   const router = useRouter();
   const pathname = usePathname();
+  const analytics = useJune();
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { root: 'organization' },
@@ -40,6 +45,10 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
   };
 
   const checkIsActive = (path: string) => pathname?.startsWith(`/${path}`);
+  const handleSignOutClick = () => {
+    analytics?.reset();
+    signOut();
+  };
 
   return (
     <GridItem
@@ -131,6 +140,16 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
               boxSize='6'
               color={isActive ? 'gray.700' : 'gray.500'}
             />
+          )}
+        />
+        <SidenavItem
+          label='Sign out'
+          isActive={false}
+          onClick={handleSignOutClick}
+          icon={() => (
+            <Box boxSize={6}>
+              <SignOut color={'gray.500'} />
+            </Box>
           )}
         />
       </VStack>

@@ -1,10 +1,8 @@
 'use client';
 
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
-import { Button } from '@ui/form/Button';
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { signIn, signOut } from 'next-auth/react';
-import { useJune } from '@spaces/hooks/useJune';
+import { signIn } from 'next-auth/react';
 import { Divider } from '@ui/presentation/Divider';
 import { Text } from '@ui/typography/Text';
 import { Heading } from '@ui/typography/Heading';
@@ -21,7 +19,6 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../../../pages/api/auth/[...nextauth]';
 
 export const AuthPanel = () => {
-  const analytics = useJune();
   const { data: session } = useSession();
   const [oAuthSettings, setOAuthSettings] =
     useState<OAuthUserSettingsInterface>({
@@ -74,11 +71,6 @@ export const AuthPanel = () => {
         process.env.CUSTOMER_OS_GOOGLE_MANAGE_ACCESS_URL as string,
       );
     }
-  };
-
-  const handleSignOutClick = () => {
-    analytics?.reset();
-    signOut();
   };
 
   return (
@@ -144,10 +136,6 @@ export const AuthPanel = () => {
               ></Switch>
             </Flex>
           </Flex>
-
-          <br />
-          <br />
-          <Button onClick={handleSignOutClick}>Sign Out</Button>
         </CardBody>
       </Card>
       <Divider borderWidth={'2px'}></Divider>
