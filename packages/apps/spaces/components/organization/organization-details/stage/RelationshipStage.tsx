@@ -12,7 +12,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 
-import { stageOptions } from './util';
+import { customerStageOptions, otherStageOptions } from './util';
 
 interface RelationshipStageProps {
   defaultValue?: string | null;
@@ -30,8 +30,10 @@ export const RelationshipStage = ({
     useSetStageToOrganizationRelationshipMutation();
   const [removeStageFromRelationship] =
     useRemoveStageFromOrganizationRelationshipMutation();
+  const options =
+    relationship === 'CUSTOMER' ? customerStageOptions : otherStageOptions;
   const value = defaultValue
-    ? stageOptions.find((o) => o.value === defaultValue)
+    ? options.find((o) => o.value === defaultValue)
     : null;
 
   const handleRemoveStage = useCallback(() => {
@@ -176,7 +178,7 @@ export const RelationshipStage = ({
       variant='unstyled'
       placeholder='Stage'
       backspaceRemovesValue
-      options={stageOptions}
+      options={options}
       onChange={handleSelect}
       openMenuOnClick={false}
       chakraStyles={{

@@ -1,20 +1,16 @@
-export type Stage =
-  | 'Target'
-  | 'Lead'
-  | 'Prospect'
-  | 'Trial'
-  | 'Lost'
-  | 'Live'
-  | 'Former'
-  | 'Unqualified';
+export const otherStageOptions: { label: string; value: string }[] = [
+  { label: 'Active', value: 'Active' },
+  { label: 'Inactive', value: 'Inactive' },
+];
 
-export const stageOptions: { label: string; value: Stage }[] = [
-  { label: 'Target', value: 'Target' },
+export const customerStageOptions: { label: string; value: string }[] = [
   { label: 'Lead', value: 'Lead' },
-  { label: 'Prospect', value: 'Prospect' },
+  { label: 'MQL', value: 'MQL' },
+  { label: 'SQL', value: 'SQL' },
   { label: 'Trial', value: 'Trial' },
-  { label: 'Lost', value: 'Lost' },
+  { label: 'Proposal', value: 'Proposal' },
   { label: 'Live', value: 'Live' },
+  { label: 'Lost', value: 'Lost' },
   { label: 'Former', value: 'Former' },
-  { label: 'Unqualified', value: 'Unqualified' },
+  { label: 'Not a fit', value: 'Not a fit' },
 ];
