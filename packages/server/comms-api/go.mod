@@ -21,7 +21,7 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230811131018-c07b2469cc3e
-	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20230904115442-e5d7b447b08a
+	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20230907074127-652af4a49bf1
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.1.0
 	github.com/sirupsen/logrus v1.9.3
