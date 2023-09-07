@@ -219,7 +219,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           copyLabel='Copy link to this email'
         />
 
-        <CardBody mt={0} pb={6} overflow='auto'>
+        <CardBody mt={0} p='6' pt='4' overflow='auto'>
           <Flex direction='row' justify='space-between' mb={3}>
             <Flex
               direction='column'

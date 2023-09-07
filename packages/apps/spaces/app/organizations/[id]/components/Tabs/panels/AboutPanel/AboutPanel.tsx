@@ -22,11 +22,12 @@ import { useRemoveRelationshipStageMutation } from '@organization/graphql/remove
 
 import { FormSocialInput } from '../../shared/FormSocialInput';
 import {
-  stageOptions,
   industryOptions,
   employeesOptions,
+  otherStageOptions,
   relationshipOptions,
   businessTypeOptions,
+  customerStageOptions,
   lastFundingRoundOptions,
 } from './util';
 import {
@@ -195,6 +196,11 @@ export const AboutPanel = () => {
       return next;
     },
   });
+
+  const stageOptions =
+    defaultValues.relationship?.value === 'CUSTOMER'
+      ? customerStageOptions
+      : otherStageOptions;
 
   return (
     <Flex

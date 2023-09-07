@@ -4,11 +4,12 @@ import { SelectOption } from '@shared/types/SelectOptions';
 import { OrganizationQuery } from '../../../../graphql/organization.generated';
 import { UpdateOrganizationMutationVariables } from '../../../../graphql/updateOrganization.generated';
 import {
-  stageOptions,
   industryOptions,
   employeesOptions,
+  otherStageOptions,
   relationshipOptions,
   businessTypeOptions,
+  customerStageOptions,
   lastFundingRoundOptions,
 } from './util';
 
@@ -81,9 +82,10 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
         (i) => data?.relationshipStages?.[0]?.relationship === i.value,
       ) || null;
     this.stage =
-      stageOptions.find(
-        (i) => data?.relationshipStages?.[0]?.stage === i.value,
-      ) || null;
+      (data?.relationshipStages?.[0]?.relationship === 'CUSTOMER'
+        ? customerStageOptions
+        : otherStageOptions
+      ).find((i) => data?.relationshipStages?.[0]?.stage === i.value) || null;
     this.socials = data?.socials || [];
   }
 

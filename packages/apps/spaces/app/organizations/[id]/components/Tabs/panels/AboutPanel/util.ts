@@ -160,15 +160,22 @@ export const relationshipOptions: SelectOption[] = [
     label: 'Trade Association Member',
   },
 ];
-export const stageOptions: SelectOption[] = [
-  { label: 'Target', value: 'Target' },
+
+export const otherStageOptions: SelectOption[] = [
+  { label: 'Active', value: 'Active' },
+  { label: 'Inactive', value: 'Inactive' },
+];
+
+export const customerStageOptions: SelectOption[] = [
   { label: 'Lead', value: 'Lead' },
-  { label: 'Prospect', value: 'Prospect' },
+  { label: 'MQL', value: 'MQL' },
+  { label: 'SQL', value: 'SQL' },
   { label: 'Trial', value: 'Trial' },
-  { label: 'Lost', value: 'Lost' },
+  { label: 'Proposal', value: 'Proposal' },
   { label: 'Live', value: 'Live' },
+  { label: 'Lost', value: 'Lost' },
   { label: 'Former', value: 'Former' },
-  { label: 'Unqualified', value: 'Unqualified' },
+  { label: 'Not a fit', value: 'Not a fit' },
 ];
 
 export const industryOptions: GroupedOption[] = [
