@@ -73,11 +73,11 @@ type CreateMeetingResponse struct {
 type BookingRescheduleRequest struct {
 	TriggerEvent string `json:"triggerEvent"`
 	Payload      struct {
-		Title         string    `json:"title"`
-		RescheduleUid string    `json:"rescheduleUid"`
-		StartTime     time.Time `json:"startTime"`
-		EndTime       time.Time `json:"endTime"`
-		Organizer     struct {
+		Title               string    `json:"title"`
+		RescheduleUid       string    `json:"rescheduleUid"`
+		RescheduleStartTime time.Time `json:"rescheduleStartTime"`
+		RescheduleEndTime   time.Time `json:"rescheduleEndTime"`
+		Organizer           struct {
 			Email string `json:"email"`
 		} `json:"organizer"`
 		Attendees []struct {
