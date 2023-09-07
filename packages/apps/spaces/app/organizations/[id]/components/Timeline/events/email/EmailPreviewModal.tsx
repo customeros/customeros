@@ -1,10 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { CardBody } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
-import { useCopyToClipboard } from '@spaces/hooks/useCopyToClipboard';
 import sanitizeHtml from 'sanitize-html';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
@@ -25,8 +24,8 @@ import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { htmlToProsemirrorNode } from 'remirror';
 import { InteractionEvent } from '@graphql/types';
 import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
-import { useOutsideClick } from '@ui/utils';
 import { TimelineEventPreviewHeader } from '@organization/components/Timeline/preview/header/TimelineEventPreviewHeader';
+import { TimelinePreviewBackdrop } from '@organization/components/Timeline/preview/TimelinePreviewBackdrop';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -60,7 +59,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 }) => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const cardRef = useRef<HTMLDivElement>(null);
 
   const event = modalContent as InteractionEvent;
 
@@ -70,7 +68,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     stringHandler: htmlToProsemirrorNode,
     content: '',
   });
-  const [_, copy] = useCopyToClipboard();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [mode, setMode] = useState(REPLY_MODE);
@@ -211,77 +208,76 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     );
   };
 
-  useOutsideClick({
-    ref: cardRef,
-    handler: handleClosePreview,
-  });
-
   return (
-    <Flex ref={cardRef} flexDir='column' maxH='calc(100vh - 5rem)'>
-      <TimelineEventPreviewHeader
-        //@ts-expect-error alias
-        date={event.date}
-        name={event.interactionSession?.name ?? ''}
-        onClose={handleClosePreview}
-        copyLabel='Copy link to this email'
-      />
+    <TimelinePreviewBackdrop onCloseModal={handleClosePreview}>
+      <Flex flexDir='column' maxH='calc(100vh - 5rem)'>
+        <TimelineEventPreviewHeader
+          //@ts-expect-error alias
+          date={event.date}
+          name={event.interactionSession?.name ?? ''}
+          onClose={handleClosePreview}
+          copyLabel='Copy link to this email'
+        />
 
-      <CardBody mt={0} pb={6} overflow='auto'>
-        <Flex direction='row' justify='space-between' mb={3}>
-          <Flex
-            direction='column'
-            align='flex-start'
-            maxWidth='calc(100% - 70px)'
-            overflow='hidden'
-            textOverflow='ellipsis'
-          >
-            <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
-            <EmailMetaDataEntry entryType='To' content={to} />
-            {!!cc.length && <EmailMetaDataEntry entryType='CC' content={cc} />}
-            {!!bcc.length && (
-              <EmailMetaDataEntry entryType='BCC' content={bcc} />
-            )}
-            <EmailMetaDataEntry entryType='Subject' content={subject} />
+        <CardBody mt={0} pb={6} overflow='auto'>
+          <Flex direction='row' justify='space-between' mb={3}>
+            <Flex
+              direction='column'
+              align='flex-start'
+              maxWidth='calc(100% - 70px)'
+              overflow='hidden'
+              textOverflow='ellipsis'
+            >
+              <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
+              <EmailMetaDataEntry entryType='To' content={to} />
+              {!!cc.length && (
+                <EmailMetaDataEntry entryType='CC' content={cc} />
+              )}
+              {!!bcc.length && (
+                <EmailMetaDataEntry entryType='BCC' content={bcc} />
+              )}
+              <EmailMetaDataEntry entryType='Subject' content={subject} />
+            </Flex>
+            <div>
+              <Image
+                src={'/backgrounds/organization/post-stamp.webp'}
+                alt='Email'
+                width={48}
+                height={70}
+              />
+            </div>
           </Flex>
-          <div>
-            <Image
-              src={'/backgrounds/organization/post-stamp.webp'}
-              alt='Email'
-              width={48}
-              height={70}
-            />
-          </div>
-        </Flex>
 
-        <Text color='gray.700' size='sm'>
-          {event?.content && (
-            <RichTextPreview
-              htmlContent={sanitizeHtml(event.content)}
-              extensions={basicEditorExtensions}
-            />
-          )}
-        </Text>
-      </CardBody>
-      <ComposeEmail
-        formId={formId}
-        onModeChange={handleModeChange}
-        modal
-        to={state.values.to}
-        cc={state.values.cc}
-        bcc={state.values.bcc}
-        onSubmit={handleSubmit}
-        isSending={isSending}
-        remirrorProps={remirrorProps}
-      />
-      <ConfirmDeleteDialog
-        label='Discard this email?'
-        description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'
-        confirmButtonLabel='Discard email'
-        isOpen={isOpen}
-        onClose={onClose}
-        onConfirm={handleExitEditorAndCleanData}
-        isLoading={false}
-      />
-    </Flex>
+          <Text color='gray.700' size='sm'>
+            {event?.content && (
+              <RichTextPreview
+                htmlContent={sanitizeHtml(event.content)}
+                extensions={basicEditorExtensions}
+              />
+            )}
+          </Text>
+        </CardBody>
+        <ComposeEmail
+          formId={formId}
+          onModeChange={handleModeChange}
+          modal
+          to={state.values.to}
+          cc={state.values.cc}
+          bcc={state.values.bcc}
+          onSubmit={handleSubmit}
+          isSending={isSending}
+          remirrorProps={remirrorProps}
+        />
+        <ConfirmDeleteDialog
+          label='Discard this email?'
+          description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'
+          confirmButtonLabel='Discard email'
+          isOpen={isOpen}
+          onClose={onClose}
+          onConfirm={handleExitEditorAndCleanData}
+          isLoading={false}
+        />
+      </Flex>
+    </TimelinePreviewBackdrop>
   );
 };
