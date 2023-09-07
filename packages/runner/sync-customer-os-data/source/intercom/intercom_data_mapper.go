@@ -1,40 +1,39 @@
 package intercom
 
-//func MapUser(inputJson string) (string, error) {
-//	var input struct {
-//		ID        int64  `json:"id,omitempty"`
-//		Name      string `json:"name,omitempty"`
-//		Email     string `json:"email,omitempty"`
-//		Phone     string `json:"phone,omitempty"`
-//		CreatedAt string `json:"created,omitempty"`
-//		Modified  string `json:"modified,omitempty"`
-//	}
-//
-//	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
-//		return "", err
-//	}
-//
-//	output := model.Output{
-//		ExternalId:  fmt.Sprintf("%d", input.ID),
-//		Name:        input.Name,
-//		Email:       input.Email,
-//		PhoneNumber: input.Phone,
-//		CreatedAt:   input.CreatedAt,
-//		UpdatedAt:   input.Modified,
-//	}
-//	if input.ID == 0 {
-//		output.Skip = true
-//		output.SkipReason = "Missing external id"
-//	}
-//
-//	outputJson, err := json.Marshal(output)
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	return string(outputJson), nil
-//}
-//
+import (
+	"encoding/json"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+)
+
+func MapUser(inputJson string) (string, error) {
+	var input struct {
+		ID    string `json:"id,omitempty"`
+		Name  string `json:"name,omitempty"`
+		Email string `json:"email,omitempty"`
+	}
+
+	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
+		return "", err
+	}
+
+	output := model.Output{
+		ExternalId: input.ID,
+		Name:       input.Name,
+		Email:      input.Email,
+	}
+	if input.ID == "" {
+		output.Skip = true
+		output.SkipReason = "Missing external id"
+	}
+
+	outputJson, err := json.Marshal(output)
+	if err != nil {
+		return "", err
+	}
+
+	return string(outputJson), nil
+}
+
 //func MapOrganization(inputJSON string) (string, error) {
 //	var input struct {
 //		ID                int64  `json:"id,omitempty"`
