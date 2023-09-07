@@ -1,8 +1,3 @@
-import { useState, useEffect } from 'react';
-
-import { Flex } from '@ui/layout/Flex';
-import { Card } from '@ui/presentation/Card';
-import { ScaleFade } from '@ui/transitions/ScaleFade';
 import { Action, InteractionEvent, Meeting } from '@graphql/types';
 
 import { EmailPreviewModal } from '../events/email/EmailPreviewModal';
@@ -11,6 +6,7 @@ import { SlackThreadPreviewModal } from '../events/slack/SlackThreadPreviewModal
 import { ActionPreviewModal } from '../events/action/ActionPreviewModal';
 
 import { useTimelineEventPreviewContext } from './TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { TimelinePreviewBackdrop } from '@organization/components/Timeline/preview/TimelinePreviewBackdrop';
 
 interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;
@@ -19,17 +15,7 @@ interface TimelineEventPreviewModalProps {
 export const TimelineEventPreviewModal = ({
   invalidateQuery,
 }: TimelineEventPreviewModalProps) => {
-  const [isMounted, setIsMounted] = useState(false); // needed for delaying the backdrop filter
-  const { closeModal, isModalOpen, modalContent } =
-    useTimelineEventPreviewContext();
-
-  useEffect(() => {
-    setIsMounted(isModalOpen);
-  }, [isModalOpen]);
-
-  if (!isModalOpen || !modalContent) {
-    return null;
-  }
+  const { closeModal, modalContent } = useTimelineEventPreviewContext();
 
   const event = modalContent as InteractionEvent | Meeting | Action;
   const isMeeting = event?.__typename === 'Meeting';
@@ -37,55 +23,18 @@ export const TimelineEventPreviewModal = ({
   const isInteraction = event?.__typename === 'InteractionEvent';
   const isSlack = isInteraction && event?.channel === 'SLACK';
   const isEmail = isInteraction && event?.channel === 'EMAIL';
-  const handleCloseModal = () => {
-    if (isEmail) return; // email modal handles closing the modal by itself
-    closeModal();
-  };
+
+  // Email handles close logic from within and use outside click cannot be used because preview should be closed only on backdrop click
+  // user should be able to update panel details while having preview open
+  if (isEmail) {
+    return <EmailPreviewModal invalidateQuery={invalidateQuery} />;
+  }
 
   return (
-    <Flex
-      position='absolute'
-      top='0'
-      bottom='0'
-      left='0'
-      right='0'
-      zIndex={1}
-      cursor='pointer'
-      backdropFilter='blur(3px)'
-      justify='center'
-      background={isMounted ? 'rgba(16, 24, 40, 0.45)' : 'rgba(16, 24, 40, 0)'}
-      align='center'
-      transition='all 0.1s linear'
-      onClick={handleCloseModal}
-    >
-      <ScaleFade
-        in={isModalOpen}
-        style={{
-          position: 'absolute',
-          marginInline: 'auto',
-          top: '1rem',
-          width: '544px',
-          minWidth: '544px',
-        }}
-      >
-        <Card
-          size='lg'
-          position='absolute'
-          mx='auto'
-          top='4'
-          w='544px'
-          minW='544px'
-          cursor='default'
-          onClick={(e) => e.stopPropagation()}
-        >
-          {isMeeting && (
-            <MeetingPreviewModal invalidateQuery={invalidateQuery} />
-          )}
-          {isSlack && <SlackThreadPreviewModal />}
-          {isEmail && <EmailPreviewModal invalidateQuery={invalidateQuery} />}
-          {isAction && <ActionPreviewModal type={event.actionType} />}
-        </Card>
-      </ScaleFade>
-    </Flex>
+    <TimelinePreviewBackdrop onCloseModal={closeModal}>
+      {isMeeting && <MeetingPreviewModal invalidateQuery={invalidateQuery} />}
+      {isSlack && <SlackThreadPreviewModal />}
+      {isAction && <ActionPreviewModal type={event.actionType} />}
+    </TimelinePreviewBackdrop>
   );
 };
