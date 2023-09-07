@@ -14,6 +14,7 @@ var sourceByModel = map[model.DataSource]entity.DataSource{
 	model.DataSourcePipedrive:      entity.DataSourcePipedrive,
 	model.DataSourceSLACk:          entity.DataSourceSlack,
 	model.DataSourceWebscrape:      entity.DataSourceWebscrape,
+	model.DataSourceIntercom:       entity.DataSourceIntercom,
 }
 
 var sourceByValue = utils.ReverseMap(sourceByModel)

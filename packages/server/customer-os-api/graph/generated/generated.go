@@ -7353,6 +7353,7 @@ enum ExternalSystemType {
     CALCOM
     PIPEDRIVE
     SLACK
+    INTERCOM
 }
 
 type ExternalSystem {
@@ -8469,6 +8470,7 @@ input SocialUpdateInput {
     PIPEDRIVE
     SLACK
     WEBSCRAPE
+    INTERCOM
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!
