@@ -43,11 +43,11 @@ Find the integration you need below, and click on the link to see the guide for 
 ## CRM
 
 - Freshsales
-- Hubspot
+- [Hubspot][hubspot]
 - Kustomer
 - Microsoft Dynamics Customer Engagement
 - Pipedrive
-- Salesforce
+- [Salesforce][salesforce]
 - Sugar CRM
 - Zendesk Sell
 - Zendesk Sunshine
@@ -169,6 +169,7 @@ Find the integration you need below, and click on the link to see the guide for 
 <!--- References --->
 
 [hubspot]: /en/integrations/hubspot/
+[salesforce]: /en/integrations/salesforce/
 [zendesk-support]: /en/integrations/zendesk-support/
 [google-workspace]: /en/integrations/google-workspace/
 [jira]: /en/integrations/jira/
