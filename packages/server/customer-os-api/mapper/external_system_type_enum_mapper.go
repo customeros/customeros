@@ -12,6 +12,7 @@ var externalSystemTypeByModel = map[model.ExternalSystemType]entity.ExternalSyst
 	model.ExternalSystemTypeCalcom:         entity.CalCom,
 	model.ExternalSystemTypePipedrive:      entity.Pipedrive,
 	model.ExternalSystemTypeSLACk:          entity.Slack,
+	model.ExternalSystemTypeIntercom:       entity.Intercom,
 }
 
 var externalSystemTypeByValue = utils.ReverseMap(externalSystemTypeByModel)

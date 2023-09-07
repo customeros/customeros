@@ -12,6 +12,7 @@ enum ExternalSystemType {
     CALCOM
     PIPEDRIVE
     SLACK
+    INTERCOM
 }
 
 type ExternalSystem {

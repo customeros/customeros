@@ -6,4 +6,5 @@ enum DataSource {
     PIPEDRIVE
     SLACK
     WEBSCRAPE
+    INTERCOM
 }
