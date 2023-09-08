@@ -37,7 +37,7 @@ export const useArchiveOrganizations = (): Result => {
       return null;
     } catch (err) {
       toastError(
-        `We couldn’t delete ${
+        `We couldn’t archive ${
           ids.length === 1 ? 'this' : 'these'
         } organization${ids.length === 1 ? '' : 's'}. Please try again.`,
         `organzations-archive-error`,

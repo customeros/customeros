@@ -43,6 +43,7 @@ import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 import EmptyState from './EmptyState';
+import { Archive } from '@ui/media/icons';
 
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
@@ -247,14 +248,15 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
       </div>
 
       <ConfirmDeleteDialog
-        label={`Delete selected ${
+        label={`Archive selected ${
           idsToRemove.length === 1 ? 'organization' : 'organizations'
         }?`}
-        confirmButtonLabel={'Delete'}
+        confirmButtonLabel={'Archive'}
         isOpen={isOpen}
         onClose={handleCancelRemoveOrganizations}
         onConfirm={handleArchiveOrganizations}
         isLoading={loading}
+        icon={<Archive />}
       />
 
       {/* TODO: Remove coercion to any type when we get rid of the old graphql types generated which are out of sync */}

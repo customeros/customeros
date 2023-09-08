@@ -11,6 +11,7 @@ import {
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
+import { SvgIcon } from '@ui/media/icons/SvgIcon';
 
 interface ConfirmDeleteDialogProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface ConfirmDeleteDialogProps {
   description?: string;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;
+  icon?: any;
 }
 
 export const ConfirmDeleteDialog = ({
@@ -31,6 +33,7 @@ export const ConfirmDeleteDialog = ({
   label,
   description,
   confirmButtonLabel,
+  icon,
   cancelButtonLabel = 'Cancel',
 }: ConfirmDeleteDialogProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -50,7 +53,7 @@ export const ConfirmDeleteDialog = ({
           <AlertDialogCloseButton color='gray.400' top={6} />
           <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6'>
             <FeaturedIcon size='lg' colorScheme='red'>
-              <Icons.Trash1 />
+              {icon ? <SvgIcon>{icon}</SvgIcon> : <Icons.Trash1 />}
             </FeaturedIcon>
             <Text mt='4'>{label}</Text>
             {description && (

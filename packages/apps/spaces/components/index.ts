@@ -9,7 +9,6 @@ export {
   DeleteIconButton,
   MessageDeprecate,
   Address,
-  DeleteConfirmationDialog,
   DebouncedInput,
   Input,
   Link,

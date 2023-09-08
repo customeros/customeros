@@ -6,7 +6,6 @@ export { WorkspaceElementButton } from './workspace-element-button';
 export { Button } from './button';
 export { MessageDeprecate } from './message';
 export { Address } from './address';
-export { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 export { IconButton, DeleteIconButton, AddIconButton } from './icon-button';
 export { Table } from './table';
 export { DebouncedInput, Input, EditableContentInput } from './input';
