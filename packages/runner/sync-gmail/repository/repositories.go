@@ -2,7 +2,6 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"gorm.io/gorm"
 )
@@ -13,8 +12,7 @@ type Repositories struct {
 	CommonRepositories *commonRepository.Repositories
 
 	//pg repositories
-	RawEmailRepository              RawEmailRepository
-	PersonalEmailProviderRepository PersonalEmailProviderRepository
+	RawEmailRepository RawEmailRepository
 
 	//neo4j repositories
 	TenantRepository           TenantRepository
@@ -38,8 +36,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 
 		CommonRepositories: commonRepository.InitRepositories(gormDb, driver),
 
-		RawEmailRepository:              NewRawEmailRepository(gormDb),
-		PersonalEmailProviderRepository: NewPersonalEmailProviderRepository(gormDb),
+		RawEmailRepository: NewRawEmailRepository(gormDb),
 
 		TenantRepository:           NewTenantRepository(driver),
 		UserRepository:             NewUserRepository(driver),
@@ -54,13 +51,6 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		ActionPointRepository:      NewActionPointRepository(driver),
 		DomainRepository:           NewDomainRepository(driver),
 		TimelineEventRepository:    NewTimelineEventRepository(driver),
-	}
-
-	var err error
-
-	err = gormDb.AutoMigrate(&entity.PersonalEmailProvider{})
-	if err != nil {
-		panic(err)
 	}
 
 	return &repositories
