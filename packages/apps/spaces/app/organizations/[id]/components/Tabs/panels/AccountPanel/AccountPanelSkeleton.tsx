@@ -19,6 +19,9 @@ export const AccountPanelSkeleton: React.FC = () => {
       <SkeletonCard withValue={false}>
         <SkeletonCardFooter1 />
       </SkeletonCard>
+      <SkeletonCard withValue={false}>
+        <SkeletonCardFooter2 />
+      </SkeletonCard>
     </OrganizationPanel>
   );
 };

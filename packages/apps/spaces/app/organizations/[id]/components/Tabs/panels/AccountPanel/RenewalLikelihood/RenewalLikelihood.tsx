@@ -35,9 +35,13 @@ export const RenewalLikelihood = ({ data, name }: RenewalLikelihoodProps) => {
         p='4'
         w='full'
         size='lg'
-        boxShadow='xs'
         variant='outline'
         cursor='pointer'
+        boxShadow='xs'
+        _hover={{
+          boxShadow: 'md',
+        }}
+        transition='all 0.2s ease-out'
         onClick={updateModal.onOpen}
       >
         <CardBody as={Flex} p='0' align='center'>
