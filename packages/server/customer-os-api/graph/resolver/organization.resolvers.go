@@ -276,6 +276,30 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 	return response.Id, nil
 }
 
+// OrganizationHideAll is the resolver for the organization_HideAll field.
+func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHideAll", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", ids))
+
+	for _, orgId := range ids {
+		_, err := r.Clients.OrganizationClient.HideOrganization(ctx, &orggrpc.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: orgId,
+			UserId:         common.GetUserIdFromContext(ctx),
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to hide organization %s", orgId)
+		}
+	}
+
+	return &model.Result{
+		Result: true,
+	}, nil
+}
+
 // OrganizationShow is the resolver for the organization_Show field.
 func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShow", graphql.GetOperationContext(ctx))
@@ -295,6 +319,30 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 	}
 
 	return response.Id, nil
+}
+
+// OrganizationShowAll is the resolver for the organization_ShowAll field.
+func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShowAll", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", ids))
+
+	for _, orgId := range ids {
+		_, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &orggrpc.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: orgId,
+			UserId:         common.GetUserIdFromContext(ctx),
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to show organization %s", orgId)
+		}
+	}
+
+	return &model.Result{
+		Result: true,
+	}, nil
 }
 
 // OrganizationMerge is the resolver for the organization_Merge field.
