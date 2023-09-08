@@ -37,6 +37,7 @@ type Social struct {
 type Organization struct {
 	ID                string                             `json:"id"`
 	Name              string                             `json:"name"`
+	Hide              bool                               `json:"hide"`
 	Description       string                             `json:"description"`
 	Website           string                             `json:"website"`
 	Industry          string                             `json:"industry"`

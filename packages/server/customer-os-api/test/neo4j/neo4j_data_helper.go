@@ -663,8 +663,8 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 
 func CreateTenantOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
 	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
-		Name:               organizationName,
-		TenantOrganization: true,
+		Name: organizationName,
+		Hide: true,
 	})
 }
 
@@ -709,7 +709,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.lastFundingRound=$lastFundingRound,
 							org.lastFundingAmount=$lastFundingAmount,
 							org.isPublic=$isPublic, 
-							org.tenantOrganization=$tenantOrganization,
+							org.hide=$hide,
 							org.createdAt=$now,
 							org.updatedAt=$now,
 							org.renewalLikelihood=$renewalLikelihood,
@@ -740,7 +740,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"industryGroup":                   organization.IndustryGroup,
 		"targetAudience":                  organization.TargetAudience,
 		"valueProposition":                organization.ValueProposition,
-		"tenantOrganization":              organization.TenantOrganization,
+		"hide":                            organization.Hide,
 		"lastFundingRound":                organization.LastFundingRound,
 		"lastFundingAmount":               organization.LastFundingAmount,
 		"renewalLikelihood":               organization.RenewalLikelihood.RenewalLikelihood,

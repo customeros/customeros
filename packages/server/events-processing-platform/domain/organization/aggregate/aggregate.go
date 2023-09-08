@@ -50,6 +50,10 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onUpdateRenewalForecast(event)
 	case events.OrganizationUpdateBillingDetailsV1:
 		return a.onUpdateBillingDetails(event)
+	case events.OrganizationHideV1:
+		return a.onHide(event)
+	case events.OrganizationShowV1:
+		return a.onShow(event)
 	case events.OrganizationRequestRenewalForecastV1,
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRequestScrapeByWebsiteV1:
@@ -67,6 +71,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Organization.Name = eventData.Name
+	a.Organization.Hide = eventData.Hide
 	a.Organization.Description = eventData.Description
 	a.Organization.Website = eventData.Website
 	a.Organization.Industry = eventData.Industry
@@ -96,8 +101,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	}
 	a.Organization.Source.SourceOfTruth = eventData.SourceOfTruth
 	a.Organization.UpdatedAt = eventData.UpdatedAt
-	a.Organization.IsPublic = eventData.IsPublic
 	if !eventData.IgnoreEmptyFields {
+		a.Organization.IsPublic = eventData.IsPublic
+		a.Organization.Hide = eventData.Hide
 		a.Organization.Name = eventData.Name
 		a.Organization.Description = eventData.Description
 		a.Organization.Website = eventData.Website
@@ -248,5 +254,23 @@ func (a *OrganizationAggregate) onUpdateBillingDetails(event eventstore.Event) e
 	if eventData.UpdatedBy == "" {
 		a.Organization.BillingDetails.RenewalCycleNext = eventData.RenewalCycleNext
 	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onHide(event eventstore.Event) error {
+	var eventData events.HideOrganizationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Organization.Hide = true
+	return nil
+}
+
+func (a *OrganizationAggregate) onShow(event eventstore.Event) error {
+	var eventData events.ShowOrganizationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Organization.Hide = false
 	return nil
 }

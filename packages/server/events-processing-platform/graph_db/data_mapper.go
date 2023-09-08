@@ -22,6 +22,7 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 		LastFundingRound:  utils.GetStringPropOrEmpty(props, "lastFundingRound"),
 		LastFundingAmount: utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
 		IsPublic:          utils.GetBoolPropOrFalse(props, "isPublic"),
+		Hide:              utils.GetBoolPropOrFalse(props, "hide"),
 		Employees:         utils.GetInt64PropOrZero(props, "employees"),
 		Market:            utils.GetStringPropOrEmpty(props, "market"),
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),

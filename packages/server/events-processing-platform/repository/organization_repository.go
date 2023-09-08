@@ -25,6 +25,7 @@ type OrganizationRepository interface {
 	UpdateRenewalForecast(ctx context.Context, orgId string, event events.OrganizationUpdateRenewalForecastEvent) error
 	UpdateBillingDetails(ctx context.Context, orgId string, event events.OrganizationUpdateBillingDetailsEvent) error
 	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
+	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 }
 
 type organizationRepository struct {
@@ -47,6 +48,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, organiz
 		 MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id}) 
 		 ON CREATE SET 	org.name = $name,
 						org.description = $description,
+						org.hide = $hide,
 						org.website = $website,
 						org.industry = $industry,
 						org.subIndustry = $subIndustry,
@@ -70,6 +72,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, organiz
 	return r.executeQuery(ctx, query, map[string]any{
 		"id":                organizationId,
 		"name":              event.Name,
+		"hide":              event.Hide,
 		"description":       event.Description,
 		"website":           event.Website,
 		"industry":          event.Industry,
@@ -100,6 +103,7 @@ func (r *organizationRepository) UpdateOrganization(ctx context.Context, organiz
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
 		 SET	org.name = $name,
 				org.description = $description,
+				org.hide = $hide,
 				org.website = $website,
 				org.industry = $industry,
 				org.subIndustry = $subIndustry,
@@ -121,6 +125,7 @@ func (r *organizationRepository) UpdateOrganization(ctx context.Context, organiz
 		"id":                organizationId,
 		"tenant":            event.Tenant,
 		"name":              event.Name,
+		"hide":              event.Hide,
 		"description":       event.Description,
 		"website":           event.Website,
 		"industry":          event.Industry,
@@ -158,7 +163,6 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 				org.market = CASE WHEN $market <> '' THEN $market ELSE org.market END, 
 				org.employees = CASE WHEN $employees <> 0 THEN $employees ELSE org.employees END, 
 				org.sourceOfTruth = $sourceOfTruth,
-				org.isPublic = $isPublic,
 				org.updatedAt = $updatedAt,
 				org.syncedWithEventStore = true`, event.Tenant)
 
@@ -175,7 +179,6 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 		"industryGroup":     event.IndustryGroup,
 		"targetAudience":    event.TargetAudience,
 		"valueProposition":  event.ValueProposition,
-		"isPublic":          event.IsPublic,
 		"employees":         event.Employees,
 		"market":            event.Market,
 		"lastFundingRound":  event.LastFundingRound,
@@ -397,6 +400,26 @@ func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organ
 		"userId":         userId,
 		"source":         constants.SourceOpenline,
 		"now":            utils.Now(),
+	})
+}
+
+func (r *organizationRepository) SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetVisibility")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.Bool("hide", hide))
+
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
+		 SET	org.hide = $hide,
+				org.updatedAt = $now`, tenant)
+
+	span.LogFields(log.String("query", query))
+
+	return r.executeQuery(ctx, query, map[string]any{
+		"id":     organizationId,
+		"tenant": tenant,
+		"hide":   hide,
+		"now":    utils.Now(),
 	})
 }
 

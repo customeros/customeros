@@ -7,6 +7,7 @@ import (
 
 type OrganizationDataFields struct {
 	Name              string
+	Hide              bool
 	Description       string
 	Website           string
 	Industry          string

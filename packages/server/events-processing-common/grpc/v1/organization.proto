@@ -26,6 +26,13 @@ message UpsertOrganizationGrpcRequest {
   string lastFundingRound = 19;
   string lastFundingAmount = 20;
   string userId = 21;
+  bool hide = 22;
+}
+
+message OrganizationIdGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string userId = 3;
 }
 
 message LinkPhoneNumberToOrganizationGrpcRequest {
@@ -112,4 +119,6 @@ service organizationGrpcService {
   rpc UpdateOrganizationRenewalForecast(OrganizationRenewalForecastRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationBillingDetails(OrganizationBillingDetailsRequest) returns (OrganizationIdGrpcResponse);
   rpc RequestRenewNextCycleDate(RequestRenewNextCycleDateRequest) returns (OrganizationIdGrpcResponse);
+  rpc HideOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

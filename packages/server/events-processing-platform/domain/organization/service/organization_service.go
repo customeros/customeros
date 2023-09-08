@@ -44,6 +44,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 
 	coreFields := models.OrganizationDataFields{
 		Name:              request.Name,
+		Hide:              request.Hide,
 		Description:       request.Description,
 		Website:           request.Website,
 		Industry:          request.Industry,
@@ -218,6 +219,50 @@ func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, req
 	}
 
 	s.log.Infof("Requested next cycle date renewal for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+
+	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+}
+
+func (s *organizationService) HideOrganization(ctx context.Context, req *pb.OrganizationIdGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.HideOrganization")
+	defer span.Finish()
+	span.LogFields(log.Object("request", req))
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	command := cmd.NewHideOrganizationCommand(req.Tenant, req.OrganizationId, req.UserId)
+	if err := s.organizationCommands.HideOrganizationCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed hide organization with id  %s for tenant %s, err: %s", req.OrganizationId, req.Tenant, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Hidden organization with id %s for tenant %s", req.OrganizationId, req.Tenant)
+
+	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+}
+
+func (s *organizationService) ShowOrganization(ctx context.Context, req *pb.OrganizationIdGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.ShowOrganization")
+	defer span.Finish()
+	span.LogFields(log.Object("request", req))
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	command := cmd.NewShowOrganizationCommand(req.Tenant, req.OrganizationId, req.UserId)
+	if err := s.organizationCommands.ShowOrganizationCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed show organization with id  %s for tenant %s, err: %s", req.OrganizationId, req.Tenant, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Show organization with id %s for tenant %s", req.OrganizationId, req.Tenant)
 
 	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
 }

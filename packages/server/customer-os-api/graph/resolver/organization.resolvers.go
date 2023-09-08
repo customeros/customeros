@@ -255,6 +255,48 @@ func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []str
 	}, nil
 }
 
+// OrganizationHide is the resolver for the organization_Hide field.
+func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHide", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationId", id))
+
+	response, err := r.Clients.OrganizationClient.HideOrganization(ctx, &orggrpc.OrganizationIdGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: id,
+		UserId:         common.GetUserIdFromContext(ctx),
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
+		return response.Id, nil
+	}
+
+	return response.Id, nil
+}
+
+// OrganizationShow is the resolver for the organization_Show field.
+func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShow", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationId", id))
+
+	response, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &orggrpc.OrganizationIdGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: id,
+		UserId:         common.GetUserIdFromContext(ctx),
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
+		return response.Id, nil
+	}
+
+	return response.Id, nil
+}
+
 // OrganizationMerge is the resolver for the organization_Merge field.
 func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationMerge", graphql.GetOperationContext(ctx))

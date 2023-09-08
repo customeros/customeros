@@ -26,6 +26,7 @@ type OrganizationEntity struct {
 	TargetAudience     string
 	ValueProposition   string
 	IsPublic           bool
+	Hide               bool
 	Market             string
 	LastFundingRound   string
 	LastFundingAmount  string

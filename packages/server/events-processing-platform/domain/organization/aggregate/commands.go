@@ -32,6 +32,10 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, command event
 		return a.linkDomain(ctx, c)
 	case *cmd.AddSocialCommand:
 		return a.addSocial(ctx, c)
+	case *cmd.HideOrganizationCommand:
+		return a.hideOrganization(ctx, c)
+	case *cmd.ShowOrganizationCommand:
+		return a.showOrganization(ctx, c)
 	default:
 		return errors.New("invalid command type")
 	}
@@ -308,6 +312,38 @@ func (a *OrganizationAggregate) requestNextCycleDate(ctx context.Context, comman
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRequestNextCycleDateEvent")
+	}
+
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) hideOrganization(ctx context.Context, command *cmd.HideOrganizationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.hideOrganization")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewHideOrganizationEventEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewHideOrganizationEventEvent")
+	}
+
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) showOrganization(ctx context.Context, command *cmd.ShowOrganizationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.showOrganization")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewShowOrganizationEventEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewShowOrganizationEventEvent")
 	}
 
 	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)

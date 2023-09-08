@@ -317,3 +317,41 @@ func (h *GraphOrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Conte
 
 	return err
 }
+
+func (h *GraphOrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationHide")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.HideOrganizationEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.OrganizationRepository.SetVisibility(ctx, eventData.Tenant, organizationId, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (h *GraphOrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationShow")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.HideOrganizationEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.OrganizationRepository.SetVisibility(ctx, eventData.Tenant, organizationId, false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}

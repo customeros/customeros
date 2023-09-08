@@ -19,6 +19,8 @@ type OrganizationCommands struct {
 	UpdateBillingDetailsCommand    UpdateBillingDetailsCommandHandler
 	RequestRenewalForecastCommand  RequestRenewalForecastCommandHandler
 	RequestNextCycleDateCommand    RequestNextCycleDateCommandHandler
+	HideOrganizationCommand        HideOrganizationCommandHandler
+	ShowOrganizationCommand        ShowOrganizationCommandHandler
 }
 
 func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *OrganizationCommands {
@@ -34,5 +36,7 @@ func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstor
 		UpdateBillingDetailsCommand:    NewUpdateBillingDetailsCommandHandler(log, cfg, es, repositories),
 		RequestRenewalForecastCommand:  NewRequestRenewalForecastCommandHandler(log, es),
 		RequestNextCycleDateCommand:    NewRequestNextCycleDateCommandHandler(log, es),
+		HideOrganizationCommand:        NewHideOrganizationCommandHandler(log, es),
+		ShowOrganizationCommand:        NewShowOrganizationCommandHandler(log, es),
 	}
 }
