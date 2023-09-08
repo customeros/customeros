@@ -1,13 +1,13 @@
 package repository
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type PersonalEmailProviderRepository interface {
-	GetPersonalEmailProviderList() ([]entity.PersonalEmailProvider, error)
+	GetPersonalEmailProviders() ([]entity.PersonalEmailProvider, error)
 }
 
 type personalEmailProviderRepositoryImpl struct {
@@ -18,7 +18,7 @@ func NewPersonalEmailProviderRepository(gormDb *gorm.DB) PersonalEmailProviderRe
 	return &personalEmailProviderRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *personalEmailProviderRepositoryImpl) GetPersonalEmailProviderList() ([]entity.PersonalEmailProvider, error) {
+func (repo *personalEmailProviderRepositoryImpl) GetPersonalEmailProviders() ([]entity.PersonalEmailProvider, error) {
 	result := []entity.PersonalEmailProvider{}
 	err := repo.gormDb.Find(&result).Limit(1000).Error
 

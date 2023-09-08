@@ -78,13 +78,13 @@ func syncEmails(services *service.Services) {
 				return
 			}
 
-			personalEmailProviderList, err := services.Repositories.PersonalEmailProviderRepository.GetPersonalEmailProviderList()
+			personalEmailProviderList, err := services.Repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 			if err != nil {
 				logrus.Errorf("failed to get personal email provider list: %v", err)
 				return
 			}
 
-			organizationAllowedForImport, err := services.Repositories.CommonRepositories.ImportAllowedOrganizationRepository.GetOrganizationsAllowedForImport(tenant.Name)
+			organizationAllowedForImport, err := services.Repositories.CommonRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant.Name)
 			if err != nil {
 				logrus.Errorf("failed to check if organization is allowed for import: %v", err)
 				return
