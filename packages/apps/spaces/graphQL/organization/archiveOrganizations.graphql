@@ -1,9 +1,0 @@
-mutation archiveOrganizations(
-  $ids: [ID!]!
-) {
-  organization_ArchiveAll(
-    ids: $ids
-  ) {
-    result
-  }
-}

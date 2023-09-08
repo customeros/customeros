@@ -26,7 +26,6 @@ mutation createMeeting($meeting: MeetingInput!) {
     agendaContentType
     note {
       id
-      html
       appSource
     }
     createdBy {
