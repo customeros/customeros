@@ -12,8 +12,10 @@ export function useJune(): AnalyticsBrowser | undefined {
       setAnalytics(response);
     };
 
-    // @ts-expect-error fixme type process in the future
-    if (process.env.JUNE_ENABLED === true) {
+    if (`${process.env.JUNE_ENABLED}` === 'true') {
+      console.log(
+        '🏷️ ----- : Test log that will be remove as soon as issue is resolved on prod',
+      );
       loadAnalytics();
     }
   }, []);
