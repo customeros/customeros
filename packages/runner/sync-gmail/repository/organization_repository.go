@@ -52,7 +52,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()}) " +
 		" ON CREATE SET org.createdAt=$now, " +
 		"				org.updatedAt=$now, " +
-		"               org.tenantOrganization=false, " +
+		"               org.hide=false, " +
 		"               org.name=$name, " +
 		"				org.source=$source, " +
 		"				org.sourceOfTruth=$source, " +

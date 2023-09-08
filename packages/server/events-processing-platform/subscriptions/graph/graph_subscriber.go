@@ -187,6 +187,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnRenewalForecastUpdate(ctx, evt)
 	case orgevents.OrganizationUpdateBillingDetailsV1:
 		return s.organizationEventHandler.OnBillingDetailsUpdate(ctx, evt)
+	case orgevents.OrganizationHideV1:
+		return s.organizationEventHandler.OnOrganizationHide(ctx, evt)
+	case orgevents.OrganizationShowV1:
+		return s.organizationEventHandler.OnOrganizationShow(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1:

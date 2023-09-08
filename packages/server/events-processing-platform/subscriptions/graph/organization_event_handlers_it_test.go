@@ -441,3 +441,71 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate_SetNotByUser(t *te
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 0, len(eventsMap))
 }
+
+func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+		Name: "test org",
+		Hide: false,
+	})
+	orgEventHandler := &GraphOrganizationEventHandler{
+		Repositories:         testDatabase.Repositories,
+		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	event, err := events.NewHideOrganizationEventEvent(orgAggregate)
+	require.Nil(t, err)
+	err = orgEventHandler.OnOrganizationHide(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+
+	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
+	require.Equal(t, orgId, organization.ID)
+	require.Equal(t, true, organization.Hide)
+}
+
+func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+		Name: "test org",
+		Hide: true,
+	})
+	orgEventHandler := &GraphOrganizationEventHandler{
+		Repositories:         testDatabase.Repositories,
+		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	event, err := events.NewShowOrganizationEventEvent(orgAggregate)
+	require.Nil(t, err)
+	err = orgEventHandler.OnOrganizationShow(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+
+	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
+	require.Equal(t, orgId, organization.ID)
+	require.Equal(t, false, organization.Hide)
+}

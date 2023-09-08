@@ -21,8 +21,10 @@ func main() {
 	InitClients()
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
-	testCreateOrganization()
-	testUpdateOrganization()
+	//testCreateOrganization()
+	//testUpdateOrganization()
+	//testHideOrganization()
+	testShowOrganization()
 }
 
 func InitClients() {
@@ -82,6 +84,28 @@ func testUpdateOrganization() {
 		Tenant:  tenant,
 		Id:      organizationId,
 		Website: website,
+	})
+	print(result)
+}
+
+func testHideOrganization() {
+	tenant := "openline"
+	organizationId := "ccc"
+
+	result, _ := clients.OrganizationClient.HideOrganization(context.TODO(), &organization_grpc_service.OrganizationIdGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+	})
+	print(result)
+}
+
+func testShowOrganization() {
+	tenant := "openline"
+	organizationId := "ccc"
+
+	result, _ := clients.OrganizationClient.ShowOrganization(context.TODO(), &organization_grpc_service.OrganizationIdGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
 	})
 	print(result)
 }

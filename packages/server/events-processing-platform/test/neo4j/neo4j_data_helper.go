@@ -46,6 +46,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 			  MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$id})
 				SET o:Organization_%s,
 					o.name=$name,
+					o.hide=$hide,
 					o.renewalLikelihood=$renewalLikelihood,
 					o.renewalLikelihoodComment=$renewalLikelihoodComment,
 					o.renewalLikelihoodUpdatedAt=$renewalLikelihoodUpdatedAt,
@@ -65,6 +66,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":                         tenant,
 		"name":                           organization.Name,
+		"hide":                           organization.Hide,
 		"id":                             orgId,
 		"renewalLikelihood":              organization.RenewalLikelihood.RenewalLikelihood,
 		"renewalLikelihoodPrevious":      organization.RenewalLikelihood.PreviousRenewalLikelihood,

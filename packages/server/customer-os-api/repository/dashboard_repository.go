@@ -327,7 +327,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		if locationFilterCypher != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
-		countQuery += fmt.Sprintf(` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)`)
+		countQuery += fmt.Sprintf(` WHERE (o.hide = false OR o.hide is null)`)
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			countQuery += " AND "
 		}
@@ -380,7 +380,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		if sort != nil && sort.By == "RELATIONSHIP" {
 			query += " OPTIONAL MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) WITH * "
 		}
-		query += ` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) `
+		query += ` WHERE (o.hide = false OR o.hide is null) `
 
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			query += " AND "

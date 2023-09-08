@@ -22,11 +22,14 @@ const (
 	OrganizationRequestRenewalForecastV1  = "V1_ORGANIZATION_RECALCULATE_RENEWAL_FORECAST_REQUEST"
 	OrganizationRequestNextCycleDateV1    = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
 	OrganizationRequestScrapeByWebsiteV1  = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
+	OrganizationHideV1                    = "V1_ORGANIZATION_HIDE"
+	OrganizationShowV1                    = "V1_ORGANIZATION_SHOW"
 )
 
 type OrganizationCreateEvent struct {
 	Tenant            string    `json:"tenant" validate:"required"`
 	Name              string    `json:"name"`
+	Hide              bool      `json:"hide"`
 	Description       string    `json:"description"`
 	Website           string    `json:"website"`
 	Industry          string    `json:"industry"`
@@ -50,6 +53,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 	eventData := OrganizationCreateEvent{
 		Tenant:            aggregate.GetTenant(),
 		Name:              organizationFields.OrganizationDataFields.Name,
+		Hide:              organizationFields.OrganizationDataFields.Hide,
 		Description:       organizationFields.OrganizationDataFields.Description,
 		Website:           organizationFields.OrganizationDataFields.Website,
 		Industry:          organizationFields.OrganizationDataFields.Industry,
@@ -86,6 +90,7 @@ type OrganizationUpdateEvent struct {
 	SourceOfTruth     string    `json:"sourceOfTruth"`
 	UpdatedAt         time.Time `json:"updatedAt"`
 	Name              string    `json:"name"`
+	Hide              bool      `json:"hide"`
 	Description       string    `json:"description"`
 	Website           string    `json:"website"`
 	Industry          string    `json:"industry"`
@@ -105,6 +110,7 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		IgnoreEmptyFields: ignoreEmptyFields,
 		Tenant:            aggregate.GetTenant(),
 		Name:              organizationFields.OrganizationDataFields.Name,
+		Hide:              organizationFields.OrganizationDataFields.Hide,
 		Description:       organizationFields.OrganizationDataFields.Description,
 		Website:           organizationFields.OrganizationDataFields.Website,
 		Industry:          organizationFields.OrganizationDataFields.Industry,
@@ -408,6 +414,46 @@ func NewOrganizationRequestScrapeByWebsite(aggregate eventstore.Aggregate, websi
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestScrapeByWebsiteV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type HideOrganizationEvent struct {
+	Tenant string `json:"tenant" validate:"required"`
+}
+
+func NewHideOrganizationEventEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
+	eventData := HideOrganizationEvent{
+		Tenant: aggregate.GetTenant(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationHideV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type ShowOrganizationEvent struct {
+	Tenant string `json:"tenant" validate:"required"`
+}
+
+func NewShowOrganizationEventEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
+	eventData := ShowOrganizationEvent{
+		Tenant: aggregate.GetTenant(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationShowV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

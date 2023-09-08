@@ -96,7 +96,6 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		" MERGE (org:Organization {id:$orgId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET org.createdAt=$createdAt, " +
 		"				org.updatedAt=$updatedAt, " +
-		"               org.tenantOrganization=false, " +
 		"               org.name=$name, " +
 		"				org.description=$description, " +
 		"               org.website=$website, " +

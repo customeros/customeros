@@ -185,3 +185,23 @@ func NewAddSocialCommand(objectID, tenant, socialId, socialPlatform, socialUrl, 
 		UpdatedAt: updatedAt,
 	}
 }
+
+type HideOrganizationCommand struct {
+	eventstore.BaseCommand
+}
+
+func NewHideOrganizationCommand(tenant, orgId, userId string) *HideOrganizationCommand {
+	return &HideOrganizationCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
+	}
+}
+
+type ShowOrganizationCommand struct {
+	eventstore.BaseCommand
+}
+
+func NewShowOrganizationCommand(tenant, orgId, userId string) *ShowOrganizationCommand {
+	return &ShowOrganizationCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
+	}
+}
