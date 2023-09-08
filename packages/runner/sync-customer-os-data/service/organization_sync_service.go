@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
+	comentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -24,6 +25,11 @@ type organizationSyncService struct {
 	log          logger.Logger
 }
 
+type domains struct {
+	whitelistDomains       []comentity.WhitelistDomain
+	personalEmailProviders []comentity.PersonalEmailProvider
+}
+
 func NewDefaultOrganizationSyncService(repositories *repository.Repositories, services *Services, log logger.Logger) SyncService {
 	return &organizationSyncService{
 		repositories: repositories,
@@ -35,11 +41,30 @@ func NewDefaultOrganizationSyncService(repositories *repository.Repositories, se
 func (s *organizationSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 	completed, failed, skipped := 0, 0, 0
 
+	var controlDomains *domains
+
 	for {
 		organizations := dataService.GetDataForSync(ctx, common.ORGANIZATIONS, batchSize, runId)
 
 		if len(organizations) == 0 {
 			break
+		}
+
+		if controlDomains == nil {
+			whitelistDomains, err := s.repositories.CommonRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant)
+			if err != nil {
+				s.log.Errorf("error while getting whitelist domains: %v", err)
+				whitelistDomains = make([]comentity.WhitelistDomain, 0)
+			}
+			personalEmailProviders, err := s.repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+			if err != nil {
+				s.log.Errorf("error while getting personal email providers: %v", err)
+				personalEmailProviders = make([]comentity.PersonalEmailProvider, 0)
+			}
+			controlDomains = &domains{
+				whitelistDomains:       whitelistDomains,
+				personalEmailProviders: personalEmailProviders,
+			}
 		}
 
 		s.log.Infof("syncing %d organizations from %s for tenant %s", len(organizations), dataService.SourceId(), tenant)
@@ -57,7 +82,7 @@ func (s *organizationSyncService) Sync(ctx context.Context, dataService source.S
 				defer wg.Done()
 
 				var comp, fail, skip int
-				s.syncOrganization(ctx, org, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+				s.syncOrganization(ctx, org, dataService, controlDomains, syncDate, tenant, runId, &comp, &fail, &skip)
 
 				results <- result{comp, fail, skip}
 			}(v.(entity.OrganizationData))
@@ -87,7 +112,7 @@ func (s *organizationSyncService) Sync(ctx context.Context, dataService source.S
 	return completed, failed, skipped
 }
 
-func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput entity.OrganizationData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
+func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput entity.OrganizationData, dataService source.SourceDataService, controlDomains *domains, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationSyncService.syncOrganization")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
@@ -105,6 +130,33 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		*skipped++
 		span.LogFields(log.Bool("skippedSync", true))
 		return
+	}
+
+	nonPersonalEmailProviderDomains := make([]string, 0)
+	for _, domain := range orgInput.Domains {
+		if !controlDomains.isPersonalEmailProvider(domain) {
+			nonPersonalEmailProviderDomains = append(nonPersonalEmailProviderDomains, domain)
+		}
+	}
+	orgInput.Domains = nonPersonalEmailProviderDomains
+
+	if orgInput.CreateByDomain {
+		if !orgInput.HasDomains() {
+			if err := dataService.MarkProcessed(ctx, orgInput.SyncId, runId, true, true, "Missing non-personal email provider domain"); err != nil {
+				*failed++
+				span.LogFields(log.Bool("failedSync", true))
+				return
+			}
+			*skipped++
+			span.LogFields(log.Bool("skippedSync", true))
+			return
+		}
+	}
+	orgHasWhitelistedDomain := false
+	for _, domain := range orgInput.Domains {
+		if controlDomains.isWhitelistedDomain(domain) {
+			orgHasWhitelistedDomain = true
+		}
 	}
 
 	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput)
@@ -125,7 +177,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 	span.LogFields(log.String("organizationId", organizationId))
 
 	if !failedSync {
-		err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, orgInput)
+		err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, orgInput, orgHasWhitelistedDomain)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
@@ -262,4 +314,25 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		*completed++
 	}
 	span.LogFields(log.Bool("failedSync", failedSync))
+}
+
+func (d *domains) isPersonalEmailProvider(domain string) bool {
+	for _, v := range d.personalEmailProviders {
+		if strings.ToLower(domain) == strings.ToLower(v.ProviderDomain) {
+			return true
+		}
+	}
+	return false
+}
+
+func (d *domains) isWhitelistedDomain(domain string) bool {
+	if domain == "" {
+		return false
+	}
+	for _, v := range d.whitelistDomains {
+		if v.Domain != "*" && strings.ToLower(domain) == strings.ToLower(v.Domain) && v.Allowed {
+			return true
+		}
+	}
+	return false
 }

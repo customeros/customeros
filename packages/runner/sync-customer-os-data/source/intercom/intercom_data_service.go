@@ -16,11 +16,13 @@ import (
 )
 
 const (
-	AdminsTableSuffix = "admins"
+	AdminsTableSuffix   = "admins"
+	ContactsTableSuffix = "contacts"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
-	string(common.USERS): {AdminsTableSuffix},
+	string(common.USERS):         {AdminsTableSuffix},
+	string(common.ORGANIZATIONS): {ContactsTableSuffix},
 }
 
 type intercomDataService struct {
@@ -41,6 +43,7 @@ func NewIntercomDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string
 	}
 	dataService.dataFuncs = map[common.SyncedEntityType]func(context.Context, int, string) []any{}
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
+	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
 	return &dataService
 }
 
@@ -116,39 +119,39 @@ func (s *intercomDataService) GetUsersForSync(ctx context.Context, batchSize int
 	return users
 }
 
-//func (s *intercomDataService) GetOrganizationsForSync(ctx context.Context, batchSize int, runId string) []any {
-//	s.processingIds = make(map[string]source.ProcessingEntity)
-//	currentEntity := string(common.ORGANIZATIONS)
-//
-//	var organizations []any
-//	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-//		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
-//		if err != nil {
-//			s.log.Fatal(err) // alexb handle errors
-//			return nil
-//		}
-//		for _, v := range airbyteRecords {
-//			if len(organizations) >= batchSize {
-//				break
-//			}
-//			outputJSON, err := MapOrganization(v.AirbyteData)
-//			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
-//			if err != nil {
-//				s.log.Fatal(err) // alexb handle errors
-//				continue
-//			}
-//
-//			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-//				ExternalId:  organization.ExternalId,
-//				Entity:      currentEntity,
-//				TableSuffix: sourceTableSuffix,
-//			}
-//			organizations = append(organizations, organization)
-//		}
-//	}
-//	return organizations
-//}
-//
+func (s *intercomDataService) GetOrganizationsForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.ORGANIZATIONS)
+
+	var organizations []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Error(err)
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(organizations) >= batchSize {
+				break
+			}
+			outputJSON, err := MapOrganization(v.AirbyteData)
+			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				s.log.Fatal(err) // alexb handle errors
+				continue
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  organization.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			organizations = append(organizations, organization)
+		}
+	}
+	return organizations
+}
+
 //func (s *intercomDataService) GetContactsForSync(ctx context.Context, batchSize int, runId string) []any {
 //	s.processingIds = make(map[string]source.ProcessingEntity)
 //	currentEntity := string(common.CONTACTS)
