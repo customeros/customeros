@@ -2,14 +2,14 @@ module github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail
 
 go 1.20
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../../server/customer-os-common-module
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../../server/customer-os-common-module
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.12.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230907202733-53a96582fd62
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230908062116-37b5a96799dd
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
