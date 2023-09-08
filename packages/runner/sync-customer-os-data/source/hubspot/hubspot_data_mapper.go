@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"strconv"
@@ -59,25 +61,27 @@ func MapOrganization(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	output := model.Output{
-		ExternalId:      input.ID,
-		CreatedAt:       input.CreatedAt,
-		UpdatedAt:       input.UpdatedAt,
-		Name:            input.Properties.Name,
-		Description:     input.Properties.Description,
-		Website:         input.Properties.Website,
-		Industry:        input.Properties.Industry,
-		IsPublic:        input.Properties.IsPublic,
-		Employees:       input.Properties.NumberOfEmployees,
-		PhoneNumber:     input.Properties.Phone,
-		Country:         input.Properties.Country,
-		Region:          input.Properties.State,
-		Locality:        input.Properties.City,
-		Address:         input.Properties.Address,
-		Address2:        input.Properties.Address2,
-		Zip:             input.Properties.Zip,
-		ExternalOwnerId: input.Properties.HubspotOwnerId,
-		Domains:         []string{input.Properties.Domain},
+	output := entity.OrganizationData{
+		BaseData: entity.BaseData{
+			ExternalId:   input.ID,
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.UpdatedAt,
+		},
+		Name:                input.Properties.Name,
+		Description:         input.Properties.Description,
+		Website:             input.Properties.Website,
+		Industry:            input.Properties.Industry,
+		IsPublic:            input.Properties.IsPublic,
+		Employees:           int64(input.Properties.NumberOfEmployees),
+		PhoneNumber:         input.Properties.Phone,
+		Country:             input.Properties.Country,
+		Region:              input.Properties.State,
+		Locality:            input.Properties.City,
+		Address:             input.Properties.Address,
+		Address2:            input.Properties.Address2,
+		Zip:                 input.Properties.Zip,
+		UserExternalOwnerId: input.Properties.HubspotOwnerId,
+		Domains:             []string{input.Properties.Domain},
 	}
 	switch input.Properties.Type {
 	case "PROSPECT":
@@ -94,13 +98,7 @@ func MapOrganization(inputJSON string) (string, error) {
 		output.RelationshipStage = Live
 	}
 
-	// Convert output data to JSON
-	outputJSON, err := json.Marshal(output)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
-	}
-
-	return string(outputJSON), nil
+	return utils.ToJson(output)
 }
 
 func MapUser(inputJSON string) (string, error) {
@@ -122,13 +120,15 @@ func MapUser(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	output := model.Output{
+	output := entity.UserData{
+		BaseData: entity.BaseData{
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.UpdatedAt,
+		},
 		Name:      fmt.Sprintf("%s %s", input.FirstName, input.LastName),
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
 		Email:     input.Email,
-		CreatedAt: input.CreatedAt,
-		UpdatedAt: input.UpdatedAt,
 	}
 
 	if input.UserID != 0 {

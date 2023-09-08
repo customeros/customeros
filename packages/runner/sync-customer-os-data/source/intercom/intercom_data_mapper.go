@@ -2,7 +2,11 @@ package intercom
 
 import (
 	"encoding/json"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"strings"
+	"time"
 )
 
 func MapUser(inputJson string) (string, error) {
@@ -16,69 +20,80 @@ func MapUser(inputJson string) (string, error) {
 		return "", err
 	}
 
-	output := model.Output{
-		ExternalId: input.ID,
-		Name:       input.Name,
-		Email:      input.Email,
+	output := entity.UserData{
+		BaseData: entity.BaseData{
+			ExternalId: input.ID,
+		},
+		Name:  input.Name,
+		Email: input.Email,
 	}
 	if input.ID == "" {
 		output.Skip = true
 		output.SkipReason = "Missing external id"
 	}
 
-	outputJson, err := json.Marshal(output)
-	if err != nil {
-		return "", err
-	}
-
-	return string(outputJson), nil
+	return utils.ToJson(output)
 }
 
-//func MapOrganization(inputJSON string) (string, error) {
-//	var input struct {
-//		ID                int64  `json:"id,omitempty"`
-//		Name              string `json:"name,omitempty"`
-//		Address           string `json:"address,omitempty"`
-//		AddTime           string `json:"add_time,omitempty"`
-//		UpdateTime        string `json:"update_time,omitempty"`
-//		OwnerID           int64  `json:"owner_id,omitempty"`
-//		PeopleCount       int    `json:"people_count,omitempty"`
-//		AddressCountry    string `json:"address_country,omitempty"`
-//		CountryCode       string `json:"country_code,omitempty"`
-//		AddressLocality   string `json:"address_locality,omitempty"`
-//		AddressPostalCode string `json:"address_postal_code,omitempty"`
-//	}
-//
-//	err := json.Unmarshal([]byte(inputJSON), &input)
-//	if err != nil {
-//		return "", fmt.Errorf("failed to parse input JSON: %v", err)
-//	}
-//
-//	output := model.Output{
-//		ExternalId:     fmt.Sprintf("%d", input.ID),
-//		Name:           input.Name,
-//		Address:        input.Address,
-//		CreatedAt:      input.AddTime,
-//		UpdatedAt:      input.UpdateTime,
-//		ExternalUserId: fmt.Sprintf("%d", input.OwnerID),
-//		Employees:      input.PeopleCount,
-//		Country:        utils.StringFirstNonEmpty(input.AddressCountry, input.CountryCode),
-//		Locality:       input.AddressLocality,
-//		Zip:            input.AddressPostalCode,
-//	}
-//	if input.ID == 0 {
-//		output.Skip = true
-//		output.SkipReason = "Missing external id"
-//	}
-//
-//	outputJSON, err := json.Marshal(output)
-//	if err != nil {
-//		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
-//	}
-//
-//	return string(outputJSON), nil
-//}
-//
+func MapOrganization(inputJSON string) (string, error) {
+	var input struct {
+		Email     string `json:"email,omitempty"`
+		ID        string `json:"id,omitempty"`
+		CreatedAt int64  `json:"created_at,omitempty"`
+	}
+
+	err := json.Unmarshal([]byte(inputJSON), &input)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse input JSON: %v", err)
+	}
+	if input.Email == "" {
+		output := entity.OrganizationData{
+			BaseData: entity.BaseData{
+				Skip:       true,
+				SkipReason: "Missing email",
+			},
+		}
+		return utils.ToJson(output)
+	}
+	if input.ID == "" {
+		output := entity.OrganizationData{
+			BaseData: entity.BaseData{
+				Skip:       true,
+				SkipReason: "Missing id",
+			},
+		}
+		return utils.ToJson(output)
+	}
+
+	output := entity.OrganizationData{
+		BaseData: entity.BaseData{
+			ExternalId: input.ID,
+		},
+		CreateByDomain:      true,
+		ExternalSourceTable: utils.StringPtr("contacts"),
+	}
+	output.Domains = []string{extractDomain(input.Email)}
+	if input.CreatedAt != 0 {
+		output.CreatedAtStr = tsStrToRFC3339(input.CreatedAt)
+	}
+
+	return utils.ToJson(output)
+}
+
+func extractDomain(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return ""
+	}
+	return parts[1]
+}
+
+func tsStrToRFC3339(timestamp int64) string {
+	t := time.Unix(timestamp, 0).UTC()
+	layout := "2006-01-02T15:04:05Z"
+	return t.Format(layout)
+}
+
 //func MapContact(inputJSON string) (string, error) {
 //	var input struct {
 //		ID         int64  `json:"id,omitempty"`

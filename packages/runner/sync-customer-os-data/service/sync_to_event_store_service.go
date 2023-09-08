@@ -272,6 +272,7 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 			Id:                utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 			Tenant:            v.LinkedNodeId,
 			Name:              utils.GetStringPropOrEmpty(v.Node.Props, "name"),
+			Hide:              utils.GetBoolPropOrFalse(v.Node.Props, "hide"),
 			Description:       utils.GetStringPropOrEmpty(v.Node.Props, "description"),
 			Website:           utils.GetStringPropOrEmpty(v.Node.Props, "website"),
 			Industry:          utils.GetStringPropOrEmpty(v.Node.Props, "industry"),

@@ -3,17 +3,21 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
+	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"gorm.io/gorm"
 )
 
 type Dbs struct {
-	ControlDb      *gorm.DB
+	GormDB         *gorm.DB
 	Neo4jDriver    *neo4j.DriverWithContext
 	RawDataStoreDB *config.RawDataStoreDB
 }
 
 type Repositories struct {
-	Dbs                          Dbs
+	Dbs Dbs
+
+	CommonRepositories *commonRepository.Repositories
+
 	TenantSyncSettingsRepository TenantSyncSettingsRepository
 	SyncRunRepository            SyncRunRepository
 
@@ -32,15 +36,16 @@ type Repositories struct {
 	ActionRepository           ActionRepository
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.RawDataStoreDB) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb *config.RawDataStoreDB) *Repositories {
 	repositories := Repositories{
 		Dbs: Dbs{
 			Neo4jDriver:    driver,
-			ControlDb:      controlDb,
+			GormDB:         gormDB,
 			RawDataStoreDB: airbyteStoreDb,
 		},
-		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(controlDb),
-		SyncRunRepository:            NewSyncRunRepository(controlDb),
+		CommonRepositories:           commonRepository.InitRepositories(gormDB, driver),
+		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(gormDB),
+		SyncRunRepository:            NewSyncRunRepository(gormDB),
 		ContactRepository:            NewContactRepository(driver),
 		EmailRepository:              NewEmailRepository(driver),
 		PhoneNumberRepository:        NewPhoneNumberRepository(driver),

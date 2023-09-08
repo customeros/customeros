@@ -16,7 +16,7 @@ import (
 
 type OrganizationRepository interface {
 	GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error)
-	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error
+	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData, orgWhitelisted bool) error
 	MergeOrganizationRelationshipAndStage(ctx context.Context, tenant, organizationId, relationship, stage, externalSystem string) error
 	MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
 	MergeOrganizationDomain(ctx context.Context, tenant, organizationId, domain, externalSystem string) error
@@ -80,7 +80,7 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 	return "", nil
 }
 
-func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error {
+func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData, orgWhitelisted bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -97,6 +97,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		" ON CREATE SET org.createdAt=$createdAt, " +
 		"				org.updatedAt=$updatedAt, " +
 		"               org.name=$name, " +
+		"               org.hide=$hide, " +
 		"				org.description=$description, " +
 		"               org.website=$website, " +
 		"				org.industry=$industry, " +
@@ -168,6 +169,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 				"appSource":         constants.AppSourceSyncCustomerOsData,
 				"externalSource":    organization.ExternalSourceTable,
 				"now":               utils.Now(),
+				"hide":              !orgWhitelisted,
 			})
 		if err != nil {
 			return nil, err

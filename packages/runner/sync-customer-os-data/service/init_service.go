@@ -25,7 +25,7 @@ func NewInitService(repositories *repository.Repositories, services *Services, l
 }
 
 func (s *initService) Init() {
-	db := s.repositories.Dbs.ControlDb
+	db := s.repositories.Dbs.GormDB
 
 	err := db.AutoMigrate(&entity.TenantSyncSettings{})
 	if err != nil {

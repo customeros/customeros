@@ -3,6 +3,7 @@ package slack
 import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"regexp"
 	"strconv"
@@ -41,29 +42,38 @@ func MapUser(inputJson string) (string, error) {
 	}
 
 	if input.Bot || input.App {
-		output := model.Output{
-			Skip:       true,
-			SkipReason: "User is a bot or app",
+		output := entity.UserData{
+			BaseData: entity.BaseData{
+				Skip:       true,
+				SkipReason: "User is a bot or app",
+			},
 		}
 		return utils.ToJson(output)
 	}
 	if input.Deleted {
-		output := model.Output{
-			Skip:       true,
-			SkipReason: "User is deleted",
+		output := entity.UserData{
+			BaseData: entity.BaseData{
+				Skip:       true,
+				SkipReason: "User is deleted",
+			},
 		}
 		return utils.ToJson(output)
 	}
 	if !slackUserIsTenantUser(input.Profile.Email, input.TeamId, input.OpenlineFields.TenantDomain, input.OpenlineFields.TenantTeamId) {
-		output := model.Output{
-			Skip:       true,
-			SkipReason: "Slack user is not a tenant user",
+		output := entity.UserData{
+			BaseData: entity.BaseData{
+
+				Skip:       true,
+				SkipReason: "Slack user is not a tenant user",
+			},
 		}
 		return utils.ToJson(output)
 	}
 
-	output := model.Output{
-		ExternalId:  input.ID,
+	output := entity.UserData{
+		BaseData: entity.BaseData{
+			ExternalId: input.ID,
+		},
 		Email:       input.Profile.Email,
 		PhoneNumber: input.Profile.Phone,
 		FirstName:   input.Profile.FirstName,

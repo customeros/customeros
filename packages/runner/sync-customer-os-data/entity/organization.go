@@ -54,6 +54,9 @@ type OrganizationData struct {
 	Market              string              `json:"market,omitempty"`
 	LastFundingRound    string              `json:"lastFundingRound,omitempty"`
 	LastFundingAmount   string              `json:"lastFundingAmount,omitempty"`
+	// If true, the organization will be created by domain,
+	// Missing domains, or blacklisted domains will result in no organization being created
+	CreateByDomain bool `json:"createByDomain,omitempty"`
 }
 
 func (o *OrganizationData) HasDomains() bool {

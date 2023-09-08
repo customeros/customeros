@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 )
@@ -22,13 +23,15 @@ func MapUser(inputJson string) (string, error) {
 		return "", err
 	}
 
-	output := model.Output{
-		ExternalId:  fmt.Sprintf("%d", input.ID),
+	output := entity.UserData{
+		BaseData: entity.BaseData{
+			ExternalId:   fmt.Sprintf("%d", input.ID),
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.Modified,
+		},
 		Name:        input.Name,
 		Email:       input.Email,
 		PhoneNumber: input.Phone,
-		CreatedAt:   input.CreatedAt,
-		UpdatedAt:   input.Modified,
 	}
 	if input.ID == 0 {
 		output.Skip = true
@@ -63,14 +66,16 @@ func MapOrganization(inputJSON string) (string, error) {
 		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
 
-	output := model.Output{
-		ExternalId:     fmt.Sprintf("%d", input.ID),
+	output := entity.OrganizationData{
+		BaseData: entity.BaseData{
+			ExternalId:   fmt.Sprintf("%d", input.ID),
+			CreatedAtStr: input.AddTime,
+			UpdatedAtStr: input.UpdateTime,
+		},
 		Name:           input.Name,
 		Address:        input.Address,
-		CreatedAt:      input.AddTime,
-		UpdatedAt:      input.UpdateTime,
-		ExternalUserId: fmt.Sprintf("%d", input.OwnerID),
-		Employees:      input.PeopleCount,
+		UserExternalId: fmt.Sprintf("%d", input.OwnerID),
+		Employees:      int64(input.PeopleCount),
 		Country:        utils.StringFirstNonEmpty(input.AddressCountry, input.CountryCode),
 		Locality:       input.AddressLocality,
 		Zip:            input.AddressPostalCode,
