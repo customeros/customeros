@@ -33,6 +33,17 @@ export type OrganizationAccountDetailsQuery = {
     __typename?: 'Organization';
     id: string;
     name: string;
+    notes: {
+      __typename?: 'NotePage';
+      totalPages: number;
+      totalElements: any;
+      content: Array<{
+        __typename?: 'Note';
+        id: string;
+        content?: string | null;
+        contentType?: string | null;
+      }>;
+    };
     accountDetails?: {
       __typename?: 'OrgAccountDetails';
       renewalForecast?: {
@@ -86,6 +97,15 @@ export const OrganizationAccountDetailsDocument = `
   organization(id: $id) {
     id
     name
+    notes {
+      content {
+        id
+        content
+        contentType
+      }
+      totalPages
+      totalElements
+    }
     accountDetails {
       renewalForecast {
         amount

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useForm } from 'react-inverted-form';
 
 import { Box } from '@ui/layout/Box';
@@ -25,6 +25,7 @@ interface BillingDetailsCardBProps {
   data?: BillingDetails | null;
 }
 export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
+  const [isFocused, setIsFocused] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
   const defaultValues = BillingDetailsDTO.toForm(data);
@@ -57,6 +58,9 @@ export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
     formId,
     defaultValues,
     stateReducer: (state, action, next) => {
+      if (action.type === 'FIELD_BLUR') {
+        setIsFocused(false);
+      }
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'frequency': {
@@ -96,9 +100,13 @@ export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
       p='4'
       w='full'
       size='lg'
-      boxShadow='xs'
       variant='outline'
       cursor='default'
+      boxShadow={isFocused ? 'md' : 'xs'}
+      _hover={{
+        boxShadow: 'md',
+      }}
+      transition='all 0.2s ease-out'
     >
       <CardBody as={Flex} p='0' w='full' align='center'>
         <FeaturedIcon>
@@ -120,6 +128,7 @@ export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
               formId={formId}
               name='amount'
               min={0}
+              onFocus={() => setIsFocused(true)}
               placeholder='Amount'
               leftElement={
                 <Box color='gray.500'>
@@ -136,6 +145,7 @@ export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
               placeholder='Monthly'
               options={frequencyOptions}
               formId={formId}
+              onFocus={() => setIsFocused(true)}
               leftElement={
                 <Box mr={3} color='gray.500'>
                   <CoinsSwap height={16} />

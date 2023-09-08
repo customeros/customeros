@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useForm } from 'react-inverted-form';
 
 import { Flex } from '@ui/layout/Flex';
@@ -25,6 +25,7 @@ interface TimeToRenewalsCardProps {
   data?: BillingDetails | null;
 }
 export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
+  const [isFocused, setIsFocused] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
@@ -43,6 +44,9 @@ export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
     formId: 'time-to-renewal',
     defaultValues,
     stateReducer: (state, action, next) => {
+      if (action.type === 'FIELD_BLUR') {
+        setIsFocused(false);
+      }
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'renewalCycle': {
@@ -115,9 +119,13 @@ export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
       p='4'
       w='full'
       size='lg'
-      boxShadow='xs'
       variant='outline'
       cursor='default'
+      boxShadow={isFocused ? 'md' : 'xs'}
+      _hover={{
+        boxShadow: 'md',
+      }}
+      transition='all 0.2s ease-out'
     >
       <CardBody as={Flex} p='0' justify='space-between' align='center' w='full'>
         <FeaturedIcon size='md' minW='10'>
@@ -163,12 +171,14 @@ export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
             placeholder='Monthly'
             options={frequencyOptions}
             formId='time-to-renewal'
+            onFocus={() => setIsFocused(true)}
             leftElement={<Icons.ClockFastForward mr='3' color='gray.500' />}
           />
           <DatePicker
             label='Renewal cycle start'
             formId='time-to-renewal'
             name='renewalCycleStart'
+            onFocus={() => setIsFocused(true)}
           />
         </Flex>
       </CardFooter>

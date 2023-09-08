@@ -8,7 +8,8 @@ import { RenewalForecast, RenewalForecastType } from './RenewalForecast';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
 import { BillingDetailsCard } from './BillingDetailsCard/BillingDetailsCard';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
-import { TimeToRenewal } from '@organization/components/Tabs/panels/AccountPanel/TimeToRenewal/TimeToRenewal';
+import { TimeToRenewal } from './TimeToRenewal';
+import { Notes } from './Notes';
 
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
@@ -49,6 +50,7 @@ export const AccountPanel = () => {
         id={id}
         data={data?.organization?.accountDetails?.billingDetails}
       />
+      <Notes id={id} data={data?.organization?.notes?.content} />
     </OrganizationPanel>
   );
 };
