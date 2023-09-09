@@ -63,6 +63,10 @@
     {
       "name": "Check JobRole nodes without linked contact or user",
       "query": "MATCH (j:JobRole) WHERE NOT (j)--(:Contact|User) RETURN count(j)"
+    },
+    {
+      "name": "Check multiple organizations share same domain",
+      "query": "match (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
     }
   ]
 }

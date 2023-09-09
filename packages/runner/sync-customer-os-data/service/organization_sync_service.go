@@ -186,16 +186,6 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		}
 	}
 
-	if newOrganization && !failedSync {
-		err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, orgInput.Id, orgInput.ExternalSystem, constants.AppSourceSyncCustomerOsData)
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed create organization created action for organization %v, tenant %v :%v", organizationId, tenant, err)
-			s.log.Errorf(reason)
-		}
-	}
-
 	if orgInput.HasDomains() && !failedSync {
 		for _, domain := range orgInput.Domains {
 			err = s.repositories.OrganizationRepository.MergeOrganizationDomain(ctx, tenant, organizationId, domain, orgInput.ExternalSystem)
@@ -206,6 +196,16 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 				s.log.Errorf(reason)
 				break
 			}
+		}
+	}
+
+	if newOrganization && !failedSync {
+		err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, orgInput.Id, orgInput.ExternalSystem, constants.AppSourceSyncCustomerOsData)
+		if err != nil {
+			failedSync = true
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("failed create organization created action for organization %v, tenant %v :%v", organizationId, tenant, err)
+			s.log.Errorf(reason)
 		}
 	}
 
@@ -295,7 +295,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		if err = s.repositories.OrganizationRepository.LinkToParentOrganizationAsSubsidiary(ctx, tenant, organizationId, orgInput.ExternalSystem, orgInput.ParentOrganization); err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed link current organization as subsidiary %v to parent organization by external id %v, tenant %v :%v", orgInput.Id, orgInput.ParentOrganization.ExternalId, tenant, err)
+			reason = fmt.Sprintf("failed link current organization as subsidiary %v to parent organization by external id %v, tenant %v :%v", orgInput.Id, orgInput.ParentOrganization.Organization.ExternalId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}

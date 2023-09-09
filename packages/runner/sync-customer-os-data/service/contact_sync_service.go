@@ -108,6 +108,41 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		return
 	}
 
+	if contactInput.OrganizationRequired {
+		found := false
+		for _, org := range contactInput.Organizations {
+			if org.ReferencedById() {
+				orgFound, _ := s.repositories.OrganizationRepository.IsOrganizationExistsWithId(ctx, tenant, org.Id)
+				if orgFound {
+					found = true
+					break
+				}
+			} else if org.ReferencedByExternalId() {
+				orgFound, _ := s.repositories.OrganizationRepository.IsOrganizationExistsWithExternalId(ctx, tenant, org.ExternalId, contactInput.ExternalSystem)
+				if orgFound {
+					found = true
+					break
+				}
+			} else if org.ReferencedByDomain() {
+				orgFound, _ := s.repositories.OrganizationRepository.IsOrganizationExistsWithDomain(ctx, tenant, org.Domain)
+				if orgFound {
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			if err := dataService.MarkProcessed(ctx, contactInput.SyncId, runId, true, true, "Organization not found"); err != nil {
+				*failed++
+				span.LogFields(log.Bool("failedSync", true))
+				return
+			}
+			*skipped++
+			span.LogFields(log.Bool("skippedSync", true))
+			return
+		}
+	}
+
 	if contactInput.Name == "" {
 		contactInput.Name = strings.TrimSpace(fmt.Sprintf("%s %s", contactInput.FirstName, contactInput.LastName))
 	}
@@ -184,44 +219,34 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		}
 	}
 
-	if contactInput.HasOrganizationsByExternalId() && !failedSync {
-		for _, organizationExternalId := range contactInput.ExternalOrganizationsIds {
-			if organizationExternalId != "" {
-				if err = s.repositories.ContactRepository.LinkContactWithOrganizationByExternalId(ctx, tenant, contactId, organizationExternalId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
+	if !failedSync {
+		for _, organization := range contactInput.Organizations {
+			if !organization.Available() {
+				continue
+			}
+			if organization.ReferencedByExternalId() {
+				if err = s.repositories.ContactRepository.LinkContactWithOrganizationByExternalId(ctx, tenant, contactId, dataService.SourceId(), organization); err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
+					reason = fmt.Sprintf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organization.ExternalId, tenant, err)
 					s.log.Errorf(reason)
 					break
 				}
+			} else if organization.ReferencedById() {
+				if err = s.repositories.ContactRepository.LinkContactWithOrganizationByInternalId(ctx, tenant, contactId, dataService.SourceId(), organization); err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("failed link contact %v to organization with id %v, tenant %v :%v", contactId, organization.Id, tenant, err)
+					s.log.Errorf(reason)
+				}
+			} else if organization.ReferencedByDomain() {
+				if err = s.repositories.ContactRepository.LinkContactWithOrganizationByDomain(ctx, tenant, contactId, dataService.SourceId(), organization); err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("failed link contact %v to organization with id %v, tenant %v :%v", contactId, organization.Id, tenant, err)
+					s.log.Errorf(reason)
+				}
 			}
-		}
-	}
-
-	if contactInput.HasOrganizationById() && !failedSync {
-		if err = s.repositories.ContactRepository.LinkContactWithOrganizationByInternalId(ctx, tenant, contactId, contactInput.OpenlineOrganizationId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed link contact %v to organization with id %v, tenant %v :%v", contactId, contactInput.OpenlineOrganizationId, tenant, err)
-			s.log.Errorf(reason)
-		}
-	}
-
-	if !failedSync {
-		if err = s.repositories.RoleRepository.RemoveOutdatedJobRoles(ctx, tenant, contactId, dataService.SourceId(), contactInput.PrimaryOrganizationExternalId); err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
-			s.log.Errorf(reason)
-		}
-	}
-
-	if contactInput.PrimaryOrganizationExternalId != "" && !failedSync {
-		if err = s.repositories.RoleRepository.MergeJobRole(ctx, tenant, contactId, contactInput.JobTitle, contactInput.PrimaryOrganizationExternalId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge primary job role for contact {%s}, organization external id {%s}, tenant {%s} :%v", contactId, contactInput.PrimaryOrganizationExternalId, tenant, err)
-			s.log.Errorf(reason)
 		}
 	}
 

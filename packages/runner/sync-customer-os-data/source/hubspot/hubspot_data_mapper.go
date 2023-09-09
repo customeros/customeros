@@ -3,7 +3,6 @@ package hubspot
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/text/cases"
@@ -67,21 +66,23 @@ func MapOrganization(inputJSON string) (string, error) {
 			CreatedAtStr: input.CreatedAt,
 			UpdatedAtStr: input.UpdatedAt,
 		},
-		Name:                input.Properties.Name,
-		Description:         input.Properties.Description,
-		Website:             input.Properties.Website,
-		Industry:            input.Properties.Industry,
-		IsPublic:            input.Properties.IsPublic,
-		Employees:           int64(input.Properties.NumberOfEmployees),
-		PhoneNumber:         input.Properties.Phone,
-		Country:             input.Properties.Country,
-		Region:              input.Properties.State,
-		Locality:            input.Properties.City,
-		Address:             input.Properties.Address,
-		Address2:            input.Properties.Address2,
-		Zip:                 input.Properties.Zip,
-		UserExternalOwnerId: input.Properties.HubspotOwnerId,
-		Domains:             []string{input.Properties.Domain},
+		Name:        input.Properties.Name,
+		Description: input.Properties.Description,
+		Website:     input.Properties.Website,
+		Industry:    input.Properties.Industry,
+		IsPublic:    input.Properties.IsPublic,
+		Employees:   int64(input.Properties.NumberOfEmployees),
+		PhoneNumber: input.Properties.Phone,
+		Country:     input.Properties.Country,
+		Region:      input.Properties.State,
+		Locality:    input.Properties.City,
+		Address:     input.Properties.Address,
+		Address2:    input.Properties.Address2,
+		Zip:         input.Properties.Zip,
+		OwnerUser: &entity.ReferencedUser{
+			ExternalOwnerId: input.Properties.HubspotOwnerId,
+		},
+		Domains: []string{input.Properties.Domain},
 	}
 	switch input.Properties.Type {
 	case "PROSPECT":
@@ -166,27 +167,30 @@ func MapNote(inputJSON string) (string, error) {
 	}
 
 	// Create output struct
-	var output model.Output
+	var output = entity.NoteData{
+		BaseData: entity.BaseData{
+			ExternalId:   input.ID,
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.UpdatedAt,
+		},
+	}
 
 	// Map fields
-	output.ExternalId = input.ID
-	output.CreatedAt = input.CreatedAt
-	output.UpdatedAt = input.UpdatedAt
 	output.Content = input.Properties.Body
 	output.ContentType = "text/html"
-	output.ExternalOwnerId = input.Properties.OwnerId
-	output.ExternalUserId = strconv.Itoa(input.Properties.CreatedBy)
+	output.CreatorUserExternalOwnerId = input.Properties.OwnerId
+	output.CreatorUserExternalId = strconv.Itoa(input.Properties.CreatedBy)
 
 	// Map contacts
 	for _, contact := range input.Contacts {
 		id := fmt.Sprint(contact)
-		output.ExternalContactsIds = append(output.ExternalContactsIds, id)
+		output.NotedContactsExternalIds = append(output.NotedContactsExternalIds, id)
 	}
 
 	// Map companies
 	for _, company := range input.Companies {
 		id := fmt.Sprint(company)
-		output.ExternalOrganizationsIds = append(output.ExternalOrganizationsIds, id)
+		output.NotedOrganizationsExternalIds = append(output.NotedOrganizationsExternalIds, id)
 	}
 
 	// Marshal output to JSON
@@ -221,24 +225,22 @@ func MapMeeting(inputJSON string) (string, error) {
 	}
 
 	// Create output
-	var output model.Output
+	var output entity.MeetingData
 
 	// Map ID
 	output.ExternalId = input.ID
-	output.CreatedAt = input.CreatedAt
-	output.UpdatedAt = input.UpdatedAt
-	output.StartedAt = input.Properties.StartTime
-	output.EndedAt = input.Properties.EndTime
+	output.CreatedAtStr = input.CreatedAt
+	output.UpdatedAtStr = input.UpdatedAt
+	output.StartedAtStr = input.Properties.StartTime
+	output.EndedAtStr = input.Properties.EndTime
 	output.Name = input.Properties.Title
-	output.ExternalUserId = fmt.Sprint(input.Properties.CreatedByUserId)
-	output.Html = input.Properties.Html
-	output.Text = input.Properties.Text
+	output.CreatorUserExternalId = fmt.Sprint(input.Properties.CreatedByUserId)
 	output.MeetingUrl = input.Properties.MeetingUrl
-	if len(output.Html) > 0 {
-		output.Agenda = output.Html
+	if len(input.Properties.Html) > 0 {
+		output.Agenda = input.Properties.Html
 		output.ContentType = "text/html"
-	} else if len(output.Text) > 0 {
-		output.Agenda = output.Text
+	} else if len(input.Properties.Text) > 0 {
+		output.Agenda = input.Properties.Text
 		output.ContentType = "text/plain"
 	}
 	if len(input.Properties.Location) > 0 {
@@ -297,7 +299,7 @@ func MapEmailMessage(inputJSON string) (string, error) {
 	}
 
 	// Create output
-	var output model.Output
+	var output entity.EmailMessageData
 	if input.Properties.ThreadId == "" || input.Properties.EmailStatus != "SENT" {
 		output.Skip = true
 		output.SkipReason = "Email is not sent or is not part of a thread"
@@ -312,12 +314,12 @@ func MapEmailMessage(inputJSON string) (string, error) {
 	output.Html = input.Properties.Html
 	output.Text = input.Properties.Text
 	output.Subject = input.Properties.Subject
-	output.ThreadId = input.Properties.ThreadId
-	output.MessageId = input.Properties.MessageId
-	output.CreatedAt = input.CreatedAt
-	output.UpdatedAt = input.UpdatedAt
-	output.FirstName = input.Properties.FromFirstName
-	output.LastName = input.Properties.FromLastName
+	output.EmailThreadId = input.Properties.ThreadId
+	output.EmailMessageId = input.Properties.MessageId
+	output.CreatedAtStr = input.CreatedAt
+	output.UpdatedAtStr = input.UpdatedAt
+	output.FromFirstName = input.Properties.FromFirstName
+	output.FromLastName = input.Properties.FromLastName
 	output.FromEmail = input.Properties.FromEmail
 	output.ToEmail = strings.Split(input.Properties.ToEmail, ";")
 	output.CcEmail = strings.Split(input.Properties.CcEmail, ";")
@@ -376,21 +378,26 @@ func MapContact(inputJSON string) (string, error) {
 	}
 
 	// Create output
-	var output model.Output
-	output.ExternalId = input.ID
-	output.CreatedAt = input.CreatedAt
-	output.UpdatedAt = input.UpdatedAt
-	output.FirstName = input.Properties.FirstName
-	output.LastName = input.Properties.LastName
-	output.JobTitle = input.Properties.JobTitle
-	output.Email = input.Properties.Email
+	var output = entity.ContactData{
+		BaseData: entity.BaseData{
+			ExternalId:   input.ID,
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.UpdatedAt,
+		},
+		FirstName: input.Properties.FirstName,
+		LastName:  input.Properties.LastName,
+		Email:     input.Properties.Email,
+	}
 	output.AdditionalEmails = strings.Split(input.Properties.AdditionalEmails, ";")
 	output.PhoneNumber = input.Properties.PhoneNumber
 	if input.Properties.AssociatedCompanyId != nil {
-		output.ExternalOrganizationId = fmt.Sprint(*input.Properties.AssociatedCompanyId)
+		output.Organizations = append(output.Organizations, entity.ReferencedOrganization{
+			JobTitle:   input.Properties.JobTitle,
+			ExternalId: fmt.Sprint(*input.Properties.AssociatedCompanyId),
+		})
 	}
 	output.Country = input.Properties.Country
-	output.ExternalOwnerId = fmt.Sprint(input.Properties.OwnerId)
+	output.UserExternalOwnerId = fmt.Sprint(input.Properties.OwnerId)
 	output.Region = input.Properties.State
 	output.Locality = input.Properties.City
 	output.Zip = input.Properties.Zipcode
@@ -398,15 +405,10 @@ func MapContact(inputJSON string) (string, error) {
 	output.Timezone = convertToStandardTimezoneFormat(input.Properties.Timezone)
 
 	if len(input.Properties.LifecycleStage) > 0 {
-		output.TextCustomFields = append(output.TextCustomFields, struct {
-			Name           string `json:"name,omitempty"`
-			Value          string `json:"value,omitempty"`
-			ExternalSystem string `json:"externalSystem,omitempty"`
-			CreatedAt      string `json:"createdAt,omitempty"`
-		}{
-			Name:      "Hubspot Lifecycle Stage",
-			Value:     input.Properties.LifecycleStage,
-			CreatedAt: input.CreatedAt,
+		output.TextCustomFields = append(output.TextCustomFields, entity.TextCustomField{
+			Name:         "Hubspot Lifecycle Stage",
+			Value:        input.Properties.LifecycleStage,
+			CreatedAtStr: input.CreatedAt,
 		})
 		if isCustomerTag(input.Properties.LifecycleStage) {
 			output.Tags = append(output.Tags, "CUSTOMER")
@@ -418,7 +420,15 @@ func MapContact(inputJSON string) (string, error) {
 	// Map contacts
 	for _, contact := range input.Companies {
 		id := fmt.Sprint(contact)
-		output.ExternalOrganizationsIds = append(output.ExternalOrganizationsIds, id)
+		// Check if organization already exists
+		for _, organization := range output.Organizations {
+			if organization.ExternalId == id {
+				continue
+			}
+		}
+		output.Organizations = append(output.Organizations, entity.ReferencedOrganization{
+			ExternalId: id,
+		})
 	}
 
 	// Marshal output

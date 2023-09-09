@@ -3,7 +3,7 @@ package zendesk_support
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 )
@@ -30,13 +30,15 @@ func MapUser(inputJSON string) (string, error) {
 	}
 
 	// Map to output
-	output := model.Output{
+	output := entity.UserData{
+		BaseData: entity.BaseData{
+			ExternalId:   fmt.Sprintf("%d", input.ID),
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.UpdatedAt,
+		},
 		Name:        input.Name,
 		Email:       utils.IfNotNilString(input.Email),
 		PhoneNumber: utils.IfNotNilString(input.Phone),
-		CreatedAt:   input.CreatedAt,
-		UpdatedAt:   input.UpdatedAt,
-		ExternalId:  fmt.Sprintf("%d", input.ID),
 	}
 
 	if input.Role == "end-user" || input.ID == 0 {
@@ -95,24 +97,23 @@ func mapOrganizationFromOrg(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	output := model.Output{
-		ExternalId:          fmt.Sprintf("%d", input.ID),
-		CreatedAt:           input.CreatedAt,
-		UpdatedAt:           input.UpdatedAt,
-		ExternalUrl:         input.URL,
+	output := entity.OrganizationData{
+		BaseData: entity.BaseData{
+			ExternalId:   fmt.Sprintf("%d", input.ID),
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.UpdatedAt,
+			ExternalUrl:  input.URL,
+		},
 		Name:                input.Name,
 		Domains:             input.DomainNames,
-		ExternalSourceTable: "organizations",
+		ExternalSourceTable: utils.StringPtr("organizations"),
 	}
 	if input.ID == 0 {
 		output.Skip = true
 		output.SkipReason = "Missing ID"
 	}
 	if input.Details != "" {
-		output.Notes = append(output.Notes, struct {
-			FieldSource string `json:"fieldSource,omitempty"`
-			Note        string `json:"note,omitempty"`
-		}{
+		output.Notes = append(output.Notes, entity.OrganizationNote{
 			FieldSource: "details",
 			Note:        input.Details,
 		})
@@ -152,12 +153,14 @@ func mapOrganizationFromUser(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	output := model.Output{
-		ExternalId:          fmt.Sprintf("%d", input.ID),
-		CreatedAt:           input.CreatedAt,
-		UpdatedAt:           input.UpdatedAt,
-		ExternalSourceTable: "users",
-		ExternalUrl:         input.URL,
+	output := entity.OrganizationData{
+		BaseData: entity.BaseData{
+			ExternalId:   fmt.Sprintf("%d", input.ID),
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.UpdatedAt,
+			ExternalUrl:  input.URL,
+		},
+		ExternalSourceTable: utils.StringPtr("users"),
 		Name:                input.Name,
 		PhoneNumber:         input.Phone,
 	}
@@ -166,10 +169,7 @@ func mapOrganizationFromUser(inputJSON string) (string, error) {
 		output.SkipReason = "User is not an agent"
 	}
 	if input.Details != "" {
-		output.Notes = append(output.Notes, struct {
-			FieldSource string `json:"fieldSource,omitempty"`
-			Note        string `json:"note,omitempty"`
-		}{
+		output.Notes = append(output.Notes, entity.OrganizationNote{
 			FieldSource: "details",
 			Note:        input.Details,
 		})
@@ -178,21 +178,16 @@ func mapOrganizationFromUser(inputJSON string) (string, error) {
 		output.Email = input.Email
 	}
 	if input.OrganizationId > 0 {
-		output.ParentOrganization = struct {
-			ExternalId           string `json:"externalId,omitempty"`
-			OrganizationRelation string `json:"organizationRelation,omitempty"`
-			Type                 string `json:"type,omitempty"`
-		}{
-			ExternalId:           fmt.Sprintf("%d", input.OrganizationId),
+		output.ParentOrganization = &entity.ParentOrganization{
+			Organization: entity.ReferencedOrganization{
+				ExternalId: fmt.Sprintf("%d", input.OrganizationId),
+			},
 			OrganizationRelation: "subsidiary",
 			Type:                 "store",
 		}
 	}
 	if input.Notes != "" {
-		output.Notes = append(output.Notes, struct {
-			FieldSource string `json:"fieldSource,omitempty"`
-			Note        string `json:"note,omitempty"`
-		}{
+		output.Notes = append(output.Notes, entity.OrganizationNote{
 			Note:        input.Notes,
 			FieldSource: "notes",
 		})
@@ -232,11 +227,13 @@ func MapIssue(inputJSON string) (string, error) {
 	}
 
 	// Map to output
-	output := model.Output{
-		ExternalId:  fmt.Sprintf("%d", input.ID),
-		CreatedAt:   input.CreatedAt,
-		UpdatedAt:   input.UpdatedAt,
-		ExternalUrl: input.URL,
+	output := entity.IssueData{
+		BaseData: entity.BaseData{
+			ExternalId:   fmt.Sprintf("%d", input.ID),
+			CreatedAtStr: input.CreatedAt,
+			UpdatedAtStr: input.UpdatedAt,
+			ExternalUrl:  input.URL,
+		},
 		Subject:     input.Subject,
 		Status:      input.Status,
 		Priority:    input.Priority,
@@ -289,7 +286,7 @@ func MapNote(inputJSON string) (string, error) {
 	}
 
 	// Create output struct
-	var output model.Output
+	var output entity.NoteData
 
 	if input.ID == 0 {
 		output.Skip = true
@@ -301,12 +298,12 @@ func MapNote(inputJSON string) (string, error) {
 	}
 	// Map fields
 	output.ExternalId = fmt.Sprintf("%d", input.ID)
-	output.CreatedAt = input.CreatedAt
+	output.CreatedAtStr = input.CreatedAt
 	output.Content = input.HtmlBody
 	output.ContentType = "text/html"
 	output.Text = input.Body
 	if input.AuthorId > 0 {
-		output.ExternalCreatorId = fmt.Sprintf("%d", input.AuthorId)
+		output.CreatorExternalId = fmt.Sprintf("%d", input.AuthorId)
 	}
 	if input.TicketId > 0 {
 		output.MentionedIssueExternalId = fmt.Sprintf("%d", input.TicketId)
@@ -338,7 +335,7 @@ func MapInteractionEvent(inputJSON string) (string, error) {
 	}
 
 	// Create output struct
-	var output model.Output
+	var output entity.InteractionEventData
 
 	if input.ID == 0 {
 		output.Skip = true
@@ -350,7 +347,7 @@ func MapInteractionEvent(inputJSON string) (string, error) {
 	}
 	// Map fields
 	output.ExternalId = fmt.Sprintf("%d", input.ID)
-	output.CreatedAt = input.CreatedAt
+	output.CreatedAtStr = input.CreatedAt
 	output.Type = "ISSUE"
 	if input.HtmlBody != "" {
 		output.Content = input.HtmlBody

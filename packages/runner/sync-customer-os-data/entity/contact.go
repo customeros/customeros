@@ -9,32 +9,30 @@ import (
 
 type ContactData struct {
 	BaseData
-	Prefix                        string            `json:"prefix,omitempty"`
-	FirstName                     string            `json:"firstName,omitempty"`
-	LastName                      string            `json:"LastName,omitempty"`
-	Name                          string            `json:"name,omitempty"`
-	Label                         string            `json:"label,omitempty"`
-	JobTitle                      string            `json:"jobTitle,omitempty"`
-	Notes                         []ContactNote     `json:"notes,omitempty"`
-	Email                         string            `json:"email,omitempty"`
-	AdditionalEmails              []string          `json:"additionalEmails,omitempty"`
-	PhoneNumber                   string            `json:"phoneNumber,omitempty"`
-	AdditionalPhoneNumbers        []string          `json:"additionalPhoneNumbers,omitempty"`
-	ExternalOrganizationsIds      []string          `json:"externalOrganizationsIds,omitempty"`
-	PrimaryOrganizationExternalId string            `json:"externalOrganizationId,omitempty"`
-	UserExternalOwnerId           string            `json:"externalOwnerId,omitempty"`
-	UserExternalUserId            string            `json:"externalUserId,omitempty"`
-	TextCustomFields              []TextCustomField `json:"textCustomFields,omitempty"`
-	Tags                          []string          `json:"tags,omitempty"`
-	Location                      string            `json:"location,omitempty"`
-	Country                       string            `json:"country,omitempty"`
-	Region                        string            `json:"region,omitempty"`
-	Locality                      string            `json:"locality,omitempty"`
-	Address                       string            `json:"address,omitempty"`
-	Zip                           string            `json:"zip,omitempty"`
-	Timezone                      string            `json:"timezone,omitempty"`
-	OpenlineOrganizationId        string            `json:"openlineOrganizationId,omitempty"`
-	ProfilePhotoUrl               string            `json:"profilePhotoUrl,omitempty"`
+	Prefix                 string                   `json:"prefix,omitempty"`
+	FirstName              string                   `json:"firstName,omitempty"`
+	LastName               string                   `json:"LastName,omitempty"`
+	Name                   string                   `json:"name,omitempty"`
+	Label                  string                   `json:"label,omitempty"`
+	Notes                  []ContactNote            `json:"notes,omitempty"`
+	Email                  string                   `json:"email,omitempty"`
+	AdditionalEmails       []string                 `json:"additionalEmails,omitempty"`
+	PhoneNumber            string                   `json:"phoneNumber,omitempty"`
+	AdditionalPhoneNumbers []string                 `json:"additionalPhoneNumbers,omitempty"`
+	UserExternalOwnerId    string                   `json:"externalOwnerId,omitempty"`
+	UserExternalUserId     string                   `json:"externalUserId,omitempty"`
+	TextCustomFields       []TextCustomField        `json:"textCustomFields,omitempty"`
+	Tags                   []string                 `json:"tags,omitempty"`
+	Location               string                   `json:"location,omitempty"`
+	Country                string                   `json:"country,omitempty"`
+	Region                 string                   `json:"region,omitempty"`
+	Locality               string                   `json:"locality,omitempty"`
+	Address                string                   `json:"address,omitempty"`
+	Zip                    string                   `json:"zip,omitempty"`
+	Timezone               string                   `json:"timezone,omitempty"`
+	ProfilePhotoUrl        string                   `json:"profilePhotoUrl,omitempty"`
+	Organizations          []ReferencedOrganization `json:"organizations,omitempty"`
+	OrganizationRequired   bool                     `json:"organizationRequired,omitempty"`
 }
 
 type ContactNote struct {
@@ -75,12 +73,15 @@ func (c *ContactData) HasPhoneNumber() bool {
 	return len(c.PhoneNumber) > 0
 }
 
-func (c *ContactData) HasOrganizationsByExternalId() bool {
-	return len(c.ExternalOrganizationsIds) > 0
-}
-
-func (c *ContactData) HasOrganizationById() bool {
-	return c.OpenlineOrganizationId != ""
+func (c *ContactData) HasOrganizations() bool {
+	found := false
+	for _, org := range c.Organizations {
+		if org.Available() {
+			found = true
+			break
+		}
+	}
+	return found
 }
 
 func (c *ContactData) HasNotes() bool {
@@ -122,10 +123,6 @@ func (c *ContactData) SetTextCustomFieldsTimes() {
 
 func (c *ContactData) Normalize() {
 	c.SetTimes()
-
-	c.ExternalOrganizationsIds = append(c.ExternalOrganizationsIds, c.PrimaryOrganizationExternalId)
-	c.ExternalOrganizationsIds = utils.FilterEmpty(c.ExternalOrganizationsIds)
-	c.ExternalOrganizationsIds = utils.RemoveDuplicates(c.ExternalOrganizationsIds)
 
 	c.AdditionalEmails = utils.FilterEmpty(c.AdditionalEmails)
 	c.AdditionalEmails = utils.RemoveDuplicates(c.AdditionalEmails)

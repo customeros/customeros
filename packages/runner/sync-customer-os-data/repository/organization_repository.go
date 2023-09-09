@@ -29,6 +29,9 @@ type OrganizationRepository interface {
 	GetOrganizationIdsForContactByExternalId(ctx context.Context, tenant, contactExternalId, externalSystem string) ([]string, error)
 	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllDomainLinksCrossTenantsNotSynced(ctx context.Context, size int) ([]*neo4j.Record, error)
+	IsOrganizationExistsWithExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (bool, error)
+	IsOrganizationExistsWithId(ctx context.Context, tenant, id string) (bool, error)
+	IsOrganizationExistsWithDomain(ctx context.Context, tenant, domain string) (bool, error)
 }
 
 type organizationRepository struct {
@@ -425,7 +428,7 @@ func (r *organizationRepository) LinkToParentOrganizationAsSubsidiary(ctx contex
 			map[string]interface{}{
 				"tenant":           tenant,
 				"externalSystem":   externalSystem,
-				"parentExternalId": parentOrganizationDtls.ExternalId,
+				"parentExternalId": parentOrganizationDtls.Organization.ExternalId,
 				"organizationId":   organizationId,
 				"type":             parentOrganizationDtls.Type,
 			})
@@ -651,4 +654,69 @@ func (r *organizationRepository) GetAllDomainLinksCrossTenantsNotSynced(ctx cont
 		return nil, err
 	}
 	return result.([]*neo4j.Record), err
+}
+
+func (r *organizationRepository) IsOrganizationExistsWithExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.IsOrganizationExistsWithExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
+					MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
+				return count(org) as cnt`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	count, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, map[string]any{
+			"tenant":           tenant,
+			"externalId":       externalId,
+			"externalSystemId": externalSystemId,
+		})
+		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
+	})
+	return count.(int64) > 0, err
+}
+
+func (r *organizationRepository) IsOrganizationExistsWithId(ctx context.Context, tenant, id string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.IsOrganizationExistsWithExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				return count(org) as cnt`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	count, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, map[string]any{
+			"tenant":         tenant,
+			"organizationId": id,
+		})
+		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
+	})
+	return count.(int64) > 0, err
+}
+
+func (r *organizationRepository) IsOrganizationExistsWithDomain(ctx context.Context, tenant, domain string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.IsOrganizationExistsWithExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
+				return count(org) as cnt`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	count, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, map[string]any{
+			"tenant": tenant,
+			"domain": domain,
+		})
+		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
+	})
+	return count.(int64) > 0, err
 }

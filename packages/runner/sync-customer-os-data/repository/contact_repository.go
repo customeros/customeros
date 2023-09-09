@@ -26,8 +26,9 @@ type ContactRepository interface {
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
-	LinkContactWithOrganizationByExternalId(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error
-	LinkContactWithOrganizationByInternalId(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error
+	LinkContactWithOrganizationByExternalId(ctx context.Context, tenant, contactId, externalSystemId string, org entity.ReferencedOrganization) error
+	LinkContactWithOrganizationByInternalId(ctx context.Context, tenant, contactId, externalSystemId string, org entity.ReferencedOrganization) error
+	LinkContactWithOrganizationByDomain(ctx context.Context, tenant, contactId, externalSystemId string, org entity.ReferencedOrganization) error
 	GetContactIdsForEmail(ctx context.Context, tenant, emailId string) ([]string, error)
 	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
@@ -538,36 +539,38 @@ func (r *contactRepository) MergeTagForContact(ctx context.Context, tenant, cont
 	return err
 }
 
-func (r *contactRepository) LinkContactWithOrganizationByExternalId(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error {
+func (r *contactRepository) LinkContactWithOrganizationByExternalId(ctx context.Context, tenant, contactId, externalSystemId string, org entity.ReferencedOrganization) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByExternalId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	query := fmt.Sprintf(`MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+		 MATCH (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization) 
+		 MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) 
+		 ON CREATE SET j.id=randomUUID(), 
+						j.source=$source, 
+						j.jobTitle=$jobTitle, 
+						j.sourceOfTruth=$sourceOfTruth, 
+						j.appSource=$appSource, 
+						j.createdAt=$now, 
+						j.updatedAt=$now, 
+						j:JobRole_%s`, tenant)
+	span.LogFields(log.String("query", query))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MATCH (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization) " +
-		" MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) " +
-		" ON CREATE SET j.id=randomUUID(), " +
-		"				j.source=$source, " +
-		"				j.sourceOfTruth=$sourceOfTruth, " +
-		"				j.appSource=$appSource, " +
-		"				j.createdAt=$now, " +
-		"				j.updatedAt=$now, " +
-		"				j:%s "
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, "JobRole_"+tenant),
+		_, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":                 tenant,
 				"contactId":              contactId,
-				"externalSystemId":       source,
-				"organizationExternalId": organizationExternalId,
+				"externalSystemId":       externalSystemId,
+				"jobTitle":               org.JobTitle,
+				"organizationExternalId": org.ExternalId,
 				"now":                    utils.Now(),
-				"source":                 source,
-				"sourceOfTruth":          source,
+				"source":                 externalSystemId,
+				"sourceOfTruth":          externalSystemId,
 				"appSource":              constants.AppSourceSyncCustomerOsData,
-				"contactCreatedAt":       contactCreatedAt,
 			})
 		if err != nil {
 			return nil, err
@@ -577,30 +580,63 @@ func (r *contactRepository) LinkContactWithOrganizationByExternalId(ctx context.
 	return err
 }
 
-func (r *contactRepository) LinkContactWithOrganizationByInternalId(ctx context.Context, tenant, contactId, organizationId, source string, contactCreatedAt time.Time) error {
+func (r *contactRepository) LinkContactWithOrganizationByInternalId(ctx context.Context, tenant, contactId, externalSystemId string, org entity.ReferencedOrganization) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByInternalId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
-		" MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) "+
-		" MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) "+
-		" ON CREATE SET j.id=randomUUID(), "+
-		"				j.source=$source, "+
-		"				j.sourceOfTruth=$sourceOfTruth, "+
-		"				j.appSource=$appSource, "+
-		"				j.createdAt=$now, "+
-		"				j.updatedAt=$now, "+
-		"				j:JobRole_%s ", tenant)
+	query := fmt.Sprintf(`MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+		 MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) 
+		 MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) 
+		 ON CREATE SET j.id=randomUUID(), 
+						j.source=$source, 
+						j.jobTitle=$jobTitle, 
+						j.sourceOfTruth=$sourceOfTruth, 
+						j.appSource=$appSource, 
+						j.createdAt=$now, 
+						j.updatedAt=$now, 
+						j:JobRole_%s `, tenant)
 	span.LogFields(log.String("query", query))
+
 	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{
 		"tenant":         tenant,
 		"contactId":      contactId,
-		"organizationId": organizationId,
+		"organizationId": org.Id,
+		"jobTitle":       org.JobTitle,
 		"now":            utils.Now(),
-		"source":         source,
-		"sourceOfTruth":  source,
+		"source":         externalSystemId,
+		"sourceOfTruth":  externalSystemId,
 		"appSource":      constants.AppSourceSyncCustomerOsData,
+	})
+}
+
+func (r *contactRepository) LinkContactWithOrganizationByDomain(ctx context.Context, tenant, contactId, externalSystemId string, org entity.ReferencedOrganization) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByDomain")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+		 MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
+		 MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) 
+		 ON CREATE SET j.id=randomUUID(), 
+						j.source=$source, 
+						j.jobTitle=$jobTitle, 
+						j.sourceOfTruth=$sourceOfTruth, 
+						j.appSource=$appSource, 
+						j.createdAt=$now, 
+						j.updatedAt=$now, 
+						j:JobRole_%s `, tenant)
+	span.LogFields(log.String("query", query))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{
+		"tenant":        tenant,
+		"contactId":     contactId,
+		"domain":        org.Domain,
+		"jobTitle":      org.JobTitle,
+		"now":           utils.Now(),
+		"source":        externalSystemId,
+		"sourceOfTruth": externalSystemId,
+		"appSource":     constants.AppSourceSyncCustomerOsData,
 	})
 }
 

@@ -16,44 +16,43 @@ type OrganizationNote struct {
 }
 
 type ParentOrganization struct {
-	ExternalId           string               `json:"externalId,omitempty"`
-	OrganizationRelation OrganizationRelation `json:"organizationRelation,omitempty"`
-	Type                 string               `json:"type,omitempty"`
+	Organization         ReferencedOrganization `json:"organization,omitempty"`
+	OrganizationRelation OrganizationRelation   `json:"organizationRelation,omitempty"`
+	Type                 string                 `json:"type,omitempty"`
 }
 
 type OrganizationData struct {
 	BaseData
-	Name                string              `json:"name,omitempty"`
-	Description         string              `json:"description,omitempty"`
-	Domains             []string            `json:"domains,omitempty"`
-	Notes               []OrganizationNote  `json:"notes,omitempty"`
-	Website             string              `json:"website,omitempty"`
-	Industry            string              `json:"industry,omitempty"`
-	IsPublic            bool                `json:"isPublic,omitempty"`
-	Employees           int64               `json:"employees,omitempty"`
-	PhoneNumber         string              `json:"phoneNumber,omitempty"`
-	Email               string              `json:"email,omitempty"`
-	ExternalUrl         string              `json:"externalUrl,omitempty"`
-	ExternalSourceTable *string             `json:"externalSourceTable,omitempty"`
-	UserExternalOwnerId string              `json:"externalOwnerId,omitempty"`
-	UserExternalId      string              `json:"externalUserId,omitempty"`
-	LocationName        string              `json:"locationName,omitempty"`
-	Country             string              `json:"country,omitempty"`
-	Region              string              `json:"region,omitempty"`
-	Locality            string              `json:"locality,omitempty"`
-	Address             string              `json:"address,omitempty"`
-	Address2            string              `json:"address2,omitempty"`
-	Zip                 string              `json:"zip,omitempty"`
-	RelationshipName    string              `json:"relationshipName,omitempty"`
-	RelationshipStage   string              `json:"relationshipStage,omitempty"`
-	ParentOrganization  *ParentOrganization `json:"parentOrganization,omitempty"`
-	SubIndustry         string              `json:"subIndustry,omitempty"`
-	IndustryGroup       string              `json:"industryGroup,omitempty"`
-	TargetAudience      string              `json:"targetAudience,omitempty"`
-	ValueProposition    string              `json:"valueProposition,omitempty"`
-	Market              string              `json:"market,omitempty"`
-	LastFundingRound    string              `json:"lastFundingRound,omitempty"`
-	LastFundingAmount   string              `json:"lastFundingAmount,omitempty"`
+	Name                string             `json:"name,omitempty"`
+	Description         string             `json:"description,omitempty"`
+	Domains             []string           `json:"domains,omitempty"`
+	Notes               []OrganizationNote `json:"notes,omitempty"`
+	Website             string             `json:"website,omitempty"`
+	Industry            string             `json:"industry,omitempty"`
+	IsPublic            bool               `json:"isPublic,omitempty"`
+	Employees           int64              `json:"employees,omitempty"`
+	PhoneNumber         string             `json:"phoneNumber,omitempty"`
+	Email               string             `json:"email,omitempty"`
+	ExternalSourceTable *string            `json:"externalSourceTable,omitempty"`
+	// Currently not used. Sync processes will not set automatically owner user
+	OwnerUser          *ReferencedUser     `json:"ownerUser,omitempty"`
+	LocationName       string              `json:"locationName,omitempty"`
+	Country            string              `json:"country,omitempty"`
+	Region             string              `json:"region,omitempty"`
+	Locality           string              `json:"locality,omitempty"`
+	Address            string              `json:"address,omitempty"`
+	Address2           string              `json:"address2,omitempty"`
+	Zip                string              `json:"zip,omitempty"`
+	RelationshipName   string              `json:"relationshipName,omitempty"`
+	RelationshipStage  string              `json:"relationshipStage,omitempty"`
+	ParentOrganization *ParentOrganization `json:"parentOrganization,omitempty"`
+	SubIndustry        string              `json:"subIndustry,omitempty"`
+	IndustryGroup      string              `json:"industryGroup,omitempty"`
+	TargetAudience     string              `json:"targetAudience,omitempty"`
+	ValueProposition   string              `json:"valueProposition,omitempty"`
+	Market             string              `json:"market,omitempty"`
+	LastFundingRound   string              `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  string              `json:"lastFundingAmount,omitempty"`
 	// If true, the organization will be created by domain,
 	// Missing domains, or blacklisted domains will result in no organization being created
 	CreateByDomain bool `json:"createByDomain,omitempty"`
@@ -93,4 +92,8 @@ func (o *OrganizationData) Normalize() {
 	o.Domains = utils.FilterEmpty(o.Domains)
 	utils.LowercaseStrings(o.Domains)
 	o.Domains = utils.RemoveDuplicates(o.Domains)
+}
+
+func (o *OrganizationData) HasOwner() bool {
+	return o.OwnerUser != nil
 }

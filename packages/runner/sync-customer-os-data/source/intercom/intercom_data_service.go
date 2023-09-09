@@ -23,6 +23,7 @@ const (
 var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):         {AdminsTableSuffix},
 	string(common.ORGANIZATIONS): {ContactsTableSuffix},
+	string(common.CONTACTS):      {ContactsTableSuffix},
 }
 
 type intercomDataService struct {
@@ -44,6 +45,7 @@ func NewIntercomDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string
 	dataService.dataFuncs = map[common.SyncedEntityType]func(context.Context, int, string) []any{}
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
 	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
+	dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
 	return &dataService
 }
 
@@ -152,70 +154,38 @@ func (s *intercomDataService) GetOrganizationsForSync(ctx context.Context, batch
 	return organizations
 }
 
-//func (s *intercomDataService) GetContactsForSync(ctx context.Context, batchSize int, runId string) []any {
-//	s.processingIds = make(map[string]source.ProcessingEntity)
-//	currentEntity := string(common.CONTACTS)
-//
-//	var contacts []any
-//	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-//		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
-//		if err != nil {
-//			s.log.Fatal(err) // alexb handle errors
-//			return nil
-//		}
-//		for _, v := range airbyteRecords {
-//			if len(contacts) >= batchSize {
-//				break
-//			}
-//			outputJSON, err := MapContact(v.AirbyteData)
-//			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
-//			if err != nil {
-//				s.log.Fatal(err) // alexb handle errors
-//				continue
-//			}
-//
-//			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-//				ExternalId:  contact.ExternalId,
-//				Entity:      currentEntity,
-//				TableSuffix: sourceTableSuffix,
-//			}
-//			contacts = append(contacts, contact)
-//		}
-//	}
-//	return contacts
-//}
-//
-//func (s *intercomDataService) GetNotesForSync(ctx context.Context, batchSize int, runId string) []any {
-//	s.processingIds = make(map[string]source.ProcessingEntity)
-//	currentEntity := string(common.NOTES)
-//	var notes []any
-//	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-//		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
-//		if err != nil {
-//			s.log.Fatal(err) // alexb handle errors
-//			return nil
-//		}
-//		for _, v := range airbyteRecords {
-//			if len(notes) >= batchSize {
-//				break
-//			}
-//			outputJSON, err := MapNote(v.AirbyteData)
-//			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
-//			if err != nil {
-//				s.log.Fatal(err) // alexb handle errors
-//				continue
-//			}
-//
-//			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-//				ExternalId:  note.ExternalId,
-//				Entity:      currentEntity,
-//				TableSuffix: sourceTableSuffix,
-//			}
-//			notes = append(notes, note)
-//		}
-//	}
-//	return notes
-//}
+func (s *intercomDataService) GetContactsForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.CONTACTS)
+
+	var contacts []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Error(err)
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(contacts) >= batchSize {
+				break
+			}
+			outputJSON, err := MapContact(v.AirbyteData)
+			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				s.log.Fatal(err) // alexb handle errors
+				continue
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  contact.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			contacts = append(contacts, contact)
+		}
+	}
+	return contacts
+}
 
 func (s *intercomDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
