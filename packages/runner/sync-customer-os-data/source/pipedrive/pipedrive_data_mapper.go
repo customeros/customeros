@@ -3,7 +3,6 @@ package pipedrive
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
@@ -72,13 +71,15 @@ func MapOrganization(inputJSON string) (string, error) {
 			CreatedAtStr: input.AddTime,
 			UpdatedAtStr: input.UpdateTime,
 		},
-		Name:           input.Name,
-		Address:        input.Address,
-		UserExternalId: fmt.Sprintf("%d", input.OwnerID),
-		Employees:      int64(input.PeopleCount),
-		Country:        utils.StringFirstNonEmpty(input.AddressCountry, input.CountryCode),
-		Locality:       input.AddressLocality,
-		Zip:            input.AddressPostalCode,
+		Name:    input.Name,
+		Address: input.Address,
+		OwnerUser: &entity.ReferencedUser{
+			ExternalId: fmt.Sprintf("%d", input.OwnerID),
+		},
+		Employees: int64(input.PeopleCount),
+		Country:   utils.StringFirstNonEmpty(input.AddressCountry, input.CountryCode),
+		Locality:  input.AddressLocality,
+		Zip:       input.AddressPostalCode,
 	}
 	if input.ID == 0 {
 		output.Skip = true
@@ -119,23 +120,27 @@ func MapContact(inputJSON string) (string, error) {
 		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
 
-	output := model.Output{
-		ExternalId: fmt.Sprintf("%d", input.ID),
-		Name:       input.Name,
-		FirstName:  input.FirstName,
-		LastName:   input.LastName,
-		CreatedAt:  input.AddTime,
-		UpdatedAt:  input.UpdateTime,
+	output := entity.ContactData{
+		BaseData: entity.BaseData{
+			ExternalId:   fmt.Sprintf("%d", input.ID),
+			CreatedAtStr: input.AddTime,
+			UpdatedAtStr: input.UpdateTime,
+		},
+		Name:      input.Name,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
 	}
 	if input.ID == 0 {
 		output.Skip = true
 		output.SkipReason = "Missing external id"
 	}
 	if input.OrgId != 0 {
-		output.ExternalOrganizationId = fmt.Sprintf("%d", input.OrgId)
+		output.Organizations = append(output.Organizations, entity.ReferencedOrganization{
+			ExternalId: fmt.Sprintf("%d", input.OrgId),
+		})
 	}
 	if input.OwnerId != 0 {
-		output.ExternalUserId = fmt.Sprintf("%d", input.OwnerId)
+		output.UserExternalUserId = fmt.Sprintf("%d", input.OwnerId)
 	}
 
 	var primaryEmailFound = false
@@ -185,23 +190,25 @@ func MapNote(inputJSON string) (string, error) {
 		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
 
-	output := model.Output{
-		ExternalId: fmt.Sprintf("%d", input.ID),
-		CreatedAt:  input.AddTime,
-		UpdatedAt:  input.UpdateTime,
+	output := entity.NoteData{
+		BaseData: entity.BaseData{
+			ExternalId:   fmt.Sprintf("%d", input.ID),
+			CreatedAtStr: input.AddTime,
+			UpdatedAtStr: input.UpdateTime,
+		},
 	}
 	if input.ID == 0 {
 		output.Skip = true
 		output.SkipReason = "Missing external id"
 	}
 	if input.UserId != 0 {
-		output.ExternalUserId = fmt.Sprintf("%d", input.UserId)
+		output.CreatorUserExternalId = fmt.Sprintf("%d", input.UserId)
 	}
 	if input.PersonId != 0 {
-		output.ExternalContactsIds = append(output.ExternalContactsIds, fmt.Sprintf("%d", input.PersonId))
+		output.NotedContactsExternalIds = append(output.NotedContactsExternalIds, fmt.Sprintf("%d", input.PersonId))
 	}
 	if input.OrgId != 0 {
-		output.ExternalOrganizationsIds = append(output.ExternalOrganizationsIds, fmt.Sprintf("%d", input.OrgId))
+		output.NotedOrganizationsExternalIds = append(output.NotedOrganizationsExternalIds, fmt.Sprintf("%d", input.OrgId))
 	}
 	if strings.Contains(input.Content, "<") {
 		output.Content = input.Content

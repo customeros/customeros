@@ -27,7 +27,6 @@ type Repositories struct {
 	LocationRepository         LocationRepository
 	ExternalSystemRepository   ExternalSystemRepository
 	OrganizationRepository     OrganizationRepository
-	RoleRepository             JobRoleRepository
 	UserRepository             UserRepository
 	NoteRepository             NoteRepository
 	InteractionEventRepository InteractionEventRepository
@@ -52,7 +51,6 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb 
 		LocationRepository:           NewLocationRepository(driver),
 		ExternalSystemRepository:     NewExternalSystemRepository(driver),
 		OrganizationRepository:       NewOrganizationRepository(driver),
-		RoleRepository:               NewJobRoleRepository(driver),
 		UserRepository:               NewUserRepository(driver),
 		NoteRepository:               NewNoteRepository(driver),
 		InteractionEventRepository:   NewInteractionEventRepository(driver),

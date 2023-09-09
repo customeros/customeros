@@ -2,7 +2,6 @@ package slack
 
 import (
 	"encoding/json"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"regexp"
@@ -117,37 +116,41 @@ func MapContact(inputJson string) (string, error) {
 	}
 
 	if input.Bot || input.App {
-		output := model.Output{
+		output := entity.BaseData{
 			Skip:       true,
 			SkipReason: "User is a bot or app",
 		}
 		return utils.ToJson(output)
 	}
 	if input.Deleted {
-		output := model.Output{
+		output := entity.BaseData{
 			Skip:       true,
 			SkipReason: "User is deleted",
 		}
 		return utils.ToJson(output)
 	}
 	if slackUserIsTenantUser(input.Profile.Email, input.TeamId, input.OpenlineFields.TenantDomain, input.OpenlineFields.TenantTeamId) {
-		output := model.Output{
+		output := entity.BaseData{
 			Skip:       true,
 			SkipReason: "Slack user is not a contact",
 		}
 		return utils.ToJson(output)
 	}
 
-	output := model.Output{
-		ExternalId:             input.ID,
-		Email:                  input.Profile.Email,
-		PhoneNumber:            input.Profile.Phone,
-		FirstName:              input.Profile.FirstName,
-		LastName:               input.Profile.LastName,
-		Name:                   input.Profile.Name,
-		Timezone:               input.Timezone,
-		OpenlineOrganizationId: input.OpenlineFields.OrganizationId,
+	output := entity.ContactData{
+		BaseData: entity.BaseData{
+			ExternalId: input.ID,
+		},
+		Email:       input.Profile.Email,
+		PhoneNumber: input.Profile.Phone,
+		FirstName:   input.Profile.FirstName,
+		LastName:    input.Profile.LastName,
+		Name:        input.Profile.Name,
+		Timezone:    input.Timezone,
 	}
+	output.Organizations = append(output.Organizations, entity.ReferencedOrganization{
+		Id: input.OpenlineFields.OrganizationId,
+	})
 	if !strings.HasPrefix(input.Profile.Image192, "https://secure.gravatar.com") {
 		output.ProfilePhotoUrl = input.Profile.Image192
 	}
@@ -187,13 +190,15 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		return "", err
 	}
 
-	output := model.Output{
-		ExternalId:  input.OpenlineFields.ChannelId + "/" + input.Ts,
-		CreatedAt:   tsStrToRFC3339Nanos(input.Ts),
+	output := entity.InteractionEventData{
+		BaseData: entity.BaseData{
+			ExternalId:   input.OpenlineFields.ChannelId + "/" + input.Ts,
+			CreatedAtStr: tsStrToRFC3339Nanos(input.Ts),
+			ExternalUrl:  input.OpenlineFields.Permalink,
+		},
 		ContentType: "plain/text",
 		Type:        "MESSAGE",
 		Channel:     "SLACK",
-		ExternalUrl: input.OpenlineFields.Permalink,
 	}
 
 	// Do not use blocks in content for now.
@@ -231,11 +236,11 @@ func MapInteractionEvent(inputJson string) (string, error) {
 			output.Hide = true
 		}
 		output.PartOfSession.ExternalId = "session/" + input.OpenlineFields.ChannelId + "/" + input.ThreadTs
-		output.PartOfSession.CreatedAt = tsStrToRFC3339Nanos(input.ThreadTs)
+		output.PartOfSession.CreatedAtStr = tsStrToRFC3339Nanos(input.ThreadTs)
 		output.PartOfSession.Identifier = input.OpenlineFields.ChannelId + "/" + input.ThreadTs
 	} else {
 		output.PartOfSession.ExternalId = "session/" + input.OpenlineFields.ChannelId + "/" + input.Ts
-		output.PartOfSession.CreatedAt = tsStrToRFC3339Nanos(input.Ts)
+		output.PartOfSession.CreatedAtStr = tsStrToRFC3339Nanos(input.Ts)
 		output.PartOfSession.Identifier = input.OpenlineFields.ChannelId + "/" + input.Ts
 	}
 

@@ -47,34 +47,113 @@ func MapOrganization(inputJSON string) (string, error) {
 		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
 	if input.Email == "" {
-		output := entity.OrganizationData{
-			BaseData: entity.BaseData{
-				Skip:       true,
-				SkipReason: "Missing email",
-			},
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing email",
 		}
 		return utils.ToJson(output)
 	}
 	if input.ID == "" {
-		output := entity.OrganizationData{
-			BaseData: entity.BaseData{
-				Skip:       true,
-				SkipReason: "Missing id",
-			},
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing id",
+		}
+		return utils.ToJson(output)
+	}
+	domain := extractDomain(input.Email)
+	if domain == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing email domain",
 		}
 		return utils.ToJson(output)
 	}
 
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId: input.ID,
+			ExternalId: domain,
 		},
 		CreateByDomain:      true,
 		ExternalSourceTable: utils.StringPtr("contacts"),
 	}
-	output.Domains = []string{extractDomain(input.Email)}
+	output.Domains = []string{domain}
 	if input.CreatedAt != 0 {
 		output.CreatedAtStr = tsStrToRFC3339(input.CreatedAt)
+	}
+
+	return utils.ToJson(output)
+}
+
+func MapContact(inputJSON string) (string, error) {
+	var input struct {
+		ID               string `json:"id,omitempty"`
+		CreatedAt        int64  `json:"created_at,omitempty"`
+		UpdatedAt        int64  `json:"updated_at,omitempty"`
+		Email            string `json:"email,omitempty"`
+		Phone            string `json:"phone,omitempty"`
+		Name             string `json:"name,omitempty"`
+		Role             string `json:"role,omitempty"` // not used yet in sync
+		Type             string `json:"type,omitempty"` // not used yet in sync
+		Avatar           string `json:"avatar,omitempty"`
+		CustomAttributes struct {
+			JobTitle string `json:"job_title,omitempty"`
+		} `json:"custom_attributes,omitempty"`
+		Location struct {
+			City          string `json:"city,omitempty"`
+			Type          string `json:"type,omitempty"`
+			Region        string `json:"region,omitempty"`
+			Country       string `json:"country,omitempty"`
+			CountryCodeA3 string `json:"country_code,omitempty"`
+			ContinentCode string `json:"continent_code,omitempty"`
+		} `json:"location,omitempty"`
+	}
+
+	err := json.Unmarshal([]byte(inputJSON), &input)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse input JSON: %v", err)
+	}
+	if input.Email == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing email",
+		}
+		return utils.ToJson(output)
+	}
+	if input.ID == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing id",
+		}
+		return utils.ToJson(output)
+	}
+	emailDomain := extractDomain(input.Email)
+	if emailDomain == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing email domain",
+		}
+		return utils.ToJson(output)
+	}
+
+	output := entity.ContactData{
+		BaseData: entity.BaseData{
+			ExternalId: input.ID,
+		},
+		PhoneNumber:          input.Phone,
+		Name:                 input.Name,
+		Email:                input.Email,
+		ProfilePhotoUrl:      input.Avatar,
+		OrganizationRequired: true,
+	}
+	output.Organizations = append(output.Organizations, entity.ReferencedOrganization{
+		Domain:   emailDomain,
+		JobTitle: input.CustomAttributes.JobTitle,
+	})
+	if input.CreatedAt != 0 {
+		output.CreatedAtStr = tsStrToRFC3339(input.CreatedAt)
+	}
+	if input.UpdatedAt != 0 {
+		output.UpdatedAtStr = tsStrToRFC3339(input.UpdatedAt)
 	}
 
 	return utils.ToJson(output)
