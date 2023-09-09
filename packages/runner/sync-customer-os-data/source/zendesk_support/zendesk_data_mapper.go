@@ -99,14 +99,14 @@ func mapOrganizationFromOrg(inputJSON string) (string, error) {
 	// Perform mapping
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId:   fmt.Sprintf("%d", input.ID),
-			CreatedAtStr: input.CreatedAt,
-			UpdatedAtStr: input.UpdatedAt,
-			ExternalUrl:  input.URL,
+			ExternalId:          fmt.Sprintf("%d", input.ID),
+			CreatedAtStr:        input.CreatedAt,
+			UpdatedAtStr:        input.UpdatedAt,
+			ExternalUrl:         input.URL,
+			ExternalSourceTable: utils.StringPtr("organizations"),
 		},
-		Name:                input.Name,
-		Domains:             input.DomainNames,
-		ExternalSourceTable: utils.StringPtr("organizations"),
+		Name:    input.Name,
+		Domains: input.DomainNames,
 	}
 	if input.ID == 0 {
 		output.Skip = true
@@ -155,14 +155,14 @@ func mapOrganizationFromUser(inputJSON string) (string, error) {
 	// Perform mapping
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId:   fmt.Sprintf("%d", input.ID),
-			CreatedAtStr: input.CreatedAt,
-			UpdatedAtStr: input.UpdatedAt,
-			ExternalUrl:  input.URL,
+			ExternalId:          fmt.Sprintf("%d", input.ID),
+			CreatedAtStr:        input.CreatedAt,
+			UpdatedAtStr:        input.UpdatedAt,
+			ExternalUrl:         input.URL,
+			ExternalSourceTable: utils.StringPtr("users"),
 		},
-		ExternalSourceTable: utils.StringPtr("users"),
-		Name:                input.Name,
-		PhoneNumber:         input.Phone,
+		Name:        input.Name,
+		PhoneNumber: input.Phone,
 	}
 	if input.Role != "end-user" || input.ID == 0 {
 		output.Skip = true
@@ -360,15 +360,10 @@ func MapInteractionEvent(inputJSON string) (string, error) {
 		output.PartOfExternalId = fmt.Sprintf("%d", input.TicketId)
 	}
 	if input.AuthorId > 0 {
-		output.SentBy = struct {
-			OpenlineId                string `json:"openlineId,omitempty"`
-			ExternalId                string `json:"externalId,omitempty"`
-			ParticipantType           string `json:"participantType,omitempty"`
-			RelationType              string `json:"relationType,omitempty"`
-			ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
-			OrganizationId            string `json:"organizationId,omitempty"`
-		}{
-			ExternalId: fmt.Sprintf("%d", input.AuthorId),
+		output.SentBy = entity.InteractionEventParticipant{
+			ReferencedParticipant: entity.ReferencedParticipant{
+				ExternalId: fmt.Sprintf("%d", input.AuthorId),
+			},
 		}
 	}
 

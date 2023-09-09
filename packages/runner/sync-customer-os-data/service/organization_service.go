@@ -7,6 +7,7 @@ import (
 )
 
 type OrganizationService interface {
+	GetIdForReferencedOrganization(ctx context.Context, tenant, externalSystem string, org entity.ReferencedOrganization) (string, error)
 	UpdateLastTouchpointByOrganizationId(ctx context.Context, tenant, organizationID string)
 	UpdateLastTouchpointByOrganizationExternalId(ctx context.Context, tenant, organizationExternalId, externalSystem string)
 	UpdateLastTouchpointByContactId(ctx context.Context, tenant, contactID string)
@@ -83,4 +84,19 @@ func (s *organizationService) UpdateLastTouchpointByContactEmailId(ctx context.C
 	for _, contactId := range contactIds {
 		s.UpdateLastTouchpointByContactId(ctx, tenant, contactId)
 	}
+}
+
+func (s *organizationService) GetIdForReferencedOrganization(ctx context.Context, tenant, externalSystemId string, org entity.ReferencedOrganization) (string, error) {
+	if !org.Available() {
+		return "", nil
+	}
+
+	if org.ReferencedById() {
+		return s.repositories.OrganizationRepository.GetOrganizationIdById(ctx, tenant, org.Id)
+	} else if org.ReferencedByExternalId() {
+		return s.repositories.OrganizationRepository.GetOrganizationIdByExternalId(ctx, tenant, org.ExternalId, externalSystemId)
+	} else if org.ReferencedByDomain() {
+		return s.repositories.OrganizationRepository.GetOrganizationIdByDomain(ctx, tenant, org.Domain)
+	}
+	return "", nil
 }

@@ -31,6 +31,9 @@ type ContactRepository interface {
 	LinkContactWithOrganizationByDomain(ctx context.Context, tenant, contactId, externalSystemId string, org entity.ReferencedOrganization) error
 	GetContactIdsForEmail(ctx context.Context, tenant, emailId string) ([]string, error)
 	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
+	GetContactIdById(ctx context.Context, tenant, id string) (string, error)
+	GetContactIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
+	GetJobRoleId(ctx context.Context, tenant, contactId, organizationId string) (string, error)
 }
 
 type contactRepository struct {
@@ -697,4 +700,90 @@ func (r *contactRepository) GetAllCrossTenantsNotSynced(ctx context.Context, siz
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *contactRepository) GetContactIdById(ctx context.Context, tenant, id string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactIdById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
+				return c.id order by c.createdAt`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, map[string]any{
+			"tenant":    tenant,
+			"contactId": id,
+		})
+		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]string)) == 0 {
+		return "", nil
+	}
+	return records.([]string)[0], nil
+}
+
+func (r *contactRepository) GetContactIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactIdByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
+					MATCH (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
+				return c.id order by c.createdAt`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, map[string]any{
+			"tenant":           tenant,
+			"externalId":       externalId,
+			"externalSystemId": externalSystemId,
+		})
+		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]string)) == 0 {
+		return "", nil
+	}
+	return records.([]string)[0], nil
+}
+
+func (r *contactRepository) GetJobRoleId(ctx context.Context, tenant, contactId, organizationId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetJobRoleId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
+				MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				MATCH (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) 
+				return j.id order by j.createdAt`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, map[string]any{
+			"tenant":         tenant,
+			"contactId":      contactId,
+			"organizationId": organizationId,
+		})
+		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]string)) == 0 {
+		return "", nil
+	}
+	return records.([]string)[0], nil
 }

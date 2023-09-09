@@ -215,17 +215,18 @@ func MapInteractionEvent(inputJson string) (string, error) {
 
 	output.Content = replaceUserMentionsInText(input.Text, input.OpenlineFields.UserNamesById)
 
-	output.SentBy = struct {
-		OpenlineId                string `json:"openlineId,omitempty"`
-		ExternalId                string `json:"externalId,omitempty"`
-		ParticipantType           string `json:"participantType,omitempty"`
-		RelationType              string `json:"relationType,omitempty"`
-		ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
-		OrganizationId            string `json:"organizationId,omitempty"`
-	}{
-		ExternalId:                input.SenderUser,
-		ReplaceContactWithJobRole: true,
-		OrganizationId:            input.OpenlineFields.OrganizationId,
+	output.SentBy = entity.InteractionEventParticipant{
+		ReferencedUser: entity.ReferencedUser{
+			ExternalId: input.SenderUser,
+		},
+		ReferencedJobRole: entity.ReferencedJobRole{
+			ReferencedOrganization: entity.ReferencedOrganization{
+				Id: input.OpenlineFields.OrganizationId,
+			},
+			ReferencedContact: entity.ReferencedContact{
+				ExternalId: input.SenderUser,
+			},
+		},
 	}
 	output.PartOfSession.Channel = "SLACK"
 	output.PartOfSession.Type = "THREAD"
@@ -247,32 +248,27 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	for _, user := range input.OpenlineFields.UserIds {
 		if user != input.SenderUser {
 			output.SentTo = append(output.SentTo,
-				struct {
-					OpenlineId                string `json:"openlineId,omitempty"`
-					ExternalId                string `json:"externalId,omitempty"`
-					ParticipantType           string `json:"participantType,omitempty"`
-					RelationType              string `json:"relationType,omitempty"`
-					ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
-					OrganizationId            string `json:"organizationId,omitempty"`
-				}{
-					ExternalId:                user,
-					ReplaceContactWithJobRole: true,
-					OrganizationId:            input.OpenlineFields.OrganizationId,
+				entity.InteractionEventParticipant{
+					ReferencedUser: entity.ReferencedUser{
+						ExternalId: user,
+					},
+					ReferencedJobRole: entity.ReferencedJobRole{
+						ReferencedOrganization: entity.ReferencedOrganization{
+							Id: input.OpenlineFields.OrganizationId,
+						},
+						ReferencedContact: entity.ReferencedContact{
+							ExternalId: user,
+						},
+					},
 				})
 		}
 	}
 
 	output.SentTo = append(output.SentTo,
-		struct {
-			OpenlineId                string `json:"openlineId,omitempty"`
-			ExternalId                string `json:"externalId,omitempty"`
-			ParticipantType           string `json:"participantType,omitempty"`
-			RelationType              string `json:"relationType,omitempty"`
-			ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
-			OrganizationId            string `json:"organizationId,omitempty"`
-		}{
-			OpenlineId:      input.OpenlineFields.OrganizationId,
-			ParticipantType: "ORGANIZATION",
+		entity.InteractionEventParticipant{
+			ReferencedOrganization: entity.ReferencedOrganization{
+				Id: input.OpenlineFields.OrganizationId,
+			},
 		})
 
 	if input.Type != "message" {

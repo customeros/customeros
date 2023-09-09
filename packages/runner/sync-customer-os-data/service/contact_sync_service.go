@@ -111,24 +111,10 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 	if contactInput.OrganizationRequired {
 		found := false
 		for _, org := range contactInput.Organizations {
-			if org.ReferencedById() {
-				orgFound, _ := s.repositories.OrganizationRepository.IsOrganizationExistsWithId(ctx, tenant, org.Id)
-				if orgFound {
-					found = true
-					break
-				}
-			} else if org.ReferencedByExternalId() {
-				orgFound, _ := s.repositories.OrganizationRepository.IsOrganizationExistsWithExternalId(ctx, tenant, org.ExternalId, contactInput.ExternalSystem)
-				if orgFound {
-					found = true
-					break
-				}
-			} else if org.ReferencedByDomain() {
-				orgFound, _ := s.repositories.OrganizationRepository.IsOrganizationExistsWithDomain(ctx, tenant, org.Domain)
-				if orgFound {
-					found = true
-					break
-				}
+			orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, contactInput.ExternalSystem, org)
+			if orgId != "" {
+				found = true
+				break
 			}
 		}
 		if !found {

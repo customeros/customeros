@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
@@ -28,13 +27,8 @@ type InteractionEventRepository interface {
 	InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emails []string) error
 	LinkInteractionEventAsPartOfByExternalId(ctx context.Context, tenant string, event entity.InteractionEventData) error
 
-	FindParticipantByExternalId(ctx context.Context, tenant, externalId, externalSystem string) (*dbtype.Node, error)
-
-	LinkInteractionEventWithSenderByExternalId(ctx context.Context, tenant, eventId, externalSystem string, sender entity.InteractionEventParticipant) error
-	LinkInteractionEventWithRecipientByExternalId(ctx context.Context, tenant, eventId, externalSystem string, recipient entity.InteractionEventParticipant) error
-	LinkInteractionEventWithRecipientByOpenlineId(ctx context.Context, tenant, eventId string, recipient entity.InteractionEventParticipant) error
-	LinkInteractionEventWithSenderJobRole(ctx context.Context, tenant string, interactionEventId, organizationId, contactId string) error
-	LinkInteractionEventWithRecipientJobRole(ctx context.Context, tenant string, interactionEventId, organizationId, contactId, relationType string) error
+	LinkInteractionEventWithSenderById(ctx context.Context, tenant, eventId, id, label string) error
+	LinkInteractionEventWithRecipientById(ctx context.Context, tenant, eventId, id, label, relationType string) error
 }
 
 type interactionEventRepository struct {
@@ -98,6 +92,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 		  	ie:TimelineEvent_%s, 
 		  	rel.syncDate=$syncDate, 
 			rel.externalUrl=$externalUrl,
+			rel.externalSource=$externalSource,
 		  	ie.createdAt=$createdAt,
 			ie.channel=$channel,
 			ie.eventType=$type, 
@@ -128,6 +123,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 			"appSource":        constants.AppSourceSyncCustomerOsData,
 			"externalId":       event.ExternalId,
 			"externalUrl":      event.ExternalUrl,
+			"externalSource":   event.ExternalSourceTable,
 			"syncDate":         syncDate,
 			"channel":          event.Channel,
 			"hide":             event.Hide,
@@ -372,88 +368,6 @@ func (r *interactionEventRepository) LinkInteractionEventAsPartOfByExternalId(ct
 	return err
 }
 
-func (r *interactionEventRepository) LinkInteractionEventWithSenderByExternalId(ctx context.Context, tenant, eventId, externalSystem string, sender entity.InteractionEventParticipant) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithSenderByExternalId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
-		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$sentByExternalId}]-(n) 
-		WHERE ($nodeLabel = '' OR $nodeLabel in labels(n))
-		MERGE (ie)-[result:SENT_BY]->(n)`, tenant)
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query, map[string]interface{}{
-			"tenant":             tenant,
-			"interactionEventId": eventId,
-			"nodeLabel":          sender.GetNodeLabel(),
-			"sentByExternalId":   sender.ExternalId,
-			"externalSystemId":   externalSystem,
-		})
-		return nil, err
-	})
-	return err
-}
-
-func (r *interactionEventRepository) LinkInteractionEventWithRecipientByExternalId(ctx context.Context, tenant, eventId, externalSystem string, recipient entity.InteractionEventParticipant) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithRecipientByExternalId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
-		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$sentByExternalId}]-(n) 
-		WHERE ($nodeLabel = '' OR $nodeLabel in labels(n))
-		MERGE (ie)-[result:SENT_TO]->(n)
-		ON CREATE SET result.type=$relationType
-		return result`
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]interface{}{
-				"tenant":             tenant,
-				"interactionEventId": eventId,
-				"sentByExternalId":   recipient.ExternalId,
-				"nodeLabel":          recipient.GetNodeLabel(),
-				"relationType":       recipient.RelationType,
-				"externalSystemId":   externalSystem,
-			})
-		return nil, err
-	})
-	return err
-}
-
-func (r *interactionEventRepository) LinkInteractionEventWithRecipientByOpenlineId(ctx context.Context, tenant, eventId string, recipient entity.InteractionEventParticipant) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithRecipientByOpenlineId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
-		MATCH (n:%s {id:$id}) 
-		MERGE (ie)-[result:SENT_TO]->(n)
-		ON CREATE SET result.type=$relationType
-		return result`, tenant, recipient.GetNodeLabel()+"_"+tenant)
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":             tenant,
-				"interactionEventId": eventId,
-				"id":                 recipient.OpenlineId,
-				"relationType":       recipient.RelationType,
-			})
-		return nil, err
-	})
-	return err
-}
-
 func (r *interactionEventRepository) MergeInteractionSessionForEvent(ctx context.Context, tenant, eventId, externalSource string, syncDate time.Time, session entity.InteractionSession) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.MergeInteractionSessionForEvent")
 	defer span.Finish()
@@ -499,84 +413,53 @@ func (r *interactionEventRepository) MergeInteractionSessionForEvent(ctx context
 	})
 }
 
-func (r *interactionEventRepository) FindParticipantByExternalId(ctx context.Context, tenant, externalId, externalSystem string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.FindParticipantByExternalId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := `MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$externalId}]-(n) 
-		return n`
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":           tenant,
-				"externalId":       externalId,
-				"externalSystemId": externalSystem,
-			})
-		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	if result == nil {
-		return nil, nil
-	}
-	return result.(*dbtype.Node), err
-}
-
-func (r *interactionEventRepository) LinkInteractionEventWithSenderJobRole(ctx context.Context, tenant string, interactionEventId, organizationId, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithSenderJobRole")
+func (r *interactionEventRepository) LinkInteractionEventWithSenderById(ctx context.Context, tenant, eventId, id, label string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithSenderById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
-		MATCH (:Organization {id:$organizationId})<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(:Contact {id:$contactId}) 
-		MERGE (ie)-[result:SENT_BY]->(j)
-		return result`, tenant)
+		MATCH (:Tenant {name:$tenant})--(sender:Contact|User|Organization|JobRole|Email|PhoneNumber {id:$id}) 
+		WHERE $label IN labels(sender)
+		MERGE (ie)-[:SENT_BY]->(sender)`, tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":             tenant,
-				"interactionEventId": interactionEventId,
-				"organizationId":     organizationId,
-				"contactId":          contactId,
-			})
+		_, err := tx.Run(ctx, query, map[string]interface{}{
+			"tenant":             tenant,
+			"interactionEventId": eventId,
+			"id":                 id,
+			"label":              label,
+		})
 		return nil, err
 	})
 	return err
 }
 
-func (r *interactionEventRepository) LinkInteractionEventWithRecipientJobRole(ctx context.Context, tenant string, interactionEventId, organizationId, contactId, relationType string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithRecipientJobRole")
+func (r *interactionEventRepository) LinkInteractionEventWithRecipientById(ctx context.Context, tenant, eventId, id, label, relationType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithRecipientById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
-		MATCH (:Organization {id:$organizationId})<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(:Contact {id:$contactId}) 
-		MERGE (ie)-[result:SENT_TO]->(j)
-		ON CREATE SET result.type=$relationType
-		return result`, tenant)
+		MATCH (:Tenant {name:$tenant})--(sender:Contact|User|Organization|JobRole|Email|PhoneNumber {id:$id}) 
+		WHERE $label IN labels(sender)
+		MERGE (ie)-[rel:SENT_TO]->(sender)
+		ON CREATE SET rel.type=$relationType`, tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":             tenant,
-				"interactionEventId": interactionEventId,
-				"organizationId":     organizationId,
-				"contactId":          contactId,
-				"relationType":       relationType,
-			})
+		_, err := tx.Run(ctx, query, map[string]interface{}{
+			"tenant":             tenant,
+			"interactionEventId": eventId,
+			"id":                 id,
+			"label":              label,
+			"relationType":       relationType,
+		})
 		return nil, err
 	})
 	return err
