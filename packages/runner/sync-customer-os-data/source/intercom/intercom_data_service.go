@@ -17,13 +17,14 @@ import (
 
 const (
 	AdminsTableSuffix            = "admins"
+	TeamsTableSuffix             = "teams"
 	ContactsTableSuffix          = "contacts"
 	ConversationsTableSuffix     = "conversations"
 	ConversationPartsTableSuffix = "conversation_parts"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
-	string(common.USERS):              {AdminsTableSuffix},
+	string(common.USERS):              {AdminsTableSuffix, TeamsTableSuffix},
 	string(common.ORGANIZATIONS):      {ContactsTableSuffix},
 	string(common.CONTACTS):           {ContactsTableSuffix},
 	string(common.INTERACTION_EVENTS): {ConversationsTableSuffix, ConversationPartsTableSuffix},
