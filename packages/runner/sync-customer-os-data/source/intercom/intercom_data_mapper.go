@@ -14,10 +14,19 @@ func MapUser(inputJson string) (string, error) {
 		ID    string `json:"id,omitempty"`
 		Name  string `json:"name,omitempty"`
 		Email string `json:"email,omitempty"`
+		Type  string `json:"type,omitempty"`
 	}
 
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
 		return "", err
+	}
+
+	if input.ID == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing id",
+		}
+		return utils.ToJson(output)
 	}
 
 	output := entity.UserData{
@@ -27,9 +36,10 @@ func MapUser(inputJson string) (string, error) {
 		Name:  input.Name,
 		Email: input.Email,
 	}
-	if input.ID == "" {
-		output.Skip = true
-		output.SkipReason = "Missing external id"
+	if input.Type == "admin" {
+		output.ExternalSourceTable = utils.StringPtr("admins")
+	} else if input.Type == "team" {
+		output.ExternalSourceTable = utils.StringPtr("teams")
 	}
 
 	return utils.ToJson(output)

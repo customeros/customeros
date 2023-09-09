@@ -108,8 +108,9 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 		" WITH u, ext " +
 		" MERGE (u)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
 		" ON CREATE SET r.externalOwnerId = $externalOwnerId, " +
-		"				r.syncDate=$syncDate " +
-		" ON MATCH SET r.syncDate=$syncDate " +
+		"				r.syncDate=$syncDate, " +
+		"				r.externalSource=$externalSource " +
+		" ON MATCH SET r.syncDate=$syncDate, r.externalSource=$externalSource " +
 		" WITH u " +
 		" FOREACH (x in CASE WHEN u.sourceOfTruth <> $sourceOfTruth THEN [u] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateUser {source:$source, id:x.id}) " +
@@ -123,6 +124,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 				"userId":          user.Id,
 				"externalSystem":  user.ExternalSystem,
 				"externalId":      user.ExternalId,
+				"externalSource":  user.ExternalSourceTable,
 				"externalOwnerId": user.ExternalOwnerId,
 				"syncDate":        syncDate,
 				"name":            user.Name,
