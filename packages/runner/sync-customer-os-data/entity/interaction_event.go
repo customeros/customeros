@@ -3,33 +3,15 @@ package entity
 import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"strings"
 )
 
-func (participant InteractionEventParticipant) GetNodeLabel() string {
-	switch strings.ToUpper(participant.ParticipantType) {
-	case "ORGANIZATION":
-		return "Organization"
-	case "USER":
-		return "User"
-	case "CONTACT":
-		return "Contact"
-	case "EMAIL":
-		return "Email"
-	case "PHONE":
-		return "PhoneNumber"
-	default:
-		return ""
-	}
-}
-
 type InteractionEventParticipant struct {
-	OpenlineId                string `json:"openlineId,omitempty"`
-	ExternalId                string `json:"externalId,omitempty"`
-	ParticipantType           string `json:"participantType,omitempty"`
-	RelationType              string `json:"relationType,omitempty"`
-	ReplaceContactWithJobRole bool   `json:"replaceContactWithJobRole,omitempty"`
-	OrganizationId            string `json:"organizationId,omitempty"`
+	ReferencedUser         ReferencedUser         `json:"referencedUser,omitempty"`
+	ReferencedContact      ReferencedContact      `json:"referencedContact,omitempty"`
+	ReferencedOrganization ReferencedOrganization `json:"referencedOrganization,omitempty"`
+	ReferencedParticipant  ReferencedParticipant  `json:"referencedParticipant,omitempty"`
+	ReferencedJobRole      ReferencedJobRole      `json:"referencedJobRole,omitempty"`
+	RelationType           string                 `json:"relationType,omitempty"`
 }
 
 type InteractionEventData struct {
@@ -44,6 +26,8 @@ type InteractionEventData struct {
 	PartOfSession    InteractionSession            `json:"partOfSession,omitempty"`
 	SentBy           InteractionEventParticipant   `json:"sentBy,omitempty"`
 	SentTo           []InteractionEventParticipant `json:"sentTo,omitempty"`
+	// in sent to or sent by at least 1 contact should be available in the system
+	ContactRequired bool `json:"contactRequired,omitempty"`
 }
 
 func (i *InteractionEventData) IsPartOfByExternalId() bool {
@@ -51,7 +35,11 @@ func (i *InteractionEventData) IsPartOfByExternalId() bool {
 }
 
 func (i *InteractionEventData) HasSender() bool {
-	return len(i.SentBy.ExternalId) > 0
+	return i.SentBy.ReferencedUser.Available() ||
+		i.SentBy.ReferencedContact.Available() ||
+		i.SentBy.ReferencedOrganization.Available() ||
+		i.SentBy.ReferencedParticipant.Available() ||
+		i.SentBy.ReferencedJobRole.Available()
 }
 
 func (i *InteractionEventData) HasSession() bool {

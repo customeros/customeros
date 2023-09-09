@@ -10,22 +10,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"golang.org/x/exp/slices"
 	"sync"
 	"time"
 )
 
 type interactionEventSyncService struct {
 	repositories *repository.Repositories
+	services     *Services
 	log          logger.Logger
 }
 
-func NewDefaultInteractionEventSyncService(repositories *repository.Repositories, log logger.Logger) SyncService {
+func NewDefaultInteractionEventSyncService(repositories *repository.Repositories, services *Services, log logger.Logger) SyncService {
 	return &interactionEventSyncService{
 		repositories: repositories,
+		services:     services,
 		log:          log,
 	}
 }
@@ -105,6 +105,33 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 		return
 	}
 
+	if interactionEventInput.ContactRequired {
+		found := false
+		_, label, _ := s.getParticipantId(ctx, tenant, interactionEventInput.ExternalSystem, interactionEventInput.SentBy)
+		if label == "Contact" {
+			found = true
+		}
+		if !found {
+			for _, sentTo := range interactionEventInput.SentTo {
+				_, label, _ = s.getParticipantId(ctx, tenant, interactionEventInput.ExternalSystem, sentTo)
+				if label == "Contact" {
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			if err := dataService.MarkProcessed(ctx, interactionEventInput.SyncId, runId, true, true, "No contact found as interaction event participant"); err != nil {
+				*failed++
+				span.LogFields(log.Bool("failedSync", true))
+				return
+			}
+			*skipped++
+			span.LogFields(log.Bool("skippedSync", true))
+			return
+		}
+	}
+
 	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEvent(ctx, tenant, interactionEventInput)
 	if err != nil {
 		failedSync = true
@@ -113,7 +140,7 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 		s.log.Error(reason)
 	}
 
-	// Create new note id if not found
+	// Create new interaction event id if not found
 	if interactionEventId == "" {
 		ieUuid, _ := uuid.NewRandom()
 		interactionEventId = ieUuid.String()
@@ -153,27 +180,20 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 
 	if !failedSync && interactionEventInput.HasSender() {
 		sender := interactionEventInput.SentBy
-		participantNode, err := s.repositories.InteractionEventRepository.FindParticipantByExternalId(ctx, tenant, sender.ExternalId, interactionEventInput.ExternalSystem)
+
+		id, label, err := s.getParticipantId(ctx, tenant, interactionEventInput.ExternalSystem, sender)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed finding participant by external id %v for tenant %v :%v", sender.ExternalId, tenant, err)
+			reason = fmt.Sprintf("failed finding participant %v for tenant %s :%s", sender, tenant, err.Error())
 			s.log.Error(reason)
 		}
-		if sender.ReplaceContactWithJobRole && participantNode != nil && slices.Contains(participantNode.Labels, "Contact") {
-			err = s.repositories.InteractionEventRepository.LinkInteractionEventWithSenderJobRole(ctx, tenant, interactionEventId, sender.OrganizationId, utils.GetStringPropOrEmpty(participantNode.Props, "id"))
+		if id != "" {
+			err = s.repositories.InteractionEventRepository.LinkInteractionEventWithSenderById(ctx, tenant, interactionEventId, id, label)
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
 				reason = fmt.Sprintf("failed link interaction event with job role for tenant %v :%v", tenant, err)
-				s.log.Error(reason)
-			}
-		} else {
-			err = s.repositories.InteractionEventRepository.LinkInteractionEventWithSenderByExternalId(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, sender)
-			if err != nil {
-				failedSync = true
-				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("failed link interaction event with sender by external reference %v for tenant %v :%v", interactionEventInput.ExternalId, tenant, err)
 				s.log.Error(reason)
 			}
 		}
@@ -181,38 +201,20 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 
 	if !failedSync {
 		for _, recipient := range interactionEventInput.SentTo {
-			if recipient.OpenlineId != "" {
-				err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientByOpenlineId(ctx, tenant, interactionEventId, recipient)
+			id, label, err := s.getParticipantId(ctx, tenant, interactionEventInput.ExternalSystem, recipient)
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed finding participant %v for tenant %s :%s", recipient, tenant, err.Error())
+				s.log.Error(reason)
+			}
+			if id != "" {
+				err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientById(ctx, tenant, interactionEventId, id, label, recipient.RelationType)
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("failed link interaction event with recipient by id %v for tenant %v :%v", recipient.OpenlineId, tenant, err.Error())
+					reason = fmt.Sprintf("failed link interaction event with job role for tenant %v :%v", tenant, err)
 					s.log.Error(reason)
-				}
-			} else {
-				participantNode, err := s.repositories.InteractionEventRepository.FindParticipantByExternalId(ctx, tenant, recipient.ExternalId, interactionEventInput.ExternalSystem)
-				if err != nil {
-					failedSync = true
-					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("failed finding participant by external id %v for tenant %v :%v", recipient.ExternalId, tenant, err)
-					s.log.Error(reason)
-				}
-				if recipient.ReplaceContactWithJobRole && participantNode != nil && slices.Contains(participantNode.Labels, "Contact") {
-					err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientJobRole(ctx, tenant, interactionEventId, recipient.OrganizationId, utils.GetStringPropOrEmpty(participantNode.Props, "id"), recipient.RelationType)
-					if err != nil {
-						failedSync = true
-						tracing.TraceErr(span, err)
-						reason = fmt.Sprintf("failed link interaction event with job role for tenant %v :%v", tenant, err)
-						s.log.Error(reason)
-					}
-				} else {
-					err = s.repositories.InteractionEventRepository.LinkInteractionEventWithRecipientByExternalId(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, recipient)
-					if err != nil {
-						failedSync = true
-						tracing.TraceErr(span, err)
-						reason = fmt.Sprintf("failed link interaction event with recipient by external reference %v for tenant %v :%v", interactionEventInput.ExternalId, tenant, err)
-						s.log.Error(reason)
-					}
 				}
 			}
 		}
@@ -232,4 +234,53 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 		*completed++
 	}
 	span.LogFields(log.Bool("failedSync", failedSync))
+}
+
+func (s *interactionEventSyncService) getParticipantId(ctx context.Context, tenant, externalSystemId string, participant entity.InteractionEventParticipant) (id string, label string, err error) {
+	id = ""
+	label = ""
+	err = nil
+
+	if participant.ReferencedUser.Available() {
+		label = "User"
+		id, err = s.services.UserService.GetIdForReferencedUser(ctx, tenant, externalSystemId, participant.ReferencedUser)
+	}
+	if id == "" && participant.ReferencedContact.Available() {
+		label = "Contact"
+		id, err = s.services.ContactService.GetIdForReferencedContact(ctx, tenant, externalSystemId, participant.ReferencedContact)
+	}
+	if id == "" && participant.ReferencedOrganization.Available() {
+		label = "Organization"
+		id, err = s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, externalSystemId, participant.ReferencedOrganization)
+	}
+	if id == "" && participant.ReferencedParticipant.Available() {
+		if id == "" {
+			id, err = s.repositories.UserRepository.GetUserIdByExternalId(ctx, tenant, participant.ReferencedParticipant.ExternalId, externalSystemId)
+			if id != "" {
+				label = "User"
+			}
+		}
+		if id == "" {
+			id, err = s.repositories.ContactRepository.GetContactIdByExternalId(ctx, tenant, participant.ReferencedParticipant.ExternalId, externalSystemId)
+			if id != "" {
+				label = "Contact"
+			}
+		}
+		if id == "" {
+			id, err = s.repositories.OrganizationRepository.GetOrganizationIdByExternalId(ctx, tenant, participant.ReferencedParticipant.ExternalId, externalSystemId)
+			if id != "" {
+				label = "Organization"
+			}
+		}
+	}
+	if id == "" && participant.ReferencedJobRole.Available() {
+		contactId, _ := s.services.ContactService.GetIdForReferencedContact(ctx, tenant, externalSystemId, participant.ReferencedJobRole.ReferencedContact)
+		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, externalSystemId, participant.ReferencedJobRole.ReferencedOrganization)
+		id, err = s.repositories.ContactRepository.GetJobRoleId(ctx, tenant, contactId, orgId)
+		label = "JobRole"
+	}
+	if id == "" {
+		label = ""
+	}
+	return
 }

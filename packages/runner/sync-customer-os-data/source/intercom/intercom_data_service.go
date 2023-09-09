@@ -16,14 +16,17 @@ import (
 )
 
 const (
-	AdminsTableSuffix   = "admins"
-	ContactsTableSuffix = "contacts"
+	AdminsTableSuffix            = "admins"
+	ContactsTableSuffix          = "contacts"
+	ConversationsTableSuffix     = "conversations"
+	ConversationPartsTableSuffix = "conversation_parts"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
-	string(common.USERS):         {AdminsTableSuffix},
-	string(common.ORGANIZATIONS): {ContactsTableSuffix},
-	string(common.CONTACTS):      {ContactsTableSuffix},
+	string(common.USERS):              {AdminsTableSuffix},
+	string(common.ORGANIZATIONS):      {ContactsTableSuffix},
+	string(common.CONTACTS):           {ContactsTableSuffix},
+	string(common.INTERACTION_EVENTS): {ConversationsTableSuffix, ConversationPartsTableSuffix},
 }
 
 type intercomDataService struct {
@@ -46,6 +49,7 @@ func NewIntercomDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
 	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
 	dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
+	dataService.dataFuncs[common.INTERACTION_EVENTS] = dataService.GetInteractionEventsForSync
 	return &dataService
 }
 
@@ -185,6 +189,39 @@ func (s *intercomDataService) GetContactsForSync(ctx context.Context, batchSize 
 		}
 	}
 	return contacts
+}
+
+func (s *intercomDataService) GetInteractionEventsForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.INTERACTION_EVENTS)
+
+	var interactionEvents []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Error(err)
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(interactionEvents) >= batchSize {
+				break
+			}
+			outputJSON, err := MapInteractionEvent(v.AirbyteData)
+			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				s.log.Fatal(err) // alexb handle errors
+				continue
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  interactionEvent.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			interactionEvents = append(interactionEvents, interactionEvent)
+		}
+	}
+	return interactionEvents
 }
 
 func (s *intercomDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {

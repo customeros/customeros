@@ -35,14 +35,14 @@ func MapUser(inputJson string) (string, error) {
 	return utils.ToJson(output)
 }
 
-func MapOrganization(inputJSON string) (string, error) {
+func MapOrganization(inputJson string) (string, error) {
 	var input struct {
 		Email     string `json:"email,omitempty"`
 		ID        string `json:"id,omitempty"`
 		CreatedAt int64  `json:"created_at,omitempty"`
 	}
 
-	err := json.Unmarshal([]byte(inputJSON), &input)
+	err := json.Unmarshal([]byte(inputJson), &input)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
@@ -71,10 +71,10 @@ func MapOrganization(inputJSON string) (string, error) {
 
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId: domain,
+			ExternalId:          domain,
+			ExternalSourceTable: utils.StringPtr("contacts"),
 		},
-		CreateByDomain:      true,
-		ExternalSourceTable: utils.StringPtr("contacts"),
+		CreateByDomain: true,
 	}
 	output.Domains = []string{domain}
 	if input.CreatedAt != 0 {
@@ -84,7 +84,7 @@ func MapOrganization(inputJSON string) (string, error) {
 	return utils.ToJson(output)
 }
 
-func MapContact(inputJSON string) (string, error) {
+func MapContact(inputJson string) (string, error) {
 	var input struct {
 		ID               string `json:"id,omitempty"`
 		CreatedAt        int64  `json:"created_at,omitempty"`
@@ -108,7 +108,7 @@ func MapContact(inputJSON string) (string, error) {
 		} `json:"location,omitempty"`
 	}
 
-	err := json.Unmarshal([]byte(inputJSON), &input)
+	err := json.Unmarshal([]byte(inputJson), &input)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
@@ -173,128 +173,112 @@ func tsStrToRFC3339(timestamp int64) string {
 	return t.Format(layout)
 }
 
-//func MapContact(inputJSON string) (string, error) {
-//	var input struct {
-//		ID         int64  `json:"id,omitempty"`
-//		Name       string `json:"name,omitempty"`
-//		FirstName  string `json:"first_name,omitempty"`
-//		LastName   string `json:"last_name,omitempty"`
-//		Active     bool   `json:"active_flag,omitempty"`
-//		AddTime    string `json:"add_time,omitempty"`
-//		UpdateTime string `json:"update_time,omitempty"`
-//		OrgId      int64  `json:"org_id,omitempty"`
-//		OwnerId    int64  `json:"owner_id,omitempty"`
-//		Emails     []struct {
-//			Value   string `json:"value,omitempty"`
-//			Primary bool   `json:"primary,omitempty"`
-//		} `json:"email,omitempty"`
-//		Phones []struct {
-//			Value   string `json:"value,omitempty"`
-//			Primary bool   `json:"primary,omitempty"`
-//		} `json:"phone,omitempty"`
-//	}
-//
-//	err := json.Unmarshal([]byte(inputJSON), &input)
-//	if err != nil {
-//		return "", fmt.Errorf("failed to parse input JSON: %v", err)
-//	}
-//
-//	output := model.Output{
-//		ExternalId: fmt.Sprintf("%d", input.ID),
-//		Name:       input.Name,
-//		FirstName:  input.FirstName,
-//		LastName:   input.LastName,
-//		CreatedAt:  input.AddTime,
-//		UpdatedAt:  input.UpdateTime,
-//	}
-//	if input.ID == 0 {
-//		output.Skip = true
-//		output.SkipReason = "Missing external id"
-//	}
-//	if input.OrgId != 0 {
-//		output.ExternalOrganizationId = fmt.Sprintf("%d", input.OrgId)
-//	}
-//	if input.OwnerId != 0 {
-//		output.ExternalUserId = fmt.Sprintf("%d", input.OwnerId)
-//	}
-//
-//	var primaryEmailFound = false
-//	for _, email := range input.Emails {
-//		if email.Value != "" {
-//			if email.Primary && !primaryEmailFound {
-//				output.Email = email.Value
-//				primaryEmailFound = true
-//			} else {
-//				output.AdditionalEmails = append(output.AdditionalEmails, email.Value)
-//			}
-//		}
-//	}
-//	var primaryPhoneNumberFound = false
-//	for _, phone := range input.Phones {
-//		if phone.Value != "" {
-//			if phone.Primary && !primaryPhoneNumberFound {
-//				output.PhoneNumber = phone.Value
-//				primaryPhoneNumberFound = true
-//			} else {
-//				output.AdditionalPhoneNumbers = append(output.AdditionalPhoneNumbers, phone.Value)
-//			}
-//		}
-//	}
-//
-//	outputJSON, err := json.Marshal(output)
-//	if err != nil {
-//		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
-//	}
-//
-//	return string(outputJSON), nil
-//}
-//
-//func MapNote(inputJSON string) (string, error) {
-//	var input struct {
-//		ID         int64  `json:"id,omitempty"`
-//		Content    string `json:"content,omitempty"`
-//		UserId     int64  `json:"user_id,omitempty"`
-//		AddTime    string `json:"add_time,omitempty"`
-//		UpdateTime string `json:"update_time,omitempty"`
-//		PersonId   int64  `json:"person_id,omitempty"`
-//		OrgId      int64  `json:"org_id,omitempty"`
-//	}
-//
-//	err := json.Unmarshal([]byte(inputJSON), &input)
-//	if err != nil {
-//		return "", fmt.Errorf("failed to parse input JSON: %v", err)
-//	}
-//
-//	output := model.Output{
-//		ExternalId: fmt.Sprintf("%d", input.ID),
-//		CreatedAt:  input.AddTime,
-//		UpdatedAt:  input.UpdateTime,
-//	}
-//	if input.ID == 0 {
-//		output.Skip = true
-//		output.SkipReason = "Missing external id"
-//	}
-//	if input.UserId != 0 {
-//		output.ExternalUserId = fmt.Sprintf("%d", input.UserId)
-//	}
-//	if input.PersonId != 0 {
-//		output.ExternalContactsIds = append(output.ExternalContactsIds, fmt.Sprintf("%d", input.PersonId))
-//	}
-//	if input.OrgId != 0 {
-//		output.ExternalOrganizationsIds = append(output.ExternalOrganizationsIds, fmt.Sprintf("%d", input.OrgId))
-//	}
-//	if strings.Contains(input.Content, "<") {
-//		output.Content = input.Content
-//		output.ContentType = "text/html"
-//	} else {
-//		output.Content = input.Content
-//		output.ContentType = "text/plain"
-//	}
-//
-//	outputJSON, err := json.Marshal(output)
-//	if err != nil {
-//		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
-//	}
-//
-//	return string(outputJSON), nil
-//}
+func MapInteractionEvent(inputJson string) (string, error) {
+	var data map[string]interface{}
+	err := json.Unmarshal([]byte(inputJson), &data)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse input JSON: %v", err)
+	}
+	if _, exists := data["conversation_id"]; exists {
+		return mapInteractionEventFromConversationPart(inputJson)
+	} else {
+		return mapInteractionEventFromConversation(inputJson)
+	}
+}
+
+func mapInteractionEventFromConversation(inputJson string) (string, error) {
+	var input struct {
+		ID        string `json:"id,omitempty"`
+		State     string `json:"state,omitempty"`
+		Title     string `json:"title,omitempty"`
+		CreatedAt int64  `json:"created_at,omitempty"`
+		UpdatedAt int64  `json:"updated_at,omitempty"`
+		Source    struct {
+			ID     string `json:"id,omitempty"`
+			Body   string `json:"body,omitempty"`
+			Type   string `json:"type,omitempty"`
+			Author struct {
+				ID    string `json:"id,omitempty"`
+				Name  string `json:"name,omitempty"`
+				Type  string `json:"type,omitempty"`
+				Email string `json:"email,omitempty"`
+			} `json:"author,omitempty"`
+		} `json:"source,omitempty"`
+		Contacts struct {
+			Contacts []struct {
+				ID   string `json:"id,omitempty"`
+				Type string `json:"type,omitempty"`
+			} `json:"contacts,omitempty"`
+		} `json:"contacts,omitempty"`
+	}
+
+	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
+		return "", err
+	}
+
+	if input.ID == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing id",
+		}
+		return utils.ToJson(output)
+	}
+
+	output := entity.InteractionEventData{
+		BaseData: entity.BaseData{
+			ExternalId:          input.ID,
+			ExternalSourceTable: utils.StringPtr("conversations"),
+			CreatedAtStr:        tsStrToRFC3339(input.CreatedAt),
+		},
+		Channel:         "CHAT",
+		ContentType:     "text/html",
+		Content:         input.Source.Body,
+		Hide:            false,
+		ContactRequired: true,
+	}
+	if input.Source.Type == "email" {
+		output.Type = "EMAIL"
+	} else {
+		output.Type = "MESSAGE"
+	}
+
+	output.PartOfSession.Name = input.Title
+	output.PartOfSession.Channel = "CHAT"
+	output.PartOfSession.Type = "THREAD"
+	output.PartOfSession.CreatedAtStr = tsStrToRFC3339(input.CreatedAt)
+	output.PartOfSession.ExternalId = "session/" + input.ID
+	if input.State == "closed" {
+		output.PartOfSession.Status = "INACTIVE"
+	} else {
+		output.PartOfSession.Status = "ACTIVE"
+	}
+
+	if input.Source.Author.Type == "admin" || input.Source.Author.Type == "team" {
+		output.SentBy = entity.InteractionEventParticipant{
+			ReferencedUser: entity.ReferencedUser{
+				ExternalId: input.Source.Author.ID,
+			},
+		}
+	} else {
+		output.SentBy = entity.InteractionEventParticipant{
+			ReferencedContact: entity.ReferencedContact{
+				ExternalId: input.Source.Author.ID,
+			},
+		}
+	}
+
+	for _, contact := range input.Contacts.Contacts {
+		output.SentTo = append(output.SentTo, entity.InteractionEventParticipant{
+			ReferencedContact: entity.ReferencedContact{
+				ExternalId: contact.ID,
+			},
+		})
+	}
+
+	return utils.ToJson(output)
+}
+
+func mapInteractionEventFromConversationPart(inputJson string) (string, error) {
+	panic("not implemented")
+	return "", nil
+}

@@ -23,17 +23,16 @@ type ParentOrganization struct {
 
 type OrganizationData struct {
 	BaseData
-	Name                string             `json:"name,omitempty"`
-	Description         string             `json:"description,omitempty"`
-	Domains             []string           `json:"domains,omitempty"`
-	Notes               []OrganizationNote `json:"notes,omitempty"`
-	Website             string             `json:"website,omitempty"`
-	Industry            string             `json:"industry,omitempty"`
-	IsPublic            bool               `json:"isPublic,omitempty"`
-	Employees           int64              `json:"employees,omitempty"`
-	PhoneNumber         string             `json:"phoneNumber,omitempty"`
-	Email               string             `json:"email,omitempty"`
-	ExternalSourceTable *string            `json:"externalSourceTable,omitempty"`
+	Name        string             `json:"name,omitempty"`
+	Description string             `json:"description,omitempty"`
+	Domains     []string           `json:"domains,omitempty"`
+	Notes       []OrganizationNote `json:"notes,omitempty"`
+	Website     string             `json:"website,omitempty"`
+	Industry    string             `json:"industry,omitempty"`
+	IsPublic    bool               `json:"isPublic,omitempty"`
+	Employees   int64              `json:"employees,omitempty"`
+	PhoneNumber string             `json:"phoneNumber,omitempty"`
+	Email       string             `json:"email,omitempty"`
 	// Currently not used. Sync processes will not set automatically owner user
 	OwnerUser          *ReferencedUser     `json:"ownerUser,omitempty"`
 	LocationName       string              `json:"locationName,omitempty"`
