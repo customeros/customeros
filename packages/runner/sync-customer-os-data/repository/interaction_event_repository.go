@@ -25,10 +25,12 @@ type InteractionEventRepository interface {
 
 	InteractionEventSentByEmail(ctx context.Context, tenant, interactionEventId, emailId string) error
 	InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emails []string) error
-	LinkInteractionEventAsPartOfByExternalId(ctx context.Context, tenant string, event entity.InteractionEventData) error
+	LinkInteractionEventAsPartOf(ctx context.Context, tenant, interactionEventId, id, label string) error
 
 	LinkInteractionEventWithSenderById(ctx context.Context, tenant, eventId, id, label string) error
 	LinkInteractionEventWithRecipientById(ctx context.Context, tenant, eventId, id, label, relationType string) error
+
+	GetInteractionSessionIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
 }
 
 type interactionEventRepository struct {
@@ -335,26 +337,27 @@ func (r *interactionEventRepository) InteractionEventSentToEmails(ctx context.Co
 	return err
 }
 
-func (r *interactionEventRepository) LinkInteractionEventAsPartOfByExternalId(ctx context.Context, tenant string, event entity.InteractionEventData) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventAsPartOfByExternalId")
+func (r *interactionEventRepository) LinkInteractionEventAsPartOf(ctx context.Context, tenant, interactionEventId, id, label string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventAsPartOf")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
+		MATCH (linkedEntity:Issue|InteractionSession {id:$id}) 
+		WHERE $label IN labels(linkedEntity) AND $label+'_%s' IN labels(linkedEntity)
+		MERGE (ie)-[rel:PART_OF]->(linkedEntity)
+		RETURN rel`, tenant, tenant)
+	span.LogFields(log.String("query", query))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
-	query := `MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
-		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$partOfExternalId}]-(n) 
-		WHERE n:Issue
-		MERGE (ie)-[result:PART_OF]->(n) 
-		return result`
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		queryResult, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":             tenant,
-				"interactionEventId": event.Id,
-				"partOfExternalId":   event.PartOfExternalId,
-				"externalSystemId":   event.ExternalSystem,
+				"interactionEventId": interactionEventId,
+				"id":                 id,
+				"label":              label,
 			})
 		if err != nil {
 			return nil, err
@@ -463,4 +466,33 @@ func (r *interactionEventRepository) LinkInteractionEventWithRecipientById(ctx c
 		return nil, err
 	})
 	return err
+}
+
+func (r *interactionEventRepository) GetInteractionSessionIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetInteractionSessionIdByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
+					MATCH (is:InteractionSession_%s)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
+				return is.id order by is.createdAt`, tenant)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, map[string]any{
+			"tenant":           tenant,
+			"externalId":       externalId,
+			"externalSystemId": externalSystemId,
+		})
+		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]string)) == 0 {
+		return "", nil
+	}
+	return records.([]string)[0], nil
 }

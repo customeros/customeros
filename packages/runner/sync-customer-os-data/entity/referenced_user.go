@@ -6,6 +6,10 @@ type ReferencedUser struct {
 	Id              string `json:"id,omitempty"`
 }
 
+func (r *ReferencedUser) GetReferencedEntityType() ReferencedEntityType {
+	return ReferencedEntityTypeUser
+}
+
 func (r *ReferencedUser) ReferencedById() bool {
 	return r.Id != ""
 }

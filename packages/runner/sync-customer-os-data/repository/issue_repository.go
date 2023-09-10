@@ -21,6 +21,7 @@ type IssueRepository interface {
 	LinkIssueWithCollaboratorUserByExternalId(ctx context.Context, tenant, issueId, userExternalId, externalSystem string) error
 	LinkIssueWithFollowerUserByExternalId(ctx context.Context, tenant, issueId, userExternalId, externalSystem string) error
 	LinkIssueWithAssigneeUserByExternalId(ctx context.Context, tenant, issueId, userExternalId, externalSystem string) error
+	GetIssueIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
 }
 
 type issueRepository struct {
@@ -275,4 +276,33 @@ func (r *issueRepository) LinkIssueWithAssigneeUserByExternalId(ctx context.Cont
 		return nil, err
 	})
 	return err
+}
+
+func (r *issueRepository) GetIssueIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetIssueIdByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
+					MATCH (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
+				return i.id order by i.createdAt`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, map[string]any{
+			"tenant":           tenant,
+			"externalId":       externalId,
+			"externalSystemId": externalSystemId,
+		})
+		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]string)) == 0 {
+		return "", nil
+	}
+	return records.([]string)[0], nil
 }

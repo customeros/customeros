@@ -8,3 +8,7 @@ type ReferencedJobRole struct {
 func (r *ReferencedJobRole) Available() bool {
 	return r.ReferencedContact.Available() && r.ReferencedOrganization.Available()
 }
+
+func (r *ReferencedJobRole) GetReferencedEntityType() ReferencedEntityType {
+	return ReferencedEntityTypeJobRole
+}

@@ -7,3 +7,7 @@ type ReferencedParticipant struct {
 func (r *ReferencedParticipant) Available() bool {
 	return r.ExternalId != ""
 }
+
+func (r *ReferencedParticipant) GetReferencedEntityType() ReferencedEntityType {
+	return ReferencedEntityTypeUnknown
+}

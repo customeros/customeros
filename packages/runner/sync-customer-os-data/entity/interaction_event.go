@@ -16,22 +16,25 @@ type InteractionEventParticipant struct {
 
 type InteractionEventData struct {
 	BaseData
-	Content          string                        `json:"content,omitempty"`
-	ContentType      string                        `json:"contentType,omitempty"`
-	Type             string                        `json:"type,omitempty"`
-	Channel          string                        `json:"channel,omitempty"`
-	Identifier       string                        `json:"identifier,omitempty"`
-	Hide             bool                          `json:"hide,omitempty"`
-	PartOfExternalId string                        `json:"partOfExternalId,omitempty"`
-	PartOfSession    InteractionSession            `json:"partOfSession,omitempty"`
-	SentBy           InteractionEventParticipant   `json:"sentBy,omitempty"`
-	SentTo           []InteractionEventParticipant `json:"sentTo,omitempty"`
+	Content        string                        `json:"content,omitempty"`
+	ContentType    string                        `json:"contentType,omitempty"`
+	Type           string                        `json:"type,omitempty"`
+	Channel        string                        `json:"channel,omitempty"`
+	Identifier     string                        `json:"identifier,omitempty"`
+	Hide           bool                          `json:"hide,omitempty"`
+	PartOfIssue    ReferencedIssue               `json:"partOfIssue,omitempty"`
+	PartOfSession  ReferencedInteractionSession  `json:"partOfSession,omitempty"`
+	SessionDetails InteractionSession            `json:"sessionDetails,omitempty"`
+	SentBy         InteractionEventParticipant   `json:"sentBy,omitempty"`
+	SentTo         []InteractionEventParticipant `json:"sentTo,omitempty"`
 	// in sent to or sent by at least 1 contact should be available in the system
 	ContactRequired bool `json:"contactRequired,omitempty"`
+	// interaction session should already exist in the system
+	SessionRequired bool `json:"sessionRequired,omitempty"`
 }
 
-func (i *InteractionEventData) IsPartOfByExternalId() bool {
-	return len(i.PartOfExternalId) > 0
+func (i *InteractionEventData) IsPartOf() bool {
+	return i.PartOfIssue.Available() || i.PartOfSession.Available()
 }
 
 func (i *InteractionEventData) HasSender() bool {
@@ -43,19 +46,19 @@ func (i *InteractionEventData) HasSender() bool {
 }
 
 func (i *InteractionEventData) HasSession() bool {
-	return i.PartOfSession.ExternalId != ""
+	return i.SessionDetails.ExternalId != ""
 }
 
 func (i *InteractionEventData) Normalize() {
 	i.SetTimes()
 	if i.HasSession() {
-		if i.PartOfSession.CreatedAtStr != "" && i.PartOfSession.CreatedAt == nil {
-			i.PartOfSession.CreatedAt, _ = utils.UnmarshalDateTime(i.PartOfSession.CreatedAtStr)
+		if i.SessionDetails.CreatedAtStr != "" && i.SessionDetails.CreatedAt == nil {
+			i.SessionDetails.CreatedAt, _ = utils.UnmarshalDateTime(i.SessionDetails.CreatedAtStr)
 		}
-		if i.PartOfSession.CreatedAt != nil {
-			i.PartOfSession.CreatedAt = common_utils.TimePtr((*i.PartOfSession.CreatedAt).UTC())
+		if i.SessionDetails.CreatedAt != nil {
+			i.SessionDetails.CreatedAt = common_utils.TimePtr((*i.SessionDetails.CreatedAt).UTC())
 		} else {
-			i.PartOfSession.CreatedAt = common_utils.TimePtr(common_utils.Now())
+			i.SessionDetails.CreatedAt = common_utils.TimePtr(common_utils.Now())
 		}
 	}
 

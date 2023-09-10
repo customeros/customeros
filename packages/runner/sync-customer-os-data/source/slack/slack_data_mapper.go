@@ -228,21 +228,21 @@ func MapInteractionEvent(inputJson string) (string, error) {
 			},
 		},
 	}
-	output.PartOfSession.Channel = "SLACK"
-	output.PartOfSession.Type = "THREAD"
-	output.PartOfSession.Status = "ACTIVE"
-	output.PartOfSession.Name = input.OpenlineFields.ChannelName
+	output.SessionDetails.Channel = "SLACK"
+	output.SessionDetails.Type = "THREAD"
+	output.SessionDetails.Status = "ACTIVE"
+	output.SessionDetails.Name = input.OpenlineFields.ChannelName
 	if input.ThreadTs != "" {
 		if input.ThreadTs != input.Ts {
 			output.Hide = true
 		}
-		output.PartOfSession.ExternalId = "session/" + input.OpenlineFields.ChannelId + "/" + input.ThreadTs
-		output.PartOfSession.CreatedAtStr = tsStrToRFC3339Nanos(input.ThreadTs)
-		output.PartOfSession.Identifier = input.OpenlineFields.ChannelId + "/" + input.ThreadTs
+		output.SessionDetails.ExternalId = "session/" + input.OpenlineFields.ChannelId + "/" + input.ThreadTs
+		output.SessionDetails.CreatedAtStr = tsStrToRFC3339Nanos(input.ThreadTs)
+		output.SessionDetails.Identifier = input.OpenlineFields.ChannelId + "/" + input.ThreadTs
 	} else {
-		output.PartOfSession.ExternalId = "session/" + input.OpenlineFields.ChannelId + "/" + input.Ts
-		output.PartOfSession.CreatedAtStr = tsStrToRFC3339Nanos(input.Ts)
-		output.PartOfSession.Identifier = input.OpenlineFields.ChannelId + "/" + input.Ts
+		output.SessionDetails.ExternalId = "session/" + input.OpenlineFields.ChannelId + "/" + input.Ts
+		output.SessionDetails.CreatedAtStr = tsStrToRFC3339Nanos(input.Ts)
+		output.SessionDetails.Identifier = input.OpenlineFields.ChannelId + "/" + input.Ts
 	}
 
 	for _, user := range input.OpenlineFields.UserIds {

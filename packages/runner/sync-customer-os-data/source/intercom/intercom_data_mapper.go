@@ -239,6 +239,7 @@ func mapInteractionEventFromConversation(inputJson string) (string, error) {
 			ExternalId:          input.ID,
 			ExternalSourceTable: utils.StringPtr("conversations"),
 			CreatedAtStr:        tsStrToRFC3339(input.CreatedAt),
+			UpdatedAtStr:        tsStrToRFC3339(input.UpdatedAt),
 		},
 		Channel:         "CHAT",
 		ContentType:     "text/html",
@@ -252,15 +253,15 @@ func mapInteractionEventFromConversation(inputJson string) (string, error) {
 		output.Type = "MESSAGE"
 	}
 
-	output.PartOfSession.Name = input.Title
-	output.PartOfSession.Channel = "CHAT"
-	output.PartOfSession.Type = "THREAD"
-	output.PartOfSession.CreatedAtStr = tsStrToRFC3339(input.CreatedAt)
-	output.PartOfSession.ExternalId = "session/" + input.ID
+	output.SessionDetails.Name = input.Title
+	output.SessionDetails.Channel = "CHAT"
+	output.SessionDetails.Type = "THREAD"
+	output.SessionDetails.CreatedAtStr = tsStrToRFC3339(input.CreatedAt)
+	output.SessionDetails.ExternalId = "session/" + input.ID
 	if input.State == "closed" {
-		output.PartOfSession.Status = "INACTIVE"
+		output.SessionDetails.Status = "INACTIVE"
 	} else {
-		output.PartOfSession.Status = "ACTIVE"
+		output.SessionDetails.Status = "ACTIVE"
 	}
 
 	if input.Source.Author.Type == "admin" || input.Source.Author.Type == "team" {
@@ -289,6 +290,81 @@ func mapInteractionEventFromConversation(inputJson string) (string, error) {
 }
 
 func mapInteractionEventFromConversationPart(inputJson string) (string, error) {
-	panic("not implemented")
-	return "", nil
+	var input struct {
+		ID     string `json:"id,omitempty"`
+		Body   string `json:"body,omitempty"`
+		Type   string `json:"type,omitempty"`
+		Author struct {
+			ID    string `json:"id,omitempty"`
+			Name  string `json:"name,omitempty"`
+			Type  string `json:"type,omitempty"`
+			Email string `json:"email,omitempty"`
+		} `json:"author,omitempty"`
+		CreatedAt      int64  `json:"created_at,omitempty"`
+		UpdatedAt      int64  `json:"updated_at,omitempty"`
+		PartType       string `json:"part_type,omitempty"`
+		ConversationId string `json:"conversation_id,omitempty"`
+	}
+
+	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
+		return "", err
+	}
+
+	if input.ID == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing id",
+		}
+		return utils.ToJson(output)
+	}
+	if input.ConversationId == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing conversation id (interaction session)",
+		}
+		return utils.ToJson(output)
+	}
+	if input.Body == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing conversation part body",
+		}
+		return utils.ToJson(output)
+	}
+
+	output := entity.InteractionEventData{
+		BaseData: entity.BaseData{
+			ExternalId:          input.ID,
+			ExternalSourceTable: utils.StringPtr("conversation_parts"),
+			CreatedAtStr:        tsStrToRFC3339(input.CreatedAt),
+			UpdatedAtStr:        tsStrToRFC3339(input.UpdatedAt),
+		},
+		Channel:         "CHAT",
+		Type:            "MESSAGE",
+		ContentType:     "text/html",
+		Content:         input.Body,
+		Hide:            true,
+		ContactRequired: false,
+		SessionRequired: true,
+	}
+
+	output.PartOfSession = entity.ReferencedInteractionSession{
+		"session/" + input.ConversationId,
+	}
+
+	if input.Author.Type == "admin" || input.Author.Type == "team" {
+		output.SentBy = entity.InteractionEventParticipant{
+			ReferencedUser: entity.ReferencedUser{
+				ExternalId: input.Author.ID,
+			},
+		}
+	} else {
+		output.SentBy = entity.InteractionEventParticipant{
+			ReferencedContact: entity.ReferencedContact{
+				ExternalId: input.Author.ID,
+			},
+		}
+	}
+
+	return utils.ToJson(output)
 }
