@@ -7,6 +7,10 @@ type ReferencedOrganization struct {
 	JobTitle   string `json:"jobTitle,omitempty"`
 }
 
+func (r *ReferencedOrganization) GetReferencedEntityType() ReferencedEntityType {
+	return ReferencedEntityTypeOrganization
+}
+
 func (r *ReferencedOrganization) ReferencedById() bool {
 	return r.Id != ""
 }

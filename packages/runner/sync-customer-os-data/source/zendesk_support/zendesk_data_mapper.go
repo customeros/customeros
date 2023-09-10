@@ -357,7 +357,9 @@ func MapInteractionEvent(inputJSON string) (string, error) {
 		output.ContentType = "text/plain"
 	}
 	if input.TicketId > 0 {
-		output.PartOfExternalId = fmt.Sprintf("%d", input.TicketId)
+		output.PartOfIssue = entity.ReferencedIssue{
+			ExternalId: fmt.Sprintf("%d", input.TicketId),
+		}
 	}
 	if input.AuthorId > 0 {
 		output.SentBy = entity.InteractionEventParticipant{

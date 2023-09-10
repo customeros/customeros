@@ -131,6 +131,23 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 			return
 		}
 	}
+	if interactionEventInput.SessionRequired {
+		found := false
+		id, _, _ := s.getReferencedEntityIdAndLabel(ctx, tenant, interactionEventInput.ExternalSystem, &interactionEventInput.PartOfSession)
+		if id != "" {
+			found = true
+		}
+		if !found {
+			if err := dataService.MarkProcessed(ctx, interactionEventInput.SyncId, runId, true, true, "Interaction session not found: "+interactionEventInput.PartOfSession.ExternalId); err != nil {
+				*failed++
+				span.LogFields(log.Bool("failedSync", true))
+				return
+			}
+			*skipped++
+			span.LogFields(log.Bool("skippedSync", true))
+			return
+		}
+	}
 
 	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEvent(ctx, tenant, interactionEventInput)
 	if err != nil {
@@ -159,22 +176,30 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 	}
 
 	if !failedSync && interactionEventInput.HasSession() {
-		err = s.repositories.InteractionEventRepository.MergeInteractionSessionForEvent(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, syncDate, interactionEventInput.PartOfSession)
+		err = s.repositories.InteractionEventRepository.MergeInteractionSessionForEvent(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, syncDate, interactionEventInput.SessionDetails)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge interaction session by external id %v for tenant %v :%v", interactionEventInput.PartOfSession.ExternalId, tenant, err)
+			reason = fmt.Sprintf("failed merge interaction session by external id %v for tenant %v :%v", interactionEventInput.SessionDetails.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
 	}
 
-	if !failedSync && interactionEventInput.IsPartOfByExternalId() {
-		err = s.repositories.InteractionEventRepository.LinkInteractionEventAsPartOfByExternalId(ctx, tenant, interactionEventInput)
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed link interaction event as part of by external reference %v for tenant %v :%v", interactionEventInput.ExternalId, tenant, err)
-			s.log.Error(reason)
+	if !failedSync && interactionEventInput.IsPartOf() {
+		var id, label string
+		if interactionEventInput.PartOfIssue.Available() {
+			id, label, _ = s.getReferencedEntityIdAndLabel(ctx, tenant, interactionEventInput.ExternalSystem, &interactionEventInput.PartOfIssue)
+		} else if interactionEventInput.PartOfSession.Available() {
+			id, label, _ = s.getReferencedEntityIdAndLabel(ctx, tenant, interactionEventInput.ExternalSystem, &interactionEventInput.PartOfSession)
+		}
+		if id != "" {
+			err = s.repositories.InteractionEventRepository.LinkInteractionEventAsPartOf(ctx, tenant, interactionEventId, id, label)
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed link interaction event %s to be part of %s %s for tenant %s :%s", interactionEventId, label, id, tenant, err.Error())
+				s.log.Error(reason)
+			}
 		}
 	}
 
@@ -242,45 +267,99 @@ func (s *interactionEventSyncService) getParticipantId(ctx context.Context, tena
 	err = nil
 
 	if participant.ReferencedUser.Available() {
-		label = "User"
-		id, err = s.services.UserService.GetIdForReferencedUser(ctx, tenant, externalSystemId, participant.ReferencedUser)
+		id, label, err = s.getReferencedEntityIdAndLabel(ctx, tenant, externalSystemId, &participant.ReferencedUser)
 	}
 	if id == "" && participant.ReferencedContact.Available() {
-		label = "Contact"
-		id, err = s.services.ContactService.GetIdForReferencedContact(ctx, tenant, externalSystemId, participant.ReferencedContact)
+		id, label, err = s.getReferencedEntityIdAndLabel(ctx, tenant, externalSystemId, &participant.ReferencedContact)
 	}
 	if id == "" && participant.ReferencedOrganization.Available() {
-		label = "Organization"
-		id, err = s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, externalSystemId, participant.ReferencedOrganization)
+		id, label, err = s.getReferencedEntityIdAndLabel(ctx, tenant, externalSystemId, &participant.ReferencedOrganization)
 	}
 	if id == "" && participant.ReferencedParticipant.Available() {
-		if id == "" {
-			id, err = s.repositories.UserRepository.GetUserIdByExternalId(ctx, tenant, participant.ReferencedParticipant.ExternalId, externalSystemId)
-			if id != "" {
-				label = "User"
-			}
-		}
-		if id == "" {
-			id, err = s.repositories.ContactRepository.GetContactIdByExternalId(ctx, tenant, participant.ReferencedParticipant.ExternalId, externalSystemId)
-			if id != "" {
-				label = "Contact"
-			}
-		}
-		if id == "" {
-			id, err = s.repositories.OrganizationRepository.GetOrganizationIdByExternalId(ctx, tenant, participant.ReferencedParticipant.ExternalId, externalSystemId)
-			if id != "" {
-				label = "Organization"
-			}
-		}
+		id, label, err = s.getReferencedEntityIdAndLabel(ctx, tenant, externalSystemId, &participant.ReferencedParticipant)
 	}
 	if id == "" && participant.ReferencedJobRole.Available() {
-		contactId, _ := s.services.ContactService.GetIdForReferencedContact(ctx, tenant, externalSystemId, participant.ReferencedJobRole.ReferencedContact)
-		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, externalSystemId, participant.ReferencedJobRole.ReferencedOrganization)
-		id, err = s.repositories.ContactRepository.GetJobRoleId(ctx, tenant, contactId, orgId)
-		label = "JobRole"
+		id, label, err = s.getReferencedEntityIdAndLabel(ctx, tenant, externalSystemId, &participant.ReferencedJobRole)
 	}
 	if id == "" {
 		label = ""
 	}
 	return
+}
+
+func (s *interactionEventSyncService) getReferencedEntityIdAndLabel(ctx context.Context, tenant, externalSystemId string, refEntity entity.ReferencedEntity) (id string, label string, err error) {
+	id = ""
+	label = ""
+	err = nil
+	if !refEntity.Available() {
+		return "", "", nil
+	}
+	switch r := refEntity.(type) {
+	case *entity.ReferencedInteractionSession:
+		id, err = s.GetIdForReferencedInteractionSession(ctx, tenant, externalSystemId, *r)
+		if id != "" {
+			label = "InteractionSession"
+		}
+	case *entity.ReferencedIssue:
+		id, err = s.services.IssueService.GetIdForReferencedIssue(ctx, tenant, externalSystemId, *r)
+		if id != "" {
+			label = "Issue"
+		}
+	case *entity.ReferencedUser:
+		id, err = s.services.UserService.GetIdForReferencedUser(ctx, tenant, externalSystemId, *r)
+		if id != "" {
+			label = "User"
+		}
+	case *entity.ReferencedContact:
+		id, err = s.services.ContactService.GetIdForReferencedContact(ctx, tenant, externalSystemId, *r)
+		if id != "" {
+			label = "Contact"
+		}
+	case *entity.ReferencedOrganization:
+		id, err = s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, externalSystemId, *r)
+		if id != "" {
+			label = "Organization"
+		}
+	case *entity.ReferencedJobRole:
+		contactId, _ := s.services.ContactService.GetIdForReferencedContact(ctx, tenant, externalSystemId, r.ReferencedContact)
+		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, externalSystemId, r.ReferencedOrganization)
+		id, err = s.repositories.ContactRepository.GetJobRoleId(ctx, tenant, contactId, orgId)
+		if id != "" {
+			label = "JobRole"
+		}
+	case *entity.ReferencedParticipant:
+		if id == "" {
+			id, err = s.repositories.UserRepository.GetUserIdByExternalId(ctx, tenant, r.ExternalId, externalSystemId)
+			if id != "" {
+				label = "User"
+			}
+		}
+		if id == "" {
+			id, err = s.repositories.ContactRepository.GetContactIdByExternalId(ctx, tenant, r.ExternalId, externalSystemId)
+			if id != "" {
+				label = "Contact"
+			}
+		}
+		if id == "" {
+			id, err = s.repositories.OrganizationRepository.GetOrganizationIdByExternalId(ctx, tenant, r.ExternalId, externalSystemId)
+			if id != "" {
+				label = "Organization"
+			}
+		}
+	}
+	if id == "" {
+		label = ""
+	}
+	return
+}
+
+func (s *interactionEventSyncService) GetIdForReferencedInteractionSession(ctx context.Context, tenant, externalSystemId string, interactionSession entity.ReferencedInteractionSession) (string, error) {
+	if !interactionSession.Available() {
+		return "", nil
+	}
+
+	if interactionSession.ReferencedByExternalId() {
+		return s.repositories.InteractionEventRepository.GetInteractionSessionIdByExternalId(ctx, tenant, interactionSession.ExternalId, externalSystemId)
+	}
+	return "", nil
 }

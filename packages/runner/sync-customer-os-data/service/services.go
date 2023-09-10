@@ -16,6 +16,7 @@ type Services struct {
 	OrganizationService                OrganizationService
 	ContactService                     ContactService
 	UserService                        UserService
+	IssueService                       IssueService
 	UserDefaultSyncService             SyncService
 	OrganizationDefaultSyncService     SyncService
 	ContactDefaultSyncService          SyncService
@@ -35,6 +36,7 @@ func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWit
 	services.OrganizationService = NewOrganizationService(repositories)
 	services.ContactService = NewContactService(repositories)
 	services.UserService = NewUserService(repositories)
+	services.IssueService = NewIssueService(repositories)
 
 	services.UserDefaultSyncService = NewDefaultUserSyncService(repositories, log)
 	services.OrganizationDefaultSyncService = NewDefaultOrganizationSyncService(repositories, services, log)

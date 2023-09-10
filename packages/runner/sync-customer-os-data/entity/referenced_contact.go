@@ -5,6 +5,10 @@ type ReferencedContact struct {
 	Id         string `json:"id,omitempty"`
 }
 
+func (r *ReferencedContact) GetReferencedEntityType() ReferencedEntityType {
+	return ReferencedEntityTypeContact
+}
+
 func (r *ReferencedContact) ReferencedById() bool {
 	return r.Id != ""
 }
