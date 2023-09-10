@@ -99,7 +99,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v4.1.1
+        uses: docker/build-push-action@v4.2.1
         with:
           context: packages/server/events-processing-platform/tmp-sources/.
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
