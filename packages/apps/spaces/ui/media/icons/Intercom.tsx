@@ -2,11 +2,9 @@ import * as React from 'react';
 import { SVGProps } from 'react';
 const SvgIntercom = (props: SVGProps<SVGSVGElement>) => (
   <svg
-    viewBox='0 0 16 16'
+    viewBox='0 0 10 10'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
-    width='inherit'
-    height='inherit'
     {...props}
   >
     <path

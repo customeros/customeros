@@ -1,7 +1,4 @@
-import {
-  EmailParticipant,
-  Organization,
-} from '@graphql/types';
+import { EmailParticipant, Organization } from '@graphql/types';
 import { Contact, InteractionEventParticipant, User } from '@graphql/types';
 // todo cleanup, move those to helper functions in timeline events utils folder
 export const getName = (
@@ -12,11 +9,11 @@ export const getName = (
   if ((data as Contact | Organization)?.name) {
     return <string>(data as Contact | Organization).name;
   }
-  const personData: Contact | User = (data as Contact | User)
+  const personData: Contact | User = data as Contact | User;
   if (personData?.firstName || personData?.lastName) {
     return `${personData.firstName} ${personData.lastName}`;
   }
-  return email || rawEmail || '';
+  return email || rawEmail || 'Unknown';
 };
 
 export const getEmailParticipantName = (
