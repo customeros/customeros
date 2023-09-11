@@ -7,6 +7,7 @@ import { ActionPreviewModal } from '../events/action/ActionPreviewModal';
 
 import { useTimelineEventPreviewContext } from './TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { TimelinePreviewBackdrop } from '@organization/components/Timeline/preview/TimelinePreviewBackdrop';
+import { IntercomThreadPreviewModal } from '@organization/components/Timeline/events/intercom/IntercomThreadPreviewModal';
 
 interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;
@@ -22,6 +23,7 @@ export const TimelineEventPreviewModal = ({
   const isAction = event?.__typename === 'Action';
   const isInteraction = event?.__typename === 'InteractionEvent';
   const isSlack = isInteraction && event?.channel === 'SLACK';
+  const isIntercom = isInteraction && event?.channel === 'CHAT';
   const isEmail = isInteraction && event?.channel === 'EMAIL';
 
   // Email handles close logic from within and use outside click cannot be used because preview should be closed only on backdrop click
@@ -34,6 +36,7 @@ export const TimelineEventPreviewModal = ({
     <TimelinePreviewBackdrop onCloseModal={closeModal}>
       {isMeeting && <MeetingPreviewModal invalidateQuery={invalidateQuery} />}
       {isSlack && <SlackThreadPreviewModal />}
+      {isIntercom && <IntercomThreadPreviewModal />}
       {isAction && <ActionPreviewModal type={event.actionType} />}
     </TimelinePreviewBackdrop>
   );

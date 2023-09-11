@@ -42,7 +42,7 @@ import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 import EmptyState from './EmptyState';
-import { Archive } from '@ui/media/icons';
+import Archive from '@ui/media/icons/Archive';
 import { useHideOrganizations } from '@spaces/hooks/useOrganization/useHideOrganizations';
 
 interface OrganizationListProps {
