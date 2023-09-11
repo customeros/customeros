@@ -18,6 +18,7 @@ import { MeetingStub } from './events/meeting/MeetingStub';
 import { TimelineEventPreviewModal } from '@organization/components/Timeline/preview/TimelineEventPreviewModal';
 import { InteractionEventWithDate, TimelineEvent } from './types';
 import { UserActionStub } from '@organization/components/Timeline/events/action/UserActionStub';
+import { IntercomStub } from '@organization/components/Timeline/events/intercom/IntercomStub';
 
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
@@ -172,6 +173,9 @@ export const OrganizationTimeline: FC = () => {
                     )}
                     {timelineEvent.channel === 'SLACK' && (
                       <SlackStub slackEvent={timelineEvent} />
+                    )}
+                    {timelineEvent.channel === 'CHAT' && (
+                      <IntercomStub intercomEvent={timelineEvent} />
                     )}
                   </TimelineItem>
                 );
