@@ -95,7 +95,9 @@ export const OrganizationTimeline: FC = () => {
       if (!d) return false;
       switch (d.__typename) {
         case 'InteractionEvent':
-          return !!d?.id && ['EMAIL', 'SLACK'].includes(d.channel ?? '');
+          return (
+            !!d?.id && ['EMAIL', 'SLACK', 'CHAT'].includes(d.channel ?? '')
+          );
         case 'Meeting':
         case 'Action':
           return !!d.id;
