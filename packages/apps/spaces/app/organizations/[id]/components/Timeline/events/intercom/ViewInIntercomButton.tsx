@@ -4,7 +4,7 @@ import { IconButton } from '@ui/form/IconButton';
 import ExternalLink from '@spaces/atoms/icons/ExternalLink';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
-import { Intercom } from '@ui/media/icons';
+import Intercom from '@ui/media/icons/Intercom';
 import { Box } from '@ui/layout/Box';
 
 export const ViewInIntercomButton: FC<{ url?: string | null }> = ({ url }) => {
