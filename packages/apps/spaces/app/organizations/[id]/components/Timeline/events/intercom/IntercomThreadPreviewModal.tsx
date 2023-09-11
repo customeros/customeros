@@ -42,6 +42,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
           direction='row'
           justifyContent='space-between'
           alignItems='center'
+          maxH='calc(100vh - 5rem)'
         >
           <Flex mb={2} alignItems='center'>
             <Heading size='sm' fontSize='lg'>
@@ -79,7 +80,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
           </Flex>
         </Flex>
       </CardHeader>
-      <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6}>
+      <CardBody mt={0} maxHeight='calc(100vh - 9rem)' overflow='auto' pb={6}>
         <IntercomMessageCard
           w='full'
           name={getName(slackSender)}
