@@ -1,26 +1,25 @@
 import {
-  ArchiveOrganizationsMutation,
-  useArchiveOrganizationsMutation,
+  HideOrganizationsMutation,
+  useHideOrganizationsMutation,
   DashboardView_OrganizationsDocument,
 } from './types';
-import { toast } from 'react-toastify';
 import { useSetRecoilState } from 'recoil';
 import { selectedItemsIds, tableMode } from '@spaces/finder/state';
 import { toastError } from '@ui/presentation/Toast';
 
 interface Result {
-  onArchiveOrganization: ({
+  onHideOrganizations: ({
     ids,
   }: {
     ids: string[];
-  }) => Promise<ArchiveOrganizationsMutation['organization_ArchiveAll'] | null>;
+  }) => Promise<HideOrganizationsMutation['organization_HideAll'] | null>;
 }
-export const useArchiveOrganizations = (): Result => {
-  const [createOrganizationMutation] = useArchiveOrganizationsMutation();
+export const useHideOrganizations = (): Result => {
+  const [createOrganizationMutation] = useHideOrganizationsMutation();
   const setSelectedItems = useSetRecoilState(selectedItemsIds);
   const setMode = useSetRecoilState(tableMode);
 
-  const handleArchiveOrganization: Result['onArchiveOrganization'] = async ({
+  const handleHideOrganization: Result['onHideOrganizations'] = async ({
     ids,
   }) => {
     try {
@@ -29,7 +28,7 @@ export const useArchiveOrganizations = (): Result => {
         awaitRefetchQueries: true,
         refetchQueries: [DashboardView_OrganizationsDocument],
       });
-      if (response.data?.organization_ArchiveAll?.result) {
+      if (response.data?.organization_HideAll?.result) {
         setSelectedItems([]);
         setMode('PREVIEW');
       }
@@ -37,16 +36,16 @@ export const useArchiveOrganizations = (): Result => {
       return null;
     } catch (err) {
       toastError(
-        `We couldn’t archive ${
-          ids.length === 1 ? 'this' : 'these'
-        } organization${ids.length === 1 ? '' : 's'}. Please try again.`,
-        `organzations-archive-error`,
+        `We couldn’t hide ${ids.length === 1 ? 'this' : 'these'} organization${
+          ids.length === 1 ? '' : 's'
+        }. Please try again.`,
+        `organzations-hide-error`,
       );
       return null;
     }
   };
 
   return {
-    onArchiveOrganization: handleArchiveOrganization,
+    onHideOrganizations: handleHideOrganization,
   };
 };

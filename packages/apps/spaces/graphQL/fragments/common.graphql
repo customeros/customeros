@@ -44,7 +44,6 @@ fragment JobRole on JobRole {
 
 fragment NoteContent on Note {
   id
-  html
   createdAt
   updatedAt
   createdBy {
@@ -363,7 +362,6 @@ fragment MeetingTimelineEventFragment on Meeting {
   }
   conferenceUrl
   note {
-    html
     id
     appSource
   }

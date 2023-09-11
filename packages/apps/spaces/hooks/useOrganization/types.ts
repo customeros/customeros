@@ -7,7 +7,7 @@ export type {
   GetOrganizationNameQuery,
   GetOrganizationCommunicationChannelsQuery,
   GetOrganizationCustomFieldsQuery,
-  ArchiveOrganizationsMutation,
+  HideOrganizationsMutation,
 } from '../../graphQL/__generated__/generated';
 export {
   useCreateOrganizationMutation,
@@ -17,6 +17,6 @@ export {
   useGetOrganizationNameLazyQuery,
   useGetOrganizationCommunicationChannelsQuery,
   useGetOrganizationCustomFieldsQuery,
-    useArchiveOrganizationsMutation,
+  useHideOrganizationsMutation,
   DashboardView_OrganizationsDocument,
 } from '../../graphQL/__generated__/generated';

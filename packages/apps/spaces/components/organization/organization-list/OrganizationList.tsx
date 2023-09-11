@@ -22,7 +22,6 @@ import {
 } from '@ui/presentation/Table';
 
 import {
-  useArchiveOrganizations,
   useCreateOrganization,
   useMergeOrganizations,
 } from '@spaces/hooks/useOrganization';
@@ -44,6 +43,7 @@ import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 import EmptyState from './EmptyState';
 import { Archive } from '@ui/media/icons';
+import { useHideOrganizations } from '@spaces/hooks/useOrganization/useHideOrganizations';
 
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
@@ -85,7 +85,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   const { push } = useRouter();
 
   const { onMergeOrganizations } = useMergeOrganizations();
-  const { onArchiveOrganization } = useArchiveOrganizations();
+  const { onHideOrganizations } = useHideOrganizations();
   const { onCreateOrganization } = useCreateOrganization();
 
   const [organizationFilters, setOrganizationFilters] = useLocalStorage<
@@ -158,8 +158,8 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
       },
     });
   };
-  const handleArchiveOrganizations = () => {
-    onArchiveOrganization({
+  const handleHideOrganizations = () => {
+    onHideOrganizations({
       ids: idsToRemove,
     });
     onClose();
@@ -254,7 +254,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
         confirmButtonLabel={'Archive'}
         isOpen={isOpen}
         onClose={handleCancelRemoveOrganizations}
-        onConfirm={handleArchiveOrganizations}
+        onConfirm={handleHideOrganizations}
         isLoading={loading}
         icon={<Archive />}
       />

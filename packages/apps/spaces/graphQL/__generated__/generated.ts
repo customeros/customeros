@@ -539,6 +539,7 @@ export type CustomerUser = {
 
 export enum DataSource {
   Hubspot = 'HUBSPOT',
+  Intercom = 'INTERCOM',
   Na = 'NA',
   Openline = 'OPENLINE',
   Pipedrive = 'PIPEDRIVE',
@@ -706,6 +707,7 @@ export type ExternalSystemReferenceInput = {
 export enum ExternalSystemType {
   Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
+  Intercom = 'INTERCOM',
   Pipedrive = 'PIPEDRIVE',
   Slack = 'SLACK',
   ZendeskSupport = 'ZENDESK_SUPPORT'
@@ -826,6 +828,7 @@ export type InteractionEvent = Node & {
   createdAt: Scalars['Time'];
   eventIdentifier?: Maybe<Scalars['String']>;
   eventType?: Maybe<Scalars['String']>;
+  externalLinks: Array<ExternalSystem>;
   id: Scalars['ID'];
   includes: Array<Attachment>;
   interactionSession?: Maybe<InteractionSession>;
@@ -1098,7 +1101,7 @@ export type Meeting = Node & {
 export type MeetingInput = {
   agenda?: InputMaybe<Scalars['String']>;
   agendaContentType?: InputMaybe<Scalars['String']>;
-  appSource: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']>;
   attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
   conferenceUrl?: InputMaybe<Scalars['String']>;
   createdAt?: InputMaybe<Scalars['Time']>;
@@ -1129,7 +1132,7 @@ export enum MeetingStatus {
 export type MeetingUpdateInput = {
   agenda?: InputMaybe<Scalars['String']>;
   agendaContentType?: InputMaybe<Scalars['String']>;
-  appSource: Scalars['String'];
+  appSource?: InputMaybe<Scalars['String']>;
   conferenceUrl?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
   externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
@@ -1242,12 +1245,16 @@ export type Mutation = {
   organization_Archive?: Maybe<Result>;
   organization_ArchiveAll?: Maybe<Result>;
   organization_Create: Organization;
+  organization_Hide: Scalars['ID'];
+  organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
   organization_RemoveRelationship: Organization;
   organization_RemoveRelationshipStage: Organization;
   organization_RemoveSubsidiary: Organization;
   organization_SetOwner: Organization;
   organization_SetRelationshipStage: Organization;
+  organization_Show: Scalars['ID'];
+  organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
   organization_UpdateBillingDetailsAsync: Scalars['ID'];
@@ -1715,6 +1722,16 @@ export type MutationOrganization_CreateArgs = {
 };
 
 
+export type MutationOrganization_HideArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationOrganization_HideAllArgs = {
+  ids: Array<Scalars['ID']>;
+};
+
+
 export type MutationOrganization_MergeArgs = {
   mergedOrganizationIds: Array<Scalars['ID']>;
   primaryOrganizationId: Scalars['ID'];
@@ -1749,6 +1766,16 @@ export type MutationOrganization_SetRelationshipStageArgs = {
   organizationId: Scalars['ID'];
   relationship: OrganizationRelationship;
   stage: Scalars['String'];
+};
+
+
+export type MutationOrganization_ShowArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationOrganization_ShowAllArgs = {
+  ids: Array<Scalars['ID']>;
 };
 
 
@@ -1966,12 +1993,10 @@ export type Node = {
 export type Note = {
   __typename?: 'Note';
   appSource: Scalars['String'];
-  content: Scalars['String'];
-  contentType: Scalars['String'];
+  content?: Maybe<Scalars['String']>;
+  contentType?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
-  /** @deprecated Use content instead */
-  html: Scalars['String'];
   id: Scalars['ID'];
   includes: Array<Attachment>;
   mentioned: Array<MentionedEntity>;
@@ -1985,7 +2010,6 @@ export type NoteInput = {
   appSource?: InputMaybe<Scalars['String']>;
   content?: InputMaybe<Scalars['String']>;
   contentType?: InputMaybe<Scalars['String']>;
-  html?: InputMaybe<Scalars['String']>;
 };
 
 export type NotePage = Pages & {
@@ -1998,7 +2022,6 @@ export type NotePage = Pages & {
 export type NoteUpdateInput = {
   content?: InputMaybe<Scalars['String']>;
   contentType?: InputMaybe<Scalars['String']>;
-  html?: InputMaybe<Scalars['String']>;
   id: Scalars['ID'];
 };
 
@@ -2019,8 +2042,6 @@ export type Organization = Node & {
   createdAt: Scalars['Time'];
   customFields: Array<CustomField>;
   description?: Maybe<Scalars['String']>;
-  /** @deprecated Deprecated in favor of domains */
-  domain?: Maybe<Scalars['String']>;
   domains: Array<Scalars['String']>;
   emails: Array<Email>;
   employees?: Maybe<Scalars['Int64']>;
@@ -2094,6 +2115,7 @@ export type OrganizationInput = {
   employees?: InputMaybe<Scalars['Int64']>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   industry?: InputMaybe<Scalars['String']>;
+  industryGroup?: InputMaybe<Scalars['String']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
   market?: InputMaybe<Market>;
   /**
@@ -2101,6 +2123,7 @@ export type OrganizationInput = {
    * **Required.**
    */
   name: Scalars['String'];
+  subIndustry?: InputMaybe<Scalars['String']>;
   templateId?: InputMaybe<Scalars['ID']>;
   website?: InputMaybe<Scalars['String']>;
 };
@@ -2414,6 +2437,7 @@ export type Query = {
   player_GetUsers: Array<PlayerUser>;
   tags: Array<Tag>;
   tenant: Scalars['String'];
+  tenant_ByEmail?: Maybe<Scalars['String']>;
   tenant_ByWorkspace?: Maybe<Scalars['String']>;
   timelineEvents: Array<TimelineEvent>;
   user: User;
@@ -2543,6 +2567,11 @@ export type QueryPhoneNumberArgs = {
 export type QueryPlayer_ByAuthIdProviderArgs = {
   authId: Scalars['String'];
   provider: Scalars['String'];
+};
+
+
+export type QueryTenant_ByEmailArgs = {
+  email: Scalars['String'];
 };
 
 
@@ -2985,7 +3014,7 @@ export type CreateContactNoteMutationVariables = Exact<{
 }>;
 
 
-export type CreateContactNoteMutation = { __typename?: 'Mutation', note_CreateForContact: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> } };
+export type CreateContactNoteMutation = { __typename?: 'Mutation', note_CreateForContact: { __typename?: 'Note', id: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> } };
 
 export type CreatePhoneCallInteractionEventMutationVariables = Exact<{
   contactId?: InputMaybe<Scalars['ID']>;
@@ -3071,7 +3100,7 @@ export type GetContactNotesQueryVariables = Exact<{
 }>;
 
 
-export type GetContactNotesQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', notes: { __typename?: 'NotePage', content: Array<{ __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }> } } | null };
+export type GetContactNotesQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', notes: { __typename?: 'NotePage', content: Array<{ __typename?: 'Note', id: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }> } } | null };
 
 export type GetContactPersonalDetailsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3093,15 +3122,6 @@ export type GetContactTagsQueryVariables = Exact<{
 
 
 export type GetContactTagsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null } | null };
-
-export type GetContactTimelineQueryVariables = Exact<{
-  contactId: Scalars['ID'];
-  from: Scalars['Time'];
-  size: Scalars['Int'];
-}>;
-
-
-export type GetContactTimelineQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null, timelineEvents: Array<{ __typename: 'Action' } | { __typename: 'Analysis', id: string, createdAt: any, content?: string | null, contentType?: string | null, analysisType?: string | null, source: DataSource, sourceOfTruth: DataSource, describes: Array<{ __typename: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, issue?: { __typename?: 'Issue', externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType, externalId?: string | null, externalUrl?: string | null }> } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, emails: Array<{ __typename?: 'Email', email?: string | null }> }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, id: string, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'JobRoleParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename: 'Meeting' }> } | { __typename: 'InteractionEvent', source: DataSource, id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, issue?: { __typename?: 'Issue', externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType, externalId?: string | null, externalUrl?: string | null }> } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, emails: Array<{ __typename?: 'Email', email?: string | null }> }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, id: string, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'JobRoleParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename: 'InteractionSession', source: DataSource, id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename: 'Issue', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, description?: string | null, source: DataSource, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null } | { __typename: 'Meeting', source: DataSource, id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', html: string, id: string, appSource: string }> } | { __typename: 'Note', id: string, html: string, createdAt: any, source: DataSource, noted: Array<{ __typename: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null } | { __typename?: 'Organization' }>, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> } | { __typename: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string, source: DataSource }> } | null };
 
 export type MergeContactsMutationVariables = Exact<{
   primaryContactId: Scalars['ID'];
@@ -3204,7 +3224,7 @@ export type LocationTotalFragment = { __typename?: 'Location', id: string, name?
 
 export type JobRoleFragment = { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string };
 
-export type NoteContentFragment = { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> };
+export type NoteContentFragment = { __typename?: 'Note', id: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> };
 
 export type TagFragment = { __typename?: 'Tag', id: string, name: string };
 
@@ -3218,7 +3238,7 @@ export type InteractionSessionFragmentFragment = { __typename?: 'InteractionSess
 
 export type InteractionEventFragmentFragment = { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, issue?: { __typename?: 'Issue', externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType, externalId?: string | null, externalUrl?: string | null }> } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, emails: Array<{ __typename?: 'Email', email?: string | null }> }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, id: string, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'JobRoleParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> };
 
-export type MeetingTimelineEventFragmentFragment = { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', html: string, id: string, appSource: string }> };
+export type MeetingTimelineEventFragmentFragment = { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }> };
 
 export type ContactNameFragmentFragment = { __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null };
 
@@ -3283,13 +3303,6 @@ export type AddOrganizationSubsidiaryMutationVariables = Exact<{
 
 export type AddOrganizationSubsidiaryMutation = { __typename?: 'Mutation', organization_AddSubsidiary: { __typename?: 'Organization', id: string, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }> } };
 
-export type ArchiveOrganizationsMutationVariables = Exact<{
-  ids: Array<Scalars['ID']> | Scalars['ID'];
-}>;
-
-
-export type ArchiveOrganizationsMutation = { __typename?: 'Mutation', organization_ArchiveAll?: { __typename?: 'Result', result: boolean } | null };
-
 export type CreateOrganizationMutationVariables = Exact<{
   input: OrganizationInput;
 }>;
@@ -3303,7 +3316,7 @@ export type CreateOrganizationNoteMutationVariables = Exact<{
 }>;
 
 
-export type CreateOrganizationNoteMutation = { __typename?: 'Mutation', note_CreateForOrganization: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> } };
+export type CreateOrganizationNoteMutation = { __typename?: 'Mutation', note_CreateForOrganization: { __typename?: 'Note', id: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> } };
 
 export type GetOrganizationQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3369,7 +3382,7 @@ export type GetOrganizationNotesQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationNotesQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', notes: { __typename?: 'NotePage', content: Array<{ __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }> } } | null };
+export type GetOrganizationNotesQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', notes: { __typename?: 'NotePage', content: Array<{ __typename?: 'Note', id: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }> } } | null };
 
 export type GetOrganizationOwnerQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3394,21 +3407,19 @@ export type GetOrganizationTableDataQueryVariables = Exact<{
 
 export type GetOrganizationTableDataQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', totalElements: any, totalPages: number, content: Array<{ __typename?: 'Organization', id: string, name: string, industry?: string | null, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', type?: string | null, organization: { __typename?: 'Organization', name: string } }> }> } };
 
-export type GetOrganizationTimelineQueryVariables = Exact<{
-  organizationId: Scalars['ID'];
-  from: Scalars['Time'];
-  size: Scalars['Int'];
-}>;
-
-
-export type GetOrganizationTimelineQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, timelineEvents: Array<{ __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string, createdAt: any, content?: string | null, contentType?: string | null, analysisType?: string | null, source: DataSource, sourceOfTruth: DataSource, describes: Array<{ __typename: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, issue?: { __typename?: 'Issue', externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType, externalId?: string | null, externalUrl?: string | null }> } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, emails: Array<{ __typename?: 'Email', email?: string | null }> }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, id: string, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'JobRoleParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename: 'Meeting' }> } | { __typename?: 'InteractionEvent', source: DataSource, id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, issue?: { __typename?: 'Issue', externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType, externalId?: string | null, externalUrl?: string | null }> } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, emails: Array<{ __typename?: 'Email', email?: string | null }> }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, id: string, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'JobRoleParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession', source: DataSource, id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename?: 'Issue', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, source: DataSource, description?: string | null, externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType, externalId?: string | null, externalUrl?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null } | { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, describedBy: Array<{ __typename?: 'Analysis', contentType?: string | null, content?: string | null, id: string, analysisType?: string | null, source: DataSource }>, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', html: string, id: string, appSource: string }> } | { __typename?: 'Note', id: string, html: string, createdAt: any, source: DataSource, noted: Array<{ __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null } | { __typename?: 'Organization', id: string, organizationName: string }>, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, mentioned: Array<{ __typename?: 'Issue', subject?: string | null, externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType, externalId?: string | null, externalUrl?: string | null }> }> } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string, source: DataSource }> } | null };
-
 export type GetOrganizationsOptionsQueryVariables = Exact<{
   pagination?: InputMaybe<Pagination>;
 }>;
 
 
 export type GetOrganizationsOptionsQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', content: Array<{ __typename?: 'Organization', id: string, name: string }> } };
+
+export type HideOrganizationsMutationVariables = Exact<{
+  ids: Array<Scalars['ID']> | Scalars['ID'];
+}>;
+
+
+export type HideOrganizationsMutation = { __typename?: 'Mutation', organization_HideAll?: { __typename?: 'Result', result: boolean } | null };
 
 export type MergeOrganizationsMutationVariables = Exact<{
   primaryOrganizationId: Scalars['ID'];
@@ -3553,7 +3564,7 @@ export type CreateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, agenda?: string | null, agendaContentType?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, html: string, appSource: string }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
+export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, agenda?: string | null, agendaContentType?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
 
 export type GetEmailValidationQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3659,14 +3670,14 @@ export type UpdateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', html: string, id: string, appSource: string }> } };
+export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }> } };
 
 export type UpdateNoteMutationVariables = Exact<{
   input: NoteUpdateInput;
 }>;
 
 
-export type UpdateNoteMutation = { __typename?: 'Mutation', note_Update: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> } };
+export type UpdateNoteMutation = { __typename?: 'Mutation', note_Update: { __typename?: 'Note', id: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> } };
 
 export type GetUserByEmailQueryVariables = Exact<{
   email: Scalars['String'];
@@ -3713,7 +3724,6 @@ export const LocationTotalFragmentDoc = gql`
 export const NoteContentFragmentDoc = gql`
     fragment NoteContent on Note {
   id
-  html
   createdAt
   updatedAt
   createdBy {
@@ -3999,7 +4009,6 @@ export const MeetingTimelineEventFragmentFragmentDoc = gql`
   }
   conferenceUrl
   note {
-    html
     id
     appSource
   }
@@ -5155,127 +5164,6 @@ export function useGetContactTagsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpt
 export type GetContactTagsQueryHookResult = ReturnType<typeof useGetContactTagsQuery>;
 export type GetContactTagsLazyQueryHookResult = ReturnType<typeof useGetContactTagsLazyQuery>;
 export type GetContactTagsQueryResult = Apollo.QueryResult<GetContactTagsQuery, GetContactTagsQueryVariables>;
-export const GetContactTimelineDocument = gql`
-    query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
-  contact(id: $contactId) {
-    id
-    ...ContactNameFragment
-    timelineEvents(from: $from, size: $size) {
-      __typename
-      ... on Meeting {
-        ...MeetingTimelineEventFragment
-        source
-      }
-      ... on PageView {
-        id
-        application
-        startedAt
-        endedAt
-        engagedTime
-        pageUrl
-        pageTitle
-        orderInSession
-        sessionId
-        source
-      }
-      ... on Issue {
-        id
-        createdAt
-        updatedAt
-        subject
-        status
-        priority
-        description
-        source
-        tags {
-          id
-          name
-        }
-      }
-      ... on Analysis {
-        id
-        createdAt
-        content
-        contentType
-        analysisType
-        describes {
-          __typename
-          ...InteractionEventFragment
-          ...InteractionSessionFragment
-          ...InteractionEventFragment
-        }
-        source
-        sourceOfTruth
-      }
-      ... on InteractionSession {
-        ...InteractionSessionFragment
-        source
-      }
-      ... on InteractionEvent {
-        ...InteractionEventFragment
-        source
-      }
-      ... on Note {
-        id
-        html
-        createdAt
-        source
-        noted {
-          ... on Contact {
-            __typename
-            ...ContactNameFragment
-          }
-        }
-        createdBy {
-          id
-          firstName
-          lastName
-        }
-        includes {
-          id
-          name
-          mimeType
-          extension
-          size
-        }
-      }
-    }
-  }
-}
-    ${ContactNameFragmentFragmentDoc}
-${MeetingTimelineEventFragmentFragmentDoc}
-${InteractionEventFragmentFragmentDoc}
-${InteractionSessionFragmentFragmentDoc}`;
-
-/**
- * __useGetContactTimelineQuery__
- *
- * To run a query within a React component, call `useGetContactTimelineQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetContactTimelineQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetContactTimelineQuery({
- *   variables: {
- *      contactId: // value for 'contactId'
- *      from: // value for 'from'
- *      size: // value for 'size'
- *   },
- * });
- */
-export function useGetContactTimelineQuery(baseOptions: Apollo.QueryHookOptions<GetContactTimelineQuery, GetContactTimelineQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactTimelineQuery, GetContactTimelineQueryVariables>(GetContactTimelineDocument, options);
-      }
-export function useGetContactTimelineLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactTimelineQuery, GetContactTimelineQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactTimelineQuery, GetContactTimelineQueryVariables>(GetContactTimelineDocument, options);
-        }
-export type GetContactTimelineQueryHookResult = ReturnType<typeof useGetContactTimelineQuery>;
-export type GetContactTimelineLazyQueryHookResult = ReturnType<typeof useGetContactTimelineLazyQuery>;
-export type GetContactTimelineQueryResult = Apollo.QueryResult<GetContactTimelineQuery, GetContactTimelineQueryVariables>;
 export const MergeContactsDocument = gql`
     mutation mergeContacts($primaryContactId: ID!, $mergedContactIds: [ID!]!) {
   contact_Merge(
@@ -6135,39 +6023,6 @@ export function useAddOrganizationSubsidiaryMutation(baseOptions?: Apollo.Mutati
 export type AddOrganizationSubsidiaryMutationHookResult = ReturnType<typeof useAddOrganizationSubsidiaryMutation>;
 export type AddOrganizationSubsidiaryMutationResult = Apollo.MutationResult<AddOrganizationSubsidiaryMutation>;
 export type AddOrganizationSubsidiaryMutationOptions = Apollo.BaseMutationOptions<AddOrganizationSubsidiaryMutation, AddOrganizationSubsidiaryMutationVariables>;
-export const ArchiveOrganizationsDocument = gql`
-    mutation archiveOrganizations($ids: [ID!]!) {
-  organization_ArchiveAll(ids: $ids) {
-    result
-  }
-}
-    `;
-export type ArchiveOrganizationsMutationFn = Apollo.MutationFunction<ArchiveOrganizationsMutation, ArchiveOrganizationsMutationVariables>;
-
-/**
- * __useArchiveOrganizationsMutation__
- *
- * To run a mutation, you first call `useArchiveOrganizationsMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useArchiveOrganizationsMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [archiveOrganizationsMutation, { data, loading, error }] = useArchiveOrganizationsMutation({
- *   variables: {
- *      ids: // value for 'ids'
- *   },
- * });
- */
-export function useArchiveOrganizationsMutation(baseOptions?: Apollo.MutationHookOptions<ArchiveOrganizationsMutation, ArchiveOrganizationsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ArchiveOrganizationsMutation, ArchiveOrganizationsMutationVariables>(ArchiveOrganizationsDocument, options);
-      }
-export type ArchiveOrganizationsMutationHookResult = ReturnType<typeof useArchiveOrganizationsMutation>;
-export type ArchiveOrganizationsMutationResult = Apollo.MutationResult<ArchiveOrganizationsMutation>;
-export type ArchiveOrganizationsMutationOptions = Apollo.BaseMutationOptions<ArchiveOrganizationsMutation, ArchiveOrganizationsMutationVariables>;
 export const CreateOrganizationDocument = gql`
     mutation createOrganization($input: OrganizationInput!) {
   organization_Create(input: $input) {
@@ -6767,159 +6622,6 @@ export function useGetOrganizationTableDataLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetOrganizationTableDataQueryHookResult = ReturnType<typeof useGetOrganizationTableDataQuery>;
 export type GetOrganizationTableDataLazyQueryHookResult = ReturnType<typeof useGetOrganizationTableDataLazyQuery>;
 export type GetOrganizationTableDataQueryResult = Apollo.QueryResult<GetOrganizationTableDataQuery, GetOrganizationTableDataQueryVariables>;
-export const GetOrganizationTimelineDocument = gql`
-    query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
-  organization(id: $organizationId) {
-    id
-    timelineEvents(from: $from, size: $size) {
-      ... on Meeting {
-        ...MeetingTimelineEventFragment
-        describedBy {
-          contentType
-          content
-          id
-          analysisType
-          source
-        }
-      }
-      ... on PageView {
-        id
-        application
-        startedAt
-        endedAt
-        engagedTime
-        pageUrl
-        pageTitle
-        orderInSession
-        sessionId
-        source
-      }
-      ... on Issue {
-        id
-        createdAt
-        updatedAt
-        subject
-        status
-        priority
-        source
-        description
-        externalLinks {
-          type
-          externalId
-          externalUrl
-        }
-        tags {
-          id
-          name
-        }
-      }
-      ... on Analysis {
-        id
-        createdAt
-        content
-        contentType
-        analysisType
-        describes {
-          __typename
-          ...InteractionEventFragment
-          ...InteractionSessionFragment
-        }
-        source
-        sourceOfTruth
-      }
-      ... on InteractionSession {
-        ...InteractionSessionFragment
-        source
-      }
-      ... on InteractionEvent {
-        ...InteractionEventFragment
-        source
-      }
-      ... on Note {
-        id
-        html
-        createdAt
-        source
-        noted {
-          ... on Organization {
-            id
-            organizationName: name
-          }
-          ... on Contact {
-            ...ContactNameFragment
-          }
-        }
-        createdBy {
-          id
-          firstName
-          lastName
-        }
-        includes {
-          id
-          name
-          mimeType
-          extension
-          size
-        }
-        mentioned {
-          ... on Issue {
-            subject
-            externalLinks {
-              type
-              externalId
-              externalUrl
-            }
-          }
-        }
-      }
-      ... on Action {
-        id
-        actionType
-        createdAt
-        source
-        createdBy {
-          id
-          firstName
-          lastName
-        }
-      }
-    }
-  }
-}
-    ${MeetingTimelineEventFragmentFragmentDoc}
-${InteractionEventFragmentFragmentDoc}
-${InteractionSessionFragmentFragmentDoc}
-${ContactNameFragmentFragmentDoc}`;
-
-/**
- * __useGetOrganizationTimelineQuery__
- *
- * To run a query within a React component, call `useGetOrganizationTimelineQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetOrganizationTimelineQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetOrganizationTimelineQuery({
- *   variables: {
- *      organizationId: // value for 'organizationId'
- *      from: // value for 'from'
- *      size: // value for 'size'
- *   },
- * });
- */
-export function useGetOrganizationTimelineQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>(GetOrganizationTimelineDocument, options);
-      }
-export function useGetOrganizationTimelineLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>(GetOrganizationTimelineDocument, options);
-        }
-export type GetOrganizationTimelineQueryHookResult = ReturnType<typeof useGetOrganizationTimelineQuery>;
-export type GetOrganizationTimelineLazyQueryHookResult = ReturnType<typeof useGetOrganizationTimelineLazyQuery>;
-export type GetOrganizationTimelineQueryResult = Apollo.QueryResult<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>;
 export const GetOrganizationsOptionsDocument = gql`
     query getOrganizationsOptions($pagination: Pagination) {
   organizations(pagination: $pagination) {
@@ -6958,6 +6660,39 @@ export function useGetOrganizationsOptionsLazyQuery(baseOptions?: Apollo.LazyQue
 export type GetOrganizationsOptionsQueryHookResult = ReturnType<typeof useGetOrganizationsOptionsQuery>;
 export type GetOrganizationsOptionsLazyQueryHookResult = ReturnType<typeof useGetOrganizationsOptionsLazyQuery>;
 export type GetOrganizationsOptionsQueryResult = Apollo.QueryResult<GetOrganizationsOptionsQuery, GetOrganizationsOptionsQueryVariables>;
+export const HideOrganizationsDocument = gql`
+    mutation hideOrganizations($ids: [ID!]!) {
+  organization_HideAll(ids: $ids) {
+    result
+  }
+}
+    `;
+export type HideOrganizationsMutationFn = Apollo.MutationFunction<HideOrganizationsMutation, HideOrganizationsMutationVariables>;
+
+/**
+ * __useHideOrganizationsMutation__
+ *
+ * To run a mutation, you first call `useHideOrganizationsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useHideOrganizationsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [hideOrganizationsMutation, { data, loading, error }] = useHideOrganizationsMutation({
+ *   variables: {
+ *      ids: // value for 'ids'
+ *   },
+ * });
+ */
+export function useHideOrganizationsMutation(baseOptions?: Apollo.MutationHookOptions<HideOrganizationsMutation, HideOrganizationsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<HideOrganizationsMutation, HideOrganizationsMutationVariables>(HideOrganizationsDocument, options);
+      }
+export type HideOrganizationsMutationHookResult = ReturnType<typeof useHideOrganizationsMutation>;
+export type HideOrganizationsMutationResult = Apollo.MutationResult<HideOrganizationsMutation>;
+export type HideOrganizationsMutationOptions = Apollo.BaseMutationOptions<HideOrganizationsMutation, HideOrganizationsMutationVariables>;
 export const MergeOrganizationsDocument = gql`
     mutation mergeOrganizations($primaryOrganizationId: ID!, $mergedOrganizationIds: [ID!]!) {
   organization_Merge(
@@ -7635,7 +7370,6 @@ export const CreateMeetingDocument = gql`
     agendaContentType
     note {
       id
-      html
       appSource
     }
     createdBy {
