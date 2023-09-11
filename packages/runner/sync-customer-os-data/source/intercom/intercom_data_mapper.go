@@ -204,10 +204,11 @@ func mapInteractionEventFromConversation(inputJson string) (string, error) {
 		CreatedAt int64  `json:"created_at,omitempty"`
 		UpdatedAt int64  `json:"updated_at,omitempty"`
 		Source    struct {
-			ID     string `json:"id,omitempty"`
-			Body   string `json:"body,omitempty"`
-			Type   string `json:"type,omitempty"`
-			Author struct {
+			ID      string `json:"id,omitempty"`
+			Body    string `json:"body,omitempty"`
+			Type    string `json:"type,omitempty"`
+			Subject string `json:"subject,omitempty"`
+			Author  struct {
 				ID    string `json:"id,omitempty"`
 				Name  string `json:"name,omitempty"`
 				Type  string `json:"type,omitempty"`
@@ -254,6 +255,9 @@ func mapInteractionEventFromConversation(inputJson string) (string, error) {
 	}
 
 	output.SessionDetails.Name = input.Title
+	if output.SessionDetails.Name == "" {
+		output.SessionDetails.Name = input.Source.Subject
+	}
 	output.SessionDetails.Channel = "CHAT"
 	output.SessionDetails.Type = "THREAD"
 	output.SessionDetails.CreatedAtStr = tsStrToRFC3339(input.CreatedAt)
