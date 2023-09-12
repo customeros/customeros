@@ -2,6 +2,7 @@ package salesforce
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -48,55 +49,52 @@ func MapUser(inputJson string) (string, error) {
 	return utils.ToJson(output)
 }
 
-//func MapOrganization(inputJson string) (string, error) {
-//	var input struct {
-//		Email     string `json:"email,omitempty"`
-//		ID        string `json:"id,omitempty"`
-//		CreatedAt int64  `json:"created_at,omitempty"`
-//	}
-//
-//	err := json.Unmarshal([]byte(inputJson), &input)
-//	if err != nil {
-//		return "", fmt.Errorf("failed to parse input JSON: %v", err)
-//	}
-//	if input.Email == "" {
-//		output := entity.BaseData{
-//			Skip:       true,
-//			SkipReason: "Missing email",
-//		}
-//		return utils.ToJson(output)
-//	}
-//	if input.ID == "" {
-//		output := entity.BaseData{
-//			Skip:       true,
-//			SkipReason: "Missing id",
-//		}
-//		return utils.ToJson(output)
-//	}
-//	domain := extractDomain(input.Email)
-//	if domain == "" {
-//		output := entity.BaseData{
-//			Skip:       true,
-//			SkipReason: "Missing email domain",
-//		}
-//		return utils.ToJson(output)
-//	}
-//
-//	output := entity.OrganizationData{
-//		BaseData: entity.BaseData{
-//			ExternalId:          domain,
-//			ExternalSourceTable: utils.StringPtr("contacts"),
-//		},
-//		CreateByDomain: true,
-//	}
-//	output.Domains = []string{domain}
-//	if input.CreatedAt != 0 {
-//		output.CreatedAtStr = tsStrToRFC3339(input.CreatedAt)
-//	}
-//
-//	return utils.ToJson(output)
-//}
-//
+func MapOrganization(inputJson string) (string, error) {
+	var input struct {
+		ID          string `json:"Id,omitempty"`
+		Name        string `json:"Name,omitempty"`
+		Phone       string `json:"Phone,omitempty"`
+		CreatedDate string `json:"CreatedDate,omitempty"`
+		Description string `json:"Description,omitempty"`
+		Industry    string `json:"Industry,omitempty"`
+		Website     string `json:"Website,omitempty"`
+		OwnerId     string `json:"OwnerId,omitempty"`
+	}
+
+	err := json.Unmarshal([]byte(inputJson), &input)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse input JSON: %v", err)
+	}
+	if input.ID == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing id",
+		}
+		return utils.ToJson(output)
+	}
+	if input.Name == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing name",
+		}
+		return utils.ToJson(output)
+	}
+
+	output := entity.OrganizationData{
+		BaseData: entity.BaseData{
+			ExternalId:   input.ID,
+			CreatedAtStr: input.CreatedDate,
+		},
+		Name:        input.Name,
+		Description: input.Description,
+		Website:     input.Website,
+		Industry:    input.Industry,
+		PhoneNumber: input.Phone,
+	}
+
+	return utils.ToJson(output)
+}
+
 //func MapContact(inputJson string) (string, error) {
 //	var input struct {
 //		ID               string `json:"id,omitempty"`
