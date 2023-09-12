@@ -35,8 +35,9 @@ export const IntercomThreadPreviewModal: React.FC = () => {
   const intercomSender = getParticipant(event?.sentBy);
   const slackEventReplies =
     event?.interactionSession?.events?.filter((e) => e?.id !== event?.id) || [];
-  const getFirstLineAsTitle = useCallback(() => {
-    return convert(event?.content || '', {
+  const title = (() => {
+    const titleString = event?.interactionSession?.name || event?.content || '';
+    return convert(`<p>${titleString}</p>`, {
       preserveNewlines: true,
       selectors: [
         {
@@ -45,7 +46,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
         },
       ],
     });
-  }, [event.id]);
+  })();
   return (
     <>
       <CardHeader pb={1} position='sticky' top={0} borderRadius='xl'>
@@ -62,7 +63,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
               noOfLines={1}
               maxW={event?.interactionSession?.name ? 'unset' : '248px'}
             >
-              {event?.interactionSession?.name || getFirstLineAsTitle()}
+              {title}
             </Heading>
           </Flex>
           <Flex direction='row' justifyContent='flex-end' alignItems='center'>
