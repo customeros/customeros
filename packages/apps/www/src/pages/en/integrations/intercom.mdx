@@ -1,0 +1,58 @@
+---
+title: Intercom Integration
+description: Overview of Intercom Integration for CustomerOS
+layout: ../../../layouts/docs.astro
+lang: en
+isMdx: true
+---
+
+import Callout from "../../../components/docs/callout.tsx";
+
+# Intercom
+
+This guide will walk you through how to sync your [Intercom][intercom] data with CustomerOS. 
+
+### Connecting your Intercom account
+
+CustomerOS connects to Intercom via an Intercom App.  
+
+1.  Log into Intercom and navigate to the [Intercom Developer Hub][intercom-developer-hub] and click on `Your Apps` found at the top right of the screen.
+
+![Intercom developer page](/images/integrations/intercom/intercom-developer-hub.png)
+
+2. Click `Your apps` in the top-right corner, then click `New app`.
+
+{/* ![Create new Intercom app](/images/integrations/intercom/intercom-new-app.png) */}
+
+3. Choose an App name (we recommend `CustomerOS`!), select your Workspace from the dropdown, and click `Create app`.
+
+{/* ![Set App name and workspace](/images/integrations/intercom/intercom-create-app.png) */}
+
+4. To set the appropriate permissions, from the Authentication tab, click Edit in the top right corner and check the permissions you want to grant to the app.
+
+We recommend only granting read permissions (not write). If you update the permissions, click Save when you are finished.
+
+{/* ![Update permissions](/images/integrations/intercom/intercom-basic-info.png) */}
+
+<Callout type="info">
+CustomerOS only requires read permissions as we don't push data back into Intercom, so you can rest assured your data will remain unaltered within Intercom.
+</Callout>
+
+5. Copy your Intercom access token.
+
+6. Log into your [CustomerOS account][customeros], click on the `Settings` button and paste your Intercom access token into the `Intercom access token` field on the integrations page.  Press save.
+
+7. That's it! CustomerOS will now continuously monitor your Intercom account for data changes and automatically sync them to CustomerOS.
+
+### What happens to this data?
+
+- CustomerOS collects your Intercom data and stores this within your customer graph for easy manipulation into useful aggregations and views
+  - This data includes contacts, interactions, companies, deals and more!
+- Once stored in CustomerOS, this data is linked to all other customer data from other systems and inputs
+  - This allows you to see the full picture about your customer without having to load data from one place to another!
+
+{/* References */}
+
+[intercom]: https://www.intercom.com/
+[intercom-developer-hub]: https://developers.intercom.com/
+[customeros]: https://app.customeros.ai/
