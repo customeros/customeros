@@ -12,6 +12,7 @@ const (
 	DataSourceSlack          DataSource = "slack"
 	DataSourceWebscrape      DataSource = "webscrape"
 	DataSourceIntercom       DataSource = "intercom"
+	DataSourceSalesforce     DataSource = "salesforce"
 )
 
 var AllDataSource = []DataSource{
@@ -22,6 +23,7 @@ var AllDataSource = []DataSource{
 	DataSourceSlack,
 	DataSourceWebscrape,
 	DataSourceIntercom,
+	DataSourceSalesforce,
 }
 
 func GetDataSource(s string) DataSource {
