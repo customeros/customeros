@@ -2,7 +2,8 @@ package utils
 
 import "time"
 
-const customLayout = "2006-01-02 15:04:05"
+const customLayout1 = "2006-01-02 15:04:05"
+const customLayout2 = "2022-11-07T22:03:16.000+0000"
 
 func UnmarshalDateTime(input string) (*time.Time, error) {
 	if input == "" {
@@ -14,8 +15,13 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 		return &t, nil
 	}
 
-	// Try custom layout
-	t, err = time.Parse(customLayout, input)
+	// Try custom layouts
+	t, err = time.Parse(customLayout1, input)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err = time.Parse(customLayout2, input)
 	if err != nil {
 		return nil, err
 	}
