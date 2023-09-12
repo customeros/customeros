@@ -43,6 +43,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		Source:        string(entity.DataSourceOpenline),
 		SourceOfTruth: string(entity.DataSourceOpenline),
 		AppSource:     utils.IfNotNilString(input.AppSource),
+		Note:          utils.IfNotNilString(input.Note),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
