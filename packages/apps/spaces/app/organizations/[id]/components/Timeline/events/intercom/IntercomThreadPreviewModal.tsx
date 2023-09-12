@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -20,6 +20,7 @@ import {
 } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider';
 import { IntercomMessageCard } from './IntercomMessageCard';
+import { convert } from 'html-to-text';
 
 const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
   const sender =
@@ -34,7 +35,17 @@ export const IntercomThreadPreviewModal: React.FC = () => {
   const intercomSender = getParticipant(event?.sentBy);
   const slackEventReplies =
     event?.interactionSession?.events?.filter((e) => e?.id !== event?.id) || [];
-
+  const getFirstLineAsTitle = useCallback(() => {
+    return convert(event?.content || '', {
+      preserveNewlines: true,
+      selectors: [
+        {
+          selector: 'a',
+          options: { hideLinkHrefIfSameAsText: true, ignoreHref: true },
+        },
+      ],
+    });
+  }, [event.id]);
   return (
     <>
       <CardHeader pb={1} position='sticky' top={0} borderRadius='xl'>
@@ -51,7 +62,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
               noOfLines={1}
               maxW={event?.interactionSession?.name ? 'unset' : '248px'}
             >
-              {event?.interactionSession?.name || event.content}
+              {event?.interactionSession?.name || getFirstLineAsTitle()}
             </Heading>
           </Flex>
           <Flex direction='row' justifyContent='flex-end' alignItems='center'>
