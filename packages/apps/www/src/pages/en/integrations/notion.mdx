@@ -1,0 +1,57 @@
+---
+title: Notion Integration
+description: Overview of Notion Integration for CustomerOS
+layout: ../../../layouts/docs.astro
+lang: en
+isMdx: true
+---
+
+import Callout from "../../../components/docs/callout.tsx";
+
+# Notion
+
+This guide will walk you through how to sync your [Notion][notion] data with CustomerOS. 
+
+### Connecting your Notion account
+
+CustomerOS connects to Notion via a Notion Private Integration.  
+
+1.  Log into Notion and navigate to your [My Integrations][notion-integrations] page and click on `New Integration`.
+
+![New Notion Integration](/images/integrations/notion/notion-new-integration.png)
+
+2. Name your new integration (we recommend `CustomerOS`!) and press `Create Integration`.
+
+3. Under the capabilities tab, make sure that the following are selected at a minimum:
+- `Read content`
+- `Read comments`
+- `Read user information including email addresses`
+
+![Notion Integration capabilities](/images/integrations/notion/notion-integration-capabilities.png)
+
+4. Copy the `Internal Integration Secret` from the Secrets tab.
+
+5. You will now need to select the pages that you wish to sync with CustomerOS.
+
+Navigate to the page(s) you want to share with CustomerOS. Click the ••• menu at the top right of the page, select Add connections, and choose the integration you created.
+
+You will need to carry out this step for all the pages you wish to share with CustomerOS.
+
+![Notion add connection](/images/integrations/notion/notion-add-connection.png)
+
+6. Log into your [CustomerOS account][customeros], click on the `Settings` button and paste your Notion Internal Integration Secret into the `Notion Access token` field.  Press save.
+
+7. That's it! CustomerOS will now continuously monitor your Notion account for data changes and automatically sync them to CustomerOS.
+
+### What happens to this data?
+
+- CustomerOS collects your Notion data and stores this within your customer graph for easy manipulation into useful aggregations and views
+  - This data includes contacts, interactions, companies, deals and more!
+- Once stored in CustomerOS, this data is linked to all other customer data from other systems and inputs
+  - This allows you to see the full picture about your customer without having to load data from one place to another!
+
+{/* References */}
+
+[notion]: https://www.notion.so/
+[notion-integrations]: https://www.notion.so/my-integrations
+[customeros]: https://app.customeros.ai/
