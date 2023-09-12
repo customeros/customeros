@@ -12,6 +12,7 @@ const (
 	AirbyteSourceZendeskSupport RawDataSource = "zendesk_support"
 	AirbyteSourcePipedrive      RawDataSource = "pipedrive"
 	AirbyteSourceIntercom       RawDataSource = "intercom"
+	AirbyteSourceSalesforce     RawDataSource = "salesforce"
 	OpenlineSourceSlack         RawDataSource = "slack"
 )
 
