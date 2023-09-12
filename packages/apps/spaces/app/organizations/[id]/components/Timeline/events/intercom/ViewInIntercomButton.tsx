@@ -5,7 +5,7 @@ import ExternalLink from '@spaces/atoms/icons/ExternalLink';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import Intercom from '@ui/media/icons/Intercom';
-import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
 
 export const ViewInIntercomButton: FC<{ url?: string | null }> = ({ url }) => {
   const [hovered, setHovered] = useState(false);
@@ -32,9 +32,9 @@ export const ViewInIntercomButton: FC<{ url?: string | null }> = ({ url }) => {
           hovered ? (
             <ExternalLink height={16} color='var(--chakra-colors-gray-500)' />
           ) : (
-            <Box boxSize={4}>
-              <Intercom />
-            </Box>
+            <Flex alignItems='center' justifyContent='center'>
+              <Intercom height={10} />
+            </Flex>
           )
         }
       />

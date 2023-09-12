@@ -31,7 +31,7 @@ const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
 export const IntercomThreadPreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const event = modalContent as InteractionEvent;
-  const slackSender = getParticipant(event?.sentBy);
+  const intercomSender = getParticipant(event?.sentBy);
   const slackEventReplies =
     event?.interactionSession?.events?.filter((e) => e?.id !== event?.id) || [];
 
@@ -45,15 +45,14 @@ export const IntercomThreadPreviewModal: React.FC = () => {
           maxH='calc(100vh - 5rem)'
         >
           <Flex mb={2} alignItems='center'>
-            <Heading size='sm' fontSize='lg'>
-              {event?.interactionSession?.name || 'Thread'}
+            <Heading
+              size='sm'
+              fontSize='lg'
+              noOfLines={1}
+              maxW={event?.interactionSession?.name ? 'unset' : '248px'}
+            >
+              {event?.interactionSession?.name || event.content}
             </Heading>
-            {/* todo uncomment when channel data is available  */}
-            {/*{channel && (*/}
-            {/*  <Text color='gray.500' ml={2} fontSize='sm'>*/}
-            {/*    {channel}*/}
-            {/*  </Text>*/}
-            {/*)}*/}
           </Flex>
           <Flex direction='row' justifyContent='flex-end' alignItems='center'>
             <Tooltip label='Copy link to this thread' placement='bottom'>
@@ -83,8 +82,8 @@ export const IntercomThreadPreviewModal: React.FC = () => {
       <CardBody mt={0} maxHeight='calc(100vh - 9rem)' overflow='auto' pb={6}>
         <IntercomMessageCard
           w='full'
-          name={getName(slackSender)}
-          profilePhotoUrl={slackSender?.profilePhotoUrl}
+          name={getName(intercomSender)}
+          profilePhotoUrl={intercomSender?.profilePhotoUrl}
           sourceUrl={event?.externalLinks?.[0]?.externalUrl}
           content={event?.content || ''}
           // @ts-expect-error typescript does not work well with aliases
