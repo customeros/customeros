@@ -42,6 +42,7 @@ type OrganizationCreateEvent struct {
 	Market            string    `json:"market"`
 	LastFundingRound  string    `json:"lastFundingRound"`
 	LastFundingAmount string    `json:"lastFundingAmount"`
+	Note              string    `json:"note"`
 	Source            string    `json:"source"`
 	SourceOfTruth     string    `json:"sourceOfTruth"`
 	AppSource         string    `json:"appSource"`
@@ -66,6 +67,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 		Market:            organizationFields.OrganizationDataFields.Market,
 		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
 		LastFundingAmount: organizationFields.OrganizationDataFields.LastFundingAmount,
+		Note:              organizationFields.OrganizationDataFields.Note,
 		Source:            organizationFields.Source.Source,
 		SourceOfTruth:     organizationFields.Source.SourceOfTruth,
 		AppSource:         organizationFields.Source.AppSource,
@@ -103,6 +105,7 @@ type OrganizationUpdateEvent struct {
 	Market            string    `json:"market"`
 	LastFundingRound  string    `json:"lastFundingRound"`
 	LastFundingAmount string    `json:"lastFundingAmount"`
+	Note              string    `json:"note"`
 }
 
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *models.OrganizationFields, updatedAt time.Time, ignoreEmptyFields bool) (eventstore.Event, error) {
@@ -123,6 +126,7 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		Market:            organizationFields.OrganizationDataFields.Market,
 		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
 		LastFundingAmount: organizationFields.OrganizationDataFields.LastFundingAmount,
+		Note:              organizationFields.OrganizationDataFields.Note,
 		UpdatedAt:         updatedAt,
 		SourceOfTruth:     organizationFields.Source.SourceOfTruth,
 	}

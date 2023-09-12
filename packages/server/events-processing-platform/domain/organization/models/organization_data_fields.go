@@ -20,6 +20,7 @@ type OrganizationDataFields struct {
 	Market            string
 	LastFundingRound  string
 	LastFundingAmount string
+	Note              string
 }
 
 type OrganizationFields struct {

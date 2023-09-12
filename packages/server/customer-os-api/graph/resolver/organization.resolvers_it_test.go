@@ -64,6 +64,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 		ValueProposition:  "value-proposition",
 		LastFundingRound:  "Seed",
 		LastFundingAmount: "10k",
+		Note:              "Some note",
 		IsPublic:          true,
 	}
 	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
@@ -94,6 +95,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.ValueProposition, *organizationStruct.Organization.ValueProposition)
 	require.Equal(t, model.FundingRoundSeed, *organizationStruct.Organization.LastFundingRound)
 	require.Equal(t, inputOrganizationEntity.LastFundingAmount, *organizationStruct.Organization.LastFundingAmount)
+	require.Equal(t, "Some note", *organizationStruct.Organization.Note)
 	require.NotNil(t, organizationStruct.Organization.CreatedAt)
 }
 
