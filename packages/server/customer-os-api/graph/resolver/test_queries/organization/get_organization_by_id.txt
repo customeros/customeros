@@ -12,6 +12,7 @@ query GetOrganization($organizationId: ID!){
     valueProposition
     lastFundingRound
     lastFundingAmount
+    note
     isPublic
     createdAt
     lastTouchPointTimelineEventId

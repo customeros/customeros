@@ -14,6 +14,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		ID:                            entity.ID,
 		Name:                          entity.Name,
 		Description:                   utils.StringPtr(entity.Description),
+		Note:                          utils.StringPtr(entity.Note),
 		Website:                       utils.StringPtr(entity.Website),
 		Industry:                      utils.StringPtr(entity.Industry),
 		SubIndustry:                   utils.StringPtr(entity.SubIndustry),

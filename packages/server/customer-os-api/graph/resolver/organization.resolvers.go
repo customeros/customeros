@@ -43,6 +43,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		Source:        string(entity.DataSourceOpenline),
 		SourceOfTruth: string(entity.DataSourceOpenline),
 		AppSource:     utils.IfNotNilString(input.AppSource),
+		Note:          utils.IfNotNilString(input.Note),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -107,6 +108,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		ValueProposition:  utils.IfNotNilString(input.ValueProposition),
 		LastFundingAmount: utils.IfNotNilString(input.LastFundingAmount),
 		LastFundingRound:  mapper.MapFundingRoundFromModel(input.LastFundingRound),
+		Note:              utils.IfNotNilString(input.Note),
 		SourceOfTruth:     string(entity.DataSourceOpenline),
 	})
 	if err != nil {
