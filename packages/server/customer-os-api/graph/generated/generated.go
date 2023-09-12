@@ -7410,6 +7410,7 @@ enum ExternalSystemType {
     PIPEDRIVE
     SLACK
     INTERCOM
+    SALESFORCE
 }
 
 type ExternalSystem {
@@ -8531,6 +8532,7 @@ input SocialUpdateInput {
     SLACK
     WEBSCRAPE
     INTERCOM
+    SALESFORCE
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!

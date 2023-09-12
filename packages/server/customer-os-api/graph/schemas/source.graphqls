@@ -7,4 +7,5 @@ enum DataSource {
     SLACK
     WEBSCRAPE
     INTERCOM
+    SALESFORCE
 }
