@@ -10,6 +10,7 @@
     "icons": "npx @svgr/cli --typescript --out-dir components/ui-kit/atoms/icons --ignore-existing -- public/icons",
     "codegen": "graphql-codegen --require dotenv/config --config codegen.ts",
     "codegen:graphql": "graphql-codegen --require dotenv/config --config graphql-codegen.ts",
+    "codegen:icons": "node scripts/codegen-icons.js",
     "preatify": "yarn prettier --write ."
   },
   "dependencies": {

@@ -1,20 +1,12 @@
-import * as React from 'react';
-import { SVGProps } from 'react';
-const SvgUnorderedList = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    viewBox='0 0 16 16'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-    width='1em'
-    height='1em'
-    {...props}
-  >
+import { Icon, IconProps } from '@ui/media/Icon';
+
+export const UnorderedList = (props: IconProps) => (
+  <Icon viewBox='0 0 24 24' {...props}>
     <path
-      d='M14 3.333H6.667M14 12.667H6.667M14 8H6.667M4 3.333a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm0 9.334a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z'
+      d='M14 3.33333L6.66667 3.33333M14 12.6667L6.66667 12.6667M14 8L6.66667 8M4 3.33333C4 3.88561 3.55228 4.33333 3 4.33333C2.44772 4.33333 2 3.88561 2 3.33333C2 2.78104 2.44772 2.33333 3 2.33333C3.55228 2.33333 4 2.78104 4 3.33333ZM4 12.6667C4 13.2189 3.55228 13.6667 3 13.6667C2.44772 13.6667 2 13.2189 2 12.6667C2 12.1144 2.44772 11.6667 3 11.6667C3.55228 11.6667 4 12.1144 4 12.6667ZM4 8C4 8.55228 3.55228 9 3 9C2.44772 9 2 8.55228 2 8C2 7.44771 2.44772 7 3 7C3.55228 7 4 7.44771 4 8Z'
       stroke='currentColor'
       strokeLinecap='round'
       strokeLinejoin='round'
     />
-  </svg>
+  </Icon>
 );
-export default SvgUnorderedList;

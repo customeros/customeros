@@ -1,20 +1,12 @@
-import * as React from 'react';
-import { SVGProps } from 'react';
-const SvgItalic = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    viewBox='0 0 16 16'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-    width='1em'
-    height='1em'
-    {...props}
-  >
+import { Icon, IconProps } from '@ui/media/Icon';
+
+export const Italic = (props: IconProps) => (
+  <Icon viewBox='0 0 24 24' {...props}>
     <path
-      d='M12.667 2.667h-6m2.666 10.666h-6M10 2.667 6 13.333'
+      d='M12.6667 2.66666H6.66667M9.33333 13.3333H3.33333M10 2.66666L6 13.3333'
       stroke='currentColor'
       strokeLinecap='round'
       strokeLinejoin='round'
     />
-  </svg>
+  </Icon>
 );
-export default SvgItalic;
