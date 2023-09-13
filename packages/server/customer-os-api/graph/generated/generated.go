@@ -8136,8 +8136,12 @@ input OrganizationInput {
 }
 
 input OrganizationUpdateInput {
-    id: ID!
-    name: String!
+    id:          ID!
+    """
+    Set to true when partial update is needed. Empty or missing fields will not be ignored.
+    """
+    patch:       Boolean
+    name:        String!
     description: String
     note:        String
     domains:     [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
@@ -55657,7 +55661,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
+	fieldsInOrder := [...]string{"id", "patch", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -55673,6 +55677,15 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.ID = data
+		case "patch":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("patch"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Patch = data
 		case "name":
 			var err error
 

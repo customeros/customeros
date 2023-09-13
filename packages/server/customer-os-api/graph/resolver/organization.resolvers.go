@@ -95,6 +95,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		Tenant:            common.GetTenantFromContext(ctx),
 		UserId:            common.GetUserIdFromContext(ctx),
 		Id:                input.ID,
+		IgnoreEmptyFields: utils.IfNotNilBool(input.Patch),
 		Name:              input.Name,
 		Description:       utils.IfNotNilString(input.Description),
 		Website:           utils.IfNotNilString(input.Website),

@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"net/url"
-	"strings"
 	"time"
 )
 
@@ -31,28 +29,4 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 	}
 
 	return &t, nil
-}
-
-// Deprecated use from common module
-func ExtractDomainFromUrl(inputURL string) string {
-	// Prepend "http://" if the URL doesn't start with a scheme
-	if !strings.HasPrefix(inputURL, "http://") && !strings.HasPrefix(inputURL, "https://") {
-		inputURL = "http://" + inputURL
-	}
-
-	// Parse the URL
-	u, err := url.Parse(inputURL)
-	if err != nil {
-		return ""
-	}
-
-	// Extract and return the hostname (domain)
-	domain := u.Hostname()
-
-	// Remove "www." if it exists
-	if strings.HasPrefix(domain, "www.") {
-		domain = domain[4:] // Remove the first 4 characters ("www.")
-	}
-
-	return strings.ToLower(domain)
 }
