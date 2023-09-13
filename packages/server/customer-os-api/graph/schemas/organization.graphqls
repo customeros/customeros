@@ -147,8 +147,12 @@ input OrganizationInput {
 }
 
 input OrganizationUpdateInput {
-    id: ID!
-    name: String!
+    id:          ID!
+    """
+    Set to true when partial update is needed. Empty or missing fields will not be ignored.
+    """
+    patch:       Boolean
+    name:        String!
     description: String
     note:        String
     domains:     [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")

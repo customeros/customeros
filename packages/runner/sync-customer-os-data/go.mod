@@ -10,8 +10,8 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.12.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230908153614-7228ca29c16a
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230908153614-7228ca29c16a
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230913035046-55fc6f114ceb
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230913035046-55fc6f114ceb
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
