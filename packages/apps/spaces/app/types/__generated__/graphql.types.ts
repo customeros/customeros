@@ -538,9 +538,11 @@ export type CustomerUser = {
 
 export enum DataSource {
   Hubspot = 'HUBSPOT',
+  Intercom = 'INTERCOM',
   Na = 'NA',
   Openline = 'OPENLINE',
   Pipedrive = 'PIPEDRIVE',
+  Salesforce = 'SALESFORCE',
   Slack = 'SLACK',
   Webscrape = 'WEBSCRAPE',
   ZendeskSupport = 'ZENDESK_SUPPORT',
@@ -705,7 +707,9 @@ export type ExternalSystemReferenceInput = {
 export enum ExternalSystemType {
   Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
+  Intercom = 'INTERCOM',
   Pipedrive = 'PIPEDRIVE',
+  Salesforce = 'SALESFORCE',
   Slack = 'SLACK',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
@@ -1257,12 +1261,16 @@ export type Mutation = {
   organization_Archive?: Maybe<Result>;
   organization_ArchiveAll?: Maybe<Result>;
   organization_Create: Organization;
+  organization_Hide: Scalars['ID'];
+  organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
   organization_RemoveRelationship: Organization;
   organization_RemoveRelationshipStage: Organization;
   organization_RemoveSubsidiary: Organization;
   organization_SetOwner: Organization;
   organization_SetRelationshipStage: Organization;
+  organization_Show: Scalars['ID'];
+  organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
   organization_UpdateBillingDetailsAsync: Scalars['ID'];
@@ -1654,6 +1662,14 @@ export type MutationOrganization_CreateArgs = {
   input: OrganizationInput;
 };
 
+export type MutationOrganization_HideArgs = {
+  id: Scalars['ID'];
+};
+
+export type MutationOrganization_HideAllArgs = {
+  ids: Array<Scalars['ID']>;
+};
+
 export type MutationOrganization_MergeArgs = {
   mergedOrganizationIds: Array<Scalars['ID']>;
   primaryOrganizationId: Scalars['ID'];
@@ -1683,6 +1699,14 @@ export type MutationOrganization_SetRelationshipStageArgs = {
   organizationId: Scalars['ID'];
   relationship: OrganizationRelationship;
   stage: Scalars['String'];
+};
+
+export type MutationOrganization_ShowArgs = {
+  id: Scalars['ID'];
+};
+
+export type MutationOrganization_ShowAllArgs = {
+  ids: Array<Scalars['ID']>;
 };
 
 export type MutationOrganization_UnsetOwnerArgs = {
@@ -1932,6 +1956,7 @@ export type Organization = Node & {
   locations: Array<Location>;
   market?: Maybe<Market>;
   name: Scalars['String'];
+  note?: Maybe<Scalars['String']>;
   notes: NotePage;
   owner?: Maybe<User>;
   phoneNumbers: Array<PhoneNumber>;
@@ -1989,6 +2014,7 @@ export type OrganizationInput = {
    * **Required.**
    */
   name: Scalars['String'];
+  note?: InputMaybe<Scalars['String']>;
   subIndustry?: InputMaybe<Scalars['String']>;
   templateId?: InputMaybe<Scalars['ID']>;
   website?: InputMaybe<Scalars['String']>;
@@ -2067,6 +2093,9 @@ export type OrganizationUpdateInput = {
   lastFundingRound?: InputMaybe<FundingRound>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
+  note?: InputMaybe<Scalars['String']>;
+  /** Set to true when partial update is needed. Empty or missing fields will not be ignored. */
+  patch?: InputMaybe<Scalars['Boolean']>;
   subIndustry?: InputMaybe<Scalars['String']>;
   targetAudience?: InputMaybe<Scalars['String']>;
   valueProposition?: InputMaybe<Scalars['String']>;

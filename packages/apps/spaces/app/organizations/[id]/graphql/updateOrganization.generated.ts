@@ -28,6 +28,7 @@ export type UpdateOrganizationMutation = {
     __typename?: 'Organization';
     id: string;
     name: string;
+    note?: string | null;
     description?: string | null;
     domains: Array<string>;
     website?: string | null;
@@ -47,6 +48,7 @@ export const UpdateOrganizationDocument = `
   organization_Update(input: $input) {
     id
     name
+    note
     description
     domains
     website

@@ -2,6 +2,7 @@ mutation updateOrganization($input: OrganizationUpdateInput!) {
   organization_Update(input: $input) {
     id
     name
+    note
     description
     domains
     website
