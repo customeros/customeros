@@ -84,7 +84,7 @@ func (s *syncService) Sync(parentCtx context.Context, runId string) {
 		syncRunDtls.FailedOrganizations = failed
 		syncRunDtls.SkippedOrganizations = skipped
 
-		completed, failed, skipped = s.contactSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		completed, failed, skipped = s.contactSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, 1)
 		syncRunDtls.CompletedContacts = completed
 		syncRunDtls.FailedContacts = failed
 		syncRunDtls.SkippedContacts = skipped

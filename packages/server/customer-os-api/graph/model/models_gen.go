@@ -1423,6 +1423,13 @@ type TagUpdateInput struct {
 	Name string `json:"name"`
 }
 
+type TenantBillableInfo struct {
+	WhitelistedOrganizations int64 `json:"whitelistedOrganizations"`
+	WhitelistedContacts      int64 `json:"whitelistedContacts"`
+	GreylistedOrganizations  int64 `json:"greylistedOrganizations"`
+	GreylistedContacts       int64 `json:"greylistedContacts"`
+}
+
 type TenantInput struct {
 	Name      string  `json:"name"`
 	AppSource *string `json:"appSource,omitempty"`

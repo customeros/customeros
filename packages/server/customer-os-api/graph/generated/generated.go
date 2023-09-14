@@ -746,6 +746,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Analysis                              func(childComplexity int, id string) int
 		Attachment                            func(childComplexity int, id string) int
+		BillableInfo                          func(childComplexity int) int
 		Contact                               func(childComplexity int, id string) int
 		ContactByEmail                        func(childComplexity int, email string) int
 		ContactByPhone                        func(childComplexity int, e164 string) int
@@ -833,6 +834,13 @@ type ComplexityRoot struct {
 		Name      func(childComplexity int) int
 		Source    func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
+	}
+
+	TenantBillableInfo struct {
+		GreylistedContacts       func(childComplexity int) int
+		GreylistedOrganizations  func(childComplexity int) int
+		WhitelistedContacts      func(childComplexity int) int
+		WhitelistedOrganizations func(childComplexity int) int
 	}
 
 	User struct {
@@ -1154,6 +1162,7 @@ type QueryResolver interface {
 	Tenant(ctx context.Context) (string, error)
 	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
 	TenantByEmail(ctx context.Context, email string) (*string, error)
+	BillableInfo(ctx context.Context) (*model.TenantBillableInfo, error)
 	TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
@@ -5572,6 +5581,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Attachment(childComplexity, args["id"].(string)), true
 
+	case "Query.billableInfo":
+		if e.complexity.Query.BillableInfo == nil {
+			break
+		}
+
+		return e.complexity.Query.BillableInfo(childComplexity), true
+
 	case "Query.contact":
 		if e.complexity.Query.Contact == nil {
 			break
@@ -6163,6 +6179,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Tag.UpdatedAt(childComplexity), true
+
+	case "TenantBillableInfo.greylistedContacts":
+		if e.complexity.TenantBillableInfo.GreylistedContacts == nil {
+			break
+		}
+
+		return e.complexity.TenantBillableInfo.GreylistedContacts(childComplexity), true
+
+	case "TenantBillableInfo.greylistedOrganizations":
+		if e.complexity.TenantBillableInfo.GreylistedOrganizations == nil {
+			break
+		}
+
+		return e.complexity.TenantBillableInfo.GreylistedOrganizations(childComplexity), true
+
+	case "TenantBillableInfo.whitelistedContacts":
+		if e.complexity.TenantBillableInfo.WhitelistedContacts == nil {
+			break
+		}
+
+		return e.complexity.TenantBillableInfo.WhitelistedContacts(childComplexity), true
+
+	case "TenantBillableInfo.whitelistedOrganizations":
+		if e.complexity.TenantBillableInfo.WhitelistedOrganizations == nil {
+			break
+		}
+
+		return e.complexity.TenantBillableInfo.WhitelistedOrganizations(childComplexity), true
 
 	case "User.appSource":
 		if e.complexity.User.AppSource == nil {
@@ -8596,6 +8640,16 @@ input TenantInput {
 
 extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
+}`, BuiltIn: false},
+	{Name: "../schemas/tenant_billable.graphqls", Input: `extend type Query {
+    billableInfo: TenantBillableInfo! @hasRole(roles: [USER, ADMIN])
+}
+
+type TenantBillableInfo {
+    whitelistedOrganizations: Int64!
+    whitelistedContacts: Int64!
+    greylistedOrganizations: Int64!
+    greylistedContacts: Int64!
 }`, BuiltIn: false},
 	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Analysis | Issue | Meeting | Action
 
@@ -47461,6 +47515,84 @@ func (ec *executionContext) fieldContext_Query_tenant_ByEmail(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_billableInfo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_billableInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().BillableInfo(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"USER", "ADMIN"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.TenantBillableInfo); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.TenantBillableInfo`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TenantBillableInfo)
+	fc.Result = res
+	return ec.marshalNTenantBillableInfo2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillableInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_billableInfo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "whitelistedOrganizations":
+				return ec.fieldContext_TenantBillableInfo_whitelistedOrganizations(ctx, field)
+			case "whitelistedContacts":
+				return ec.fieldContext_TenantBillableInfo_whitelistedContacts(ctx, field)
+			case "greylistedOrganizations":
+				return ec.fieldContext_TenantBillableInfo_greylistedOrganizations(ctx, field)
+			case "greylistedContacts":
+				return ec.fieldContext_TenantBillableInfo_greylistedContacts(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantBillableInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_timelineEvents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_timelineEvents(ctx, field)
 	if err != nil {
@@ -49585,6 +49717,182 @@ func (ec *executionContext) fieldContext_Tag_appSource(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillableInfo_whitelistedOrganizations(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillableInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillableInfo_whitelistedOrganizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WhitelistedOrganizations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillableInfo_whitelistedOrganizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillableInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillableInfo_whitelistedContacts(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillableInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillableInfo_whitelistedContacts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WhitelistedContacts, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillableInfo_whitelistedContacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillableInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillableInfo_greylistedOrganizations(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillableInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillableInfo_greylistedOrganizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GreylistedOrganizations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillableInfo_greylistedOrganizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillableInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantBillableInfo_greylistedContacts(ctx context.Context, field graphql.CollectedField, obj *model.TenantBillableInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantBillableInfo_greylistedContacts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GreylistedContacts, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantBillableInfo_greylistedContacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantBillableInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -64516,6 +64824,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "billableInfo":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_billableInfo(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "timelineEvents":
 			field := field
 
@@ -65036,6 +65366,60 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 			}
 		case "appSource":
 			out.Values[i] = ec._Tag_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var tenantBillableInfoImplementors = []string{"TenantBillableInfo"}
+
+func (ec *executionContext) _TenantBillableInfo(ctx context.Context, sel ast.SelectionSet, obj *model.TenantBillableInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tenantBillableInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TenantBillableInfo")
+		case "whitelistedOrganizations":
+			out.Values[i] = ec._TenantBillableInfo_whitelistedOrganizations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "whitelistedContacts":
+			out.Values[i] = ec._TenantBillableInfo_whitelistedContacts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "greylistedOrganizations":
+			out.Values[i] = ec._TenantBillableInfo_greylistedOrganizations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "greylistedContacts":
+			out.Values[i] = ec._TenantBillableInfo_greylistedContacts(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -68548,6 +68932,20 @@ func (ec *executionContext) unmarshalNTagInput2githubᚗcomᚋopenlineᚑaiᚋop
 func (ec *executionContext) unmarshalNTagUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagUpdateInput(ctx context.Context, v interface{}) (model.TagUpdateInput, error) {
 	res, err := ec.unmarshalInputTagUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTenantBillableInfo2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillableInfo(ctx context.Context, sel ast.SelectionSet, v model.TenantBillableInfo) graphql.Marshaler {
+	return ec._TenantBillableInfo(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTenantBillableInfo2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantBillableInfo(ctx context.Context, sel ast.SelectionSet, v *model.TenantBillableInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TenantBillableInfo(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNTenantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantInput(ctx context.Context, v interface{}) (model.TenantInput, error) {

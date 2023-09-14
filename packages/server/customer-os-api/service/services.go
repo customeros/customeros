@@ -50,6 +50,7 @@ type Services struct {
 	ActionService                   ActionService
 	CountryService                  CountryService
 	ActionItemService               ActionItemService
+	BillableService                 BillableService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -78,6 +79,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		ActionService:                   NewActionService(log, repositories),
 		CountryService:                  NewCountryService(log, repositories),
 		ActionItemService:               NewActionItemService(log, repositories),
+		BillableService:                 NewBillableService(log, repositories),
 	}
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
 	services.JobRoleService = NewJobRoleService(log, repositories, &services)
