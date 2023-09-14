@@ -198,7 +198,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		},
 		ContentType: "plain/text",
 		Type:        "MESSAGE",
-		Channel:     "SLACK",
+		Channel:     "CHAT",
 	}
 
 	// Do not use blocks in content for now.
@@ -228,7 +228,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 			},
 		},
 	}
-	output.SessionDetails.Channel = "SLACK"
+	output.SessionDetails.Channel = "CHAT"
 	output.SessionDetails.Type = "THREAD"
 	output.SessionDetails.Status = "ACTIVE"
 	output.SessionDetails.Name = input.OpenlineFields.ChannelName
