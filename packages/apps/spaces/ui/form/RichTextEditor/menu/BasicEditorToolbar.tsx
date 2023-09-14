@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { useActive, useCommands } from '@remirror/react';
 import { Flex, HStack, StackDivider } from '@chakra-ui/react';
-import Quote from '@ui/media/icons/Quote';
+import { Quote } from '@ui/media/icons/Quote';
 import { TextFormatButtons } from './TextFormatButtons';
 import { ListButtons } from './ListButtons';
 import { Button } from '@ui/form/Button';

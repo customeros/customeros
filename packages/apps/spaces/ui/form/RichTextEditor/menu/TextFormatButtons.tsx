@@ -1,10 +1,10 @@
 import { useActive, useCommands } from '@remirror/react';
 import { Flex } from '@chakra-ui/react';
-import Bold from '@ui/media/icons/Bold';
-import Italic from '@ui/media/icons/Italic';
-import Strikethrough from '@ui/media/icons/Strikethrough';
+import { Bold01 } from '@ui/media/icons/Bold01';
+import { Italic01 } from '@ui/media/icons/Italic01';
+import { Strikethrough01 } from '@ui/media/icons/Strikethrough01';
 import { ToolbarButton } from './ToolbarButton';
-import Heading from '@ui/media/icons/Heading';
+import { Heading01 } from '@ui/media/icons/Heading01';
 
 export const TextFormatButtons = () => {
   const { toggleBold, toggleItalic, toggleHeading, toggleStrike, focus } =
@@ -19,7 +19,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.bold()}
-        icon={<Bold color='inherit' />}
+        icon={<Bold01 color='inherit' />}
       />
       <ToolbarButton
         label='Italic'
@@ -28,7 +28,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.italic()}
-        icon={<Italic color='inherit' />}
+        icon={<Italic01 color='inherit' />}
       />
       <ToolbarButton
         label='Strikethrough'
@@ -37,7 +37,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.strike()}
-        icon={<Strikethrough color='inherit' />}
+        icon={<Strikethrough01 color='inherit' />}
       />
       <ToolbarButton
         label='Heading'
@@ -46,7 +46,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.heading()}
-        icon={<Heading color='inherit' />}
+        icon={<Heading01 color='inherit' />}
       />
     </Flex>
   );

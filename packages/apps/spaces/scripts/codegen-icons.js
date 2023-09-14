@@ -5,7 +5,7 @@ const makeIconComponent = (name, content) => `
 import { Icon, IconProps } from "@ui/media/Icon";
 
 export const ${name} = (props: IconProps) => (
-  <Icon viewBox="0 0 24 24" {...props}>
+  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
     ${content}
   </Icon>
 );
@@ -26,10 +26,13 @@ files.forEach((name) => {
     const svgInnerContent = lines
       .slice(1, lines.length - 2)
       .join('\n')
-      .replace('stroke="black"', 'stroke="currentColor"')
-      .replace('stroke-width', 'strokeWidth')
-      .replace('stroke-linecap', 'strokeLinecap')
-      .replace('stroke-linejoin', 'strokeLinejoin');
+      .replaceAll('stroke="black"', 'stroke="currentColor"')
+      .replaceAll('fill="black"', 'fill="currentColor"')
+      .replaceAll('stroke-width', 'strokeWidth')
+      .replaceAll('stroke-linecap', 'strokeLinecap')
+      .replaceAll('stroke-linejoin', 'strokeLinejoin')
+      .replaceAll('fill-rule', 'fillRule')
+      .replaceAll('clip-rule', 'clipRule');
 
     const componentName = camelize(name.split('.')[0]);
     const outFileName = `${componentName}.tsx`;
