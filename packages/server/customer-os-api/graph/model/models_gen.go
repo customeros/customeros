@@ -916,6 +916,34 @@ type LocationUpdateInput struct {
 	UtcOffset    *int64   `json:"utcOffset,omitempty"`
 }
 
+type LogEntry struct {
+	ID            string     `json:"id"`
+	Content       *string    `json:"content,omitempty"`
+	ContentType   *string    `json:"contentType,omitempty"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	StartedAt     time.Time  `json:"startedAt"`
+	CreatedBy     *User      `json:"createdBy,omitempty"`
+	Tags          []*Tag     `json:"tags"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+type LogEntryInput struct {
+	Content     *string                   `json:"content,omitempty"`
+	ContentType *string                   `json:"contentType,omitempty"`
+	Tags        []*TagCreateOrUpdateInput `json:"tags,omitempty"`
+	StartedAt   *time.Time                `json:"startedAt,omitempty"`
+	AppSource   *string                   `json:"appSource,omitempty"`
+}
+
+type LogEntryUpdateInput struct {
+	Content     *string    `json:"content,omitempty"`
+	ContentType *string    `json:"contentType,omitempty"`
+	StartedAt   *time.Time `json:"startedAt,omitempty"`
+}
+
 type Meeting struct {
 	ID                 string               `json:"id"`
 	Name               *string              `json:"name,omitempty"`
@@ -1411,6 +1439,11 @@ type Tag struct {
 	UpdatedAt time.Time  `json:"updatedAt"`
 	Source    DataSource `json:"source"`
 	AppSource string     `json:"appSource"`
+}
+
+type TagCreateOrUpdateInput struct {
+	ID   *string `json:"id,omitempty"`
+	Name *string `json:"name,omitempty"`
 }
 
 type TagInput struct {
