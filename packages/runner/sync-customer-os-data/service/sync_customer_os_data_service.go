@@ -74,17 +74,17 @@ func (s *syncService) Sync(parentCtx context.Context, runId string) {
 
 		s.syncExternalSystem(ctx, dataService, v.Tenant)
 
-		completed, failed, skipped := s.userSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, 1)
+		completed, failed, skipped := s.userSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedUsers = completed
 		syncRunDtls.FailedUsers = failed
 		syncRunDtls.SkippedUsers = skipped
 
-		completed, failed, skipped = s.organizationSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, 1)
+		completed, failed, skipped = s.organizationSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedOrganizations = completed
 		syncRunDtls.FailedOrganizations = failed
 		syncRunDtls.SkippedOrganizations = skipped
 
-		completed, failed, skipped = s.contactSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, 1)
+		completed, failed, skipped = s.contactSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedContacts = completed
 		syncRunDtls.FailedContacts = failed
 		syncRunDtls.SkippedContacts = skipped

@@ -32,8 +32,9 @@ func NewDefaultInteractionEventSyncService(repositories *repository.Repositories
 
 func (s *interactionEventSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 	completed, failed, skipped := 0, 0, 0
-	for {
+	interactionEventSyncMutex := &sync.Mutex{}
 
+	for {
 		events := dataService.GetDataForSync(ctx, common.INTERACTION_EVENTS, batchSize, runId)
 
 		if len(events) == 0 {
@@ -55,7 +56,7 @@ func (s *interactionEventSyncService) Sync(ctx context.Context, dataService sour
 				defer wg.Done()
 
 				var comp, fail, skip int
-				s.syncInteractionEvent(ctx, event, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+				s.syncInteractionEvent(ctx, interactionEventSyncMutex, event, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
 
 				results <- result{comp, fail, skip}
 			}(v.(entity.InteractionEventData))
@@ -85,7 +86,7 @@ func (s *interactionEventSyncService) Sync(ctx context.Context, dataService sour
 	return completed, failed, skipped
 }
 
-func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, interactionEventInput entity.InteractionEventData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
+func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, interactionEventSyncMutex *sync.Mutex, interactionEventInput entity.InteractionEventData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventSyncService.syncInteractionEvent")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
@@ -149,6 +150,7 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 		}
 	}
 
+	interactionEventSyncMutex.Lock()
 	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEvent(ctx, tenant, interactionEventInput)
 	if err != nil {
 		failedSync = true
@@ -174,6 +176,7 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 			s.log.Error(reason)
 		}
 	}
+	interactionEventSyncMutex.Unlock()
 
 	if !failedSync && interactionEventInput.HasSession() {
 		err = s.repositories.InteractionEventRepository.MergeInteractionSessionForEvent(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, syncDate, interactionEventInput.SessionDetails)

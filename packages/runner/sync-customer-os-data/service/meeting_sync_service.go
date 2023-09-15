@@ -33,6 +33,7 @@ func NewDefaultMeetingSyncService(repositories *repository.Repositories, service
 func (s *meetingSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 
 	completed, failed, skipped := 0, 0, 0
+	meetingSyncMutex := &sync.Mutex{}
 
 	for {
 
@@ -57,7 +58,7 @@ func (s *meetingSyncService) Sync(ctx context.Context, dataService source.Source
 				defer wg.Done()
 
 				var comp, fail, skip int
-				s.syncMeeting(ctx, meeting, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+				s.syncMeeting(ctx, meetingSyncMutex, meeting, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
 
 				results <- result{comp, fail, skip}
 			}(v.(entity.MeetingData))
@@ -87,7 +88,7 @@ func (s *meetingSyncService) Sync(ctx context.Context, dataService source.Source
 	return completed, failed, skipped
 }
 
-func (s *meetingSyncService) syncMeeting(ctx context.Context, meetingInput entity.MeetingData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
+func (s *meetingSyncService) syncMeeting(ctx context.Context, meetingSyncMutex *sync.Mutex, meetingInput entity.MeetingData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingSyncService.syncMeeting")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
@@ -107,6 +108,7 @@ func (s *meetingSyncService) syncMeeting(ctx context.Context, meetingInput entit
 		return
 	}
 
+	meetingSyncMutex.Lock()
 	meetingId, err := s.repositories.MeetingRepository.GetMatchedMeetingId(ctx, tenant, meetingInput)
 	if err != nil {
 		failedSync = true
@@ -132,6 +134,7 @@ func (s *meetingSyncService) syncMeeting(ctx context.Context, meetingInput entit
 			s.log.Errorf(reason)
 		}
 	}
+	meetingSyncMutex.Unlock()
 
 	if meetingInput.HasLocation() && !failedSync {
 		err = s.repositories.MeetingRepository.MergeMeetingLocation(ctx, tenant, meetingInput)
