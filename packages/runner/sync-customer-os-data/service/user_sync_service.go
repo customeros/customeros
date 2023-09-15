@@ -135,13 +135,15 @@ func (s *userSyncService) syncUser(ctx context.Context, userInput entity.UserDat
 		}
 	}
 
-	if userInput.HasPhoneNumber() && !failedSync {
-		err = s.repositories.UserRepository.MergePhoneNumber(ctx, tenant, userInput)
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merging phone number for user with id %v for tenant %v :%v", userId, tenant, err)
-			s.log.Errorf(reason)
+	if userInput.HasPhoneNumbers() && !failedSync {
+		for _, phoneNumber := range userInput.PhoneNumbers {
+			err = s.repositories.UserRepository.MergePhoneNumber(ctx, tenant, userInput, phoneNumber)
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed merging phone number for user with id %v for tenant %v :%v", userId, tenant, err)
+				s.log.Errorf(reason)
+			}
 		}
 	}
 
