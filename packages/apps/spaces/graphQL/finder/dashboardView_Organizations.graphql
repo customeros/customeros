@@ -92,6 +92,9 @@ query dashboardView_Organizations(
           id
           channel
           eventType
+          externalLinks {
+            type
+          }
           sentBy {
             __typename
             ... on EmailParticipant {
@@ -120,14 +123,14 @@ query dashboardView_Organizations(
                 }
               }
             }
-              ... on UserParticipant {
+            ... on UserParticipant {
               userParticipant {
                 id
                 firstName
                 lastName
               }
+            }
           }
-        }
         }
         ... on Analysis {
           id

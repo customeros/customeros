@@ -2295,6 +2295,7 @@ export type Query = {
   __typename?: 'Query';
   analysis: Analysis;
   attachment: Attachment;
+  billableInfo: TenantBillableInfo;
   /** Fetch a single contact from customerOS by contact ID. */
   contact?: Maybe<Contact>;
   contact_ByEmail: Contact;
@@ -2614,6 +2615,14 @@ export type TagInput = {
 export type TagUpdateInput = {
   id: Scalars['ID'];
   name: Scalars['String'];
+};
+
+export type TenantBillableInfo = {
+  __typename?: 'TenantBillableInfo';
+  greylistedContacts: Scalars['Int64'];
+  greylistedOrganizations: Scalars['Int64'];
+  whitelistedContacts: Scalars['Int64'];
+  whitelistedOrganizations: Scalars['Int64'];
 };
 
 export type TenantInput = {
