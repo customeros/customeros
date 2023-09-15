@@ -34,7 +34,8 @@ export class ContactFormDto implements ContactForm {
 
   constructor(data?: Partial<Contact> | null) {
     this.id = data?.id || ''; // auxiliary field
-    this.name = data?.firstName || '';
+    this.name =
+      data?.name || `${data?.firstName} ${data?.lastName}`.trim() || '';
     this.title = data?.jobRoles?.[0]?.jobTitle || '';
     this.roleId = data?.jobRoles?.[0]?.id || ''; // auxiliary field
     this.role = (() => {

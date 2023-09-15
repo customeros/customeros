@@ -27,6 +27,8 @@ message UpsertOrganizationGrpcRequest {
   string lastFundingAmount = 20;
   string userId = 21;
   bool hide = 22;
+  string note = 23;
+  bool ignoreEmptyFields = 24;
 }
 
 message OrganizationIdGrpcRequest {

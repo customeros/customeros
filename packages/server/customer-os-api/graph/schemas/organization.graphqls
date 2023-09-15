@@ -40,6 +40,7 @@ type Organization implements Node {
     updatedAt:   Time!
     name:        String!
     description: String
+    note:        String
     domains:     [String!]! @goField(forceResolver: true)
     website:     String
     industry:    String
@@ -130,6 +131,7 @@ input OrganizationInput {
     """
     name: String!
     description: String
+    note:        String
     domains:     [String!]
     website:     String
     industry:    String
@@ -145,9 +147,14 @@ input OrganizationInput {
 }
 
 input OrganizationUpdateInput {
-    id: ID!
-    name: String!
+    id:          ID!
+    """
+    Set to true when partial update is needed. Empty or missing fields will not be ignored.
+    """
+    patch:       Boolean
+    name:        String!
     description: String
+    note:        String
     domains:     [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
     website:     String
     industry:    String

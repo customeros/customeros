@@ -1,5 +1,0 @@
-mutation addOrganizationNote($organzationId: ID!, $input: NoteInput!) {
-  note_CreateForOrganization(organizationId: $organzationId, input: $input) {
-    id
-  }
-}

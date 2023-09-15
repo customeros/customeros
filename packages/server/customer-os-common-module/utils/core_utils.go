@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"net/url"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -402,4 +403,27 @@ func ToJson(obj any) (string, error) {
 		return "", err
 	}
 	return string(outputJson), nil
+}
+
+func ExtractDomainFromUrl(inputURL string) string {
+	// Prepend "http://" if the URL doesn't start with a scheme
+	if !strings.HasPrefix(inputURL, "http://") && !strings.HasPrefix(inputURL, "https://") {
+		inputURL = "http://" + inputURL
+	}
+
+	// Parse the URL
+	u, err := url.Parse(inputURL)
+	if err != nil {
+		return ""
+	}
+
+	// Extract and return the hostname (domain)
+	domain := u.Hostname()
+
+	// Remove "www." if it exists
+	if strings.HasPrefix(domain, "www.") {
+		domain = domain[4:] // Remove the first 4 characters ("www.")
+	}
+
+	return strings.ToLower(domain)
 }

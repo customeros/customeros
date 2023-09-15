@@ -1,7 +1,7 @@
 {
   "icon": true,
-  "typescript": true,
-  "template": "scripts/svgr-template.ts",
-  "outDir": "testIcons/out",
-  "ignoreExisting": true
+  "replace-attr-values": {
+   '#000': "currentColor",
+   '#667085': "currentColor"
+   }
 }

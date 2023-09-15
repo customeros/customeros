@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import { useForm } from 'react-inverted-form';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Note } from '@graphql/types';
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Divider } from '@ui/presentation/Divider';
@@ -10,14 +9,15 @@ import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { Card, CardBody, CardFooter } from '@ui/layout/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useAddOrganizationNoteMutation } from '@organization/graphql/addOrganizationNote.generated';
-import { useUpdateOrganizationNoteMutation } from '@organization/graphql/updateOrganizationNote.generated';
+import { useUpdateOrganizationMutation } from '@organization/graphql/updateOrganization.generated';
+import { OrganizationAccountDetailsQuery } from '@organization/graphql/getAccountPanelDetails.generated';
 
 import { invalidateAccountDetailsQuery } from '../utils';
+import { NotesDTO } from './Notes.dto';
 
 interface NotesProps {
   id: string;
-  data?: Pick<Note, '__typename' | 'id' | 'content' | 'contentType'>[];
+  data?: OrganizationAccountDetailsQuery['organization'] | null;
 }
 
 export const Notes = ({ data, id }: NotesProps) => {
@@ -26,15 +26,7 @@ export const Notes = ({ data, id }: NotesProps) => {
   const queryClient = useQueryClient();
   const client = getGraphQLClient();
 
-  const addNote = useAddOrganizationNoteMutation(client, {
-    onSuccess: () => {
-      timeoutRef.current = setTimeout(
-        () => invalidateAccountDetailsQuery(queryClient, id),
-        500,
-      );
-    },
-  });
-  const updateNote = useUpdateOrganizationNoteMutation(client, {
+  const updateOrganization = useUpdateOrganizationMutation(client, {
     onSuccess: () => {
       timeoutRef.current = setTimeout(
         () => invalidateAccountDetailsQuery(queryClient, id),
@@ -43,33 +35,19 @@ export const Notes = ({ data, id }: NotesProps) => {
     },
   });
 
-  const note = data?.[0];
+  const note = data?.note ?? '';
 
   useForm({
     formId: 'account-notes-form',
     defaultValues: {
-      notes: note?.content || '',
+      notes: note,
     },
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_BLUR') {
         setIsFocused(false);
-
-        if (!note) {
-          addNote.mutate({
-            organzationId: id,
-            input: {
-              content: action.payload.value,
-              contentType: 'text',
-            },
-          });
-        } else {
-          updateNote.mutate({
-            input: {
-              id: note.id,
-              content: action.payload.value,
-            },
-          });
-        }
+        updateOrganization.mutate({
+          input: NotesDTO.toPayload({ id, note: action.payload.value }),
+        });
       }
       return next;
     },

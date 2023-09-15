@@ -61,6 +61,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		ValueProposition:  "value-proposition",
 		LastFundingRound:  "Seed",
 		LastFundingAmount: "1.000.000",
+		Note:              "Some important notes",
 		IsPublic:          false,
 		AppSource:         "unit-test",
 		Source:            "N/A",
@@ -101,6 +102,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "value-proposition", eventData.ValueProposition)
 	require.Equal(t, "Seed", eventData.LastFundingRound)
 	require.Equal(t, "1.000.000", eventData.LastFundingAmount)
+	require.Equal(t, "Some important notes", eventData.Note)
 	require.Equal(t, false, eventData.IsPublic)
 
 	require.Equal(t, organizationEvents.OrganizationRequestScrapeByWebsiteV1, eventList[1].GetEventType())

@@ -50,7 +50,7 @@ export const AccountPanel = () => {
         id={id}
         data={data?.organization?.accountDetails?.billingDetails}
       />
-      <Notes id={id} data={data?.organization?.notes?.content} />
+      <Notes id={id} data={data?.organization} />
     </OrganizationPanel>
   );
 };

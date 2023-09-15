@@ -23,6 +23,7 @@ export interface OrganizationAboutForm
     Organization,
     | 'id'
     | 'name'
+    | 'note'
     | 'description'
     | 'website'
     | 'targetAudience'
@@ -100,12 +101,14 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
       description: data.description,
       market: data.businessType?.value,
       website: data.website,
+      note: data.note,
       industry: data.industry?.value,
       employees: data.employees?.value,
       targetAudience: data.targetAudience,
       valueProposition: data.valueProposition,
       lastFundingRound: data.lastFundingRound?.value,
       lastFundingAmount: data.lastFundingAmount,
+      patch: true,
     } as UpdateOrganizationMutationVariables['input'];
   }
 }

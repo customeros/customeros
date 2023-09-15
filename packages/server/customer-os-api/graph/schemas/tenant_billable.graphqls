@@ -1,0 +1,10 @@
+extend type Query {
+    billableInfo: TenantBillableInfo! @hasRole(roles: [USER, ADMIN])
+}
+
+type TenantBillableInfo {
+    whitelistedOrganizations: Int64!
+    whitelistedContacts: Int64!
+    greylistedOrganizations: Int64!
+    greylistedContacts: Int64!
+}

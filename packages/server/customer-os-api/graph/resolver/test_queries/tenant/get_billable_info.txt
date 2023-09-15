@@ -1,0 +1,8 @@
+query {
+  billableInfo {
+        whitelistedOrganizations
+        whitelistedContacts
+        greylistedOrganizations
+        greylistedContacts
+  }
+}

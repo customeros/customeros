@@ -62,7 +62,7 @@ Find the integration you need below, and click on the link to see the guide for 
 - Google Sheets
 - [Jira][jira]
 - Microsoft Teams
-- Notion
+- [Notion][notion]
 - Slack
 - [Smartsheet][smartsheet]
 - [Trello][trello]
@@ -81,7 +81,7 @@ Find the integration you need below, and click on the link to see the guide for 
 
 - Drift
 - Freshdesk
-- Intercom
+- [Intercom][intercom]
 - Zendesk Chat
 - [Zendesk Support][zendesk-support]
 - Zendesk Talk
@@ -173,6 +173,8 @@ Find the integration you need below, and click on the link to see the guide for 
 [zendesk-support]: /en/integrations/zendesk-support/
 [google-workspace]: /en/integrations/google-workspace/
 [jira]: /en/integrations/jira/
+[notion]: /en/integrations/notion/
 [trello]: /en/integrations/trello/
 [smartsheet]: /en/integrations/smartsheet/
 [snowplow]: /en/integrations/snowplow/
+[intercom]: /en/integrations/intercom/

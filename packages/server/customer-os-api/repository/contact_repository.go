@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -40,6 +42,7 @@ type ContactRepository interface {
 
 	GetAllContactPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllContactEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
+	GetBillableContactStats(ctx context.Context) (*neo4j.Record, error)
 }
 
 type contactRepository struct {
@@ -981,4 +984,34 @@ func (r *contactRepository) RestoreFromArchive(ctx context.Context, tenant, cont
 		return nil, err
 	})
 	return err
+}
+
+func (r *contactRepository) GetBillableContactStats(ctx context.Context) (*neo4j.Record, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetBillableContactStats")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `match (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+			optional match (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact) 
+with o.hide as hide, count(distinct(o)) as orgs, count(DISTINCT(c)) as contacts
+with
+  CASE WHEN hide = true THEN orgs ELSE 0 END as grey_orgs,
+  CASE WHEN hide = true THEN 0 ELSE orgs  END as white_orgs,
+  CASE WHEN hide = true THEN contacts ELSE 0 END as grey_contacts,
+  CASE WHEN hide = true THEN 0 ELSE contacts  END as white_contacts
+RETURN sum(white_orgs) as whiteOrgs, sum(white_contacts) as whiteContacts, sum(grey_orgs) as greyOrgs, sum(grey_contacts) as greyContacts;`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": common.GetTenantFromContext(ctx),
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Single(ctx)
+	})
+	return dbRecord.(*db.Record), err
 }

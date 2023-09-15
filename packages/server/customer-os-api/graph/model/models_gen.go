@@ -1066,6 +1066,7 @@ type Organization struct {
 	UpdatedAt                     time.Time                        `json:"updatedAt"`
 	Name                          string                           `json:"name"`
 	Description                   *string                          `json:"description,omitempty"`
+	Note                          *string                          `json:"note,omitempty"`
 	Domains                       []string                         `json:"domains"`
 	Website                       *string                          `json:"website,omitempty"`
 	Industry                      *string                          `json:"industry,omitempty"`
@@ -1118,6 +1119,7 @@ type OrganizationInput struct {
 	// **Required.**
 	Name          string              `json:"name"`
 	Description   *string             `json:"description,omitempty"`
+	Note          *string             `json:"note,omitempty"`
 	Domains       []string            `json:"domains,omitempty"`
 	Website       *string             `json:"website,omitempty"`
 	Industry      *string             `json:"industry,omitempty"`
@@ -1163,9 +1165,12 @@ type OrganizationRelationshipStage struct {
 }
 
 type OrganizationUpdateInput struct {
-	ID                string        `json:"id"`
+	ID string `json:"id"`
+	// Set to true when partial update is needed. Empty or missing fields will not be ignored.
+	Patch             *bool         `json:"patch,omitempty"`
 	Name              string        `json:"name"`
 	Description       *string       `json:"description,omitempty"`
+	Note              *string       `json:"note,omitempty"`
 	Domains           []string      `json:"domains,omitempty"`
 	Website           *string       `json:"website,omitempty"`
 	Industry          *string       `json:"industry,omitempty"`
@@ -1416,6 +1421,13 @@ type TagInput struct {
 type TagUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type TenantBillableInfo struct {
+	WhitelistedOrganizations int64 `json:"whitelistedOrganizations"`
+	WhitelistedContacts      int64 `json:"whitelistedContacts"`
+	GreylistedOrganizations  int64 `json:"greylistedOrganizations"`
+	GreylistedContacts       int64 `json:"greylistedContacts"`
 }
 
 type TenantInput struct {

@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	comentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -130,6 +131,14 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		*skipped++
 		span.LogFields(log.Bool("skippedSync", true))
 		return
+	}
+
+	// populate domain if missing and website available
+	if !orgInput.HasDomains() && orgInput.Website != "" {
+		domainFromWebsite := utils.ExtractDomainFromUrl(orgInput.Website)
+		if domainFromWebsite != "" {
+			orgInput.Domains = []string{domainFromWebsite}
+		}
 	}
 
 	nonPersonalEmailProviderDomains := make([]string, 0)

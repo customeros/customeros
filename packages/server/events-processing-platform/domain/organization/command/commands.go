@@ -9,27 +9,30 @@ import (
 
 type UpsertOrganizationCommand struct {
 	eventstore.BaseCommand
-	CoreFields models.OrganizationDataFields
-	Source     common_models.Source
-	CreatedAt  *time.Time
-	UpdatedAt  *time.Time
+	IgnoreEmptyFields bool
+	DataFields        models.OrganizationDataFields
+	Source            common_models.Source
+	CreatedAt         *time.Time
+	UpdatedAt         *time.Time
 }
 
 func UpsertOrganizationCommandToOrganizationFields(command *UpsertOrganizationCommand) *models.OrganizationFields {
 	return &models.OrganizationFields{
 		ID:                     command.ObjectID,
 		Tenant:                 command.Tenant,
-		OrganizationDataFields: command.CoreFields,
+		OrganizationDataFields: command.DataFields,
 		Source:                 command.Source,
 		CreatedAt:              command.CreatedAt,
 		UpdatedAt:              command.UpdatedAt,
+		IgnoreEmptyFields:      command.IgnoreEmptyFields,
 	}
 }
 
-func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource, userId string, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource, userId string, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time, ignoreEmptyFields bool) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
-		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
-		CoreFields:  coreFields,
+		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant, userId),
+		IgnoreEmptyFields: ignoreEmptyFields,
+		DataFields:        coreFields,
 		Source: common_models.Source{
 			Source:        source,
 			SourceOfTruth: sourceOfTruth,
@@ -42,9 +45,9 @@ func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth,
 
 type UpdateOrganizationCommand struct {
 	eventstore.BaseCommand
-	IgnoreEmptyFields bool `json:"ignoreEmptyFields"`
+	IgnoreEmptyFields bool
 	DataFields        models.OrganizationDataFields
-	SourceOfTruth     string `json:"sourceOfTruth"`
+	SourceOfTruth     string
 	UpdatedAt         *time.Time
 }
 

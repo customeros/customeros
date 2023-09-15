@@ -2,15 +2,7 @@ query OrganizationAccountDetails($id: ID!) {
   organization(id: $id) {
     id
     name
-    notes {
-      content {
-        id
-        content
-        contentType
-      }
-      totalPages
-      totalElements
-    }
+    note
     accountDetails {
       renewalForecast {
         amount

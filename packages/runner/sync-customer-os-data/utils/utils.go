@@ -1,6 +1,8 @@
 package utils
 
-import "time"
+import (
+	"time"
+)
 
 const customLayout1 = "2006-01-02 15:04:05"
 const customLayout2 = "2022-11-07T22:03:16.000+0000"

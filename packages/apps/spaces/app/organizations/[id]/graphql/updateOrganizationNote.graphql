@@ -1,5 +1,0 @@
-mutation updateOrganizationNote($input: NoteUpdateInput!) {
-  note_Update(input: $input) {
-    id
-  }
-}
