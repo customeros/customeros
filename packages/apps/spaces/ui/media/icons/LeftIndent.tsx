@@ -1,20 +1,12 @@
-import * as React from 'react';
-import { SVGProps } from 'react';
-const SvgLeftIndent = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    viewBox='0 0 16 16'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-    width='1em'
-    height='1em'
-    {...props}
-  >
+import { Icon, IconProps } from '@ui/media/Icon';
+
+export const LeftIndent = (props: IconProps) => (
+  <Icon viewBox='0 0 24 24' fill='none' boxSize='4' {...props}>
     <path
-      d='M14 6.167H8m6-3.5H2m12 7.166H8m6 3.5H2m.853-7.626L5.431 7.64c.193.145.29.217.324.306.03.078.03.164 0 .242-.034.088-.13.16-.324.305l-2.578 1.934c-.274.206-.412.309-.527.306a.333.333 0 0 1-.255-.128C2 10.515 2 10.343 2 10V6.133c0-.343 0-.515.07-.605a.333.333 0 0 1 .256-.128c.115-.002.253.1.527.307Z'
+      d='M14 6.16667H8M14 2.66667H2M14 9.83334H8M14 13.3333H2M2.85333 5.70667L5.43111 7.64C5.62411 7.78475 5.7206 7.85712 5.75511 7.94585C5.78533 8.02356 5.78533 8.10978 5.75511 8.1875C5.7206 8.27622 5.62411 8.34859 5.43111 8.49334L2.85333 10.4267C2.57868 10.6327 2.44135 10.7357 2.3264 10.7333C2.22637 10.7312 2.13256 10.6843 2.07088 10.6055C2 10.515 2 10.3433 2 10V6.13334C2 5.79002 2 5.61836 2.07088 5.52784C2.13256 5.44906 2.22637 5.40216 2.3264 5.40008C2.44135 5.39769 2.57868 5.50068 2.85333 5.70667Z'
       stroke='currentColor'
       strokeLinecap='round'
       strokeLinejoin='round'
     />
-  </svg>
+  </Icon>
 );
-export default SvgLeftIndent;

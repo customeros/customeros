@@ -53,7 +53,7 @@ export const ConfirmDeleteDialog = ({
           <AlertDialogCloseButton color='gray.400' top={6} />
           <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6'>
             <FeaturedIcon size='lg' colorScheme='red'>
-              {icon ? <SvgIcon>{icon}</SvgIcon> : <Icons.Trash1 />}
+              {icon ? icon : <Icons.Trash1 />}
             </FeaturedIcon>
             <Text mt='4'>{label}</Text>
             {description && (

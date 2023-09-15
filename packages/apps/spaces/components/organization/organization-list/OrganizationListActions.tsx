@@ -9,8 +9,7 @@ import {
 import { Menu, MenuButton, MenuList, MenuItem } from '@ui/overlay/Menu';
 import { useRecoilState } from 'recoil';
 import { tableMode } from '@spaces/finder/state';
-import { SvgIcon } from '@ui/media/icons/SvgIcon';
-import Archive from '@ui/media/icons/Archive';
+import { Archive } from '@ui/media/icons/Archive';
 
 interface OrganizationListActionsProps {
   table: TableInstance<Organization>;
@@ -54,11 +53,7 @@ const OrganizationListActions = ({
           colorScheme='red'
           onClick={() => onArchiveOrganizations(table)}
           aria-label='Archive Organizations'
-          icon={
-            <SvgIcon boxSize='4'>
-              <Archive />
-            </SvgIcon>
-          }
+          icon={<Archive />}
         />
       );
     }
