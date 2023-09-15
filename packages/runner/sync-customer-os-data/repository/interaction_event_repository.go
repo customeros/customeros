@@ -52,16 +52,16 @@ func (r *interactionEventRepository) GetMatchedInteractionEvent(ctx context.Cont
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystem})
-				OPTIONAL MATCH (ext)<-[:IS_LINKED_WITH {externalId:$issueExternalId}]-(ie:InteractionEvent_%s)
-				WITH ie WHERE ie is not null
-				return ie.id limit 1`
+				OPTIONAL MATCH (ext)<-[:IS_LINKED_WITH {externalId:$externalId}]-(ie:InteractionEvent_%s)
+				WITH ie WHERE NOT ie IS NULL
+				RETURN ie.id limit 1`
 
 	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 			map[string]interface{}{
-				"tenant":          tenant,
-				"externalSystem":  event.ExternalSystem,
-				"issueExternalId": event.ExternalId,
+				"tenant":         tenant,
+				"externalSystem": event.ExternalSystem,
+				"externalId":     event.ExternalId,
 			})
 		if err != nil {
 			return nil, err

@@ -31,6 +31,8 @@ func NewDefaultUserSyncService(repositories *repository.Repositories, log logger
 
 func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 	completed, failed, skipped := 0, 0, 0
+	userSyncMutex := &sync.Mutex{}
+
 	for {
 		users := dataService.GetDataForSync(ctx, common.USERS, batchSize, runId)
 		if len(users) == 0 {
@@ -50,7 +52,7 @@ func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDat
 			go func(user entity.UserData) {
 				defer wg.Done()
 				var comp, fail, skip int
-				s.syncUser(ctx, v.(entity.UserData), dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+				s.syncUser(ctx, userSyncMutex, v.(entity.UserData), dataService, syncDate, tenant, runId, &comp, &fail, &skip)
 				results <- result{comp, fail, skip}
 			}(v.(entity.UserData))
 		}
@@ -77,7 +79,7 @@ func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDat
 	return completed, failed, skipped
 }
 
-func (s *userSyncService) syncUser(ctx context.Context, userInput entity.UserData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
+func (s *userSyncService) syncUser(ctx context.Context, userSyncMutex *sync.Mutex, userInput entity.UserData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserSyncService.syncUser")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
@@ -99,6 +101,7 @@ func (s *userSyncService) syncUser(ctx context.Context, userInput entity.UserDat
 
 	userInput.Email = strings.ToLower(userInput.Email)
 
+	userSyncMutex.Lock()
 	userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, userInput)
 	if err != nil {
 		failedSync = true
@@ -124,6 +127,7 @@ func (s *userSyncService) syncUser(ctx context.Context, userInput entity.UserDat
 			s.log.Errorf(reason)
 		}
 	}
+	userSyncMutex.Unlock()
 
 	if userInput.HasEmail() && !failedSync {
 		err = s.repositories.UserRepository.MergeEmail(ctx, tenant, userInput)

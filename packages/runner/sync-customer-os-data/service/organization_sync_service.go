@@ -41,6 +41,7 @@ func NewDefaultOrganizationSyncService(repositories *repository.Repositories, se
 
 func (s *organizationSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 	completed, failed, skipped := 0, 0, 0
+	organizationSyncMutex := &sync.Mutex{}
 
 	var controlDomains *domains
 
@@ -83,7 +84,7 @@ func (s *organizationSyncService) Sync(ctx context.Context, dataService source.S
 				defer wg.Done()
 
 				var comp, fail, skip int
-				s.syncOrganization(ctx, org, dataService, controlDomains, syncDate, tenant, runId, &comp, &fail, &skip)
+				s.syncOrganization(ctx, organizationSyncMutex, org, dataService, controlDomains, syncDate, tenant, runId, &comp, &fail, &skip)
 
 				results <- result{comp, fail, skip}
 			}(v.(entity.OrganizationData))
@@ -113,7 +114,7 @@ func (s *organizationSyncService) Sync(ctx context.Context, dataService source.S
 	return completed, failed, skipped
 }
 
-func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput entity.OrganizationData, dataService source.SourceDataService, controlDomains *domains, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
+func (s *organizationSyncService) syncOrganization(ctx context.Context, organizationSyncMutex *sync.Mutex, orgInput entity.OrganizationData, dataService source.SourceDataService, controlDomains *domains, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationSyncService.syncOrganization")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
@@ -168,6 +169,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		}
 	}
 
+	organizationSyncMutex.Lock()
 	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput)
 	if err != nil {
 		failedSync = true
@@ -194,6 +196,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 			s.log.Errorf(reason)
 		}
 	}
+	organizationSyncMutex.Unlock()
 
 	if orgInput.HasDomains() && !failedSync {
 		for _, domain := range orgInput.Domains {

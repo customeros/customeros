@@ -31,6 +31,7 @@ func NewDefaultNoteSyncService(repositories *repository.Repositories, log logger
 
 func (s *noteSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 	completed, failed, skipped := 0, 0, 0
+	noteSyncMutex := &sync.Mutex{}
 
 	for {
 
@@ -55,7 +56,7 @@ func (s *noteSyncService) Sync(ctx context.Context, dataService source.SourceDat
 				defer wg.Done()
 
 				var comp, fail, skip int
-				s.syncNote(ctx, note, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+				s.syncNote(ctx, noteSyncMutex, note, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
 
 				results <- result{comp, fail, skip}
 			}(v.(entity.NoteData))
@@ -84,7 +85,7 @@ func (s *noteSyncService) Sync(ctx context.Context, dataService source.SourceDat
 	return completed, failed, skipped
 }
 
-func (s *noteSyncService) syncNote(ctx context.Context, noteInput entity.NoteData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
+func (s *noteSyncService) syncNote(ctx context.Context, noteSyncMutex *sync.Mutex, noteInput entity.NoteData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteSyncService.syncNote")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
@@ -104,6 +105,7 @@ func (s *noteSyncService) syncNote(ctx context.Context, noteInput entity.NoteDat
 		return
 	}
 
+	noteSyncMutex.Lock()
 	noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, noteInput)
 	if err != nil {
 		failedSync = true
@@ -129,6 +131,7 @@ func (s *noteSyncService) syncNote(ctx context.Context, noteInput entity.NoteDat
 			s.log.Errorf(reason)
 		}
 	}
+	noteSyncMutex.Unlock()
 
 	if noteInput.HasNotedContacts() && !failedSync {
 		for _, contactExternalId := range noteInput.NotedContactsExternalIds {

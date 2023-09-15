@@ -34,6 +34,7 @@ func NewDefaultIssueSyncService(repositories *repository.Repositories, services 
 func (s *issueSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 
 	completed, failed, skipped := 0, 0, 0
+	issueSyncMutex := &sync.Mutex{}
 
 	for {
 
@@ -58,7 +59,7 @@ func (s *issueSyncService) Sync(ctx context.Context, dataService source.SourceDa
 				defer wg.Done()
 
 				var comp, fail, skip int
-				s.syncIssue(ctx, issue, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+				s.syncIssue(ctx, issueSyncMutex, issue, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
 
 				results <- result{comp, fail, skip}
 			}(v.(entity.IssueData))
@@ -88,7 +89,7 @@ func (s *issueSyncService) Sync(ctx context.Context, dataService source.SourceDa
 	return completed, failed, skipped
 }
 
-func (s *issueSyncService) syncIssue(ctx context.Context, issueInput entity.IssueData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
+func (s *issueSyncService) syncIssue(ctx context.Context, issueSyncMutex *sync.Mutex, issueInput entity.IssueData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueSyncService.syncIssue")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
@@ -108,6 +109,7 @@ func (s *issueSyncService) syncIssue(ctx context.Context, issueInput entity.Issu
 		return
 	}
 
+	issueSyncMutex.Lock()
 	dbNode, err := s.repositories.IssueRepository.GetMatchedIssue(ctx, tenant, issueInput.ExternalSystem, issueInput.ExternalId)
 	var issueId string
 	if dbNode != nil {
@@ -137,6 +139,7 @@ func (s *issueSyncService) syncIssue(ctx context.Context, issueInput entity.Issu
 			s.log.Errorf(reason)
 		}
 	}
+	issueSyncMutex.Unlock()
 
 	if issueInput.HasReporterOrganization() && !failedSync {
 		err = s.repositories.IssueRepository.LinkIssueWithReporterOrganizationByExternalId(ctx, tenant, issueId, issueInput.ReporterOrganizationExternalId, issueInput.ExternalSystem)

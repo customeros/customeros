@@ -34,6 +34,7 @@ func NewDefaultContactSyncService(repositories *repository.Repositories, service
 func (s *contactSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 
 	completed, failed, skipped := 0, 0, 0
+	contactSyncMutex := &sync.Mutex{}
 
 	for {
 
@@ -58,7 +59,7 @@ func (s *contactSyncService) Sync(ctx context.Context, dataService source.Source
 				defer wg.Done()
 
 				var comp, fail, skip int
-				s.syncContact(ctx, contact, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+				s.syncContact(ctx, contactSyncMutex, contact, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
 
 				results <- result{comp, fail, skip}
 			}(v.(entity.ContactData))
@@ -88,7 +89,7 @@ func (s *contactSyncService) Sync(ctx context.Context, dataService source.Source
 	return completed, failed, skipped
 }
 
-func (s *contactSyncService) syncContact(ctx context.Context, contactInput entity.ContactData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
+func (s *contactSyncService) syncContact(ctx context.Context, contactSyncMutex *sync.Mutex, contactInput entity.ContactData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactSyncService.syncContact")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
@@ -133,6 +134,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		contactInput.Name = strings.TrimSpace(fmt.Sprintf("%s %s", contactInput.FirstName, contactInput.LastName))
 	}
 
+	contactSyncMutex.Lock()
 	contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, contactInput)
 	if err != nil {
 		failedSync = true
@@ -158,6 +160,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 			s.log.Errorf(reason)
 		}
 	}
+	contactSyncMutex.Unlock()
 
 	if len(contactInput.Email) > 0 && !failedSync {
 		if err = s.repositories.ContactRepository.MergePrimaryEmail(ctx, tenant, contactId, contactInput.Email, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
