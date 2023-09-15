@@ -26,7 +26,7 @@ export const useFinderOrganizationTableData = (
   const initialVariables = {
     pagination: {
       page: 1,
-      limit: 20,
+      limit: 40,
     },
     where: undefined as InputMaybe<Filter> | undefined,
   };

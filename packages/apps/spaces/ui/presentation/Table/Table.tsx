@@ -52,7 +52,7 @@ export const Table = <T extends object>({
   columns,
   isLoading,
   onFetchMore,
-  totalItems = 50,
+  totalItems = 40,
   onSortingChange,
   onSelectionChange,
   renderTableActions,
@@ -86,8 +86,8 @@ export const Table = <T extends object>({
 
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
-    count: !data.length && isLoading ? 15 : totalItems,
-    overscan: 25,
+    count: !data.length && isLoading ? 40 : totalItems,
+    overscan: 10,
     getScrollElement: () => scrollElementRef.current,
     estimateSize: () => 21,
   });
