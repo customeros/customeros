@@ -1,7 +1,7 @@
 import { useCommands } from '@remirror/react';
 import { Flex } from '@chakra-ui/react';
-import RightIndent from '@ui/media/icons/RightIndent';
-import LeftIndent from '@ui/media/icons/LeftIndent';
+import { RightIndent } from '@ui/media/icons/RightIndent';
+import { LeftIndent } from '@ui/media/icons/LeftIndent';
 import React from 'react';
 import { ToolbarButton } from './ToolbarButton';
 

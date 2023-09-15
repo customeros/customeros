@@ -1,5 +1,5 @@
 import React from 'react';
-import { Maybe, TimelineEvent } from '@graphql/types';
+import { ExternalSystemType, Maybe, TimelineEvent } from '@graphql/types';
 import { Icons } from '@ui/media/Icon';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -58,9 +58,20 @@ export const LastTouchpointTableCell = ({
         ) {
           label = 'Meeting';
           icon = <Icons.Calendar boxSize='3' color='gray.700' />;
-        } else if (lastTouchPointTimelineEvent.channel === 'SLACK') {
-          label = 'Slack message';
-          icon = <Icons.MessageTextSquare1 boxSize='3' color='gray.700' />;
+        } else if (lastTouchPointTimelineEvent.channel === 'CHAT') {
+          if (
+            lastTouchPointTimelineEvent.externalLinks?.[0].type ===
+            ExternalSystemType.Slack
+          ) {
+            label = 'Slack message';
+            icon = <Icons.MessageTextSquare1 boxSize='3' color='gray.700' />;
+          } else if (
+            lastTouchPointTimelineEvent.externalLinks?.[0].type ===
+            ExternalSystemType.Intercom
+          ) {
+            label = 'Intercom message';
+            icon = <Icons.MessageTextSquare1 boxSize='3' color='gray.700' />;
+          }
         } else {
           label = 'InteractionEvent';
         }
