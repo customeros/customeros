@@ -66,7 +66,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
 
   const [tableInstance, setTableInstance] =
     useState<TableInstance<Organization> | null>(null);
-  const [page, setPagination] = useState(1);
+  const [_, setPagination] = useState(1);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [enableSelection, setEnableSelection] = useState(false);
   const [selection, setSelection] = useState<RowSelectionState>({});
@@ -110,7 +110,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
       variables: {
         pagination: {
           page: 1,
-          limit: 20,
+          limit: 40,
         },
         where: {
           AND: filters,
@@ -129,17 +129,18 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
 
   const handleFetchMore = useCallback(() => {
     setPagination((prev) => {
+      fetchMore({
+        variables: {
+          pagination: {
+            limit: variables.pagination.limit,
+            page: prev + 1,
+          },
+        },
+      });
+
       return prev + 1;
     });
-    fetchMore({
-      variables: {
-        pagination: {
-          limit: variables.pagination.limit,
-          page: page + 1,
-        },
-      },
-    });
-  }, [page, fetchMore, variables.pagination.limit]);
+  }, [fetchMore, variables.pagination.limit, setPagination]);
 
   const handleMergeOrganizations = (table: TableInstance<Organization>) => {
     const organizationIds = Object.keys(selection)
