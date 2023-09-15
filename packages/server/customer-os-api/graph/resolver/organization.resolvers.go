@@ -130,6 +130,92 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
+// OrganizationUpdateRenewalLikelihood is the resolver for the organization_UpdateRenewalLikelihood field.
+func (r *mutationResolver) OrganizationUpdateRenewalLikelihood(ctx context.Context, input model.RenewalLikelihoodInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdateRenewalLikelihood", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("input", input))
+
+	var likelihood = orggrpc.Likelihood_NONE_LIKELIHOOD
+	if input.Probability != nil {
+		switch *input.Probability {
+		case model.RenewalLikelihoodProbabilityHigh:
+			likelihood = orggrpc.Likelihood_HIGH
+		case model.RenewalLikelihoodProbabilityMedium:
+			likelihood = orggrpc.Likelihood_MEDIUM
+		case model.RenewalLikelihoodProbabilityLow:
+			likelihood = orggrpc.Likelihood_LOW
+		case model.RenewalLikelihoodProbabilityZero:
+			likelihood = orggrpc.Likelihood_ZERO
+		}
+	}
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalLikelihood(ctx, &orggrpc.OrganizationRenewalLikelihoodRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: input.ID,
+		Comment:        input.Comment,
+		UserId:         common.GetUserIdFromContext(ctx),
+		Likelihood:     likelihood,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update organization' renewal likelihood %s", input.ID)
+		return response.Id, nil
+	}
+
+	return response.Id, nil
+}
+
+// OrganizationUpdateRenewalForecast is the resolver for the organization_UpdateRenewalForecast field.
+func (r *mutationResolver) OrganizationUpdateRenewalForecast(ctx context.Context, input model.RenewalForecastInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdateRenewalForecast", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("input", input))
+
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalForecast(ctx, &orggrpc.OrganizationRenewalForecastRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: input.ID,
+		Comment:        input.Comment,
+		UserId:         common.GetUserIdFromContext(ctx),
+		Amount:         input.Amount,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update organization' renewal forecast %s", input.ID)
+		return response.Id, nil
+	}
+
+	return response.Id, nil
+}
+
+// OrganizationUpdateBillingDetails is the resolver for the organization_UpdateBillingDetails field.
+func (r *mutationResolver) OrganizationUpdateBillingDetails(ctx context.Context, input model.BillingDetailsInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdateBillingDetails", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("input", input))
+
+	requestObj := orggrpc.OrganizationBillingDetailsRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: input.ID,
+		UserId:         common.GetUserIdFromContext(ctx),
+		Amount:         input.Amount,
+		Frequency:      mapper.MapFrequencyFromModelToGrpc(input.Frequency),
+		RenewalCycle:   mapper.MapFrequencyFromModelToGrpc(input.RenewalCycle),
+		CycleStart:     utils.ConvertTimeToTimestampPtr(input.RenewalCycleStart),
+	}
+
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationBillingDetails(ctx, &requestObj)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update organization' billing details %s", input.ID)
+		return response.Id, nil
+	}
+
+	return response.Id, nil
+}
+
 // OrganizationUpdateRenewalLikelihoodAsync is the resolver for the organization_UpdateRenewalLikelihoodAsync field.
 func (r *mutationResolver) OrganizationUpdateRenewalLikelihoodAsync(ctx context.Context, input model.RenewalLikelihoodInput) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdateRenewalLikelihoodAsync", graphql.GetOperationContext(ctx))

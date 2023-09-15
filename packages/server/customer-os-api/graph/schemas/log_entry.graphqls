@@ -1,0 +1,32 @@
+extend type Mutation {
+    logEntry_CreateForOrganization(organizationId : ID!, input: NoteInput!): ID!
+    logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID!
+}
+
+type LogEntry {
+    id: ID!
+    content: String
+    contentType: String
+    createdAt: Time!
+    updatedAt: Time!
+    startedAt: Time!
+    createdBy: User @goField(forceResolver: true)
+    tags: [Tag!]!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+input LogEntryInput {
+    content: String
+    contentType: String
+    tags: [TagCreateOrUpdateInput!]
+    startedAt: Time
+    appSource: String
+}
+
+input LogEntryUpdateInput {
+    content: String
+    contentType: String
+    startedAt: Time
+}

@@ -26,3 +26,8 @@ input TagUpdateInput {
     id: ID!
     name: String!
 }
+
+input TagCreateOrUpdateInput {
+    id: ID
+    name: String
+}
