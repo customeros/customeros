@@ -41,10 +41,8 @@ func MapUser(inputJson string) (string, error) {
 		LastName:  input.LastName,
 		Email:     input.Email,
 	}
-	output.PhoneNumber = input.Phone
-	if output.PhoneNumber == "" {
-		output.PhoneNumber = input.MobilePhone
-	}
+	output.PhoneNumbers = []string{input.Phone}
+	output.PhoneNumbers = append(output.PhoneNumbers, input.MobilePhone)
 
 	return utils.ToJson(output)
 }
@@ -89,7 +87,9 @@ func MapOrganization(inputJson string) (string, error) {
 		Description: input.Description,
 		Website:     input.Website,
 		Industry:    input.Industry,
-		PhoneNumber: input.Phone,
+	}
+	if input.Phone != "" {
+		output.PhoneNumbers = []string{input.Phone}
 	}
 
 	return utils.ToJson(output)

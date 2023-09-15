@@ -218,12 +218,14 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		}
 	}
 
-	if orgInput.HasPhoneNumber() && !failedSync {
-		if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, orgInput.PhoneNumber, orgInput.ExternalSystem, *orgInput.CreatedAt); err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge phone number for organization with external reference %v , tenant %v :%v", orgInput.ExternalId, tenant, err)
-			s.log.Errorf(reason)
+	if orgInput.HasPhoneNumbers() && !failedSync {
+		for _, phoneNumber := range orgInput.PhoneNumbers {
+			if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, phoneNumber, orgInput.ExternalSystem, *orgInput.CreatedAt); err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed merge phone number for organization with external reference %v , tenant %v :%v", orgInput.ExternalId, tenant, err)
+				s.log.Errorf(reason)
+			}
 		}
 	}
 

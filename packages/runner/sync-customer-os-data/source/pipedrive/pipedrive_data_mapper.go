@@ -28,9 +28,9 @@ func MapUser(inputJson string) (string, error) {
 			CreatedAtStr: input.CreatedAt,
 			UpdatedAtStr: input.Modified,
 		},
-		Name:        input.Name,
-		Email:       input.Email,
-		PhoneNumber: input.Phone,
+		Name:         input.Name,
+		Email:        input.Email,
+		PhoneNumbers: []string{input.Phone},
 	}
 	if input.ID == 0 {
 		output.Skip = true

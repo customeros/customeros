@@ -72,7 +72,6 @@ func MapOrganization(inputJSON string) (string, error) {
 		Industry:    input.Properties.Industry,
 		IsPublic:    input.Properties.IsPublic,
 		Employees:   int64(input.Properties.NumberOfEmployees),
-		PhoneNumber: input.Properties.Phone,
 		Country:     input.Properties.Country,
 		Region:      input.Properties.State,
 		Locality:    input.Properties.City,
@@ -83,6 +82,9 @@ func MapOrganization(inputJSON string) (string, error) {
 			ExternalOwnerId: input.Properties.HubspotOwnerId,
 		},
 		Domains: []string{input.Properties.Domain},
+	}
+	if input.Properties.Phone != "" {
+		output.PhoneNumbers = []string{input.Properties.Phone}
 	}
 	switch input.Properties.Type {
 	case "PROSPECT":

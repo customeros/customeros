@@ -17,7 +17,7 @@ type UserRepository interface {
 	GetMatchedUserId(ctx context.Context, tenant string, user entity.UserData) (string, error)
 	MergeUser(ctx context.Context, tenant string, syncDate time.Time, user entity.UserData) error
 	MergeEmail(ctx context.Context, tenant string, user entity.UserData) error
-	MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData) error
+	MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData, phoneNumber string) error
 	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetUserIdById(ctx context.Context, tenant, id string) (string, error)
 	GetUserIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
@@ -137,7 +137,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 				"source":          user.ExternalSystem,
 				"sourceOfTruth":   user.ExternalSystem,
 				"appSource":       constants.AppSourceSyncCustomerOsData,
-				"now":             time.Now().UTC(),
+				"now":             utils.Now(),
 			})
 		if err != nil {
 			return nil, err
@@ -184,7 +184,7 @@ func (r *userRepository) MergeEmail(ctx context.Context, tenant string, user ent
 				"source":        user.ExternalSystem,
 				"sourceOfTruth": user.ExternalSystem,
 				"appSource":     constants.AppSourceSyncCustomerOsData,
-				"now":           time.Now().UTC(),
+				"now":           utils.Now(),
 			})
 		if err != nil {
 			return nil, err
@@ -198,7 +198,7 @@ func (r *userRepository) MergeEmail(ctx context.Context, tenant string, user ent
 	return err
 }
 
-func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData) error {
+func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData, phoneNumber string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.MergePhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -226,12 +226,12 @@ func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, us
 			map[string]interface{}{
 				"tenant":        tenant,
 				"userId":        user.Id,
-				"phoneNumber":   user.PhoneNumber,
+				"phoneNumber":   phoneNumber,
 				"label":         "WORK",
 				"source":        user.ExternalSystem,
 				"sourceOfTruth": user.ExternalSystem,
 				"appSource":     constants.AppSourceSyncCustomerOsData,
-				"now":           time.Now().UTC(),
+				"now":           utils.Now(),
 			})
 		if err != nil {
 			return nil, err

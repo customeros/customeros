@@ -67,6 +67,10 @@
     {
       "name": "Check multiple organizations share same domain",
       "query": "match (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
+    },
+    {
+      "name": "Check missing properties",
+      "query": "CALL {\nMATCH (n:Organization)\nWHERE n.hide IS NULL\nRETURN count(n) as cnt\n} return sum(cnt)"
     }
   ]
 }
