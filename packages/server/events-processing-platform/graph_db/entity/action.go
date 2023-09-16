@@ -59,13 +59,6 @@ func (action *ActionEntity) SetDataloaderKey(key string) {
 	action.DataloaderKey = key
 }
 
-func (ActionEntity) IsTimelineEvent() {
-}
-
-func (ActionEntity) TimelineEventLabel() string {
-	return NodeLabel_Action
-}
-
 type ActionEntities []ActionEntity
 
 func (action ActionEntity) Labels(tenant string) []string {

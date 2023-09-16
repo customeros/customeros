@@ -19,13 +19,6 @@ type NoteEntity struct {
 
 type NoteEntities []NoteEntity
 
-func (NoteEntity) IsTimelineEvent() {
-}
-
-func (NoteEntity) TimelineEventLabel() string {
-	return NodeLabel_Note
-}
-
 func (note *NoteEntity) SetDataloaderKey(key string) {
 	note.DataloaderKey = key
 }

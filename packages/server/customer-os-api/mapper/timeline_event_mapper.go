@@ -1,10 +1,8 @@
 package mapper
 
 import (
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"reflect"
 )
 
 func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.TimelineEvent {
@@ -36,8 +34,10 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 	case entity.NodeLabel_Action:
 		actionEntity := (*timelineEventEntity).(*entity.ActionEntity)
 		return MapEntityToAction(actionEntity)
+	case entity.NodeLabel_LogEntry:
+		logEntryEntity := (*timelineEventEntity).(*entity.LogEntryEntity)
+		return MapEntityToLogEntry(logEntryEntity)
 	}
-	fmt.Errorf("timeline event of type %s not identified", reflect.TypeOf(timelineEventEntity))
 	return nil
 }
 

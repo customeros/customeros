@@ -28,13 +28,6 @@ func (interactionSession InteractionSessionEntity) ToString() string {
 
 type InteractionSessionEntities []InteractionSessionEntity
 
-func (InteractionSessionEntity) IsTimelineEvent() {
-}
-
-func (InteractionSessionEntity) TimelineEventLabel() string {
-	return NodeLabel_InteractionSession
-}
-
 func (InteractionSessionEntity) IsAnalysisDescribe() {
 }
 

@@ -29,19 +29,12 @@ func (pageView PageViewEntity) ToString() string {
 
 type PageViewEntities []PageViewEntity
 
-func (PageViewEntity) IsTimelineEvent() {
-}
-
 func (pageView *PageViewEntity) SetDataloaderKey(key string) {
 	pageView.DataloaderKey = key
 }
 
 func (pageView PageViewEntity) GetDataloaderKey() string {
 	return pageView.DataloaderKey
-}
-
-func (PageViewEntity) TimelineEventLabel() string {
-	return NodeLabel_PageView
 }
 
 func (pageView PageViewEntity) Labels() []string {

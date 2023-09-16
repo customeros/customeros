@@ -930,6 +930,8 @@ type LogEntry struct {
 	AppSource     string     `json:"appSource"`
 }
 
+func (LogEntry) IsTimelineEvent() {}
+
 type LogEntryInput struct {
 	Content     *string                   `json:"content,omitempty"`
 	ContentType *string                   `json:"contentType,omitempty"`
@@ -2692,6 +2694,7 @@ const (
 	TimelineEventTypeIssue              TimelineEventType = "ISSUE"
 	TimelineEventTypeMeeting            TimelineEventType = "MEETING"
 	TimelineEventTypeAction             TimelineEventType = "ACTION"
+	TimelineEventTypeLogEntry           TimelineEventType = "LOG_ENTRY"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -2703,11 +2706,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeIssue,
 	TimelineEventTypeMeeting,
 	TimelineEventTypeAction,
+	TimelineEventTypeLogEntry,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting, TimelineEventTypeAction, TimelineEventTypeLogEntry:
 		return true
 	}
 	return false

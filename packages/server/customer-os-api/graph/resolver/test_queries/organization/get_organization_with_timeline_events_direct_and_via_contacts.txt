@@ -58,6 +58,12 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
                 actionType
                 source
             }
+            ... on LogEntry {
+                id
+                startedAt
+                content
+                contentType
+            }
           }
   }
 }

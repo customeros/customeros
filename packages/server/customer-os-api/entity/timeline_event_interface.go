@@ -10,6 +10,7 @@ var NodeLabelsByTimelineEventType = map[string]string{
 	model.TimelineEventTypeInteractionEvent.String(): NodeLabel_InteractionEvent,
 	model.TimelineEventTypeMeeting.String():          NodeLabel_Meeting,
 	model.TimelineEventTypeAction.String():           NodeLabel_Action,
+	model.TimelineEventTypeLogEntry.String():         NodeLabel_LogEntry,
 }
 
 type TimelineEvent interface {

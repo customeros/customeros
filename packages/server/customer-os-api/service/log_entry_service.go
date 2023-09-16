@@ -14,6 +14,7 @@ import (
 
 type LogEntryService interface {
 	GetById(ctx context.Context, logEntryId string) (*entity.LogEntryEntity, error)
+	mapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity
 }
 
 type logEntryService struct {

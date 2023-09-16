@@ -11,7 +11,7 @@ type LogEntry {
     updatedAt: Time!
     startedAt: Time!
     createdBy: User @goField(forceResolver: true)
-    tags: [Tag!]!
+    tags: [Tag!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!

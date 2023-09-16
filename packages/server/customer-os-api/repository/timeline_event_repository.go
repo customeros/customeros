@@ -14,6 +14,13 @@ import (
 	"time"
 )
 
+var (
+	relationshipsWithOrganization           = []string{"LOGGED", "NOTED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
+	relationshipsWithOrganizationProperties = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
+	relationshipsWithContact                = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "NOTED", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
+	relationshipsWithContactProperties      = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
+)
+
 type TimelineEventRepository interface {
 	GetTimelineEventsForContact(ctx context.Context, tenant, contactId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error)
 	GetTimelineEventsForOrganization(ctx context.Context, tenant, organizationId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error)
@@ -163,10 +170,14 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 	defer session.Close(ctx)
 
 	params := map[string]any{
-		"tenant":         tenant,
-		"organizationId": organizationId,
-		"startingDate":   startingDate,
-		"size":           size,
+		"tenant":                        tenant,
+		"organizationId":                organizationId,
+		"startingDate":                  startingDate,
+		"size":                          size,
+		"relationshipsWithOrganization": relationshipsWithOrganization,
+		"relationshipsWithOrganizationProperties": relationshipsWithOrganizationProperties,
+		"relationshipsWithContact":                relationshipsWithContact,
+		"relationshipsWithContactProperties":      relationshipsWithContactProperties,
 	}
 	filterByTypeCypherFragment := ""
 	if len(labels) > 0 {
@@ -178,7 +189,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		// get all timeline events for the organization contacts
 		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
@@ -187,7 +198,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		// get all timeline events directly for the organization
 		" WITH o MATCH (o), "+
 		" p = (o)-[*1]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY','ACTION_ON'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganization)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
@@ -197,7 +208,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
@@ -207,7 +218,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" WITH o MATCH (o)-[:HAS|ROLE_IN]-(e), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e) OR 'JobRole' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationProperties)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
@@ -247,8 +258,12 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 	defer session.Close(ctx)
 
 	params := map[string]any{
-		"tenant":         tenant,
-		"organizationId": organizationId,
+		"tenant":                        tenant,
+		"organizationId":                organizationId,
+		"relationshipsWithOrganization": relationshipsWithOrganization,
+		"relationshipsWithOrganizationProperties": relationshipsWithOrganizationProperties,
+		"relationshipsWithContact":                relationshipsWithContact,
+		"relationshipsWithContactProperties":      relationshipsWithContactProperties,
 	}
 	filterByTypeCypherFragment := ""
 	if len(labels) > 0 {
@@ -257,10 +272,10 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 	}
 	query := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
 		" CALL { "+
-		// get all timeline events for the organization' contatcs
+		// get all timeline events for the organization' contacts
 		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -268,7 +283,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		// get all timeline events directly for the organization
 		" WITH o MATCH (o), "+
 		" p = (o)-[*1]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY', 'ACTION_ON'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganization)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -277,7 +292,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -286,7 +301,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" WITH o MATCH (o)-[:HAS|ROLE_IN]-(e), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e) OR 'JobRole' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationProperties)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -345,17 +360,17 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 	params := map[string]any{
 		"tenant":                             tenant,
 		"organizationId":                     organizationId,
-		"nodeLabels":                         []string{entity.NodeLabel_InteractionSession, entity.NodeLabel_Issue, entity.NodeLabel_InteractionEvent, entity.NodeLabel_Meeting},
+		"nodeLabels":                         []string{entity.NodeLabel_InteractionSession, entity.NodeLabel_Issue, entity.NodeLabel_InteractionEvent, entity.NodeLabel_Meeting, entity.NodeLabel_LogEntry},
 		"excludeInteractionEventContentType": []string{"x-openline-transcript-element"},
 		"contactRelationTypes":               []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
-		"organizationRelationTypes":          []string{"REPORTED_BY", "SENT_TO", "SENT_BY"},
+		"organizationRelationTypes":          []string{"LOGGED", "REPORTED_BY", "SENT_TO", "SENT_BY"},
 		"emailAndPhoneRelationTypes":         []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
 		"now":                                utils.Now(),
 	}
 
 	query := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
 		CALL { ` +
-		// get all timeline events for the organization contatcs
+		// get all timeline events for the organization contacts
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
 		p = (c)-[*1..2]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $contactRelationTypes)
