@@ -63,6 +63,9 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
                 startedAt
                 content
                 contentType
+                createdBy {
+                    id
+                }
             }
           }
   }

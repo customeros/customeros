@@ -66,6 +66,18 @@ func (i *Loaders) GetUser(ctx context.Context, userId string) (*entity.UserEntit
 	return result.(*entity.UserEntity), nil
 }
 
+func (i *Loaders) GetUserAuthorForLogEntry(ctx context.Context, logEntryId string) (*entity.UserEntity, error) {
+	thunk := i.UserAuthorForLogEntry.Load(ctx, dataloader.StringKey(logEntryId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.UserEntity), nil
+}
+
 func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUsersForEmails", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
@@ -286,7 +298,7 @@ func (b *userBatcher) getUsers(ctx context.Context, keys dataloader.Keys) []*dat
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for organizations")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
@@ -303,6 +315,55 @@ func (b *userBatcher) getUsers(ctx context.Context, keys dataloader.Keys) []*dat
 			val := userEntityById[id]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}
 			delete(keyOrder, id)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
+
+	return results
+}
+
+func (b *userBatcher) getUserAuthorsForLogEntries(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserAuthorsForLogEntries", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	userEntities, err := b.userService.GetUserAuthorsForLogEntries(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for log entries")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	userEntityByLogEntryId := make(map[string]entity.UserEntity)
+	for _, val := range *userEntities {
+		userEntityByLogEntryId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for logEntryId, _ := range userEntityByLogEntryId {
+		if ix, ok := keyOrder[logEntryId]; ok {
+			val := userEntityByLogEntryId[logEntryId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, logEntryId)
 		}
 	}
 	for _, ix := range keyOrder {
