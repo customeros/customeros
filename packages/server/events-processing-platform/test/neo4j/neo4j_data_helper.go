@@ -108,6 +108,32 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 	return userId
 }
 
+func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
+	logEntryId := logEntry.Id
+	if logEntryId == "" {
+		logEntryId = uuid.New().String()
+	}
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$orgId})
+			  MERGE (o)-[:LOGGED]->(l:LogEntry {id:$id})
+				SET l:LogEntry_%s,
+					l:TimelineEvent,
+					l:TimelineEvent_%s,
+					l.content=$content,
+					l.contentType=$contentType,
+					l.startedAt=$startedAt
+				`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":      tenant,
+		"orgId":       orgId,
+		"id":          logEntryId,
+		"content":     logEntry.Content,
+		"contentType": logEntry.ContentType,
+		"startedAt":   logEntry.StartedAt,
+	})
+	return logEntryId
+}
+
 func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
 	query := `MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`

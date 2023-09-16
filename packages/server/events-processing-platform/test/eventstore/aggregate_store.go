@@ -33,6 +33,12 @@ func (as *testAggregateStore) Save(ctx context.Context, aggregate eventstore.Agg
 	for _, event := range aggregate.GetUncommittedEvents() {
 		as.aggregateMap[aggregate.GetID()] = append(as.aggregateMap[aggregate.GetID()], event)
 	}
+	version := 0
+	for i := 0; i < len(as.aggregateMap[aggregate.GetID()]); i++ {
+		as.aggregateMap[aggregate.GetID()][i].Version = int64(version)
+		version++
+	}
+
 	return nil
 }
 

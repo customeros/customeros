@@ -1,13 +1,13 @@
 package entity
 
 import (
-	"fmt"
 	"time"
 )
 
 type NoteEntity struct {
 	Id            string
-	Html          string
+	Content       string
+	ContentType   string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Source        DataSource
@@ -15,10 +15,6 @@ type NoteEntity struct {
 	AppSource     string
 
 	DataloaderKey string
-}
-
-func (note NoteEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nhtml: %s", note.Id, note.Html)
 }
 
 type NoteEntities []NoteEntity

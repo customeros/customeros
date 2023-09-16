@@ -1,0 +1,87 @@
+package events
+
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"time"
+)
+
+const (
+	LogEntryCreateV1 = "V1_LOG_ENTRY_CREATE"
+	LogEntryUpdateV1 = "V1_LOG_ENTRY_UPDATE"
+)
+
+type LogEntryCreateEvent struct {
+	Tenant               string    `json:"tenant" validate:"required"`
+	Content              string    `json:"content"`
+	ContentType          string    `json:"contentType"`
+	StartedAt            time.Time `json:"startedAt" validate:"required"`
+	AuthorUserId         string    `json:"authorUserId"`
+	LoggedOrganizationId string    `json:"loggedOrganizationId"`
+	Source               string    `json:"source"`
+	SourceOfTruth        string    `json:"sourceOfTruth"`
+	AppSource            string    `json:"appSource"`
+	CreatedAt            time.Time `json:"createdAt"`
+	UpdatedAt            time.Time `json:"updatedAt"`
+}
+
+func NewLogEntryCreateEvent(aggregate eventstore.Aggregate, dataFields models.LogEntryDataFields, source commonModels.Source, createdAt, updatedAt, startedAt time.Time) (eventstore.Event, error) {
+	eventData := LogEntryCreateEvent{
+		Tenant:               aggregate.GetTenant(),
+		Content:              dataFields.Content,
+		ContentType:          dataFields.ContentType,
+		AuthorUserId:         utils.IfNotNilString(dataFields.AuthorUserId),
+		LoggedOrganizationId: utils.IfNotNilString(dataFields.LoggedOrganizationId),
+		Source:               source.Source,
+		SourceOfTruth:        source.SourceOfTruth,
+		AppSource:            source.AppSource,
+		CreatedAt:            createdAt,
+		UpdatedAt:            updatedAt,
+		StartedAt:            startedAt,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, LogEntryCreateV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type LogEntryUpdateEvent struct {
+	Tenant        string    `json:"tenant" validate:"required"`
+	Content       string    `json:"content"`
+	ContentType   string    `json:"contentType"`
+	StartedAt     time.Time `json:"startedAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	SourceOfTruth string    `json:"sourceOfTruth"`
+}
+
+func NewLogEntryUpdateEvent(aggregate eventstore.Aggregate, content, contentType, sourceOfTruth string, updatedAt, startedAt time.Time) (eventstore.Event, error) {
+	eventData := LogEntryUpdateEvent{
+		Tenant:      aggregate.GetTenant(),
+		Content:     content,
+		ContentType: contentType,
+		UpdatedAt:   updatedAt,
+		StartedAt:   startedAt,
+	}
+	if sourceOfTruth != "" {
+		eventData.SourceOfTruth = sourceOfTruth
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, LogEntryUpdateV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}

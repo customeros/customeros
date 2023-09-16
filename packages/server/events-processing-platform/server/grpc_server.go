@@ -6,6 +6,7 @@ import (
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
+	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
@@ -15,6 +16,7 @@ import (
 	interaction_event_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/service"
 	job_role_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/service"
 	location_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/service"
+	log_entry_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/service"
 	organization_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/service"
 	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
 	user_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/service"
@@ -93,4 +95,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	interactionEventService := interaction_event_service.NewInteractionEventService(server.log, server.repositories, server.commands.InteractionEventCommands)
 	interaction_event_grpc_service.RegisterInteractionEventGrpcServiceServer(grpcServer, interactionEventService)
+
+	logEntryService := log_entry_service.NewLogEntryService(server.log, server.repositories, server.commands.LogEntryCommands)
+	log_entry_grpc_service.RegisterLogEntryGrpcServiceServer(grpcServer, logEntryService)
 }

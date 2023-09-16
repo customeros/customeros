@@ -72,7 +72,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	var organizationEntity *entity.OrganizationEntity
 	for i := 0; i < maxRetry; i++ {
 		time.Sleep(200 * time.Millisecond)
-		organizationEntity, err = r.Services.OrganizationService.GetOrganizationById(ctx, response.Id)
+		organizationEntity, err = r.Services.OrganizationService.GetById(ctx, response.Id)
 		if organizationEntity != nil && err == nil {
 			return mapper.MapEntityToOrganization(organizationEntity), nil
 		}
@@ -119,7 +119,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	}
 	time.Sleep(100 * time.Millisecond)
 
-	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, response.Id)
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, response.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch organization details")
@@ -450,7 +450,7 @@ func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganiz
 		}
 	}
 
-	organizationEntityPtr, err := r.Services.OrganizationService.GetOrganizationById(ctx, primaryOrganizationID)
+	organizationEntityPtr, err := r.Services.OrganizationService.GetById(ctx, primaryOrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organization by id %s", primaryOrganizationID)
@@ -472,7 +472,7 @@ func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input 
 		graphql.AddErrorf(ctx, "Failed to add subsidiary %s to organization %s", input.SubOrganizationID, input.OrganizationID)
 		return nil, err
 	}
-	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, input.OrganizationID)
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch organization %s", input.OrganizationID)
@@ -494,7 +494,7 @@ func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, org
 		graphql.AddErrorf(ctx, "Failed to remove subsidiary %s from organization %s", subsidiaryID, organizationID)
 		return nil, err
 	}
-	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, organizationID)
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch organization %s", organizationID)
@@ -1033,7 +1033,7 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 		return nil, nil
 	}
 
-	organizationEntityPtr, err := r.Services.OrganizationService.GetOrganizationById(ctx, id)
+	organizationEntityPtr, err := r.Services.OrganizationService.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organization by id %s", id)

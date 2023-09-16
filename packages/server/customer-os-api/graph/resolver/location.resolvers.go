@@ -50,7 +50,7 @@ func (r *mutationResolver) LocationRemoveFromOrganization(ctx context.Context, o
 		graphql.AddErrorf(ctx, "Could not detach location %s from organization %s", locationID, organizationID)
 		return nil, nil
 	}
-	organizationEntity, err := r.Services.OrganizationService.GetOrganizationById(ctx, organizationID)
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not get organization %s", organizationID)

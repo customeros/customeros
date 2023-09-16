@@ -538,7 +538,7 @@ type ComplexityRoot struct {
 		LocationRemoveFromContact                func(childComplexity int, contactID string, locationID string) int
 		LocationRemoveFromOrganization           func(childComplexity int, organizationID string, locationID string) int
 		LocationUpdate                           func(childComplexity int, input model.LocationUpdateInput) int
-		LogEntryCreateForOrganization            func(childComplexity int, organizationID string, input model.NoteInput) int
+		LogEntryCreateForOrganization            func(childComplexity int, organizationID string, input model.LogEntryInput) int
 		LogEntryUpdate                           func(childComplexity int, id string, input model.LogEntryUpdateInput) int
 		MeetingAddNewLocation                    func(childComplexity int, meetingID string) int
 		MeetingAddNote                           func(childComplexity int, meetingID string, note *model.NoteInput) int
@@ -1040,7 +1040,7 @@ type MutationResolver interface {
 	LocationRemoveFromContact(ctx context.Context, contactID string, locationID string) (*model.Contact, error)
 	LocationRemoveFromOrganization(ctx context.Context, organizationID string, locationID string) (*model.Organization, error)
 	LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error)
-	LogEntryCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (string, error)
+	LogEntryCreateForOrganization(ctx context.Context, organizationID string, input model.LogEntryInput) (string, error)
 	LogEntryUpdate(ctx context.Context, id string, input model.LogEntryUpdateInput) (string, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
@@ -4028,7 +4028,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.LogEntryCreateForOrganization(childComplexity, args["organizationId"].(string), args["input"].(model.NoteInput)), true
+		return e.complexity.Mutation.LogEntryCreateForOrganization(childComplexity, args["organizationId"].(string), args["input"].(model.LogEntryInput)), true
 
 	case "Mutation.logEntry_Update":
 		if e.complexity.Mutation.LogEntryUpdate == nil {
@@ -8041,7 +8041,7 @@ input LocationUpdateInput {
     utcOffset: Int64
 }`, BuiltIn: false},
 	{Name: "../schemas/log_entry.graphqls", Input: `extend type Mutation {
-    logEntry_CreateForOrganization(organizationId : ID!, input: NoteInput!): ID!
+    logEntry_CreateForOrganization(organizationId : ID!, input: LogEntryInput!): ID!
     logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID!
 }
 
@@ -10331,10 +10331,10 @@ func (ec *executionContext) field_Mutation_logEntry_CreateForOrganization_args(c
 		}
 	}
 	args["organizationId"] = arg0
-	var arg1 model.NoteInput
+	var arg1 model.LogEntryInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNNoteInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx, tmp)
+		arg1, err = ec.unmarshalNLogEntryInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogEntryInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -32290,7 +32290,7 @@ func (ec *executionContext) _Mutation_logEntry_CreateForOrganization(ctx context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().LogEntryCreateForOrganization(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(model.NoteInput))
+		return ec.resolvers.Mutation().LogEntryCreateForOrganization(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(model.LogEntryInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -69362,6 +69362,11 @@ func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 
 func (ec *executionContext) unmarshalNLocationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocationUpdateInput(ctx context.Context, v interface{}) (model.LocationUpdateInput, error) {
 	res, err := ec.unmarshalInputLocationUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNLogEntryInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogEntryInput(ctx context.Context, v interface{}) (model.LogEntryInput, error) {
+	res, err := ec.unmarshalInputLogEntryInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

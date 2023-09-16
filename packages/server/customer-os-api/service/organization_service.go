@@ -21,7 +21,7 @@ import (
 
 type OrganizationService interface {
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
-	GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
+	GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Archive(ctx context.Context, organizationId string) error
@@ -169,7 +169,12 @@ func (s *organizationService) GetOrganizationsForJobRoles(ctx context.Context, j
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
+func (s *organizationService) GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
+
 	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationId)
 	if err != nil {
 		return nil, err
@@ -197,12 +202,12 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("primaryOrganizationId", primaryOrganizationId), log.String("mergedOrganizationId", mergedOrganizationId))
 
-	_, err := s.GetOrganizationById(ctx, primaryOrganizationId)
+	_, err := s.GetById(ctx, primaryOrganizationId)
 	if err != nil {
 		s.log.Errorf("(organizationService.Merge) Primary organization with id {%s} not found: {%v}", primaryOrganizationId, err.Error())
 		return err
 	}
-	_, err = s.GetOrganizationById(ctx, mergedOrganizationId)
+	_, err = s.GetById(ctx, mergedOrganizationId)
 	if err != nil {
 		s.log.Errorf("(organizationService.Merge) Organization to merge with id {%s} not found: {%v}", mergedOrganizationId, err.Error())
 		return err

@@ -8,6 +8,7 @@ import (
 	interactionEventCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
 	jobRoleCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
+	logentrcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
 	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	phoneNumberCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	userCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
@@ -26,5 +27,6 @@ func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore events
 		EmailCommands:            emailCommands.NewEmailCommands(log, cfg, aggregateStore),
 		UserCommands:             userCommands.NewUserCommands(log, cfg, aggregateStore),
 		JobRoleCommands:          jobRoleCommands.NewJobRoleCommands(log, cfg, aggregateStore),
+		LogEntryCommands:         logentrcmdhnd.NewLogEntryCommands(log, cfg, aggregateStore),
 	}
 }

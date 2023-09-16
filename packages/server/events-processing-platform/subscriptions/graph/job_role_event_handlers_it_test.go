@@ -46,5 +46,4 @@ func TestGraphJobRoleEventHandler_OnJobRoleCreate(t *testing.T) {
 	require.Equal(t, "Chief Janitor", utils.GetStringPropOrEmpty(props, "jobTitle"))
 	require.Equal(t, description, utils.GetStringPropOrEmpty(props, "description"))
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
-
 }
