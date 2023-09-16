@@ -1021,6 +1021,32 @@ func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithCont
 	return noteId.String()
 }
 
+func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
+	logEntryId := logEntry.Id
+	if logEntryId == "" {
+		logEntryId = uuid.New().String()
+	}
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$orgId})
+			  MERGE (o)-[:LOGGED]->(l:LogEntry {id:$id})
+				ON CREATE SET l:LogEntry_%s,
+					l:TimelineEvent,
+					l:TimelineEvent_%s,
+					l.content=$content,
+					l.contentType=$contentType,
+					l.startedAt=$startedAt
+				`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":      tenant,
+		"orgId":       orgId,
+		"id":          logEntryId,
+		"content":     logEntry.Content,
+		"contentType": logEntry.ContentType,
+		"startedAt":   logEntry.StartedAt,
+	})
+	return logEntryId
+}
+
 func LinkNoteWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, noteId, organizationId string) {
 	query := `MATCH (n:Note {id:$noteId}),
 			(org:Organization {id:$organizationId})

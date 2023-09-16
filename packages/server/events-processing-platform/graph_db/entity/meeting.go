@@ -30,13 +30,6 @@ func (meeting MeetingEntity) ToString() string {
 
 type MeetingEntities []MeetingEntity
 
-func (MeetingEntity) IsTimelineEvent() {
-}
-
-func (MeetingEntity) TimelineEventLabel() string {
-	return NodeLabel_Meeting
-}
-
 func (MeetingEntity) IsAnalysisDescribe() {
 }
 

@@ -976,6 +976,7 @@ type JobRoleResolver interface {
 }
 type LogEntryResolver interface {
 	CreatedBy(ctx context.Context, obj *model.LogEntry) (*model.User, error)
+	Tags(ctx context.Context, obj *model.LogEntry) ([]*model.Tag, error)
 }
 type MeetingResolver interface {
 	AttendedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
@@ -8053,7 +8054,7 @@ type LogEntry {
     updatedAt: Time!
     startedAt: Time!
     createdBy: User @goField(forceResolver: true)
-    tags: [Tag!]!
+    tags: [Tag!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -8859,7 +8860,7 @@ type TenantBillableInfo {
     greylistedOrganizations: Int64!
     greylistedContacts: Int64!
 }`, BuiltIn: false},
-	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Analysis | Issue | Meeting | Action
+	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Analysis | Issue | Meeting | Action | LogEntry
 
 extend type Query {
     timelineEvents(ids: [ID!]!): [TimelineEvent!]!
@@ -8874,6 +8875,7 @@ enum TimelineEventType {
     ISSUE
     MEETING
     ACTION
+    LOG_ENTRY
 }`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
@@ -26115,7 +26117,7 @@ func (ec *executionContext) _LogEntry_tags(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Tags, nil
+		return ec.resolvers.LogEntry().Tags(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -26136,8 +26138,8 @@ func (ec *executionContext) fieldContext_LogEntry_tags(ctx context.Context, fiel
 	fc = &graphql.FieldContext{
 		Object:     "LogEntry",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -58781,6 +58783,13 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 			return graphql.Null
 		}
 		return ec._Action(ctx, sel, obj)
+	case model.LogEntry:
+		return ec._LogEntry(ctx, sel, &obj)
+	case *model.LogEntry:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._LogEntry(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -62385,7 +62394,7 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var logEntryImplementors = []string{"LogEntry"}
+var logEntryImplementors = []string{"LogEntry", "TimelineEvent"}
 
 func (ec *executionContext) _LogEntry(ctx context.Context, sel ast.SelectionSet, obj *model.LogEntry) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, logEntryImplementors)
@@ -62454,10 +62463,41 @@ func (ec *executionContext) _LogEntry(ctx context.Context, sel ast.SelectionSet,
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "tags":
-			out.Values[i] = ec._LogEntry_tags(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LogEntry_tags(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "source":
 			out.Values[i] = ec._LogEntry_source(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

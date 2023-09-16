@@ -28,13 +28,6 @@ func (interactionEventEntity InteractionEventEntity) ToString() string {
 
 type InteractionEventEntities []InteractionEventEntity
 
-func (InteractionEventEntity) IsTimelineEvent() {
-}
-
-func (InteractionEventEntity) TimelineEventLabel() string {
-	return NodeLabel_InteractionEvent
-}
-
 func (InteractionEventEntity) IsAnalysisDescribe() {
 }
 

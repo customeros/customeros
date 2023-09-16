@@ -25,19 +25,12 @@ func (analysisEntity AnalysisEntity) ToString() string {
 
 type AnalysisEntities []AnalysisEntity
 
-func (AnalysisEntity) IsTimelineEvent() {
-}
-
 func (analysis *AnalysisEntity) SetDataloaderKey(key string) {
 	analysis.DataloaderKey = key
 }
 
 func (analysis AnalysisEntity) GetDataloaderKey() string {
 	return analysis.DataloaderKey
-}
-
-func (AnalysisEntity) TimelineEventLabel() string {
-	return NodeLabel_Analysis
 }
 
 func (AnalysisEntity) Labels(tenant string) []string {

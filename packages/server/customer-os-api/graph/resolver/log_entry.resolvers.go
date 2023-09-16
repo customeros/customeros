@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -22,7 +23,14 @@ import (
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *logEntryResolver) CreatedBy(ctx context.Context, obj *model.LogEntry) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
+	graphql.AddErrorf(ctx, "Not implemented: LogEntry.CreatedBy")
+	return nil, nil
+}
+
+// Tags is the resolver for the tags field.
+func (r *logEntryResolver) Tags(ctx context.Context, obj *model.LogEntry) ([]*model.Tag, error) {
+	graphql.AddErrorf(ctx, "Not implemented: LogEntry.Tags")
+	return nil, nil
 }
 
 // LogEntryCreateForOrganization is the resolver for the logEntry_CreateForOrganization field.

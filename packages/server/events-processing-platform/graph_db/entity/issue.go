@@ -20,13 +20,6 @@ type IssueEntity struct {
 
 type IssueEntities []IssueEntity
 
-func (*IssueEntity) IsTimelineEvent() {
-}
-
-func (*IssueEntity) TimelineEventLabel() string {
-	return NodeLabel_Issue
-}
-
 func (issue *IssueEntity) SetDataloaderKey(key string) {
 	issue.DataloaderKey = key
 }

@@ -162,6 +162,8 @@ func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node)
 		return s.services.MeetingService.mapDbNodeToMeetingEntity(*dbNode)
 	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Action) {
 		return s.services.ActionService.mapDbNodeToActionEntity(*dbNode)
+	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_LogEntry) {
+		return s.services.LogEntryService.mapDbNodeToLogEntryEntity(dbNode)
 	}
 	return nil
 }
