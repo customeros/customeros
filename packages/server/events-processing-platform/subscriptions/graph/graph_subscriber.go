@@ -9,6 +9,7 @@ import (
 	interactionevtevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
+	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -38,6 +39,7 @@ type GraphSubscriber struct {
 	locationEventHandler     *GraphLocationEventHandler
 	jobRoleEventHandler      *GraphJobRoleEventHandler
 	interactionEventHandler  *GraphInteractionEventHandler
+	logEntryEventHandler     *GraphLogEntryEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commands *domain.Commands, cfg *config.Config) *GraphSubscriber {
@@ -54,6 +56,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
 		interactionEventHandler:  &GraphInteractionEventHandler{Repositories: repositories, Log: log},
+		logEntryEventHandler:     &GraphLogEntryEventHandler{Repositories: repositories, Log: log},
 	}
 }
 
@@ -231,6 +234,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.interactionEventHandler.OnSummaryReplace(ctx, evt)
 	case interactionevtevents.InteractionEventReplaceActionItemsV1:
 		return s.interactionEventHandler.OnActionItemsReplace(ctx, evt)
+
+	case logentryevents.LogEntryCreateV1:
+		return s.logEntryEventHandler.OnCreate(ctx, evt)
+	case logentryevents.LogEntryUpdateV1:
+		return s.logEntryEventHandler.OnUpdate(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType

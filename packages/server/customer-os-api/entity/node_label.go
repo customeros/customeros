@@ -8,6 +8,7 @@ const (
 	NodeLabel_InteractionEvent   = "InteractionEvent"
 	NodeLabel_InteractionSession = "InteractionSession"
 	NodeLabel_Note               = "Note"
+	NodeLabel_LogEntry           = "LogEntry"
 	NodeLabel_Organization       = "Organization"
 	NodeLabel_Action             = "Action"
 	NodeLabel_PageView           = "PageView"

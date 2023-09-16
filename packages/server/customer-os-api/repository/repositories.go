@@ -40,6 +40,7 @@ type Repositories struct {
 	ActionRepository                   ActionRepository
 	CountryRepository                  CountryRepository
 	ActionItemRepository               ActionItemRepository
+	LogEntryRepository                 LogEntryRepository
 }
 
 type Drivers struct {
@@ -86,5 +87,6 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.ActionRepository = NewActionRepository(driver)
 	repositories.CountryRepository = NewCountryRepository(driver)
 	repositories.ActionItemRepository = NewActionItemRepository(driver)
+	repositories.LogEntryRepository = NewLogEntryRepository(driver)
 	return &repositories
 }

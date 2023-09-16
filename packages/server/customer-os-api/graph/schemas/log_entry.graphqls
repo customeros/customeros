@@ -1,5 +1,5 @@
 extend type Mutation {
-    logEntry_CreateForOrganization(organizationId : ID!, input: NoteInput!): ID!
+    logEntry_CreateForOrganization(organizationId : ID!, input: LogEntryInput!): ID!
     logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID!
 }
 

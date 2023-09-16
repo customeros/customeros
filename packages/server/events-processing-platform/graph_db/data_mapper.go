@@ -89,3 +89,19 @@ func MapDbNodeToActionEntity(node dbtype.Node) *entity.ActionEntity {
 	}
 	return &action
 }
+
+func MapDbNodeToLogEntryEntity(node dbtype.Node) *entity.LogEntryEntity {
+	props := utils.GetPropsFromNode(node)
+	logEntry := entity.LogEntryEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &logEntry
+}
