@@ -1047,6 +1047,18 @@ func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWith
 	return logEntryId
 }
 
+func LogEntryCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext, logEntryId, userId string) {
+	query := `MATCH (l:LogEntry {id:$logEntryId}),
+					(u:User {id:$userId})
+			  MERGE (l)-[:CREATED_BY]->(u)
+				`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"logEntryId": logEntryId,
+		"userId":     userId,
+	})
+}
+
 func LinkNoteWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, noteId, organizationId string) {
 	query := `MATCH (n:Note {id:$noteId}),
 			(org:Organization {id:$organizationId})

@@ -7,6 +7,8 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -23,8 +25,15 @@ import (
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *logEntryResolver) CreatedBy(ctx context.Context, obj *model.LogEntry) (*model.User, error) {
-	graphql.AddErrorf(ctx, "Not implemented: LogEntry.CreatedBy")
-	return nil, nil
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserAuthorForLogEntry(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Error fetching user author for log entry %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching user author for log entry %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
 }
 
 // Tags is the resolver for the tags field.

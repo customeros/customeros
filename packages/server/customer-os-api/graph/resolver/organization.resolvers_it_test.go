@@ -473,6 +473,8 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 		Content:     "log entry content",
 		ContentType: "text/plain",
 	})
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	neo4jt.LogEntryCreatedByUser(ctx, driver, logEntryId, userId)
 
 	// prepare issue with tags
 	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
@@ -499,6 +501,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "LogEntry"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 13, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_direct_and_via_contacts"),
@@ -593,6 +596,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.NotNil(t, timelineEvent11["startedAt"].(string))
 	require.Equal(t, "log entry content", timelineEvent11["content"].(string))
 	require.Equal(t, "text/plain", timelineEvent11["contentType"].(string))
+	require.Equal(t, userId, timelineEvent11["createdBy"].(map[string]interface{})["id"].(string))
 }
 
 func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
