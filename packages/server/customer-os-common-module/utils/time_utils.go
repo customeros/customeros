@@ -13,6 +13,10 @@ func Now() time.Time {
 	return time.Now().UTC()
 }
 
+func NowAsPtr() *time.Time {
+	return TimePtr(time.Now().UTC())
+}
+
 func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {
 	if input == nil {
 		return nil

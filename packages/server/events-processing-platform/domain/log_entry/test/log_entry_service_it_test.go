@@ -151,6 +151,119 @@ func TestLogEntryService_UpsertLogEntry_UpdateLogEntry(t *testing.T) {
 	require.Equal(t, "text/plain", eventData.ContentType)
 }
 
+func TestLogEntryService_AddTag(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := teventstore.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+
+	logEntryClient := log_entry_grpc_service.NewLogEntryGrpcServiceClient(grpcConnection)
+
+	logEntryId := uuid.New().String()
+	tagId := uuid.New().String()
+	tenant := "ziggy"
+
+	// prepare aggregate
+	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenant, logEntryId)
+	event := eventstore.NewBaseEvent(logEntryAggregate, events.LogEntryCreateV1)
+	preconfiguredEventData := events.LogEntryCreateEvent{
+		StartedAt:     utils.Now(),
+		SourceOfTruth: "openline",
+	}
+	err = event.SetJsonData(&preconfiguredEventData)
+	require.Nil(t, err)
+	logEntryAggregate.UncommittedEvents = []eventstore.Event{
+		event,
+	}
+	err = aggregateStore.Save(ctx, logEntryAggregate)
+	require.Nil(t, err)
+
+	response, err := logEntryClient.AddTag(ctx, &log_entry_grpc_service.AddTagGrpcRequest{
+		Tenant: tenant,
+		Id:     logEntryId,
+		TagId:  tagId,
+	})
+	require.Nil(t, err, "Failed to add tag")
+
+	require.NotNil(t, response)
+	require.Equal(t, logEntryId, response.Id)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[aggregate.NewLogEntryAggregateWithTenantAndID(tenant, response.Id).ID]
+	require.Equal(t, 2, len(eventList))
+
+	require.Equal(t, events.LogEntryCreateV1, eventList[0].GetEventType())
+	require.Equal(t, events.LogEntryAddTagV1, eventList[1].GetEventType())
+	require.Equal(t, string(aggregate.LogEntryAggregateType)+"-"+tenant+"-"+logEntryId, eventList[1].GetAggregateID())
+
+	var eventData events.LogEntryAddTagEvent
+	err = eventList[1].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, tagId, eventData.TagId)
+	test.AssertRecentTime(t, eventData.TaggedAt)
+}
+
+func TestLogEntryService_RemoveTag(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := teventstore.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+
+	logEntryClient := log_entry_grpc_service.NewLogEntryGrpcServiceClient(grpcConnection)
+
+	logEntryId := uuid.New().String()
+	tagId := uuid.New().String()
+	tenant := "ziggy"
+
+	// prepare aggregate
+	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenant, logEntryId)
+	event := eventstore.NewBaseEvent(logEntryAggregate, events.LogEntryCreateV1)
+	preconfiguredEventData := events.LogEntryCreateEvent{
+		StartedAt:     utils.Now(),
+		SourceOfTruth: "openline",
+	}
+	err = event.SetJsonData(&preconfiguredEventData)
+	require.Nil(t, err)
+	logEntryAggregate.UncommittedEvents = []eventstore.Event{
+		event,
+	}
+	err = aggregateStore.Save(ctx, logEntryAggregate)
+	require.Nil(t, err)
+
+	response, err := logEntryClient.RemoveTag(ctx, &log_entry_grpc_service.RemoveTagGrpcRequest{
+		Tenant: tenant,
+		Id:     logEntryId,
+		TagId:  tagId,
+	})
+	require.Nil(t, err, "Failed to remove tag")
+
+	require.NotNil(t, response)
+	require.Equal(t, logEntryId, response.Id)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[aggregate.NewLogEntryAggregateWithTenantAndID(tenant, response.Id).ID]
+	require.Equal(t, 2, len(eventList))
+
+	require.Equal(t, events.LogEntryCreateV1, eventList[0].GetEventType())
+	require.Equal(t, events.LogEntryRemoveTagV1, eventList[1].GetEventType())
+	require.Equal(t, string(aggregate.LogEntryAggregateType)+"-"+tenant+"-"+logEntryId, eventList[1].GetAggregateID())
+
+	var eventData events.LogEntryRemoveTagEvent
+	err = eventList[1].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, tagId, eventData.TagId)
+}
+
 func tearDownTestCase(ctx context.Context, database *test.TestDatabase) func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())

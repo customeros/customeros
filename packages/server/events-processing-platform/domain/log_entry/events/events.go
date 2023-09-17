@@ -10,8 +10,10 @@ import (
 )
 
 const (
-	LogEntryCreateV1 = "V1_LOG_ENTRY_CREATE"
-	LogEntryUpdateV1 = "V1_LOG_ENTRY_UPDATE"
+	LogEntryCreateV1    = "V1_LOG_ENTRY_CREATE"
+	LogEntryUpdateV1    = "V1_LOG_ENTRY_UPDATE"
+	LogEntryAddTagV1    = "V1_LOG_ENTRY_ADD_TAG"
+	LogEntryRemoveTagV1 = "V1_LOG_ENTRY_REMOVE_TAG"
 )
 
 type LogEntryCreateEvent struct {
@@ -80,6 +82,52 @@ func NewLogEntryUpdateEvent(aggregate eventstore.Aggregate, content, contentType
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LogEntryUpdateV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type LogEntryAddTagEvent struct {
+	Tenant   string    `json:"tenant" validate:"required"`
+	TagId    string    `json:"tagId" validate:"required"`
+	TaggedAt time.Time `json:"taggedAt" validate:"required"`
+}
+
+func NewLogEntryAddTagEvent(aggregate eventstore.Aggregate, tagId string, taggedAt time.Time) (eventstore.Event, error) {
+	eventData := LogEntryAddTagEvent{
+		Tenant:   aggregate.GetTenant(),
+		TagId:    tagId,
+		TaggedAt: taggedAt,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, LogEntryAddTagV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type LogEntryRemoveTagEvent struct {
+	Tenant string `json:"tenant" validate:"required"`
+	TagId  string `json:"tagId" validate:"required"`
+}
+
+func NewLogEntryRemoveTagEvent(aggregate eventstore.Aggregate, tagId string) (eventstore.Event, error) {
+	eventData := LogEntryRemoveTagEvent{
+		Tenant: aggregate.GetTenant(),
+		TagId:  tagId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, LogEntryRemoveTagV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

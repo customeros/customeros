@@ -121,3 +121,80 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, now, logEntry.UpdatedAt)
 	require.Equal(t, now, logEntry.StartedAt)
 }
+
+func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, orgId, entity.LogEntryEntity{})
+	tagId := neo4jt.CreateTag(ctx, testDatabase.Driver, tenantName, entity.TagEntity{})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1, "Tag": 1})
+
+	// prepare event handler
+	logEntryEventHandler := &GraphLogEntryEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	now := utils.Now()
+	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
+	event, err := events.NewLogEntryAddTagEvent(logEntryAggregate, tagId, now)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = logEntryEventHandler.OnAddTag(context.Background(), event)
+	require.Nil(t, err, "failed to execute event handler")
+
+	// CHECK
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization": 1, "Organization_" + tenantName: 1,
+		"LogEntry": 1, "LogEntry_" + tenantName: 1,
+		"Tag": 1, "Tag_" + tenantName: 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"TAGGED": 1,
+	})
+	relationship, err := neo4jt.GetRelationship(ctx, testDatabase.Driver, logEntryId, tagId)
+	require.Nil(t, err)
+	require.NotNil(t, relationship)
+	require.Equal(t, "TAGGED", relationship.Type)
+	require.Equal(t, now, relationship.Props["taggedAt"])
+}
+
+func TestGraphLogEntryEventHandler_OnRemoveTag(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, testDatabase.Driver, tenantName, orgId, entity.LogEntryEntity{})
+	tagId := neo4jt.CreateTag(ctx, testDatabase.Driver, tenantName, entity.TagEntity{})
+	neo4jt.LinkTag(ctx, testDatabase.Driver, tagId, logEntryId)
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization": 1, "LogEntry": 1, "TimelineEvent": 1, "Tag": 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"TAGGED": 1,
+	})
+
+	// prepare event handler
+	logEntryEventHandler := &GraphLogEntryEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
+	event, err := events.NewLogEntryRemoveTagEvent(logEntryAggregate, tagId)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = logEntryEventHandler.OnRemoveTag(context.Background(), event)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization": 1, "Organization_" + tenantName: 1,
+		"LogEntry": 1, "LogEntry_" + tenantName: 1,
+		"Tag": 1, "Tag_" + tenantName: 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"TAGGED": 0,
+	})
+}

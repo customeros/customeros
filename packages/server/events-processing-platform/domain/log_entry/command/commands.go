@@ -28,3 +28,29 @@ func NewUpsertLogEntryCommand(logEntryId, tenant, source, sourceOfTruth, appSour
 		UpdatedAt: updatedAt,
 	}
 }
+
+type AddTagCommand struct {
+	eventstore.BaseCommand
+	TagId    string `json:"tagId" validate:"required"`
+	TaggedAt *time.Time
+}
+
+func NewAddTagCommand(logEntryId, tenant, userId, tagId string, taggedAt *time.Time) *AddTagCommand {
+	return &AddTagCommand{
+		BaseCommand: eventstore.NewBaseCommand(logEntryId, tenant, userId),
+		TagId:       tagId,
+		TaggedAt:    taggedAt,
+	}
+}
+
+type RemoveTagCommand struct {
+	eventstore.BaseCommand
+	TagId string
+}
+
+func NewRemoveTagCommand(logEntryId, tenant, userId, tagId string) *RemoveTagCommand {
+	return &RemoveTagCommand{
+		BaseCommand: eventstore.NewBaseCommand(logEntryId, tenant, userId),
+		TagId:       tagId,
+	}
+}

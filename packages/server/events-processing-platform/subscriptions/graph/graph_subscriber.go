@@ -239,6 +239,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.logEntryEventHandler.OnCreate(ctx, evt)
 	case logentryevents.LogEntryUpdateV1:
 		return s.logEntryEventHandler.OnUpdate(ctx, evt)
+	case logentryevents.LogEntryAddTagV1:
+		return s.logEntryEventHandler.OnAddTag(ctx, evt)
+	case logentryevents.LogEntryRemoveTagV1:
+		return s.logEntryEventHandler.OnRemoveTag(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType

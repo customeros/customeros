@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -17,10 +18,13 @@ type TagService interface {
 	Update(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error)
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*entity.TagEntities, error)
+	GetById(ctx context.Context, tagId string) (*entity.TagEntity, error)
+	GetByName(ctx context.Context, tagName string) (*entity.TagEntity, error)
 	GetTagsForContact(ctx context.Context, contactId string) (*entity.TagEntities, error)
 	GetTagsForContacts(ctx context.Context, contactIds []string) (*entity.TagEntities, error)
 	GetTagsForIssues(ctx context.Context, issueIds []string) (*entity.TagEntities, error)
 	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*entity.TagEntities, error)
+	GetTagsForLogEntries(ctx context.Context, logEntryIds []string) (*entity.TagEntities, error)
 }
 
 type tagService struct {
@@ -36,6 +40,11 @@ func NewTagService(log logger.Logger, repository *repository.Repositories) TagSe
 }
 
 func (s *tagService) Merge(ctx context.Context, tag *entity.TagEntity) (*entity.TagEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.Merge")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("tag", tag))
+
 	tagNodePtr, err := s.repositories.TagRepository.Merge(ctx, common.GetTenantFromContext(ctx), *tag)
 	if err != nil {
 		return nil, err
@@ -130,6 +139,53 @@ func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationID
 		tagEntities = append(tagEntities, *tagEntity)
 	}
 	return &tagEntities, nil
+}
+
+func (s *tagService) GetTagsForLogEntries(ctx context.Context, logEntryIds []string) (*entity.TagEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagsForLogEntries")
+	defer span.Finish()
+	span.LogFields(log.Object("logEntryIds", logEntryIds))
+
+	tags, err := s.repositories.TagRepository.GetForLogEntries(ctx, common.GetTenantFromContext(ctx), logEntryIds)
+	if err != nil {
+		return nil, err
+	}
+	tagEntities := make(entity.TagEntities, 0, len(tags))
+	for _, v := range tags {
+		tagEntity := s.mapDbNodeToTagEntity(*v.Node)
+		s.addDbRelationshipToTagEntity(*v.Relationship, tagEntity)
+		tagEntity.DataloaderKey = v.LinkedNodeId
+		tagEntities = append(tagEntities, *tagEntity)
+	}
+	return &tagEntities, nil
+}
+
+func (s *tagService) GetById(ctx context.Context, tagId string) (*entity.TagEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("tagId", tagId))
+
+	tagDbNode, err := s.repositories.TagRepository.GetById(ctx, tagId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToTagEntity(*tagDbNode), nil
+}
+
+func (s *tagService) GetByName(ctx context.Context, tagName string) (*entity.TagEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetByName")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("tagName", tagName))
+
+	tagDbNode, err := s.repositories.TagRepository.GetByName(ctx, tagName)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToTagEntity(*tagDbNode), nil
 }
 
 func (s *tagService) mapDbNodeToTagEntity(dbNode dbtype.Node) *entity.TagEntity {
