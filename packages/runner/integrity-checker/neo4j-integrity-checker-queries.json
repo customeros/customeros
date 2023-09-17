@@ -66,11 +66,15 @@
     },
     {
       "name": "Check multiple organizations share same domain",
-      "query": "match (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
+      "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
     },
     {
       "name": "Check missing properties",
-      "query": "CALL {\nMATCH (n:Organization)\nWHERE n.hide IS NULL\nRETURN count(n) as cnt\n} return sum(cnt)"
+      "query": "CALL {MATCH (n:Organization) WHERE n.hide IS NULL RETURN count(n) as cnt } return sum(cnt)"
+    },
+    {
+      "name": "Check duplicate values",
+      "query": "CALL {MATCH (t:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) with t.name as tenant, tag.name as tag_name, count(tag) as size_tags where size_tags > 1 return count(tag_name) as cnt} return sum(cnt)"
     }
   ]
 }

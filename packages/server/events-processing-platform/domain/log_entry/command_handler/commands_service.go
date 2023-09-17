@@ -8,10 +8,14 @@ import (
 
 type LogEntryCommands struct {
 	UpsertLogEntry UpsertLogEntryCommandHandler
+	AddTag         AddTagCommandHandler
+	RemoveTag      RemoveTagCommandHandler
 }
 
 func NewLogEntryCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *LogEntryCommands {
 	return &LogEntryCommands{
 		UpsertLogEntry: NewUpsertLogEntryCommandHandler(log, cfg, es),
+		AddTag:         NewAddTagCommandHandler(log, cfg, es),
+		RemoveTag:      NewRemoveTagCommandHandler(log, cfg, es),
 	}
 }

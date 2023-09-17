@@ -216,43 +216,6 @@ func ReverseMap[K comparable, V comparable](in map[K]V) map[V]K {
 	return out
 }
 
-func Contains(list []string, str string) bool {
-	for _, v := range list {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
-
-func ContainsAll(sourceSlice, itemsToCheck []string) bool {
-	for _, item := range itemsToCheck {
-		found := false
-		for _, sourceItem := range sourceSlice {
-			if sourceItem == item {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-	return true
-}
-
-func AnySliceToStringSlice(input []any) ([]string, error) {
-	result := []string{}
-	for _, item := range input {
-		str, ok := item.(string)
-		if !ok {
-			return nil, fmt.Errorf("could not convert item to string")
-		}
-		result = append(result, str)
-	}
-	return result, nil
-}
-
 func GetFunctionName() string {
 	pc, _, _, _ := runtime.Caller(2)
 	fullName := runtime.FuncForPC(pc).Name()

@@ -27,6 +27,7 @@ type Repositories struct {
 	InteractionEventRepository InteractionEventRepository
 	ActionRepository           ActionRepository
 	LogEntryRepository         LogEntryRepository
+	TagRepository              TagRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
@@ -47,6 +48,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		InteractionEventRepository: NewInteractionEventRepository(driver),
 		ActionRepository:           NewActionRepository(driver),
 		LogEntryRepository:         NewLogEntryRepository(driver),
+		TagRepository:              NewTagRepository(driver),
 	}
 	return &repositories
 }

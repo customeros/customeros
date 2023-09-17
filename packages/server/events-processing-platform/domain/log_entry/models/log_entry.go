@@ -16,4 +16,5 @@ type LogEntry struct {
 	CreatedAt            time.Time     `json:"createdAt,omitempty"`
 	UpdatedAt            time.Time     `json:"updatedAt,omitempty"`
 	StartedAt            time.Time     `json:"startedAt,omitempty"`
+	TagIds               []string      `json:"tagIds,omitempty"`
 }

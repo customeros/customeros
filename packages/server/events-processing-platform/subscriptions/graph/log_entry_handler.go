@@ -59,3 +59,45 @@ func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore
 
 	return err
 }
+
+func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnAddTag")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.LogEntryAddTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.TagRepository.AddTagByIdTo(ctx, eventData.Tenant, eventData.TagId, logEntryId, "LogEntry", eventData.TaggedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.Log.Errorf("Error while adding tag %s to log entry %s: %s", eventData.TagId, logEntryId, err.Error())
+	}
+
+	return err
+}
+
+func (h *GraphLogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnRemoveTag")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.LogEntryRemoveTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.TagRepository.RemoveTagByIdFrom(ctx, eventData.Tenant, eventData.TagId, logEntryId, "LogEntry")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.Log.Errorf("Error while removing tag %s to log entry %s: %s", eventData.TagId, logEntryId, err.Error())
+	}
+
+	return err
+}

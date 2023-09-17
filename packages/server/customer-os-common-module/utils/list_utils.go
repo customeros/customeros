@@ -1,11 +1,24 @@
 package utils
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 func FilterEmpty(vals []string) []string {
 	var result []string
 	for _, val := range vals {
 		if val != "" {
+			result = append(result, val)
+		}
+	}
+	return result
+}
+
+func RemoveFromList(arr []string, valueToRemove string) []string {
+	var result []string
+	for _, val := range arr {
+		if val != valueToRemove {
 			result = append(result, val)
 		}
 	}
@@ -28,4 +41,41 @@ func LowercaseStrings(arr []string) {
 	for i, s := range arr {
 		arr[i] = strings.ToLower(s)
 	}
+}
+
+func Contains(list []string, str string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
+func ContainsAll(sourceSlice, itemsToCheck []string) bool {
+	for _, item := range itemsToCheck {
+		found := false
+		for _, sourceItem := range sourceSlice {
+			if sourceItem == item {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+func AnySliceToStringSlice(input []any) ([]string, error) {
+	result := []string{}
+	for _, item := range input {
+		str, ok := item.(string)
+		if !ok {
+			return nil, fmt.Errorf("could not convert item to string")
+		}
+		result = append(result, str)
+	}
+	return result, nil
 }

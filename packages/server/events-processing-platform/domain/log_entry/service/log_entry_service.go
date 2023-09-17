@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/google/uuid"
+	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
@@ -55,6 +56,34 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *pb.Upsert
 	s.log.Infof("Upserted logEntry %s", logEntryId)
 
 	return &pb.LogEntryIdGrpcResponse{Id: logEntryId}, nil
+}
+
+func (s *logEntryService) AddTag(ctx context.Context, request *pb.AddTagGrpcRequest) (*pb.LogEntryIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.Addtag")
+	defer span.Finish()
+
+	command := cmd.NewAddTagCommand(request.Id, request.Tenant, request.UserId, request.TagId, common_utils.TimePtr(common_utils.Now()))
+	if err := s.logEntryCommands.AddTag.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddTag.Handle) tenant:%s, logEntryId: %s, tagId , err: %s", request.Tenant, request.Id, request.TagId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &pb.LogEntryIdGrpcResponse{Id: request.Id}, nil
+}
+
+func (s *logEntryService) RemoveTag(ctx context.Context, request *pb.RemoveTagGrpcRequest) (*pb.LogEntryIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.RemoveTag")
+	defer span.Finish()
+
+	command := cmd.NewRemoveTagCommand(request.Id, request.Tenant, request.UserId, request.TagId)
+	if err := s.logEntryCommands.RemoveTag.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RemoveTag.Handle) tenant:%s, logEntryId: %s, tagId , err: %s", request.Tenant, request.Id, request.TagId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &pb.LogEntryIdGrpcResponse{Id: request.Id}, nil
 }
 
 func (s *logEntryService) errResponse(err error) error {

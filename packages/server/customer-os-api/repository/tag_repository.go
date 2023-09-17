@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type TagRepository interface {
@@ -20,6 +22,9 @@ type TagRepository interface {
 	GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetForLogEntries(ctx context.Context, tenant string, logEntryIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetById(ctx context.Context, tagId string) (*dbtype.Node, error)
+	GetByName(ctx context.Context, tagName string) (*dbtype.Node, error)
 }
 
 type tagRepository struct {
@@ -40,25 +45,27 @@ func (r *tagRepository) Merge(ctx context.Context, tenant string, tag entity.Tag
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) " +
-		" ON CREATE SET " +
-		"  tag.id=randomUUID(), " +
-		"  tag.createdAt=$now, " +
-		"  tag.updatedAt=$now, " +
-		"  tag.source=$source, " +
-		"  tag.appSource=$appSource, " +
-		"  tag:%s" +
-		" RETURN tag"
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+		 MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) 
+		 ON CREATE SET 
+		  tag.id=randomUUID(),
+		  tag.createdAt=$now,
+		  tag.updatedAt=$now,
+		  tag.source=$source,
+		  tag.sourceOfTruth=$sourceOfTruth,
+		  tag.appSource=$appSource,
+		  tag:Tag_%s
+		 RETURN tag`, tenant)
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Tag_"+tenant),
+		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
-				"tenant":    tenant,
-				"name":      tag.Name,
-				"source":    tag.Source,
-				"appSource": tag.AppSource,
-				"now":       utils.Now(),
+				"tenant":        tenant,
+				"name":          tag.Name,
+				"source":        tag.Source,
+				"sourceOfTruth": tag.SourceOfTruth,
+				"appSource":     tag.AppSource,
+				"now":           utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
@@ -248,4 +255,91 @@ func (r *tagRepository) GetForOrganizations(ctx context.Context, tenant string, 
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *tagRepository) GetForLogEntries(ctx context.Context, tenant string, logEntryIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.GetForLogEntries")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (l:LogEntry_%s)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			WHERE l.id IN $logEntryIds
+			RETURN tag, rel, l.id ORDER BY rel.taggedAt, tag.name`, tenant)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":      tenant,
+				"logEntryIds": logEntryIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *tagRepository) GetById(ctx context.Context, tagId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.GetById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("tagId", tagId))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id}) return tag`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": common.GetTenantFromContext(ctx),
+				"id":     tagId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *tagRepository) GetByName(ctx context.Context, tagName string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryRepository.GetByName")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("tagName", tagName))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) return tag limit 1`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": common.GetTenantFromContext(ctx),
+				"name":   tagName,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
 }

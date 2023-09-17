@@ -538,7 +538,9 @@ type ComplexityRoot struct {
 		LocationRemoveFromContact                func(childComplexity int, contactID string, locationID string) int
 		LocationRemoveFromOrganization           func(childComplexity int, organizationID string, locationID string) int
 		LocationUpdate                           func(childComplexity int, input model.LocationUpdateInput) int
+		LogEntryAddTag                           func(childComplexity int, id string, input model.TagIDOrNameInput) int
 		LogEntryCreateForOrganization            func(childComplexity int, organizationID string, input model.LogEntryInput) int
+		LogEntryRemoveTag                        func(childComplexity int, id string, input model.TagIDOrNameInput) int
 		LogEntryUpdate                           func(childComplexity int, id string, input model.LogEntryUpdateInput) int
 		MeetingAddNewLocation                    func(childComplexity int, meetingID string) int
 		MeetingAddNote                           func(childComplexity int, meetingID string, note *model.NoteInput) int
@@ -783,6 +785,7 @@ type ComplexityRoot struct {
 		InteractionSession                    func(childComplexity int, id string) int
 		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
 		Issue                                 func(childComplexity int, id string) int
+		LogEntry                              func(childComplexity int, id string) int
 		Meeting                               func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
 		OrganizationDistinctOwners            func(childComplexity int) int
@@ -1043,6 +1046,8 @@ type MutationResolver interface {
 	LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error)
 	LogEntryCreateForOrganization(ctx context.Context, organizationID string, input model.LogEntryInput) (string, error)
 	LogEntryUpdate(ctx context.Context, id string, input model.LogEntryUpdateInput) (string, error)
+	LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
+	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
@@ -1178,6 +1183,7 @@ type QueryResolver interface {
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
+	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
@@ -4019,6 +4025,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.LocationUpdate(childComplexity, args["input"].(model.LocationUpdateInput)), true
 
+	case "Mutation.logEntry_AddTag":
+		if e.complexity.Mutation.LogEntryAddTag == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_logEntry_AddTag_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LogEntryAddTag(childComplexity, args["id"].(string), args["input"].(model.TagIDOrNameInput)), true
+
 	case "Mutation.logEntry_CreateForOrganization":
 		if e.complexity.Mutation.LogEntryCreateForOrganization == nil {
 			break
@@ -4030,6 +4048,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.LogEntryCreateForOrganization(childComplexity, args["organizationId"].(string), args["input"].(model.LogEntryInput)), true
+
+	case "Mutation.logEntry_RemoveTag":
+		if e.complexity.Mutation.LogEntryRemoveTag == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_logEntry_RemoveTag_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LogEntryRemoveTag(childComplexity, args["id"].(string), args["input"].(model.TagIDOrNameInput)), true
 
 	case "Mutation.logEntry_Update":
 		if e.complexity.Mutation.LogEntryUpdate == nil {
@@ -5941,6 +5971,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Issue(childComplexity, args["id"].(string)), true
 
+	case "Query.logEntry":
+		if e.complexity.Query.LogEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Query_logEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LogEntry(childComplexity, args["id"].(string)), true
+
 	case "Query.meeting":
 		if e.complexity.Query.Meeting == nil {
 			break
@@ -6641,7 +6683,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSocialInput,
 		ec.unmarshalInputSocialUpdateInput,
 		ec.unmarshalInputSortBy,
-		ec.unmarshalInputTagCreateOrUpdateInput,
+		ec.unmarshalInputTagIdOrNameInput,
 		ec.unmarshalInputTagInput,
 		ec.unmarshalInputTagUpdateInput,
 		ec.unmarshalInputTenantInput,
@@ -8041,9 +8083,15 @@ input LocationUpdateInput {
     timeZone: String
     utcOffset: Int64
 }`, BuiltIn: false},
-	{Name: "../schemas/log_entry.graphqls", Input: `extend type Mutation {
-    logEntry_CreateForOrganization(organizationId : ID!, input: LogEntryInput!): ID!
-    logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID!
+	{Name: "../schemas/log_entry.graphqls", Input: `extend type Query {
+    logEntry(id : ID!): LogEntry! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    logEntry_CreateForOrganization(organizationId : ID!, input: LogEntryInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    logEntry_AddTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    logEntry_RemoveTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LogEntry {
@@ -8063,7 +8111,7 @@ type LogEntry {
 input LogEntryInput {
     content: String
     contentType: String
-    tags: [TagCreateOrUpdateInput!]
+    tags: [TagIdOrNameInput!]
     startedAt: Time
     appSource: String
 }
@@ -8832,7 +8880,7 @@ input TagUpdateInput {
     name: String!
 }
 
-input TagCreateOrUpdateInput {
+input TagIdOrNameInput {
     id: ID
     name: String
 }`, BuiltIn: false},
@@ -10321,6 +10369,30 @@ func (ec *executionContext) field_Mutation_location_Update_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_logEntry_AddTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.TagIDOrNameInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNTagIdOrNameInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_logEntry_CreateForOrganization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -10337,6 +10409,30 @@ func (ec *executionContext) field_Mutation_logEntry_CreateForOrganization_args(c
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNLogEntryInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogEntryInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_logEntry_RemoveTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.TagIDOrNameInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNTagIdOrNameInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -12311,6 +12407,21 @@ func (ec *executionContext) field_Query_interactionSession_args(ctx context.Cont
 }
 
 func (ec *executionContext) field_Query_issue_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_logEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -32291,8 +32402,38 @@ func (ec *executionContext) _Mutation_logEntry_CreateForOrganization(ctx context
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().LogEntryCreateForOrganization(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(model.LogEntryInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().LogEntryCreateForOrganization(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(model.LogEntryInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -32346,8 +32487,38 @@ func (ec *executionContext) _Mutation_logEntry_Update(ctx context.Context, field
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().LogEntryUpdate(rctx, fc.Args["id"].(string), fc.Args["input"].(model.LogEntryUpdateInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().LogEntryUpdate(rctx, fc.Args["id"].(string), fc.Args["input"].(model.LogEntryUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -32382,6 +32553,176 @@ func (ec *executionContext) fieldContext_Mutation_logEntry_Update(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_logEntry_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_logEntry_AddTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_logEntry_AddTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().LogEntryAddTag(rctx, fc.Args["id"].(string), fc.Args["input"].(model.TagIDOrNameInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_logEntry_AddTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_logEntry_AddTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_logEntry_RemoveTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_logEntry_RemoveTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().LogEntryRemoveTag(rctx, fc.Args["id"].(string), fc.Args["input"].(model.TagIDOrNameInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_logEntry_RemoveTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_logEntry_RemoveTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -47554,6 +47895,115 @@ func (ec *executionContext) fieldContext_Query_issue(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_logEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_logEntry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().LogEntry(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.LogEntry); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.LogEntry`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.LogEntry)
+	fc.Result = res
+	return ec.marshalNLogEntry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_logEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_LogEntry_id(ctx, field)
+			case "content":
+				return ec.fieldContext_LogEntry_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_LogEntry_contentType(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_LogEntry_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_LogEntry_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_LogEntry_startedAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_LogEntry_createdBy(ctx, field)
+			case "tags":
+				return ec.fieldContext_LogEntry_tags(ctx, field)
+			case "source":
+				return ec.fieldContext_LogEntry_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_LogEntry_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_LogEntry_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LogEntry", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_logEntry_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_meeting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_meeting(ctx, field)
 	if err != nil {
@@ -56630,7 +57080,7 @@ func (ec *executionContext) unmarshalInputLogEntryInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tags"))
-			data, err := ec.unmarshalOTagCreateOrUpdateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagCreateOrUpdateInputᚄ(ctx, v)
+			data, err := ec.unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -57935,8 +58385,8 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputTagCreateOrUpdateInput(ctx context.Context, obj interface{}) (model.TagCreateOrUpdateInput, error) {
-	var it model.TagCreateOrUpdateInput
+func (ec *executionContext) unmarshalInputTagIdOrNameInput(ctx context.Context, obj interface{}) (model.TagIDOrNameInput, error) {
+	var it model.TagIDOrNameInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -63337,6 +63787,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "logEntry_AddTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logEntry_AddTag(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logEntry_RemoveTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logEntry_RemoveTag(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "meeting_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_meeting_Create(ctx, field)
@@ -66062,6 +66526,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_issue(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "logEntry":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_logEntry(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -69405,6 +69891,20 @@ func (ec *executionContext) unmarshalNLocationUpdateInput2githubᚗcomᚋopenlin
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNLogEntry2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogEntry(ctx context.Context, sel ast.SelectionSet, v model.LogEntry) graphql.Marshaler {
+	return ec._LogEntry(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLogEntry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogEntry(ctx context.Context, sel ast.SelectionSet, v *model.LogEntry) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LogEntry(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNLogEntryInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLogEntryInput(ctx context.Context, v interface{}) (model.LogEntryInput, error) {
 	res, err := ec.unmarshalInputLogEntryInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -70461,8 +70961,13 @@ func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenli
 	return ec._Tag(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTagCreateOrUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagCreateOrUpdateInput(ctx context.Context, v interface{}) (*model.TagCreateOrUpdateInput, error) {
-	res, err := ec.unmarshalInputTagCreateOrUpdateInput(ctx, v)
+func (ec *executionContext) unmarshalNTagIdOrNameInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInput(ctx context.Context, v interface{}) (model.TagIDOrNameInput, error) {
+	res, err := ec.unmarshalInputTagIdOrNameInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInput(ctx context.Context, v interface{}) (*model.TagIDOrNameInput, error) {
+	res, err := ec.unmarshalInputTagIdOrNameInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -71814,7 +72319,7 @@ func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenli
 	return ec._Tag(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOTagCreateOrUpdateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagCreateOrUpdateInputᚄ(ctx context.Context, v interface{}) ([]*model.TagCreateOrUpdateInput, error) {
+func (ec *executionContext) unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInputᚄ(ctx context.Context, v interface{}) ([]*model.TagIDOrNameInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -71823,10 +72328,10 @@ func (ec *executionContext) unmarshalOTagCreateOrUpdateInput2ᚕᚖgithubᚗcom�
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]*model.TagCreateOrUpdateInput, len(vSlice))
+	res := make([]*model.TagIDOrNameInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNTagCreateOrUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagCreateOrUpdateInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}

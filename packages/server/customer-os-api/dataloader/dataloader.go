@@ -18,6 +18,7 @@ type Loaders struct {
 	TagsForOrganization                         *dataloader.Loader
 	TagsForContact                              *dataloader.Loader
 	TagsForIssue                                *dataloader.Loader
+	TagsForLogEntry                             *dataloader.Loader
 	EmailsForContact                            *dataloader.Loader
 	EmailsForOrganization                       *dataloader.Loader
 	LocationsForContact                         *dataloader.Loader
@@ -251,6 +252,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForIssue:                                dataloader.NewBatchedLoader(tagBatcher.getTagsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		TagsForLogEntry:                             dataloader.NewBatchedLoader(tagBatcher.getTagsForLogEntries, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		EmailsForContact:                            dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		EmailsForOrganization:                       dataloader.NewBatchedLoader(emailBatcher.getEmailsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		LocationsForContact:                         dataloader.NewBatchedLoader(locationBatcher.getLocationsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

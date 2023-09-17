@@ -20,10 +20,26 @@ message UpsertLogEntryGrpcRequest {
   optional string loggedOrganizationId = 13;
 }
 
+message AddTagGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string userId = 3;
+  string tagId = 4;
+}
+
+message RemoveTagGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string userId = 3;
+  string tagId = 4;
+}
+
 message LogEntryIdGrpcResponse {
   string id = 1;
 }
 
 service logEntryGrpcService {
   rpc UpsertLogEntry(UpsertLogEntryGrpcRequest) returns (LogEntryIdGrpcResponse);
+  rpc AddTag(AddTagGrpcRequest) returns (LogEntryIdGrpcResponse);
+  rpc RemoveTag(RemoveTagGrpcRequest) returns (LogEntryIdGrpcResponse);
 }

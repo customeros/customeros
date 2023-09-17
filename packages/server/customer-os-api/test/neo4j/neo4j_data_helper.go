@@ -639,6 +639,17 @@ func TagContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId,
 	})
 }
 
+func TagLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, logEntryId, tagId string, taggedAt *time.Time) {
+	query := `MATCH (l:LogEntry {id:$logEntryId}), (tag:Tag {id:$tagId})
+			MERGE (l)-[r:TAGGED]->(tag)
+			ON CREATE SET r.taggedAt=$taggedAt`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tagId":      tagId,
+		"logEntryId": logEntryId,
+		"taggedAt":   utils.TimePtrFirstNonNilNillableAsAny(taggedAt, utils.NowAsPtr()),
+	})
+}
+
 func TagOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, tagId string) {
 	query := `MATCH (o:Organization {id:$organizationId}), (tag:Tag {id:$tagId})
 			MERGE (o)-[r:TAGGED]->(tag)

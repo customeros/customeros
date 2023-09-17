@@ -134,6 +134,39 @@ func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, 
 	return logEntryId
 }
 
+func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, tag entity.TagEntity) string {
+	tagId := tag.Id
+	if tagId == "" {
+		tagId = uuid.New().String()
+	}
+
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$tagId})
+				SET tag:Tag_%s,
+					tag.name=$name`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant": tenant,
+		"tagId":  tagId,
+		"name":   tag.Name,
+	})
+	return tagId
+}
+
+func LinkTag(ctx context.Context, driver *neo4j.DriverWithContext, tagId, entityId string) {
+
+	query := `MATCH (e {id:$entityId})
+				MATCH (t:Tag {id:$tagId})
+				MERGE (e)-[rel:TAGGED]->(t)
+				SET rel.taggedAt=$now`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tagId":    tagId,
+		"entityId": entityId,
+		"now":      utils.Now(),
+	})
+}
+
 func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
 	query := `MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
@@ -166,6 +199,30 @@ func GetNodeById(ctx context.Context, driver *neo4j.DriverWithContext, label str
 	}
 
 	node := queryResult.(dbtype.Node)
+	return &node, nil
+}
+
+func GetRelationship(ctx context.Context, driver *neo4j.DriverWithContext, fromNodeId, toNodeId string) (*dbtype.Relationship, error) {
+	session := utils.NewNeo4jReadSession(ctx, *driver)
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, `MATCH (n {id:$fromNodeId})-[rel]->(m {id:$toNodeId}) RETURN rel limit 1`,
+			map[string]interface{}{
+				"fromNodeId": fromNodeId,
+				"toNodeId":   toNodeId,
+			})
+		record, err := result.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	node := queryResult.(dbtype.Relationship)
 	return &node, nil
 }
 

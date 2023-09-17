@@ -1,6 +1,12 @@
+extend type Query {
+    logEntry(id : ID!): LogEntry! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
 extend type Mutation {
-    logEntry_CreateForOrganization(organizationId : ID!, input: LogEntryInput!): ID!
-    logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID!
+    logEntry_CreateForOrganization(organizationId : ID!, input: LogEntryInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    logEntry_AddTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    logEntry_RemoveTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LogEntry {
@@ -20,7 +26,7 @@ type LogEntry {
 input LogEntryInput {
     content: String
     contentType: String
-    tags: [TagCreateOrUpdateInput!]
+    tags: [TagIdOrNameInput!]
     startedAt: Time
     appSource: String
 }

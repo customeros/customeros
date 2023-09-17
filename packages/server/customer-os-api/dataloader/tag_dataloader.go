@@ -42,6 +42,16 @@ func (i *Loaders) GetTagsForIssue(ctx context.Context, issueId string) (*entity.
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetTagsForLogEntry(ctx context.Context, logEntryId string) (*entity.TagEntities, error) {
+	thunk := i.TagsForLogEntry.Load(ctx, dataloader.StringKey(logEntryId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.TagEntities)
+	return &resultObj, nil
+}
+
 func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
@@ -182,6 +192,58 @@ func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys)
 		if ix, ok := keyOrder[issueId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, issueId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
+	}
+
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.TagEntities{})); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Int("results_length", len(results)))
+
+	return results
+}
+
+func (b *tagBatcher) getTagsForLogEntries(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForLogEntries", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	tagEntitiesPtr, err := b.tagService.GetTagsForLogEntries(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get tags for log entries")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	tagEntitiesByLogEntryId := make(map[string]entity.TagEntities)
+	for _, val := range *tagEntitiesPtr {
+		if list, ok := tagEntitiesByLogEntryId[val.DataloaderKey]; ok {
+			tagEntitiesByLogEntryId[val.DataloaderKey] = append(list, val)
+		} else {
+			tagEntitiesByLogEntryId[val.DataloaderKey] = entity.TagEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for logEntryId, record := range tagEntitiesByLogEntryId {
+		if ix, ok := keyOrder[logEntryId]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, logEntryId)
 		}
 	}
 	for _, ix := range keyOrder {

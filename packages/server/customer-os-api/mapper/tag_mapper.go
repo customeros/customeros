@@ -9,9 +9,10 @@ import (
 
 func MapTagInputToEntity(input model.TagInput) *entity.TagEntity {
 	tagEntity := entity.TagEntity{
-		Name:      input.Name,
-		Source:    entity.DataSourceOpenline,
-		AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		Name:          input.Name,
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &tagEntity
 }

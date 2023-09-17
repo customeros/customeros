@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
@@ -29,12 +30,15 @@ func NewLogEntryAggregateWithTenantAndID(tenant, id string) *LogEntryAggregate {
 }
 
 func (a *LogEntryAggregate) When(event eventstore.Event) error {
-
 	switch event.GetEventType() {
 	case events.LogEntryCreateV1:
 		return a.onLogEntryCreate(event)
 	case events.LogEntryUpdateV1:
 		return a.onLogEntryUpdate(event)
+	case events.LogEntryAddTagV1:
+		return a.onLogEntryAddTag(event)
+	case events.LogEntryRemoveTagV1:
+		return a.onLogEntryRemoveTag(event)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
@@ -76,5 +80,28 @@ func (a *LogEntryAggregate) onLogEntryUpdate(event eventstore.Event) error {
 	if eventData.SourceOfTruth != "" {
 		a.LogEntry.Source.SourceOfTruth = eventData.SourceOfTruth
 	}
+	return nil
+}
+
+func (a *LogEntryAggregate) onLogEntryAddTag(event eventstore.Event) error {
+	var eventData events.LogEntryAddTagEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.LogEntry.TagIds = append(a.LogEntry.TagIds, eventData.TagId)
+	a.LogEntry.TagIds = utils.RemoveDuplicates(a.LogEntry.TagIds)
+
+	return nil
+}
+
+func (a *LogEntryAggregate) onLogEntryRemoveTag(event eventstore.Event) error {
+	var eventData events.LogEntryRemoveTagEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.LogEntry.TagIds = utils.RemoveFromList(a.LogEntry.TagIds, eventData.TagId)
+
 	return nil
 }

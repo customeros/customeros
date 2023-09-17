@@ -933,11 +933,11 @@ type LogEntry struct {
 func (LogEntry) IsTimelineEvent() {}
 
 type LogEntryInput struct {
-	Content     *string                   `json:"content,omitempty"`
-	ContentType *string                   `json:"contentType,omitempty"`
-	Tags        []*TagCreateOrUpdateInput `json:"tags,omitempty"`
-	StartedAt   *time.Time                `json:"startedAt,omitempty"`
-	AppSource   *string                   `json:"appSource,omitempty"`
+	Content     *string             `json:"content,omitempty"`
+	ContentType *string             `json:"contentType,omitempty"`
+	Tags        []*TagIDOrNameInput `json:"tags,omitempty"`
+	StartedAt   *time.Time          `json:"startedAt,omitempty"`
+	AppSource   *string             `json:"appSource,omitempty"`
 }
 
 type LogEntryUpdateInput struct {
@@ -1443,7 +1443,7 @@ type Tag struct {
 	AppSource string     `json:"appSource"`
 }
 
-type TagCreateOrUpdateInput struct {
+type TagIDOrNameInput struct {
 	ID   *string `json:"id,omitempty"`
 	Name *string `json:"name,omitempty"`
 }
