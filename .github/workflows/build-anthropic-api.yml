@@ -88,7 +88,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v4.2.1
+        uses: docker/build-push-action@v5.0.0
         with:
           context: ./packages/server/
           file: ./packages/server/anthropic-api/Dockerfile
