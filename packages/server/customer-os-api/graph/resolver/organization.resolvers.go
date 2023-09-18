@@ -48,6 +48,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create organization")
+		r.log.Errorf("Error from events processing %s", err.Error())
 		return nil, nil
 	}
 	if len(input.Domains) > 0 {
@@ -115,6 +116,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create organization")
+		r.log.Errorf("Error from events processing %s", err.Error())
 		return nil, nil
 	}
 	time.Sleep(100 * time.Millisecond)
