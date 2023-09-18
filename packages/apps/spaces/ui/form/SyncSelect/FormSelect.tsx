@@ -14,7 +14,7 @@ interface FormSelectProps extends SelectProps {
 export const FormSelect = forwardRef<SelectInstance, FormSelectProps>(
   ({ name, formId, isLabelVisible, label, ...rest }, ref) => {
     const { getInputProps } = useField(name, formId);
-    const { id, onChange, onBlur, value } = getInputProps();
+    const { id, onChange, onBlur, value, defaultValue } = getInputProps();
 
     return (
       <FormControl>
@@ -33,6 +33,7 @@ export const FormSelect = forwardRef<SelectInstance, FormSelectProps>(
           name={name}
           value={value}
           onBlur={() => onBlur(value)}
+          defaultValue={defaultValue}
           onChange={onChange}
           {...rest}
         />
