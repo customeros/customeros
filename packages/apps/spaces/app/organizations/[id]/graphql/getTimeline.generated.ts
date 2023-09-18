@@ -364,6 +364,24 @@ export type GetTimelineQuery = {
       | { __typename: 'Issue' }
       | { __typename: 'LogEntry' }
       | {
+          __typename: 'LogEntry';
+          id: string;
+          createdAt: any;
+          updatedAt: any;
+          source: Types.DataSource;
+          content?: string | null;
+          contentType?: string | null;
+          logEntryStartedAt: any;
+          logEntryCreatedBy?: {
+            __typename: 'User';
+            id: string;
+            firstName: string;
+            lastName: string;
+            profilePhotoUrl?: string | null;
+          } | null;
+          tags: Array<{ __typename?: 'Tag'; id: string; name: string }>;
+        }
+      | {
           __typename: 'Meeting';
           id: string;
           name?: string | null;
@@ -495,12 +513,12 @@ export const GetTimelineDocument = `
     query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
     timelineEventsTotalCount(
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY]
     )
     timelineEvents(
       from: $from
       size: $size
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY]
     ) {
       __typename
       ... on Action {
@@ -625,6 +643,28 @@ export const GetTimelineDocument = `
         }
         agenda
         status
+      }
+      ... on LogEntry {
+        id
+        createdAt
+        updatedAt
+        logEntryStartedAt: startedAt
+        logEntryCreatedBy: createdBy {
+          ... on User {
+            __typename
+            id
+            firstName
+            lastName
+            profilePhotoUrl
+          }
+        }
+        tags {
+          id
+          name
+        }
+        source
+        content
+        contentType
       }
     }
   }
