@@ -20,6 +20,7 @@ import { InteractionEventWithDate, TimelineEvent } from './types';
 import { UserActionStub } from '@organization/components/Timeline/events/action/UserActionStub';
 import { IntercomStub } from '@organization/components/Timeline/events/intercom/IntercomStub';
 import { ExternalSystemType } from '@spaces/graphql';
+import { LogEntryStub } from '@organization/components/Timeline/events/logEntry/LogEntryStub';
 
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
@@ -100,6 +101,7 @@ export const OrganizationTimeline: FC = () => {
             !!d?.id && ['EMAIL', 'SLACK', 'CHAT'].includes(d.channel ?? '')
           );
         case 'Meeting':
+        case 'LogEntry':
         case 'Action':
           return !!d.id;
         default:
@@ -115,6 +117,8 @@ export const OrganizationTimeline: FC = () => {
           case 'Meeting':
           case 'Action':
             return a.createdAt;
+          case 'LogEntry':
+            return a.logEntryStartedAt;
 
           default:
             return null;
@@ -206,6 +210,16 @@ export const OrganizationTimeline: FC = () => {
                     showDate={showDate}
                   >
                     <UserActionStub data={timelineEvent} />
+                  </TimelineItem>
+                );
+              }
+              case 'LogEntry': {
+                return (
+                  <TimelineItem
+                    date={timelineEvent?.logEntryStartedAt}
+                    showDate={showDate}
+                  >
+                    <LogEntryStub data={timelineEvent} />
                   </TimelineItem>
                 );
               }

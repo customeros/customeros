@@ -16,16 +16,15 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
 
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
-import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 
-export const Logger: React.FC<{ invalidateQuery: any }> = ({
+export const Logger: React.FC<{ invalidateQuery: () => void }> = ({
   invalidateQuery,
 }) => {
   const id = useParams()?.id as string;
   const client = getGraphQLClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { data, isLoading } = useGetTagsQuery(client);
+  const { data } = useGetTagsQuery(client);
   const logEntryValues: LogEntryDtoI = new LogEntryDto();
   const { state, reset } = useForm<LogEntryDtoI>({
     formId: 'organization-create-log-entry',
@@ -39,12 +38,9 @@ export const Logger: React.FC<{ invalidateQuery: any }> = ({
     extensions: basicEditorExtensions,
   });
   const createLogEntryMutation = useCreateLogEntryMutation(client, {
-    onSuccess: (data, variables, context) => {
+    onSuccess: () => {
       reset();
       timeoutRef.current = setTimeout(() => invalidateQuery(), 500);
-    },
-    onError: () => {
-      console.log('🏷️ ----- : ERROR');
     },
   });
 
@@ -57,7 +53,6 @@ export const Logger: React.FC<{ invalidateQuery: any }> = ({
   }, []);
 
   const onCreateLogEntry = () => {
-    console.log('🏷️ ----- state.values.tags: ', state.values.tags);
     const logEntryPayload = LogEntryDto.toPayload({
       ...logEntryValues,
       tags: state.values.tags,

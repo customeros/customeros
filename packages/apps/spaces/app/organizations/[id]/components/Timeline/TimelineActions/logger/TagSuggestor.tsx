@@ -7,7 +7,7 @@ import {
 } from '@remirror/react';
 
 export const TagSuggestor: FC<{
-  tags: Array<{ label: string; id: string }>;
+  tags?: Array<{ label: string; id: string }>;
 }> = ({ tags = [] }) => {
   const [options, setOptions] = useState<MentionAtomNodeAttributes[]>(tags);
 

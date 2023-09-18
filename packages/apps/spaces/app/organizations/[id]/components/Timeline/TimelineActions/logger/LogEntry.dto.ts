@@ -1,7 +1,5 @@
-import { TagIdOrNameInput } from '@graphql/types';
-
 export interface LogEntryDtoI {
-  tags: Array<TagIdOrNameInput>;
+  tags: Array<{ label: string; value: string }>;
   content: string;
   contentType: string;
   appSource: string;
@@ -15,7 +13,7 @@ export interface LogEntryDtoFormI {
 }
 
 export class LogEntryDto implements LogEntryDtoI {
-  tags: Array<TagIdOrNameInput>;
+  tags: Array<{ label: string; value: string }>;
   content: string;
   contentType: string;
   appSource: string;
@@ -35,7 +33,7 @@ export class LogEntryDto implements LogEntryDtoI {
 
   static toPayload(data: LogEntryDtoFormI) {
     return {
-      tags: data.tags.map(({ label, value }) => ({ name: label })),
+      tags: data.tags.map((data) => ({ name: data?.label })),
       content: data.content,
       contentType: data.contentType,
       appSource: 'customerOS',
