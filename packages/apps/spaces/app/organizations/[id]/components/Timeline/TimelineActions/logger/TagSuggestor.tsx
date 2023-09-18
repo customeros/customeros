@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { cx } from '@remirror/core';
 import {
   FloatingWrapper,
@@ -6,16 +6,16 @@ import {
   useMentionAtom,
 } from '@remirror/react';
 
-const commonTags = ['meeting', 'call', 'voicemail', 'email', 'text-message'];
-const tags = commonTags.map((label) => ({ label, id: label }));
+export const TagSuggestor: FC<{
+  tags: Array<{ label: string; id: string }>;
+}> = ({ tags = [] }) => {
+  const [options, setOptions] = useState<MentionAtomNodeAttributes[]>(tags);
 
-export const TagSuggestor: React.FC = () => {
-  const [options, setOptions] = useState<MentionAtomNodeAttributes[]>([]);
   const { state, getMenuProps, getItemProps, indexIsHovered, indexIsSelected } =
     useMentionAtom({
       items: options,
-      // @ts-expect-error explain
-      submitKeys: ['Space', 'Enter'],
+      // @ts-expect-error space is not included in types but it's a valid option
+      submitKeys: ['Space'],
     });
 
   useEffect(() => {
@@ -48,24 +48,24 @@ export const TagSuggestor: React.FC = () => {
     >
       <div {...getMenuProps()} className='floating-menu'>
         {enabled &&
-          options.map((user, index) => {
+          options.map((tag, index) => {
             const isHighlighted = indexIsSelected(index);
             const isHovered = indexIsHovered(index);
 
             return (
               <div
-                key={user.id}
+                key={`remirror-mention-tag-suggestion-${tag.label}-${tag.id}`}
                 className={cx(
                   'floating-menu-option',
                   isHighlighted && 'highlighted',
                   isHovered && 'hovered',
                 )}
                 {...getItemProps({
-                  item: user,
+                  item: tag,
                   index,
                 })}
               >
-                {user.label}
+                {tag.label}
               </div>
             );
           })}

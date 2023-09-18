@@ -9,26 +9,31 @@ import { MultiCreatableSelect } from '@ui/form/MultiCreatableSelect';
 import { tagsSelectStyles } from './tagSelectStyles';
 import { TagButton } from './TagButton';
 import { useTagButtonSlideAnimation } from './useTagButtonSlideAnimation';
+import { useField } from 'react-inverted-form';
 
 interface EmailParticipantSelect {
-  autofocus?: boolean;
+  formId: string;
+  name: string;
+  tags?: Array<{ value: string; label: string }>;
 }
 
 interface Tag {
   label: string;
   value: string;
 }
-const commonTags = ['meeting', 'call', 'voicemail', 'email', 'text-message'];
-const tags = commonTags.map((label) => ({ label, value: label }));
+const suggestedTags = ['meeting', 'call', 'voicemail', 'email', 'text-message'];
 
 export const TagsSelect: FC<EmailParticipantSelect> = ({
-  autofocus = false,
+  formId,
+  name,
+  tags = [],
 }) => {
+  const { getInputProps } = useField(name, formId);
+  const { onChange, value: selectedTags } = getInputProps();
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [focusedOption, setFocusedOption] = useState<Tag | null>(null);
   const [inputVal, setInputVal] = useState('');
-  const [selectedTags, setTags] = useState<Array<Tag>>([]);
-  const scope = useTagButtonSlideAnimation(!!selectedTags.length);
+  const scope = useTagButtonSlideAnimation(!!selectedTags?.length);
   const getFilteredSuggestions = (
     filterString: string,
     callback: (options: OptionsOrGroups<any, any>) => void,
@@ -38,15 +43,12 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       return;
     }
 
-    const options: OptionsOrGroups<string, any> = commonTags
-      .map((label) => ({ label, value: label }))
-      .filter((e) =>
-        e.value.toLowerCase().includes(filterString.slice(1)?.toLowerCase()),
-      );
+    const options: OptionsOrGroups<string, any> = tags.filter((e) =>
+      e.label.toLowerCase().includes(filterString.slice(1)?.toLowerCase()),
+    );
 
     callback(options);
   };
-
   const handleInputChange = (d: string) => {
     setInputVal(d);
     if (d.length === 1 && d.startsWith('#')) {
@@ -66,7 +68,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       if (!isMenuOpen) return;
 
       if (focusedOption) {
-        setTags((prevTags) => [...prevTags, focusedOption]);
+        onChange([...selectedTags, focusedOption]);
         setMenuOpen(false);
         setFocusedOption(null);
         setInputVal('');
@@ -94,27 +96,36 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
     <>
       <AnimatePresence initial={false}>
         <Flex alignItems='center' ref={scope}>
-          {!selectedTags.length && (
+          {!selectedTags?.length && (
             <>
               <Text color='gray.500' mr={2} whiteSpace='nowrap'>
                 Suggested tags:
               </Text>
 
-              {tags.map((tag) => (
+              {suggestedTags?.map((tag) => (
                 <TagButton
-                  key={`tag-select-${tag.value}`}
-                  onTagSet={() => setTags([tag])}
+                  key={`tag-select-${tag}`}
+                  onTagSet={() =>
+                    onChange([
+                      {
+                        label: tag,
+                        value:
+                          tags?.find((e) => suggestedTags.includes(e.label))
+                            ?.value || tag,
+                      },
+                    ])
+                  }
                   tag={tag}
                 />
               ))}
             </>
           )}
-          {!!selectedTags.length && (
+          {!!selectedTags?.length && (
             <MultiCreatableSelect
               Option={Option}
-              autoFocus={autofocus}
-              name=''
-              formId=''
+              // autoFocus={autofocus}
+              name={name}
+              formId={formId}
               placeholder=''
               onKeyDown={handleKeyDown}
               noOptionsMessage={() => null}
@@ -130,9 +141,6 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               }}
               onMenuClose={() => setFocusedOption(null)}
               value={selectedTags}
-              onChange={(e) => {
-                setTags(e);
-              }}
               inputValue={inputVal}
               onInputChange={handleInputChange}
               menuIsOpen={isMenuOpen}

@@ -3,10 +3,7 @@ import { Button } from '@ui/form/Button';
 
 interface TagButtonProps {
   onTagSet: () => void;
-  tag: {
-    label: string;
-    value: string;
-  };
+  tag: string;
 }
 
 export const TagButton: React.FC<TagButtonProps> = ({ onTagSet, tag }) => (
@@ -19,6 +16,6 @@ export const TagButton: React.FC<TagButtonProps> = ({ onTagSet, tag }) => (
     mr={2}
     onClick={onTagSet}
   >
-    {`#${tag.label}`}
+    {`#${tag}`}
   </Button>
 );
