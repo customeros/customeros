@@ -3,15 +3,14 @@ import { SlideFade } from '@ui/transitions/SlideFade';
 import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { useSearchParams } from 'next/navigation';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
-import { Icons } from '@ui/media/Icon';
 import { useForm } from 'react-inverted-form';
 import {
   ComposeEmailDto,
   ComposeEmailDtoI,
 } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail.dto';
 import { handleSendEmail } from '@organization/components/Timeline/events/email/compose-email/utils';
-import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useDisclosure } from '@ui/utils';
@@ -19,6 +18,7 @@ import { useRemirror } from '@remirror/react';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { Logger } from '@organization/components/Timeline/TimelineActions/logger/Logger';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
+import { Mail01 } from '@ui/media/icons/Mail01';
 
 interface TimelineActionsProps {
   onScrollBottom: () => void;
@@ -145,7 +145,8 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
           onClick={() => handleToggleEmailEditor()}
           borderRadius='3xl'
           size='xs'
-          leftIcon={<Icons.Mail1 boxSize='4' />}
+          colorScheme={showEmailEditor ? 'primary' : 'gray'}
+          leftIcon={<Mail01 color='inherit' />}
         >
           Email
         </Button>
@@ -154,7 +155,8 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
           onClick={handleToggleLogger}
           borderRadius='3xl'
           size='xs'
-          leftIcon={<MessageChatSquare />}
+          colorScheme={showLogger ? 'primary' : 'gray'}
+          leftIcon={<MessageChatSquare color='inherit' />}
         >
           Log
         </Button>
@@ -203,7 +205,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
               bg={'white'}
               border='1px solid var(--gray-100, #F2F4F7)'
             >
-              <Logger />
+              <Logger invalidateQuery={invalidateQuery} />
             </Box>
           </SlideFade>
         )}
