@@ -197,6 +197,7 @@ export type GetTimelineQuery = {
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
             externalUrl?: string | null;
+            type: Types.ExternalSystemType;
           }>;
           repliesTo?: { __typename?: 'InteractionEvent'; id: string } | null;
           summary?: {
@@ -361,6 +362,7 @@ export type GetTimelineQuery = {
         }
       | { __typename: 'InteractionSession' }
       | { __typename: 'Issue' }
+      | { __typename: 'LogEntry' }
       | {
           __typename: 'Meeting';
           id: string;
@@ -543,6 +545,7 @@ export const GetTimelineDocument = `
         }
         externalLinks {
           externalUrl
+          type
         }
         repliesTo {
           id

@@ -1079,6 +1079,35 @@ export type LocationUpdateInput = {
   zip?: InputMaybe<Scalars['String']>;
 };
 
+export type LogEntry = {
+  __typename?: 'LogEntry';
+  appSource: Scalars['String'];
+  content?: Maybe<Scalars['String']>;
+  contentType?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  id: Scalars['ID'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  startedAt: Scalars['Time'];
+  tags: Array<Tag>;
+  updatedAt: Scalars['Time'];
+};
+
+export type LogEntryInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
+  tags?: InputMaybe<Array<TagIdOrNameInput>>;
+};
+
+export type LogEntryUpdateInput = {
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
+};
+
 export enum Market {
   B2B = 'B2B',
   B2C = 'B2C',
@@ -1238,6 +1267,10 @@ export type Mutation = {
   location_RemoveFromContact: Contact;
   location_RemoveFromOrganization: Organization;
   location_Update: Location;
+  logEntry_AddTag: Scalars['ID'];
+  logEntry_CreateForOrganization: Scalars['ID'];
+  logEntry_RemoveTag: Scalars['ID'];
+  logEntry_Update: Scalars['ID'];
   meeting_AddNewLocation: Location;
   meeting_AddNote: Meeting;
   meeting_Create: Meeting;
@@ -1273,8 +1306,14 @@ export type Mutation = {
   organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
+  organization_UpdateBillingDetails: Scalars['ID'];
+  /** @deprecated Use organization_UpdateBillingDetails instead */
   organization_UpdateBillingDetailsAsync: Scalars['ID'];
+  organization_UpdateRenewalForecast: Scalars['ID'];
+  /** @deprecated Use organization_UpdateRenewalForecast instead */
   organization_UpdateRenewalForecastAsync: Scalars['ID'];
+  organization_UpdateRenewalLikelihood: Scalars['ID'];
+  /** @deprecated Use organization_UpdateRenewalLikelihood instead */
   organization_UpdateRenewalLikelihoodAsync: Scalars['ID'];
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
@@ -1556,6 +1595,26 @@ export type MutationLocation_UpdateArgs = {
   input: LocationUpdateInput;
 };
 
+export type MutationLogEntry_AddTagArgs = {
+  id: Scalars['ID'];
+  input: TagIdOrNameInput;
+};
+
+export type MutationLogEntry_CreateForOrganizationArgs = {
+  input: LogEntryInput;
+  organizationId: Scalars['ID'];
+};
+
+export type MutationLogEntry_RemoveTagArgs = {
+  id: Scalars['ID'];
+  input: TagIdOrNameInput;
+};
+
+export type MutationLogEntry_UpdateArgs = {
+  id: Scalars['ID'];
+  input: LogEntryUpdateInput;
+};
+
 export type MutationMeeting_AddNewLocationArgs = {
   meetingId: Scalars['ID'];
 };
@@ -1717,12 +1776,24 @@ export type MutationOrganization_UpdateArgs = {
   input: OrganizationUpdateInput;
 };
 
+export type MutationOrganization_UpdateBillingDetailsArgs = {
+  input: BillingDetailsInput;
+};
+
 export type MutationOrganization_UpdateBillingDetailsAsyncArgs = {
   input: BillingDetailsInput;
 };
 
+export type MutationOrganization_UpdateRenewalForecastArgs = {
+  input: RenewalForecastInput;
+};
+
 export type MutationOrganization_UpdateRenewalForecastAsyncArgs = {
   input: RenewalForecastInput;
+};
+
+export type MutationOrganization_UpdateRenewalLikelihoodArgs = {
+  input: RenewalLikelihoodInput;
 };
 
 export type MutationOrganization_UpdateRenewalLikelihoodAsyncArgs = {
@@ -2325,6 +2396,7 @@ export type Query = {
   interactionSession: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
   issue: Issue;
+  logEntry: LogEntry;
   meeting: Meeting;
   organization?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
@@ -2418,6 +2490,10 @@ export type QueryInteractionSession_BySessionIdentifierArgs = {
 };
 
 export type QueryIssueArgs = {
+  id: Scalars['ID'];
+};
+
+export type QueryLogEntryArgs = {
   id: Scalars['ID'];
 };
 
@@ -2607,6 +2683,11 @@ export type Tag = {
   updatedAt: Scalars['Time'];
 };
 
+export type TagIdOrNameInput = {
+  id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
+};
+
 export type TagInput = {
   appSource?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
@@ -2649,6 +2730,7 @@ export type TimelineEvent =
   | InteractionEvent
   | InteractionSession
   | Issue
+  | LogEntry
   | Meeting
   | Note
   | PageView;
@@ -2659,6 +2741,7 @@ export enum TimelineEventType {
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',
   Issue = 'ISSUE',
+  LogEntry = 'LOG_ENTRY',
   Meeting = 'MEETING',
   Note = 'NOTE',
   PageView = 'PAGE_VIEW',

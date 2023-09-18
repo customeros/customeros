@@ -19,6 +19,7 @@ import { TimelineEventPreviewModal } from '@organization/components/Timeline/pre
 import { InteractionEventWithDate, TimelineEvent } from './types';
 import { UserActionStub } from '@organization/components/Timeline/events/action/UserActionStub';
 import { IntercomStub } from '@organization/components/Timeline/events/intercom/IntercomStub';
+import { ExternalSystemType } from '@spaces/graphql';
 
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
@@ -173,11 +174,17 @@ export const OrganizationTimeline: FC = () => {
                     {timelineEvent.channel === 'EMAIL' && (
                       <EmailStub email={timelineEvent} />
                     )}
-                    {timelineEvent.channel === 'SLACK' && (
-                      <SlackStub slackEvent={timelineEvent} />
-                    )}
                     {timelineEvent.channel === 'CHAT' && (
-                      <IntercomStub intercomEvent={timelineEvent} />
+                      <>
+                        {timelineEvent.externalLinks?.[0]?.type ===
+                          ExternalSystemType.Slack && (
+                          <SlackStub slackEvent={timelineEvent} />
+                        )}
+                        {timelineEvent.externalLinks?.[0]?.type ===
+                          ExternalSystemType.Intercom && (
+                          <IntercomStub intercomEvent={timelineEvent} />
+                        )}
+                      </>
                     )}
                   </TimelineItem>
                 );
