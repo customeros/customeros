@@ -118,8 +118,11 @@ func (s *zendeskSupportDataService) GetUsersForSync(ctx context.Context, batchSi
 			outputJSON, err := MapUser(v.AirbyteData)
 			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				user = entity.UserData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -141,7 +144,7 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(ctx context.Context,
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -151,8 +154,11 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(ctx context.Context,
 			outputJSON, err := MapOrganization(v.AirbyteData)
 			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				organization = entity.OrganizationData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -174,7 +180,7 @@ func (s *zendeskSupportDataService) GetIssuesForSync(ctx context.Context, batchS
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -184,8 +190,11 @@ func (s *zendeskSupportDataService) GetIssuesForSync(ctx context.Context, batchS
 			outputJSON, err := MapIssue(v.AirbyteData)
 			issue, err := source.MapJsonToIssue(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				issue = entity.IssueData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -207,7 +216,7 @@ func (s *zendeskSupportDataService) GetNotesForSync(ctx context.Context, batchSi
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -217,8 +226,11 @@ func (s *zendeskSupportDataService) GetNotesForSync(ctx context.Context, batchSi
 			outputJSON, err := MapNote(v.AirbyteData)
 			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				note = entity.NoteData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  note.ExternalId,
@@ -239,7 +251,7 @@ func (s *zendeskSupportDataService) GetInteractionEventsForSync(ctx context.Cont
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -249,8 +261,11 @@ func (s *zendeskSupportDataService) GetInteractionEventsForSync(ctx context.Cont
 			outputJSON, err := MapInteractionEvent(v.AirbyteData)
 			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				interactionEvent = entity.InteractionEventData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{

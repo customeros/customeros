@@ -101,6 +101,12 @@ func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageI
 	var interactionEventId string
 	messageInput.Normalize()
 
+	if messageInput.ExternalSystem == "" {
+		_ = dataService.MarkProcessed(ctx, messageInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+		*failed++
+		return
+	}
+
 	if messageInput.Skip {
 		if err := dataService.MarkProcessed(ctx, messageInput.SyncId, runId, true, true, messageInput.SkipReason); err != nil {
 			*failed++

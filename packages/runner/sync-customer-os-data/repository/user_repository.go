@@ -17,7 +17,7 @@ type UserRepository interface {
 	GetMatchedUserId(ctx context.Context, tenant string, user entity.UserData) (string, error)
 	MergeUser(ctx context.Context, tenant string, syncDate time.Time, user entity.UserData) error
 	MergeEmail(ctx context.Context, tenant string, user entity.UserData) error
-	MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData, phoneNumber string) error
+	MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData, phoneNumber entity.PhoneNumber) error
 	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetUserIdById(ctx context.Context, tenant, id string) (string, error)
 	GetUserIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
@@ -198,7 +198,7 @@ func (r *userRepository) MergeEmail(ctx context.Context, tenant string, user ent
 	return err
 }
 
-func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData, phoneNumber string) error {
+func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData, phoneNumber entity.PhoneNumber) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.MergePhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -218,7 +218,7 @@ func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, us
 		"				p:%s " +
 		" WITH DISTINCT u, p " +
 		" MERGE (u)-[rel:HAS]->(p) " +
-		" ON CREATE SET rel.primary=true, " +
+		" ON CREATE SET rel.primary=$primary, " +
 		"				rel.label=$label " +
 		" RETURN p.id "
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -226,8 +226,9 @@ func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, us
 			map[string]interface{}{
 				"tenant":        tenant,
 				"userId":        user.Id,
-				"phoneNumber":   phoneNumber,
-				"label":         "WORK",
+				"phoneNumber":   phoneNumber.Number,
+				"label":         phoneNumber.Label,
+				"primary":       phoneNumber.Primary,
 				"source":        user.ExternalSystem,
 				"sourceOfTruth": user.ExternalSystem,
 				"appSource":     constants.AppSourceSyncCustomerOsData,

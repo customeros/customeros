@@ -109,8 +109,11 @@ func (s *slackDataService) GetUsersForSync(ctx context.Context, batchSize int, r
 			outputJSON, err := MapUser(v.Data)
 			user, err := source.MapJsonToUser(outputJSON, v.RawId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				user = entity.UserData{
+					BaseData: entity.BaseData{
+						SyncId: v.RawId,
+					},
+				}
 			}
 			s.processingIds[v.RawId] = source.ProcessingEntity{
 				ExternalId:  user.ExternalId,
@@ -141,8 +144,11 @@ func (s *slackDataService) GetContactsForSync(ctx context.Context, batchSize int
 			outputJSON, err := MapContact(v.Data)
 			contact, err := source.MapJsonToContact(outputJSON, v.RawId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				contact = entity.ContactData{
+					BaseData: entity.BaseData{
+						SyncId: v.RawId,
+					},
+				}
 			}
 
 			s.processingIds[v.RawId] = source.ProcessingEntity{
@@ -174,8 +180,11 @@ func (s *slackDataService) GetInteractionEventsForSync(ctx context.Context, batc
 			outputJSON, err := MapInteractionEvent(v.Data)
 			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.RawId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				interactionEvent = entity.InteractionEventData{
+					BaseData: entity.BaseData{
+						SyncId: v.RawId,
+					},
+				}
 			}
 
 			s.processingIds[v.RawId] = source.ProcessingEntity{

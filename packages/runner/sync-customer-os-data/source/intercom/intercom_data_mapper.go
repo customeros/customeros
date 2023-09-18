@@ -149,11 +149,19 @@ func MapContact(inputJson string) (string, error) {
 		BaseData: entity.BaseData{
 			ExternalId: input.ID,
 		},
-		PhoneNumber:          input.Phone,
+
 		Name:                 input.Name,
 		Email:                input.Email,
 		ProfilePhotoUrl:      input.Avatar,
 		OrganizationRequired: true,
+	}
+	if input.Phone != "" {
+		output.PhoneNumbers = []entity.PhoneNumber{
+			{
+				Number:  input.Phone,
+				Primary: true,
+			},
+		}
 	}
 	output.Organizations = append(output.Organizations, entity.ReferencedOrganization{
 		Domain:   emailDomain,

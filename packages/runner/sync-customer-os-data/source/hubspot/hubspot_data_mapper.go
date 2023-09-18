@@ -84,7 +84,11 @@ func MapOrganization(inputJSON string) (string, error) {
 		Domains: []string{input.Properties.Domain},
 	}
 	if input.Properties.Phone != "" {
-		output.PhoneNumbers = []string{input.Properties.Phone}
+		output.PhoneNumbers = []entity.PhoneNumber{
+			{
+				Number:  input.Properties.Phone,
+				Primary: true,
+			}}
 	}
 	switch input.Properties.Type {
 	case "PROSPECT":
@@ -391,7 +395,13 @@ func MapContact(inputJSON string) (string, error) {
 		Email:     input.Properties.Email,
 	}
 	output.AdditionalEmails = strings.Split(input.Properties.AdditionalEmails, ";")
-	output.PhoneNumber = input.Properties.PhoneNumber
+	output.PhoneNumbers = []entity.PhoneNumber{
+		{
+			Number:  input.Properties.PhoneNumber,
+			Primary: true,
+		},
+	}
+
 	if input.Properties.AssociatedCompanyId != nil {
 		output.Organizations = append(output.Organizations, entity.ReferencedOrganization{
 			JobTitle:   input.Properties.JobTitle,

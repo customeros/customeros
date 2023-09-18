@@ -9,30 +9,31 @@ import (
 
 type ContactData struct {
 	BaseData
-	Prefix                 string                   `json:"prefix,omitempty"`
-	FirstName              string                   `json:"firstName,omitempty"`
-	LastName               string                   `json:"LastName,omitempty"`
-	Name                   string                   `json:"name,omitempty"`
-	Label                  string                   `json:"label,omitempty"`
-	Notes                  []ContactNote            `json:"notes,omitempty"`
-	Email                  string                   `json:"email,omitempty"`
-	AdditionalEmails       []string                 `json:"additionalEmails,omitempty"`
-	PhoneNumber            string                   `json:"phoneNumber,omitempty"`
-	AdditionalPhoneNumbers []string                 `json:"additionalPhoneNumbers,omitempty"`
-	UserExternalOwnerId    string                   `json:"externalOwnerId,omitempty"`
-	UserExternalUserId     string                   `json:"externalUserId,omitempty"`
-	TextCustomFields       []TextCustomField        `json:"textCustomFields,omitempty"`
-	Tags                   []string                 `json:"tags,omitempty"`
-	Location               string                   `json:"location,omitempty"`
-	Country                string                   `json:"country,omitempty"`
-	Region                 string                   `json:"region,omitempty"`
-	Locality               string                   `json:"locality,omitempty"`
-	Address                string                   `json:"address,omitempty"`
-	Zip                    string                   `json:"zip,omitempty"`
-	Timezone               string                   `json:"timezone,omitempty"`
-	ProfilePhotoUrl        string                   `json:"profilePhotoUrl,omitempty"`
-	Organizations          []ReferencedOrganization `json:"organizations,omitempty"`
-	OrganizationRequired   bool                     `json:"organizationRequired,omitempty"`
+	Prefix               string                   `json:"prefix,omitempty"`
+	FirstName            string                   `json:"firstName,omitempty"`
+	LastName             string                   `json:"LastName,omitempty"`
+	Name                 string                   `json:"name,omitempty"`
+	Label                string                   `json:"label,omitempty"`
+	Notes                []ContactNote            `json:"notes,omitempty"`
+	Email                string                   `json:"email,omitempty"`
+	AdditionalEmails     []string                 `json:"additionalEmails,omitempty"`
+	PhoneNumbers         []PhoneNumber            `json:"phoneNumbers,omitempty"`
+	UserExternalOwnerId  string                   `json:"externalOwnerId,omitempty"`
+	UserExternalUserId   string                   `json:"externalUserId,omitempty"`
+	TextCustomFields     []TextCustomField        `json:"textCustomFields,omitempty"`
+	Tags                 []string                 `json:"tags,omitempty"`
+	LocationName         string                   `json:"locationName,omitempty"`
+	Country              string                   `json:"country,omitempty"`
+	Region               string                   `json:"region,omitempty"`
+	Locality             string                   `json:"locality,omitempty"`
+	Street               string                   `json:"street,omitempty"`
+	Address              string                   `json:"address,omitempty"`
+	Zip                  string                   `json:"zip,omitempty"`
+	PostalCode           string                   `json:"postalCode,omitempty"`
+	Timezone             string                   `json:"timezone,omitempty"`
+	ProfilePhotoUrl      string                   `json:"profilePhotoUrl,omitempty"`
+	Organizations        []ReferencedOrganization `json:"organizations,omitempty"`
+	OrganizationRequired bool                     `json:"organizationRequired,omitempty"`
 }
 
 type ContactNote struct {
@@ -69,8 +70,17 @@ func (c *ContactData) AllEmails() []string {
 	return allEmails
 }
 
-func (c *ContactData) HasPhoneNumber() bool {
-	return len(c.PhoneNumber) > 0
+func (c *ContactData) HasPhoneNumbers() bool {
+	return len(c.PhoneNumbers) > 0
+}
+
+func (c *ContactData) PrimaryPhoneNumber() string {
+	for _, phoneNumber := range c.PhoneNumbers {
+		if phoneNumber.Primary {
+			return phoneNumber.Number
+		}
+	}
+	return ""
 }
 
 func (c *ContactData) HasOrganizations() bool {
@@ -89,7 +99,7 @@ func (c *ContactData) HasNotes() bool {
 }
 
 func (c *ContactData) HasLocation() bool {
-	return len(c.Location) > 0 || len(c.Country) > 0 || len(c.Region) > 0 || len(c.Locality) > 0 || len(c.Address) > 0 || len(c.Zip) > 0
+	return c.LocationName != "" || c.Country != "" || c.Region != "" || c.Locality != "" || c.Address != "" || c.Zip != "" || c.PostalCode != ""
 }
 
 func (c *ContactData) HasTextCustomFields() bool {
@@ -129,6 +139,6 @@ func (c *ContactData) Normalize() {
 	utils.LowercaseStrings(c.AdditionalEmails)
 	c.Email = strings.ToLower(c.Email)
 
-	c.AdditionalPhoneNumbers = utils.FilterEmpty(c.AdditionalPhoneNumbers)
-	c.AdditionalPhoneNumbers = utils.RemoveDuplicates(c.AdditionalPhoneNumbers)
+	c.PhoneNumbers = GetNonEmptyPhoneNumbers(c.PhoneNumbers)
+	c.PhoneNumbers = RemoveDuplicatedPhoneNumbers(c.PhoneNumbers)
 }

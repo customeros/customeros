@@ -97,6 +97,12 @@ func (s *meetingSyncService) syncMeeting(ctx context.Context, meetingSyncMutex *
 	var reason string
 	meetingInput.Normalize()
 
+	if meetingInput.ExternalSystem == "" {
+		_ = dataService.MarkProcessed(ctx, meetingInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+		*failed++
+		return
+	}
+
 	if meetingInput.Skip {
 		if err := dataService.MarkProcessed(ctx, meetingInput.SyncId, runId, true, true, meetingInput.SkipReason); err != nil {
 			*failed++

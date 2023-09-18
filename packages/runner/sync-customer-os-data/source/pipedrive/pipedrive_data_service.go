@@ -111,8 +111,11 @@ func (s *pipedriveDataService) GetUsersForSync(ctx context.Context, batchSize in
 			outputJSON, err := MapUser(v.AirbyteData)
 			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				user = entity.UserData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  user.ExternalId,
@@ -133,7 +136,7 @@ func (s *pipedriveDataService) GetOrganizationsForSync(ctx context.Context, batc
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -143,8 +146,11 @@ func (s *pipedriveDataService) GetOrganizationsForSync(ctx context.Context, batc
 			outputJSON, err := MapOrganization(v.AirbyteData)
 			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				organization = entity.OrganizationData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -166,7 +172,7 @@ func (s *pipedriveDataService) GetContactsForSync(ctx context.Context, batchSize
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -176,8 +182,11 @@ func (s *pipedriveDataService) GetContactsForSync(ctx context.Context, batchSize
 			outputJSON, err := MapContact(v.AirbyteData)
 			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				contact = entity.ContactData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -198,7 +207,7 @@ func (s *pipedriveDataService) GetNotesForSync(ctx context.Context, batchSize in
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			s.log.Fatal(err) // alexb handle errors
+			s.log.Error(err)
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -208,8 +217,11 @@ func (s *pipedriveDataService) GetNotesForSync(ctx context.Context, batchSize in
 			outputJSON, err := MapNote(v.AirbyteData)
 			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				note = entity.NoteData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{

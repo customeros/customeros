@@ -112,8 +112,11 @@ func (s *intercomDataService) GetUsersForSync(ctx context.Context, batchSize int
 			outputJSON, err := MapUser(v.AirbyteData)
 			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				user = entity.UserData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  user.ExternalId,
@@ -144,8 +147,11 @@ func (s *intercomDataService) GetOrganizationsForSync(ctx context.Context, batch
 			outputJSON, err := MapOrganization(v.AirbyteData)
 			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				organization = entity.OrganizationData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -177,8 +183,11 @@ func (s *intercomDataService) GetContactsForSync(ctx context.Context, batchSize 
 			outputJSON, err := MapContact(v.AirbyteData)
 			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				contact = entity.ContactData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -210,8 +219,11 @@ func (s *intercomDataService) GetInteractionEventsForSync(ctx context.Context, b
 			outputJSON, err := MapInteractionEvent(v.AirbyteData)
 			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				interactionEvent = entity.InteractionEventData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{

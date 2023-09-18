@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"strings"
 	"sync"
 	"time"
 )
@@ -99,7 +98,11 @@ func (s *userSyncService) syncUser(ctx context.Context, userSyncMutex *sync.Mute
 		return
 	}
 
-	userInput.Email = strings.ToLower(userInput.Email)
+	if userInput.ExternalSystem == "" {
+		_ = dataService.MarkProcessed(ctx, userInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+		*failed++
+		return
+	}
 
 	userSyncMutex.Lock()
 	userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, userInput)
