@@ -11,7 +11,7 @@ import (
 
 type OrganizationRepository interface {
 	GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainId string) (*dbtype.Node, error)
-	CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time) (*dbtype.Node, error)
+	CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error)
 	LinkDomainToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName, organizationId string) error
 	GetOrganizationsLinkedToEmailsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, emailIdList []string) ([]string, error)
 	UpdateLastTouchpointInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
@@ -47,16 +47,16 @@ func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, 
 	}
 }
 
-func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time) (*dbtype.Node, error) {
+func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()}) " +
 		" ON CREATE SET org.createdAt=$now, " +
 		"				org.updatedAt=$now, " +
-		"               org.hide=false, " +
 		"               org.name=$name, " +
 		"				org.source=$source, " +
 		"				org.sourceOfTruth=$source, " +
 		"				org.appSource=$appSource, " +
+		"				org.hide=$hide, " +
 		"				org:%s " +
 		" RETURN org"
 
@@ -68,6 +68,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 			"sourceOfTruth": sourceOfTruth,
 			"appSource":     appSource,
 			"now":           date,
+			"hide":          hide,
 		})
 	if err != nil {
 		return nil, err
