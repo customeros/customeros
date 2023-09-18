@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
-	comentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
@@ -20,6 +20,9 @@ import (
 	"strings"
 	"time"
 )
+
+const Source = "gmail"
+const AppSource = "sync-gmail"
 
 type emailService struct {
 	cfg          *config.Config
@@ -30,7 +33,7 @@ type emailService struct {
 type EmailService interface {
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 
-	SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []comentity.PersonalEmailProvider, organizationAllowedForImport []comentity.WhitelistDomain)
+	SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain)
 
 	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawEmailState, *string, error)
 	SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawEmailState, *string, error)
@@ -51,7 +54,7 @@ func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEnt
 	return s.mapDbNodeToEmailEntity(*email), nil
 }
 
-func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []comentity.PersonalEmailProvider, organizationAllowedForImport []comentity.WhitelistDomain) {
+func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain) {
 	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForUserForSync(externalSystemId, tenant, userSource)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
@@ -102,7 +105,7 @@ func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSo
 	return s.syncEmail(externalSystemId, tenant, rawEmail.ID, personalEmailProviderList, organizationAllowedForImport)
 }
 
-func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail, personalEmailProviderList []comentity.PersonalEmailProvider, organizationAllowedForImport []comentity.WhitelistDomain) {
+func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain) {
 	for _, email := range emails {
 		state, reason, err := s.syncEmail(externalSystemId, tenant, email.ID, personalEmailProviderList, organizationAllowedForImport)
 
@@ -121,7 +124,7 @@ func (s *emailService) syncEmails(externalSystemId, tenant string, emails []enti
 	}
 }
 
-func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, personalEmailProviderList []comentity.PersonalEmailProvider, organizationAllowedForImport []comentity.WhitelistDomain) (entity.RawEmailState, *string, error) {
+func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, personalEmailProviderList []commonEntity.PersonalEmailProvider, whitelistDomainList []commonEntity.WhitelistDomain) (entity.RawEmailState, *string, error) {
 	ctx := context.Background()
 
 	emailIdString := emailId.String()
@@ -178,29 +181,8 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			return entity.ERROR, nil, err
 		}
 
-		shouldAddInteractionEvent := false
-
-		if organizationAllowedForImport != nil && len(organizationAllowedForImport) == 1 {
-			if organizationAllowedForImport[0].Name == "*" && organizationAllowedForImport[0].Domain == "*" {
-				shouldAddInteractionEvent = true
-			}
-		}
-
-		if !shouldAddInteractionEvent {
-			//check if at least 1 email belongs to an organization that is allowed for import
-			for _, emailString := range allEmailsString {
-
-				for _, organizationAllowedForImport := range organizationAllowedForImport {
-					if strings.Contains(emailString, organizationAllowedForImport.Domain) {
-						shouldAddInteractionEvent = true
-						break
-					}
-				}
-			}
-		}
-
-		if !shouldAddInteractionEvent {
-			reason := "organization is not allowed for import"
+		if len(allEmailsString) == 0 {
+			reason := "no emails address belongs to a workspace domain"
 			return entity.SKIPPED, &reason, nil
 		}
 
@@ -260,7 +242,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//from
 		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
-		fromEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, getAllowedOrganizationForImportByDomain(extractDomain(from), organizationAllowedForImport), personalEmailProviderList, now)
+		fromEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, getWhitelistedDomain(extractDomain(from), whitelistDomainList), personalEmailProviderList, now)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 			return entity.ERROR, nil, err
@@ -279,7 +261,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//to
 		for _, toEmail := range to {
-			toEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, getAllowedOrganizationForImportByDomain(extractDomain(toEmail), organizationAllowedForImport), personalEmailProviderList, now)
+			toEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, getWhitelistedDomain(extractDomain(toEmail), whitelistDomainList), personalEmailProviderList, now)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -299,7 +281,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//cc
 		for _, ccEmail := range cc {
-			ccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, getAllowedOrganizationForImportByDomain(extractDomain(ccEmail), organizationAllowedForImport), personalEmailProviderList, now)
+			ccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, getWhitelistedDomain(extractDomain(ccEmail), whitelistDomainList), personalEmailProviderList, now)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -320,7 +302,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		//bcc
 		for _, bccEmail := range bcc {
 
-			bccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, getAllowedOrganizationForImportByDomain(extractDomain(bccEmail), organizationAllowedForImport), personalEmailProviderList, now)
+			bccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, getWhitelistedDomain(extractDomain(bccEmail), whitelistDomainList), personalEmailProviderList, now)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -418,8 +400,8 @@ type EmailChannelData struct {
 	Reference []string `json:"Reference"`
 }
 
-func getAllowedOrganizationForImportByDomain(domain string, allowedOrganizations []comentity.WhitelistDomain) *comentity.WhitelistDomain {
-	for _, allowedOrganization := range allowedOrganizations {
+func getWhitelistedDomain(domain string, whitelistedDomains []commonEntity.WhitelistDomain) *commonEntity.WhitelistDomain {
+	for _, allowedOrganization := range whitelistedDomains {
 		if strings.Contains(domain, allowedOrganization.Domain) {
 			return &allowedOrganization
 		}
@@ -427,7 +409,7 @@ func getAllowedOrganizationForImportByDomain(domain string, allowedOrganizations
 	return nil
 }
 
-func (s *emailService) buildEmailsListExcludingPersonalEmails(personalEmailProviderList []comentity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
+func (s *emailService) buildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
 	var allEmails []string
 
 	if from != "" && from != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, extractDomain(from)) {
@@ -444,7 +426,7 @@ func (s *emailService) buildEmailsListExcludingPersonalEmails(personalEmailProvi
 	return allEmails, nil
 }
 
-func hasPersonalEmailProvider(providers []comentity.PersonalEmailProvider, domain string) bool {
+func hasPersonalEmailProvider(providers []commonEntity.PersonalEmailProvider, domain string) bool {
 	for _, provider := range providers {
 		if provider.ProviderDomain == domain {
 			return true
@@ -584,12 +566,7 @@ func extractDomain(email string) string {
 	return strings.ToLower(split[len(split)-2] + "." + split[len(split)-1])
 }
 
-const Source = "gmail"
-const AppSource = "sync-gmail"
-
-// TODO 1. we need a way to mark a domain associated with the tenant.
-// if we find an email address associated to it that doesn't exist in db, we should create the email without a contact/a user
-func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, allowedOrganization *comentity.WhitelistDomain, personalEmailProviderList []comentity.PersonalEmailProvider, now time.Time) (string, error) {
+func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *commonEntity.WhitelistDomain, personalEmailProviderList []commonEntity.PersonalEmailProvider, now time.Time) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))
@@ -629,10 +606,18 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 		if err != nil {
 			return "", fmt.Errorf("unable to create domain: %v", err)
 		}
+	}
+
+	organizationNode, err = s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
+	if err != nil {
+		return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
+	}
+
+	if organizationNode == nil {
 
 		var organizationName string
 
-		if allowedOrganization == nil || allowedOrganization.Name == "" {
+		if whitelistDomain == nil || whitelistDomain.Name == "" {
 
 			//TODO to insert into the allowed organization table with allowed = false t have it for the next time ????
 			organizationName, err = s.services.OpenAiService.AskForOrganizationNameByDomain(tenant, interactionEventId, domain)
@@ -643,10 +628,11 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 				return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
 			}
 		} else {
-			organizationName = allowedOrganization.Name
+			organizationName = whitelistDomain.Name
 		}
 
-		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, Source, "openline", AppSource, now)
+		hide := whitelistDomain == nil || !whitelistDomain.Allowed
+		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, Source, "openline", AppSource, now, hide)
 		if err != nil {
 			return "", fmt.Errorf("unable to create organization for tenant: %v", err)
 		}
@@ -663,49 +649,7 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 			return "", fmt.Errorf("unable to create action: %v", err)
 		}
 	} else {
-
-		organizationNode, err = s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
-		if err != nil {
-			return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
-		}
-
-		if organizationNode == nil {
-
-			var organizationName string
-
-			if allowedOrganization == nil || allowedOrganization.Name == "" {
-				organizationName, err = s.services.OpenAiService.AskForOrganizationNameByDomain(tenant, interactionEventId, domain)
-				if err != nil {
-					return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
-				}
-				if organizationName == "" {
-					return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
-				}
-			} else {
-				organizationName = allowedOrganization.Name
-			}
-
-			organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, Source, "openline", AppSource, now)
-			if err != nil {
-				return "", fmt.Errorf("unable to create organization for tenant: %v", err)
-			}
-
-			organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
-			domainName := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain")
-			err = s.repositories.OrganizationRepository.LinkDomainToOrganization(ctx, tx, tenant, domainName, organizationId)
-			if err != nil {
-				return "", fmt.Errorf("unable to link domain to organization: %v", err)
-			}
-
-			_, err := s.repositories.ActionRepository.Create(ctx, tx, tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated, Source, AppSource)
-			if err != nil {
-				return "", fmt.Errorf("unable to create action: %v", err)
-			}
-
-		} else {
-			organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
-		}
-
+		organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
 	}
 
 	firstName := ""
@@ -724,16 +668,8 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 		}
 	}
 
-	if organizationId == "" {
-		return "", fmt.Errorf("empty organization id: %v", err)
-	}
-
 	emailId, err := s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, Source, AppSource)
 	if err != nil {
-		return "", fmt.Errorf("unable to create email linked to organization: %v", err)
-	}
-
-	if emailId == "" {
 		return "", fmt.Errorf("unable to create email linked to organization: %v", err)
 	}
 
