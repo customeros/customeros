@@ -1,48 +1,30 @@
 import React, { useEffect, useRef } from 'react';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
-import { useRemirror } from '@remirror/react';
-import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { Box, Flex } from '@chakra-ui/react';
 import { Button } from '@ui/form/Button';
 import { TagSuggestor } from './TagSuggestor';
 
 import { TagsSelect } from './TagSelect';
 import Image from 'next/image';
-import noteIcon from 'public/images/event-ill-log.png';
-import { useForm } from 'react-inverted-form';
-import { LogEntryDto, LogEntryDtoI } from './LogEntry.dto';
-import { useCreateLogEntryMutation } from '@organization/graphql/createLogEntry.generated';
+import noteIcon from '../../../../../../../../public/images/event-ill-log.png';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useParams } from 'next/navigation';
 
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
+import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/TimelineActions/TimelineActionsContext/TimelineActionLogEntryContext';
 
-export const Logger: React.FC<{ invalidateQuery: () => void }> = ({
-  invalidateQuery,
-}) => {
-  const id = useParams()?.id as string;
+export const Logger = () => {
+  const { onCreateLogEntry, remirrorProps, isSaving } =
+    useTimelineActionLogEntryContext();
   const client = getGraphQLClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   const { data } = useGetTagsQuery(client);
-  const logEntryValues: LogEntryDtoI = new LogEntryDto();
-  const { state, reset } = useForm<LogEntryDtoI>({
-    formId: 'organization-create-log-entry',
-    defaultValues: logEntryValues,
-
-    stateReducer: (_, _a, next) => {
-      return next;
-    },
-  });
-  const remirrorProps = useRemirror({
-    extensions: basicEditorExtensions,
-  });
-  const createLogEntryMutation = useCreateLogEntryMutation(client, {
-    onSuccess: () => {
-      reset();
-      timeoutRef.current = setTimeout(() => invalidateQuery(), 500);
-    },
-  });
+  //
+  // const createLogEntryMutation = useCreateLogEntryMutation(client, {
+  //   onSuccess: () => {
+  //     // reset();
+  //     timeoutRef.current = setTimeout(() => invalidateQuery(), 500);
+  //   },
+  // });
 
   useEffect(() => {
     return () => {
@@ -51,20 +33,6 @@ export const Logger: React.FC<{ invalidateQuery: () => void }> = ({
       }
     };
   }, []);
-
-  const onCreateLogEntry = () => {
-    const logEntryPayload = LogEntryDto.toPayload({
-      ...logEntryValues,
-      tags: state.values.tags,
-      content: state.values.content,
-      contentType: state.values.contentType,
-    });
-    createLogEntryMutation.mutate({
-      organizationId: id,
-
-      logEntry: logEntryPayload,
-    });
-  };
 
   return (
     <Flex
@@ -108,8 +76,8 @@ export const Logger: React.FC<{ invalidateQuery: () => void }> = ({
           pr={3}
           size='sm'
           fontSize='sm'
-          isDisabled={createLogEntryMutation.isLoading}
-          isLoading={createLogEntryMutation.isLoading}
+          isDisabled={isSaving}
+          isLoading={isSaving}
           loadingText='Sending'
           onClick={onCreateLogEntry}
         >
