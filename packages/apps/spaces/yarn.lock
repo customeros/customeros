@@ -13389,10 +13389,10 @@ react-hook-form@7.44.3:
   resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.44.3.tgz#a99e560c6ef2b668db1daaebc4f98267331b6828"
   integrity sha512-/tHId6p2ViAka1wECMw8FEPn/oz/w226zehHrJyQ1oIzCBNMIJCaj6ZkQcv+MjDxYh9MWR7RQic7Qqwe4a5nkw==
 
-react-inverted-form@^1.2.10:
-  version "1.2.10"
-  resolved "https://registry.yarnpkg.com/react-inverted-form/-/react-inverted-form-1.2.10.tgz#2e535017270b2809735d515a0a649703905e67af"
-  integrity sha512-g6o3A40XFRlNHMRXrXRwcp2sBF8fClVyIi+aq+OIFHuDISs4S9e6sJ/hkqF0vmu6d0TQAVkgNWul051udIZ1nw==
+react-inverted-form@^1.2.11:
+  version "1.2.11"
+  resolved "https://registry.yarnpkg.com/react-inverted-form/-/react-inverted-form-1.2.11.tgz#51962e1f27149d11d332c16c419c1b2a82dc8a5d"
+  integrity sha512-Z1jRSmyIOil6qUm6BMsNFzEwjXVfcFG+KWcNvAzfsbcDXMTDIRRdfYPie4xPRtwxvoVxr2Ykzkbm4Ih3p9fSAA==
 
 react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"
