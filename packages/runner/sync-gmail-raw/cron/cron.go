@@ -89,11 +89,6 @@ func syncEmailsForAllTenantsWithServiceAccount(config *config.Config, services *
 				return
 			}
 
-			if tenant.Name != "openline" {
-				logrus.Infof("syncing emails for tenant: %s skip", tenant)
-				return
-			}
-
 			usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
 			if err != nil {
 				logrus.Error(err)
