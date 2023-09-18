@@ -28,9 +28,13 @@ func MapUser(inputJson string) (string, error) {
 			CreatedAtStr: input.CreatedAt,
 			UpdatedAtStr: input.Modified,
 		},
-		Name:         input.Name,
-		Email:        input.Email,
-		PhoneNumbers: []string{input.Phone},
+		Name:  input.Name,
+		Email: input.Email,
+		PhoneNumbers: []entity.PhoneNumber{
+			{
+				Number: input.Phone,
+			},
+		},
 	}
 	if input.ID == 0 {
 		output.Skip = true
@@ -154,15 +158,12 @@ func MapContact(inputJSON string) (string, error) {
 			}
 		}
 	}
-	var primaryPhoneNumberFound = false
 	for _, phone := range input.Phones {
 		if phone.Value != "" {
-			if phone.Primary && !primaryPhoneNumberFound {
-				output.PhoneNumber = phone.Value
-				primaryPhoneNumberFound = true
-			} else {
-				output.AdditionalPhoneNumbers = append(output.AdditionalPhoneNumbers, phone.Value)
-			}
+			output.PhoneNumbers = append(output.PhoneNumbers, entity.PhoneNumber{
+				Number:  phone.Value,
+				Primary: phone.Primary,
+			})
 		}
 	}
 

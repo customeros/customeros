@@ -20,7 +20,7 @@ type OrganizationRepository interface {
 	MergeOrganizationRelationshipAndStage(ctx context.Context, tenant, organizationId, relationship, stage, externalSystem string) error
 	MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
 	MergeOrganizationDomain(ctx context.Context, tenant, organizationId, domain, externalSystem string) error
-	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
+	MergePhoneNumber(ctx context.Context, tenant, organizationId, externalSystem string, createdAt time.Time, phoneNumber entity.PhoneNumber) error
 	MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error
 	LinkToParentOrganizationAsSubsidiary(ctx context.Context, tenant, organizationId, externalSystem string, parentOrganizationDtls *entity.ParentOrganization) error
 	CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error)
@@ -332,7 +332,7 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 	return err
 }
 
-func (r *organizationRepository) MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error {
+func (r *organizationRepository) MergePhoneNumber(ctx context.Context, tenant, organizationId, externalSystem string, createdAt time.Time, phoneNumber entity.PhoneNumber) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergePhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -352,14 +352,16 @@ func (r *organizationRepository) MergePhoneNumber(ctx context.Context, tenant, o
 		"				p:%s " +
 		" WITH DISTINCT o, p " +
 		" MERGE (o)-[rel:HAS]->(p) " +
-		" ON CREATE SET rel.primary=false, p.updatedAt=$now, o.updatedAt=$now "
+		" ON CREATE SET rel.primary=$primary, rel.label=$label, p.updatedAt=$now, o.updatedAt=$now "
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, "PhoneNumber_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"organizationId": organizationId,
-				"phoneNumber":    phoneNumber,
+				"phoneNumber":    phoneNumber.Number,
+				"primary":        phoneNumber.Primary,
+				"label":          phoneNumber.Label,
 				"createdAt":      createdAt,
 				"source":         externalSystem,
 				"sourceOfTruth":  externalSystem,

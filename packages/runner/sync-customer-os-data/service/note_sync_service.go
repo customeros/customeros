@@ -94,6 +94,12 @@ func (s *noteSyncService) syncNote(ctx context.Context, noteSyncMutex *sync.Mute
 	var reason string
 	noteInput.Normalize()
 
+	if noteInput.ExternalSystem == "" {
+		_ = dataService.MarkProcessed(ctx, noteInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+		*failed++
+		return
+	}
+
 	if noteInput.Skip {
 		if err := dataService.MarkProcessed(ctx, noteInput.SyncId, runId, true, true, noteInput.SkipReason); err != nil {
 			*failed++

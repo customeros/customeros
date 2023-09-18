@@ -73,12 +73,14 @@ func MapUser(inputJson string) (string, error) {
 		BaseData: entity.BaseData{
 			ExternalId: input.ID,
 		},
-		Email:        input.Profile.Email,
-		PhoneNumbers: []string{input.Profile.Phone},
-		FirstName:    input.Profile.FirstName,
-		LastName:     input.Profile.LastName,
-		Name:         input.Profile.Name,
-		Timezone:     input.Timezone,
+		Email: input.Profile.Email,
+		PhoneNumbers: []entity.PhoneNumber{{
+			Number:  input.Profile.Phone,
+			Primary: true}},
+		FirstName: input.Profile.FirstName,
+		LastName:  input.Profile.LastName,
+		Name:      input.Profile.Name,
+		Timezone:  input.Timezone,
 	}
 	if !strings.HasPrefix(input.Profile.Image192, "https://secure.gravatar.com") {
 		output.ProfilePhotoUrl = input.Profile.Image192
@@ -141,12 +143,12 @@ func MapContact(inputJson string) (string, error) {
 		BaseData: entity.BaseData{
 			ExternalId: input.ID,
 		},
-		Email:       input.Profile.Email,
-		PhoneNumber: input.Profile.Phone,
-		FirstName:   input.Profile.FirstName,
-		LastName:    input.Profile.LastName,
-		Name:        input.Profile.Name,
-		Timezone:    input.Timezone,
+		Email:        input.Profile.Email,
+		PhoneNumbers: []entity.PhoneNumber{{Number: input.Profile.Phone, Primary: true}},
+		FirstName:    input.Profile.FirstName,
+		LastName:     input.Profile.LastName,
+		Name:         input.Profile.Name,
+		Timezone:     input.Timezone,
 	}
 	output.Organizations = append(output.Organizations, entity.ReferencedOrganization{
 		Id: input.OpenlineFields.OrganizationId,

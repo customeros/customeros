@@ -36,9 +36,11 @@ func MapUser(inputJSON string) (string, error) {
 			CreatedAtStr: input.CreatedAt,
 			UpdatedAtStr: input.UpdatedAt,
 		},
-		Name:         input.Name,
-		Email:        utils.IfNotNilString(input.Email),
-		PhoneNumbers: []string{utils.IfNotNilString(input.Phone)},
+		Name:  input.Name,
+		Email: utils.IfNotNilString(input.Email),
+		PhoneNumbers: []entity.PhoneNumber{{
+			Number: utils.IfNotNilString(input.Phone),
+		}},
 	}
 
 	if input.Role == "end-user" || input.ID == 0 {
@@ -164,7 +166,7 @@ func mapOrganizationFromUser(inputJSON string) (string, error) {
 		Name: input.Name,
 	}
 	if input.Phone != "" {
-		output.PhoneNumbers = []string{input.Phone}
+		output.PhoneNumbers = []entity.PhoneNumber{{Number: input.Phone}}
 	}
 	if input.Role != "end-user" || input.ID == 0 {
 		output.Skip = true

@@ -98,6 +98,12 @@ func (s *issueSyncService) syncIssue(ctx context.Context, issueSyncMutex *sync.M
 	var reason = ""
 	issueInput.Normalize()
 
+	if issueInput.ExternalSystem == "" {
+		_ = dataService.MarkProcessed(ctx, issueInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+		*failed++
+		return
+	}
+
 	if issueInput.Skip {
 		if err := dataService.MarkProcessed(ctx, issueInput.SyncId, runId, true, true, issueInput.SkipReason); err != nil {
 			*failed++

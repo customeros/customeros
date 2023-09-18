@@ -31,7 +31,7 @@ type OrganizationData struct {
 	Industry     string             `json:"industry,omitempty"`
 	IsPublic     bool               `json:"isPublic,omitempty"`
 	Employees    int64              `json:"employees,omitempty"`
-	PhoneNumbers []string           `json:"phoneNumbers,omitempty"`
+	PhoneNumbers []PhoneNumber      `json:"phoneNumbers,omitempty"`
 	Email        string             `json:"email,omitempty"`
 	// Currently not used. Sync processes will not set automatically owner user
 	OwnerUser          *ReferencedUser     `json:"ownerUser,omitempty"`
@@ -92,8 +92,8 @@ func (o *OrganizationData) Normalize() {
 	utils.LowercaseStrings(o.Domains)
 	o.Domains = utils.RemoveDuplicates(o.Domains)
 
-	o.PhoneNumbers = utils.FilterEmpty(o.PhoneNumbers)
-	o.PhoneNumbers = utils.RemoveDuplicates(o.PhoneNumbers)
+	o.PhoneNumbers = GetNonEmptyPhoneNumbers(o.PhoneNumbers)
+	o.PhoneNumbers = RemoveDuplicatedPhoneNumbers(o.PhoneNumbers)
 }
 
 func (o *OrganizationData) HasOwner() bool {

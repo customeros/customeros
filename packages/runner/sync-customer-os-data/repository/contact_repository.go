@@ -15,12 +15,11 @@ import (
 )
 
 type ContactRepository interface {
-	GetMatchedContactId(ctx context.Context, tenant string, contact entity.ContactData) (string, error)
+	GetMatchedContactId(ctx context.Context, tenant, primaryPhoneNumber string, contact entity.ContactData) (string, error)
 	MergeContact(ctx context.Context, tenant string, syncDate time.Time, contact entity.ContactData) error
 	MergePrimaryEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergeAdditionalEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
-	MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
-	MergeAdditionalPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
+	MergePhoneNumber(ctx context.Context, tenant, contactId, externalSystem string, createdAt time.Time, phoneNumber entity.PhoneNumber) error
 	SetOwnerByOwnerExternalId(ctx context.Context, tenant, contactId, ownerExternalId, externalSystemId string) error
 	SetOwnerByUserExternalId(ctx context.Context, tenant, contactId, userExternalId, externalSystemId string) error
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
@@ -46,7 +45,7 @@ func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	}
 }
 
-func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant string, contact entity.ContactData) (string, error) {
+func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant, primaryPhoneNumber string, contact entity.ContactData) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetMatchedContactId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -73,7 +72,7 @@ func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant stri
 				"externalSystem":    contact.ExternalSystem,
 				"contactExternalId": contact.ExternalId,
 				"emails":            contact.EmailsForUnicity(),
-				"phoneNumber":       contact.PhoneNumber,
+				"phoneNumber":       primaryPhoneNumber,
 			})
 		if err != nil {
 			return nil, err
@@ -249,51 +248,8 @@ func (r *contactRepository) MergeAdditionalEmail(ctx context.Context, tenant, co
 	return err
 }
 
-func (r *contactRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergePrimaryPhoneNumber")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" OPTIONAL MATCH (c)-[rel:HAS]->(p:PhoneNumber) " +
-		" SET rel.primary=false " +
-		" WITH DISTINCT c, t " +
-		" MERGE (p:PhoneNumber {rawPhoneNumber: $phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET " +
-		"				p.id=randomUUID(), " +
-		"				p.createdAt=$now, " +
-		"				p.updatedAt=$now, " +
-		"				p.source=$source, " +
-		"				p.sourceOfTruth=$sourceOfTruth, " +
-		"				p.appSource=$appSource, " +
-		"				p:%s " +
-		" WITH DISTINCT c, p " +
-		" MERGE (c)-[rel:HAS]->(p) " +
-		" ON CREATE SET rel.primary=true, p.updatedAt=$now, c.updatedAt=$now " +
-		" ON MATCH SET rel.primary=true, c.updatedAt=$now "
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, "PhoneNumber_"+tenant),
-			map[string]interface{}{
-				"tenant":        tenant,
-				"contactId":     contactId,
-				"phoneNumber":   phoneNumber,
-				"createdAt":     createdAt,
-				"source":        externalSystem,
-				"sourceOfTruth": externalSystem,
-				"appSource":     constants.AppSourceSyncCustomerOsData,
-				"now":           utils.Now(),
-			})
-		return nil, err
-	})
-	return err
-}
-
-func (r *contactRepository) MergeAdditionalPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeAdditionalPhoneNumber")
+func (r *contactRepository) MergePhoneNumber(ctx context.Context, tenant, contactId, externalSystem string, createdAt time.Time, phoneNumber entity.PhoneNumber) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergePhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -306,11 +262,12 @@ func (r *contactRepository) MergeAdditionalPhoneNumber(ctx context.Context, tena
 						p.source=$source, 
 						p.sourceOfTruth=$sourceOfTruth, 
 						p.appSource=$appSource, 
-						p:%s 
+						p:PhoneNumber_%s 
 		 WITH DISTINCT c, p 
 		 MERGE (c)-[rel:HAS]->(p) 
-		 ON CREATE SET rel.primary=false 
-		 ON MATCH SET rel.primary=false, p.updatedAt=$now `, "PhoneNumber_"+tenant)
+		 ON CREATE SET rel.primary=$primary, rel.label=$label 
+		 ON MATCH SET 
+			rel.label = CASE WHEN rel.label = '' OR rel.label IS NULL THEN $label ELSE rel.label END`, tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
@@ -320,7 +277,9 @@ func (r *contactRepository) MergeAdditionalPhoneNumber(ctx context.Context, tena
 			map[string]interface{}{
 				"tenant":        tenant,
 				"contactId":     contactId,
-				"phoneNumber":   phoneNumber,
+				"phoneNumber":   phoneNumber.Number,
+				"primary":       phoneNumber.Primary,
+				"label":         phoneNumber.Label,
 				"createdAt":     createdAt,
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
@@ -454,8 +413,10 @@ func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, co
 		"	loc.country=$country, " +
 		"	loc.region=$region, " +
 		"	loc.locality=$locality, " +
+		"	loc.street=$street, " +
 		"	loc.address=$address, " +
 		"	loc.zip=$zip, " +
+		"	loc.postalCode=$postalCode, " +
 		"	loc.id=randomUUID(), " +
 		"	loc.appSource=$appSource, " +
 		"	loc.sourceOfTruth=$sourceOfTruth, " +
@@ -466,8 +427,10 @@ func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, co
 		"             loc.country = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $country ELSE loc.country END, " +
 		"             loc.region = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $region ELSE loc.region END, " +
 		"             loc.locality = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $locality ELSE loc.locality END, " +
+		"             loc.street = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $street ELSE loc.street END, " +
 		"             loc.address = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $address ELSE loc.address END, " +
 		"             loc.zip = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $zip ELSE loc.zip END, " +
+		"             loc.postalCode = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $postalCode ELSE loc.postalCode END, " +
 		"             loc.updatedAt = CASE WHEN loc.sourceOfTruth=$sourceOfTruth THEN $now ELSE loc.updatedAt END " +
 		" WITH loc, t " +
 		" MERGE (loc)-[:LOCATION_BELONGS_TO_TENANT]->(t) " +
@@ -475,7 +438,8 @@ func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, co
 		" FOREACH (x in CASE WHEN loc.sourceOfTruth <> $sourceOfTruth THEN [loc] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateLocation {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
-		" alt.country=$country, alt.region=$region, alt.locality=$locality, alt.address=$address, alt.zip=$zip " +
+		" alt.country=$country, alt.region=$region, alt.locality=$locality, alt.address=$address, " +
+		" alt.zip=$zip, alt.postalCode=$postalCode, alt.street=$street " +
 		") "
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -486,13 +450,15 @@ func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, co
 				"country":       contact.Country,
 				"region":        contact.Region,
 				"locality":      contact.Locality,
+				"street":        contact.Street,
 				"address":       contact.Address,
 				"zip":           contact.Zip,
+				"postalCode":    contact.PostalCode,
 				"createdAt":     utils.TimePtrFirstNonNilNillableAsAny(contact.CreatedAt),
 				"source":        contact.ExternalSystem,
 				"sourceOfTruth": contact.ExternalSystem,
 				"appSource":     constants.AppSourceSyncCustomerOsData,
-				"locationName":  contact.Location,
+				"locationName":  contact.LocationName,
 				"now":           utils.Now(),
 			})
 		return nil, err

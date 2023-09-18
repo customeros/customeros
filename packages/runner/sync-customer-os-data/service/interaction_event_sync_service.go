@@ -95,6 +95,12 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 	var reason string
 	interactionEventInput.Normalize()
 
+	if interactionEventInput.ExternalSystem == "" {
+		_ = dataService.MarkProcessed(ctx, interactionEventInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+		*failed++
+		return
+	}
+
 	if interactionEventInput.Skip {
 		if err := dataService.MarkProcessed(ctx, interactionEventInput.SyncId, runId, true, true, interactionEventInput.SkipReason); err != nil {
 			*failed++

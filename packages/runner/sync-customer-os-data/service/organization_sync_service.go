@@ -123,6 +123,12 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 	var reason string
 	orgInput.Normalize()
 
+	if orgInput.ExternalSystem == "" {
+		_ = dataService.MarkProcessed(ctx, orgInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+		*failed++
+		return
+	}
+
 	if orgInput.Skip {
 		if err := dataService.MarkProcessed(ctx, orgInput.SyncId, runId, true, true, orgInput.SkipReason); err != nil {
 			*failed++
@@ -223,7 +229,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 
 	if orgInput.HasPhoneNumbers() && !failedSync {
 		for _, phoneNumber := range orgInput.PhoneNumbers {
-			if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, phoneNumber, orgInput.ExternalSystem, *orgInput.CreatedAt); err != nil {
+			if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, orgInput.ExternalSystem, *orgInput.CreatedAt, phoneNumber); err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
 				reason = fmt.Sprintf("failed merge phone number for organization with external reference %v , tenant %v :%v", orgInput.ExternalId, tenant, err)

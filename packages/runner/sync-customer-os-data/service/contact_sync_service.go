@@ -109,6 +109,12 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactSyncMutex *
 		return
 	}
 
+	if contactInput.ExternalSystem == "" {
+		_ = dataService.MarkProcessed(ctx, contactInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+		*failed++
+		return
+	}
+
 	if contactInput.OrganizationRequired {
 		found := false
 		for _, org := range contactInput.Organizations {
@@ -135,7 +141,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactSyncMutex *
 	}
 
 	contactSyncMutex.Lock()
-	contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, contactInput)
+	contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, contactInput.PrimaryPhoneNumber(), contactInput)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)
@@ -185,25 +191,14 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactSyncMutex *
 		}
 	}
 
-	if contactInput.HasPhoneNumber() && !failedSync {
-		if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(ctx, tenant, contactId, contactInput.PhoneNumber, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
-			s.log.Errorf(reason)
-		}
-	}
-
 	if !failedSync {
-		for _, additionalPhoneNumber := range contactInput.AdditionalPhoneNumbers {
-			if len(additionalPhoneNumber) > 0 {
-				if err = s.repositories.ContactRepository.MergeAdditionalPhoneNumber(ctx, tenant, contactId, additionalPhoneNumber, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
-					failedSync = true
-					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("failed merge additional phone number for contact with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
-					s.log.Errorf(reason)
-					break
-				}
+		for _, phoneNumber := range contactInput.PhoneNumbers {
+			if err = s.repositories.ContactRepository.MergePhoneNumber(ctx, tenant, contactId, contactInput.ExternalSystem, *contactInput.CreatedAt, phoneNumber); err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed merge additional phone number for contact with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
+				s.log.Errorf(reason)
+				break
 			}
 		}
 	}

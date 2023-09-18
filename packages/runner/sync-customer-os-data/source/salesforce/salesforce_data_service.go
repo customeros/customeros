@@ -18,8 +18,8 @@ import (
 const (
 	UserTableSuffix           = "user"
 	AccountTableSuffix        = "account"
-	CampaignmemberTableSuffix = "campaignmember"
 	ContactTableSuffix        = "contact"
+	CampaignmemberTableSuffix = "campaignmember"
 	ContentnoteTableSuffix    = "contentnote"
 	FeeditemTableSuffix       = "feeditem"
 	LeadTableSuffix           = "lead"
@@ -29,7 +29,7 @@ const (
 var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):         {UserTableSuffix},
 	string(common.ORGANIZATIONS): {AccountTableSuffix},
-	//string(common.CONTACTS):           {ContactsTableSuffix},
+	string(common.CONTACTS):      {ContactTableSuffix},
 	//string(common.INTERACTION_EVENTS): {ConversationsTableSuffix, ConversationPartsTableSuffix},
 }
 
@@ -52,7 +52,7 @@ func NewSalesforceDataService(airbyteStoreDb *config.RawDataStoreDB, tenant stri
 	dataService.dataFuncs = map[common.SyncedEntityType]func(context.Context, int, string) []any{}
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
 	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
-	//dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
+	dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
 	//dataService.dataFuncs[common.INTERACTION_EVENTS] = dataService.GetInteractionEventsForSync
 	return &dataService
 }
@@ -115,8 +115,11 @@ func (s *salesforceDataService) GetUsersForSync(ctx context.Context, batchSize i
 			outputJSON, err := MapUser(v.AirbyteData)
 			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				user = entity.UserData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  user.ExternalId,
@@ -147,8 +150,11 @@ func (s *salesforceDataService) GetOrganizationsForSync(ctx context.Context, bat
 			outputJSON, err := MapOrganization(v.AirbyteData)
 			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				s.log.Fatal(err) // alexb handle errors
-				continue
+				organization = entity.OrganizationData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
 			}
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -162,39 +168,42 @@ func (s *salesforceDataService) GetOrganizationsForSync(ctx context.Context, bat
 	return organizations
 }
 
-//func (s *salesforceDataService) GetContactsForSync(ctx context.Context, batchSize int, runId string) []any {
-//	s.processingIds = make(map[string]source.ProcessingEntity)
-//	currentEntity := string(common.CONTACTS)
-//
-//	var contacts []any
-//	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-//		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
-//		if err != nil {
-//			s.log.Error(err)
-//			return nil
-//		}
-//		for _, v := range airbyteRecords {
-//			if len(contacts) >= batchSize {
-//				break
-//			}
-//			outputJSON, err := MapContact(v.AirbyteData)
-//			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
-//			if err != nil {
-//				s.log.Fatal(err) // alexb handle errors
-//				continue
-//			}
-//
-//			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-//				ExternalId:  contact.ExternalId,
-//				Entity:      currentEntity,
-//				TableSuffix: sourceTableSuffix,
-//			}
-//			contacts = append(contacts, contact)
-//		}
-//	}
-//	return contacts
-//}
-//
+func (s *salesforceDataService) GetContactsForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.CONTACTS)
+
+	var contacts []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Error(err)
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(contacts) >= batchSize {
+				break
+			}
+			outputJSON, err := MapContact(v.AirbyteData)
+			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				contact = entity.ContactData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  contact.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			contacts = append(contacts, contact)
+		}
+	}
+	return contacts
+}
+
 //func (s *salesforceDataService) GetInteractionEventsForSync(ctx context.Context, batchSize int, runId string) []any {
 //	s.processingIds = make(map[string]source.ProcessingEntity)
 //	currentEntity := string(common.INTERACTION_EVENTS)
@@ -213,8 +222,11 @@ func (s *salesforceDataService) GetOrganizationsForSync(ctx context.Context, bat
 //			outputJSON, err := MapInteractionEvent(v.AirbyteData)
 //			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.AirbyteAbId, s.SourceId())
 //			if err != nil {
-//				s.log.Fatal(err) // alexb handle errors
-//				continue
+//				interactionEvent = entity.InteractionEventData{
+//					BaseData: entity.BaseData{
+//						SyncId: v.AirbyteAbId,
+//					},
+//				}
 //			}
 //
 //			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
