@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
@@ -126,11 +127,13 @@ func testCreateLogEntry() {
 	result, _ := clients.LogEntryClient.UpsertLogEntry(context.TODO(), &log_entry_grpc_service.UpsertLogEntryGrpcRequest{
 		Tenant:               tenant,
 		LoggedOrganizationId: utils.StringPtr(organizationId),
-		AppSource:            "test_app",
-		AuthorUserId:         utils.StringPtr(authorId),
-		Content:              "I spoke with client",
-		ContentType:          "text/plain",
-		UserId:               userId,
+		SourceFields: &common_grpc_service.SourceFields{
+			AppSource: "test_app",
+		},
+		AuthorUserId: utils.StringPtr(authorId),
+		Content:      "I spoke with client",
+		ContentType:  "text/plain",
+		UserId:       userId,
 	})
 	print(result)
 }
