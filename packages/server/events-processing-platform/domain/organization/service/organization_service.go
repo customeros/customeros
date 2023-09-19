@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
@@ -60,9 +61,11 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 		LastFundingAmount: request.LastFundingAmount,
 		Note:              request.Note,
 	}
-	source := common_utils.StringFirstNonEmpty(request.SourceFields.Source, request.Source)
-	sourceOfTruth := common_utils.StringFirstNonEmpty(request.SourceFields.SourceOfTruth, request.SourceOfTruth)
-	appSource := common_utils.StringFirstNonEmpty(request.SourceFields.AppSource, request.AppSource)
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	source := common_utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
+	sourceOfTruth := common_utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
+	appSource := common_utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
 
 	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, source, sourceOfTruth, appSource, request.UserId, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
