@@ -8,6 +8,7 @@ WORKDIR /workspace
 RUN mkdir /workspace/build
 RUN mkdir /workspace/build/customer-os-api
 RUN mkdir /workspace/build/customer-os-common-module
+RUN mkdir /workspace/build/customer-os-common-auth
 
 #copy and build common module
 COPY customer-os-common-module/go.mod /workspace/build/customer-os-common-module/go.mod
@@ -16,6 +17,14 @@ RUN cd /workspace/build/customer-os-common-module && go mod download && go mod v
 
 COPY customer-os-common-module/. /workspace/build/customer-os-common-module/
 RUN cd /workspace/build/customer-os-common-module && go build
+
+#copy and build common auth module
+COPY customer-os-common-auth/go.mod /workspace/build/customer-os-common-auth/go.mod
+COPY customer-os-common-auth/go.sum /workspace/build/customer-os-common-auth/go.sum
+RUN cd /workspace/build/customer-os-common-auth && go mod download && go mod verify
+
+COPY customer-os-common-auth/. /workspace/build/customer-os-common-auth/
+RUN cd /workspace/build/customer-os-common-auth && go build
 
 #copy events-processing-common
 RUN mkdir /workspace/build/events-processing-common

@@ -11,9 +11,11 @@ import (
 type OAuthTokenRepository interface {
 	GetAll() ([]entity.OAuthTokenEntity, error)
 	GetByPlayerIdAndProvider(playerId string, provider string) (*entity.OAuthTokenEntity, error)
+	GetForEmail(provider, tenant, email string) (*entity.OAuthTokenEntity, error)
 
 	Save(oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
 	Update(playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error)
+
 	MarkForManualRefresh(playerId, provider string) error
 }
 
@@ -45,6 +47,25 @@ func (repo oAuthTokenRepository) GetByPlayerIdAndProvider(playerId, provider str
 	err := repo.db.
 		Where("player_identity_id = ?", playerId).
 		Where("provider = ?", provider).
+		First(&oAuthTokenEntity).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return &oAuthTokenEntity, nil
+}
+
+func (repo oAuthTokenRepository) GetForEmail(provider, tenant, email string) (*entity.OAuthTokenEntity, error) {
+	var oAuthTokenEntity entity.OAuthTokenEntity
+
+	err := repo.db.
+		Where("provider = ?", provider).
+		Where("tenant_name = ?", tenant).
+		Where("email_address = ?", email).
 		First(&oAuthTokenEntity).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

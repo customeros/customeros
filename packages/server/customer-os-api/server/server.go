@@ -24,6 +24,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/validator"
+	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -85,6 +86,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// Setting up Postgres repositories
 	commonServices := commonService.InitServices(db.GormDB, &neo4jDriver)
+	commonAuthServices := commonAuthService.InitServices(db.GormDB)
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.cfg)
@@ -102,7 +104,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	corsConfig.AllowOrigins = []string{"*"}
 	adminApiHandler := cosHandler.NewAdminApiHandler(server.cfg, commonServices)
 
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer)
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, commonAuthServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,
@@ -199,6 +201,9 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 		}
 		if c.Keys[commonService.KEY_USER_ID] != nil {
 			customCtx.UserId = c.Keys[commonService.KEY_USER_ID].(string)
+		}
+		if c.Keys[commonService.KEY_USER_EMAIL] != nil {
+			customCtx.UserEmail = c.Keys[commonService.KEY_USER_EMAIL].(string)
 		}
 		if c.Keys[commonService.KEY_IDENTITY_ID] != nil {
 			customCtx.IdentityId = c.Keys[commonService.KEY_IDENTITY_ID].(string)

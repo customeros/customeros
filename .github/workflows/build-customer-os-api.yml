@@ -5,12 +5,14 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
       - packages/server/events-processing-common/**
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
       - packages/server/events-processing-common/**
       - packages/server/customer-os-api/**
       - .github/workflows/build-customer-os-api.yml
@@ -79,11 +81,13 @@ jobs:
           mkdir tmp-sources/customer-os-common-module
           mkdir tmp-sources/customer-os-api
           mkdir tmp-sources/events-processing-common
+          mkdir tmp-sources/customer-os-common-auth
           
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer-os-api
           cp .env tmp-sources/customer-os-api/.env
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
           cp -r ../events-processing-common/* tmp-sources/events-processing-common
+          cp -r ../customer-os-common-auth/* tmp-sources/customer-os-common-auth
           
           cp Dockerfile tmp-sources/Dockerfile
 

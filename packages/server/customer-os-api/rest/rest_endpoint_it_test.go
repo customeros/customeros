@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
+	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/testcontainers/testcontainers-go"
@@ -67,7 +68,8 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 	commonServices := commonService.InitServices(postgresGormDB, driver)
-	serviceContainer = service.InitServices(appLogger, driver, &config.Config{}, commonServices, nil)
+	commonAuthServices := commonAuthService.InitServices(postgresGormDB)
+	serviceContainer = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, nil)
 	dataloader.NewDataLoader(serviceContainer)
 	log.Printf("%v", serviceContainer)
 }

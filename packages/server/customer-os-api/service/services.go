@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 )
@@ -13,7 +14,8 @@ type Services struct {
 	cfg   *config.Config
 	Cache CacheService
 
-	CommonServices *commonService.Services
+	CommonServices     *commonService.Services
+	CommonAuthServices *commonAuthService.Services
 
 	ContactService                  ContactService
 	OrganizationService             OrganizationService
@@ -54,11 +56,12 @@ type Services struct {
 	LogEntryService                 LogEntryService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver)
 
 	services := Services{
 		CommonServices:                  commonServices,
+		CommonAuthServices:              commonAuthServices,
 		OrganizationService:             NewOrganizationService(log, repositories, grpcClients),
 		CustomFieldService:              NewCustomFieldService(log, repositories),
 		UserService:                     NewUserService(log, repositories, grpcClients),
