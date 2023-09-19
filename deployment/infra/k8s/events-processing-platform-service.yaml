@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: events-processing-platform-service
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
     - name: grpc
       port: 5001
