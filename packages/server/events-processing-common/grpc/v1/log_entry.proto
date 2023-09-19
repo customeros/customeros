@@ -1,6 +1,8 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+import "common/external_system.proto";
 
 option go_package = "api/grpc/v1/log_entry;log_entry_grpc_service";
 
@@ -13,11 +15,10 @@ message UpsertLogEntryGrpcRequest {
   google.protobuf.Timestamp createdAt = 6;
   google.protobuf.Timestamp updatedAt = 7;
   google.protobuf.Timestamp startedAt = 8;
-  string appSource = 9;
-  string source = 10;
-  string sourceOfTruth = 11;
   optional string authorUserId = 12;
   optional string loggedOrganizationId = 13;
+  SourceFields sourceFields = 14;
+  ExternalSystemFields externalSystemFields = 15;
 }
 
 message AddTagGrpcRequest {

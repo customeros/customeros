@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "common/source.proto";
 
 option go_package = "api/grpc/v1/organization;organization_grpc_service";
 
@@ -14,9 +15,9 @@ message UpsertOrganizationGrpcRequest {
   bool isPublic = 7;
   int64 employees = 8;
   string market = 9;
-  string appSource = 10;
-  string source = 11;
-  string sourceOfTruth = 12;
+  string appSource = 10 [deprecated = true];
+  string source = 11 [deprecated = true];
+  string sourceOfTruth = 12 [deprecated = true];
   google.protobuf.Timestamp  createdAt = 13;
   google.protobuf.Timestamp  updatedAt = 14;
   string subIndustry = 15;
@@ -29,6 +30,7 @@ message UpsertOrganizationGrpcRequest {
   bool hide = 22;
   string note = 23;
   bool ignoreEmptyFields = 24;
+  SourceFields sourceFields = 25;
 }
 
 message OrganizationIdGrpcRequest {

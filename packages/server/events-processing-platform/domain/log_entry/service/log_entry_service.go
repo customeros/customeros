@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
@@ -46,7 +47,12 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *pb.Upsert
 		AuthorUserId:         request.AuthorUserId,
 		LoggedOrganizationId: request.LoggedOrganizationId,
 	}
-	command := cmd.NewUpsertLogEntryCommand(logEntryId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, request.UserId, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	source := cmnmod.Source{}
+	source.FromGrpc(request.SourceFields)
+	externalSystem := cmnmod.ExternalSystem{}
+	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	command := cmd.NewUpsertLogEntryCommand(logEntryId, request.Tenant, request.UserId, source, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.logEntryCommands.UpsertLogEntry.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertSyncLogEntry.Handle) tenant:%s, logEntryId: %s , err: %s", request.Tenant, request.Id, err.Error())

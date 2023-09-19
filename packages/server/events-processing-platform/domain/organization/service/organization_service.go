@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/google/uuid"
+	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
@@ -59,7 +60,11 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 		LastFundingAmount: request.LastFundingAmount,
 		Note:              request.Note,
 	}
-	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, request.UserId, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
+	source := common_utils.StringFirstNonEmpty(request.SourceFields.Source, request.Source)
+	sourceOfTruth := common_utils.StringFirstNonEmpty(request.SourceFields.SourceOfTruth, request.SourceOfTruth)
+	appSource := common_utils.StringFirstNonEmpty(request.SourceFields.AppSource, request.AppSource)
+
+	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, source, sourceOfTruth, appSource, request.UserId, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertSyncOrganization.Handle) tenant:%s, organizationID: %s , err: {%v}", request.Tenant, organizationId, err)

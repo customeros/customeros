@@ -9,23 +9,21 @@ import (
 
 type UpsertLogEntryCommand struct {
 	eventstore.BaseCommand
-	DataFields models.LogEntryDataFields
-	Source     cmnmod.Source
-	CreatedAt  *time.Time
-	UpdatedAt  *time.Time
+	DataFields     models.LogEntryDataFields
+	Source         cmnmod.Source
+	ExternalSystem cmnmod.ExternalSystem
+	CreatedAt      *time.Time
+	UpdatedAt      *time.Time
 }
 
-func NewUpsertLogEntryCommand(logEntryId, tenant, source, sourceOfTruth, appSource, userId string, dataFields models.LogEntryDataFields, createdAt, updatedAt *time.Time) *UpsertLogEntryCommand {
+func NewUpsertLogEntryCommand(logEntryId, tenant, userId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, dataFields models.LogEntryDataFields, createdAt, updatedAt *time.Time) *UpsertLogEntryCommand {
 	return &UpsertLogEntryCommand{
-		BaseCommand: eventstore.NewBaseCommand(logEntryId, tenant, userId),
-		DataFields:  dataFields,
-		Source: cmnmod.Source{
-			Source:        source,
-			SourceOfTruth: sourceOfTruth,
-			AppSource:     appSource,
-		},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		BaseCommand:    eventstore.NewBaseCommand(logEntryId, tenant, userId),
+		DataFields:     dataFields,
+		Source:         source,
+		ExternalSystem: externalSystem,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
 	}
 }
 

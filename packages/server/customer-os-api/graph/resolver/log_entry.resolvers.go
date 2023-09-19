@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	grpccommon "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -67,14 +68,16 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 	}
 
 	response, err := r.Clients.LogEntryClient.UpsertLogEntry(ctx, &logentrygrpc.UpsertLogEntryGrpcRequest{
-		Tenant:               common.GetTenantFromContext(ctx),
-		UserId:               common.GetUserIdFromContext(ctx),
-		Content:              utils.IfNotNilString(input.Content),
-		ContentType:          utils.IfNotNilString(input.ContentType),
-		StartedAt:            timestamppb.New(utils.IfNotNilTimeWithDefault(input.StartedAt, utils.Now())),
-		AppSource:            constants.AppSourceCustomerOsApi,
-		Source:               string(entity.DataSourceOpenline),
-		SourceOfTruth:        string(entity.DataSourceOpenline),
+		Tenant:      common.GetTenantFromContext(ctx),
+		UserId:      common.GetUserIdFromContext(ctx),
+		Content:     utils.IfNotNilString(input.Content),
+		ContentType: utils.IfNotNilString(input.ContentType),
+		StartedAt:   timestamppb.New(utils.IfNotNilTimeWithDefault(input.StartedAt, utils.Now())),
+		SourceFields: &grpccommon.SourceFields{
+			AppSource:     constants.AppSourceCustomerOsApi,
+			Source:        string(entity.DataSourceOpenline),
+			SourceOfTruth: string(entity.DataSourceOpenline),
+		},
 		LoggedOrganizationId: utils.StringPtr(organizationID),
 		AuthorUserId:         utils.StringPtr(common.GetUserIdFromContext(ctx)),
 	})
@@ -126,12 +129,14 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 		return "", nil
 	}
 	grpcRequestMessage := logentrygrpc.UpsertLogEntryGrpcRequest{
-		Id:            id,
-		Tenant:        common.GetTenantFromContext(ctx),
-		UserId:        common.GetUserIdFromContext(ctx),
-		Content:       utils.IfNotNilString(input.Content),
-		ContentType:   utils.IfNotNilString(input.ContentType),
-		SourceOfTruth: string(entity.DataSourceOpenline),
+		Id:          id,
+		Tenant:      common.GetTenantFromContext(ctx),
+		UserId:      common.GetUserIdFromContext(ctx),
+		Content:     utils.IfNotNilString(input.Content),
+		ContentType: utils.IfNotNilString(input.ContentType),
+		SourceFields: &grpccommon.SourceFields{
+			SourceOfTruth: string(entity.DataSourceOpenline),
+		},
 	}
 	if input.StartedAt != nil {
 		grpcRequestMessage.StartedAt = timestamppb.New(*input.StartedAt)

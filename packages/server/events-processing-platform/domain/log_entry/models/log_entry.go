@@ -6,15 +6,16 @@ import (
 )
 
 type LogEntry struct {
-	ID                   string        `json:"id"`
-	Tenant               string        `json:"tenant"`
-	Content              string        `json:"content"`
-	ContentType          string        `json:"contentType,omitempty"`
-	AuthorUserId         string        `json:"authorUserId,omitempty"`
-	LoggedOrganizationId string        `json:"loggedOrganizationId,omitempty"`
-	Source               cmnmod.Source `json:"source"`
-	CreatedAt            time.Time     `json:"createdAt,omitempty"`
-	UpdatedAt            time.Time     `json:"updatedAt,omitempty"`
-	StartedAt            time.Time     `json:"startedAt,omitempty"`
-	TagIds               []string      `json:"tagIds,omitempty"`
+	ID                   string                  `json:"id"`
+	Tenant               string                  `json:"tenant"`
+	Content              string                  `json:"content"`
+	ContentType          string                  `json:"contentType,omitempty"`
+	AuthorUserId         string                  `json:"authorUserId,omitempty"`
+	LoggedOrganizationId string                  `json:"loggedOrganizationId,omitempty"`
+	Source               cmnmod.Source           `json:"source"`
+	ExternalSystems      []cmnmod.ExternalSystem `json:"externalSystem"`
+	CreatedAt            time.Time               `json:"createdAt,omitempty"`
+	UpdatedAt            time.Time               `json:"updatedAt,omitempty"`
+	StartedAt            time.Time               `json:"startedAt,omitempty"`
+	TagIds               []string                `json:"tagIds,omitempty"`
 }
