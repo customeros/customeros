@@ -99,6 +99,7 @@ export const TimelineActionButtons = () => {
         onClick={() => handleToggleEditor('log-entry')}
         borderRadius='3xl'
         size='xs'
+        isDisabled // this will be removed in next pr - when feature is complete
         colorScheme={openedEditor === 'log-entry' ? 'primary' : 'gray'}
         leftIcon={<MessageChatSquare color='inherit' />}
       >
