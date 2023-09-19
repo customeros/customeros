@@ -76,7 +76,7 @@ spec:
               value: "1000"
 
             - name: EVENTS_PROCESSING_PLATFORM_URL
-              value: "event-store-service.openline.svc.cluster.local:5001"
+              value: "events-processing-platform-service.openline.svc.cluster.local:5001"
             - name: EVENTS_PROCESSING_PLATFORM_API_KEY
               value: "082c1193-a5a2-42fc-87fc-e960e692fffd"
 
