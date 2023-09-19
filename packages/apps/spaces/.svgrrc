@@ -1,7 +1,0 @@
-{
-  "icon": true,
-  "replace-attr-values": {
-   '#000': "currentColor",
-   '#667085': "currentColor"
-   }
-}

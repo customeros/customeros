@@ -14,6 +14,7 @@ import {
   MentionAtomExtension,
   EmojiExtension,
   MarkdownExtension,
+  EventsExtension,
 } from 'remirror/extensions';
 import data from 'svgmoji/emoji-slack.json';
 import { IdentifierSchemaAttributes } from 'remirror';
@@ -31,11 +32,12 @@ export const basicEditorExtensions = () => [
   new HeadingExtension(),
   new MarkdownExtension(),
   new NodeFormattingExtension(),
+  new EventsExtension(),
   new EmojiExtension({ data, moji: 'noto', fallback: '', plainText: true }),
   new MentionAtomExtension({
     matchers: [
       { name: 'at', char: '@' },
-      { name: 'tag', char: '#' },
+      { name: 'tag', char: '#', mentionClassName: 'customeros-tag' },
     ],
   }),
   new LinkExtension({ autoLink: true }),

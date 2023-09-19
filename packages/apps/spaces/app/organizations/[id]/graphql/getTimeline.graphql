@@ -1,12 +1,12 @@
 query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
     timelineEventsTotalCount(
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY]
     )
     timelineEvents(
       from: $from
       size: $size
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY]
     ) {
       __typename
       ... on Action {
@@ -133,6 +133,30 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         }
         agenda
         status
+      }
+
+      ... on LogEntry {
+        id
+        createdAt
+        updatedAt
+        logEntryStartedAt: startedAt
+        logEntryCreatedBy: createdBy {
+          ... on User {
+            __typename
+              id
+              firstName
+              lastName
+              profilePhotoUrl
+          }
+        }
+        tags {
+          id
+          name
+        }
+        source
+        content
+        contentType
+
       }
     }
   }
