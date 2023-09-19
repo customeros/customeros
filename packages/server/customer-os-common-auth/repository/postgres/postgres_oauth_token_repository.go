@@ -14,6 +14,7 @@ type OAuthTokenRepository interface {
 
 	Save(oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
 	Update(playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error)
+	MarkForManualRefresh(playerId, provider string) error
 }
 
 type oAuthTokenRepository struct {
@@ -29,7 +30,7 @@ func NewOAuthTokenRepository(db *gorm.DB) OAuthTokenRepository {
 func (repo oAuthTokenRepository) GetAll() ([]entity.OAuthTokenEntity, error) {
 	var entities []entity.OAuthTokenEntity
 
-	err := repo.db.Find(&entities).Error
+	err := repo.db.Where("needs_manual_refresh = ?", false).Find(&entities).Error
 
 	if err != nil {
 		return nil, err
@@ -83,4 +84,23 @@ func (repo oAuthTokenRepository) Update(playerId, provider, accessToken, refresh
 	}
 
 	return existing, nil
+}
+
+func (repo oAuthTokenRepository) MarkForManualRefresh(playerId, provider string) error {
+	existing, err := repo.GetByPlayerIdAndProvider(playerId, provider)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return fmt.Errorf("oauth token not found")
+	}
+
+	existing.NeedsManualRefresh = true
+
+	result := repo.db.Save(&existing)
+	if result.Error != nil {
+		return fmt.Errorf("updating oauth token failed: %w", result.Error)
+	}
+
+	return nil
 }
