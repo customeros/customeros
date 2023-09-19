@@ -1,6 +1,9 @@
 package models
 
-import "fmt"
+import (
+	comutils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	grpccommon "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+)
 
 type Source struct {
 	Source        string `json:"source"`
@@ -9,5 +12,15 @@ type Source struct {
 }
 
 func (s *Source) String() string {
-	return fmt.Sprintf("Source{Source: %s, SourceOfTruth: %s, AppSource: %s}", s.Source, s.SourceOfTruth, s.AppSource)
+	output, _ := comutils.ToJson(s)
+	return output
+}
+
+func (s *Source) FromGrpc(grpcSource *grpccommon.SourceFields) {
+	if grpcSource == nil {
+		return
+	}
+	s.Source = grpcSource.Source
+	s.SourceOfTruth = grpcSource.SourceOfTruth
+	s.AppSource = grpcSource.AppSource
 }

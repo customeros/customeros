@@ -33,7 +33,7 @@ func (a *LogEntryAggregate) CreateLogEntry(ctx context.Context, command *cmd.Ups
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(command.UpdatedAt, createdAtNotNil)
 	startedAtNotNil := utils.IfNotNilTimeWithDefault(command.DataFields.StartedAt, createdAtNotNil)
 
-	createEvent, err := events.NewLogEntryCreateEvent(a, command.DataFields, command.Source, createdAtNotNil, updatedAtNotNil, startedAtNotNil)
+	createEvent, err := events.NewLogEntryCreateEvent(a, command.DataFields, command.Source, command.ExternalSystem, createdAtNotNil, updatedAtNotNil, startedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryCreateEvent")

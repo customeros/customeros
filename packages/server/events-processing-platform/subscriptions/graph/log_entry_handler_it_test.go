@@ -23,11 +23,12 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: "test org",
 	})
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization": 1, "User": 1, "LogEntry": 0, "TimelineEvent": 0})
+		"Organization": 1, "User": 1, "ExternalSystem": 1, "LogEntry": 0, "TimelineEvent": 0})
 
 	// prepare event handler
 	logEntryEventHandler := &GraphLogEntryEventHandler{
@@ -45,6 +46,9 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatform,
 		SourceOfTruth: constants.SourceOpenline,
+	}, commonModels.ExternalSystem{
+		ExternalSystemId: "sf",
+		ExternalId:       "123",
 	}, now, now, now)
 	require.Nil(t, err, "failed to create event")
 
@@ -55,11 +59,13 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"User": 1, "User_" + tenantName: 1,
+		"ExternalSystem": 1, "ExternalSystem_" + tenantName: 1,
 		"LogEntry": 1, "LogEntry_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
-		"LOGGED":     1,
-		"CREATED_BY": 1,
+		"LOGGED":         1,
+		"CREATED_BY":     1,
+		"IS_LINKED_WITH": 1,
 	})
 
 	logEntryDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "LogEntry_"+tenantName, logEntryId)

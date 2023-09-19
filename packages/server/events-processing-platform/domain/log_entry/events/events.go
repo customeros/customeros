@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -17,20 +17,21 @@ const (
 )
 
 type LogEntryCreateEvent struct {
-	Tenant               string    `json:"tenant" validate:"required"`
-	Content              string    `json:"content"`
-	ContentType          string    `json:"contentType"`
-	StartedAt            time.Time `json:"startedAt" validate:"required"`
-	AuthorUserId         string    `json:"authorUserId"`
-	LoggedOrganizationId string    `json:"loggedOrganizationId"`
-	Source               string    `json:"source"`
-	SourceOfTruth        string    `json:"sourceOfTruth"`
-	AppSource            string    `json:"appSource"`
-	CreatedAt            time.Time `json:"createdAt"`
-	UpdatedAt            time.Time `json:"updatedAt"`
+	Tenant               string                `json:"tenant" validate:"required"`
+	Content              string                `json:"content"`
+	ContentType          string                `json:"contentType"`
+	StartedAt            time.Time             `json:"startedAt" validate:"required"`
+	AuthorUserId         string                `json:"authorUserId"`
+	LoggedOrganizationId string                `json:"loggedOrganizationId"`
+	Source               string                `json:"source"`
+	SourceOfTruth        string                `json:"sourceOfTruth"`
+	AppSource            string                `json:"appSource"`
+	CreatedAt            time.Time             `json:"createdAt"`
+	UpdatedAt            time.Time             `json:"updatedAt"`
+	ExternalSystem       cmnmod.ExternalSystem `json:"externalSystem"`
 }
 
-func NewLogEntryCreateEvent(aggregate eventstore.Aggregate, dataFields models.LogEntryDataFields, source commonModels.Source, createdAt, updatedAt, startedAt time.Time) (eventstore.Event, error) {
+func NewLogEntryCreateEvent(aggregate eventstore.Aggregate, dataFields models.LogEntryDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt, startedAt time.Time) (eventstore.Event, error) {
 	eventData := LogEntryCreateEvent{
 		Tenant:               aggregate.GetTenant(),
 		Content:              dataFields.Content,
@@ -43,6 +44,9 @@ func NewLogEntryCreateEvent(aggregate eventstore.Aggregate, dataFields models.Lo
 		CreatedAt:            createdAt,
 		UpdatedAt:            updatedAt,
 		StartedAt:            startedAt,
+	}
+	if externalSystem.Available() {
+		eventData.ExternalSystem = externalSystem
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

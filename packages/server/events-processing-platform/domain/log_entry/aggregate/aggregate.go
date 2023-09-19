@@ -3,7 +3,7 @@ package aggregate
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -58,13 +58,16 @@ func (a *LogEntryAggregate) onLogEntryCreate(event eventstore.Event) error {
 	a.LogEntry.AuthorUserId = eventData.AuthorUserId
 	a.LogEntry.LoggedOrganizationId = eventData.LoggedOrganizationId
 	a.LogEntry.StartedAt = eventData.StartedAt
-	a.LogEntry.Source = common_models.Source{
+	a.LogEntry.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,
 	}
 	a.LogEntry.CreatedAt = eventData.CreatedAt
 	a.LogEntry.UpdatedAt = eventData.UpdatedAt
+	if eventData.ExternalSystem.Available() {
+		a.LogEntry.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
+	}
 	return nil
 }
 

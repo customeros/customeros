@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
@@ -44,14 +45,16 @@ func TestLogEntryService_UpsertLogEntry_CreateLogEntry(t *testing.T) {
 	startedAt := timeNow.Add(-1 * time.Hour)
 	tenant := "ziggy"
 	response, err := logEntryClient.UpsertLogEntry(ctx, &log_entry_grpc_service.UpsertLogEntryGrpcRequest{
-		Tenant:               tenant,
-		Content:              "This is a log entry",
-		ContentType:          "text/plain",
-		StartedAt:            timestamppb.New(startedAt),
-		CreatedAt:            timestamppb.New(timeNow),
-		Source:               "openline",
-		SourceOfTruth:        "openline",
-		AppSource:            "unit-test",
+		Tenant:      tenant,
+		Content:     "This is a log entry",
+		ContentType: "text/plain",
+		StartedAt:   timestamppb.New(startedAt),
+		CreatedAt:   timestamppb.New(timeNow),
+		SourceFields: &common_grpc_service.SourceFields{
+			Source:        "openline",
+			SourceOfTruth: "openline",
+			AppSource:     "unit-test",
+		},
 		AuthorUserId:         utils.StringPtr("123"),
 		LoggedOrganizationId: utils.StringPtr("456"),
 	})

@@ -34,6 +34,16 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.Log.Errorf("Error while saving log entry %s: %s", logEntryId, err.Error())
+		return err
+	}
+
+	if eventData.ExternalSystem.Available() {
+		err = h.Repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, "LogEntry", eventData.ExternalSystem)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.Log.Errorf("Error while link log entry %s with external system %s: %s", logEntryId, eventData.ExternalSystem.ExternalSystemId, err.Error())
+			return err
+		}
 	}
 
 	return err
