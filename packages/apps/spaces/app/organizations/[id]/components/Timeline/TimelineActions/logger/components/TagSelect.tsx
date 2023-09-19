@@ -10,6 +10,7 @@ import { tagsSelectStyles } from './tagSelectStyles';
 import { TagButton } from './TagButton';
 import { useTagButtonSlideAnimation } from './useTagButtonSlideAnimation';
 import { useField } from 'react-inverted-form';
+import { OptionProps } from 'chakra-react-select';
 
 interface EmailParticipantSelect {
   formId: string;
@@ -75,8 +76,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       }
     }
   };
-
-  const Option = (props: any) => {
+  const Option = (props: OptionProps<{ label: string; value: string }>) => {
     const Or = useRef(null);
 
     useEffect(() => {
@@ -86,12 +86,13 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
     }, [props.isFocused, props.data.label]);
 
     return (
-      <chakraComponents.Option {...props} key={props.data.label} ref={Or}>
-        {props.data.label || props.data.value}
-      </chakraComponents.Option>
+      <div ref={Or}>
+        <chakraComponents.Option {...props} key={props.data.label}>
+          {props.data.label || props.data.value}
+        </chakraComponents.Option>
+      </div>
     );
   };
-
   return (
     <>
       <AnimatePresence initial={false}>
@@ -123,7 +124,6 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
           {!!selectedTags?.length && (
             <MultiCreatableSelect
               Option={Option}
-              // autoFocus={autofocus}
               name={name}
               formId={formId}
               placeholder=''

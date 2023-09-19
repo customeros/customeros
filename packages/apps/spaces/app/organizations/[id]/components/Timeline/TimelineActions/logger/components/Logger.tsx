@@ -58,7 +58,7 @@ export const Logger = () => {
           }))}
         />
       </RichTextEditor>
-      <Flex justifyContent='space-between' zIndex={3}>
+      <Flex justifyContent='space-between' zIndex={8}>
         <TagsSelect
           formId='organization-create-log-entry'
           name='tags'
