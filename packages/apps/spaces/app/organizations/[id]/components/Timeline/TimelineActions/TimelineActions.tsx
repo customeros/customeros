@@ -3,9 +3,9 @@ import { Box } from '@ui/layout/Box';
 import { useParams } from 'next/navigation';
 import { TimelineActionLogEntryContextContextProvider } from './TimelineActionsContext/TimelineActionLogEntryContext';
 import { TimelineActionButtons } from './TimelineActionButtons';
-import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
 import { TimelineActionEmailContextContextProvider } from './TimelineActionsContext/TimelineActionEmailContext';
-import { EmailTimelineAction } from './email/EmailTimelineAction';
+import { TimelineActionContextContextProvider } from './TimelineActionsContext/TimelineActionContext';
+import { TimelineActionsArea } from './TimelineActionsArea';
 
 interface TimelineActionsProps {
   onScrollBottom: () => void;
@@ -19,20 +19,21 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   const id = useParams()?.id as string;
 
   return (
-    <TimelineActionEmailContextContextProvider
-      id={id}
-      invalidateQuery={invalidateQuery}
-    >
-      <TimelineActionLogEntryContextContextProvider
+    <TimelineActionContextContextProvider>
+      <TimelineActionEmailContextContextProvider
         id={id}
         invalidateQuery={invalidateQuery}
       >
-        <Box bg='gray.25'>
-          <TimelineActionButtons />
-          <EmailTimelineAction onScrollBottom={onScrollBottom} />
-          <LogEntryTimelineAction onScrollBottom={onScrollBottom} />
-        </Box>
-      </TimelineActionLogEntryContextContextProvider>
-    </TimelineActionEmailContextContextProvider>
+        <TimelineActionLogEntryContextContextProvider
+          id={id}
+          invalidateQuery={invalidateQuery}
+        >
+          <Box bg='gray.25'>
+            <TimelineActionButtons />
+            <TimelineActionsArea onScrollBottom={onScrollBottom} />
+          </Box>
+        </TimelineActionLogEntryContextContextProvider>
+      </TimelineActionEmailContextContextProvider>
+    </TimelineActionContextContextProvider>
   );
 };

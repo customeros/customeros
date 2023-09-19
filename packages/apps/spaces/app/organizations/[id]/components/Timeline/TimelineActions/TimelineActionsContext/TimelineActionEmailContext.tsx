@@ -1,10 +1,8 @@
 import React, {
   useState,
-  useEffect,
   useContext,
   createContext,
   PropsWithChildren,
-  useRef,
 } from 'react';
 
 import { useForm } from 'react-inverted-form';
@@ -18,16 +16,15 @@ import {
 } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail.dto';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useTimelineActionContext } from './TimelineActionContext';
 
 export const noop = () => undefined;
 
 interface TimelineActionEmailContextContextMethods {
-  showEmailEditor: () => void;
-  closeEmailEditor: (prop?: { openLogEntry: () => void }) => void;
+  checkCanExitSafely: () => boolean;
   handleExitEditorAndCleanData: () => void;
   closeConfirmationDialog: () => void;
-  onCreateEmail: any;
-  isEmailEditorOpen: boolean;
+  onCreateEmail: () => void;
   remirrorProps: any;
   isSending: boolean;
   showConfirmationDialog: boolean;
@@ -37,12 +34,10 @@ interface TimelineActionEmailContextContextMethods {
 
 const TimelineActionEmailContextContext =
   createContext<TimelineActionEmailContextContextMethods>({
-    showEmailEditor: noop,
-    closeEmailEditor: noop,
+    checkCanExitSafely: () => false,
     onCreateEmail: noop,
     handleExitEditorAndCleanData: noop,
     closeConfirmationDialog: noop,
-    isEmailEditorOpen: false,
     remirrorProps: null,
     isSending: false,
     showConfirmationDialog: false,
@@ -66,12 +61,12 @@ export const TimelineActionEmailContextContextProvider = ({
   const searchParams = useSearchParams();
   const { data: session } = useSession();
 
-  const [isEmailEditorOpen, setShowEmailEditor] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isSending, setIsSending] = useState(false);
   const remirrorProps = useRemirror({
     extensions: basicEditorExtensions,
   });
+  const { closeEditor } = useTimelineActionContext();
+
   const formId = 'compose-email-timeline-footer';
 
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
@@ -89,19 +84,19 @@ export const TimelineActionEmailContextContextProvider = ({
       return next;
     },
   });
+  const handleResetEditor = () => {
+    const context = remirrorProps.getContext();
+    if (context) {
+      context.commands.resetContent();
+    }
+    reset();
+  };
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
   const handleEmailSendSuccess = () => {
     invalidateQuery();
     setIsSending(false);
-    reset();
-    setShowEmailEditor(false);
+    handleResetEditor();
+    onClose();
   };
   const handleEmailSendError = () => {
     setIsSending(false);
@@ -128,35 +123,35 @@ export const TimelineActionEmailContextContextProvider = ({
   };
 
   const handleExitEditorAndCleanData = () => {
-    reset();
+    handleResetEditor();
+
     onClose();
-    setShowEmailEditor(false);
+    closeEditor();
   };
 
-  const handleCloseEmailEditor = (prop?: { openLogEntry: () => void }) => {
-    const isFormPristine = Object.values(state.fields)?.every(
-      (e) => e.meta.pristine,
-    );
-    const isFormEmpty = Object.values(state.values)?.every((e) => !e.length);
+  const handleCheckCanExitSafely = () => {
+    const { content, ...values } = state.values;
 
-    const showEmailEditorConfirmationDialog = !isFormPristine && !isFormEmpty;
+    const isFormEmpty = !content.length || content === `<p style=""></p>`;
+    const areFieldsEmpty = Object.values(values).every((e) => !e.length);
+    const showEmailEditorConfirmationDialog = !isFormEmpty || !areFieldsEmpty;
     if (showEmailEditorConfirmationDialog) {
       onOpen();
+      return false;
     } else {
-      handleExitEditorAndCleanData();
-      prop?.openLogEntry();
+      handleResetEditor();
+      onClose();
+      return true;
     }
   };
 
   return (
     <TimelineActionEmailContextContext.Provider
       value={{
-        showEmailEditor: () => setShowEmailEditor(true),
-        closeEmailEditor: handleCloseEmailEditor,
+        checkCanExitSafely: handleCheckCanExitSafely,
         handleExitEditorAndCleanData,
         closeConfirmationDialog: onClose,
         onCreateEmail,
-        isEmailEditorOpen,
         remirrorProps,
         isSending,
         showConfirmationDialog: isOpen,

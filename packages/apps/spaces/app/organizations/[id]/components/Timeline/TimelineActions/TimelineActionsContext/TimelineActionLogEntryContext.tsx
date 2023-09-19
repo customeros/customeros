@@ -1,5 +1,4 @@
 import {
-  useState,
   useEffect,
   useContext,
   createContext,
@@ -16,32 +15,29 @@ import { useRemirror } from '@remirror/react';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useCreateLogEntryMutation } from '@organization/graphql/createLogEntry.generated';
 import { useDisclosure } from '@ui/utils';
+import { useTimelineActionContext } from './TimelineActionContext';
 
 export const noop = () => undefined;
 
 interface TimelineActionLogEntryContextContextMethods {
-  showLogEntryEditor: () => void;
-  closeLogEntryEditor: (prop?: { openEmailEditor: () => void }) => void;
+  checkCanExitSafely: () => boolean;
   closeConfirmationDialog: () => void;
   handleExitEditorAndCleanData: () => void;
-  onCreateLogEntry: any;
-  isLogEntryEditorOpen: boolean;
+  onCreateLogEntry: () => void;
   remirrorProps: any;
   isSaving: boolean;
-  showConfirmationDialog: boolean;
+  showLogEntryConfirmationDialog: boolean;
 }
 
 const TimelineActionLogEntryContextContext =
   createContext<TimelineActionLogEntryContextContextMethods>({
-    showLogEntryEditor: noop,
-    closeLogEntryEditor: noop,
+    checkCanExitSafely: () => false,
     onCreateLogEntry: noop,
     closeConfirmationDialog: noop,
     handleExitEditorAndCleanData: noop,
-    isLogEntryEditorOpen: false,
     remirrorProps: null,
     isSaving: false,
-    showConfirmationDialog: false,
+    showLogEntryConfirmationDialog: false,
   });
 
 export const useTimelineActionLogEntryContext = () => {
@@ -58,9 +54,9 @@ export const TimelineActionLogEntryContextContextProvider = ({
 }>) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [isLogEntryEditorOpen, setEditorOpen] = useState(false);
   const client = getGraphQLClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { closeEditor } = useTimelineActionContext();
 
   const logEntryValues: LogEntryDtoI = new LogEntryDto();
   const { state, reset } = useForm<LogEntryDtoI>({
@@ -74,10 +70,17 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const remirrorProps = useRemirror({
     extensions: basicEditorExtensions,
   });
+  const handleResetEditor = () => {
+    const context = remirrorProps.getContext();
+    if (context) {
+      context.commands.resetContent();
+    }
+    reset();
+  };
   const createLogEntryMutation = useCreateLogEntryMutation(client, {
     onSuccess: () => {
-      reset();
-      invalidateQuery();
+      timeoutRef.current = setTimeout(() => invalidateQuery(), 500);
+      handleResetEditor();
     },
   });
 
@@ -103,43 +106,40 @@ export const TimelineActionLogEntryContextContextProvider = ({
     });
   };
 
-  const handleExitEditorAndCleanData = (prop?: any) => {
-    reset();
+  const handleExitEditorAndCleanData = () => {
+    handleResetEditor();
     onClose();
-    setEditorOpen(false);
-    console.log('🏷️ ----- : HERE');
-    setTimeout(() => {
-      console.log('🏷️ ----- : insite', prop);
-      prop?.openEmailEditor();
-    }, 100);
+    closeEditor();
   };
 
-  const handleCloseEmailEditor = (prop?: { openEmailEditor: () => void }) => {
-    const isFormPristine = Object.values(state.fields)?.every(
-      (e) => e.meta.pristine,
-    );
-    const isFormEmpty = Object.values(state.values)?.every((e) => !e.length);
+  const handleCheckCanExitSafely = () => {
+    const { content, tags } = state.values;
 
-    const showEmailEditorConfirmationDialog = !isFormPristine && !isFormEmpty;
-    if (showEmailEditorConfirmationDialog) {
+    const isContentEmpty = !content.length || content === `<p style=""></p>`;
+
+    const showLogEntryEditorConfirmationDialog =
+      !tags.length && !isContentEmpty;
+
+    if (showLogEntryEditorConfirmationDialog) {
       onOpen();
+      return false;
     } else {
-      handleExitEditorAndCleanData(prop);
+      handleResetEditor();
+      onClose();
+      return true;
     }
   };
 
   return (
     <TimelineActionLogEntryContextContext.Provider
       value={{
-        showLogEntryEditor: () => setEditorOpen(true),
-        closeLogEntryEditor: handleCloseEmailEditor,
+        checkCanExitSafely: handleCheckCanExitSafely,
         handleExitEditorAndCleanData,
         closeConfirmationDialog: onClose,
         onCreateLogEntry,
-        isLogEntryEditorOpen,
         remirrorProps,
         isSaving: createLogEntryMutation.isLoading,
-        showConfirmationDialog: isOpen,
+        showLogEntryConfirmationDialog: isOpen,
       }}
     >
       {children}
