@@ -1,6 +1,6 @@
 import { LogEntry, LogEntryUpdateInput } from '@graphql/types';
 
-export interface LogEntryDtoI {
+export interface LogEntryFormDtoI {
   tags: Array<{ label: string; value: string }>;
   content: string;
   contentType: string;

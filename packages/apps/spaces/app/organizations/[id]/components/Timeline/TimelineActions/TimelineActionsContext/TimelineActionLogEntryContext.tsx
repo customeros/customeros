@@ -8,7 +8,7 @@ import {
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
   LogEntryFormDto,
-  LogEntryDtoI,
+  LogEntryFormDtoI,
 } from '@organization/components/Timeline/TimelineActions/logger/LogEntryFormDto';
 import { useForm } from 'react-inverted-form';
 import { useRemirror } from '@remirror/react';
@@ -59,7 +59,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const { closeEditor } = useTimelineActionContext();
 
   const logEntryValues = new LogEntryFormDto();
-  const { state, reset } = useForm<LogEntryDtoI>({
+  const { state, reset } = useForm<LogEntryFormDtoI>({
     formId: 'organization-create-log-entry',
     defaultValues: logEntryValues,
 
