@@ -1,12 +1,12 @@
 import omit from 'lodash/omit';
 import { ChakraStylesConfig, GroupBase } from 'chakra-react-select';
+import { CSSWithMultiValues } from '@chakra-ui/react';
 export const multiCreatableSelectStyles = (
   chakraStyles:
     | ChakraStylesConfig<unknown, boolean, GroupBase<unknown>>
     | undefined,
 ) => ({
-  // @ts-expect-error fixme
-  multiValue: (base) => ({
+  multiValue: (base: CSSWithMultiValues) => ({
     ...base,
     padding: 0,
     paddingLeft: 2,
@@ -20,20 +20,16 @@ export const multiCreatableSelectStyles = (
     marginRight: 1,
     cursor: 'default',
   }),
-  // @ts-expect-error fixme
-  clearIndicator: (base) => ({
+  clearIndicator: (base: CSSWithMultiValues) => ({
     ...base,
     background: 'transparent',
     color: 'transparent',
     display: 'none',
   }),
-  // @ts-expect-error fixme
-  multiValueRemove: (styles, { data }) => ({
+  multiValueRemove: (styles: CSSWithMultiValues) => ({
     ...styles,
-    // visibility: 'hidden',
   }),
-  // @ts-expect-error fixme
-  container: (props) => ({
+  container: (props: CSSWithMultiValues) => ({
     ...props,
     minWidth: '300px',
     width: '100%',
@@ -41,8 +37,7 @@ export const multiCreatableSelectStyles = (
     _focusVisible: { border: 'none !important' },
     _focus: { border: 'none !important' },
   }),
-  // @ts-expect-error fixme
-  menuList: (props) => ({
+  menuList: (props: CSSWithMultiValues) => ({
     ...props,
     padding: '2',
     boxShadow: 'md',
@@ -50,8 +45,10 @@ export const multiCreatableSelectStyles = (
     borderRadius: 'lg',
     maxHeight: '12rem',
   }),
-  // @ts-expect-error fixme
-  option: (props, { isSelected, isFocused }) => ({
+  option: (
+    props: CSSWithMultiValues,
+    { isSelected, isFocused }: { isSelected: boolean; isFocused: boolean },
+  ) => ({
     ...props,
     my: '2px',
     borderRadius: 'md',
@@ -60,21 +57,18 @@ export const multiCreatableSelectStyles = (
     boxShadow: isFocused ? 'menuOptionsFocus' : 'none',
     _hover: { bg: isSelected ? 'primary.50' : 'gray.100' },
   }),
-  // @ts-expect-error fixme
-  groupHeading: (props) => ({
+  groupHeading: (props: CSSWithMultiValues) => ({
     ...props,
     color: 'gray.400',
     textTransform: 'uppercase',
     fontWeight: 'regular',
   }),
-  // @ts-expect-error fixme
-  input: (props) => ({
+  input: (props: CSSWithMultiValues) => ({
     ...props,
     color: 'gray.500',
     fontWeight: 'regular',
   }),
-  // @ts-expect-error fixme
-  valueContainer: (props) => ({
+  valueContainer: (props: CSSWithMultiValues) => ({
     ...props,
     maxH: '86px',
     overflowY: 'auto',

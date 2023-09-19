@@ -58,7 +58,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { closeEditor } = useTimelineActionContext();
 
-  const logEntryValues: LogEntryDtoI = new LogEntryDto();
+  const logEntryValues = new LogEntryDto();
   const { state, reset } = useForm<LogEntryDtoI>({
     formId: 'organization-create-log-entry',
     defaultValues: logEntryValues,

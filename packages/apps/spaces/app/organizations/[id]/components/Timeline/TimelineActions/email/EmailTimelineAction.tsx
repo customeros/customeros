@@ -35,7 +35,8 @@ export const EmailTimelineAction: React.FC<EmailTimelineActionProps> = ({
             m={6}
             mt={2}
             bg={'white'}
-            border='1px solid var(--gray-100, #F2F4F7)'
+            border='1px solid'
+            borderColor='gray.100'
           >
             <ComposeEmail
               formId={formId}

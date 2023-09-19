@@ -33,7 +33,8 @@ export const LogEntryTimelineAction: React.FC<LogEntryTimelineActionProps> = ({
             mt={2}
             p={6}
             bg={'white'}
-            border='1px solid var(--gray-100, #F2F4F7)'
+            border='1px solid'
+            borderColor='gray.100'
           >
             <Logger />
           </Box>
