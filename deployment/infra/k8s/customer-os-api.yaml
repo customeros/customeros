@@ -81,7 +81,7 @@ spec:
               value: "082c1193-a5a2-42fc-87fc-e960e692fffd"
 
             - name: JAEGER_AGENT_HOST
-              value: "jaeger-agent.openline.svc.cluster.local"
+              value: "jaeger.openline.svc.cluster.local"
             - name: JAEGER_AGENT_PORT
               value: "6831"
 

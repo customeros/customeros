@@ -82,7 +82,7 @@ spec:
             - name: JAEGER_SERVICE_NAME
               value: "comms-api"
             - name: JAEGER_AGENT_HOST
-              value: "jaeger-agent.openline.svc.cluster.local"
+              value: "jaeger.openline.svc.cluster.local"
             - name: JAEGER_AGENT_PORT
               value: "6831"
             - name: JAEGER_SAMPLER_TYPE
