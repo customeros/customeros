@@ -14,7 +14,7 @@ export interface LogEntryForm {
   contentType: string;
 }
 
-export class LogEntryDto implements LogEntryForm {
+export class LogEntryFormDto implements LogEntryForm {
   tags: Array<{ label: string; value: string }>;
   content: string;
   contentType: string;

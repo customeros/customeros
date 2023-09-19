@@ -7,9 +7,9 @@ import {
 } from 'react';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
-  LogEntryDto,
+  LogEntryFormDto,
   LogEntryDtoI,
-} from '@organization/components/Timeline/TimelineActions/logger/LogEntry.dto';
+} from '@organization/components/Timeline/TimelineActions/logger/LogEntryFormDto';
 import { useForm } from 'react-inverted-form';
 import { useRemirror } from '@remirror/react';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
@@ -58,7 +58,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { closeEditor } = useTimelineActionContext();
 
-  const logEntryValues = new LogEntryDto();
+  const logEntryValues = new LogEntryFormDto();
   const { state, reset } = useForm<LogEntryDtoI>({
     formId: 'organization-create-log-entry',
     defaultValues: logEntryValues,
@@ -93,7 +93,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   }, []);
 
   const onCreateLogEntry = () => {
-    const logEntryPayload = LogEntryDto.toPayload({
+    const logEntryPayload = LogEntryFormDto.toPayload({
       ...logEntryValues,
       tags: state.values.tags,
       content: state.values.content,
