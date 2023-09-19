@@ -65,7 +65,6 @@ export const Logger = () => {
           tags={data?.tags}
         />
         <Button
-          className='customeros-remirror-submit-button'
           variant='outline'
           colorScheme='gray'
           fontWeight={600}
