@@ -18,6 +18,17 @@ interface LogEntryStubProps {
   data: LogEntryWithAliases;
 }
 
+function addHashToTagContent(htmlInput: string): string {
+  const regex =
+    /(<span[^>]*data-mention-atom-name="tag"[^>]*>)(.*?)(<\/span>)/g;
+  return htmlInput.replace(
+    regex,
+    (match: string, p1: string, p2: string, p3: string) => {
+      return p1 + '#' + p2 + p3;
+    },
+  );
+}
+
 const getLogEntryIcon = (type: string) => {
   switch (type) {
     case 'email':
@@ -38,7 +49,7 @@ const getLogEntryIcon = (type: string) => {
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
   const { openModal } = useTimelineEventPreviewContext();
   const fullName = `${data.logEntryCreatedBy?.firstName} ${data.logEntryCreatedBy?.lastName}`;
-  const text = convert(data?.content || '', {
+  const text = convert(addHashToTagContent(data?.content || ''), {
     preserveNewlines: true,
     selectors: [
       {
