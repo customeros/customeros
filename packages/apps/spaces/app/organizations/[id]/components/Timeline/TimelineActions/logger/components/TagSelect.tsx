@@ -76,6 +76,8 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       }
     }
   };
+
+  // FIXME - move this to outher scope
   const Option = (props: OptionProps<{ label: string; value: string }>) => {
     const Or = useRef(null);
 

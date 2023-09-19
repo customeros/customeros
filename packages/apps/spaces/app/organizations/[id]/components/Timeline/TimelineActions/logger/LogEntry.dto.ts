@@ -41,6 +41,6 @@ export class LogEntryDto implements LogEntryForm {
       contentType: data.contentType,
       appSource: 'customerOS',
       startedAt: new Date().toISOString(),
-    } as any;
+    } as unknown as LogEntryUpdateInput;
   }
 }
