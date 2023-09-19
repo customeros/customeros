@@ -15,6 +15,7 @@ type OAuthTokenEntity struct {
 	EmailAddress              string    `gorm:"column:email_address;size:255;"`
 	AccessToken               string    `gorm:"column:access_token;type:text"`
 	RefreshToken              string    `gorm:"column:refresh_token;type:text"`
+	NeedsManualRefresh        bool      `gorm:"column:needs_manual_refresh;default:false;"`
 	IdToken                   string    `gorm:"column:id_token;type:text"`
 	ExpiresAt                 time.Time `gorm:"column:expires_at;type:timestamp;"`
 	Scope                     string    `gorm:"column:scope;type:text"`
