@@ -283,7 +283,14 @@ func (s *emailService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAut
 
 	if !token.Valid() {
 		newToken, err := reuseTokenSource.Token()
-		if err != nil {
+		if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
+			err := s.repositories.OAuthRepositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+			if err != nil {
+				logrus.Errorf("failed to mark token for manual refresh: %v", err)
+				return nil, err
+			}
+			return nil, fmt.Errorf("token is invalid and marked for manual refresh")
+		} else if err != nil {
 			logrus.Errorf("failed to get new token: %v", err)
 			return nil, err
 		}
@@ -300,7 +307,14 @@ func (s *emailService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAut
 	}
 
 	gmailService, err := gmail.NewService(context.TODO(), option.WithTokenSource(reuseTokenSource))
-	if err != nil {
+	if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
+		err := s.repositories.OAuthRepositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		if err != nil {
+			logrus.Errorf("failed to mark token for manual refresh: %v", err)
+			return nil, err
+		}
+		return nil, fmt.Errorf("token is invalid and marked for manual refresh")
+	} else if err != nil {
 		logrus.Errorf("failed to create gmail service for token: %v", err)
 		return nil, err
 	}
