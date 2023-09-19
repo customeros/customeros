@@ -523,7 +523,8 @@ func (r *contactRepository) LinkContactWithOrganizationByExternalId(ctx context.
 						j.appSource=$appSource, 
 						j.createdAt=$now, 
 						j.updatedAt=$now, 
-						j:JobRole_%s`, tenant)
+						j:JobRole_%s 
+		 ON MATCH SET j.jobTitle = CASE WHEN (j.sourceOfTruth=$sourceOfTruth AND $jobTitle <> '') OR j.jobTitle is null OR j.jobTitle = '' THEN $jobTitle ELSE j.jobTitle END`, tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
@@ -564,7 +565,8 @@ func (r *contactRepository) LinkContactWithOrganizationByInternalId(ctx context.
 						j.appSource=$appSource, 
 						j.createdAt=$now, 
 						j.updatedAt=$now, 
-						j:JobRole_%s `, tenant)
+						j:JobRole_%s 
+		 ON MATCH SET j.jobTitle = CASE WHEN (j.sourceOfTruth=$sourceOfTruth AND $jobTitle <> '') OR j.jobTitle is null OR j.jobTitle = '' THEN $jobTitle ELSE j.jobTitle END`, tenant)
 	span.LogFields(log.String("query", query))
 
 	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{
@@ -594,7 +596,8 @@ func (r *contactRepository) LinkContactWithOrganizationByDomain(ctx context.Cont
 						j.appSource=$appSource, 
 						j.createdAt=$now, 
 						j.updatedAt=$now, 
-						j:JobRole_%s `, tenant)
+						j:JobRole_%s 
+		ON MATCH SET j.jobTitle = CASE WHEN (j.sourceOfTruth=$sourceOfTruth AND $jobTitle <> '') OR j.jobTitle is null OR j.jobTitle = '' THEN $jobTitle ELSE j.jobTitle END`, tenant)
 	span.LogFields(log.String("query", query))
 
 	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{

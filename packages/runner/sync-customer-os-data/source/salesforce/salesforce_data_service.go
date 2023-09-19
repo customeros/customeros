@@ -16,21 +16,19 @@ import (
 )
 
 const (
-	UserTableSuffix           = "user"
-	AccountTableSuffix        = "account"
-	ContactTableSuffix        = "contact"
-	CampaignmemberTableSuffix = "campaignmember"
-	ContentnoteTableSuffix    = "contentnote"
-	FeeditemTableSuffix       = "feeditem"
-	LeadTableSuffix           = "lead"
-	OpportunityTableSuffix    = "opportunity"
+	UserTableSuffix        = "user"
+	AccountTableSuffix     = "account"
+	ContactTableSuffix     = "contact"
+	LeadTableSuffix        = "lead"
+	ContentnoteTableSuffix = "contentnote"
+	FeeditemTableSuffix    = "feeditem"
+	OpportunityTableSuffix = "opportunity"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):         {UserTableSuffix},
-	string(common.ORGANIZATIONS): {AccountTableSuffix},
-	string(common.CONTACTS):      {ContactTableSuffix},
-	//string(common.INTERACTION_EVENTS): {ConversationsTableSuffix, ConversationPartsTableSuffix},
+	string(common.ORGANIZATIONS): {AccountTableSuffix, LeadTableSuffix},
+	string(common.CONTACTS):      {ContactTableSuffix, LeadTableSuffix},
 }
 
 type salesforceDataService struct {
@@ -203,42 +201,6 @@ func (s *salesforceDataService) GetContactsForSync(ctx context.Context, batchSiz
 	}
 	return contacts
 }
-
-//func (s *salesforceDataService) GetInteractionEventsForSync(ctx context.Context, batchSize int, runId string) []any {
-//	s.processingIds = make(map[string]source.ProcessingEntity)
-//	currentEntity := string(common.INTERACTION_EVENTS)
-//
-//	var interactionEvents []any
-//	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-//		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
-//		if err != nil {
-//			s.log.Error(err)
-//			return nil
-//		}
-//		for _, v := range airbyteRecords {
-//			if len(interactionEvents) >= batchSize {
-//				break
-//			}
-//			outputJSON, err := MapInteractionEvent(v.AirbyteData)
-//			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.AirbyteAbId, s.SourceId())
-//			if err != nil {
-//				interactionEvent = entity.InteractionEventData{
-//					BaseData: entity.BaseData{
-//						SyncId: v.AirbyteAbId,
-//					},
-//				}
-//			}
-//
-//			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-//				ExternalId:  interactionEvent.ExternalId,
-//				Entity:      currentEntity,
-//				TableSuffix: sourceTableSuffix,
-//			}
-//			interactionEvents = append(interactionEvents, interactionEvent)
-//		}
-//	}
-//	return interactionEvents
-//}
 
 func (s *salesforceDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
