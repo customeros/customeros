@@ -10,6 +10,7 @@ export const globalCacheData = atom({
       emails: Array<{ email: string; rawEmail: string; primary: boolean }>,
     } as any | undefined,
     isOwner: false,
+    gmailOauthTokenNeedsManualRefresh: false,
     gCliCache: [],
   },
 });

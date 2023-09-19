@@ -648,9 +648,10 @@ type GCliItem struct {
 }
 
 type GlobalCache struct {
-	User      *User       `json:"user"`
-	IsOwner   bool        `json:"isOwner"`
-	GCliCache []*GCliItem `json:"gCliCache"`
+	User                              *User       `json:"user"`
+	IsOwner                           bool        `json:"isOwner"`
+	GmailOauthTokenNeedsManualRefresh bool        `json:"gmailOauthTokenNeedsManualRefresh"`
+	GCliCache                         []*GCliItem `json:"gCliCache"`
 }
 
 type InteractionEvent struct {

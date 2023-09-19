@@ -22,7 +22,11 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	response := &model.GlobalCache{}
 
-	user, err := r.Services.UserService.FindUserById(ctx, common.GetUserIdFromContext(ctx))
+	tenantName := common.GetTenantFromContext(ctx)
+	userId := common.GetUserIdFromContext(ctx)
+	userEmail := common.GetUserEmailFromContext(ctx)
+
+	user, err := r.Services.UserService.FindUserById(ctx, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - find user by id")
@@ -37,6 +41,18 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 		return nil, err
 	}
 	response.IsOwner = *isOwner
+
+	if userEmail != "" {
+		gmailTokenNeedsManualRefresh, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetForEmail("google", tenantName, userEmail)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
+			return nil, err
+		}
+		if gmailTokenNeedsManualRefresh != nil {
+			response.GmailOauthTokenNeedsManualRefresh = gmailTokenNeedsManualRefresh.NeedsManualRefresh
+		}
+	}
 
 	response.GCliCache = r.Services.Cache.GetStates() //pre-populate with states
 
