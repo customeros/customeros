@@ -29,9 +29,10 @@ export class LogEntryDto implements LogEntryForm {
     this.startedAt = new Date().toISOString();
   }
 
-  static toForm(data: any) {
-    return new LogEntryDto(data);
-  }
+  // Commented out as at this moment user cannot update existing data besides started at. Therefore this is not needed for now
+  // static toForm(data: LogEntryDtoI) {
+  //   return new LogEntryDto(data);
+  // }
 
   static toPayload(data: LogEntryForm): LogEntryUpdateInput {
     return {
