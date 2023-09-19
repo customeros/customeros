@@ -85,6 +85,10 @@ github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-a
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230905160427-fac4f0c7771f/go.mod h1:Ghqm8l2WvAm7kZPSMF5utHV5crickzkgQAMR+N16CBw=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230905205324-bb882f6be687 h1:GZ5jWOWBCGrxd0SvZLcZJBgIKrpy13eiga95n9f9veQ=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230905205324-bb882f6be687/go.mod h1:Ghqm8l2WvAm7kZPSMF5utHV5crickzkgQAMR+N16CBw=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230919041711-57206163fd88 h1:VeoUG4Gxwypoptoy35YWrIUUPeSeMEVeGNqyPe7g2jw=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230919041711-57206163fd88/go.mod h1:Ghqm8l2WvAm7kZPSMF5utHV5crickzkgQAMR+N16CBw=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230919071321-b1ec8acfb667 h1:/zbEcMsDWA8sCEr/SX7g6PE5rq2soJCe4IT3p9f6Ejg=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230919071321-b1ec8acfb667/go.mod h1:Ghqm8l2WvAm7kZPSMF5utHV5crickzkgQAMR+N16CBw=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230905205324-bb882f6be687 h1:9qmliSmxsVNz5PbrFeE7Wy4v2PI2EajZk3jsWHHkJHU=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230905205324-bb882f6be687/go.mod h1:Rz0h1aTmXOnNQCD8a8/LkpOBIsammOhxQ9UhWDYfB/g=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
