@@ -1,4 +1,4 @@
-import { LogEntry } from '@graphql/types';
+import { LogEntry, LogEntryUpdateInput } from '@graphql/types';
 
 export interface LogEntryDtoI {
   tags: Array<{ label: string; value: string }>;
@@ -33,7 +33,7 @@ export class LogEntryDto implements LogEntryForm {
     return new LogEntryDto(data);
   }
 
-  static toPayload(data: LogEntryForm) {
+  static toPayload(data: LogEntryForm): LogEntryUpdateInput {
     return {
       tags: data.tags.map((data) => ({ name: data?.label })),
       content: data.content,
