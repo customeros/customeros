@@ -1,3 +1,5 @@
+import { LogEntry } from '@graphql/types';
+
 export interface LogEntryDtoI {
   tags: Array<{ label: string; value: string }>;
   content: string;
@@ -6,20 +8,20 @@ export interface LogEntryDtoI {
   startedAt: string | Date;
 }
 
-export interface LogEntryDtoFormI {
+export interface LogEntryForm {
   tags: Array<{ label: string; value: string }>;
   content: string;
   contentType: string;
 }
 
-export class LogEntryDto implements LogEntryDtoI {
+export class LogEntryDto implements LogEntryForm {
   tags: Array<{ label: string; value: string }>;
   content: string;
   contentType: string;
   appSource: string;
   startedAt: string | Date;
 
-  constructor(data?: any) {
+  constructor(data?: LogEntry) {
     this.content = data?.content || '';
     this.contentType = 'text/html';
     this.tags = [];
@@ -31,7 +33,7 @@ export class LogEntryDto implements LogEntryDtoI {
     return new LogEntryDto(data);
   }
 
-  static toPayload(data: LogEntryDtoFormI) {
+  static toPayload(data: LogEntryForm) {
     return {
       tags: data.tags.map((data) => ({ name: data?.label })),
       content: data.content,
