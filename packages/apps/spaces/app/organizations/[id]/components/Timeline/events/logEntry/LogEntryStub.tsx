@@ -36,7 +36,7 @@ const getLogEntryIcon = (type: string) => {
 };
 
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
-  // const { openModal } = useTimelineEventPreviewContext();
+  const { openModal } = useTimelineEventPreviewContext();
   const fullName = `${data.logEntryCreatedBy?.firstName} ${data.logEntryCreatedBy?.lastName}`;
   const text = convert(data?.content || '', {
     preserveNewlines: true,
@@ -77,7 +77,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
       boxShadow='xs'
       borderColor='gray.200'
       borderRadius='lg'
-      onClick={() => console.log('opened')}
+      onClick={() => openModal(data)}
       _hover={{ boxShadow: 'md' }}
       transition='all 0.2s ease-out'
     >

@@ -8,6 +8,8 @@ import { ActionPreviewModal } from '../events/action/ActionPreviewModal';
 import { useTimelineEventPreviewContext } from './TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { TimelinePreviewBackdrop } from '@organization/components/Timeline/preview/TimelinePreviewBackdrop';
 import { IntercomThreadPreviewModal } from '@organization/components/Timeline/events/intercom/IntercomThreadPreviewModal';
+import { LogEntryPreviewModal } from '@organization/components/Timeline/events/logEntry/LogEntryPreviewModal';
+import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 
 interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;
@@ -18,9 +20,14 @@ export const TimelineEventPreviewModal = ({
 }: TimelineEventPreviewModalProps) => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
 
-  const event = modalContent as InteractionEvent | Meeting | Action;
+  const event = modalContent as
+    | InteractionEvent
+    | Meeting
+    | Action
+    | LogEntryWithAliases;
   const isMeeting = event?.__typename === 'Meeting';
   const isAction = event?.__typename === 'Action';
+  const isLogEntry = event?.__typename === 'LogEntry';
   const isInteraction = event?.__typename === 'InteractionEvent';
   const isSlack = isInteraction && event?.channel === 'SLACK';
   const isIntercom = isInteraction && event?.channel === 'CHAT';
@@ -38,6 +45,7 @@ export const TimelineEventPreviewModal = ({
       {isSlack && <SlackThreadPreviewModal />}
       {isIntercom && <IntercomThreadPreviewModal />}
       {isAction && <ActionPreviewModal type={event.actionType} />}
+      {isLogEntry && <LogEntryPreviewModal />}
     </TimelinePreviewBackdrop>
   );
 };
