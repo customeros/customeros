@@ -16,6 +16,7 @@ import { Box } from '@ui/layout/Box';
 import noteImg from 'public/images/note-img-preview.png';
 import { LogEntryDatePicker } from './LogEntryDatePicker';
 import { Image } from '@ui/media/Image';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 const getAuthor = (user: User) => {
   if (!user?.firstName && !user.lastName) {
@@ -35,6 +36,7 @@ export const LogEntryPreviewModal: React.FC = () => {
         pb={1}
         position='sticky'
         top={0}
+        pt={4}
         borderRadius='xl'
         id={'eventCard'}
       >
@@ -106,10 +108,11 @@ export const LogEntryPreviewModal: React.FC = () => {
             <Text fontSize='sm' fontWeight='semibold'>
               Entry
             </Text>
-            <Text
+
+            <HtmlContentRenderer
               fontSize='sm'
-              className='slack-container'
-              dangerouslySetInnerHTML={{ __html: `${event?.content}` }}
+              noOfLines={undefined}
+              htmlContent={`${event?.content}`}
             />
           </Flex>
 
