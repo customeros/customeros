@@ -184,6 +184,18 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 		s.log.Errorf(reason)
 	}
 
+	if !failedSync && orgInput.UpdateOnly && organizationId == "" {
+		organizationSyncMutex.Unlock()
+		if err := dataService.MarkProcessed(ctx, orgInput.SyncId, runId, true, true, "This record is for update only, organization not available yet."); err != nil {
+			*failed++
+			span.LogFields(log.Bool("failedSync", true))
+			return
+		}
+		*skipped++
+		span.LogFields(log.Bool("skippedSync", true))
+		return
+	}
+
 	newOrganization := len(organizationId) == 0
 	// Create new organization id if not found
 	if newOrganization {
@@ -194,7 +206,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 	span.LogFields(log.String("organizationId", organizationId))
 
 	if !failedSync {
-		err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, orgInput, orgHasWhitelistedDomain)
+		err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, orgInput, orgHasWhitelistedDomain || orgInput.Whitelisted)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)

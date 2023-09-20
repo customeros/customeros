@@ -21,13 +21,13 @@ const (
 	ContactTableSuffix     = "contact"
 	LeadTableSuffix        = "lead"
 	FeeditemTableSuffix    = "feeditem"
-	ContentnoteTableSuffix = "contentnote"
 	OpportunityTableSuffix = "opportunity"
+	ContentnoteTableSuffix = "contentnote"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):         {UserTableSuffix},
-	string(common.ORGANIZATIONS): {AccountTableSuffix, LeadTableSuffix},
+	string(common.ORGANIZATIONS): {AccountTableSuffix, LeadTableSuffix, OpportunityTableSuffix},
 	string(common.CONTACTS):      {ContactTableSuffix, LeadTableSuffix},
 	string(common.LOG_ENTRIES):   {FeeditemTableSuffix},
 }
