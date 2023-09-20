@@ -21,6 +21,7 @@ type LogEntry {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }
 
 input LogEntryInput {

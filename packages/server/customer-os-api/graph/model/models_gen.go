@@ -918,17 +918,18 @@ type LocationUpdateInput struct {
 }
 
 type LogEntry struct {
-	ID            string     `json:"id"`
-	Content       *string    `json:"content,omitempty"`
-	ContentType   *string    `json:"contentType,omitempty"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	StartedAt     time.Time  `json:"startedAt"`
-	CreatedBy     *User      `json:"createdBy,omitempty"`
-	Tags          []*Tag     `json:"tags"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
+	ID            string            `json:"id"`
+	Content       *string           `json:"content,omitempty"`
+	ContentType   *string           `json:"contentType,omitempty"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	StartedAt     time.Time         `json:"startedAt"`
+	CreatedBy     *User             `json:"createdBy,omitempty"`
+	Tags          []*Tag            `json:"tags"`
+	Source        DataSource        `json:"source"`
+	SourceOfTruth DataSource        `json:"sourceOfTruth"`
+	AppSource     string            `json:"appSource"`
+	ExternalLinks []*ExternalSystem `json:"externalLinks"`
 }
 
 func (LogEntry) IsTimelineEvent() {}
