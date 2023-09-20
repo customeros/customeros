@@ -70,6 +70,8 @@ func MapOrganization(inputJson string) (string, error) {
 		return mapOrganizationFromAccount(inputJson)
 	} else if input.Attributes.Type == "Lead" {
 		return mapOrganizationFromLead(inputJson)
+	} else if input.Attributes.Type == "Opportunity" {
+		return mapOrganizationFromOpportunity(inputJson)
 	} else {
 		output := entity.BaseData{
 			Skip:       true,
@@ -190,6 +192,52 @@ func mapOrganizationFromLead(inputJson string) (string, error) {
 		output.OwnerUser = &entity.ReferencedUser{
 			ExternalId: input.OwnerId,
 		}
+	}
+
+	return utils.ToJson(output)
+}
+
+func mapOrganizationFromOpportunity(inputJson string) (string, error) {
+	var input struct {
+		ID        string `json:"Id,omitempty"`
+		AccountId string `json:"AccountId,omitempty"`
+		IsWon     bool   `json:"IsWon,omitempty"`
+		IsClosed  bool   `json:"IsClosed,omitempty"`
+	}
+
+	err := json.Unmarshal([]byte(inputJson), &input)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse input JSON: %v", err)
+	}
+
+	if !input.IsClosed {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Opportunity not closed yet",
+		}
+		return utils.ToJson(output)
+	}
+	if !input.IsWon {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Opportunity not won",
+		}
+		return utils.ToJson(output)
+	}
+	if input.AccountId == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing account id, cannot identify organization",
+		}
+		return utils.ToJson(output)
+	}
+
+	output := entity.OrganizationData{
+		BaseData: entity.BaseData{
+			ExternalId: input.AccountId,
+		},
+		Whitelisted: true,
+		UpdateOnly:  true,
 	}
 
 	return utils.ToJson(output)
