@@ -69,8 +69,9 @@ type MeetingParticipantInput struct {
 }
 
 type NoteInput struct {
-	HTML      string  `json:"html"`
-	AppSource *string `json:"appSource,omitempty"`
+	Content     *string `json:"content,omitempty"`
+	ContentType *string `json:"contentType,omitempty"`
+	AppSource   *string `json:"appSource,omitempty"`
 }
 
 type MeetingStatus string
@@ -82,7 +83,7 @@ const (
 )
 
 type MeetingInput struct {
-	Name               string                     `json:"name,omitempty"`
+	Name               *string                    `json:"name,omitempty"`
 	AttendedBy         []*MeetingParticipantInput `json:"attendedBy,omitempty"`
 	CreatedBy          []*MeetingParticipantInput `json:"createdBy,omitempty"`
 	CreatedAt          *time.Time                 `json:"createdAt,omitempty"`
@@ -93,6 +94,6 @@ type MeetingInput struct {
 	Agenda             *string                    `json:"agenda,omitempty"`
 	AgendaContentType  *string                    `json:"agendaContentType,omitempty"`
 	Note               *NoteInput                 `json:"note,omitempty"`
-	AppSource          string                     `json:"appSource"`
+	AppSource          *string                    `json:"appSource,omitempty"`
 	Status             *MeetingStatus             `json:"status,omitempty"`
 }
