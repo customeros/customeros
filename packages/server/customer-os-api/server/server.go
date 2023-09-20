@@ -127,6 +127,10 @@ func (server *server) Run(parentCtx context.Context) error {
 		cosHandler.TracingEnhancer(ctx, "/whoami"),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
 		rest.WhoamiHandler(serviceContainer))
+	r.POST("/poc",
+		cosHandler.TracingEnhancer(ctx, "/poc"),
+		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
+		rest.PocHandler(serviceContainer))
 	r.POST("/admin/query",
 		cosHandler.TracingEnhancer(ctx, "/admin/query"),
 		adminApiHandler.GetAdminApiHandlerEnhancer(),

@@ -2,7 +2,7 @@ name: customer-os-api
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter", "integration-app-poc" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-common-auth/**
@@ -108,6 +108,6 @@ jobs:
         uses: docker/build-push-action@v5.0.0
         with:
           context: packages/server/customer-os-api/tmp-sources/.
-          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
+          push: ${{ github.ref_name == 'otter' || github.ref_name == 'integration-app-poc' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
