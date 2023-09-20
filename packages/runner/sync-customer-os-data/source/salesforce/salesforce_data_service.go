@@ -20,8 +20,8 @@ const (
 	AccountTableSuffix     = "account"
 	ContactTableSuffix     = "contact"
 	LeadTableSuffix        = "lead"
-	ContentnoteTableSuffix = "contentnote"
 	FeeditemTableSuffix    = "feeditem"
+	ContentnoteTableSuffix = "contentnote"
 	OpportunityTableSuffix = "opportunity"
 )
 
@@ -29,6 +29,7 @@ var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):         {UserTableSuffix},
 	string(common.ORGANIZATIONS): {AccountTableSuffix, LeadTableSuffix},
 	string(common.CONTACTS):      {ContactTableSuffix, LeadTableSuffix},
+	string(common.LOG_ENTRIES):   {FeeditemTableSuffix},
 }
 
 type salesforceDataService struct {
@@ -51,7 +52,7 @@ func NewSalesforceDataService(airbyteStoreDb *config.RawDataStoreDB, tenant stri
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
 	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
 	dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
-	//dataService.dataFuncs[common.INTERACTION_EVENTS] = dataService.GetInteractionEventsForSync
+	dataService.dataFuncs[common.LOG_ENTRIES] = dataService.GetLogEntriesForSync
 	return &dataService
 }
 
@@ -64,7 +65,7 @@ func (s *salesforceDataService) GetDataForSync(ctx context.Context, dataType com
 	if ok := s.dataFuncs[dataType]; ok != nil {
 		return s.dataFuncs[dataType](ctx, batchSize, runId)
 	} else {
-		s.log.Warnf("No %s data function for %s", s.SourceId(), dataType)
+		s.log.Infof("No %s data function for %s", s.SourceId(), dataType)
 		return nil
 	}
 }
@@ -200,6 +201,42 @@ func (s *salesforceDataService) GetContactsForSync(ctx context.Context, batchSiz
 		}
 	}
 	return contacts
+}
+
+func (s *salesforceDataService) GetLogEntriesForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.LOG_ENTRIES)
+
+	var logEntries []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Error(err)
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(logEntries) >= batchSize {
+				break
+			}
+			outputJSON, err := MapLogEntry(v.AirbyteData)
+			logEntry, err := source.MapJsonToLogEntry(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				logEntry = entity.LogEntryData{
+					BaseData: entity.BaseData{
+						SyncId: v.AirbyteAbId,
+					},
+				}
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  logEntry.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			logEntries = append(logEntries, logEntry)
+		}
+	}
+	return logEntries
 }
 
 func (s *salesforceDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
