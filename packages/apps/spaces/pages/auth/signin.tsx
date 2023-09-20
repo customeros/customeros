@@ -20,22 +20,18 @@ import { theme } from '@ui/theme/theme';
 import { Button } from '@ui/form/Button';
 import { Center } from '@ui/layout/Center';
 import { Image } from '@ui/media/Image';
-import LoginBg from '@spaces/atoms/backgrounds/Login';
 import BackgroundGridDot from '../../public/backgrounds/grid/backgroundGridDot.png';
 import GoogleLogo from '@spaces/atoms/icons/GoogleLogo';
 
 import CustomOsLogo from './CustomerOS-logo.png';
+import Background from './login-bg.png';
 
 export default function SignIn({
   providers,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <ChakraProvider theme={theme}>
-      <Grid
-        templateColumns={['1fr', '1fr', '1fr', '10fr 11fr']}
-        gap={1}
-        h='100vh'
-      >
+      <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} h='100vh'>
         <GridItem h='100vh'>
           <Box height='50%'>
             <Image
@@ -75,9 +71,13 @@ export default function SignIn({
             </Flex>
           </Center>
         </GridItem>
-        <GridItem h='100vh' w='full' overflow='hidden'>
-          <LoginBg />
-        </GridItem>
+        <GridItem
+          borderTopLeftRadius='80px'
+          borderBottomLeftRadius='80px'
+          bg={`url(${Background.src})`}
+          backgroundRepeat={'no-repeat'}
+          backgroundSize={'cover'}
+        ></GridItem>
       </Grid>
     </ChakraProvider>
   );

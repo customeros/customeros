@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -33,8 +33,14 @@ export const IntercomThreadPreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const event = modalContent as InteractionEvent;
   const intercomSender = getParticipant(event?.sentBy);
-  const slackEventReplies =
-    event?.interactionSession?.events?.filter((e) => e?.id !== event?.id) || [];
+  const intercomeEventReplies =
+    event?.interactionSession?.events
+      ?.filter((e) => e?.id !== event?.id)
+      // TODO: remove this filter when we have a better way to handle this
+      .filter(
+        (e) =>
+          !e.content?.includes('You’ll get replies here and in your email:'),
+      ) || [];
   const title = (() => {
     const titleString = event?.interactionSession?.name || event?.content || '';
     return convert(`<p>${titleString}</p>`, {
@@ -49,7 +55,14 @@ export const IntercomThreadPreviewModal: React.FC = () => {
   })();
   return (
     <>
-      <CardHeader pb={1} position='sticky' top={0} borderRadius='xl'>
+      <CardHeader
+        position='sticky'
+        top={0}
+        borderRadius='xl'
+        px='6'
+        pt='4'
+        pb='1'
+      >
         <Flex
           direction='row'
           justifyContent='space-between'
@@ -102,18 +115,18 @@ export const IntercomThreadPreviewModal: React.FC = () => {
           date={DateTimeUtils.timeAgo(event?.date, { addSuffix: true })}
         />
 
-        {!!slackEventReplies.length && (
+        {!!intercomeEventReplies.length && (
           <>
             <Flex marginY={2} alignItems='center'>
               <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
-                {slackEventReplies.length}{' '}
-                {slackEventReplies.length === 1 ? 'reply' : 'replies'}
+                {intercomeEventReplies.length}{' '}
+                {intercomeEventReplies.length === 1 ? 'reply' : 'replies'}
               </Text>
               <Divider />
             </Flex>
 
             <Flex direction='column' gap={2}>
-              {slackEventReplies.map((reply) => {
+              {intercomeEventReplies.map((reply) => {
                 const replyParticipant = getParticipant(reply?.sentBy);
                 return (
                   <IntercomMessageCard

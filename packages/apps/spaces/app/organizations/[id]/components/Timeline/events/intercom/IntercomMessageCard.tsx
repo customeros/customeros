@@ -1,11 +1,19 @@
 import React, { PropsWithChildren } from 'react';
+import parse, {
+  Element,
+  domToReact,
+  HTMLReactParserOptions,
+} from 'html-react-parser';
+import linkifyHtml from 'linkify-html';
+
 import { Card, CardBody, CardProps } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
 import User from '@spaces/atoms/icons/User';
-import linkifyHtml from 'linkify-html';
+
 import { ViewInIntercomButton } from './ViewInIntercomButton';
+import { ImageAttachment } from './ImageAttachment';
 
 interface IntercomMessageCardProps extends PropsWithChildren {
   name: string;
@@ -35,6 +43,32 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
       rel: 'noopener noreferrer',
     });
   })();
+
+  const parseOptions: HTMLReactParserOptions = {
+    replace: (domNode) => {
+      if (domNode instanceof Element) {
+        switch (domNode.name) {
+          case 'td': {
+            return (
+              <Flex
+                flexDir='column'
+                noOfLines={showDateOnHover ? 4 : undefined}
+              >
+                {domToReact(domNode.children)}
+              </Flex>
+            );
+          }
+          case 'img': {
+            return <ImageAttachment {...domNode.attribs} />;
+          }
+          default:
+            return;
+        }
+      }
+    },
+  };
+
+  const parsedDisplayContent = parse(displayContent, parseOptions);
 
   return (
     <>
@@ -74,13 +108,13 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
             />
             <Flex direction='column' flex={1} position='relative'>
               <Flex justifyContent='space-between' flex={1}>
-                <Flex>
+                <Flex align='baseline'>
                   <Text color='gray.700' fontWeight={600}>
                     {name}
                   </Text>
                   <Text
                     color={showDateOnHover ? 'transparent' : 'gray.500'}
-                    ml={2}
+                    ml='2'
                     fontSize='xs'
                     className='intercom-stub-date'
                   >
@@ -90,11 +124,29 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
 
                 <ViewInIntercomButton url={sourceUrl} />
               </Flex>
-              <Text
+              <Flex
+                flexDir='column'
                 pointerEvents={showDateOnHover ? 'none' : 'initial'}
                 noOfLines={showDateOnHover ? 4 : undefined}
-                dangerouslySetInnerHTML={{ __html: displayContent }}
-              />
+                sx={{
+                  '& ol, ul': {
+                    pl: '5',
+                  },
+                  '& pre': {
+                    whiteSpace: 'normal',
+                    fontSize: '12px',
+                    color: 'gray.700',
+                    border: '1px solid',
+                    borderColor: 'gray.300',
+                    borderRadius: '4',
+                    p: '2',
+                    py: '1',
+                    my: '2',
+                  },
+                }}
+              >
+                {parsedDisplayContent}
+              </Flex>
               {children}
             </Flex>
           </Flex>

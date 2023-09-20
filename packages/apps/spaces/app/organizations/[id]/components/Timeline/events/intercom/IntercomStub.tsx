@@ -13,6 +13,7 @@ import { Button } from '@ui/form/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { InteractionEventWithDate } from '@organization/components/Timeline/types';
 import { IntercomMessageCard } from '@organization/components/Timeline/events/intercom/IntercomMessageCard';
+import { User02 } from '@ui/media/icons/User02';
 
 // TODO unify with slack
 export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
@@ -58,15 +59,21 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
         <Flex mt={1}>
           <Flex columnGap={1} mr={1}>
             {uniqThreadParticipants?.map(
-              ({ id, name, firstName, lastName, ...rest }) => (
-                <Avatar
-                  name={name || `${firstName} ${lastName}`}
-                  key={`uniq-intercom-thread-participant-${intercomEvent.id}-${id}`}
-                  variant='roundedSquareSmall'
-                  size='xs'
-                  src={rest?.profilePhotoUrl || undefined}
-                />
-              ),
+              ({ id, name, firstName, lastName, profilePhotoUrl }) => {
+                const displayName =
+                  name ?? [firstName, lastName].filter(Boolean).join(' ');
+
+                return (
+                  <Avatar
+                    size='xs'
+                    name={displayName}
+                    variant='roundedSquareSmall'
+                    icon={<User02 color='primary.700' />}
+                    src={profilePhotoUrl ? profilePhotoUrl : undefined}
+                    key={`uniq-intercom-thread-participant-${intercomEvent.id}-${id}`}
+                  />
+                );
+              },
             )}
           </Flex>
           <Button variant='link' fontSize='sm' size='sm'>
