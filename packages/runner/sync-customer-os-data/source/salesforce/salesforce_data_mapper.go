@@ -403,3 +403,66 @@ func extractDomain(email string) string {
 	}
 	return parts[1]
 }
+
+func MapLogEntry(inputJson string) (string, error) {
+	var input struct {
+		ID          string `json:"Id,omitempty"`
+		Body        string `json:"Body,omitempty"`
+		CreatedDate string `json:"CreatedDate,omitempty"`
+		Type        string `json:"Type,omitempty"`
+		Status      string `json:"Status,omitempty"`
+		IsRichText  bool   `json:"IsRichText,omitempty"`
+		CreatedById string `json:"CreatedById,omitempty"`
+		ParentId    string `json:"ParentId,omitempty"`
+	}
+
+	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
+		return "", err
+	}
+
+	if input.ID == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing id",
+		}
+		return utils.ToJson(output)
+	}
+	if input.Body == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing body",
+		}
+		return utils.ToJson(output)
+	}
+	if input.Status != "Published" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Not published",
+		}
+		return utils.ToJson(output)
+	}
+
+	output := entity.LogEntryData{
+		BaseData: entity.BaseData{
+			ExternalId:          input.ID,
+			CreatedAtStr:        input.CreatedDate,
+			ExternalSourceTable: utils.StringPtr("feeditem"),
+		},
+		Content:      input.Body,
+		StartedAtStr: input.CreatedDate,
+		AuthorUser: entity.ReferencedUser{
+			ExternalId: input.CreatedById,
+		},
+		LoggedOrganization: entity.ReferencedOrganization{
+			ExternalId: input.ParentId,
+		},
+		LoggedEntityRequired: true,
+	}
+	if input.IsRichText {
+		output.ContentType = "text/html"
+	} else {
+		output.ContentType = "text/plain"
+	}
+
+	return utils.ToJson(output)
+}

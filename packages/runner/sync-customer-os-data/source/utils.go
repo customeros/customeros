@@ -44,6 +44,18 @@ func MapJsonToContact(jsonData, syncId, source string) (entity.ContactData, erro
 	return contact, nil
 }
 
+func MapJsonToLogEntry(jsonData, syncId, source string) (entity.LogEntryData, error) {
+	logEntry := entity.LogEntryData{}
+	err := json.Unmarshal([]byte(jsonData), &logEntry)
+	if err != nil {
+		return entity.LogEntryData{}, err
+	}
+	logEntry.SyncId = syncId
+	logEntry.ExternalSystem = source
+	logEntry.Id = ""
+	return logEntry, nil
+}
+
 func MapJsonToNote(jsonData, syncId, source string) (entity.NoteData, error) {
 	note := entity.NoteData{}
 	err := json.Unmarshal([]byte(jsonData), &note)

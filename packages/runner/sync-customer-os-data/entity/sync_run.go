@@ -38,6 +38,9 @@ type SyncRun struct {
 	CompletedInteractionEvents int `gorm:"column:synced_interaction_events"`
 	FailedInteractionEvents    int `gorm:"column:failed_interaction_events"`
 	SkippedInteractionEvents   int `gorm:"column:skipped_interaction_events"`
+	CompletedLogEntries        int `gorm:"column:synced_log_entries"`
+	FailedLogEntries           int `gorm:"column:failed_log_entries"`
+	SkippedLogEntries          int `gorm:"column:skipped_log_entries"`
 }
 
 func (SyncRun) TableName() string {
@@ -45,13 +48,16 @@ func (SyncRun) TableName() string {
 }
 
 func (s *SyncRun) SumTotalCompleted() {
-	s.TotalCompleted = s.CompletedContacts + s.CompletedUsers + s.CompletedOrganizations + s.CompletedNotes + s.CompletedEmailMessages + s.CompletedIssues + s.CompletedMeetings + s.CompletedInteractionEvents
+	s.TotalCompleted = s.CompletedContacts + s.CompletedUsers + s.CompletedOrganizations + s.CompletedNotes + s.CompletedEmailMessages +
+		s.CompletedIssues + s.CompletedMeetings + s.CompletedInteractionEvents + s.CompletedLogEntries
 }
 
 func (s *SyncRun) SumTotalFailed() {
-	s.TotalFailed = s.FailedContacts + s.FailedUsers + s.FailedOrganizations + s.FailedNotes + s.FailedEmailMessages + s.FailedIssues + s.FailedMeetings + s.FailedInteractionEvents
+	s.TotalFailed = s.FailedContacts + s.FailedUsers + s.FailedOrganizations + s.FailedNotes + s.FailedEmailMessages +
+		s.FailedIssues + s.FailedMeetings + s.FailedInteractionEvents + s.FailedLogEntries
 }
 
 func (s *SyncRun) SumTotalSkipped() {
-	s.TotalSkipped = s.SkippedContacts + s.SkippedUsers + s.SkippedOrganizations + s.SkippedNotes + s.SkippedEmailMessages + s.SkippedIssues + s.SkippedMeetings + s.SkippedInteractionEvents
+	s.TotalSkipped = s.SkippedContacts + s.SkippedUsers + s.SkippedOrganizations + s.SkippedNotes + s.SkippedEmailMessages +
+		s.SkippedIssues + s.SkippedMeetings + s.SkippedInteractionEvents + s.SkippedLogEntries
 }

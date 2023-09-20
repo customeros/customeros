@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
+	"strings"
 )
 
 type logEntryService struct {
@@ -36,7 +37,7 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *pb.Upsert
 	defer span.Finish()
 
 	logEntryId := request.Id
-	if logEntryId == "" {
+	if strings.TrimSpace(logEntryId) == "" {
 		logEntryId = uuid.New().String()
 	}
 

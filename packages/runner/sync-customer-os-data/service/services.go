@@ -22,6 +22,7 @@ type Services struct {
 	ContactDefaultSyncService          SyncService
 	IssueDefaultSyncService            SyncService
 	NoteDefaultSyncService             SyncService
+	LogEntryDefaultSyncService         SyncService
 	MeetingDefaultSyncService          SyncService
 	EmailMessageDefaultSyncService     SyncService
 	InteractionEventDefaultSyncService SyncService
@@ -42,6 +43,7 @@ func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWit
 	services.OrganizationDefaultSyncService = NewDefaultOrganizationSyncService(repositories, services, log)
 	services.ContactDefaultSyncService = NewDefaultContactSyncService(repositories, services, log)
 	services.IssueDefaultSyncService = NewDefaultIssueSyncService(repositories, services, log)
+	services.LogEntryDefaultSyncService = NewDefaultLogEntrySyncService(repositories, services, grpcClients, log)
 	services.NoteDefaultSyncService = NewDefaultNoteSyncService(repositories, log)
 	services.MeetingDefaultSyncService = NewDefaultMeetingSyncService(repositories, services, log)
 	services.EmailMessageDefaultSyncService = NewDefaultEmailMessageSyncService(repositories, services, log)

@@ -94,6 +94,11 @@ func (s *syncService) Sync(parentCtx context.Context, runId string) {
 		syncRunDtls.FailedIssues = failed
 		syncRunDtls.SkippedIssues = skipped
 
+		completed, failed, skipped = s.logEntrySyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedLogEntries = completed
+		syncRunDtls.FailedLogEntries = failed
+		syncRunDtls.SkippedLogEntries = skipped
+
 		completed, failed, skipped = s.noteSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedNotes = completed
 		syncRunDtls.FailedNotes = failed
@@ -201,6 +206,15 @@ func (s *syncService) issueSyncService(tenantSyncSettings entity.TenantSyncSetti
 		}
 	}
 	return s.services.IssueDefaultSyncService
+}
+
+func (s *syncService) logEntrySyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.LOG_ENTRIES]; ok {
+			return u
+		}
+	}
+	return s.services.LogEntryDefaultSyncService
 }
 
 func (s *syncService) noteSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {

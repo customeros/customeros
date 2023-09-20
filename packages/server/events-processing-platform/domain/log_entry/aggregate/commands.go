@@ -3,6 +3,7 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
@@ -50,12 +51,25 @@ func (a *LogEntryAggregate) UpdateLogEntry(ctx context.Context, command *cmd.Ups
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(command.UpdatedAt, utils.Now())
 	startedAtNotNil := utils.IfNotNilTimeWithDefault(command.DataFields.StartedAt, a.LogEntry.StartedAt)
-	if command.Source.SourceOfTruth == "" {
-		command.Source.SourceOfTruth = a.LogEntry.Source.SourceOfTruth
+	sourceOfTruth := command.Source.SourceOfTruth
+	if sourceOfTruth == "" {
+		sourceOfTruth = a.LogEntry.Source.SourceOfTruth
+	}
+
+	// do not change data if log entry was modified by openline
+	if sourceOfTruth != a.LogEntry.Source.SourceOfTruth && a.LogEntry.Source.SourceOfTruth == constants.SourceOpenline {
+		sourceOfTruth = a.LogEntry.Source.SourceOfTruth
+		startedAtNotNil = a.LogEntry.StartedAt
+		if a.LogEntry.Content != "" {
+			command.DataFields.Content = a.LogEntry.Content
+		}
+		if a.LogEntry.ContentType != "" {
+			command.DataFields.ContentType = a.LogEntry.ContentType
+		}
 	}
 
 	event, err := events.NewLogEntryUpdateEvent(a, command.DataFields.Content, command.DataFields.ContentType,
-		command.Source.SourceOfTruth, updatedAtNotNil, startedAtNotNil)
+		sourceOfTruth, updatedAtNotNil, startedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryUpdateEvent")

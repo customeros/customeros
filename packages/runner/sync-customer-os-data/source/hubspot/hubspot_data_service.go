@@ -68,7 +68,7 @@ func (s *hubspotDataService) GetDataForSync(ctx context.Context, dataType common
 	if ok := s.dataFuncs[dataType]; ok != nil {
 		return s.dataFuncs[dataType](ctx, batchSize, runId)
 	} else {
-		s.log.Warnf("No %s data function for %s", s.SourceId(), dataType)
+		s.log.Infof("No %s data function for %s", s.SourceId(), dataType)
 		return nil
 	}
 }
