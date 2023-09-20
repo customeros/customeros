@@ -81,7 +81,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
           h='fit-content'
         >
           <Text
-            w={390}
+            w={412}
             noOfLines={4}
             color='gray.700'
             fontSize='sm'

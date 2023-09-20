@@ -5,7 +5,7 @@ import {
   MentionAtomNodeAttributes,
   useMentionAtom,
 } from '@remirror/react';
-import { Box } from '@chakra-ui/react';
+import { Box } from '@ui/layout/Box';
 
 export const TagSuggestor: FC<{
   tags?: Array<{ label: string; id: string }>;
@@ -40,7 +40,6 @@ export const TagSuggestor: FC<{
   }, [state]);
 
   const enabled = Boolean(state);
-  // console.log('🏷️ ----- : x', getMenuProps());
   return (
     <FloatingWrapper
       positioner='cursor'

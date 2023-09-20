@@ -2,7 +2,7 @@ import React from 'react';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { Box, Flex } from '@chakra-ui/react';
 import { Button } from '@ui/form/Button';
-import { TagSuggestor } from './TagSuggestor';
+import { TagSuggestor } from '@ui/form/RichTextEditor/TagSuggestor';
 import { TagsSelect } from './TagSelect';
 import Image from 'next/image';
 import noteIcon from 'public/images/event-ill-log.png';
