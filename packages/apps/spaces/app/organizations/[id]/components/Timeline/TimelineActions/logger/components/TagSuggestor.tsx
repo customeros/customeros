@@ -5,6 +5,7 @@ import {
   MentionAtomNodeAttributes,
   useMentionAtom,
 } from '@remirror/react';
+import { Box } from '@chakra-ui/react';
 
 export const TagSuggestor: FC<{
   tags?: Array<{ label: string; id: string }>;
@@ -34,11 +35,12 @@ export const TagSuggestor: FC<{
       setOptions(filteredOptions);
     }
     if (filteredOptions.length === 0) {
-      setOptions([{ id: searchTerm, label: searchTerm }]);
+      setOptions([{ id: searchTerm, label: searchTerm, hide: true }]);
     }
   }, [state]);
 
   const enabled = Boolean(state);
+  // console.log('🏷️ ----- : x', getMenuProps());
   return (
     <FloatingWrapper
       positioner='cursor'
@@ -51,9 +53,19 @@ export const TagSuggestor: FC<{
           options.map((tag, index) => {
             const isHighlighted = indexIsSelected(index);
             const isHovered = indexIsHovered(index);
-
+            if (tag?.hide) {
+              return (
+                <div
+                  key={`remirror-mention-tag-suggestion-${tag.label}-${tag.id}`}
+                  {...getItemProps({
+                    item: tag,
+                    index,
+                  })}
+                />
+              );
+            }
             return (
-              <div
+              <Box
                 key={`remirror-mention-tag-suggestion-${tag.label}-${tag.id}`}
                 className={cx(
                   'floating-menu-option',
@@ -66,7 +78,7 @@ export const TagSuggestor: FC<{
                 })}
               >
                 {tag.label}
-              </div>
+              </Box>
             );
           })}
       </div>

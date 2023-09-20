@@ -23,7 +23,7 @@ export const tagsSelectStyles = (
     fontSize: 'md',
     margin: 0,
     marginRight: 1,
-    cursor: 'default',
+    cursor: 'text',
     fontWeight: 500,
 
     '&:first-of-type': {
@@ -49,6 +49,7 @@ export const tagsSelectStyles = (
     minWidth: '300px',
     width: '100%',
     overflow: 'visible',
+    cursor: 'text',
     _focusVisible: { border: 'none !important' },
     _focus: { border: 'none !important' },
   }),
@@ -82,6 +83,7 @@ export const tagsSelectStyles = (
     ...props,
     color: 'gray.500',
     fontWeight: 'regular',
+    cursor: 'text',
   }),
   valueContainer: (props: CSSWithMultiValues) => ({
     ...props,

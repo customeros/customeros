@@ -12,10 +12,10 @@ import {
 } from '@organization/components/Timeline/TimelineActions/logger/LogEntryFormDto';
 import { useForm } from 'react-inverted-form';
 import { useRemirror } from '@remirror/react';
-import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useCreateLogEntryMutation } from '@organization/graphql/createLogEntry.generated';
 import { useDisclosure } from '@ui/utils';
 import { useTimelineActionContext } from './TimelineActionContext';
+import { logEntryEditorExtensions } from './extensions';
 
 export const noop = () => undefined;
 
@@ -68,7 +68,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
     },
   });
   const remirrorProps = useRemirror({
-    extensions: basicEditorExtensions,
+    extensions: logEntryEditorExtensions,
   });
   const handleResetEditor = () => {
     reset();
@@ -116,9 +116,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
 
   const handleCheckCanExitSafely = () => {
     const { content, tags } = state.values;
-
     const isContentEmpty = !content.length || content === `<p style=""></p>`;
-
     const showLogEntryEditorConfirmationDialog =
       !!tags.length || !isContentEmpty;
     if (showLogEntryEditorConfirmationDialog) {
