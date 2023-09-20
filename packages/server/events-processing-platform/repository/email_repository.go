@@ -182,7 +182,8 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 					e.username = $username,
 					e.updatedAt = $validatedAt,
 					e.isReachable = $isReachable
-				WITH e
+				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
+				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
