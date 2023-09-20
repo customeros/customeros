@@ -12,4 +12,4 @@ In order to make it easier to interact with customerOS, we are proposing a set o
 Using the components and our customerOS you can build applications faster and register them to have access to all your customer data. 
 
 
-![alt text](https://raw.githubusercontent.com/openline-ai/openline-customer-os/27-document-ecosytem-view-for-customer-os/architecture/images/customer-os-eco-system-view.png)
+![alt text](https://raw.githubusercontent.com/openline-ai/openline-customer-os/master/architecture/images/customer-os-eco-system-view.png)
