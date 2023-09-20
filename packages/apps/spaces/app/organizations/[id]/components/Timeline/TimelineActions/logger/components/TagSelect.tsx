@@ -60,9 +60,18 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
     }
   };
 
+  // this function is needed as tags are selected on 'Space' not 'Enter'
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.code === 'Enter') {
       event.preventDefault();
+    }
+    if (event.code === 'Backspace') {
+      if (inputVal.length) {
+        return;
+      }
+      event.preventDefault();
+      const newSelected = [...selectedTags].slice(0, selectedTags.length - 1);
+      onChange(newSelected);
     }
     if (event.code === 'Space') {
       event.preventDefault();
@@ -129,6 +138,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               name={name}
               formId={formId}
               placeholder=''
+              backspaceRemovesValue
               onKeyDown={handleKeyDown}
               noOptionsMessage={() => null}
               loadOptions={(inputValue: string, callback) => {

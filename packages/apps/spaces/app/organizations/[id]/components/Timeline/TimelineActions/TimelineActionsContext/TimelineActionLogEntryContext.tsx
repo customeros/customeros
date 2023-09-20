@@ -59,7 +59,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const { closeEditor } = useTimelineActionContext();
 
   const logEntryValues = new LogEntryFormDto();
-  const { state, reset } = useForm<LogEntryFormDtoI>({
+  const { state, reset, setDefaultValues } = useForm<LogEntryFormDtoI>({
     formId: 'organization-create-log-entry',
     defaultValues: logEntryValues,
 
@@ -71,11 +71,13 @@ export const TimelineActionLogEntryContextContextProvider = ({
     extensions: basicEditorExtensions,
   });
   const handleResetEditor = () => {
+    reset();
+    setDefaultValues(logEntryValues);
+
     const context = remirrorProps.getContext();
     if (context) {
       context.commands.resetContent();
     }
-    reset();
   };
   const createLogEntryMutation = useCreateLogEntryMutation(client, {
     onSuccess: () => {
@@ -118,8 +120,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
     const isContentEmpty = !content.length || content === `<p style=""></p>`;
 
     const showLogEntryEditorConfirmationDialog =
-      !tags.length && !isContentEmpty;
-
+      !!tags.length || !isContentEmpty;
     if (showLogEntryEditorConfirmationDialog) {
       onOpen();
       return false;

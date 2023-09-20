@@ -76,7 +76,7 @@ export const TimelineActionEmailContextContextProvider = ({
     subject: '',
     content: '',
   });
-  const { state, reset } = useForm<ComposeEmailDtoI>({
+  const { state, reset, setDefaultValues } = useForm<ComposeEmailDtoI>({
     formId,
     defaultValues,
 
@@ -85,6 +85,7 @@ export const TimelineActionEmailContextContextProvider = ({
     },
   });
   const handleResetEditor = () => {
+    setDefaultValues(defaultValues);
     const context = remirrorProps.getContext();
     if (context) {
       context.commands.resetContent();
