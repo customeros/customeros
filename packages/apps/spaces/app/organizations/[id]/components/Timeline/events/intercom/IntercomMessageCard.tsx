@@ -130,10 +130,18 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
                 noOfLines={showDateOnHover ? 4 : undefined}
                 sx={{
                   '& ol, ul': {
-                    pl: '6',
+                    pl: '5',
                   },
                   '& pre': {
                     whiteSpace: 'normal',
+                    fontSize: '12px',
+                    color: 'gray.700',
+                    border: '1px solid',
+                    borderColor: 'gray.300',
+                    borderRadius: '4',
+                    p: '2',
+                    py: '1',
+                    my: '2',
                   },
                 }}
               >
