@@ -1,6 +1,6 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-analytics-api
 
-go 1.19
+go 1.20
 
 require (
 	github.com/99designs/gqlgen v0.17.38
