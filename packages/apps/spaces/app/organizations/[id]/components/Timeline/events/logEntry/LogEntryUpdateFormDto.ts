@@ -33,9 +33,7 @@ export class LogEntryUpdateFormDto implements LogEntryUpdateForm {
     newDate.setMinutes(Number(timeArray?.[1] ?? '00'));
     return newDate;
   }
-  static toPayload(
-    data: LogEntryUpdateForm,
-  ): Pick<LogEntryUpdateInput, 'startedAt'> {
+  static toPayload(data: LogEntryUpdateFormDtoI): LogEntryUpdateInput {
     return {
       startedAt: this.applyHourAndMinuteToDate(data.date, data.time),
     };

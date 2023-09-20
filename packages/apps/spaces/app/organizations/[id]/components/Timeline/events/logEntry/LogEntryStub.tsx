@@ -94,7 +94,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
     >
       <CardBody px='3' py='2'>
         <Flex w='full' justify='space-between' position='relative'>
-          <Text w={390} noOfLines={4} color='gray.700'>
+          <Text w={390} noOfLines={4} color='gray.700' fontSize='sm'>
             <Text as='span'>{fullName}</Text>
             <Text as='span' color='gray.500' mx={1}>
               wrote

@@ -15,6 +15,28 @@ import {
 import { useField, useForm } from 'react-inverted-form';
 import { useQueryClient } from '@tanstack/react-query';
 
+const calendarStyles = {
+  '& .react-date-picker--open .react-date-picker__calendar-button, .react-date-picker:focus-within .react-date-picker__calendar-button, .react-date-picker:focus .react-date-picker__calendar-button, .react-date-picker:focus-visible .react-date-picker__calendar-button':
+    {
+      borderColor: 'transparent !important',
+    },
+  '& .react-date-picker__calendar-button:hover': {
+    borderColor: 'transparent !important',
+  },
+
+  '& .react-date-picker': {
+    height: 'min-content',
+    position: 'initial !important',
+  },
+  '& .react-date-picker__wrapper': {
+    height: 'min-content',
+    position: 'initial',
+  },
+  '& .react-date-picker__button': {
+    p: 0,
+    height: 'min-content',
+  },
+};
 export const LogEntryDatePicker: React.FC<{ event: LogEntryWithAliases }> = ({
   event,
 }) => {
@@ -47,6 +69,8 @@ export const LogEntryDatePicker: React.FC<{ event: LogEntryWithAliases }> = ({
     updateLogEntryMutation.mutate({
       id: event.id,
       input: {
+        content: event.content,
+        contentType: event.contentType,
         ...LogEntryUpdateFormDto.toPayload({
           ...state.values,
           time: state.values.time,
@@ -57,30 +81,21 @@ export const LogEntryDatePicker: React.FC<{ event: LogEntryWithAliases }> = ({
 
   return (
     <>
-      <Text size='sm' fontWeight='semibold' as='label' htmlFor={id}>
+      <Text
+        size='sm'
+        fontSize='sm'
+        fontWeight='semibold'
+        as='label'
+        htmlFor={id}
+      >
         Date
       </Text>
       <Flex
+        alignItems='center'
         sx={{
-          '& .react-date-picker--open .react-date-picker__calendar-button, .react-date-picker:focus-within .react-date-picker__calendar-button, .react-date-picker:focus .react-date-picker__calendar-button, .react-date-picker:focus-visible .react-date-picker__calendar-button':
-            {
-              borderColor: 'transparent !important',
-            },
-          '& .react-date-picker__calendar-button:hover': {
-            borderColor: 'transparent !important',
-          },
+          ...calendarStyles,
           '& .react-date-picker__calendar': {
-            inset: '120% auto auto !important',
-          },
-          '& .react-date-picker': {
-            height: 'min-content',
-          },
-          '& .react-date-picker__wrapper': {
-            height: 'min-content',
-          },
-          '& .react-date-picker__button': {
-            p: 0,
-            height: 'min-content',
+            inset: `116px auto auto auto !important`,
           },
         }}
       >
@@ -103,7 +118,7 @@ export const LogEntryDatePicker: React.FC<{ event: LogEntryWithAliases }> = ({
             <Text
               color={event.logEntryStartedAt ? 'gray.700' : 'gray.400'}
               role='button'
-              size='sm'
+              fontSize='sm'
             >
               {DateTimeUtils.format(dateValue, 'EEEE, dd MMM yyyy')}
             </Text>
@@ -121,6 +136,9 @@ export const LogEntryDatePicker: React.FC<{ event: LogEntryWithAliases }> = ({
                 display: 'none',
               },
             }}
+            fontSize='sm'
+            size='xs'
+            lineHeight='1'
             _hover={{ borderColor: 'transparent', cursor: 'text' }}
             _focus={{ borderColor: 'transparent', cursor: 'text' }}
             _focusVisible={{ borderColor: 'transparent', cursor: 'text' }}
