@@ -2,17 +2,23 @@ package salesforce
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
+	app_repo "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	source_entity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"golang.org/x/oauth2"
 	"gorm.io/gorm"
+	"net/http"
+	"strings"
 )
 
 const (
@@ -29,11 +35,12 @@ var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):         {UserTableSuffix},
 	string(common.ORGANIZATIONS): {AccountTableSuffix, LeadTableSuffix, OpportunityTableSuffix},
 	string(common.CONTACTS):      {ContactTableSuffix, LeadTableSuffix},
-	string(common.LOG_ENTRIES):   {FeeditemTableSuffix},
+	string(common.LOG_ENTRIES):   {FeeditemTableSuffix, ContentnoteTableSuffix},
 }
 
 type salesforceDataService struct {
 	airbyteStoreDb *config.RawDataStoreDB
+	repositories   *app_repo.Repositories
 	tenant         string
 	instance       string
 	processingIds  map[string]source.ProcessingEntity
@@ -41,9 +48,10 @@ type salesforceDataService struct {
 	log            logger.Logger
 }
 
-func NewSalesforceDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string, log logger.Logger) source.SourceDataService {
+func NewSalesforceDataService(airbyteStoreDb *config.RawDataStoreDB, repositories *app_repo.Repositories, tenant string, log logger.Logger) source.SourceDataService {
 	dataService := salesforceDataService{
 		airbyteStoreDb: airbyteStoreDb,
+		repositories:   repositories,
 		tenant:         tenant,
 		processingIds:  map[string]source.ProcessingEntity{},
 		log:            log,
@@ -207,6 +215,11 @@ func (s *salesforceDataService) GetLogEntriesForSync(ctx context.Context, batchS
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.LOG_ENTRIES)
 
+	tenantSettings, err := s.repositories.TenantSettingsRepository.GetTenantSettings(ctx, s.tenant)
+	if err != nil {
+		s.log.Errorf("Failed to get tenant settings for tenant %s: %v", s.tenant, err.Error())
+	}
+
 	var logEntries []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
 		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
@@ -227,7 +240,22 @@ func (s *salesforceDataService) GetLogEntriesForSync(ctx context.Context, batchS
 					},
 				}
 			}
-
+			if sourceTableSuffix == ContentnoteTableSuffix && logEntry.ExternalSystem != "" && tenantSettings.SalesforceClientId != "" {
+				linkedEntityAccountOrLeadId, err := fetchLinkedEntityForContentNote(ctx, s.tenant, tenantSettings.SalesforceClientId, tenantSettings.SalesforceClientSecret, tenantSettings.SalesforceRefreshToken, logEntry.ExternalId)
+				if err != nil {
+					s.log.Errorf("Failed to fetch linked entity for content note %s: %v", logEntry.ExternalId, err.Error())
+					logEntry = entity.LogEntryData{
+						BaseData: entity.BaseData{
+							SyncId: v.AirbyteAbId,
+						},
+					}
+				} else {
+					s.log.Infof("Linked entity for content note %s: %v", logEntry.ExternalId, linkedEntityAccountOrLeadId)
+					logEntry.LoggedOrganization = entity.ReferencedOrganization{
+						ExternalId: linkedEntityAccountOrLeadId,
+					}
+				}
+			}
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  logEntry.ExternalId,
 				Entity:      currentEntity,
@@ -249,4 +277,152 @@ func (s *salesforceDataService) MarkProcessed(ctx context.Context, syncId, runId
 		return err
 	}
 	return nil
+}
+
+const (
+	SalesforceOAuthURL   = "https://login.salesforce.com/services/oauth2/token"
+	ServicesDataQueryURL = "/services/data/v57.0/query/?q=%s"
+)
+
+// Define a struct to hold token information
+type TokenInfo struct {
+	Token       *oauth2.Token
+	InstanceURL string
+}
+
+// Define a map to store tokens with tenant as the key
+var tokens = make(map[string]*TokenInfo)
+
+func fetchLinkedEntityForContentNote(ctx context.Context, tenant, salesforceClientID, salesforceClientSecret, salesforceRefreshToken, contentNoteID string) (string, error) {
+
+	// Step 1: Obtain an access token using the provided credentials
+	token, err := getAccessTokenIfNeeded(tenant, salesforceClientID, salesforceClientSecret, salesforceRefreshToken)
+	if err != nil {
+		return "", err
+	}
+
+	// Retrieve the instance URL from the map
+	instanceURL := tokens[tenant].InstanceURL
+
+	// Build the Salesforce API URL for ContentDocumentLink
+	query := fmt.Sprintf("SELECT+FIELDS(ALL)+from+ContentDocumentLink+where+contentDocumentId+=+'%s'+limit+200", contentNoteID)
+	contentDocumentLinkURL := instanceURL + fmt.Sprintf(ServicesDataQueryURL, query)
+
+	// Create a new HTTP request
+	req, err := http.NewRequest("GET", contentDocumentLinkURL, nil)
+	if err != nil {
+		return "", err
+	}
+	// Set the authorization header with the access token
+	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
+
+	// Send the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Failed to fetch linked entity: %s", resp.Status)
+	}
+
+	// Parse the response to extract the linked entity ID
+	var sfContentDocumentLinkResponse struct {
+		Records []struct {
+			LinkedEntityId string `json:"LinkedEntityId"`
+			IsDeleted      bool   `json:"IsDeleted"`
+		} `json:"records"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&sfContentDocumentLinkResponse); err != nil {
+		return "", err
+	}
+
+	for _, record := range sfContentDocumentLinkResponse.Records {
+		if strings.HasPrefix(record.LinkedEntityId, sfAccountIdPrefix) || strings.HasPrefix(record.LinkedEntityId, sfLeadIdPrefix) {
+			return record.LinkedEntityId, nil
+		}
+	}
+
+	return "", nil
+}
+
+func getAccessTokenIfNeeded(tenant, ClientID, ClientSecret, RefreshToken string) (*oauth2.Token, error) {
+	// Check if the token for the given tenant exists and is not expired
+	if tokenInfo, ok := tokens[tenant]; ok {
+		if !tokenInfo.Token.Valid() {
+			// Token is expired, need to refresh
+			return refreshAccessToken(tenant, ClientID, ClientSecret, RefreshToken)
+		}
+		return tokenInfo.Token, nil
+	}
+
+	// Token is missing, need to obtain a new one
+	return obtainNewAccessToken(tenant, ClientID, ClientSecret, RefreshToken)
+}
+
+func refreshAccessToken(tenant, ClientID, ClientSecret, RefreshToken string) (*oauth2.Token, error) {
+	// Configure the OAuth2 client credentials
+	conf := &oauth2.Config{
+		ClientID:     ClientID,
+		ClientSecret: ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			TokenURL: SalesforceOAuthURL,
+		},
+	}
+
+	// Create a context
+	ctx := context.Background()
+
+	// Exchange the refresh token for a new access token
+	token := &oauth2.Token{
+		RefreshToken: RefreshToken,
+	}
+
+	newToken, err := conf.TokenSource(ctx, token).Token()
+	if err != nil {
+		return nil, err
+	}
+
+	// Update the token information in the map
+	tokens[tenant] = &TokenInfo{
+		Token:       newToken,
+		InstanceURL: newToken.Extra("instance_url").(string),
+	}
+
+	return newToken, nil
+}
+
+func obtainNewAccessToken(tenant, ClientID, ClientSecret, RefreshToken string) (*oauth2.Token, error) {
+	// Configure the OAuth2 client credentials
+	conf := &oauth2.Config{
+		ClientID:     ClientID,
+		ClientSecret: ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			TokenURL: SalesforceOAuthURL,
+		},
+	}
+
+	// Create a context
+	ctx := context.Background()
+
+	// Exchange the refresh token for an access token
+	token := &oauth2.Token{
+		RefreshToken: RefreshToken,
+	}
+
+	newToken, err := conf.TokenSource(ctx, token).Token()
+	if err != nil {
+		return nil, err
+	}
+
+	// Update the token information in the map
+	tokens[tenant] = &TokenInfo{
+		Token:       newToken,
+		InstanceURL: newToken.Extra("instance_url").(string),
+	}
+
+	return newToken, nil
 }

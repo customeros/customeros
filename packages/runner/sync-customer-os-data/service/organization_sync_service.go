@@ -176,7 +176,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 	}
 
 	organizationSyncMutex.Lock()
-	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput)
+	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput.ExternalSystem, orgInput.ExternalId, orgInput.Domains)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)

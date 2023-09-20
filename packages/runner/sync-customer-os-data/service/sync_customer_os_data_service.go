@@ -148,7 +148,7 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 			return intercom.NewIntercomDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
 		},
 		string(entity.AirbyteSourceSalesforce): func() source.SourceDataService {
-			return salesforce.NewSalesforceDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
+			return salesforce.NewSalesforceDataService(s.repositories.Dbs.RawDataStoreDB, s.repositories, tenantToSync.Tenant, s.log)
 		},
 		string(entity.OpenlineSourceSlack): func() source.SourceDataService {
 			return slack.NewSlackDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
