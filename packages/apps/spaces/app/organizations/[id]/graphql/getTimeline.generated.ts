@@ -362,7 +362,6 @@ export type GetTimelineQuery = {
         }
       | { __typename: 'InteractionSession' }
       | { __typename: 'Issue' }
-      | { __typename: 'LogEntry' }
       | {
           __typename: 'LogEntry';
           id: string;

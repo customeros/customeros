@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -9,13 +9,13 @@ import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPrev
 import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';
 import copy from 'copy-to-clipboard';
-import { VStack } from '@chakra-ui/react';
+import { VStack } from '@ui/layout/Stack';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 import { User } from '@graphql/types';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Box } from '@ui/layout/Box';
 import Image from 'next/image';
 import noteIcon from 'public/images/event-ill-log-preview.png';
+import { LogEntryDatePicker } from './LogEntryDatePicker';
 
 const getAuthor = (user: User) => {
   if (!user?.firstName && !user.lastName) {
@@ -74,17 +74,8 @@ export const LogEntryPreviewModal: React.FC = () => {
             <Image src={noteIcon} alt='' height={123} width={174} />
           </Box>
           <Flex direction='column'>
-            <Text size='sm' fontWeight='semibold'>
-              Date
-            </Text>
-            <Text size='sm'>
-              {DateTimeUtils.format(
-                new Date(event.logEntryStartedAt).toISOString(),
-                'EEEE, dd MMM yyyy • h:mma',
-              )}
-            </Text>
+            <LogEntryDatePicker event={event} />
           </Flex>
-
           <Flex direction='column'>
             <Text size='sm' fontWeight='semibold'>
               Author
