@@ -19,6 +19,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 type ActionForecastMetadata struct {
@@ -133,8 +134,12 @@ func (h *GraphOrganizationEventHandler) OnDomainLinkedToOrganization(ctx context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
+	if strings.TrimSpace(eventData.Domain) == "" {
+		return nil
+	}
+
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.OrganizationRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, eventData.Domain)
+	err := h.Repositories.OrganizationRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
 
 	return err
 }
