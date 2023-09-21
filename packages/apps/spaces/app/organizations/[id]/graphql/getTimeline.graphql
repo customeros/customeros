@@ -147,6 +147,9 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
               firstName
               lastName
               profilePhotoUrl
+              emails {
+                email
+              }
           }
         }
         tags {

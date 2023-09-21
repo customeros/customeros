@@ -377,6 +377,10 @@ export type GetTimelineQuery = {
             firstName: string;
             lastName: string;
             profilePhotoUrl?: string | null;
+            emails?: Array<{
+              __typename?: 'Email';
+              email?: string | null;
+            }> | null;
           } | null;
           tags: Array<{ __typename?: 'Tag'; id: string; name: string }>;
           externalLinks: Array<{
@@ -661,6 +665,9 @@ export const GetTimelineDocument = `
             firstName
             lastName
             profilePhotoUrl
+            emails {
+              email
+            }
           }
         }
         tags {

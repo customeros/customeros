@@ -3536,10 +3536,9 @@ span.slack_code {
  */
 .remirror-is-empty:first-of-type::before {
   position: absolute;
-  color: #aaa;
+  color: var(--chakra-colors-gray-400);
   pointer-events: none;
   height: 0;
-  font-style: italic;
   content: attr(data-placeholder);
 }
 
