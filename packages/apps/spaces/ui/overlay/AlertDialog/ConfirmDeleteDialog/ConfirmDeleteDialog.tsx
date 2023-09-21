@@ -47,6 +47,7 @@ export const ConfirmDeleteDialog = ({
       isOpen={isOpen}
       onClose={onClose}
       leastDestructiveRef={cancelRef}
+      closeOnEsc
     >
       <AlertDialogOverlay>
         <AlertDialogContent
