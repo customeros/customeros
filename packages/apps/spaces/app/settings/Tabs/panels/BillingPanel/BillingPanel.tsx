@@ -28,7 +28,7 @@ export const BillingPanel = () => {
     >
       <CardHeader px='6' pb='0' pt='4'>
         <Heading as='h1' fontSize='lg' color='gray.700'>
-          <b>Billing details</b>
+          <b>Billing</b>
         </Heading>
       </CardHeader>
       <CardBody px='6' w='full'>
@@ -73,13 +73,13 @@ export const BillingPanel = () => {
             <Flex justify='space-between' align='center'>
               <Text color='gray.700'>Synced (no charge)</Text>
               <Text color='gray.700'>
-                {data?.billableInfo.greylistedContacts}
+                {data?.billableInfo.greylistedContacts ?? 0}
               </Text>
             </Flex>
             <Flex justify='space-between' align='center'>
               <Text color='gray.700'>Active (billed)</Text>
-              <Text color='gray.700'>
-                {data?.billableInfo.whitelistedContacts}
+              <Text color='gray.700' fontWeight='semibold'>
+                {data?.billableInfo.whitelistedContacts ?? 0}
               </Text>
             </Flex>
           </CardFooter>
