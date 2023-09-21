@@ -1,38 +1,27 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { Box, Flex } from '@chakra-ui/react';
 import { Button } from '@ui/form/Button';
-import { TagSuggestor } from './TagSuggestor';
-
+import { TagSuggestor } from '@ui/form/RichTextEditor/TagSuggestor';
 import { TagsSelect } from './TagSelect';
 import Image from 'next/image';
-import noteIcon from '../../../../../../../../public/images/event-ill-log.png';
+import noteIcon from 'public/images/event-ill-log.png';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
-import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/TimelineActions/TimelineActionsContext/TimelineActionLogEntryContext';
+import { useTimelineActionLogEntryContext } from '../../TimelineActionsContext/TimelineActionLogEntryContext';
+import { useField } from 'react-inverted-form';
 
 export const Logger = () => {
   const { onCreateLogEntry, remirrorProps, isSaving } =
     useTimelineActionLogEntryContext();
   const client = getGraphQLClient();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { getInputProps } = useField(
+    'content',
+    'organization-create-log-entry',
+  );
+  const { value } = getInputProps();
   const { data } = useGetTagsQuery(client);
-  //
-  // const createLogEntryMutation = useCreateLogEntryMutation(client, {
-  //   onSuccess: () => {
-  //     // reset();
-  //     timeoutRef.current = setTimeout(() => invalidateQuery(), 500);
-  //   },
-  // });
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  const isLogEmpty = !value?.length || value === `<p style=""></p>`;
 
   return (
     <Flex
@@ -46,7 +35,7 @@ export const Logger = () => {
 
       <RichTextEditor
         {...remirrorProps}
-        placeholder='Log conversation you had with a customer'
+        placeholder='Log a conversation you had with a customer'
         formId='organization-create-log-entry'
         name='content'
         showToolbar={false}
@@ -75,7 +64,7 @@ export const Logger = () => {
           pr={3}
           size='sm'
           fontSize='sm'
-          isDisabled={isSaving}
+          isDisabled={isSaving || isLogEmpty}
           isLoading={isSaving}
           loadingText='Sending'
           onClick={onCreateLogEntry}

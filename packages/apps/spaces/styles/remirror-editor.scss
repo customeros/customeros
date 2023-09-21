@@ -3645,6 +3645,7 @@ span.slack_code {
    * https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/
    * */
   box-sizing: inherit;
+  color: var(--chakra-colors-gray-700);
 }
 
 .remirror-theme {
@@ -3712,7 +3713,7 @@ span.slack_code {
 .remirror-theme h4,
 .remirror-theme h5,
 .remirror-theme h6 {
-  color: var(--rmr-color-text);
+  color: var(--chakra-color-gray-700);
   font-family: var(--rmr-font-family-heading);
   line-height: var(--rmr-line-height-heading);
   font-weight: var(--rmr-font-weight-heading);
@@ -3755,9 +3756,12 @@ span.slack_code {
   overflow:auto;
 }
 
+.customeros-logger .remirror-editor-wrapper {
+  min-height: 85px
+}
 .customeros-logger .remirror-editor,
 .customeros-logger .remirror-is-empty {
-  min-height: 65px;
+  min-height: 75px;
 }
 
 .remirror-theme .ProseMirror p,
@@ -3894,8 +3898,12 @@ a {
   --input-border-radius: var(--chakra-radii-md);
   position: relative;
   -webkit-overflow-scrolling: touch;
-  padding: var(--chakra-space-2);
   border-color: var(--chakra-colors-gray-200);
+
+  &:has(.floating-menu-option) {
+    padding: var(--chakra-space-2);
+
+  }
 }
 
 .floating-menu-option {
@@ -3920,9 +3928,8 @@ a {
   padding: 0.4rem 0.8rem;
   --menu-bg: var(--chakra-colors-gray-100);
   color: var(--chakra-colors-gray-700);
-  margin-top: 2px;
-  margin-bottom: 2px;
   border-radius: var(--chakra-radii-md);
+
 
   &:focus,
   &.highlighted {

@@ -1,11 +1,4 @@
 import React, { PropsWithChildren } from 'react';
-import parse, {
-  Element,
-  domToReact,
-  HTMLReactParserOptions,
-} from 'html-react-parser';
-import linkifyHtml from 'linkify-html';
-
 import { Card, CardBody, CardProps } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -13,7 +6,7 @@ import { Avatar } from '@ui/media/Avatar';
 import User from '@spaces/atoms/icons/User';
 
 import { ViewInIntercomButton } from './ViewInIntercomButton';
-import { ImageAttachment } from './ImageAttachment';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 interface IntercomMessageCardProps extends PropsWithChildren {
   name: string;
@@ -37,39 +30,6 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
   w,
   showDateOnHover,
 }) => {
-  const displayContent: string = (() => {
-    return linkifyHtml(content, {
-      defaultProtocol: 'https',
-      rel: 'noopener noreferrer',
-    });
-  })();
-
-  const parseOptions: HTMLReactParserOptions = {
-    replace: (domNode) => {
-      if (domNode instanceof Element) {
-        switch (domNode.name) {
-          case 'td': {
-            return (
-              <Flex
-                flexDir='column'
-                noOfLines={showDateOnHover ? 4 : undefined}
-              >
-                {domToReact(domNode.children)}
-              </Flex>
-            );
-          }
-          case 'img': {
-            return <ImageAttachment {...domNode.attribs} />;
-          }
-          default:
-            return;
-        }
-      }
-    },
-  };
-
-  const parsedDisplayContent = parse(displayContent, parseOptions);
-
   return (
     <>
       <Card
@@ -124,29 +84,12 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
 
                 <ViewInIntercomButton url={sourceUrl} />
               </Flex>
-              <Flex
-                flexDir='column'
+
+              <HtmlContentRenderer
                 pointerEvents={showDateOnHover ? 'none' : 'initial'}
                 noOfLines={showDateOnHover ? 4 : undefined}
-                sx={{
-                  '& ol, ul': {
-                    pl: '5',
-                  },
-                  '& pre': {
-                    whiteSpace: 'normal',
-                    fontSize: '12px',
-                    color: 'gray.700',
-                    border: '1px solid',
-                    borderColor: 'gray.300',
-                    borderRadius: '4',
-                    p: '2',
-                    py: '1',
-                    my: '2',
-                  },
-                }}
-              >
-                {parsedDisplayContent}
-              </Flex>
+                htmlContent={content}
+              />
               {children}
             </Flex>
           </Flex>

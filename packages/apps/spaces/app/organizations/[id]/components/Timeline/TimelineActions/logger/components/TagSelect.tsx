@@ -60,11 +60,8 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
     }
   };
 
-  // this function is needed as tags are selected on 'Space' not 'Enter'
+  // this function is needed as tags are selected on 'Space' & 'Enter'
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.code === 'Enter') {
-      event.preventDefault();
-    }
     if (event.code === 'Backspace') {
       if (inputVal.length) {
         return;
@@ -73,7 +70,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       const newSelected = [...selectedTags].slice(0, selectedTags.length - 1);
       onChange(newSelected);
     }
-    if (event.code === 'Space') {
+    if (event.code === 'Space' || event.code === 'Enter') {
       event.preventDefault();
       if (!isMenuOpen) return;
 
@@ -140,6 +137,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               placeholder=''
               backspaceRemovesValue
               onKeyDown={handleKeyDown}
+              onChange={onChange}
               noOptionsMessage={() => null}
               loadOptions={(inputValue: string, callback) => {
                 getFilteredSuggestions(inputValue, callback);

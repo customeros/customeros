@@ -4,29 +4,18 @@ import { Card, CardBody } from '@ui/presentation/Card';
 
 import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import React from 'react';
-import Image from 'next/image';
+import { Image } from '@ui/media/Image';
 import noteIcon from 'public/images/event-ill-log-stub.png';
 import { Box } from '@spaces/ui/layout/Box';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Calendar } from '@ui/media/icons/Calendar';
 import { Phone } from '@ui/media/icons/Phone';
 import { MessageTextSquare01 } from '@ui/media/icons/MessageTextSquare01';
-import { convert } from 'html-to-text';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 interface LogEntryStubProps {
   data: LogEntryWithAliases;
-}
-
-function addHashToTagContent(htmlInput: string): string {
-  const regex =
-    /(<span[^>]*data-mention-atom-name="tag"[^>]*>)(.*?)(<\/span>)/g;
-  return htmlInput.replace(
-    regex,
-    (match: string, p1: string, p2: string, p3: string) => {
-      return p1 + '#' + p2 + p3;
-    },
-  );
 }
 
 const getLogEntryIcon = (type: string) => {
@@ -49,15 +38,7 @@ const getLogEntryIcon = (type: string) => {
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
   const { openModal } = useTimelineEventPreviewContext();
   const fullName = `${data.logEntryCreatedBy?.firstName} ${data.logEntryCreatedBy?.lastName}`;
-  const text = convert(addHashToTagContent(data?.content || ''), {
-    preserveNewlines: true,
-    selectors: [
-      {
-        selector: 'a',
-        options: { hideLinkHrefIfSameAsText: true, ignoreHref: true },
-      },
-    ],
-  });
+
   const logEntryIcon = (() => {
     const icon = getLogEntryIcon(data.tags?.[0]?.name);
 
@@ -93,16 +74,32 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
       transition='all 0.2s ease-out'
     >
       <CardBody px='3' py='2'>
-        <Flex w='full' justify='space-between' position='relative'>
-          <Text w={390} noOfLines={4} color='gray.700'>
+        <Flex
+          w='full'
+          justify='space-between'
+          position='relative'
+          h='fit-content'
+        >
+          <Text
+            w={412}
+            noOfLines={4}
+            color='gray.700'
+            fontSize='sm'
+            height='fit-content'
+          >
             <Text as='span'>{fullName}</Text>
             <Text as='span' color='gray.500' mx={1}>
               wrote
             </Text>
-            <Text as='span'>{text}</Text>
+            <HtmlContentRenderer
+              showAsInlineText
+              fontSize='sm'
+              noOfLines={4}
+              htmlContent={`${data?.content}`}
+            />
           </Text>
 
-          <Box h={94}>
+          <Box h={86}>
             <Box position='absolute' top={-2} right={-3}>
               <Image src={noteIcon} alt='' height={94} width={124} />
             </Box>
