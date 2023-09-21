@@ -4,7 +4,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Heading } from '@ui/typography/Heading';
 import { FeaturedIcon } from '@ui/media/Icon';
-import { Archive } from '@ui/media/icons/Archive';
+import { Users03 } from '@ui/media/icons/Users03';
 import { Divider } from '@ui/presentation/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardHeader, CardFooter } from '@ui/layout/Card';
@@ -47,7 +47,7 @@ export const BillingPanel = () => {
         >
           <CardBody as={Flex} p='0' align='center'>
             <FeaturedIcon size='md' minW='10' colorScheme='gray'>
-              <Archive />
+              <Users03 />
             </FeaturedIcon>
             <Flex
               ml='5'

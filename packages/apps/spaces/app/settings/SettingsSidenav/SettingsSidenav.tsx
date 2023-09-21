@@ -7,6 +7,7 @@ import { Icons } from '@ui/media/Icon';
 import { GridItem } from '@ui/layout/Grid';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
+import { Receipt } from '@ui/media/icons/Receipt';
 
 import { SidenavItem } from '@shared/components/RootSidenav/SidenavItem';
 import { useLocalStorage } from 'usehooks-ts';
@@ -22,10 +23,9 @@ export const SettingsSidenav = () => {
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
   const handleItemClick = (tab: string) => () => {
-    const params = new URLSearchParams(searchParams ?? '');
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
     params.set('tab', tab);
     setLastActivePosition({ ...lastActivePosition, settings: tab });
-    // todo remove, for now needed
     router.push(`?${params}`);
   };
 
@@ -60,13 +60,13 @@ export const SettingsSidenav = () => {
           noOfLines={1}
           wordBreak='keep-all'
         >
-          Tenant Settings
+          Settings
         </Text>
       </Flex>
 
       <VStack spacing='2' w='full'>
         <SidenavItem
-          label='OAuth Settings'
+          label='My Account'
           isActive={checkIsActive('oauth') || !searchParams?.get('tab')}
           onClick={handleItemClick('oauth')}
           icon={
@@ -81,7 +81,7 @@ export const SettingsSidenav = () => {
           isActive={checkIsActive('billing')}
           onClick={handleItemClick('billing')}
           icon={
-            <Icons.Folder
+            <Receipt
               color={checkIsActive('billing') ? 'gray.700' : 'gray.500'}
               boxSize='6'
             />

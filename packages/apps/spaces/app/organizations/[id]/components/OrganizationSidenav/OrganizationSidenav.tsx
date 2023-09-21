@@ -32,14 +32,13 @@ export const OrganizationSidenav = () => {
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
   const handleItemClick = (tab: string) => () => {
-    const urlSearchParams = new URLSearchParams(searchParams ?? '');
+    const urlSearchParams = new URLSearchParams(searchParams?.toString());
     urlSearchParams.set('tab', tab);
 
     setLastActivePosition({
       ...lastActivePosition,
       [params?.id as string]: urlSearchParams.toString(),
     });
-    // todo remove, for now needed
     router.push(`?${urlSearchParams}`);
   };
 
@@ -64,7 +63,9 @@ export const OrganizationSidenav = () => {
             size='xs'
             variant='ghost'
             aria-label='Go back'
-            onClick={() => router.push(`/${lastActivePosition?.root || 'organization'}`)}
+            onClick={() =>
+              router.push(`/${lastActivePosition?.root || 'organization'}`)
+            }
             icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
           />
 
