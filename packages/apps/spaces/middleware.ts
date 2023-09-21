@@ -106,7 +106,10 @@ function getRedirectUrl(
     );
   }
 
-  if (request.nextUrl.searchParams && !request.nextUrl.pathname.startsWith('/comms-api/')) {
+  if (
+    request.nextUrl.searchParams &&
+    !request.nextUrl.pathname.startsWith('/comms-api/')
+  ) {
     newURL = newURL + '?' + request.nextUrl.searchParams.toString();
   }
 
