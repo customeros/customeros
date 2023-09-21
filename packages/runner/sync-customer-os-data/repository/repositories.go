@@ -19,6 +19,7 @@ type Repositories struct {
 	CommonRepositories *commonRepository.Repositories
 
 	TenantSyncSettingsRepository TenantSyncSettingsRepository
+	TenantSettingsRepository     TenantSettingsRepository
 	SyncRunRepository            SyncRunRepository
 
 	ContactRepository          ContactRepository
@@ -45,6 +46,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb 
 		},
 		CommonRepositories:           commonRepository.InitRepositories(gormDB, driver),
 		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(gormDB),
+		TenantSettingsRepository:     NewTenantSettingsRepository(gormDB),
 		SyncRunRepository:            NewSyncRunRepository(gormDB),
 		ContactRepository:            NewContactRepository(driver),
 		EmailRepository:              NewEmailRepository(driver),

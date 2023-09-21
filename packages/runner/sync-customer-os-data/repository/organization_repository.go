@@ -15,7 +15,7 @@ import (
 )
 
 type OrganizationRepository interface {
-	GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error)
+	GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId string, domains []string) (string, error)
 	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData, orgWhitelisted bool) error
 	MergeOrganizationRelationshipAndStage(ctx context.Context, tenant, organizationId, relationship, stage, externalSystem string) error
 	MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
@@ -44,7 +44,7 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 	}
 }
 
-func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error) {
+func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId string, domains []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMatchedOrganizationId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -64,9 +64,9 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 		queryResult, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":                 tenant,
-				"externalSystem":         organization.ExternalSystem,
-				"organizationExternalId": organization.ExternalId,
-				"domains":                organization.Domains,
+				"externalSystem":         externalSystem,
+				"organizationExternalId": externalId,
+				"domains":                domains,
 			})
 		if err != nil {
 			return nil, err

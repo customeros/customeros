@@ -142,13 +142,15 @@ func mapOrganizationFromAccount(inputJson string) (string, error) {
 
 func mapOrganizationFromLead(inputJson string) (string, error) {
 	var input struct {
-		ID          string `json:"Id,omitempty"`
-		Email       string `json:"Email,omitempty"`
-		Industry    string `json:"Industry,omitempty"`
-		Company     string `json:"Company,omitempty"`
-		CreatedDate string `json:"CreatedDate,omitempty"`
-		IsConverted bool   `json:"IsConverted,omitempty"`
-		OwnerId     string `json:"OwnerId,omitempty"`
+		ID                 string `json:"Id,omitempty"`
+		Email              string `json:"Email,omitempty"`
+		Industry           string `json:"Industry,omitempty"`
+		Company            string `json:"Company,omitempty"`
+		CreatedDate        string `json:"CreatedDate,omitempty"`
+		IsConverted        bool   `json:"IsConverted,omitempty"`
+		OwnerId            string `json:"OwnerId,omitempty"`
+		ConvertedAccountId string `json:"ConvertedAccountId,omitempty"`
+		ConvertedContactId string `json:"ConvertedContactId,omitempty"`
 	}
 
 	err := json.Unmarshal([]byte(inputJson), &input)
@@ -261,7 +263,7 @@ func MapContact(inputJson string) (string, error) {
 	} else {
 		output := entity.BaseData{
 			Skip:       true,
-			SkipReason: "Attributes type not equal Account or Lead",
+			SkipReason: "Attributes type not equal Account, Lead or Opportunity",
 		}
 		return utils.ToJson(output)
 	}
@@ -454,6 +456,24 @@ func extractDomain(email string) string {
 
 func MapLogEntry(inputJson string) (string, error) {
 	var input struct {
+		Attributes struct {
+			Type string `json:"type,omitempty"`
+		} `json:"attributes,omitempty"`
+	}
+
+	err := json.Unmarshal([]byte(inputJson), &input)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse input JSON: %v", err)
+	}
+	if input.Attributes.Type == "ContentNote" {
+		return mapLogEntryFromContentNote(inputJson)
+	} else {
+		return mapLogEntryFromFeedItem(inputJson)
+	}
+}
+
+func mapLogEntryFromFeedItem(inputJson string) (string, error) {
+	var input struct {
 		ID          string `json:"Id,omitempty"`
 		Body        string `json:"Body,omitempty"`
 		CreatedDate string `json:"CreatedDate,omitempty"`
@@ -489,6 +509,13 @@ func MapLogEntry(inputJson string) (string, error) {
 		}
 		return utils.ToJson(output)
 	}
+	if !strings.HasPrefix(input.ParentId, sfAccountIdPrefix) && !strings.HasPrefix(input.ParentId, sfLeadIdPrefix) {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Parent is not an account or lead",
+		}
+		return utils.ToJson(output)
+	}
 
 	output := entity.LogEntryData{
 		BaseData: entity.BaseData{
@@ -510,6 +537,61 @@ func MapLogEntry(inputJson string) (string, error) {
 		output.ContentType = "text/html"
 	} else {
 		output.ContentType = "text/plain"
+	}
+
+	return utils.ToJson(output)
+}
+
+func mapLogEntryFromContentNote(inputJson string) (string, error) {
+	var input struct {
+		ID          string `json:"Id,omitempty"`
+		Title       string `json:"Title,omitempty"`
+		TextPreview string `json:"TextPreview,omitempty"`
+		CreatedDate string `json:"CreatedDate,omitempty"`
+		CreatedById string `json:"CreatedById,omitempty"`
+		FileType    string `json:"FileType,omitempty"`
+	}
+
+	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
+		return "", err
+	}
+
+	if input.ID == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing id",
+		}
+		return utils.ToJson(output)
+	}
+	if input.Title == "" && input.TextPreview == "" {
+		output := entity.BaseData{
+			Skip:       true,
+			SkipReason: "Missing title and text preview",
+		}
+		return utils.ToJson(output)
+	}
+
+	output := entity.LogEntryData{
+		BaseData: entity.BaseData{
+			ExternalId:          input.ID,
+			CreatedAtStr:        input.CreatedDate,
+			ExternalSourceTable: utils.StringPtr("contentnote"),
+		},
+		ContentType:  "text/plain",
+		StartedAtStr: input.CreatedDate,
+		AuthorUser: entity.ReferencedUser{
+			ExternalId: input.CreatedById,
+		},
+		LoggedEntityRequired: true,
+	}
+	if input.Title != "" {
+		output.Content = input.Title
+	}
+	if input.TextPreview != "" {
+		if output.Content != "" {
+			output.Content += "\n"
+		}
+		output.Content += input.TextPreview
 	}
 
 	return utils.ToJson(output)
