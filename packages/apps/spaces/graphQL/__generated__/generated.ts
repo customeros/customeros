@@ -815,6 +815,7 @@ export enum GCliSearchResultType {
 export type GlobalCache = {
   __typename?: 'GlobalCache';
   gCliCache: Array<GCliItem>;
+  gmailOauthTokenNeedsManualRefresh: Scalars['Boolean'];
   isOwner: Scalars['Boolean'];
   user: User;
 };
@@ -1068,6 +1069,35 @@ export type LocationUpdateInput = {
   zip?: InputMaybe<Scalars['String']>;
 };
 
+export type LogEntry = {
+  __typename?: 'LogEntry';
+  appSource: Scalars['String'];
+  content?: Maybe<Scalars['String']>;
+  contentType?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  id: Scalars['ID'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  startedAt: Scalars['Time'];
+  tags: Array<Tag>;
+  updatedAt: Scalars['Time'];
+};
+
+export type LogEntryInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
+  tags?: InputMaybe<Array<TagIdOrNameInput>>;
+};
+
+export type LogEntryUpdateInput = {
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
+};
+
 export enum Market {
   B2B = 'B2B',
   B2C = 'B2C',
@@ -1224,6 +1254,10 @@ export type Mutation = {
   location_RemoveFromContact: Contact;
   location_RemoveFromOrganization: Organization;
   location_Update: Location;
+  logEntry_AddTag: Scalars['ID'];
+  logEntry_CreateForOrganization: Scalars['ID'];
+  logEntry_RemoveTag: Scalars['ID'];
+  logEntry_Update: Scalars['ID'];
   meeting_AddNewLocation: Location;
   meeting_AddNote: Meeting;
   meeting_Create: Meeting;
@@ -1259,8 +1293,14 @@ export type Mutation = {
   organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
+  organization_UpdateBillingDetails: Scalars['ID'];
+  /** @deprecated Use organization_UpdateBillingDetails instead */
   organization_UpdateBillingDetailsAsync: Scalars['ID'];
+  organization_UpdateRenewalForecast: Scalars['ID'];
+  /** @deprecated Use organization_UpdateRenewalForecast instead */
   organization_UpdateRenewalForecastAsync: Scalars['ID'];
+  organization_UpdateRenewalLikelihood: Scalars['ID'];
+  /** @deprecated Use organization_UpdateRenewalLikelihood instead */
   organization_UpdateRenewalLikelihoodAsync: Scalars['ID'];
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
@@ -1595,6 +1635,30 @@ export type MutationLocation_UpdateArgs = {
 };
 
 
+export type MutationLogEntry_AddTagArgs = {
+  id: Scalars['ID'];
+  input: TagIdOrNameInput;
+};
+
+
+export type MutationLogEntry_CreateForOrganizationArgs = {
+  input: LogEntryInput;
+  organizationId: Scalars['ID'];
+};
+
+
+export type MutationLogEntry_RemoveTagArgs = {
+  id: Scalars['ID'];
+  input: TagIdOrNameInput;
+};
+
+
+export type MutationLogEntry_UpdateArgs = {
+  id: Scalars['ID'];
+  input: LogEntryUpdateInput;
+};
+
+
 export type MutationMeeting_AddNewLocationArgs = {
   meetingId: Scalars['ID'];
 };
@@ -1791,13 +1855,28 @@ export type MutationOrganization_UpdateArgs = {
 };
 
 
+export type MutationOrganization_UpdateBillingDetailsArgs = {
+  input: BillingDetailsInput;
+};
+
+
 export type MutationOrganization_UpdateBillingDetailsAsyncArgs = {
   input: BillingDetailsInput;
 };
 
 
+export type MutationOrganization_UpdateRenewalForecastArgs = {
+  input: RenewalForecastInput;
+};
+
+
 export type MutationOrganization_UpdateRenewalForecastAsyncArgs = {
   input: RenewalForecastInput;
+};
+
+
+export type MutationOrganization_UpdateRenewalLikelihoodArgs = {
+  input: RenewalLikelihoodInput;
 };
 
 
@@ -2436,6 +2515,7 @@ export type Query = {
   interactionSession: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
   issue: Issue;
+  logEntry: LogEntry;
   meeting: Meeting;
   organization?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
@@ -2546,6 +2626,11 @@ export type QueryInteractionSession_BySessionIdentifierArgs = {
 
 
 export type QueryIssueArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryLogEntryArgs = {
   id: Scalars['ID'];
 };
 
@@ -2745,6 +2830,11 @@ export type Tag = {
   updatedAt: Scalars['Time'];
 };
 
+export type TagIdOrNameInput = {
+  id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
+};
+
 export type TagInput = {
   appSource?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
@@ -2781,7 +2871,7 @@ export type TimeRange = {
   to: Scalars['Time'];
 };
 
-export type TimelineEvent = Action | Analysis | InteractionEvent | InteractionSession | Issue | Meeting | Note | PageView;
+export type TimelineEvent = Action | Analysis | InteractionEvent | InteractionSession | Issue | LogEntry | Meeting | Note | PageView;
 
 export enum TimelineEventType {
   Action = 'ACTION',
@@ -2789,6 +2879,7 @@ export enum TimelineEventType {
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',
   Issue = 'ISSUE',
+  LogEntry = 'LOG_ENTRY',
   Meeting = 'MEETING',
   Note = 'NOTE',
   PageView = 'PAGE_VIEW'
@@ -3232,7 +3323,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, potentialAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedById?: string | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedById?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleNext?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType }>, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'JobRoleParticipant', jobRoleParticipant: { __typename?: 'JobRole', contact?: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, potentialAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedById?: string | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedById?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleNext?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType }>, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'JobRoleParticipant', jobRoleParticipant: { __typename?: 'JobRole', contact?: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'LogEntry' } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -3279,7 +3370,7 @@ export type GCliSearchQuery = { __typename?: 'Query', gcli_Search: Array<{ __typ
 export type Global_CacheQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Global_CacheQuery = { __typename?: 'Query', global_Cache: { __typename?: 'GlobalCache', isOwner: boolean, user: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null, rawEmail?: string | null, primary: boolean }> | null }, gCliCache: Array<{ __typename?: 'GCliItem', id: string, type: GCliSearchResultType, display: string, data?: Array<{ __typename?: 'GCliAttributeKeyValuePair', key: string, value: string, display?: string | null }> | null }> } };
+export type Global_CacheQuery = { __typename?: 'Query', global_Cache: { __typename?: 'GlobalCache', isOwner: boolean, gmailOauthTokenNeedsManualRefresh: boolean, user: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null, rawEmail?: string | null, primary: boolean }> | null }, gCliCache: Array<{ __typename?: 'GCliItem', id: string, type: GCliSearchResultType, display: string, data?: Array<{ __typename?: 'GCliAttributeKeyValuePair', key: string, value: string, display?: string | null }> | null }> } };
 
 export type AddEmailToOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -5823,6 +5914,7 @@ export const Global_CacheDocument = gql`
       lastName
     }
     isOwner
+    gmailOauthTokenNeedsManualRefresh
     gCliCache {
       id
       type

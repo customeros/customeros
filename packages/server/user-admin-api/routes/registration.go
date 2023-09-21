@@ -184,6 +184,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
 			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
 			oauthToken.Scope = signInRequest.OAuthToken.Scope
+			oauthToken.NeedsManualRefresh = false
 			if isRequestEnablingGmailSync(signInRequest) {
 				oauthToken.GmailSyncEnabled = true
 			}
