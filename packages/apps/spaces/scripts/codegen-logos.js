@@ -11,7 +11,7 @@ export const ${name} = (props: IconProps) => (
 );
 `;
 
-const files = readdirSync(process.cwd() + '/public/icons/new');
+const files = readdirSync(process.cwd() + '/public/icons/logos');
 const prettierConfig = JSON.parse(
   readFileSync(process.cwd() + '/.prettierrc', 'utf8'),
 );
@@ -24,15 +24,13 @@ function getSvgViewBox(svgString) {
 files.forEach((name) => {
   try {
     const file = readFileSync(
-      process.cwd() + '/public/icons/new/' + name,
+      process.cwd() + '/public/icons/logos/' + name,
       'utf8',
     );
     const lines = file.split('\n');
     const svgInnerContent = lines
       .slice(1, lines.length - 2)
       .join('\n')
-      .replaceAll('stroke="black"', 'stroke="currentColor"')
-      .replaceAll('fill="black"', 'fill="currentColor"')
       .replaceAll('stroke-width', 'strokeWidth')
       .replaceAll('stroke-linecap', 'strokeLinecap')
       .replaceAll('stroke-linejoin', 'strokeLinejoin')
@@ -55,7 +53,7 @@ files.forEach((name) => {
       parser: 'babel',
     });
 
-    const filePath = process.cwd() + '/ui/media/icons/' + outFileName;
+    const filePath = process.cwd() + '/ui/media/logos/' + outFileName;
 
     writeFileSync(filePath, formattedOutContent);
   } catch (e) {}

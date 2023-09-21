@@ -17,6 +17,7 @@ import noteImg from 'public/images/note-img-preview.png';
 import { LogEntryDatePicker } from './LogEntryDatePicker';
 import { Image } from '@ui/media/Image';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import { LogEntryExternalLink } from './LogEntryExternalLink';
 
 const getAuthor = (user: User) => {
   if (!user?.firstName && !user.lastName) {
@@ -119,6 +120,10 @@ export const LogEntryPreviewModal: React.FC = () => {
           <Text fontSize='sm' fontWeight='medium'>
             {event.tags.map(({ name }) => `#${name}`).join(' ')}
           </Text>
+
+          {event?.externalLinks?.[0]?.externalUrl && (
+            <LogEntryExternalLink externalLink={event?.externalLinks?.[0]} />
+          )}
         </VStack>
       </CardBody>
     </>

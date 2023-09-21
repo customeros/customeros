@@ -12,6 +12,7 @@
     "codegen": "graphql-codegen --require dotenv/config --config codegen.ts",
     "codegen:graphql": "graphql-codegen --require dotenv/config --config graphql-codegen.ts",
     "codegen:icons": "node scripts/codegen-icons.js",
+    "codegen:logos": "node scripts/codegen-logos.js",
     "preatify": "yarn prettier --write ."
   },
   "dependencies": {

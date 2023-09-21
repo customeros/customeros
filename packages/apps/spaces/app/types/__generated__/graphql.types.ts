@@ -814,6 +814,7 @@ export enum GCliSearchResultType {
 export type GlobalCache = {
   __typename?: 'GlobalCache';
   gCliCache: Array<GCliItem>;
+  gmailOauthTokenNeedsManualRefresh: Scalars['Boolean'];
   isOwner: Scalars['Boolean'];
   user: User;
 };
@@ -1086,6 +1087,7 @@ export type LogEntry = {
   contentType?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
+  externalLinks: Array<ExternalSystem>;
   id: Scalars['ID'];
   source: DataSource;
   sourceOfTruth: DataSource;

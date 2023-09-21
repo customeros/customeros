@@ -379,6 +379,12 @@ export type GetTimelineQuery = {
             profilePhotoUrl?: string | null;
           } | null;
           tags: Array<{ __typename?: 'Tag'; id: string; name: string }>;
+          externalLinks: Array<{
+            __typename?: 'ExternalSystem';
+            type: Types.ExternalSystemType;
+            externalUrl?: string | null;
+            externalSource?: string | null;
+          }>;
         }
       | {
           __typename: 'Meeting';
@@ -664,6 +670,11 @@ export const GetTimelineDocument = `
         source
         content
         contentType
+        externalLinks {
+          type
+          externalUrl
+          externalSource
+        }
       }
     }
   }
