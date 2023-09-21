@@ -30,10 +30,23 @@ func InitTestNeo4jDB() (testcontainers.Container, *neo4j.DriverWithContext) {
 	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
 	var err error
-	neo4jContainer, err := startContainer(ctxWithTimeout, username, password)
-	if err != nil {
-		log.Panic(err)
+	var neo4jContainer testcontainers.Container
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		neo4jContainer, err = startContainer(ctxWithTimeout, username, password)
+		if err == nil {
+			// success, break out of loop
+			break
+		}
+		// error occurred
+		if i == maxRetries-1 {
+			// last attempt failed, panic
+			log.Panic(err)
+		}
+		// wait for 1 second before retrying
+		time.Sleep(1 * time.Second)
 	}
+
 	port, err := neo4jContainer.MappedPort(ctxWithTimeout, "7687")
 	if err != nil {
 		log.Panic(err)
