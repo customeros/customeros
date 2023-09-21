@@ -23,4 +23,5 @@ const (
 	NodeLabel_HealthIndicator    = "HealthIndicator"
 	NodeLabel_Country            = "Country"
 	NodeLabel_ActionItem         = "ActionItem"
+	NodeLabel_LogEntry           = "LogEntry"
 )

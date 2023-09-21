@@ -12,6 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
+	"time"
 )
 
 type OrganizationRepository interface {
@@ -26,6 +27,7 @@ type OrganizationRepository interface {
 	UpdateBillingDetails(ctx context.Context, orgId string, event events.OrganizationUpdateBillingDetailsEvent) error
 	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
+	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 }
 
 type organizationRepository struct {
@@ -426,6 +428,27 @@ func (r *organizationRepository) SetVisibility(ctx context.Context, tenant, orga
 		"tenant": tenant,
 		"hide":   hide,
 		"now":    utils.Now(),
+	})
+}
+
+func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetVisibility")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))
+
+	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	return r.executeQuery(ctx, query, map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"touchpointAt":   touchpointAt,
+		"touchpointId":   touchpointId,
 	})
 }
 

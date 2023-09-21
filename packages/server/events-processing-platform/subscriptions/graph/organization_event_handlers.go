@@ -360,3 +360,38 @@ func (h *GraphOrganizationEventHandler) OnOrganizationShow(ctx context.Context, 
 	}
 	return err
 }
+
+func (h *GraphOrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnRefreshLastTouchpoint")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationRefreshLastTouchpointEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	lastTouchpointAt, lastTouchpointId, err := h.Repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to calculate last touchpoint: %v", err.Error())
+		span.LogFields(log.Bool("last touchpoint failed", true))
+		return nil
+	}
+
+	if lastTouchpointAt == nil {
+		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
+		span.LogFields(log.Bool("last touchpoint not found", true))
+		return nil
+	}
+
+	if err = h.Repositories.OrganizationRepository.UpdateLastTouchpoint(ctx, eventData.Tenant, organizationId, *lastTouchpointAt, lastTouchpointId); err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to update last touchpoint for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
+	}
+
+	return nil
+}

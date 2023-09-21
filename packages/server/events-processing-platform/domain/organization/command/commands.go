@@ -208,3 +208,13 @@ func NewShowOrganizationCommand(tenant, orgId, userId string) *ShowOrganizationC
 		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
 	}
 }
+
+type RefreshLastTouchpointCommand struct {
+	eventstore.BaseCommand
+}
+
+func NewRefreshLastTouchpointCommand(tenant, orgId, userId string) *RefreshLastTouchpointCommand {
+	return &RefreshLastTouchpointCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
+	}
+}

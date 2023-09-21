@@ -21,6 +21,7 @@ type OrganizationCommands struct {
 	RequestNextCycleDateCommand    RequestNextCycleDateCommandHandler
 	HideOrganizationCommand        HideOrganizationCommandHandler
 	ShowOrganizationCommand        ShowOrganizationCommandHandler
+	RefreshLastTouchpointCommand   RefreshLastTouchpointCommandHandler
 }
 
 func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *OrganizationCommands {
@@ -38,5 +39,6 @@ func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstor
 		RequestNextCycleDateCommand:    NewRequestNextCycleDateCommandHandler(log, es),
 		HideOrganizationCommand:        NewHideOrganizationCommandHandler(log, es),
 		ShowOrganizationCommand:        NewShowOrganizationCommandHandler(log, es),
+		RefreshLastTouchpointCommand:   NewRefreshLastTouchpointCommandHandler(log, es),
 	}
 }

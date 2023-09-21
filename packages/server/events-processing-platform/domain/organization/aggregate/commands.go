@@ -36,6 +36,8 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, command event
 		return a.hideOrganization(ctx, c)
 	case *cmd.ShowOrganizationCommand:
 		return a.showOrganization(ctx, c)
+	case *cmd.RefreshLastTouchpointCommand:
+		return a.refreshLastTouchpoint(ctx, c)
 	default:
 		return errors.New("invalid command type")
 	}
@@ -272,7 +274,7 @@ func (a *OrganizationAggregate) updateRenewalForecast(ctx context.Context, comma
 }
 
 func (a *OrganizationAggregate) requestRenewalForecast(ctx context.Context, command *cmd.RequestRenewalForecastCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.RequestRenewalForecast")
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.requestRenewalForecast")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
@@ -344,6 +346,22 @@ func (a *OrganizationAggregate) showOrganization(ctx context.Context, command *c
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewShowOrganizationEventEvent")
+	}
+
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) refreshLastTouchpoint(ctx context.Context, command *cmd.RefreshLastTouchpointCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.refreshLastTouchpoint")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewOrganizationRefreshLastTouchpointEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationRefreshLastTouchpointEvent")
 	}
 
 	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
