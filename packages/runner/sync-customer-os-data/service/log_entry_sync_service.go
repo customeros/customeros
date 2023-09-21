@@ -122,13 +122,8 @@ func (s *logEntrySyncService) syncLogEntry(ctx context.Context, logEntrySyncMute
 	if logEntryInput.LoggedEntityRequired {
 		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.LoggedOrganization)
 		if orgId == "" {
-			if err := dataService.MarkProcessed(ctx, logEntryInput.SyncId, runId, true, true, fmt.Sprintf("Logged entity with id %s is not an organizaiton, or not found", logEntryInput.LoggedOrganization.ExternalId)); err != nil {
-				*failed++
-				span.LogFields(log.Bool("failedSync", true))
-				return
-			}
-			*skipped++
-			span.LogFields(log.Bool("skippedSync", true))
+			_ = dataService.MarkProcessed(ctx, logEntryInput.SyncId, runId, false, false, "Logged organization not found.")
+			*failed++
 			return
 		}
 	}
