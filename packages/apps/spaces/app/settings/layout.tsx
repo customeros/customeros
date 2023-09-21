@@ -1,4 +1,3 @@
-import { Flex } from '@ui/layout/Flex';
 import { GridItem } from '@ui/layout/Grid';
 import { SettingsSidenav } from './SettingsSidenav';
 
@@ -11,9 +10,7 @@ export default async function SettingsLayout({
     <>
       <SettingsSidenav />
       <GridItem h='100%' area='content' overflow='hidden'>
-        <Flex flexDir='row' gap='2'>
-          {children}
-        </Flex>
+        {children}
       </GridItem>
     </>
   );

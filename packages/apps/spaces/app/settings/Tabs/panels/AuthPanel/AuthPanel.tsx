@@ -76,8 +76,6 @@ export const AuthPanel = () => {
   return (
     <>
       <Card
-        flex='3'
-        h='calc(100vh - 1rem)'
         bg='#FCFCFC'
         borderRadius='2xl'
         flexDirection='column'
@@ -139,11 +137,9 @@ export const AuthPanel = () => {
           </Flex>
         </CardBody>
       </Card>
-      <Divider borderWidth={'2px'}></Divider>
+      <Divider />
 
       <Card
-        flex='3'
-        h='calc(100vh - 1rem)'
         bg='#FCFCFC'
         borderRadius='2xl'
         flexDirection='column'

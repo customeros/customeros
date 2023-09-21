@@ -109,7 +109,7 @@ export const RootSidenav = () => {
             />
           )}
         />
-        {globalCache.isOwner && (
+        {globalCache?.isOwner && (
           <SidenavItem
             label='My portfolio'
             isActive={checkIsActive('portfolio')}

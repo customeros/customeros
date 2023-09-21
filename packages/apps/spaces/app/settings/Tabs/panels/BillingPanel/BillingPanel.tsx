@@ -1,33 +1,90 @@
 'use client';
 
-import {Card, CardBody, CardHeader} from "@ui/layout/Card";
-import {Text} from "@ui/typography/Text";
-import React from "react";
-import {Heading} from "@ui/typography/Heading";
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { Heading } from '@ui/typography/Heading';
+import { FeaturedIcon } from '@ui/media/Icon';
+import { Archive } from '@ui/media/icons/Archive';
+import { Divider } from '@ui/presentation/Divider';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { Card, CardBody, CardHeader, CardFooter } from '@ui/layout/Card';
+
+import { useGetBillableInfoQuery } from '../../../graphql/getTenantBillableInfo.generated';
 
 export const BillingPanel = () => {
+  const client = getGraphQLClient();
+  const { data } = useGetBillableInfoQuery(client);
+
   return (
-    <>
+    <Card
+      flex='1'
+      w='full'
+      h='100vh'
+      bg='#FCFCFC'
+      borderRadius='2xl'
+      flexDirection='column'
+      boxShadow='none'
+      background='gray.25'
+    >
+      <CardHeader px='6' pb='0' pt='4'>
+        <Heading as='h1' fontSize='lg' color='gray.700'>
+          <b>Billing details</b>
+        </Heading>
+      </CardHeader>
+      <CardBody px='6' w='full'>
         <Card
-            flex='3'
-            h='calc(100vh - 1rem)'
-            bg='#FCFCFC'
-            borderRadius='2xl'
-            flexDirection='column'
-            boxShadow='none'
-            position='relative'
-            background='gray.25'
-            minWidth={609}
+          p='4'
+          w='full'
+          maxW='23.5rem'
+          size='lg'
+          variant='outline'
+          cursor='default'
+          boxShadow='xs'
+          _hover={{
+            boxShadow: 'md',
+          }}
+          transition='all 0.2s ease-out'
         >
-            <CardHeader px={6} pb={2}>
-                <Heading as='h1' fontSize='lg' color='gray.700'>
-                    <b>Billing details</b>
-                </Heading>
-            </CardHeader>
-            <CardBody>
-                <Text>Billing details Form</Text>
-            </CardBody>
+          <CardBody as={Flex} p='0' align='center'>
+            <FeaturedIcon size='md' minW='10' colorScheme='gray'>
+              <Archive />
+            </FeaturedIcon>
+            <Flex
+              ml='5'
+              w='full'
+              align='center'
+              columnGap={4}
+              justify='space-between'
+            >
+              <Heading
+                size='sm'
+                whiteSpace='nowrap'
+                fontWeight='semibold'
+                color='gray.700'
+                mr={2}
+              >
+                Contacts
+              </Heading>
+            </Flex>
+          </CardBody>
+
+          <CardFooter p='0' as={Flex} flexDir='column'>
+            <Divider mt='4' mb='2' />
+            <Flex justify='space-between' align='center'>
+              <Text color='gray.700'>Synced (no charge)</Text>
+              <Text color='gray.700'>
+                {data?.billableInfo.greylistedContacts}
+              </Text>
+            </Flex>
+            <Flex justify='space-between' align='center'>
+              <Text color='gray.700'>Active (billed)</Text>
+              <Text color='gray.700'>
+                {data?.billableInfo.whitelistedContacts}
+              </Text>
+            </Flex>
+          </CardFooter>
         </Card>
-    </>
+      </CardBody>
+    </Card>
   );
 };
