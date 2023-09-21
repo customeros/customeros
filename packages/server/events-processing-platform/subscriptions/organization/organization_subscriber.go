@@ -136,6 +136,7 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 		orgevts.OrganizationUpdateRenewalLikelihoodV1,
 		orgevts.OrganizationUpdateRenewalForecastV1,
 		orgevts.OrganizationUpdateBillingDetailsV1,
+		orgevts.OrganizationRefreshLastTouchpointV1,
 		orgevts.OrganizationHideV1,
 		orgevts.OrganizationShowV1:
 		return nil

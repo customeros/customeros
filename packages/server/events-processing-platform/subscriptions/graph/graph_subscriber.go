@@ -56,7 +56,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
 		interactionEventHandler:  &GraphInteractionEventHandler{Repositories: repositories, Log: log},
-		logEntryEventHandler:     &GraphLogEntryEventHandler{Repositories: repositories, Log: log},
+		logEntryEventHandler:     &GraphLogEntryEventHandler{Repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
 	}
 }
 
@@ -194,6 +194,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnOrganizationHide(ctx, evt)
 	case orgevents.OrganizationShowV1:
 		return s.organizationEventHandler.OnOrganizationShow(ctx, evt)
+	case orgevents.OrganizationRefreshLastTouchpointV1:
+		return s.organizationEventHandler.OnRefreshLastTouchpoint(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1:

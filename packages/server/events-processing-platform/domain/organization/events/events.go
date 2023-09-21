@@ -24,6 +24,7 @@ const (
 	OrganizationRequestScrapeByWebsiteV1  = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
 	OrganizationHideV1                    = "V1_ORGANIZATION_HIDE"
 	OrganizationShowV1                    = "V1_ORGANIZATION_SHOW"
+	OrganizationRefreshLastTouchpointV1   = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
 )
 
 type OrganizationCreateEvent struct {
@@ -458,6 +459,26 @@ func NewShowOrganizationEventEvent(aggregate eventstore.Aggregate) (eventstore.E
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationShowV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationRefreshLastTouchpointEvent struct {
+	Tenant string `json:"tenant" validate:"required"`
+}
+
+func NewOrganizationRefreshLastTouchpointEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
+	eventData := OrganizationRefreshLastTouchpointEvent{
+		Tenant: aggregate.GetTenant(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshLastTouchpointV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

@@ -29,6 +29,7 @@ type Repositories struct {
 	LogEntryRepository         LogEntryRepository
 	TagRepository              TagRepository
 	ExternalSystemRepository   ExternalSystemRepository
+	TimelineEventRepository    TimelineEventRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
@@ -51,6 +52,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		LogEntryRepository:         NewLogEntryRepository(driver),
 		TagRepository:              NewTagRepository(driver),
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),
+		TimelineEventRepository:    NewTimelineEventRepository(driver),
 	}
 	return &repositories
 }

@@ -108,6 +108,27 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 	return userId
 }
 
+func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
+	contactId := contact.Id
+	if contactId == "" {
+		contactId = uuid.New().String()
+	}
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$id})
+				SET c:Contact_%s,
+					c.firstName=$firstName,
+					c.lastName=$lastName
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":    tenant,
+		"id":        contactId,
+		"firstName": contact.FirstName,
+		"lastName":  contact.LastName,
+	})
+	return contactId
+}
+
 func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
 	logEntryId := logEntry.Id
 	if logEntryId == "" {

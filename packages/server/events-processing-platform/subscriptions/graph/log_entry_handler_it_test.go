@@ -4,13 +4,18 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
+	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
+	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -19,6 +24,8 @@ import (
 func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -32,8 +39,10 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &GraphLogEntryEventHandler{
-		Repositories: testDatabase.Repositories,
+		Repositories:         testDatabase.Repositories,
+		organizationCommands: orgcmdhnd.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
+	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
 	logEntryId := uuid.New().String()
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
@@ -83,6 +92,18 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, now, logEntry.CreatedAt)
 	require.Equal(t, now, logEntry.UpdatedAt)
 	require.Equal(t, now, logEntry.StartedAt)
+
+	// Check refresh last touchpoint event was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[orgAggregate.GetID()]
+	require.Equal(t, 1, len(eventList))
+	generatedEvent := eventList[0]
+	require.Equal(t, orgevents.OrganizationRefreshLastTouchpointV1, generatedEvent.EventType)
+	var eventData orgevents.OrganizationRefreshLastTouchpointEvent
+	err = generatedEvent.GetJsonData(&eventData)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData.Tenant)
 }
 
 func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
