@@ -17,6 +17,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/gmail/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"strings"
 )
@@ -317,6 +318,21 @@ func (s *emailService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAut
 	} else if err != nil {
 		logrus.Errorf("failed to create gmail service for token: %v", err)
 		return nil, err
+	}
+
+	//Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential.
+	//See https://developers.google.com/identity/sign-in/web/devconsole-project.
+	_, err2 := gmailService.Users.GetProfile("me").Do()
+	if err2 != nil && err2.(*googleapi.Error) != nil && err2.(*googleapi.Error).Code == 401 {
+		err3 := s.repositories.OAuthRepositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		if err3 != nil {
+			logrus.Errorf("failed to mark token for manual refresh: %v", err)
+			return nil, err3
+		}
+		return nil, fmt.Errorf("token is invalid and marked for manual refresh")
+	} else if err2 != nil {
+		logrus.Errorf("failed to get new token: %v", err)
+		return nil, err2
 	}
 
 	return gmailService, nil
