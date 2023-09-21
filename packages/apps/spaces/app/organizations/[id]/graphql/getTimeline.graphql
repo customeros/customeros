@@ -156,6 +156,11 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         source
         content
         contentType
+        externalLinks {
+          type
+          externalUrl
+          externalSource
+        }
 
       }
     }
