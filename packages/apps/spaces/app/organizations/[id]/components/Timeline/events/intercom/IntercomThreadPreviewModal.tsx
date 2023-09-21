@@ -56,12 +56,12 @@ export const IntercomThreadPreviewModal: React.FC = () => {
   return (
     <>
       <CardHeader
+        py='4'
+        px='6'
+        pb='1'
         position='sticky'
         top={0}
         borderRadius='xl'
-        px='6'
-        pt='4'
-        pb='1'
       >
         <Flex
           direction='row'

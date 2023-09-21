@@ -33,12 +33,12 @@ export const LogEntryPreviewModal: React.FC = () => {
   return (
     <>
       <CardHeader
-        pb={1}
+        py='4'
+        px='6'
+        pb='1'
         position='sticky'
         top={0}
-        pt={4}
         borderRadius='xl'
-        id={'eventCard'}
       >
         <Flex
           direction='row'

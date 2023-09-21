@@ -132,13 +132,16 @@ export const MeetingPreviewModal = ({
   return (
     <>
       <CardHeader
+        position='sticky'
+        top={0}
+        pt={4}
+        p='4'
+        pb='1'
+        borderRadius='xl'
         as={Flex}
         justify='space-between'
         gap='4'
         align='center'
-        px='6'
-        pt='4'
-        pb='2'
       >
         <Text
           fontSize='lg'
