@@ -5,7 +5,7 @@ import { Flex } from '@ui/layout/Flex';
 export const TabsContainer = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Flex
-      w='full'
+      w='50%'
       h='100%'
       bg='gray.25'
       flexDir='column'

@@ -9,8 +9,11 @@ import { Button } from '@ui/form/Button';
 import { useDisclosure } from '@ui/utils';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
-import {GetOAuthUserSettings, OAuthUserSettingsInterface} from "../../services/settings/settingsService";
-import {signIn, useSession} from "next-auth/react";
+import {
+  GetOAuthUserSettings,
+  OAuthUserSettingsInterface,
+} from '../../services/settings/settingsService';
+import { signIn, useSession } from 'next-auth/react';
 
 export const GoogleSidebarNotification = () => {
   const [globalCache] = useRecoilState(globalCacheData);
@@ -19,34 +22,35 @@ export const GoogleSidebarNotification = () => {
   const infoModal = useDisclosure();
 
   const requestAccess = () => {
-    console.log('click');
-
     // @ts-expect-error look into it
     GetOAuthUserSettings(session.user.playerIdentityId).then(
-        async (res: OAuthUserSettingsInterface) => {
-          const scopes = ["openid", "email", "profile"];
-          if (res.gmailSyncEnabled) {
-            scopes.push("https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.send")
-          }
-          if (res.googleCalendarSyncEnabled) {
-            scopes.push("https://www.googleapis.com/auth/calendar.events")
-          }
-
-          await signIn(
-              'google',
-              { callbackUrl: '/' },
-              {
-                prompt: 'login',
-                scope: scopes.join(" ")
-              },
+      async (res: OAuthUserSettingsInterface) => {
+        const scopes = ['openid', 'email', 'profile'];
+        if (res.gmailSyncEnabled) {
+          scopes.push(
+            'https://www.googleapis.com/auth/gmail.readonly',
+            'https://www.googleapis.com/auth/gmail.send',
           );
-        },
+        }
+        if (res.googleCalendarSyncEnabled) {
+          scopes.push('https://www.googleapis.com/auth/calendar.events');
+        }
+
+        await signIn(
+          'google',
+          { callbackUrl: '/' },
+          {
+            prompt: 'login',
+            scope: scopes.join(' '),
+          },
+        );
+      },
     );
   };
 
   return (
     <>
-      {globalCache.gmailOauthTokenNeedsManualRefresh && (
+      {globalCache?.gmailOauthTokenNeedsManualRefresh && (
         <>
           <ConfirmDeleteDialog
             colorScheme={'purple'}
