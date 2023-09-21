@@ -22,7 +22,13 @@ interface Tag {
   label: string;
   value: string;
 }
-const suggestedTags = ['meeting', 'call', 'voicemail', 'email', 'text-message'];
+export const suggestedTags = [
+  'meeting',
+  'call',
+  'voicemail',
+  'email',
+  'text-message',
+];
 
 export const TagsSelect: FC<EmailParticipantSelect> = ({
   formId,

@@ -31,6 +31,8 @@ export const LogEntryPreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const event = modalContent as LogEntryWithAliases;
   const author = getAuthor(event?.logEntryCreatedBy);
+  const authorEmail = event?.logEntryCreatedBy?.emails?.[0]?.email;
+
   return (
     <>
       <CardHeader
@@ -102,7 +104,9 @@ export const LogEntryPreviewModal: React.FC = () => {
             <Text fontSize='sm' fontWeight='semibold'>
               Author
             </Text>
-            <Text fontSize='sm'>{author}</Text>
+            <Tooltip label={authorEmail} hasArrow>
+              <Text fontSize='sm'>{author}</Text>
+            </Tooltip>
           </Flex>
 
           <Flex direction='column'>

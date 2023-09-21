@@ -31,6 +31,16 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   const parseOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
       if (domNode instanceof Element) {
+        if (domNode.attribs && domNode.attribs.style) {
+          const styles = domNode.attribs.style.split(';');
+          const filteredStyles = styles.filter(
+            (style) =>
+              !style.includes('font-size') &&
+              !style.includes('font-family') &&
+              !style.includes('font-color'),
+          );
+          domNode.attribs.style = filteredStyles.join(';');
+        }
         switch (domNode.name) {
           case 'td': {
             return (

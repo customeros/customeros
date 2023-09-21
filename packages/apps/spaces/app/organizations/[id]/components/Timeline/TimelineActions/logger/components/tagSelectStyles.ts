@@ -1,6 +1,7 @@
 import omit from 'lodash/omit';
-import { StylesConfig, GroupBase } from 'chakra-react-select';
+import { StylesConfig, GroupBase, OptionProps } from 'chakra-react-select';
 import { CSSWithMultiValues } from '@chakra-ui/react';
+import { suggestedTags } from './TagSelect';
 
 type ChakraStylesConfig<
   OptionType = unknown,
@@ -53,14 +54,31 @@ export const tagsSelectStyles = (
     _focusVisible: { border: 'none !important' },
     _focus: { border: 'none !important' },
   }),
-  menuList: (props: CSSWithMultiValues) => ({
-    ...props,
-    padding: '2',
-    boxShadow: 'md',
-    borderColor: 'gray.200',
-    borderRadius: 'lg',
-    maxHeight: '12rem',
-  }),
+  menuList: (
+    props: CSSWithMultiValues,
+    data: { options: Array<OptionProps & { value: string }> },
+  ) => {
+    const isNew =
+      data?.options?.length === 1 &&
+      data?.options?.[0]?.label === data.options?.[0]?.value &&
+      !suggestedTags.includes(data.options?.[0]?.label);
+
+    if (isNew) {
+      return {
+        position: 'absolute',
+        bottom: '-999999999px',
+      };
+    }
+
+    return {
+      ...props,
+      padding: '2',
+      boxShadow: 'md',
+      borderColor: 'gray.200',
+      borderRadius: 'lg',
+      maxHeight: '12rem',
+    };
+  },
   option: (
     props: CSSWithMultiValues,
     { isSelected, isFocused }: { isSelected: boolean; isFocused: boolean },
