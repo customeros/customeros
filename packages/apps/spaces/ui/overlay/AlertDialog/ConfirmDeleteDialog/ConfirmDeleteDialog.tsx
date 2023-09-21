@@ -1,17 +1,17 @@
-import React, { useRef, MouseEventHandler } from 'react';
+import React, { MouseEventHandler, useRef } from 'react';
 
 import {
   AlertDialog,
-  AlertDialogOverlay,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
   AlertDialogCloseButton,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
 } from '@ui/overlay/AlertDialog';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { SvgIcon } from '@ui/media/icons/SvgIcon';
+import { AlertDialogBody } from '@chakra-ui/modal';
 
 interface ConfirmDeleteDialogProps {
   isOpen: boolean;
@@ -20,9 +20,11 @@ interface ConfirmDeleteDialogProps {
   onConfirm: MouseEventHandler<HTMLButtonElement>;
   label: string;
   description?: string;
+  body?: React.ReactNode;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;
   icon?: any;
+  colorScheme?: string;
 }
 
 export const ConfirmDeleteDialog = ({
@@ -32,9 +34,11 @@ export const ConfirmDeleteDialog = ({
   onConfirm,
   label,
   description,
+  body,
   confirmButtonLabel,
-  icon,
   cancelButtonLabel = 'Cancel',
+  icon,
+  colorScheme = 'red',
 }: ConfirmDeleteDialogProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
@@ -52,7 +56,7 @@ export const ConfirmDeleteDialog = ({
         >
           <AlertDialogCloseButton color='gray.400' top={6} />
           <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6'>
-            <FeaturedIcon size='lg' colorScheme='red'>
+            <FeaturedIcon size='lg' colorScheme={colorScheme}>
               {icon ? icon : <Icons.Trash1 />}
             </FeaturedIcon>
             <Text mt='4'>{label}</Text>
@@ -62,6 +66,8 @@ export const ConfirmDeleteDialog = ({
               </Text>
             )}
           </AlertDialogHeader>
+
+          {body && <AlertDialogBody>{body}</AlertDialogBody>}
 
           <AlertDialogFooter pb='6'>
             <Button
@@ -78,7 +84,7 @@ export const ConfirmDeleteDialog = ({
               ml={3}
               w='full'
               variant='outline'
-              colorScheme='red'
+              colorScheme={colorScheme}
               onClick={onConfirm}
               isLoading={isLoading}
               loadingText='Deleting'
