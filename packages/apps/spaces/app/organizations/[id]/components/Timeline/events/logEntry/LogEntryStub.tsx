@@ -81,7 +81,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
           h='fit-content'
         >
           <Text
-            w={412}
+            w={460}
             noOfLines={4}
             color='gray.700'
             fontSize='sm'
@@ -92,6 +92,9 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
               wrote
             </Text>
             <HtmlContentRenderer
+              position='relative'
+              zIndex={1}
+              pointerEvents='none'
               showAsInlineText
               fontSize='sm'
               noOfLines={4}

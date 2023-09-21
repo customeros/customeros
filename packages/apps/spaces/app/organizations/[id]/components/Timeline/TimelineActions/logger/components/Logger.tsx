@@ -29,7 +29,7 @@ export const Logger = () => {
       position='relative'
       className='customeros-logger'
     >
-      <Box position='absolute' top={-6} right={-6}>
+      <Box position='absolute' top={-4} right={-6}>
         <Image src={noteIcon} alt='' height={123} width={174} />
       </Box>
 

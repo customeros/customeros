@@ -37,7 +37,14 @@ export const SlackThreadPreviewModal: React.FC = () => {
 
   return (
     <>
-      <CardHeader pb={1} position='sticky' top={0} borderRadius='xl'>
+      <CardHeader
+        py='4'
+        px='6'
+        pb='1'
+        position='sticky'
+        top={0}
+        borderRadius='xl'
+      >
         <Flex
           direction='row'
           justifyContent='space-between'
@@ -79,7 +86,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
           </Flex>
         </Flex>
       </CardHeader>
-      <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6}>
+      <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6} pt={0}>
         <SlackMessageCard
           w='full'
           name={getName(slackSender)}

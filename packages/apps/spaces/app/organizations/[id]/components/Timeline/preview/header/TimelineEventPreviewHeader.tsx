@@ -23,9 +23,9 @@ export const TimelineEventPreviewHeader: React.FC<
   const [_, copy] = useCopyToClipboard();
   return (
     <CardHeader
-      pb='1'
+      py='4'
       px='6'
-      pt='4'
+      pb='1'
       position='sticky'
       background='white'
       top={0}
