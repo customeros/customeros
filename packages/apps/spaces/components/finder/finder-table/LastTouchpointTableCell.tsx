@@ -16,10 +16,7 @@ export const LastTouchpointTableCell = ({
 }) => {
   let icon = undefined;
   let label = '';
-  console.log(
-    '🏷️ ----- lastTouchPointTimelineEvent: ',
-    lastTouchPointTimelineEvent,
-  );
+
   if (lastTouchPointTimelineEvent) {
     switch (lastTouchPointTimelineEvent.__typename) {
       case 'Action':

@@ -7,8 +7,6 @@ dotenv.config({
   path: path.join(__dirname, '.env.development'),
 });
 
-console.log('🏷️ ----- : ', process.env.CUSTOMER_OS_API_PATH);
-
 const config: CodegenConfig = {
   overwrite: true,
   schema: [
