@@ -12,10 +12,15 @@ import {
 } from '@organization/components/Timeline/TimelineActions/logger/LogEntryFormDto';
 import { useForm } from 'react-inverted-form';
 import { useRemirror } from '@remirror/react';
-import { useCreateLogEntryMutation } from '@organization/graphql/createLogEntry.generated';
+import {
+  CreateLogEntryMutation,
+  CreateLogEntryMutationVariables,
+  useCreateLogEntryMutation,
+} from '@organization/graphql/createLogEntry.generated';
 import { useDisclosure } from '@ui/utils';
 import { useTimelineActionContext } from './TimelineActionContext';
 import { logEntryEditorExtensions } from './extensions';
+import { UseMutationOptions } from '@tanstack/react-query';
 
 export const noop = () => undefined;
 
@@ -23,7 +28,14 @@ interface TimelineActionLogEntryContextContextMethods {
   checkCanExitSafely: () => boolean;
   closeConfirmationDialog: () => void;
   handleExitEditorAndCleanData: () => void;
-  onCreateLogEntry: () => void;
+  onCreateLogEntry: (
+    options?: UseMutationOptions<
+      CreateLogEntryMutation,
+      unknown,
+      CreateLogEntryMutationVariables,
+      unknown
+    >,
+  ) => void;
   remirrorProps: any;
   isSaving: boolean;
   showLogEntryConfirmationDialog: boolean;
@@ -94,31 +106,42 @@ export const TimelineActionLogEntryContextContextProvider = ({
     };
   }, []);
 
-  const onCreateLogEntry = () => {
+  const onCreateLogEntry = (
+    options?: UseMutationOptions<
+      CreateLogEntryMutation,
+      unknown,
+      CreateLogEntryMutationVariables,
+      unknown
+    >,
+  ) => {
     const logEntryPayload = LogEntryFormDto.toPayload({
       ...logEntryValues,
       tags: state.values.tags,
       content: state.values.content,
       contentType: state.values.contentType,
     });
-    createLogEntryMutation.mutate({
-      organizationId: id,
+    createLogEntryMutation.mutate(
+      {
+        organizationId: id,
 
-      logEntry: logEntryPayload,
-    });
+        logEntry: logEntryPayload,
+      },
+      {
+        ...(options ?? {}),
+      },
+    );
   };
 
   const handleExitEditorAndCleanData = () => {
     handleResetEditor();
     onClose();
-    closeEditor();
+    // closeEditor();
   };
 
   const handleCheckCanExitSafely = () => {
     const { content, tags } = state.values;
     const isContentEmpty = !content.length || content === `<p style=""></p>`;
-    const showLogEntryEditorConfirmationDialog =
-      !!tags.length || !isContentEmpty;
+    const showLogEntryEditorConfirmationDialog = !isContentEmpty;
     if (showLogEntryEditorConfirmationDialog) {
       onOpen();
       return false;

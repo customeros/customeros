@@ -47,7 +47,7 @@ export const Logger = () => {
           }))}
         />
       </RichTextEditor>
-      <Flex justifyContent='space-between' zIndex={8}>
+      <Flex justifyContent='space-between' zIndex={8} fontSize='md'>
         <TagsSelect
           formId='organization-create-log-entry'
           name='tags'
@@ -67,7 +67,7 @@ export const Logger = () => {
           isDisabled={isSaving || isLogEmpty}
           isLoading={isSaving}
           loadingText='Sending'
-          onClick={onCreateLogEntry}
+          onClick={() => onCreateLogEntry()}
         >
           Log
         </Button>

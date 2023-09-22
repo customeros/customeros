@@ -1,9 +1,7 @@
 import { SideSection } from './components/SideSection';
 import { MainSection } from './components/MainSection';
-
 import { TabsContainer, Panels } from './components/Tabs';
-
-import { OrganizationTimeline } from './components/Timeline/OrganizationTimeline';
+import { OrganizationTimelineWithActionsContext } from '@organization/components/Timeline/OrganizationTimelineWithActionsContext';
 
 interface OrganizationPageProps {
   params: { id: string };
@@ -22,7 +20,7 @@ export default async function OrganizationPage({
       </SideSection>
 
       <MainSection>
-        <OrganizationTimeline />
+        <OrganizationTimelineWithActionsContext />
       </MainSection>
     </>
   );

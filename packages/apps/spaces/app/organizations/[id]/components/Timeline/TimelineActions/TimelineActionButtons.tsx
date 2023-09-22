@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { Button } from '@ui/form/Button';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
@@ -10,13 +10,19 @@ import {
   EditorType,
   useTimelineActionContext,
 } from './TimelineActionsContext/TimelineActionContext';
+import { Box } from '@chakra-ui/react';
 
-export const TimelineActionButtons = () => {
+export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
+  invalidateQuery,
+}) => {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const {
     checkCanExitSafely,
     showLogEntryConfirmationDialog,
     closeConfirmationDialog: closeLogEntryConfirmationDialog,
     handleExitEditorAndCleanData: handleExitLogEntryEditorAndCleanData,
+    onCreateLogEntry,
   } = useTimelineActionLogEntryContext();
   const {
     checkCanExitSafely: checkCanExitEmailSafely,
@@ -26,6 +32,14 @@ export const TimelineActionButtons = () => {
   } = useTimelineActionEmailContext();
   const { openedEditor, showEditor } = useTimelineActionContext();
   const [openOnConfirm, setOpenOnConfirm] = useState<null | EditorType>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleToggleEditor = (targetEditor: 'email' | 'log-entry') => {
     if (openedEditor === null) {
@@ -62,6 +76,19 @@ export const TimelineActionButtons = () => {
     }
 
     showEditor(openOnConfirm);
+  };
+  const handleConfirm = () => {
+    onCreateLogEntry({
+      onSuccess: () => {
+        handleExitLogEntryEditorAndCleanData();
+        timeoutRef.current = setTimeout(() => {
+          invalidateQuery();
+        }, 500);
+      },
+      onSettled: () => {
+        showEditor(openOnConfirm);
+      },
+    });
   };
 
   const handleCloseConfirmationModal = () => {
@@ -104,20 +131,32 @@ export const TimelineActionButtons = () => {
       >
         Log
       </Button>
+
       <ConfirmDeleteDialog
-        label={`Discard this ${
-          showEmailConfirmationDialog ? 'email' : 'log entry'
-        }?`}
-        description={`Saving draft log entries is not possible at the moment. Would you like to continue to discard this ${
-          showEmailConfirmationDialog ? 'email' : 'entry'
-        }?`}
-        confirmButtonLabel={`Discard ${
-          showEmailConfirmationDialog ? 'email' : 'entry'
-        }`}
-        isOpen={showLogEntryConfirmationDialog || showEmailConfirmationDialog}
+        label={`Discard this email?`}
+        description={`Saving draft log entries is not possible at the moment. Would you like to continue to discard this email?`}
+        confirmButtonLabel={`Discard email`}
+        isOpen={showEmailConfirmationDialog}
         onClose={handleCloseConfirmationModal}
         onConfirm={handleDiscard}
         isLoading={false}
+      />
+
+      <ConfirmDeleteDialog
+        colorScheme='primary'
+        label='Log this log entry?'
+        description='You have typed an unlogged entry. Do you want to log it to the timeline, or discard it?'
+        confirmButtonLabel='Log it'
+        cancelButtonLabel='Discard'
+        isOpen={showLogEntryConfirmationDialog}
+        onClose={handleDiscard}
+        onConfirm={handleConfirm}
+        isLoading={false}
+        icon={
+          <Box>
+            <MessageChatSquare color='primary.700' boxSize='inherit' />
+          </Box>
+        }
       />
     </ButtonGroup>
   );
