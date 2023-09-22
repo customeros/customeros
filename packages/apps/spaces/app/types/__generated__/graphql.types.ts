@@ -1272,6 +1272,7 @@ export type Mutation = {
   logEntry_AddTag: Scalars['ID'];
   logEntry_CreateForOrganization: Scalars['ID'];
   logEntry_RemoveTag: Scalars['ID'];
+  logEntry_ResetTags: Scalars['ID'];
   logEntry_Update: Scalars['ID'];
   meeting_AddNewLocation: Location;
   meeting_AddNote: Meeting;
@@ -1610,6 +1611,11 @@ export type MutationLogEntry_CreateForOrganizationArgs = {
 export type MutationLogEntry_RemoveTagArgs = {
   id: Scalars['ID'];
   input: TagIdOrNameInput;
+};
+
+export type MutationLogEntry_ResetTagsArgs = {
+  id: Scalars['ID'];
+  input?: InputMaybe<Array<TagIdOrNameInput>>;
 };
 
 export type MutationLogEntry_UpdateArgs = {

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -26,8 +26,9 @@ import { useForm } from 'react-inverted-form';
 import { useSession } from 'next-auth/react';
 import { useUpdateLogEntryMutation } from '@organization/graphql/updateLogEntry.generated';
 import { useQueryClient } from '@tanstack/react-query';
-import { PreviewTags } from './preview/PreviewTags';
+import { PreviewTags } from './preview/tags/PreviewTags';
 import { PreviewEditor } from './preview/PreviewEditor';
+import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
 
 const getAuthor = (user: User) => {
   if (!user?.firstName && !user.lastName) {
@@ -47,6 +48,7 @@ export const LogEntryPreviewModal: React.FC = () => {
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
+  const { data } = useGetTagsQuery(client);
 
   const formId = 'log-entry-update';
   const isAuthor =
@@ -62,6 +64,15 @@ export const LogEntryPreviewModal: React.FC = () => {
       );
     },
   });
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   const logEntryStartedAtValues = new LogEntryUpdateFormDto(event);
 
   useForm<LogEntryUpdateFormDtoI>({
@@ -171,11 +182,16 @@ export const LogEntryPreviewModal: React.FC = () => {
               isAuthor={isAuthor}
               formId={formId}
               initialContent={`${event?.content}`}
-              tags={[]}
+              tags={data?.tags}
             />
           </Flex>
 
-          <PreviewTags isAuthor={isAuthor} tags={event.tags} formId={formId} />
+          <PreviewTags
+            isAuthor={isAuthor}
+            tags={event?.tags}
+            tagOptions={data?.tags}
+            id={event.id}
+          />
 
           {event?.externalLinks?.[0]?.externalUrl && (
             <LogEntryExternalLink externalLink={event?.externalLinks?.[0]} />
