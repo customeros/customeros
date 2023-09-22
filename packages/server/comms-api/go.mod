@@ -29,7 +29,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.10
 	golang.org/x/oauth2 v0.12.0
 	google.golang.org/api v0.142.0
-	google.golang.org/grpc v1.58.1
+	google.golang.org/grpc v1.58.2
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.4
 )
