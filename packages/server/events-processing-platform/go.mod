@@ -28,7 +28,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.24.1
 	go.uber.org/zap v1.26.0
 	golang.org/x/sync v0.3.0
-	google.golang.org/grpc v1.58.1
+	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.4
