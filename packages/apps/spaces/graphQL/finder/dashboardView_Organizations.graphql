@@ -81,6 +81,13 @@ query dashboardView_Organizations(
         ... on Issue {
           id
         }
+        ... on LogEntry {
+          id
+          createdBy {
+            lastName
+            firstName
+          }
+        }
         ... on Note {
           id
           createdBy {

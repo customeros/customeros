@@ -1,4 +1,5 @@
 import type { CodegenConfig } from '@graphql-codegen/cli';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
 import dotenv from 'dotenv';
 

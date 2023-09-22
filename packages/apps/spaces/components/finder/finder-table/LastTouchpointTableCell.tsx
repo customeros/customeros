@@ -5,6 +5,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 
 import { DateTimeUtils } from '../../../utils';
+import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 
 export const LastTouchpointTableCell = ({
   lastTouchPointAt,
@@ -43,6 +44,15 @@ export const LastTouchpointTableCell = ({
           ' ' +
           lastTouchPointTimelineEvent.createdBy?.lastName;
         icon = <Icons.File2 boxSize='3' color='gray.700' />;
+        break;
+      }
+      case 'LogEntry': {
+        label =
+          'Log entry by ' +
+          lastTouchPointTimelineEvent.createdBy?.firstName +
+          ' ' +
+          lastTouchPointTimelineEvent.createdBy?.lastName;
+        icon = <MessageChatSquare boxSize='3' color='gray.700' />;
         break;
       }
       case 'InteractionEvent': {
