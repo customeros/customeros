@@ -239,6 +239,80 @@ func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, inp
 	return id, nil
 }
 
+// LogEntryResetTags is the resolver for the logEntry_ResetTags field.
+func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryResetTags", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("logEntryId", id), log.Object("input", input))
+
+	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
+	if err != nil || logEntryEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("Log entry %s not found", id)
+		}
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Log entry %s not found", id)
+		return "", nil
+	}
+	tags, err := r.Services.TagService.GetTagsForLogEntries(ctx, []string{logEntryEntity.Id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error getting tags for log entry")
+		return id, nil
+	}
+	currentTagIds := []string{}
+	for _, tag := range *tags {
+		currentTagIds = append(currentTagIds, tag.Id)
+	}
+
+	newTagIds := []string{}
+	for _, inputTag := range input {
+		tagId := GetTagId(ctx, r.Services, inputTag.ID, inputTag.Name)
+		if tagId == "" {
+			tagEntity, _ := CreateTag(ctx, r.Services, inputTag.Name)
+			if tagEntity != nil {
+				tagId = tagEntity.Id
+			}
+		}
+		if tagId != "" {
+			newTagIds = append(newTagIds, tagId)
+		}
+	}
+
+	for _, currentTagId := range currentTagIds {
+		if !utils.Contains(newTagIds, currentTagId) {
+			_, err = r.Clients.LogEntryClient.RemoveTag(ctx, &logentrygrpc.RemoveTagGrpcRequest{
+				Tenant: common.GetTenantFromContext(ctx),
+				UserId: common.GetUserIdFromContext(ctx),
+				Id:     id,
+				TagId:  currentTagId,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Error removing tag from log entry")
+				return id, nil
+			}
+		}
+	}
+	for _, newTagId := range newTagIds {
+		if !utils.Contains(currentTagIds, newTagId) {
+			_, err := r.Clients.LogEntryClient.AddTag(ctx, &logentrygrpc.AddTagGrpcRequest{
+				Tenant: common.GetTenantFromContext(ctx),
+				UserId: common.GetUserIdFromContext(ctx),
+				Id:     id,
+				TagId:  newTagId,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Error adding tag to log entry")
+				return id, nil
+			}
+		}
+	}
+	return id, nil
+}
+
 // LogEntry is the resolver for the logEntry field.
 func (r *queryResolver) LogEntry(ctx context.Context, id string) (*model.LogEntry, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.LogEntry", graphql.GetOperationContext(ctx))
