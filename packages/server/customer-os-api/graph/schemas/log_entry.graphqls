@@ -7,6 +7,7 @@ extend type Mutation {
     logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     logEntry_AddTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     logEntry_RemoveTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    logEntry_ResetTags(id: ID!, input: [TagIdOrNameInput!]): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LogEntry {
