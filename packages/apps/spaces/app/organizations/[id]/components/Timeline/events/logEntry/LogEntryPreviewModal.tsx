@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -14,10 +14,20 @@ import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 import { User } from '@graphql/types';
 import { Box } from '@ui/layout/Box';
 import noteImg from 'public/images/note-img-preview.png';
-import { LogEntryDatePicker } from './LogEntryDatePicker';
+import { LogEntryDatePicker } from './preview/LogEntryDatePicker';
 import { Image } from '@ui/media/Image';
-import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
-import { LogEntryExternalLink } from './LogEntryExternalLink';
+import { LogEntryExternalLink } from './preview/LogEntryExternalLink';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import {
+  LogEntryUpdateFormDto,
+  LogEntryUpdateFormDtoI,
+} from './preview/LogEntryUpdateFormDto';
+import { useForm } from 'react-inverted-form';
+import { useSession } from 'next-auth/react';
+import { useUpdateLogEntryMutation } from '@organization/graphql/updateLogEntry.generated';
+import { useQueryClient } from '@tanstack/react-query';
+import { PreviewTags } from './preview/PreviewTags';
+import { PreviewEditor } from './preview/PreviewEditor';
 
 const getAuthor = (user: User) => {
   if (!user?.firstName && !user.lastName) {
@@ -29,9 +39,50 @@ const getAuthor = (user: User) => {
 
 export const LogEntryPreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const { data: session } = useSession();
   const event = modalContent as LogEntryWithAliases;
   const author = getAuthor(event?.logEntryCreatedBy);
   const authorEmail = event?.logEntryCreatedBy?.emails?.[0]?.email;
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const client = getGraphQLClient();
+  const queryClient = useQueryClient();
+
+  const formId = 'log-entry-update';
+  const isAuthor =
+    event.logEntryCreatedBy?.emails?.findIndex(
+      (e) => session?.user?.email === e.email,
+    ) !== -1;
+
+  const updateLogEntryMutation = useUpdateLogEntryMutation(client, {
+    onSuccess: () => {
+      timeoutRef.current = setTimeout(
+        () => queryClient.invalidateQueries(['GetTimeline.infinite']),
+        500,
+      );
+    },
+  });
+  const logEntryStartedAtValues = new LogEntryUpdateFormDto(event);
+
+  useForm<LogEntryUpdateFormDtoI>({
+    formId,
+    defaultValues: logEntryStartedAtValues,
+
+    stateReducer: (state, action, next) => {
+      if (action.type === 'FIELD_BLUR') {
+        updateLogEntryMutation.mutate({
+          id: event.id,
+          input: {
+            ...LogEntryUpdateFormDto.toPayload({
+              ...state.values,
+              [action.payload.name]: action.payload.value,
+            }),
+          },
+        });
+      }
+      return next;
+    },
+  });
 
   return (
     <>
@@ -60,6 +111,7 @@ export const LogEntryPreviewModal: React.FC = () => {
                 aria-label='Copy link to this entry'
                 color='gray.500'
                 fontSize='sm'
+                size='sm'
                 mr={1}
                 icon={<CopyLink color='gray.500' height='18px' />}
                 onClick={() => copy(window.location.href)}
@@ -71,6 +123,7 @@ export const LogEntryPreviewModal: React.FC = () => {
                 aria-label='Close preview'
                 color='gray.500'
                 fontSize='sm'
+                size='sm'
                 icon={<Times color='gray.500' height='24px' />}
                 onClick={closeModal}
               />
@@ -81,8 +134,8 @@ export const LogEntryPreviewModal: React.FC = () => {
       <CardBody
         mt={0}
         maxHeight='calc(100vh - 9rem)'
+        p={6}
         pt={0}
-        pb={6}
         overflow='auto'
       >
         <Box position='relative'>
@@ -98,7 +151,7 @@ export const LogEntryPreviewModal: React.FC = () => {
         </Box>
         <VStack gap={2} alignItems='flex-start'>
           <Flex direction='column'>
-            <LogEntryDatePicker event={event} />
+            <LogEntryDatePicker event={event} formId={formId} />
           </Flex>
           <Flex direction='column'>
             <Text fontSize='sm' fontWeight='semibold'>
@@ -109,21 +162,20 @@ export const LogEntryPreviewModal: React.FC = () => {
             </Tooltip>
           </Flex>
 
-          <Flex direction='column'>
+          <Flex direction='column' w='full'>
             <Text fontSize='sm' fontWeight='semibold'>
               Entry
             </Text>
 
-            <HtmlContentRenderer
-              fontSize='sm'
-              noOfLines={undefined}
-              htmlContent={`${event?.content}`}
+            <PreviewEditor
+              isAuthor={isAuthor}
+              formId={formId}
+              initialContent={`${event?.content}`}
+              tags={[]}
             />
           </Flex>
 
-          <Text fontSize='sm' fontWeight='medium'>
-            {event.tags.map(({ name }) => `#${name}`).join(' ')}
-          </Text>
+          <PreviewTags isAuthor={isAuthor} tags={event.tags} formId={formId} />
 
           {event?.externalLinks?.[0]?.externalUrl && (
             <LogEntryExternalLink externalLink={event?.externalLinks?.[0]} />
