@@ -7,7 +7,7 @@ import (
 )
 
 func MapEntityToLogEntry(entity *entity.LogEntryEntity) *model.LogEntry {
-	note := model.LogEntry{
+	logEntry := model.LogEntry{
 		ID:            entity.Id,
 		Content:       utils.StringPtr(entity.Content),
 		ContentType:   utils.StringPtr(entity.ContentType),
@@ -18,7 +18,7 @@ func MapEntityToLogEntry(entity *entity.LogEntryEntity) *model.LogEntry {
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:     entity.AppSource,
 	}
-	return &note
+	return &logEntry
 }
 
 func MapEntitiesToLogEntries(entities *entity.LogEntryEntities) []*model.LogEntry {
