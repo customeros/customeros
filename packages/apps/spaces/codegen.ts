@@ -1,10 +1,13 @@
 import type { CodegenConfig } from '@graphql-codegen/cli';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
 import dotenv from 'dotenv';
 
 dotenv.config({
   path: path.join(__dirname, '.env.development'),
 });
+
+console.log('🏷️ ----- : ', process.env.CUSTOMER_OS_API_PATH);
 
 const config: CodegenConfig = {
   overwrite: true,
