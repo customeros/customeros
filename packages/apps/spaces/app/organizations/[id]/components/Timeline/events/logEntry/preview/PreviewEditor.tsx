@@ -12,7 +12,7 @@ export const PreviewEditor: React.FC<{
   isAuthor: boolean;
   formId: string;
   initialContent: string;
-  tags: Array<{ label: string; value: string }>;
+  tags?: Array<{ label: string; value: string }>;
 }> = ({ isAuthor, formId, initialContent, tags }) => {
   const remirrorProps = useRemirror({
     extensions: logEntryEditorExtensions,

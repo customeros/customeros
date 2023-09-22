@@ -9,7 +9,8 @@ interface TagButtonProps {
 export const TagButton: React.FC<TagButtonProps> = ({ onTagSet, tag }) => (
   <Button
     size='xs'
-    fontSize='md'
+    fontSize='inherit'
+    lineHeight='md'
     fontWeight='normal'
     color='gray.400'
     variant='unstyled'
