@@ -31,7 +31,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.10
 	go.uber.org/zap v1.26.0
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
-	google.golang.org/grpc v1.58.1
+	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.4
