@@ -1,5 +1,5 @@
 'use client';
-import React, { FC, useRef } from 'react';
+import React, { FC, useCallback, useRef } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { EmailStub, TimelineItem } from './events';
@@ -71,8 +71,9 @@ export const OrganizationTimeline: FC = () => {
         },
       },
     );
-  const invalidateQuery = () =>
+  const invalidateQuery = useCallback(() => {
     queryClient.invalidateQueries(['GetTimeline.infinite']);
+  }, []);
 
   if (isInitialLoading) {
     return (
@@ -238,12 +239,17 @@ export const OrganizationTimeline: FC = () => {
                 ) : null}
               </Flex>
             ),
-            Footer: () => (
-              <TimelineActions
-                invalidateQuery={invalidateQuery}
-                onScrollBottom={() => virtuoso?.current?.scrollBy({ top: 300 })}
-              />
-            ),
+            Footer: () => {
+              const memoizedScrollBy = useCallback(() => {
+                virtuoso?.current?.scrollBy({ top: 300 });
+              }, [virtuoso]);
+              return (
+                <TimelineActions
+                  invalidateQuery={invalidateQuery}
+                  onScrollBottom={memoizedScrollBy}
+                />
+              );
+            },
           }}
         />
         <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />

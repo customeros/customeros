@@ -36,11 +36,12 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
   tags = [],
 }) => {
   const { getInputProps } = useField(name, formId);
-  const { onChange, value: selectedTags } = getInputProps();
+  const { onChange, value: selectedTags, onBlur } = getInputProps();
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [focusedOption, setFocusedOption] = useState<Tag | null>(null);
   const [inputVal, setInputVal] = useState('');
   const scope = useTagButtonSlideAnimation(!!selectedTags?.length);
+
   const getFilteredSuggestions = (
     filterString: string,
     callback: (options: OptionsOrGroups<any, any>) => void,
@@ -155,6 +156,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
                 return input;
               }}
+              onBlur={() => onBlur(selectedTags)}
               onMenuClose={() => setFocusedOption(null)}
               value={selectedTags}
               inputValue={inputVal}

@@ -21,7 +21,7 @@ export const tagsSelectStyles = (
     background: 'transparent',
     border: '1px solid',
     borderColor: 'transparent',
-    fontSize: 'md',
+    fontSize: 'var(--tag-select-font-size)',
     margin: 0,
     marginRight: 1,
     cursor: 'text',
@@ -51,6 +51,7 @@ export const tagsSelectStyles = (
     width: '100%',
     overflow: 'visible',
     cursor: 'text',
+    fontSize: 'var(--tag-select-font-size)',
     _focusVisible: { border: 'none !important' },
     _focus: { border: 'none !important' },
   }),
@@ -76,7 +77,8 @@ export const tagsSelectStyles = (
       boxShadow: 'md',
       borderColor: 'gray.200',
       borderRadius: 'lg',
-      maxHeight: '12rem',
+      maxHeight: '150px',
+      fontSize: 'inherit',
     };
   },
   option: (
@@ -96,17 +98,20 @@ export const tagsSelectStyles = (
     color: 'gray.400',
     textTransform: 'uppercase',
     fontWeight: 'regular',
+    fontSize: 'inherit',
   }),
   input: (props: CSSWithMultiValues) => ({
     ...props,
     color: 'gray.500',
     fontWeight: 'regular',
     cursor: 'text',
+    fontSize: 'var(--tag-select-font-size)',
   }),
   valueContainer: (props: CSSWithMultiValues) => ({
     ...props,
     maxH: '86px',
     overflowY: 'auto',
+    fontSize: 'inherit',
   }),
   ...omit<ChakraStylesConfig<unknown, GroupBase<unknown>>>(chakraStyles, [
     'container',
