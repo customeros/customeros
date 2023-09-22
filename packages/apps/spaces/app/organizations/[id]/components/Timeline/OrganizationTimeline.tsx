@@ -16,7 +16,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SlackStub } from '@organization/components/Timeline/events/slack/SlackStub';
 import { MeetingStub } from './events/meeting/MeetingStub';
 import { TimelineEventPreviewModal } from '@organization/components/Timeline/preview/TimelineEventPreviewModal';
-import { InteractionEventWithDate, TimelineEvent } from './types';
+import {
+  InteractionEventWithDate,
+  LogEntryWithAliases,
+  TimelineEvent,
+} from './types';
 import { UserActionStub } from '@organization/components/Timeline/events/action/UserActionStub';
 import { IntercomStub } from '@organization/components/Timeline/events/intercom/IntercomStub';
 import { ExternalSystemType } from '@spaces/graphql';
@@ -42,7 +46,11 @@ const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
 export const NEW_DATE = new Date(new Date().setDate(new Date().getDate() + 1));
 
 function getEventDate(event?: TimelineEvent) {
-  return (event as InteractionEventWithDate)?.date || event?.createdAt;
+  return (
+    (event as InteractionEventWithDate)?.date ||
+    (event as LogEntryWithAliases)?.logEntryStartedAt ||
+    event?.createdAt
+  );
 }
 
 export const OrganizationTimeline: FC = () => {
@@ -172,6 +180,7 @@ export const OrganizationTimeline: FC = () => {
                     ),
                     getEventDate(timelineEvent as TimelineEvent),
                   );
+
             switch (timelineEvent.__typename) {
               case 'InteractionEvent': {
                 return (
