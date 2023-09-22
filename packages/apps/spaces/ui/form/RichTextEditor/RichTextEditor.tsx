@@ -7,10 +7,7 @@ import React, {
 import { Remirror, ThemeProvider, Toolbar } from '@remirror/react';
 import { useField } from 'react-inverted-form';
 import { prosemirrorNodeToHtml } from 'remirror';
-import {
-  BasicEditorExtentions,
-  RemirrorProps,
-} from '@ui/form/RichTextEditor/types';
+import { RemirrorProps } from '@ui/form/RichTextEditor/types';
 
 export const RichTextEditor: FC<
   {
@@ -18,7 +15,7 @@ export const RichTextEditor: FC<
     formId: string;
     placeholder?: string;
     showToolbar: boolean;
-  } & RemirrorProps<BasicEditorExtentions> &
+  } & RemirrorProps<any> &
     PropsWithChildren
 > = forwardRef(
   (

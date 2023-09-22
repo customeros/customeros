@@ -5,18 +5,22 @@ import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 export interface LogEntryUpdateFormDtoI {
   date: Date | string;
   time: string;
+  content: string;
 }
 
 export interface LogEntryUpdateForm {
   date: Date | string;
   time: string;
+  content: string;
 }
 
 export class LogEntryUpdateFormDto implements LogEntryUpdateForm {
   date: Date | string;
   time: string;
+  content: string;
 
   constructor(data?: LogEntryWithAliases) {
+    this.content = data?.content ?? '';
     this.date = data?.logEntryStartedAt || new Date();
     this.time = data?.logEntryStartedAt
       ? DateTimeUtils.formatTime(data?.logEntryStartedAt)
@@ -36,6 +40,7 @@ export class LogEntryUpdateFormDto implements LogEntryUpdateForm {
   static toPayload(data: LogEntryUpdateFormDtoI): LogEntryUpdateInput {
     return {
       startedAt: this.applyHourAndMinuteToDate(data.date, data.time),
+      content: data.content,
     };
   }
 }
