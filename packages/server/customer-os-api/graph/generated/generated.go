@@ -653,6 +653,7 @@ type ComplexityRoot struct {
 		Contacts                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		CreatedAt                     func(childComplexity int) int
 		CustomFields                  func(childComplexity int) int
+		CustomerOsID                  func(childComplexity int) int
 		Description                   func(childComplexity int) int
 		Domains                       func(childComplexity int) int
 		Emails                        func(childComplexity int) int
@@ -5147,6 +5148,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.CustomFields(childComplexity), true
 
+	case "Organization.customerOsId":
+		if e.complexity.Organization.CustomerOsID == nil {
+			break
+		}
+
+		return e.complexity.Organization.CustomerOsID(childComplexity), true
+
 	case "Organization.description":
 		if e.complexity.Organization.Description == nil {
 			break
@@ -8356,6 +8364,7 @@ type LinkedOrganization {
 
 type Organization implements Node {
     id: ID!
+    customerOsId: String!
     createdAt:   Time!
     updatedAt:   Time!
     name:        String!
@@ -18724,6 +18733,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -24023,6 +24034,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -24760,6 +24773,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -32331,6 +32346,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -34526,6 +34543,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -34705,6 +34724,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -35908,6 +35929,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -36087,6 +36110,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -36266,6 +36291,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -36687,6 +36714,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -36866,6 +36895,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -37045,6 +37076,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -37224,6 +37257,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -37403,6 +37438,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -37582,6 +37619,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -41873,6 +41912,50 @@ func (ec *executionContext) fieldContext_Organization_id(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_customerOsId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_customerOsId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CustomerOsID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_customerOsId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_createdAt(ctx, field)
 	if err != nil {
@@ -44212,6 +44295,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -44438,6 +44523,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -45894,6 +45981,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -48577,6 +48666,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -51129,6 +51220,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -64931,6 +65024,11 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = graphql.MarshalString("Organization")
 		case "id":
 			out.Values[i] = ec._Organization_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "customerOsId":
+			out.Values[i] = ec._Organization_customerOsId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

@@ -34,24 +34,17 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	SetupTestLogger()
 
 	testDBs := TestDatabase{}
-	testLogger := SetupTestLogger()
 
 	testDBs.Neo4jContainer, testDBs.Driver = neo4jt.InitTestNeo4jDB()
 
 	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
-	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
-		err := postgresContainer.Terminate(ctx)
-		if err != nil {
-			testLogger.Fatal("Error during container termination")
-		}
-	}(postgresContainer, context.Background())
-
 	testDBs.GormDB = postgresGormDB
 	testDBs.Repositories = repository.InitRepos(testDBs.Driver, postgresGormDB)
 
 	shutdown := func() {
 		neo4jt.CloseDriver(*testDBs.Driver)
 		neo4jt.Terminate(testDBs.Neo4jContainer, context.Background())
+		postgrest.Terminate(postgresContainer, context.Background())
 	}
 	return testDBs, shutdown
 }

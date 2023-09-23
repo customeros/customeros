@@ -754,6 +754,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 
 	output := entity.OrganizationEntity{
 		ID:                utils.GetStringPropOrEmpty(props, "id"),
+		CustomerOsId:      utils.GetStringPropOrEmpty(props, "customerOsId"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
 		Description:       utils.GetStringPropOrEmpty(props, "description"),
 		Website:           utils.GetStringPropOrEmpty(props, "website"),
