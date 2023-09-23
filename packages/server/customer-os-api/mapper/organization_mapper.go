@@ -12,6 +12,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 	}
 	return &model.Organization{
 		ID:                            entity.ID,
+		CustomerOsID:                  entity.CustomerOsId,
 		Name:                          entity.Name,
 		Description:                   utils.StringPtr(entity.Description),
 		Note:                          utils.StringPtr(entity.Note),

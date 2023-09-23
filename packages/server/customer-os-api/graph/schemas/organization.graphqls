@@ -39,6 +39,7 @@ type LinkedOrganization {
 
 type Organization implements Node {
     id: ID!
+    customerOsId: String!
     createdAt:   Time!
     updatedAt:   Time!
     name:        String!

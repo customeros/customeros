@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -52,6 +53,7 @@ func (h *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context
 	err := h.Repositories.OrganizationRepository.CreateOrganization(ctx, organizationId, eventData)
 
 	if err == nil {
+		// Set organization owner
 		evtMetadata := eventMetadata{}
 		if err = json.Unmarshal(evt.Metadata, &evtMetadata); err != nil {
 			tracing.TraceErr(span, err)
@@ -65,9 +67,49 @@ func (h *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context
 				}
 			}
 		}
+		// set customer os id
+		customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+		if customerOsErr != nil {
+			tracing.TraceErr(span, customerOsErr)
+			h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
+		}
 	}
 
 	return err
+}
+
+func (h *GraphOrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.setCustomerOsId")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("OrganizationId", organizationId))
+
+	orgDbNode, err := h.Repositories.OrganizationRepository.GetOrganization(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	organizationEntity := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+
+	if organizationEntity.CustomerOsId != "" {
+		return nil
+	}
+	var customerOsId string
+	maxAttempts := 20
+	for attempt := 1; attempt < maxAttempts+1; attempt++ {
+		customerOsId = generateNewRandomCustomerOsId()
+		customerOsIdsEntity := postgresentity.CustomerOsIds{
+			Tenant:       tenant,
+			CustomerOSID: customerOsId,
+			Entity:       postgresentity.Organization,
+			EntityId:     organizationId,
+			Attempts:     attempt,
+		}
+		innerErr := h.Repositories.CustomerOsIdsRepository.Reserve(customerOsIdsEntity)
+		if innerErr == nil {
+			break
+		}
+	}
+	return h.Repositories.OrganizationRepository.SetCustomerOsIdIfMissing(ctx, tenant, organizationId, customerOsId)
 }
 
 func (h *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt eventstore.Event) error {
@@ -85,7 +127,14 @@ func (h *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context
 	if eventData.IgnoreEmptyFields {
 		return h.Repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
 	} else {
-		return h.Repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+		err := h.Repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+		// set customer os id
+		customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+		if customerOsErr != nil {
+			tracing.TraceErr(span, customerOsErr)
+			h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
+		}
+		return err
 	}
 }
 
@@ -358,6 +407,14 @@ func (h *GraphOrganizationEventHandler) OnOrganizationShow(ctx context.Context, 
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
+	// set customer os id
+	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+	if customerOsErr != nil {
+		tracing.TraceErr(span, customerOsErr)
+		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
+	}
+
 	return err
 }
 

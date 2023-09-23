@@ -15,9 +15,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
+	"regexp"
 	"testing"
 	"time"
 )
+
+const customerOsIdPattern = `^C-[A-HJ-NP-Z2-9]{3}-[A-HJ-NP-Z2-9]{3}$`
 
 func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 	ctx := context.TODO()
@@ -508,4 +511,6 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	organization := graph_db.MapDbNodeToOrganizationEntity(*dbNode)
 	require.Equal(t, orgId, organization.ID)
 	require.Equal(t, false, organization.Hide)
+	require.NotEqual(t, "", organization.CustomerOsId)
+	require.True(t, regexp.MustCompile(customerOsIdPattern).MatchString(organization.CustomerOsId), "Valid CustomerOsId should match the format")
 }

@@ -28,6 +28,7 @@ type OrganizationRepository interface {
 	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
+	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
 }
 
 type organizationRepository struct {
@@ -449,6 +450,26 @@ func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenan
 		"organizationId": organizationId,
 		"touchpointAt":   touchpointAt,
 		"touchpointId":   touchpointId,
+	})
+}
+
+func (r *organizationRepository) SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetCustomerOsIdIfMissing")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("customerOsId", customerOsId))
+
+	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+		 SET org.customerOsId = CASE WHEN (org.customerOsId IS NULL OR org.customerOsId = '') AND $customerOsId <> '' THEN $customerOsId ELSE org.customerOsId END`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	return r.executeQuery(ctx, query, map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"customerOsId":   customerOsId,
 	})
 }
 
