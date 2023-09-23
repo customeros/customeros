@@ -2,7 +2,7 @@
 
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { Divider } from '@ui/presentation/Divider';
 import { Text } from '@ui/typography/Text';
 import { Heading } from '@ui/typography/Heading';
@@ -13,12 +13,12 @@ import {
   GetOAuthUserSettings,
   OAuthUserSettingsInterface,
 } from '../../../../../services/settings/settingsService';
-import { useSession } from 'next-auth/react';
 import { GetServerSidePropsContext } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../../../pages/api/auth/[...nextauth]';
 
 export const AuthPanel = () => {
+  const commonScopes = ['openid', 'email', 'profile'];
   const { data: session } = useSession();
   const [oAuthSettings, setOAuthSettings] =
     useState<OAuthUserSettingsInterface>({
@@ -38,14 +38,23 @@ export const AuthPanel = () => {
   }, [session]);
 
   const handleSyncGoogleMailClick = async (event: ChangeEvent) => {
+    const scopes = [...commonScopes];
     if ((event.target as HTMLInputElement).checked) {
+      scopes.push(
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.send',
+      );
+
+      if (oAuthSettings.googleCalendarSyncEnabled) {
+        scopes.push('https://www.googleapis.com/auth/calendar.readonly');
+      }
+
       const res = await signIn(
         'google',
         { callbackUrl: '/settings?tab=oauth' },
         {
           prompt: 'login',
-          scope:
-            'openid email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send',
+          scope: scopes.join(' '),
         },
       );
     } else {
@@ -57,13 +66,22 @@ export const AuthPanel = () => {
 
   const handleSyncGoogleCalendarClick = async (event: ChangeEvent) => {
     if ((event.target as HTMLInputElement).checked) {
+      const scopes = [...commonScopes];
+
+      if (oAuthSettings.gmailSyncEnabled) {
+        scopes.push(
+          'https://www.googleapis.com/auth/gmail.readonly',
+          'https://www.googleapis.com/auth/gmail.send',
+        );
+      }
+      scopes.push('https://www.googleapis.com/auth/calendar.readonly');
+
       const res = await signIn(
         'google',
         { callbackUrl: '/settings?tab=oauth' },
         {
           prompt: 'login',
-          scope:
-            'openid email profile https://www.googleapis.com/auth/calendar.events',
+          scope: scopes.join(' '),
         },
       );
     } else {
@@ -98,8 +116,7 @@ export const AuthPanel = () => {
           <br />
           <Text>
             Enable OAuth Integration to get access to your google workspace
-            emails
-            {/*and calendar events*/}
+            emails and calendar events
           </Text>
           <br />
           <Flex direction={'column'} gap={2} width={'250px'}>
@@ -117,23 +134,23 @@ export const AuthPanel = () => {
                 onChange={(event) => handleSyncGoogleMailClick(event)}
               ></Switch>
             </Flex>
-            {/*<Flex justifyContent={'space-between'}>*/}
-            {/*  <Flex gap='1' align='center'>*/}
-            {/*    <Icons.GOOGLE_CALENDAR boxSize='6' />*/}
-            {/*    <FormLabel*/}
-            {/*      htmlFor={'changeGoogleCalendarSyncSwitchButton'}*/}
-            {/*      mb='0'*/}
-            {/*    >*/}
-            {/*      Sync Google Calendar*/}
-            {/*    </FormLabel>*/}
-            {/*  </Flex>*/}
-            {/*  <Switch*/}
-            {/*    id={'changeGoogleCalendarSyncSwitchButton'}*/}
-            {/*    isChecked={oAuthSettings.googleCalendarSyncEnabled}*/}
-            {/*    colorScheme='green'*/}
-            {/*    onChange={(event) => handleSyncGoogleCalendarClick(event)}*/}
-            {/*  ></Switch>*/}
-            {/*</Flex>*/}
+            <Flex justifyContent={'space-between'}>
+              <Flex gap='1' align='center'>
+                <Icons.GOOGLE_CALENDAR boxSize='6' />
+                <FormLabel
+                  htmlFor={'changeGoogleCalendarSyncSwitchButton'}
+                  mb='0'
+                >
+                  Sync Google Calendar
+                </FormLabel>
+              </Flex>
+              <Switch
+                id={'changeGoogleCalendarSyncSwitchButton'}
+                isChecked={oAuthSettings.googleCalendarSyncEnabled}
+                colorScheme='green'
+                onChange={(event) => handleSyncGoogleCalendarClick(event)}
+              ></Switch>
+            </Flex>
           </Flex>
         </CardBody>
       </Card>

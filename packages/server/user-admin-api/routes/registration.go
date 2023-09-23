@@ -205,7 +205,7 @@ func isRequestEnablingGmailSync(signInRequest model.SignInRequest) bool {
 }
 
 func isRequestEnablingGoogleCalendarSync(signInRequest model.SignInRequest) bool {
-	if strings.Contains(signInRequest.OAuthToken.Scope, "calendar.events") {
+	if strings.Contains(signInRequest.OAuthToken.Scope, "calendar") {
 		return true
 	}
 	return false

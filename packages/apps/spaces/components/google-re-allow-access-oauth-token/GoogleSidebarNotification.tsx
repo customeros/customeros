@@ -33,7 +33,7 @@ export const GoogleSidebarNotification = () => {
           );
         }
         if (res.googleCalendarSyncEnabled) {
-          scopes.push('https://www.googleapis.com/auth/calendar.events');
+          scopes.push('https://www.googleapis.com/auth/calendar');
         }
 
         await signIn(
