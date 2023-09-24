@@ -10,12 +10,16 @@ import (
 type Repositories struct {
 	OAuthRepositories *authRepository.Repositories
 
-	TenantRepository                   TenantRepository
-	UserRepository                     UserRepository
-	EmailRepository                    EmailRepository
-	ApiKeyRepository                   ApiKeyRepository
+	TenantRepository TenantRepository
+	UserRepository   UserRepository
+	EmailRepository  EmailRepository
+	ApiKeyRepository ApiKeyRepository
+
 	UserGmailImportPageTokenRepository UserGmailImportPageTokenRepository
-	RawEmailRepository                 RawEmailRepository
+	UserGCalImportStateRepository      UserGCalImportStateRepository
+
+	RawEmailRepository         RawEmailRepository
+	RawCalendarEventRepository RawCalendarEventRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
@@ -23,12 +27,16 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 
 		OAuthRepositories: authRepository.InitRepositories(gormDb),
 
-		TenantRepository:                   NewTenantRepository(driver),
-		UserRepository:                     NewUserRepository(driver),
-		EmailRepository:                    NewEmailRepository(driver),
-		ApiKeyRepository:                   NewApiKeyRepository(gormDb),
+		TenantRepository: NewTenantRepository(driver),
+		UserRepository:   NewUserRepository(driver),
+		EmailRepository:  NewEmailRepository(driver),
+		ApiKeyRepository: NewApiKeyRepository(gormDb),
+
 		UserGmailImportPageTokenRepository: NewUserGmailImportPageTokenRepository(gormDb),
-		RawEmailRepository:                 NewRawEmailRepository(gormDb),
+		UserGCalImportStateRepository:      NewUserGCalImportStateRepository(gormDb),
+
+		RawEmailRepository:         NewRawEmailRepository(gormDb),
+		RawCalendarEventRepository: NewRawCalendarEventRepository(gormDb),
 	}
 
 	var err error
@@ -39,6 +47,15 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 	}
 
 	err = gormDb.AutoMigrate(&entity.RawEmail{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = gormDb.AutoMigrate(&entity.UserGCalImportState{})
+	if err != nil {
+		panic(err)
+	}
+	err = gormDb.AutoMigrate(&entity.RawCalendarEvent{})
 	if err != nil {
 		panic(err)
 	}

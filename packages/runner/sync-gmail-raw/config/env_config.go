@@ -31,6 +31,10 @@ type Config struct {
 	SyncData struct {
 		CronSync  string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
 		BatchSize int64  `env:"BATCH_SIZE" envDefault:"100"`
+
+		GoogleCalendarReadBatchSize int64  `env:"GOOGLE_CALENDAR_READ_BATCH_SIZE" envDefault:"100"`
+		GoogleCalendarSyncStartDate string `env:"GOOGLE_CALENDAR_SYNC_START_DATE,required"`
+		GoogleCalendarSyncStopDate  string `env:"GOOGLE_CALENDAR_SYNC_STOP_DATE,required"`
 	}
 
 	Logger logger.Config

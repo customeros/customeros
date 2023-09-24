@@ -13,8 +13,12 @@ type Services struct {
 	Repositories *repository.Repositories
 
 	UserService   UserService
-	EmailService  EmailService
 	TenantService TenantService
+
+	GmailService GmailService
+
+	EmailService   EmailService
+	MeetingService MeetingService
 }
 
 func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.Config) *Services {
@@ -24,7 +28,9 @@ func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.
 	services.Repositories = repository.InitRepos(driver, gormDb)
 	services.TenantService = NewTenantService(services.Repositories)
 	services.UserService = NewUserService(services.Repositories)
+	services.GmailService = NewGmailService(cfg, services.Repositories, services)
 	services.EmailService = NewEmailService(cfg, services.Repositories, services)
+	services.MeetingService = NewMeetingService(cfg, services.Repositories, services)
 
 	return services
 }
