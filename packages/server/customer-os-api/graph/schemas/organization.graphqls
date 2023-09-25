@@ -133,43 +133,43 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
-    name: String!
-    description: String
-    note:        String
-    domains:     [String!]
-    website:     String
-    industry:    String
-    subIndustry: String
+    name:          String!
+    description:   String
+    note:          String
+    domains:       [String!]
+    website:       String
+    industry:      String
+    subIndustry:   String
     industryGroup: String
-    isPublic:    Boolean
-    customFields: [CustomFieldInput!] @deprecated
-    fieldSets: [FieldSetInput!] @deprecated
-    templateId: ID @deprecated
-    market:      Market
-    employees:   Int64
-    appSource: String
+    isPublic:      Boolean
+    customFields:  [CustomFieldInput!]
+    fieldSets:     [FieldSetInput!] @deprecated
+    templateId:    ID @deprecated
+    market:        Market
+    employees:     Int64
+    appSource:     String
 }
 
 input OrganizationUpdateInput {
-    id:          ID!
+    id:   ID!
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:       Boolean
-    name:        String!
-    description: String
-    note:        String
-    domains:     [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
-    website:     String
-    industry:    String
-    subIndustry: String
-    industryGroup: String
-    isPublic:    Boolean
-    market:      Market
-    employees:   Int64
-    targetAudience: String
-    valueProposition: String
-    lastFundingRound: FundingRound
+    patch:             Boolean
+    name:              String!
+    description:       String
+    note:              String
+    domains:           [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    website:           String
+    industry:          String
+    subIndustry:       String
+    industryGroup:     String
+    isPublic:          Boolean
+    market:            Market
+    employees:         Int64
+    targetAudience:    String
+    valueProposition:  String
+    lastFundingRound:  FundingRound
     lastFundingAmount: String
 }
 

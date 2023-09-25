@@ -410,7 +410,7 @@ type CustomFieldTemplateInput struct {
 	Name      string                  `json:"name"`
 	Type      CustomFieldTemplateType `json:"type"`
 	Order     int                     `json:"order"`
-	Mandatory bool                    `json:"mandatory"`
+	Mandatory *bool                   `json:"mandatory,omitempty"`
 	Length    *int                    `json:"length,omitempty"`
 	Min       *int                    `json:"min,omitempty"`
 	Max       *int                    `json:"max,omitempty"`
