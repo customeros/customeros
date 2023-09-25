@@ -24,13 +24,13 @@ func StartCronJobs(config *config.Config, services *service.Services) *cron.Cron
 
 	err := c.AddFunc(config.SyncData.CronSync, func() {
 
-		//go func(jobLock *sync.Mutex) {
-		//	lockAndRunJob(jobLock, config, services, syncEmailsForAllTenantsWithServiceAccount)
-		//}(&jobLock1)
-		//
-		//go func(jobLock *sync.Mutex) {
-		//	lockAndRunJob(jobLock, config, services, syncEmailsForOauthTokens)
-		//}(&jobLock2)
+		go func(jobLock *sync.Mutex) {
+			lockAndRunJob(jobLock, config, services, syncEmailsForAllTenantsWithServiceAccount)
+		}(&jobLock1)
+
+		go func(jobLock *sync.Mutex) {
+			lockAndRunJob(jobLock, config, services, syncEmailsForOauthTokens)
+		}(&jobLock2)
 
 		//go func(jobLock *sync.Mutex) {
 		//	lockAndRunJob(jobLock, config, services, syncCalendarEventsForAllTenantsWithServiceAccount)
