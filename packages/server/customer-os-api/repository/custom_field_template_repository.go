@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type CustomFieldTemplateRepository interface {
 	Merge(ctx context.Context, tenant string, inputEntity entity.CustomFieldTemplateEntity) (*dbtype.Node, error)
+	GetById(ctx context.Context, id string) (*dbtype.Node, error)
 	createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error
 	createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error
 	FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error)
@@ -201,4 +204,32 @@ func (r *customFieldTemplateRepository) FindByCustomFieldId(ctx context.Context,
 		}
 		return queryResult.Collect(ctx)
 	})
+}
+
+func (r *customFieldTemplateRepository) GetById(ctx context.Context, id string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.GetById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("customFieldTemplateId", id))
+
+	query := fmt.Sprintf(`MATCH (cft:CustomFieldTemplate_%s {id:$id}) RETURN cft`, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"id": id,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
 }

@@ -26,6 +26,7 @@ type OrganizationGrpcServiceClient interface {
 	LinkPhoneNumberToOrganization(ctx context.Context, in *LinkPhoneNumberToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization(ctx context.Context, in *LinkEmailToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkDomainToOrganization(ctx context.Context, in *LinkDomainToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error)
 	UpdateOrganizationRenewalLikelihood(ctx context.Context, in *OrganizationRenewalLikelihoodRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationRenewalForecast(ctx context.Context, in *OrganizationRenewalForecastRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationBillingDetails(ctx context.Context, in *OrganizationBillingDetailsRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -72,6 +73,15 @@ func (c *organizationGrpcServiceClient) LinkEmailToOrganization(ctx context.Cont
 func (c *organizationGrpcServiceClient) LinkDomainToOrganization(ctx context.Context, in *LinkDomainToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/LinkDomainToOrganization", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationGrpcServiceClient) UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error) {
+	out := new(CustomFieldIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpsertCustomFieldToOrganization", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +150,7 @@ type OrganizationGrpcServiceServer interface {
 	LinkPhoneNumberToOrganization(context.Context, *LinkPhoneNumberToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization(context.Context, *LinkEmailToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkDomainToOrganization(context.Context, *LinkDomainToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error)
 	UpdateOrganizationRenewalLikelihood(context.Context, *OrganizationRenewalLikelihoodRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationRenewalForecast(context.Context, *OrganizationRenewalForecastRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationBillingDetails(context.Context, *OrganizationBillingDetailsRequest) (*OrganizationIdGrpcResponse, error)
@@ -163,6 +174,9 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkEmailToOrganization(contex
 }
 func (UnimplementedOrganizationGrpcServiceServer) LinkDomainToOrganization(context.Context, *LinkDomainToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkDomainToOrganization not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertCustomFieldToOrganization not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationRenewalLikelihood(context.Context, *OrganizationRenewalLikelihoodRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationRenewalLikelihood not implemented")
@@ -262,6 +276,24 @@ func _OrganizationGrpcService_LinkDomainToOrganization_Handler(srv interface{}, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationGrpcServiceServer).LinkDomainToOrganization(ctx, req.(*LinkDomainToOrganizationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CustomFieldForOrganizationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).UpsertCustomFieldToOrganization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/UpsertCustomFieldToOrganization",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).UpsertCustomFieldToOrganization(ctx, req.(*CustomFieldForOrganizationGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -396,6 +428,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkDomainToOrganization",
 			Handler:    _OrganizationGrpcService_LinkDomainToOrganization_Handler,
+		},
+		{
+			MethodName: "UpsertCustomFieldToOrganization",
+			Handler:    _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler,
 		},
 		{
 			MethodName: "UpdateOrganizationRenewalLikelihood",

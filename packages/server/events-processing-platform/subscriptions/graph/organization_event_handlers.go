@@ -452,3 +452,36 @@ func (h *GraphOrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Cont
 
 	return nil
 }
+
+func (h *GraphOrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnUpsertCustomField")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationUpsertCustomField
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	customFieldExists, err := h.Repositories.CustomFieldRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to check if custom field exists: %s", err.Error())
+		return err
+	}
+	if !customFieldExists {
+		err = h.Repositories.CustomFieldRepository.AddCustomFieldToOrganization(ctx, eventData.Tenant, organizationId, eventData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to add custom field to organization: %s", err.Error())
+			return err
+		}
+	} else {
+		//TODO implement update custom field
+	}
+
+	return nil
+}

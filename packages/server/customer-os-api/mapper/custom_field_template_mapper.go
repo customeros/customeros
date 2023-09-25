@@ -46,3 +46,14 @@ func MapEntitiesToCustomFieldTemplates(entities *entity.CustomFieldTemplateEntit
 	}
 	return customFieldTemplates
 }
+
+func MapTemplateTypeToFieldDataType(templateType string) *model.CustomFieldDataType {
+	switch templateType {
+	case model.CustomFieldTemplateTypeText.String():
+		return utils.ToPtr(model.CustomFieldDataTypeText)
+	case model.CustomFieldTemplateTypeLink.String():
+		return utils.ToPtr(model.CustomFieldDataTypeText)
+	default:
+		return utils.ToPtr(model.CustomFieldDataTypeText)
+	}
+}

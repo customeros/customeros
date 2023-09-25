@@ -362,3 +362,7 @@ func ExtractDomainFromUrl(inputURL string) string {
 
 	return strings.ToLower(domain)
 }
+
+func IsEmptyString(s *string) bool {
+	return s == nil || *s == ""
+}

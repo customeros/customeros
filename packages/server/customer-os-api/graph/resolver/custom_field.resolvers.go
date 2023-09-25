@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -100,7 +101,7 @@ func (r *mutationResolver) CustomFieldMergeToContact(ctx context.Context, contac
 	result, err := r.Services.CustomFieldService.MergeCustomFieldToContact(ctx, contactID, mapper.MapCustomFieldInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add custom field <%s> to contact <%s>", input.Name, contactID)
+		graphql.AddErrorf(ctx, "Could not add custom field <%s> to contact %s", utils.IfNotNilString(input.Name), contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToCustomField(result), nil
@@ -168,7 +169,7 @@ func (r *mutationResolver) CustomFieldMergeToFieldSet(ctx context.Context, conta
 	result, err := r.Services.CustomFieldService.MergeCustomFieldToFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not merge custom field <%s> to contact <%s>, fields set <%s>", input.Name, contactID, fieldSetID)
+		graphql.AddErrorf(ctx, "Could not merge custom field <%s> to contact <%s>, fields set <%s>", utils.IfNotNilString(input.Name), contactID, fieldSetID)
 		return nil, err
 	}
 	return mapper.MapEntityToCustomField(result), nil
