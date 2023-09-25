@@ -16,7 +16,7 @@ export const TagSuggestor: FC<{
     useMentionAtom({
       items: options,
       // @ts-expect-error space is not included in types but it's a valid option
-      submitKeys: ['Space'],
+      submitKeys: ['Space', 'Enter'],
     });
 
   useEffect(() => {
