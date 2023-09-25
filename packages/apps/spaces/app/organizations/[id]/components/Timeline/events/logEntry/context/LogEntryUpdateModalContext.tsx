@@ -65,6 +65,7 @@ export const LogEntryUpdateModalContextProvider = ({
         updateLogEntryMutation.mutate({
           id: event.id,
           input: {
+            contentType: 'text/html',
             ...LogEntryUpdateFormDto.toPayload({
               ...state.values,
               [action.payload.name]: action.payload.value,

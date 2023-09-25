@@ -3,7 +3,7 @@ import { Text } from '@ui/typography/Text';
 import { Card, CardBody } from '@ui/presentation/Card';
 
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Image } from '@ui/media/Image';
 import noteIcon from 'public/images/event-ill-log-stub.png';
 import { Box } from '@spaces/ui/layout/Box';
@@ -18,41 +18,38 @@ interface LogEntryStubProps {
   data: LogEntryWithAliases;
 }
 
-const getLogEntryIcon = (type: string | null | undefined) => {
-  switch (type) {
-    case 'email':
-      return <Mail01 color='gray.500' boxSize={3} />;
-    case 'meeting':
-      return <Calendar color='gray.500' boxSize={3} />;
-    case 'voicemail':
-    case 'call':
-      return <Phone color='gray.500' boxSize={3} />;
-    case 'text-message':
-      return <MessageTextSquare01 color='gray.500' boxSize={3} />;
-
-    default:
-      return null;
-  }
-};
-
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
   const { openModal } = useTimelineEventPreviewContext();
   const fullName = `${data.logEntryCreatedBy?.firstName} ${data.logEntryCreatedBy?.lastName}`;
+  const getLogEntryIcon = useCallback((type: string | null) => {
+    switch (type) {
+      case 'email':
+        return <Mail01 color='gray.500' boxSize={3} />;
+      case 'meeting':
+        return <Calendar color='gray.500' boxSize={3} />;
+      case 'voicemail':
+      case 'call':
+        return <Phone color='gray.500' boxSize={3} />;
+      case 'text-message':
+        return <MessageTextSquare01 color='gray.500' boxSize={3} />;
+
+      default:
+        return null;
+    }
+  }, []);
+
   const getInlineTags = useCallback(() => {
     if (data.tags?.[0]?.name) {
       return data.tags?.[0]?.name;
     }
-    if (data.contentType !== 'text/html') {
-      return null;
-    }
     const parser = new DOMParser();
-    const doc = parser.parseFromString(`${data?.content}`, 'text/html');
+    const doc = parser.parseFromString(`<p>${data?.content}</p>`, 'text/html');
     const element = doc.querySelector('.customeros-tag');
-
     // Return the inner HTML of the found element
     return element?.innerHTML || null;
-  }, []);
-  const logEntryIcon = (() => {
+  }, [data.tags, data.content]);
+
+  const logEntryIcon = useMemo(() => {
     const firstTag = getInlineTags();
     const icon = getLogEntryIcon(firstTag);
 
@@ -72,8 +69,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
         {icon}
       </Flex>
     );
-  })();
-
+  }, [getInlineTags]);
   return (
     <Card
       variant='outline'
