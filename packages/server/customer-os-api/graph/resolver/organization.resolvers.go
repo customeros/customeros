@@ -82,6 +82,20 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		r.log.Errorf("Error from events processing %s", err.Error())
 		return nil, nil
 	}
+
+	if len(input.CustomFields) > 0 || len(input.Domains) > 0 {
+		maxRetry := 10 // 5 seconds
+		var findOrgErr error
+		var organizationEntity *entity.OrganizationEntity
+		for i := 0; i < maxRetry; i++ {
+			organizationEntity, findOrgErr = r.Services.OrganizationService.GetById(ctx, response.Id)
+			if organizationEntity != nil && findOrgErr == nil {
+				break
+			}
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+
 	if len(input.Domains) > 0 {
 		for _, domain := range input.Domains {
 			if domain != "" {
@@ -136,7 +150,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 				SourceFields: &commongrpc.SourceFields{
 					Source:        string(entity.DataSourceOpenline),
 					SourceOfTruth: string(entity.DataSourceOpenline),
-					AppSource:     utils.IfNotNilString(input.AppSource),
+					AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 				},
 			})
 			if err != nil {
@@ -146,22 +160,9 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		}
 	}
 
-	maxRetry := 5
-	err = nil
-	var organizationEntity *entity.OrganizationEntity
-	for i := 0; i < maxRetry; i++ {
-		time.Sleep(200 * time.Millisecond)
-		organizationEntity, err = r.Services.OrganizationService.GetById(ctx, response.Id)
-		if organizationEntity != nil && err == nil {
-			return mapper.MapEntityToOrganization(organizationEntity), nil
-		}
-	}
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
 	return &model.Organization{
 		ID: response.Id,
-	}, err
+	}, nil
 }
 
 // OrganizationUpdate is the resolver for the organization_Update field.
