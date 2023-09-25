@@ -237,7 +237,7 @@ func syncEmailsForOauthTokens(config *config.Config, services *service.Services)
 	for _, tokenEntity := range tokenEntities {
 
 		if !tokenEntity.GmailSyncEnabled {
-			return
+			continue
 		}
 
 		wg.Add(1)
@@ -287,7 +287,7 @@ func syncCalendarEventsForOauthTokens(config *config.Config, services *service.S
 	for _, tokenEntity := range tokenEntities {
 
 		if !tokenEntity.GoogleCalendarSyncEnabled {
-			return
+			continue
 		}
 
 		wg.Add(1)
