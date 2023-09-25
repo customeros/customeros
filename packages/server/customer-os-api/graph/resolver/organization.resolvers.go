@@ -18,8 +18,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	orggrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go/log"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // OrganizationCreate is the resolver for the organization_Create field.
@@ -27,6 +29,33 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	// Check and prepare custom fields
+	for _, field := range input.CustomFields {
+		if utils.IsEmptyString(field.TemplateID) && utils.IsEmptyString(field.Name) {
+			graphql.AddErrorf(ctx, "Custom field template id or name is required")
+			return nil, nil
+		}
+		if utils.IsEmptyString(field.TemplateID) && field.Datatype == nil {
+			graphql.AddErrorf(ctx, "Custom field template id or data type is required")
+			return nil, nil
+		}
+		if !utils.IsEmptyString(field.TemplateID) {
+			customFieldTemplate, err := r.Services.CustomFieldTemplateService.GetById(ctx, *field.TemplateID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Custom field template %s not found", *field.TemplateID)
+				return nil, nil
+			}
+			if utils.IsEmptyString(field.Name) {
+				field.Name = &customFieldTemplate.Name
+			}
+			if field.Datatype == nil {
+				field.Datatype = mapper.MapTemplateTypeToFieldDataType(customFieldTemplate.Type)
+			}
+		}
+	}
+
 	var err error
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
 		Tenant:        common.GetTenantFromContext(ctx),
@@ -40,10 +69,12 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		IsPublic:      utils.IfNotNilBool(input.IsPublic),
 		Market:        mapper.MapMarketFromModel(input.Market),
 		Employees:     utils.IfNotNilInt64(input.Employees),
-		Source:        string(entity.DataSourceOpenline),
-		SourceOfTruth: string(entity.DataSourceOpenline),
-		AppSource:     utils.IfNotNilString(input.AppSource),
-		Note:          utils.IfNotNilString(input.Note),
+		SourceFields: &commongrpc.SourceFields{
+			Source:        string(entity.DataSourceOpenline),
+			SourceOfTruth: string(entity.DataSourceOpenline),
+			AppSource:     utils.IfNotNilString(input.AppSource),
+		},
+		Note: utils.IfNotNilString(input.Note),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -67,8 +98,55 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			}
 		}
 	}
+	if len(input.CustomFields) > 0 {
+		for _, field := range input.CustomFields {
+			customFieldEntity := mapper.MapCustomFieldInputToEntity(field)
+			var customFieldValue orggrpc.CustomFieldValue
+			customFieldValue.StringValue = customFieldEntity.Value.Str
+			customFieldValue.BoolValue = customFieldEntity.Value.Bool
+			if customFieldEntity.Value.Time != nil {
+				timestamppb.New(*customFieldEntity.Value.Time)
+			}
+			customFieldValue.IntegerValue = customFieldEntity.Value.Int
+			customFieldValue.DecimalValue = customFieldEntity.Value.Float
 
-	maxRetry := 3
+			var customFieldDataType = orggrpc.CustomFieldDataType_TEXT
+			if field.Datatype != nil {
+				switch *field.Datatype {
+				case model.CustomFieldDataTypeText:
+					customFieldDataType = orggrpc.CustomFieldDataType_TEXT
+				case model.CustomFieldDataTypeBool:
+					customFieldDataType = orggrpc.CustomFieldDataType_BOOL
+				case model.CustomFieldDataTypeDatetime:
+					customFieldDataType = orggrpc.CustomFieldDataType_DATETIME
+				case model.CustomFieldDataTypeInteger:
+					customFieldDataType = orggrpc.CustomFieldDataType_INTEGER
+				case model.CustomFieldDataTypeDecimal:
+					customFieldDataType = orggrpc.CustomFieldDataType_DECIMAL
+				}
+			}
+			_, err = r.Clients.OrganizationClient.UpsertCustomFieldToOrganization(ctx, &orggrpc.CustomFieldForOrganizationGrpcRequest{
+				Tenant:                common.GetTenantFromContext(ctx),
+				OrganizationId:        response.Id,
+				UserId:                common.GetUserIdFromContext(ctx),
+				CustomFieldName:       customFieldEntity.Name,
+				CustomFieldDataType:   customFieldDataType,
+				CustomFieldTemplateId: customFieldEntity.TemplateId,
+				CustomFieldValue:      &customFieldValue,
+				SourceFields: &commongrpc.SourceFields{
+					Source:        string(entity.DataSourceOpenline),
+					SourceOfTruth: string(entity.DataSourceOpenline),
+					AppSource:     utils.IfNotNilString(input.AppSource),
+				},
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				r.log.Errorf("Failed to upsert custom field %s to organization %s", *field.Name, response.Id)
+			}
+		}
+	}
+
+	maxRetry := 5
 	err = nil
 	var organizationEntity *entity.OrganizationEntity
 	for i := 0; i < maxRetry; i++ {
@@ -111,7 +189,9 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		LastFundingAmount: utils.IfNotNilString(input.LastFundingAmount),
 		LastFundingRound:  mapper.MapFundingRoundFromModel(input.LastFundingRound),
 		Note:              utils.IfNotNilString(input.Note),
-		SourceOfTruth:     string(entity.DataSourceOpenline),
+		SourceFields: &commongrpc.SourceFields{
+			SourceOfTruth: string(entity.DataSourceOpenline),
+		},
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

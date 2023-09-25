@@ -38,6 +38,8 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, command event
 		return a.showOrganization(ctx, c)
 	case *cmd.RefreshLastTouchpointCommand:
 		return a.refreshLastTouchpoint(ctx, c)
+	case *cmd.UpsertCustomFieldCommand:
+		return a.upsertCustomField(ctx, c)
 	default:
 		return errors.New("invalid command type")
 	}
@@ -365,6 +367,43 @@ func (a *OrganizationAggregate) refreshLastTouchpoint(ctx context.Context, comma
 	}
 
 	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, command *cmd.UpsertCustomFieldCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.upsertCustomField")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(command.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(command.UpdatedAt, createdAtNotNil)
+	sourceFields := command.Source
+	if sourceFields.Source == "" {
+		sourceFields.Source = constants.SourceOpenline
+	}
+	if sourceFields.SourceOfTruth == "" {
+		if val, ok := a.Organization.CustomFields[command.CustomFieldData.Id]; ok {
+			sourceFields.SourceOfTruth = val.Source.SourceOfTruth
+		} else {
+			sourceFields.SourceOfTruth = constants.SourceOpenline
+		}
+	}
+	if sourceFields.AppSource == "" {
+		sourceFields.AppSource = constants.AppSourceEventProcessingPlatform
+	}
+
+	found := false
+	if _, ok := a.Organization.CustomFields[command.CustomFieldData.Id]; ok {
+		found = true
+	}
+
+	event, err := events.NewOrganizationUpsertCustomField(a, sourceFields, createdAtNotNil, updatedAtNotNil, command.CustomFieldData, found)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationUpsertCustomField")
+	}
+	aggregate.EnrichEventWithMetadata(&event, &span, command.Tenant, command.UserID)
 
 	return a.Apply(event)
 }

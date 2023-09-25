@@ -20,7 +20,7 @@ func MapCustomFieldInputsToEntities(inputs []*model.CustomFieldInput) *entity.Cu
 func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFieldEntity {
 	customFieldEntity := entity.CustomFieldEntity{
 		Id:            input.ID,
-		Name:          input.Name,
+		Name:          utils.IfNotNilString(input.Name),
 		Value:         input.Value,
 		DataType:      input.Datatype.String(),
 		TemplateId:    input.TemplateID,

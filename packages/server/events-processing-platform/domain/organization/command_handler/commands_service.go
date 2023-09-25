@@ -22,6 +22,7 @@ type OrganizationCommands struct {
 	HideOrganizationCommand        HideOrganizationCommandHandler
 	ShowOrganizationCommand        ShowOrganizationCommandHandler
 	RefreshLastTouchpointCommand   RefreshLastTouchpointCommandHandler
+	UpsertCustomFieldCommand       UpsertCustomFieldCommandHandler
 }
 
 func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *OrganizationCommands {
@@ -40,5 +41,6 @@ func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstor
 		HideOrganizationCommand:        NewHideOrganizationCommandHandler(log, es),
 		ShowOrganizationCommand:        NewShowOrganizationCommandHandler(log, es),
 		RefreshLastTouchpointCommand:   NewRefreshLastTouchpointCommandHandler(log, es),
+		UpsertCustomFieldCommand:       NewUpsertCustomFieldCommandHandler(log, es),
 	}
 }

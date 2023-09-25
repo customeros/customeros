@@ -31,7 +31,8 @@ func main() {
 	//testHideOrganization()
 	//testShowOrganization()
 	//testCreateLogEntry()
-	testUpdateLogEntry()
+	//testUpdateLogEntry()
+	testAddCustomField()
 }
 
 func InitClients() {
@@ -85,7 +86,7 @@ func testCreateOrganization() {
 
 func testUpdateOrganization() {
 	tenant := "openline"
-	organizationId := "ccc"
+	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
 	website := ""
 
 	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
@@ -150,6 +151,24 @@ func testUpdateLogEntry() {
 		ContentType: "text/plain2",
 		UserId:      userId,
 		StartedAt:   timestamppb.New(utils.Now()),
+	})
+	print(result)
+}
+
+func testAddCustomField() {
+	tenant := "openline"
+	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
+	userId := "development@openline.ai"
+	result, _ := clients.OrganizationClient.UpsertCustomFieldToOrganization(context.TODO(), &organization_grpc_service.CustomFieldForOrganizationGrpcRequest{
+		Tenant:                tenant,
+		OrganizationId:        organizationId,
+		UserId:                userId,
+		CustomFieldTemplateId: utils.StringPtr("c70cd2fb-1c31-46fd-851c-2e47ceba508f"),
+		CustomFieldName:       "CF1",
+		CustomFieldDataType:   organization_grpc_service.CustomFieldDataType_TEXT,
+		CustomFieldValue: &organization_grpc_service.CustomFieldValue{
+			StringValue: utils.StringPtr("super secret value"),
+		},
 	})
 	print(result)
 }

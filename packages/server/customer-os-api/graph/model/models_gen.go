@@ -376,14 +376,11 @@ type CustomFieldEntityType struct {
 // Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
 type CustomFieldInput struct {
-	// The unique ID associated with the custom field.
 	ID *string `json:"id,omitempty"`
 	// The name of the custom field.
-	// **Required**
-	Name string `json:"name"`
+	Name *string `json:"name,omitempty"`
 	// Datatype of the custom field.
-	// **Required**
-	Datatype CustomFieldDataType `json:"datatype"`
+	Datatype *CustomFieldDataType `json:"datatype,omitempty"`
 	// The value of the custom field.
 	// **Required**
 	Value      AnyTypeValue `json:"value"`

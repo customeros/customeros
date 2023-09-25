@@ -16,6 +16,7 @@ import (
 
 type CustomFieldTemplateService interface {
 	Merge(ctx context.Context, inputEntity *entity.CustomFieldTemplateEntity) (*entity.CustomFieldTemplateEntity, error)
+	GetById(ctx context.Context, id string) (*entity.CustomFieldTemplateEntity, error)
 	FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*entity.CustomFieldTemplateEntities, error)
 	FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error)
 	FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*entity.CustomFieldTemplateEntity, error)
@@ -24,20 +25,6 @@ type CustomFieldTemplateService interface {
 type customFieldTemplateService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-}
-
-func (s *customFieldTemplateService) Merge(ctx context.Context, inputEntity *entity.CustomFieldTemplateEntity) (*entity.CustomFieldTemplateEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateService.Merge")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("inputEntity", inputEntity))
-
-	customFieldTemplateNodePtr, err := s.repositories.CustomFieldTemplateRepository.Merge(ctx, common.GetTenantFromContext(ctx), *inputEntity)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.mapDbNodeToCustomFieldTemplate(*customFieldTemplateNodePtr), nil
 }
 
 func NewCustomFieldTemplateService(log logger.Logger, repositories *repository.Repositories) CustomFieldTemplateService {
@@ -80,6 +67,34 @@ func (s *customFieldTemplateService) FindLinkedWithCustomField(ctx context.Conte
 		return nil, nil
 	}
 	return s.mapDbNodeToCustomFieldTemplate((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node)), nil
+}
+
+func (s *customFieldTemplateService) Merge(ctx context.Context, inputEntity *entity.CustomFieldTemplateEntity) (*entity.CustomFieldTemplateEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateService.Merge")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("inputEntity", inputEntity))
+
+	customFieldTemplateNodePtr, err := s.repositories.CustomFieldTemplateRepository.Merge(ctx, common.GetTenantFromContext(ctx), *inputEntity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToCustomFieldTemplate(*customFieldTemplateNodePtr), nil
+}
+
+func (s *customFieldTemplateService) GetById(ctx context.Context, id string) (*entity.CustomFieldTemplateEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("customFieldTemplateId", id))
+
+	customFieldTemplateDbNode, err := s.repositories.CustomFieldTemplateRepository.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToCustomFieldTemplate(*customFieldTemplateDbNode), nil
 }
 
 func (s *customFieldTemplateService) mapDbNodeToCustomFieldTemplate(dbNode dbtype.Node) *entity.CustomFieldTemplateEntity {

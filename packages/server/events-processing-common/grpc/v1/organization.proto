@@ -62,6 +62,36 @@ message LinkDomainToOrganizationGrpcRequest {
   string userId = 4;
 }
 
+enum CustomFieldDataType {
+  TEXT = 0;
+  BOOL = 1;
+  DATETIME = 2;
+  INTEGER = 3;
+  DECIMAL = 4;
+}
+
+message CustomFieldValue {
+  optional string stringValue = 1;
+  optional bool boolValue = 2;
+  optional google.protobuf.Timestamp  datetimeValue = 3;
+  optional int64 integerValue = 4;
+  optional double decimalValue = 5;
+}
+
+message CustomFieldForOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string userId = 3;
+  string customFieldId = 4;
+  string customFieldName = 5;
+  CustomFieldValue customFieldValue = 6;
+  CustomFieldDataType customFieldDataType = 7;
+  optional string customFieldTemplateId = 8;
+  SourceFields sourceFields = 9;
+  google.protobuf.Timestamp  createdAt = 10;
+  google.protobuf.Timestamp  updatedAt = 11;
+}
+
 enum Likelihood {
   NONE_LIKELIHOOD = 0;
   HIGH = 1;
@@ -114,11 +144,16 @@ message OrganizationIdGrpcResponse {
   string id = 1;
 }
 
+message CustomFieldIdGrpcResponse {
+  string id = 1;
+}
+
 service organizationGrpcService {
   rpc UpsertOrganization(UpsertOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
   rpc UpdateOrganizationRenewalLikelihood(OrganizationRenewalLikelihoodRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationRenewalForecast(OrganizationRenewalForecastRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationBillingDetails(OrganizationBillingDetailsRequest) returns (OrganizationIdGrpcResponse);

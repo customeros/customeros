@@ -7362,23 +7362,16 @@ Describes a custom, user-defined field associated with a ` + "`" + `Contact` + "
 **A ` + "`" + `create` + "`" + ` object.**
 """
 input CustomFieldInput {
-
-    """
-    The unique ID associated with the custom field.
-    """
-    id: ID
-
+    id: ID @deprecated
     """
     The name of the custom field.
-    **Required**
     """
-    name: String!
+    name: String
 
     """
     Datatype of the custom field.
-    **Required**
     """
-    datatype: CustomFieldDataType!
+    datatype: CustomFieldDataType
 
     """
     The value of the custom field.
@@ -55954,7 +55947,7 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -55963,7 +55956,7 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datatype"))
-			data, err := ec.unmarshalNCustomFieldDataType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx, v)
+			data, err := ec.unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -72081,6 +72074,22 @@ func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 		return graphql.Null
 	}
 	return ec._Country(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx context.Context, v interface{}) (*model.CustomFieldDataType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.CustomFieldDataType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldDataType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldInput, error) {

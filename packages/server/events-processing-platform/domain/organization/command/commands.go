@@ -218,3 +218,26 @@ func NewRefreshLastTouchpointCommand(tenant, orgId, userId string) *RefreshLastT
 		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
 	}
 }
+
+type UpsertCustomFieldCommand struct {
+	eventstore.BaseCommand
+	Source          common_models.Source
+	CreatedAt       *time.Time
+	UpdatedAt       *time.Time
+	CustomFieldData models.CustomField
+}
+
+func NewUpsertCustomFieldCommand(organizationId, tenant, source, sourceOfTruth, appSource, userId string,
+	createdAt, updatedAt *time.Time, customField models.CustomField) *UpsertCustomFieldCommand {
+	return &UpsertCustomFieldCommand{
+		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
+		Source: common_models.Source{
+			Source:        source,
+			SourceOfTruth: sourceOfTruth,
+			AppSource:     appSource,
+		},
+		CreatedAt:       createdAt,
+		UpdatedAt:       updatedAt,
+		CustomFieldData: customField,
+	}
+}

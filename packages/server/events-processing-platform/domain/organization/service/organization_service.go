@@ -276,6 +276,43 @@ func (s *organizationService) ShowOrganization(ctx context.Context, req *pb.Orga
 	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
 }
 
+func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Context, request *pb.CustomFieldForOrganizationGrpcRequest) (*pb.CustomFieldIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertCustomFieldToOrganization")
+	defer span.Finish()
+
+	customFieldId := request.CustomFieldId
+	if customFieldId == "" {
+		customFieldId = uuid.New().String()
+	}
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	customField := models.CustomField{
+		Id:         customFieldId,
+		Name:       request.CustomFieldName,
+		TemplateId: request.CustomFieldTemplateId,
+		CustomFieldValue: models.CustomFieldValue{
+			Str:     request.CustomFieldValue.StringValue,
+			Bool:    request.CustomFieldValue.BoolValue,
+			Time:    utils.TimestampProtoToTime(request.CustomFieldValue.DatetimeValue),
+			Int:     request.CustomFieldValue.IntegerValue,
+			Decimal: request.CustomFieldValue.DecimalValue,
+		},
+		CustomFieldDataType: mapper.MapCustomFieldDataType(request.CustomFieldDataType),
+	}
+
+	command := cmd.NewUpsertCustomFieldCommand(request.OrganizationId, request.Tenant,
+		sourceFields.Source, sourceFields.SourceOfTruth, sourceFields.AppSource, request.UserId,
+		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), customField)
+	if err := s.organizationCommands.UpsertCustomFieldCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
+		return nil, s.errResponse(err)
+	}
+
+	return &pb.CustomFieldIdGrpcResponse{Id: customFieldId}, nil
+}
+
 func (s *organizationService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }

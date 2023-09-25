@@ -2,6 +2,7 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -25,6 +26,7 @@ const (
 	OrganizationHideV1                    = "V1_ORGANIZATION_HIDE"
 	OrganizationShowV1                    = "V1_ORGANIZATION_SHOW"
 	OrganizationRefreshLastTouchpointV1   = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
+	OrganizationUpsertCustomFieldV1       = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
 )
 
 type OrganizationCreateEvent struct {
@@ -479,6 +481,48 @@ func NewOrganizationRefreshLastTouchpointEvent(aggregate eventstore.Aggregate) (
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshLastTouchpointV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationUpsertCustomField struct {
+	Tenant              string                  `json:"tenant" validate:"required"`
+	Source              string                  `json:"source,omitempty"`
+	SourceOfTruth       string                  `json:"sourceOfTruth,omitempty"`
+	AppSource           string                  `json:"appSource,omitempty"`
+	CreatedAt           time.Time               `json:"createdAt"`
+	UpdatedAt           time.Time               `json:"updatedAt"`
+	ExistsInEventStore  bool                    `json:"existsInEventStore"`
+	TemplateId          *string                 `json:"templateId,omitempty"`
+	CustomFieldId       string                  `json:"customFieldId"`
+	CustomFieldName     string                  `json:"customFieldName"`
+	CustomFieldDataType string                  `json:"customFieldDataType"`
+	CustomFieldValue    models.CustomFieldValue `json:"customFieldValue"`
+}
+
+func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields common_models.Source, createdAt, updatedAt time.Time, customField models.CustomField, foundInEventStore bool) (eventstore.Event, error) {
+	eventData := OrganizationUpsertCustomField{
+		Tenant:              aggregate.GetTenant(),
+		Source:              sourceFields.Source,
+		SourceOfTruth:       sourceFields.SourceOfTruth,
+		AppSource:           sourceFields.AppSource,
+		CreatedAt:           createdAt,
+		UpdatedAt:           updatedAt,
+		ExistsInEventStore:  foundInEventStore,
+		CustomFieldId:       customField.Id,
+		TemplateId:          customField.TemplateId,
+		CustomFieldName:     customField.Name,
+		CustomFieldDataType: string(customField.CustomFieldDataType),
+		CustomFieldValue:    customField.CustomFieldValue,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationUpsertCustomFieldV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

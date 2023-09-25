@@ -196,6 +196,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnOrganizationShow(ctx, evt)
 	case orgevents.OrganizationRefreshLastTouchpointV1:
 		return s.organizationEventHandler.OnRefreshLastTouchpoint(ctx, evt)
+	case orgevents.OrganizationUpsertCustomFieldV1:
+		return s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1:

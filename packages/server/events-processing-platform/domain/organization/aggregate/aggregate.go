@@ -54,6 +54,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onHide(event)
 	case events.OrganizationShowV1:
 		return a.onShow(event)
+	case events.OrganizationUpsertCustomFieldV1:
+		return a.onUpsertCustomField(event)
 	case events.OrganizationRequestRenewalForecastV1,
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRefreshLastTouchpointV1,
@@ -278,5 +280,39 @@ func (a *OrganizationAggregate) onShow(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Organization.Hide = false
+	return nil
+}
+
+func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) error {
+	var eventData events.OrganizationUpsertCustomField
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	if a.Organization.CustomFields == nil {
+		a.Organization.CustomFields = make(map[string]models.CustomField)
+	}
+
+	if val, ok := a.Organization.CustomFields[eventData.CustomFieldId]; ok {
+		val.Source.SourceOfTruth = eventData.SourceOfTruth
+		val.UpdatedAt = eventData.UpdatedAt
+		val.CustomFieldValue = eventData.CustomFieldValue
+		val.Name = eventData.CustomFieldName
+	} else {
+		a.Organization.CustomFields[eventData.CustomFieldId] = models.CustomField{
+			Source: common_models.Source{
+				Source:        eventData.Source,
+				SourceOfTruth: eventData.SourceOfTruth,
+				AppSource:     eventData.AppSource,
+			},
+			CreatedAt:           eventData.CreatedAt,
+			UpdatedAt:           eventData.UpdatedAt,
+			Id:                  eventData.CustomFieldId,
+			TemplateId:          eventData.TemplateId,
+			Name:                eventData.CustomFieldName,
+			CustomFieldDataType: models.CustomFieldDataType(eventData.CustomFieldDataType),
+			CustomFieldValue:    eventData.CustomFieldValue,
+		}
+	}
 	return nil
 }
