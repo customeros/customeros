@@ -4,13 +4,18 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type CustomFieldTemplateService interface {
+	Merge(ctx context.Context, inputEntity *entity.CustomFieldTemplateEntity) (*entity.CustomFieldTemplateEntity, error)
 	FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*entity.CustomFieldTemplateEntities, error)
 	FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error)
 	FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*entity.CustomFieldTemplateEntity, error)
@@ -19,6 +24,20 @@ type CustomFieldTemplateService interface {
 type customFieldTemplateService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
+}
+
+func (s *customFieldTemplateService) Merge(ctx context.Context, inputEntity *entity.CustomFieldTemplateEntity) (*entity.CustomFieldTemplateEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateService.Merge")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("inputEntity", inputEntity))
+
+	customFieldTemplateNodePtr, err := s.repositories.CustomFieldTemplateRepository.Merge(ctx, common.GetTenantFromContext(ctx), *inputEntity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToCustomFieldTemplate(*customFieldTemplateNodePtr), nil
 }
 
 func NewCustomFieldTemplateService(log logger.Logger, repositories *repository.Repositories) CustomFieldTemplateService {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -11,6 +12,7 @@ import (
 )
 
 type CustomFieldTemplateRepository interface {
+	Merge(ctx context.Context, tenant string, inputEntity entity.CustomFieldTemplateEntity) (*dbtype.Node, error)
 	createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error
 	createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error
 	FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error)
@@ -25,6 +27,50 @@ type customFieldTemplateRepository struct {
 func NewCustomFieldTemplateRepository(driver *neo4j.DriverWithContext) CustomFieldTemplateRepository {
 	return &customFieldTemplateRepository{
 		driver: driver,
+	}
+}
+
+func (r *customFieldTemplateRepository) Merge(ctx context.Context, tenant string, inputEntity entity.CustomFieldTemplateEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.Create")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+		 MERGE (t)<-[:CUSTOM_FIELD_TEMPLATE_BELONGS_TO_TENANT]-(cft:CustomFieldTemplate {name:$name}) 
+		 ON CREATE SET 
+		  	cft.id=randomUUID(),
+		  	cft.createdAt=$now,
+		  	cft.updatedAt=$now,
+		  	cft.order=$order,
+			cft.mandatory=$mandatory,
+			cft.type=$type,
+			cft.length=$length,
+			cft.min=$min,
+			cft.max=$max,
+		  	cft:CustomFieldTemplate_%s
+		 RETURN cft`, tenant)
+
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":    tenant,
+				"name":      inputEntity.Name,
+				"order":     inputEntity.Order,
+				"mandatory": inputEntity.Mandatory,
+				"type":      inputEntity.Type,
+				"length":    inputEntity.Length,
+				"min":       inputEntity.Min,
+				"max":       inputEntity.Max,
+				"now":       utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
 	}
 }
 

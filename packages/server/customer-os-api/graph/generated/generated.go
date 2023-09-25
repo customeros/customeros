@@ -508,6 +508,7 @@ type ComplexityRoot struct {
 		CustomFieldDeleteFromFieldSetByID        func(childComplexity int, contactID string, fieldSetID string, id string) int
 		CustomFieldMergeToContact                func(childComplexity int, contactID string, input model.CustomFieldInput) int
 		CustomFieldMergeToFieldSet               func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
+		CustomFieldTemplateCreate                func(childComplexity int, input model.CustomFieldTemplateInput) int
 		CustomFieldUpdateInContact               func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
 		CustomFieldUpdateInFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
 		CustomFieldsMergeAndUpdateInContact      func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
@@ -1026,6 +1027,7 @@ type MutationResolver interface {
 	FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error)
 	FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error)
 	FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error)
+	CustomFieldTemplateCreate(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error)
 	EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error)
 	EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error)
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
@@ -3661,6 +3663,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CustomFieldMergeToFieldSet(childComplexity, args["contactId"].(string), args["fieldSetId"].(string), args["input"].(model.CustomFieldInput)), true
+
+	case "Mutation.customFieldTemplate_Create":
+		if e.complexity.Mutation.CustomFieldTemplateCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_customFieldTemplate_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CustomFieldTemplateCreate(childComplexity, args["input"].(model.CustomFieldTemplateInput)), true
 
 	case "Mutation.customFieldUpdateInContact":
 		if e.complexity.Mutation.CustomFieldUpdateInContact == nil {
@@ -7445,6 +7459,45 @@ input CustomFieldEntityType {
     id:        ID!
     entityType: EntityType!
 }`, BuiltIn: false},
+	{Name: "../schemas/custom_field_template.graphqls", Input: `extend type Mutation {
+    customFieldTemplate_Create(input: CustomFieldTemplateInput!): CustomFieldTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type CustomFieldTemplate  implements Node {
+    id: ID!
+    createdAt: Time!
+    updatedAt: Time!
+    name: String!
+    type: CustomFieldTemplateType!
+    order: Int!
+    mandatory: Boolean!
+    length: Int
+    min: Int
+    max: Int
+}
+
+input CustomFieldTemplateInput {
+    name:      String!
+    type:      CustomFieldTemplateType!
+    order:     Int!
+    mandatory: Boolean
+    length:    Int
+    min:       Int
+    max:       Int
+}
+
+enum CustomFieldTemplateType {
+    TEXT
+    LINK
+    #    INTEGER
+    #    DECIMAL
+    #    DATE
+    #    DATETIME
+    #    TIME
+    #    BOOL
+    #    ENUM
+    #    ENTITY
+}`, BuiltIn: false},
 	{Name: "../schemas/dashboard.graphqls", Input: `extend type Query {
     """
     sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE
@@ -7651,19 +7704,6 @@ type FieldSetTemplate  implements Node {
     customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
 }
 
-type CustomFieldTemplate  implements Node {
-    id: ID!
-    createdAt: Time!
-    updatedAt: Time!
-    name: String!
-    type: CustomFieldTemplateType!
-    order: Int!
-    mandatory: Boolean!
-    length: Int
-    min: Int
-    max: Int
-}
-
 input EntityTemplateInput {
     name: String!
     extends: EntityTemplateExtension
@@ -7675,29 +7715,6 @@ input FieldSetTemplateInput {
     name: String!
     order: Int!
     customFieldTemplateInputs: [CustomFieldTemplateInput!]
-}
-
-input CustomFieldTemplateInput {
-    name: String!
-    type: CustomFieldTemplateType!
-    order: Int!
-    mandatory: Boolean!
-    length: Int
-    min: Int
-    max: Int
-}
-
-enum CustomFieldTemplateType {
-    TEXT
-    LINK
-    #    INTEGER
-    #    DECIMAL
-    #    DATE
-    #    DATETIME
-    #    TIME
-    #    BOOL
-    #    ENUM
-    #    ENTITY
 }`, BuiltIn: false},
 	{Name: "../schemas/external_system.graphqls", Input: `input ExternalSystemReferenceInput {
     externalId: ID!
@@ -8458,43 +8475,43 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
-    name: String!
-    description: String
-    note:        String
-    domains:     [String!]
-    website:     String
-    industry:    String
-    subIndustry: String
+    name:          String!
+    description:   String
+    note:          String
+    domains:       [String!]
+    website:       String
+    industry:      String
+    subIndustry:   String
     industryGroup: String
-    isPublic:    Boolean
-    customFields: [CustomFieldInput!] @deprecated
-    fieldSets: [FieldSetInput!] @deprecated
-    templateId: ID @deprecated
-    market:      Market
-    employees:   Int64
-    appSource: String
+    isPublic:      Boolean
+    customFields:  [CustomFieldInput!]
+    fieldSets:     [FieldSetInput!] @deprecated
+    templateId:    ID @deprecated
+    market:        Market
+    employees:     Int64
+    appSource:     String
 }
 
 input OrganizationUpdateInput {
-    id:          ID!
+    id:   ID!
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:       Boolean
-    name:        String!
-    description: String
-    note:        String
-    domains:     [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
-    website:     String
-    industry:    String
-    subIndustry: String
-    industryGroup: String
-    isPublic:    Boolean
-    market:      Market
-    employees:   Int64
-    targetAudience: String
-    valueProposition: String
-    lastFundingRound: FundingRound
+    patch:             Boolean
+    name:              String!
+    description:       String
+    note:              String
+    domains:           [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    website:           String
+    industry:          String
+    subIndustry:       String
+    industryGroup:     String
+    isPublic:          Boolean
+    market:            Market
+    employees:         Int64
+    targetAudience:    String
+    valueProposition:  String
+    lastFundingRound:  FundingRound
     lastFundingAmount: String
 }
 
@@ -9678,6 +9695,21 @@ func (ec *executionContext) field_Mutation_customFieldMergeToFieldSet_args(ctx c
 		}
 	}
 	args["input"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_customFieldTemplate_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CustomFieldTemplateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCustomFieldTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -30123,6 +30155,113 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetDeleteFromContact(ctx 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_fieldSetDeleteFromContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_customFieldTemplate_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_customFieldTemplate_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CustomFieldTemplateCreate(rctx, fc.Args["input"].(model.CustomFieldTemplateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CustomFieldTemplate); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.CustomFieldTemplate`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CustomFieldTemplate)
+	fc.Result = res
+	return ec.marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_customFieldTemplate_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomFieldTemplate_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CustomFieldTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
+			case "type":
+				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
+			case "order":
+				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
+			case "mandatory":
+				return ec.fieldContext_CustomFieldTemplate_mandatory(ctx, field)
+			case "length":
+				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
+			case "min":
+				return ec.fieldContext_CustomFieldTemplate_min(ctx, field)
+			case "max":
+				return ec.fieldContext_CustomFieldTemplate_max(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomFieldTemplate", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_customFieldTemplate_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -55898,7 +56037,7 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mandatory"))
-			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -59318,6 +59457,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._CustomField(ctx, sel, obj)
+	case model.CustomFieldTemplate:
+		return ec._CustomFieldTemplate(ctx, sel, &obj)
+	case *model.CustomFieldTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._CustomFieldTemplate(ctx, sel, obj)
 	case model.EntityTemplate:
 		return ec._EntityTemplate(ctx, sel, &obj)
 	case *model.EntityTemplate:
@@ -59332,13 +59478,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._FieldSetTemplate(ctx, sel, obj)
-	case model.CustomFieldTemplate:
-		return ec._CustomFieldTemplate(ctx, sel, &obj)
-	case *model.CustomFieldTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._CustomFieldTemplate(ctx, sel, obj)
 	case model.InteractionSession:
 		return ec._InteractionSession(ctx, sel, &obj)
 	case *model.InteractionSession:
@@ -63983,6 +64122,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "fieldSetDeleteFromContact":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_fieldSetDeleteFromContact(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "customFieldTemplate_Create":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_customFieldTemplate_Create(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -69096,6 +69242,10 @@ func (ec *executionContext) unmarshalNCustomFieldInput2ᚖgithubᚗcomᚋopenlin
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNCustomFieldTemplate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplate(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldTemplate) graphql.Marshaler {
+	return ec._CustomFieldTemplate(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CustomFieldTemplate) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -69148,6 +69298,11 @@ func (ec *executionContext) marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenli
 		return graphql.Null
 	}
 	return ec._CustomFieldTemplate(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCustomFieldTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInput(ctx context.Context, v interface{}) (model.CustomFieldTemplateInput, error) {
+	res, err := ec.unmarshalInputCustomFieldTemplateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNCustomFieldTemplateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInput(ctx context.Context, v interface{}) (*model.CustomFieldTemplateInput, error) {

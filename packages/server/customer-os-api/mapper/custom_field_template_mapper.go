@@ -11,7 +11,7 @@ func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *
 		Name:      input.Name,
 		Type:      input.Type.String(),
 		Order:     int64(input.Order),
-		Mandatory: input.Mandatory,
+		Mandatory: utils.IfNotNilBool(input.Mandatory),
 		Length:    utils.IntPtrToInt64Ptr(input.Length),
 		Min:       utils.IntPtrToInt64Ptr(input.Min),
 		Max:       utils.IntPtrToInt64Ptr(input.Max),
