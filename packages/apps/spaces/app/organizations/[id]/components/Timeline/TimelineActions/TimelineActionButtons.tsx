@@ -3,13 +3,13 @@ import { Button } from '@ui/form/Button';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { Mail01 } from '@ui/media/icons/Mail01';
-import { useTimelineActionLogEntryContext } from './TimelineActionsContext/TimelineActionLogEntryContext';
-import { useTimelineActionEmailContext } from './TimelineActionsContext/TimelineActionEmailContext';
+import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
+import { useTimelineActionEmailContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
   EditorType,
   useTimelineActionContext,
-} from './TimelineActionsContext/TimelineActionContext';
+} from '@organization/components/Timeline/TimelineActions/context/TimelineActionContext';
 import { Box } from '@chakra-ui/react';
 
 export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box } from '@ui/layout/Box';
 import { useParams } from 'next/navigation';
-import { TimelineActionLogEntryContextContextProvider } from './TimelineActionsContext/TimelineActionLogEntryContext';
+import { TimelineActionLogEntryContextContextProvider } from '@organization/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
 import { TimelineActionButtons } from './TimelineActionButtons';
-import { TimelineActionEmailContextContextProvider } from './TimelineActionsContext/TimelineActionEmailContext';
+import { TimelineActionEmailContextContextProvider } from '@organization/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
 import { TimelineActionsArea } from './TimelineActionsArea';
 
 interface TimelineActionsProps {

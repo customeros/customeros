@@ -4,7 +4,7 @@ import { Card, CardFooter } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { TimelineEventPreviewHeader } from '../../../preview/header/TimelineEventPreviewHeader';
-import { useTimelineEventPreviewContext } from '../../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { CardBody } from '@chakra-ui/card';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/components/Tabs/panels/AccountPanel/utils';

@@ -4,7 +4,7 @@ import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlCo
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { TagSuggestor } from '@ui/form/RichTextEditor/TagSuggestor';
 import { useRemirror } from '@remirror/react';
-import { logEntryEditorExtensions } from '@organization/components/Timeline/TimelineActions/TimelineActionsContext/extensions';
+import { logEntryEditorExtensions } from '@organization/components/Timeline/TimelineActions/context/extensions';
 import { RichEditorBlurHandler } from '@ui/form/RichTextEditor/components/RichEditorBlurHandler';
 import { htmlToProsemirrorNode } from 'remirror';
 

@@ -552,6 +552,7 @@ display: none
  * Styles extracted from: packages/remirror__theme/src/core-theme.ts
  */
 .remirror-editor.ProseMirror {
+  cursor: text;
   word-wrap: break-word;
   white-space: pre-wrap;
   white-space: break-spaces;

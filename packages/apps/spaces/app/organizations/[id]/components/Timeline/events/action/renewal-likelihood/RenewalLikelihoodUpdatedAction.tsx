@@ -4,7 +4,7 @@ import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { Text } from '@ui/typography/Text';
 import { Action, RenewalLikelihoodProbability } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '../../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getLikelihoodDisplayData } from '../utils';
 
 interface RenewalForecastUpdatedActionProps {

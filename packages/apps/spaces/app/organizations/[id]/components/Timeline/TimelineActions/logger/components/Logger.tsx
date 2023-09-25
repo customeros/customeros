@@ -8,7 +8,7 @@ import Image from 'next/image';
 import noteIcon from 'public/images/event-ill-log.png';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
-import { useTimelineActionLogEntryContext } from '../../TimelineActionsContext/TimelineActionLogEntryContext';
+import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
 import { useField } from 'react-inverted-form';
 
 export const Logger = () => {

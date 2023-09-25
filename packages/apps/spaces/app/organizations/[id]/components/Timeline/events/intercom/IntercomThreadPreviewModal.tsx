@@ -5,7 +5,7 @@ import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { DateTimeUtils } from '@spaces/utils/date';
 import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { SlideFade } from '@ui/transitions/SlideFade';
 import { Box } from '@ui/layout/Box';
 import { Logger } from '../logger/components/Logger';
-import { useTimelineActionContext } from '../TimelineActionsContext/TimelineActionContext';
+import { useTimelineActionContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionContext';
 
 interface LogEntryTimelineActionProps {
   onScrollBottom: () => void;

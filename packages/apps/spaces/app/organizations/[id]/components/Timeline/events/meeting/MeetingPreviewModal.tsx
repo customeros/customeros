@@ -20,7 +20,7 @@ import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea
 import { useUpdateMeetingMutation } from '@organization/graphql/updateMeeting.generated';
 import { useAddMeetingNoteMutation } from '@organization/graphql/addMeetingNote.generated';
 
-import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getParticipantEmail } from '../utils';
 import { MeetingIcon, HubspotIcon, CalcomIcon } from './icons';
 

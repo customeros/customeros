@@ -5,7 +5,7 @@ import {
   JobRoleParticipant,
   UserParticipant,
 } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { Avatar } from '@ui/media/Avatar';
 import { Flex } from '@ui/layout/Flex';
 import { getName } from '@spaces/utils/getParticipantsName';
