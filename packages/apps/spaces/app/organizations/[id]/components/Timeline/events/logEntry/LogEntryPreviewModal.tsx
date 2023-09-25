@@ -5,7 +5,7 @@ import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
-import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';
 import copy from 'copy-to-clipboard';
@@ -18,17 +18,11 @@ import { LogEntryDatePicker } from './preview/LogEntryDatePicker';
 import { Image } from '@ui/media/Image';
 import { LogEntryExternalLink } from './preview/LogEntryExternalLink';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import {
-  LogEntryUpdateFormDto,
-  LogEntryUpdateFormDtoI,
-} from './preview/LogEntryUpdateFormDto';
-import { useForm } from 'react-inverted-form';
 import { useSession } from 'next-auth/react';
-import { useUpdateLogEntryMutation } from '@organization/graphql/updateLogEntry.generated';
-import { useQueryClient } from '@tanstack/react-query';
 import { PreviewTags } from './preview/tags/PreviewTags';
 import { PreviewEditor } from './preview/PreviewEditor';
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
+import { useLogEntryUpdateContext } from '@organization/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
 
 const getAuthor = (user: User) => {
   if (!user?.firstName && !user.lastName) {
@@ -44,56 +38,14 @@ export const LogEntryPreviewModal: React.FC = () => {
   const event = modalContent as LogEntryWithAliases;
   const author = getAuthor(event?.logEntryCreatedBy);
   const authorEmail = event?.logEntryCreatedBy?.emails?.[0]?.email;
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   const client = getGraphQLClient();
-  const queryClient = useQueryClient();
   const { data } = useGetTagsQuery(client);
 
-  const formId = 'log-entry-update';
   const isAuthor =
     event.logEntryCreatedBy?.emails?.findIndex(
       (e) => session?.user?.email === e.email,
     ) !== -1;
-
-  const updateLogEntryMutation = useUpdateLogEntryMutation(client, {
-    onSuccess: () => {
-      timeoutRef.current = setTimeout(
-        () => queryClient.invalidateQueries(['GetTimeline.infinite']),
-        500,
-      );
-    },
-  });
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  const logEntryStartedAtValues = new LogEntryUpdateFormDto(event);
-
-  useForm<LogEntryUpdateFormDtoI>({
-    formId,
-    defaultValues: logEntryStartedAtValues,
-
-    stateReducer: (state, action, next) => {
-      if (action.type === 'FIELD_BLUR') {
-        updateLogEntryMutation.mutate({
-          id: event.id,
-          input: {
-            ...LogEntryUpdateFormDto.toPayload({
-              ...state.values,
-              [action.payload.name]: action.payload.value,
-            }),
-          },
-        });
-      }
-      return next;
-    },
-  });
+  const { formId } = useLogEntryUpdateContext();
 
   return (
     <>

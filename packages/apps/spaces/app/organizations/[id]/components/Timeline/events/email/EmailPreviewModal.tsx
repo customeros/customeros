@@ -3,7 +3,7 @@ import { CardBody } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import sanitizeHtml from 'sanitize-html';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';

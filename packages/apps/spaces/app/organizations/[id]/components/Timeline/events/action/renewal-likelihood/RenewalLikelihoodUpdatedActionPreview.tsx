@@ -5,7 +5,7 @@ import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { TimelineEventPreviewHeader } from '@organization/components/Timeline/preview/header/TimelineEventPreviewHeader';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { CardBody } from '@chakra-ui/card';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/components/Tabs/panels/AccountPanel/utils';

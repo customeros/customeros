@@ -9,7 +9,7 @@ import { Icons } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
 
 import { getParticipants, getParticipantName } from '../utils';
-import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { MeetingIcon } from './icons';
 
 interface MeetingStubProps {

@@ -6,7 +6,7 @@ import { EmailStub, TimelineItem } from './events';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
-import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
