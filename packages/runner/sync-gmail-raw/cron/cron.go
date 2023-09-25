@@ -273,7 +273,7 @@ func syncEmailsForOauthTokens(config *config.Config, services *service.Services)
 
 func syncCalendarEventsForOauthTokens(config *config.Config, services *service.Services) {
 	runId, _ := uuid.NewRandom()
-	logrus.Infof("run id: %s syncing emails from gmail using oauth tokens into customer-os at %v", runId.String(), time.Now().UTC())
+	logrus.Infof("run id: %s syncing calendar events from google using oauth tokens into customer-os at %v", runId.String(), time.Now().UTC())
 
 	tokenEntities, err := services.Repositories.OAuthRepositories.OAuthTokenRepository.GetAll()
 	if err != nil {
@@ -296,12 +296,12 @@ func syncCalendarEventsForOauthTokens(config *config.Config, services *service.S
 			serviceAccountExistsForTenant, err := services.GmailService.ServiceAccountCredentialsExistsForTenant(tokenEntity.TenantName)
 			if err != nil {
 				logrus.Error(err)
-				logrus.Infof("syncing calendar events with personal token for email address: %s completed", tokenEntity.EmailAddress)
+				logrus.Errorf("syncing calendar events for oauth token with email address: %s error", tokenEntity.EmailAddress)
 				return
 			}
 
 			if serviceAccountExistsForTenant {
-				logrus.Infof("service account already exists for personal token for email address: %s. skipping personal access import", tokenEntity.EmailAddress)
+				logrus.Infof("service account already exists for personal token for email address: %s. skipping oauth token import", tokenEntity.EmailAddress)
 				return
 			}
 

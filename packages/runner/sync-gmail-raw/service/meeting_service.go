@@ -32,7 +32,8 @@ func (s *meetingService) ReadNewCalendarEventsForUsername(gCalService *calendar.
 
 			importState, err := s.repositories.UserGCalImportStateRepository.GetGCalImportStateUsername(tenant, username, cal.Id)
 			if err != nil {
-				return fmt.Errorf("unable to retrieve history id for username: %v", err)
+				logrus.Errorf("unable to retrieve import state for username %s in tenant %s: %v", username, tenant, err)
+				return err
 			}
 
 			//incremental sync based on sync token
@@ -55,11 +56,13 @@ func (s *meetingService) ReadNewCalendarEventsForUsername(gCalService *calendar.
 				maxResults = s.cfg.SyncData.GoogleCalendarReadBatchSize
 				timeMin, err = time.Parse(time.DateOnly, s.cfg.SyncData.GoogleCalendarSyncStartDate)
 				if err != nil {
-					return fmt.Errorf("unable to parse start date: %v", err)
+					logrus.Errorf("unable to parse start date: %v", err)
+					return err
 				}
 				timeMax, err = time.Parse(time.DateOnly, s.cfg.SyncData.GoogleCalendarSyncStopDate)
 				if err != nil {
-					return fmt.Errorf("unable to parse start date: %v", err)
+					logrus.Errorf("unable to parse stop date: %v", err)
+					return err
 				}
 			}
 
@@ -69,7 +72,7 @@ func (s *meetingService) ReadNewCalendarEventsForUsername(gCalService *calendar.
 			getEventsWith = getEventsWith.PageToken(pageToken)
 
 			if syncToken != "" {
-				logrus.Infof("Sync token is not empty. Performing incremental sync with token: %s", syncToken)
+				logrus.Infof("Sync token is not empty. Performing incremental sync with token for username %s in tenant %s", username, tenant)
 				getEventsWith = getEventsWith.SyncToken(syncToken)
 			} else {
 				getEventsWith = getEventsWith.TimeMin(timeMin.Format(time.RFC3339))
@@ -78,7 +81,8 @@ func (s *meetingService) ReadNewCalendarEventsForUsername(gCalService *calendar.
 
 			events, err := getEventsWith.Do()
 			if err != nil {
-				return fmt.Errorf("unable to retrieve events: %v", err)
+				logrus.Errorf("unable to retrieve events: %v", err)
+				return err
 			}
 			if len(events.Items) > 0 {
 
@@ -87,24 +91,28 @@ func (s *meetingService) ReadNewCalendarEventsForUsername(gCalService *calendar.
 					if item.Status == "cancelled" {
 						existingCalendarEvent, err := s.repositories.RawCalendarEventRepository.GetByProviderId("gcal", tenant, username, cal.Id, item.Id)
 						if err != nil {
-							return fmt.Errorf("failed to get existing calendar event: %v", err)
+							logrus.Errorf("failed to get existing calendar event: %v", err)
+							return err
 						}
 						var calendarEventRawData CalendarEventRawData
 						err = json.Unmarshal([]byte(existingCalendarEvent.Data), &calendarEventRawData)
 						if err != nil {
-							return fmt.Errorf("failed to unmarshal existing calendar event: %v", err)
+							logrus.Errorf("failed to unmarshal existing calendar event: %v", err)
+							return err
 						}
 						calendarEventRawData.Status = "cancelled"
 
 						jc, err := JSONMarshal(calendarEventRawData)
 						if err != nil {
-							return fmt.Errorf("failed to marshal calendar event content: %v", err)
+							logrus.Errorf("failed to marshal calendar event content: %v", err)
+							return err
 						}
 						existingCalendarEvent.Data = string(jc)
 
 						err = s.repositories.RawCalendarEventRepository.Update(*existingCalendarEvent)
 						if err != nil {
-							return fmt.Errorf("failed to update existing calendar event: %v", err)
+							logrus.Errorf("failed to update existing calendar event: %v", err)
+							return err
 						}
 
 						continue
@@ -141,12 +149,14 @@ func (s *meetingService) ReadNewCalendarEventsForUsername(gCalService *calendar.
 
 					jsonContent, err := JSONMarshal(calendarEventRawData)
 					if err != nil {
-						return fmt.Errorf("failed to marshal calendar event content: %v", err)
+						logrus.Errorf("failed to marshal calendar event content: %v", err)
+						return err
 					}
 
 					err = s.repositories.RawCalendarEventRepository.SaveOrUpdate("gcal", tenant, username, cal.Id, calendarEventRawData.Id, calendarEventRawData.ICalUID, string(jsonContent))
 					if err != nil {
-						return fmt.Errorf("unable to store calendar event: %v", err)
+						logrus.Errorf("failed to save calendar event: %v", err)
+						return err
 					}
 
 				}
@@ -154,110 +164,20 @@ func (s *meetingService) ReadNewCalendarEventsForUsername(gCalService *calendar.
 			}
 
 			if syncToken != events.NextSyncToken && events.NextSyncToken != "" {
-				logrus.Infof("Sync token has changed. Updating sync token from %s to %s", syncToken, events.NextSyncToken)
+				logrus.Infof("Sync token has changed. Updating sync token for username %s in tenant %s", username, tenant)
 				syncToken = events.NextSyncToken
 			}
 
 			err = s.repositories.UserGCalImportStateRepository.UpdateGCalImportStateForUsername(tenant, username, cal.Id, syncToken, events.NextPageToken, maxResults, timeMin, timeMax)
 			if err != nil {
-				return fmt.Errorf("unable to update the gcal page token for username: %v", err)
+				logrus.Errorf("unable to update the gcal sync token for username: %v", err)
+				return err
 			}
 
 		}
 
 	}
 
-	return nil
-
-	//email, err := gmailService.Users.Messages.Get(username, providerMessageId).Format("full").Do()
-	//if err != nil {
-	//	return nil, fmt.Errorf("unable to retrieve email: %v", err)
-	//}
-	//
-	//messageId := ""
-	//emailSubject := ""
-	//emailHtml := ""
-	//emailText := ""
-	//emailSentDate := ""
-	//
-	//from := ""
-	//to := ""
-	//cc := ""
-	//bcc := ""
-	//
-	//threadId := email.ThreadId
-	//references := ""
-	//inReplyTo := ""
-	//
-	//emailHeaders := make(map[string]string)
-	//
-	//for i := range email.Payload.Headers {
-	//	headerName := strings.ToLower(email.Payload.Headers[i].Name)
-	//	emailHeaders[email.Payload.Headers[i].Name] = email.Payload.Headers[i].Value
-	//	if headerName == "message-id" {
-	//		messageId = email.Payload.Headers[i].Value
-	//	} else if headerName == "subject" {
-	//		emailSubject = email.Payload.Headers[i].Value
-	//		if emailSubject == "" {
-	//			emailSubject = "No Subject"
-	//		} else if strings.HasPrefix(emailSubject, "Re: ") {
-	//			emailSubject = emailSubject[4:]
-	//		}
-	//	} else if headerName == "from" {
-	//		from = email.Payload.Headers[i].Value
-	//	} else if headerName == "to" {
-	//		to = email.Payload.Headers[i].Value
-	//	} else if headerName == "cc" {
-	//		cc = email.Payload.Headers[i].Value
-	//	} else if headerName == "bcc" {
-	//		bcc = email.Payload.Headers[i].Value
-	//	} else if headerName == "references" {
-	//		references = email.Payload.Headers[i].Value
-	//	} else if headerName == "in-reply-to" {
-	//		inReplyTo = email.Payload.Headers[i].Value
-	//	} else if headerName == "date" {
-	//		emailSentDate = email.Payload.Headers[i].Value
-	//	}
-	//}
-	//
-	//for i := range email.Payload.Parts {
-	//	if email.Payload.Parts[i].MimeType == "text/html" {
-	//		emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
-	//		emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
-	//	} else if email.Payload.Parts[i].MimeType == "text/plain" {
-	//		emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
-	//		emailText = fmt.Sprintf("%s", string(emailTextBytes))
-	//	} else if strings.HasPrefix(email.Payload.Parts[i].MimeType, "multipart") {
-	//		for j := range email.Payload.Parts[i].Parts {
-	//			if email.Payload.Parts[i].Parts[j].MimeType == "text/html" {
-	//				emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
-	//				emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
-	//			} else if email.Payload.Parts[i].Parts[j].MimeType == "text/plain" {
-	//				emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
-	//				emailText = fmt.Sprintf("%s", string(emailTextBytes))
-	//			}
-	//		}
-	//	}
-	//}
-	//
-	//rawEmailData := &EmailRawData{
-	//	ProviderMessageId: providerMessageId,
-	//	MessageId:         messageId,
-	//	Sent:              emailSentDate,
-	//	Subject:           emailSubject,
-	//	From:              from,
-	//	To:                to,
-	//	Cc:                cc,
-	//	Bcc:               bcc,
-	//	Html:              emailHtml,
-	//	Text:              emailText,
-	//	ThreadId:          threadId,
-	//	InReplyTo:         inReplyTo,
-	//	Reference:         references,
-	//	Headers:           emailHeaders,
-	//}
-	//
-	//return rawEmailData, nil
 	return nil
 }
 
