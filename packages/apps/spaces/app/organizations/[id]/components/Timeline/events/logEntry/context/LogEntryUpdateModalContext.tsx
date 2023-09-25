@@ -4,6 +4,7 @@ import {
   createContext,
   PropsWithChildren,
   useRef,
+  useState,
 } from 'react';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useForm } from 'react-inverted-form';
@@ -35,20 +36,13 @@ export const LogEntryUpdateModalContextProvider = ({
   children,
 }: PropsWithChildren) => {
   const { modalContent, isModalOpen } = useTimelineEventPreviewContext();
-
+  const [openedLogEntryId, setOpenedLogEntryId] = useState<null | string>(null);
   const event = modalContent as LogEntryWithAliases;
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const formId = 'log-entry-update';
+  const logEntryStartedAtValues = new LogEntryUpdateFormDto(event);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const updateLogEntryMutation = useUpdateLogEntryMutation(client, {
-    onSuccess: () => {
-      timeoutRef.current = setTimeout(
-        () => queryClient.invalidateQueries(['GetTimeline.infinite']),
-        500,
-      );
-    },
-  });
 
   useEffect(() => {
     return () => {
@@ -58,9 +52,11 @@ export const LogEntryUpdateModalContextProvider = ({
     };
   }, []);
 
-  const logEntryStartedAtValues = new LogEntryUpdateFormDto(event);
-
-  const { state: formState } = useForm<LogEntryUpdateFormDtoI>({
+  const {
+    state: formState,
+    setDefaultValues,
+    reset,
+  } = useForm<LogEntryUpdateFormDtoI>({
     formId,
     defaultValues: logEntryStartedAtValues,
 
@@ -80,18 +76,39 @@ export const LogEntryUpdateModalContextProvider = ({
     },
   });
 
+  const updateLogEntryMutation = useUpdateLogEntryMutation(client, {
+    onSuccess: () => {
+      const emptyDefaults = new LogEntryUpdateFormDto();
+      reset();
+      setDefaultValues(emptyDefaults);
+      timeoutRef.current = setTimeout(
+        () => queryClient.invalidateQueries(['GetTimeline.infinite']),
+        500,
+      );
+    },
+  });
+
   useEffect(() => {
-    if (isModalOpen && event.__typename === 'LogEntry') {
+    if (!isModalOpen && openedLogEntryId) {
       updateLogEntryMutation.mutate({
-        id: event.id,
+        id: openedLogEntryId,
         input: {
           ...LogEntryUpdateFormDto.toPayload({
             ...formState.values,
           }),
         },
       });
+      setOpenedLogEntryId(null);
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, openedLogEntryId]);
+
+  useEffect(() => {
+    if (event?.id && event.__typename === 'LogEntry') {
+      setOpenedLogEntryId(event?.id);
+      const newDefaults = new LogEntryUpdateFormDto(event);
+      setDefaultValues(newDefaults);
+    }
+  }, [event]);
 
   return (
     <LogEntryUpdateModalContext.Provider
