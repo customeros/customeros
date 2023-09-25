@@ -233,13 +233,14 @@ func syncEmailsForOauthTokens(config *config.Config, services *service.Services)
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(tokenEntities))
 
 	for _, tokenEntity := range tokenEntities {
 
 		if !tokenEntity.GmailSyncEnabled {
 			return
 		}
+
+		wg.Add(1)
 
 		go func(tokenEntity authEntity.OAuthTokenEntity) {
 			defer wg.Done()
@@ -282,13 +283,14 @@ func syncCalendarEventsForOauthTokens(config *config.Config, services *service.S
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(tokenEntities))
 
 	for _, tokenEntity := range tokenEntities {
 
 		if !tokenEntity.GoogleCalendarSyncEnabled {
 			return
 		}
+
+		wg.Add(1)
 
 		go func(tokenEntity authEntity.OAuthTokenEntity) {
 			defer wg.Done()
