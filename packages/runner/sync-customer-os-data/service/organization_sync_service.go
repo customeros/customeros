@@ -214,8 +214,6 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 			s.log.Errorf(reason)
 		}
 	}
-	organizationSyncMutex.Unlock()
-
 	if orgInput.HasDomains() && !failedSync {
 		for _, domain := range orgInput.Domains {
 			err = s.repositories.OrganizationRepository.MergeOrganizationDomain(ctx, tenant, organizationId, domain, orgInput.ExternalSystem)
@@ -228,6 +226,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 			}
 		}
 	}
+	organizationSyncMutex.Unlock()
 
 	if newOrganization && !failedSync {
 		err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, orgInput.Id, orgInput.ExternalSystem, constants.AppSourceSyncCustomerOsData)
