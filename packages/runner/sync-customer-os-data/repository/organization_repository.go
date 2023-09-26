@@ -118,7 +118,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"				org.appSource=$appSource, " +
 		"				org:%s " +
 		" ON MATCH SET 	" +
-		"				org.hide = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $hide = false THEN org.hide = $hide ELSE org.hide END," +
+		"				org.hide = CASE WHEN $hide = false THEN org.hide = $hide ELSE org.hide END," +
 		"				org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.name is null OR org.name = '' THEN $name ELSE org.name END, " +
 		"				org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.description is null OR org.description = '' THEN $description ELSE org.description END, " +
 		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.website is null OR org.website = '' THEN $website ELSE org.website END, " +
