@@ -1,0 +1,34 @@
+query getTimelineEvents($ids: [ID!]!) {
+  timelineEvents(ids: $ids) {
+    __typename
+    ... on InteractionEvent {
+      id
+      date: createdAt
+      channel
+      interactionSession {
+        name
+      }
+      content
+      contentType
+      issue {
+        externalLinks {
+          type
+          externalId
+          externalUrl
+        }
+      }
+      repliesTo {
+        id
+      }
+      summary {
+        id
+        content
+        contentType
+      }
+      actionItems {
+        id
+        content
+      }
+    }
+  }
+}

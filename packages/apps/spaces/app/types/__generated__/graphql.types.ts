@@ -421,18 +421,11 @@ export type CustomFieldEntityType = {
  * **A `create` object.**
  */
 export type CustomFieldInput = {
-  /**
-   * Datatype of the custom field.
-   * **Required**
-   */
-  datatype: CustomFieldDataType;
-  /** The unique ID associated with the custom field. */
+  /** Datatype of the custom field. */
+  datatype?: InputMaybe<CustomFieldDataType>;
   id?: InputMaybe<Scalars['ID']>;
-  /**
-   * The name of the custom field.
-   * **Required**
-   */
-  name: Scalars['String'];
+  /** The name of the custom field. */
+  name?: InputMaybe<Scalars['String']>;
   templateId?: InputMaybe<Scalars['ID']>;
   /**
    * The value of the custom field.
@@ -457,7 +450,7 @@ export type CustomFieldTemplate = Node & {
 
 export type CustomFieldTemplateInput = {
   length?: InputMaybe<Scalars['Int']>;
-  mandatory: Scalars['Boolean'];
+  mandatory?: InputMaybe<Scalars['Boolean']>;
   max?: InputMaybe<Scalars['Int']>;
   min?: InputMaybe<Scalars['Int']>;
   name: Scalars['String'];
@@ -1237,6 +1230,7 @@ export type Mutation = {
   customFieldDeleteFromFieldSetById: Result;
   customFieldMergeToContact: CustomField;
   customFieldMergeToFieldSet: CustomField;
+  customFieldTemplate_Create: CustomFieldTemplate;
   customFieldUpdateInContact: CustomField;
   customFieldUpdateInFieldSet: CustomField;
   customFieldsMergeAndUpdateInContact: Contact;
@@ -1440,6 +1434,10 @@ export type MutationCustomFieldMergeToFieldSetArgs = {
   contactId: Scalars['ID'];
   fieldSetId: Scalars['ID'];
   input: CustomFieldInput;
+};
+
+export type MutationCustomFieldTemplate_CreateArgs = {
+  input: CustomFieldTemplateInput;
 };
 
 export type MutationCustomFieldUpdateInContactArgs = {
@@ -2014,6 +2012,7 @@ export type Organization = Node & {
   contacts: ContactsPage;
   createdAt: Scalars['Time'];
   customFields: Array<CustomField>;
+  customerOsId: Scalars['String'];
   description?: Maybe<Scalars['String']>;
   domains: Array<Scalars['String']>;
   emails: Array<Email>;
