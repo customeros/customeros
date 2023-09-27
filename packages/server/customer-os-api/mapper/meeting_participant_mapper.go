@@ -24,6 +24,11 @@ func MapEntityToMeetingParticipant(meetingParticipantEntity *entity.MeetingParti
 		return model.OrganizationParticipant{
 			OrganizationParticipant: MapEntityToOrganization(organizationEntity),
 		}
+	case entity.NodeLabel_Email:
+		emailEntity := (*meetingParticipantEntity).(*entity.EmailEntity)
+		return model.EmailParticipant{
+			EmailParticipant: MapEntityToEmail(emailEntity),
+		}
 	}
 	fmt.Errorf("participant of type %s not identified", reflect.TypeOf(meetingParticipantEntity))
 	return nil

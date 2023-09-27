@@ -109,4 +109,21 @@ fragment MeetingParticipantFragment on MeetingParticipant {
       }
     }
   }
+  ... on EmailParticipant {
+    __typename
+    emailParticipant {
+      rawEmail
+      email
+      contacts {
+        firstName
+        lastName
+        name
+        timezone
+      }
+      users {
+        firstName
+        lastName
+      }
+    }
+  }
 }

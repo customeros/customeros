@@ -84,7 +84,7 @@ input MeetingUpdateInput {
     externalSystem: ExternalSystemReferenceInput
 }
 
-union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
+union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant | EmailParticipant
 
 type Meeting implements Node {
     id: ID!

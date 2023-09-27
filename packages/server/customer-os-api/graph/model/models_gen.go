@@ -513,6 +513,8 @@ func (EmailParticipant) IsInteractionEventParticipant() {}
 
 func (EmailParticipant) IsInteractionSessionParticipant() {}
 
+func (EmailParticipant) IsMeetingParticipant() {}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **An `update` object.**
 type EmailUpdateInput struct {

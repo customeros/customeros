@@ -11,7 +11,7 @@ import (
 )
 
 type InteractionEventRepository interface {
-	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalId string) (string, error)
+	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalSystemId, externalId string) (string, error)
 
 	MergeInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message entity.EmailMessageData, source, appSource string) (string, error)
 	MergeEmailInteractionEvent(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, syncDate time.Time, message entity.EmailMessageData, source, appSource string) (string, error)
@@ -31,17 +31,18 @@ func NewInteractionEventRepository(driver *neo4j.DriverWithContext) InteractionE
 	}
 }
 
-func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalId string) (string, error) {
+func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalSystemId, externalId string) (string, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (ie:InteractionEvent_%s {externalId:$externalId}) " +
+	query := "MATCH (ie:InteractionEvent_%s {externalId:$externalId})-[IS_LINKED_WITH]-(e:ExternalSystem{id:$externalSystemId})" +
 		" RETURN ie.id"
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 			map[string]interface{}{
-				"externalId": externalId,
+				"externalId":       externalId,
+				"externalSystemId": externalSystemId,
 			})
 		if err != nil {
 			return nil, err

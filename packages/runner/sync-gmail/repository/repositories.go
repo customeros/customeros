@@ -12,7 +12,8 @@ type Repositories struct {
 	CommonRepositories *commonRepository.Repositories
 
 	//pg repositories
-	RawEmailRepository RawEmailRepository
+	RawEmailRepository         RawEmailRepository
+	RawCalendarEventRepository RawCalendarEventRepository
 
 	//neo4j repositories
 	TenantRepository           TenantRepository
@@ -28,6 +29,7 @@ type Repositories struct {
 	ActionPointRepository      ActionPointRepository
 	DomainRepository           DomainRepository
 	TimelineEventRepository    TimelineEventRepository
+	MeetingRepository          MeetingRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
@@ -36,7 +38,8 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 
 		CommonRepositories: commonRepository.InitRepositories(gormDb, driver),
 
-		RawEmailRepository: NewRawEmailRepository(gormDb),
+		RawEmailRepository:         NewRawEmailRepository(gormDb),
+		RawCalendarEventRepository: NewRawCalendarEventRepository(gormDb),
 
 		TenantRepository:           NewTenantRepository(driver),
 		UserRepository:             NewUserRepository(driver),
@@ -51,6 +54,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		ActionPointRepository:      NewActionPointRepository(driver),
 		DomainRepository:           NewDomainRepository(driver),
 		TimelineEventRepository:    NewTimelineEventRepository(driver),
+		MeetingRepository:          NewMeetingRepository(driver),
 	}
 
 	return &repositories

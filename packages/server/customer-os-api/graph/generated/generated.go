@@ -8260,7 +8260,7 @@ input MeetingUpdateInput {
     externalSystem: ExternalSystemReferenceInput
 }
 
-union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
+union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant | EmailParticipant
 
 type Meeting implements Node {
     id: ID!
@@ -59397,6 +59397,13 @@ func (ec *executionContext) _MeetingParticipant(ctx context.Context, sel ast.Sel
 			return graphql.Null
 		}
 		return ec._OrganizationParticipant(ctx, sel, obj)
+	case model.EmailParticipant:
+		return ec._EmailParticipant(ctx, sel, &obj)
+	case *model.EmailParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EmailParticipant(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -61436,7 +61443,7 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
-var emailParticipantImplementors = []string{"EmailParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
+var emailParticipantImplementors = []string{"EmailParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _EmailParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.EmailParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, emailParticipantImplementors)
