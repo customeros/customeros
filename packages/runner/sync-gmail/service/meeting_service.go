@@ -86,18 +86,6 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 
 		now := time.Now().UTC()
 
-		//todo check if email is already in the system
-		//allEmailsString, err := s.buildEmailsListExcludingPersonalEmails(personalEmailProviderList, calendarEvent.UsernameSource, from, to, cc, bcc)
-		//if err != nil {
-		//	logrus.Errorf("failed to build emails list: %v", err)
-		//	return entity.ERROR, nil, err
-		//}
-		//
-		//if len(allEmailsString) == 0 {
-		//	reason := "no emails address belongs to a workspace domain"
-		//	return entity.SKIPPED, &reason, nil
-		//}
-
 		session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Neo4jDriver)
 		defer session.Close(ctx)
 
@@ -135,9 +123,9 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 			EndedAt:            endedAt,
 			ConferenceUrl:      &rawCalendarEventData.HangoutLink,
 			MeetingExternalUrl: &rawCalendarEventData.HangoutLink, //what is this and what's the difference with ConfereceUrl
-			AppSource:          AppSource,
 			Agenda:             &rawCalendarEventData.Description,
 			AgendaContentType:  &contentType,
+			AppSource:          AppSource,
 			Source:             GCalSource,
 			SourceOfTruth:      "openline",
 			Status:             &status,
