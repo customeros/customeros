@@ -68,7 +68,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
       {...rest}
       sx={{
         '& ol, ul': {
-          pl: '5',
+          pl: showAsInlineText ? 0 : '5',
         },
         '& pre': {
           whiteSpace: 'normal',
