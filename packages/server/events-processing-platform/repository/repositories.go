@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	cmn_repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
 	"gorm.io/gorm"
@@ -36,7 +37,7 @@ type Repositories struct {
 	CustomFieldRepository      CustomFieldRepository
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, log logger.Logger) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
@@ -57,7 +58,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		LogEntryRepository:         NewLogEntryRepository(driver),
 		TagRepository:              NewTagRepository(driver),
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),
-		TimelineEventRepository:    NewTimelineEventRepository(driver),
+		TimelineEventRepository:    NewTimelineEventRepository(driver, log),
 		CustomFieldRepository:      NewCustomFieldRepository(driver),
 	}
 

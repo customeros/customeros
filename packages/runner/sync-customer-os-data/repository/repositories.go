@@ -3,6 +3,7 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"gorm.io/gorm"
 )
@@ -37,7 +38,7 @@ type Repositories struct {
 	ActionRepository           ActionRepository
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb *config.RawDataStoreDB) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb *config.RawDataStoreDB, log logger.Logger) *Repositories {
 	repositories := Repositories{
 		Dbs: Dbs{
 			Neo4jDriver:    driver,
@@ -53,7 +54,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDB *gorm.DB, airbyteStoreDb 
 		PhoneNumberRepository:        NewPhoneNumberRepository(driver),
 		LocationRepository:           NewLocationRepository(driver),
 		ExternalSystemRepository:     NewExternalSystemRepository(driver),
-		OrganizationRepository:       NewOrganizationRepository(driver),
+		OrganizationRepository:       NewOrganizationRepository(driver, log),
 		UserRepository:               NewUserRepository(driver),
 		NoteRepository:               NewNoteRepository(driver),
 		InteractionEventRepository:   NewInteractionEventRepository(driver),
