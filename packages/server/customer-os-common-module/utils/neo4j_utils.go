@@ -367,15 +367,17 @@ func GetFloatPropOrNil(props map[string]any, key string) *float64 {
 }
 
 func GetTimePropOrEpochStart(props map[string]any, key string) time.Time {
-	if props[key] != nil {
-		return props[key].(time.Time)
+	timePtr := GetTimePropOrNil(props, key)
+	if timePtr != nil {
+		return *timePtr
 	}
 	return GetEpochStart()
 }
 
 func GetTimePropOrZeroTime(props map[string]any, key string) time.Time {
-	if props[key] != nil {
-		return props[key].(time.Time)
+	timePtr := GetTimePropOrNil(props, key)
+	if timePtr != nil {
+		return *timePtr
 	}
 	return ZeroTime()
 }
@@ -385,16 +387,24 @@ func GetEpochStart() time.Time {
 }
 
 func GetTimePropOrNow(props map[string]any, key string) time.Time {
-	if props[key] != nil {
-		return props[key].(time.Time)
+	timePtr := GetTimePropOrNil(props, key)
+	if timePtr != nil {
+		return *timePtr
 	}
 	return time.Now().UTC()
 }
 
 func GetTimePropOrNil(props map[string]any, key string) *time.Time {
 	if props[key] != nil {
-		t := props[key].(time.Time)
-		return &t
+		switch v := props[key].(type) {
+		case time.Time:
+			return &v
+		case string:
+			t, _ := UnmarshalDateTime(v)
+			if t != nil {
+				return t
+			}
+		}
 	}
 	return nil
 }

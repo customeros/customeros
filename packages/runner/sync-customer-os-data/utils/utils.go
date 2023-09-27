@@ -9,6 +9,7 @@ import (
 const customLayout1 = "2006-01-02 15:04:05"
 const customLayout2 = "2006-01-02T15:04:05.000-0700"
 
+// Deprecated, use common module method instead
 func UnmarshalDateTime(input string) (*time.Time, error) {
 	if input == "" {
 		return nil, nil
