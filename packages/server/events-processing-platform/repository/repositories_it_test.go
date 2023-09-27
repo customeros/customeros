@@ -3,10 +3,11 @@ package repository
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/postgres"
 	"github.com/testcontainers/testcontainers-go"
-	"log"
 	"os"
 	"testing"
 )
@@ -20,7 +21,17 @@ var (
 
 const tenantName = "openline"
 
+func SetupTestLogger() logger.Logger {
+	testLogger := logger.NewExtendedAppLogger(&comlog.Config{
+		DevMode: true,
+	})
+	testLogger.InitLogger()
+	return testLogger
+}
+
 func TestMain(m *testing.M) {
+	log := SetupTestLogger()
+
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
 	defer func(dbContainer testcontainers.Container, driver neo4j.DriverWithContext, ctx context.Context) {
 		neo4jt.CloseDriver(driver)
@@ -35,7 +46,7 @@ func TestMain(m *testing.M) {
 		}
 	}(postgresContainer, context.Background())
 
-	repositories = InitRepos(driver, postgresGormDB)
+	repositories = InitRepos(driver, postgresGormDB, log)
 
 	os.Exit(m.Run())
 }
