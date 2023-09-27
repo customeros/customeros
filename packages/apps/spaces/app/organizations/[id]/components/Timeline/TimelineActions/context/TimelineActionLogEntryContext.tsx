@@ -78,7 +78,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
 }: PropsWithChildren<{
   invalidateQuery: () => void;
   id: string;
-  virtuosoRef: React.RefObject<VirtuosoHandle>;
+  virtuosoRef?: React.RefObject<VirtuosoHandle>;
 }>) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [timelineMeta] = useTimelineMeta();
@@ -155,7 +155,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
         },
       );
 
-      virtuosoRef.current?.scrollToIndex({
+      virtuosoRef?.current?.scrollToIndex({
         index: (timelineEntries?.length ?? 0) + 1,
       });
       handleResetEditor();

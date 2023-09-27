@@ -11,7 +11,7 @@ import { TimelineActionsArea } from './TimelineActionsArea';
 interface TimelineActionsProps {
   onScrollBottom: () => void;
   invalidateQuery: () => void;
-  virtuosoRef: React.RefObject<VirtuosoHandle>;
+  virtuosoRef?: React.RefObject<VirtuosoHandle>;
 }
 
 export const TimelineActions: React.FC<TimelineActionsProps> = ({
