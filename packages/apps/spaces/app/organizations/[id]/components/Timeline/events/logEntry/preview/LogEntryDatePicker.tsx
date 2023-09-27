@@ -36,6 +36,8 @@ export const LogEntryDatePicker: React.FC<{
 }> = ({ event, formId }) => {
   const { getInputProps } = useField('date', formId);
   const { id, onChange, value: dateValue, onBlur } = getInputProps();
+  const { getInputProps: getTimeInputProps } = useField('time', formId);
+  const { onBlur: onTimeBlur, value: timeValue } = getTimeInputProps();
 
   return (
     <>
@@ -102,7 +104,7 @@ export const LogEntryDatePicker: React.FC<{
             name='time'
             type='time'
             list='hidden'
-            onBlur={() => onBlur(dateValue)}
+            onBlur={() => onTimeBlur(timeValue)}
             defaultValue={DateTimeUtils.formatTime(event.logEntryStartedAt)}
           />
         </Box>
