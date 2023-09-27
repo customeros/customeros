@@ -51,6 +51,12 @@ func (EmailEntity) InteractionSessionParticipantLabel() string {
 	return NodeLabel_Email
 }
 
+func (EmailEntity) IsMeetingParticipant() {}
+
+func (EmailEntity) MeetingParticipantLabel() string {
+	return NodeLabel_Email
+}
+
 func (email EmailEntity) GetDataloaderKey() string {
 	return email.DataloaderKey
 }

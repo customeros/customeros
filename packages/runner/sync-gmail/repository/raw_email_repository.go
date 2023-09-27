@@ -12,7 +12,7 @@ type RawEmailRepository interface {
 	GetEmailsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
 	GetEmailForSyncByMessageId(externalSystem, tenant, usernameSource, messageId string) (*entity.RawEmail, error)
-	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawEmailState, reason, error *string) error
+	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error
 }
 
 type rawEmailRepositoryImpl struct {
@@ -71,7 +71,7 @@ func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(externalSystem, t
 	return &result, nil
 }
 
-func (repo *rawEmailRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawEmailState, reason, error *string) error {
+func (repo *rawEmailRepositoryImpl) MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error {
 	tx := repo.gormDb.Model(&entity.RawEmail{}).Where("id = ?", id)
 
 	tx.Update("sent_to_event_store_state", sentToEventStoreState)

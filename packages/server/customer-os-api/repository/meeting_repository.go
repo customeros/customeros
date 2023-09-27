@@ -145,7 +145,7 @@ func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tena
 	defer session.Close(ctx)
 
 	query := "MATCH (m:Meeting_%s)-[rel:%s]->(p) " +
-		" WHERE m.id IN $ids AND (p:Contact OR p:User OR p:Organization)" +
+		" WHERE m.id IN $ids AND (p:Contact OR p:User OR p:Organization OR p:Email)" +
 		" RETURN p, rel, m.id"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

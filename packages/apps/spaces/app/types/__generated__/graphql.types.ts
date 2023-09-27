@@ -1154,6 +1154,7 @@ export type MeetingInput = {
 
 export type MeetingParticipant =
   | ContactParticipant
+  | EmailParticipant
   | OrganizationParticipant
   | UserParticipant;
 

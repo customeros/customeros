@@ -458,6 +458,10 @@ func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.Db
 			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Email) {
+			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
+			participant.DataloaderKey = v.LinkedNodeId
+			meetingParticipants = append(meetingParticipants, participant)
 		}
 	}
 	return meetingParticipants

@@ -2702,15 +2702,11 @@
         "inputFields": [
           {
             "name": "datatype",
-            "description": "Datatype of the custom field.\n**Required**",
+            "description": "Datatype of the custom field.",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "ENUM",
-                "name": "CustomFieldDataType",
-                "ofType": null
-              }
+              "kind": "ENUM",
+              "name": "CustomFieldDataType",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -2718,7 +2714,7 @@
           },
           {
             "name": "id",
-            "description": "The unique ID associated with the custom field.",
+            "description": null,
             "type": {
               "kind": "SCALAR",
               "name": "ID",
@@ -2730,15 +2726,11 @@
           },
           {
             "name": "name",
-            "description": "The name of the custom field.\n**Required**",
+            "description": "The name of the custom field.",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -2964,13 +2956,9 @@
             "name": "mandatory",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Boolean",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -9242,6 +9230,11 @@
           },
           {
             "kind": "OBJECT",
+            "name": "EmailParticipant",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
             "name": "OrganizationParticipant",
             "ofType": null
           },
@@ -10387,6 +10380,39 @@
               "ofType": {
                 "kind": "OBJECT",
                 "name": "CustomField",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "customFieldTemplate_Create",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "CustomFieldTemplateInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "CustomFieldTemplate",
                 "ofType": null
               }
             },
@@ -12025,6 +12051,59 @@
                     "kind": "INPUT_OBJECT",
                     "name": "TagIdOrNameInput",
                     "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "logEntry_ResetTags",
+            "description": null,
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "TagIdOrNameInput",
+                      "ofType": null
+                    }
                   }
                 },
                 "defaultValue": null,
@@ -15902,6 +15981,22 @@
                     "ofType": null
                   }
                 }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "customerOsId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
               }
             },
             "isDeprecated": false,

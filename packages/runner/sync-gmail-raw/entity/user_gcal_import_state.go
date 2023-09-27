@@ -12,7 +12,7 @@ type UserGCalImportState struct {
 	CalendarId string    `gorm:"size:255;not null"`
 
 	SyncToken  string    `gorm:"size:255;not null"`
-	PageToken  string    `gorm:"size:255;not null"`
+	PageToken  string    `gorm:"type:text;not null"`
 	MaxResults int64     `gorm:"size:255;not null"`
 	TimeMin    time.Time `gorm:"size:255;not null"`
 	TimeMax    time.Time `gorm:"size:255;not null"`
