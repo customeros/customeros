@@ -35,7 +35,9 @@ export const LogEntryDatePicker: React.FC<{
   formId: string;
 }> = ({ event, formId }) => {
   const { getInputProps } = useField('date', formId);
-  const dateProps = getInputProps();
+  const { id, onChange, value: dateValue, onBlur } = getInputProps();
+  const { getInputProps: getTimeInputProps } = useField('time', formId);
+  const { onBlur: onTimeBlur, value: timeValue } = getTimeInputProps();
 
   return (
     <>
@@ -44,7 +46,7 @@ export const LogEntryDatePicker: React.FC<{
         fontSize='sm'
         fontWeight='semibold'
         as='label'
-        htmlFor={dateProps.id}
+        htmlFor={id}
       >
         Date
       </Text>
@@ -58,8 +60,11 @@ export const LogEntryDatePicker: React.FC<{
         }}
       >
         <ReactDatePicker
-          // id={id}
+          id={id}
           clearIcon={null}
+          onChange={onChange}
+          onBlur={() => onBlur(dateValue)}
+          defaultValue={new Date(event.logEntryStartedAt).toISOString()}
           formatShortWeekday={(_, date) =>
             DateTimeUtils.format(date.toISOString(), DateTimeUtils.shortWeekday)
           }
@@ -75,10 +80,9 @@ export const LogEntryDatePicker: React.FC<{
               role='button'
               fontSize='sm'
             >
-              {DateTimeUtils.format(dateProps.value, 'EEEE, dd MMM yyyy')}
+              {DateTimeUtils.format(dateValue, 'EEEE, dd MMM yyyy')}
             </Text>
           }
-          {...dateProps}
         />
         <Text as='span' mx={1}>
           •
@@ -96,10 +100,12 @@ export const LogEntryDatePicker: React.FC<{
             size='xs'
             lineHeight='1'
             cursor='text'
-            formId={formId}
+            formId='log-entry-update'
             name='time'
             type='time'
             list='hidden'
+            onBlur={() => onTimeBlur(timeValue)}
+            defaultValue={DateTimeUtils.formatTime(event.logEntryStartedAt)}
           />
         </Box>
       </Flex>
