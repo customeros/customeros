@@ -54,7 +54,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 		"				org.updatedAt=$now, " +
 		"               org.name=$name, " +
 		"				org.source=$source, " +
-		"				org.sourceOfTruth=$source, " +
+		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
 		"				org.hide=$hide, " +
 		"				org:%s " +
