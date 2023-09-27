@@ -82,6 +82,8 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 
 	if interactionEventId != "" {
 		//todo update / delete
+		reason := "implement update / delete"
+		return entity.SKIPPED, &reason, nil
 	} else {
 
 		now := time.Now().UTC()
@@ -240,6 +242,8 @@ func getDate(calendarDate *CalendarEventDateTime) (*time.Time, error) {
 
 		if parsedTime.IsZero() {
 			return nil, errors.New(fmt.Sprintf("unable to parse date: %v", calendarDate.Date))
+		} else {
+			parsedTime = parsedTime.UTC()
 		}
 
 		return &parsedTime, nil
@@ -250,6 +254,10 @@ func getDate(calendarDate *CalendarEventDateTime) (*time.Time, error) {
 			return nil, err
 		}
 
+		if parsedTime.IsZero() {
+			return nil, errors.New(fmt.Sprintf("unable to parse date: %v", calendarDate.DateTime))
+		}
+
 		if calendarDate.TimeZone != "" {
 			// Set the time zone for the parsed time
 			location, err := time.LoadLocation(calendarDate.TimeZone)
@@ -258,6 +266,8 @@ func getDate(calendarDate *CalendarEventDateTime) (*time.Time, error) {
 			}
 			parsedTime = parsedTime.In(location)
 		}
+
+		parsedTime = parsedTime.UTC()
 
 		return &parsedTime, nil
 	}
