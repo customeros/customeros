@@ -1,15 +1,18 @@
 import React from 'react';
-import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
-import { Box, Flex } from '@chakra-ui/react';
-import { Button } from '@ui/form/Button';
-import { TagSuggestor } from '@ui/form/RichTextEditor/TagSuggestor';
-import { TagsSelect } from './TagSelect';
 import Image from 'next/image';
-import noteIcon from 'public/images/event-ill-log.png';
+import { useField } from 'react-inverted-form';
+
+import { Button } from '@ui/form/Button';
+import { Box, Flex } from '@chakra-ui/react';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { TagSuggestor } from '@ui/form/RichTextEditor/TagSuggestor';
+import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
 import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
-import { useField } from 'react-inverted-form';
+
+import { Keymapper } from './Keymapper';
+import { TagsSelect } from './TagSelect';
+import noteIcon from 'public/images/event-ill-log.png';
 
 export const Logger = () => {
   const { onCreateLogEntry, remirrorProps, isSaving } =
@@ -46,6 +49,7 @@ export const Logger = () => {
             id: e.value,
           }))}
         />
+        <Keymapper />
       </RichTextEditor>
       <Flex justifyContent='space-between' zIndex={8} fontSize='md'>
         <TagsSelect
