@@ -46,7 +46,7 @@ export const LogEntryUpdateModalContextProvider = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { data: session } = useSession();
   const isAuthor =
-    event.logEntryCreatedBy?.emails?.findIndex(
+    event?.logEntryCreatedBy?.emails?.findIndex(
       (e) => session?.user?.email === e.email,
     ) !== -1;
   useEffect(() => {
