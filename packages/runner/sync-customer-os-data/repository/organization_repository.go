@@ -7,10 +7,12 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -36,11 +38,13 @@ type OrganizationRepository interface {
 
 type organizationRepository struct {
 	driver *neo4j.DriverWithContext
+	log    logger.Logger
 }
 
-func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {
+func NewOrganizationRepository(driver *neo4j.DriverWithContext, log logger.Logger) OrganizationRepository {
 	return &organizationRepository{
 		driver: driver,
+		log:    log,
 	}
 }
 
@@ -445,6 +449,7 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CalculateAndGetLastTouchpoint")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -510,7 +515,16 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 	}
 
 	if len(records.([]*neo4j.Record)) > 0 {
-		return utils.TimePtr(records.([]*neo4j.Record)[0].Values[0].(time.Time)), records.([]*neo4j.Record)[0].Values[1].(string), nil
+		// Try to assert the value to time.Time
+		if t, ok := records.([]*neo4j.Record)[0].Values[0].(time.Time); ok {
+			// If assertion is successful, proceed
+			return utils.TimePtr(t), records.([]*neo4j.Record)[0].Values[1].(string), nil
+		} else {
+			err = errors.New(fmt.Sprintf("Value %v associated to timeline event id %s is not of type time.Time", records.([]*neo4j.Record)[0].Values[0], records.([]*neo4j.Record)[0].Values[1].(string)))
+			tracing.TraceErr(span, err)
+			r.log.Warnf("Failed to get last touchpoint. Skip setting it to organization: %v", err.Error())
+			return nil, "", nil
+		}
 	}
 	return nil, "", nil
 }
