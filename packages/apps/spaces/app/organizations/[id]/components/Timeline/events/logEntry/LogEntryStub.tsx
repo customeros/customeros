@@ -20,7 +20,8 @@ interface LogEntryStubProps {
 
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
   const { openModal } = useTimelineEventPreviewContext();
-  const fullName = `${data.logEntryCreatedBy?.firstName} ${data.logEntryCreatedBy?.lastName}`;
+  const fullName =
+    `${data.logEntryCreatedBy?.firstName} ${data.logEntryCreatedBy?.lastName}`.trim();
   const getLogEntryIcon = useCallback((type: string | null) => {
     switch (type) {
       case 'email':

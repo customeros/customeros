@@ -1,5 +1,5 @@
 'use client';
-import React, { FC, useCallback, useRef } from 'react';
+import React, { FC, useCallback, useRef, useEffect } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { EmailStub, TimelineItem } from './events';
@@ -25,6 +25,8 @@ import { UserActionStub } from '@organization/components/Timeline/events/action/
 import { IntercomStub } from '@organization/components/Timeline/events/intercom/IntercomStub';
 import { ExternalSystemType } from '@spaces/graphql';
 import { LogEntryStub } from '@organization/components/Timeline/events/logEntry/LogEntryStub';
+
+import { useTimelineMeta } from './shared/state';
 
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
@@ -57,6 +59,7 @@ export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
   const virtuoso = useRef<VirtuosoHandle>(null);
   const queryClient = useQueryClient();
+  const [timelineMeta, setTimelineMeta] = useTimelineMeta();
 
   const client = getGraphQLClient();
   const { data, isInitialLoading, isFetchingNextPage, fetchNextPage } =
@@ -82,6 +85,17 @@ export const OrganizationTimeline: FC = () => {
   const invalidateQuery = useCallback(() => {
     queryClient.invalidateQueries(['GetTimeline.infinite']);
   }, []);
+
+  useEffect(() => {
+    setTimelineMeta({
+      ...timelineMeta,
+      getTimelineVariables: {
+        organizationId: id,
+        from: NEW_DATE.toISOString(),
+        size: 50,
+      },
+    });
+  }, [NEW_DATE, id]);
 
   if (isInitialLoading) {
     return (
@@ -254,6 +268,7 @@ export const OrganizationTimeline: FC = () => {
               }, [virtuoso]);
               return (
                 <TimelineActions
+                  virtuosoRef={virtuoso}
                   invalidateQuery={invalidateQuery}
                   onScrollBottom={memoizedScrollBy}
                 />
