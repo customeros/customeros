@@ -1,6 +1,16 @@
 package resolver
 
 import (
+	"github.com/99designs/gqlgen/client"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/stretchr/testify/require"
+
+	//"github.com/mrdulin/gqlgen-cnode/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	//"github.com/mrdulin/gqlgen-cnode/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
+	"github.com/stretchr/testify/mock"
+
 	//"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 
@@ -8,10 +18,12 @@ import (
 )
 
 var (
-	loginname = "mrdulin"
-	avatarURL = "avatar.jpg"
-	score     = 50
-	createAt  = "1900-01-01"
+	ID        = "123"
+	MimeType  = "text/plain"
+	Extension = "txt"
+	Name      = "readme.txt"
+	Size      = 123
+	AppSource = "test app"
 )
 
 func TestMutationResolver_AttachmentCreate_UT(t *testing.T) {
@@ -22,26 +34,35 @@ func TestMutationResolver_AttachmentCreate_UT(t *testing.T) {
 			AttachmentService: testAttachmentService,
 		}
 		resolvers := Resolver{Services: &mockedServices}
-		//	c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})))
-		//	ue := model.UserEntity{ID: "123", User: model.User{Loginname: &loginname, AvatarURL: &avatarURL}}
-		//	testAttachmentService.On("ValidateAccessToken", mock.AnythingOfType("string")).Return(&ue)
-		//	var resp struct {
-		//		ValidateAccessToken struct{ ID, Loginname, AvatarUrl string }
-		//	}
-		//	q := `
-		//  mutation {
-		//    validateAccessToken(accesstoken: "abc") {
-		//      id,
-		//      loginname,
-		//      avatarUrl
-		//    }
-		//  }
-		//`
-		//	c.MustPost(q, &resp)
-		//	testAttachmentService.AssertExpectations(t)
-		//require.Equal(t, "123", resp.ValidateAccessToken.ID)
-		//require.Equal(t, "mrdulin", resp.ValidateAccessToken.Loginname)
-		//require.Equal(t, "avatar.jpg", resp.ValidateAccessToken.AvatarUrl)
+		ue := model.AttachmentInput{
+			MimeType:  MimeType,
+			Name:      Name,
+			Size:      int64(Size),
+			Extension: Extension,
+			AppSource: AppSource}
+		testAttachmentService.On("attachment_Create", mock.AnythingOfType("string")).Return(&ue)
+		var resp struct {
+			attachment_Create struct{ MimeType, Name, Size, Extension, AppSource string }
+		}
+		q := `
+		 mutation {
+		   attachment_Create(input: {mimeType: "text/plain", name: "readme.txt", size: 123, extension: "txt", appSource: "test app"}) {
+			 	id,
+				createdAt,
+				mimeType,
+				name,
+				size,
+				extension,
+				source,
+				sourceOfTruth,
+				appSource
+		   }
+		 }
+		`
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})))
+		c.MustPost(q, &resp)
+		testAttachmentService.AssertExpectations(t)
+		require.Equal(t, "text/plain", resp.attachment_Create.MimeType)
 	})
 
 }
