@@ -16,6 +16,7 @@ import {
 } from './LogEntryUpdateFormDto';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useSession } from 'next-auth/react';
 
 export const noop = () => undefined;
 
@@ -43,7 +44,11 @@ export const LogEntryUpdateModalContextProvider = ({
   const formId = 'log-entry-update';
   const logEntryStartedAtValues = new LogEntryUpdateFormDto(event);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  const { data: session } = useSession();
+  const isAuthor =
+    event.logEntryCreatedBy?.emails?.findIndex(
+      (e) => session?.user?.email === e.email,
+    ) !== -1;
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -61,7 +66,7 @@ export const LogEntryUpdateModalContextProvider = ({
     defaultValues: logEntryStartedAtValues,
 
     stateReducer: (state, action, next) => {
-      if (action.type === 'FIELD_BLUR') {
+      if (action.type === 'FIELD_BLUR' && isAuthor) {
         updateLogEntryMutation.mutate({
           id: event.id,
           input: {
@@ -90,7 +95,7 @@ export const LogEntryUpdateModalContextProvider = ({
   });
 
   useEffect(() => {
-    if (!isModalOpen && openedLogEntryId) {
+    if (!isModalOpen && openedLogEntryId && isAuthor) {
       updateLogEntryMutation.mutate({
         id: openedLogEntryId,
         input: {
