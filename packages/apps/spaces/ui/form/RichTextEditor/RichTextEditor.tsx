@@ -33,7 +33,7 @@ export const RichTextEditor: FC<
     ref,
   ) => {
     const { getInputProps } = useField(name, formId);
-    const { onChange, value } = getInputProps();
+    const { onChange } = getInputProps();
     useImperativeHandle(ref, () => getContext(), [getContext]);
 
     return (
@@ -44,11 +44,7 @@ export const RichTextEditor: FC<
           onChange={(parameter) => {
             const nextState = parameter.state;
             const htmlValue = prosemirrorNodeToHtml(nextState?.doc);
-
-            // first update is happening before form store is initialized this change prevents error
-            if (value !== undefined) {
-              onChange(htmlValue);
-            }
+            onChange(htmlValue);
             setState(nextState);
           }}
           initialContent={state}

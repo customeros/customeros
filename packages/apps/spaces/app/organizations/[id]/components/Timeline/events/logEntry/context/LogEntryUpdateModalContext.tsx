@@ -84,9 +84,6 @@ export const LogEntryUpdateModalContextProvider = ({
 
   const updateLogEntryMutation = useUpdateLogEntryMutation(client, {
     onSuccess: () => {
-      const emptyDefaults = new LogEntryUpdateFormDto();
-      reset();
-      setDefaultValues(emptyDefaults);
       timeoutRef.current = setTimeout(
         () => queryClient.invalidateQueries(['GetTimeline.infinite']),
         500,
@@ -105,6 +102,7 @@ export const LogEntryUpdateModalContextProvider = ({
         },
       });
       setOpenedLogEntryId(null);
+      reset();
     }
   }, [isModalOpen, openedLogEntryId]);
 
@@ -114,7 +112,7 @@ export const LogEntryUpdateModalContextProvider = ({
       const newDefaults = new LogEntryUpdateFormDto(event);
       setDefaultValues(newDefaults);
     }
-  }, [event]);
+  }, [event?.id]);
 
   return (
     <LogEntryUpdateModalContext.Provider
