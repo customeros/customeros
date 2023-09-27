@@ -110,7 +110,6 @@ export const LogEntryUpdateModalContextProvider = ({
     if (event?.id && event.__typename === 'LogEntry') {
       setOpenedLogEntryId(event?.id);
       const newDefaults = new LogEntryUpdateFormDto(event);
-      // console.log('newDefaults', newDefaults)
       setDefaultValues(newDefaults);
     }
   }, [event?.id]);
