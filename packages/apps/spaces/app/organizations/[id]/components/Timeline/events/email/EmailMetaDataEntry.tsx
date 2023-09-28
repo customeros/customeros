@@ -34,6 +34,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
         whiteSpace='nowrap'
         textOverflow='ellipsis'
         overflow='hidden'
+        fontSize='sm'
       >
         <>
           {typeof content === 'string' && content}
