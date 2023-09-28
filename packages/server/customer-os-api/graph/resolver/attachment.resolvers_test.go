@@ -3,8 +3,8 @@ package resolver
 import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
-
 	//"github.com/mrdulin/gqlgen-cnode/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	//"github.com/mrdulin/gqlgen-cnode/graph/model"
@@ -41,9 +41,6 @@ func TestMutationResolver_AttachmentCreate_UT(t *testing.T) {
 			Extension: Extension,
 			AppSource: AppSource}
 		testAttachmentService.On("attachment_Create", mock.AnythingOfType("string")).Return(&ue)
-		var resp struct {
-			attachment_Create struct{ MimeType, Name, Size, Extension, AppSource string }
-		}
 		q := `
 		 mutation {
 		   attachment_Create(input: {mimeType: "text/plain", name: "readme.txt", size: 123, extension: "txt", appSource: "test app"}) {
@@ -60,9 +57,20 @@ func TestMutationResolver_AttachmentCreate_UT(t *testing.T) {
 		 }
 		`
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolvers})))
-		c.MustPost(q, &resp)
-		testAttachmentService.AssertExpectations(t)
-		require.Equal(t, "text/plain", resp.attachment_Create.MimeType)
+		rawResponse, err := c.RawPost(q)
+		require.Nil(t, err)
+
+		var attachmentStruct struct {
+			Attachment_Create model.Attachment
+		}
+
+		err = decode.Decode(rawResponse.Data.(map[string]any), &attachmentStruct)
+		require.Nil(t, err)
+		require.NotNil(t, attachmentStruct)
+
+		//testAttachmentService.AssertExpectations(t)
+		attachment := attachmentStruct.Attachment_Create
+		require.Equal(t, "text/plain", attachment.MimeType)
 	})
 
 }
