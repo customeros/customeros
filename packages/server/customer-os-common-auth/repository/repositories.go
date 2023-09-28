@@ -9,11 +9,13 @@ import (
 
 type Repositories struct {
 	OAuthTokenRepository repository.OAuthTokenRepository
+	ApiKeyRepository     repository.ApiKeyRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
 	repositories := &Repositories{
 		OAuthTokenRepository: repository.NewOAuthTokenRepository(db),
+		ApiKeyRepository:     repository.NewApiKeyRepository(db),
 	}
 
 	var err error
