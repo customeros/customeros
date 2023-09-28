@@ -20,6 +20,7 @@ import { theme } from '@ui/theme/theme';
 import { Button } from '@ui/form/Button';
 import { Center } from '@ui/layout/Center';
 import { Image } from '@ui/media/Image';
+import { Link } from '@ui/navigation/Link';
 import BackgroundGridDot from '../../public/backgrounds/grid/backgroundGridDot.png';
 import GoogleLogo from '@spaces/atoms/icons/GoogleLogo';
 
@@ -68,6 +69,29 @@ export default function SignIn({
                   Sign in with {provider.name}
                 </Button>
               ))}
+
+              <Text color='gray.500' mt={2} textAlign='center' fontSize='xs'>
+                By logging in you agree to CustomerOS&apos;s
+                <Text color='gray.500'>
+                  <Link
+                    color='primary.700'
+                    href='https://customeros.ai/legal/terms-of-service'
+                    mr={1}
+                  >
+                    Terms of Service
+                  </Link>
+                  <Text as='span' mr={1}>
+                    and
+                  </Text>
+                  <Link
+                    color='primary.700'
+                    href='https://www.customeros.ai/legal/privacy-policy'
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </Text>
+              </Text>
             </Flex>
           </Center>
         </GridItem>
