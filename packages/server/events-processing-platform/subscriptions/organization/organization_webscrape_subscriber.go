@@ -19,15 +19,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-type OrganizationSubscriber struct {
+type OrganizationWebscrapeSubscriber struct {
 	log                      logger.Logger
 	db                       *esdb.Client
 	cfg                      *config.Config
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.OrganizationCommands, repositories *repository.Repositories, caches caches.Cache) *OrganizationSubscriber {
-	return &OrganizationSubscriber{
+func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.OrganizationCommands, repositories *repository.Repositories, caches caches.Cache) *OrganizationWebscrapeSubscriber {
+	return &OrganizationWebscrapeSubscriber{
 		log: log,
 		db:  db,
 		cfg: cfg,
@@ -42,14 +42,14 @@ func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.C
 	}
 }
 
-func (s *OrganizationSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
+func (s *OrganizationWebscrapeSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= s.cfg.Subscriptions.OrganizationSubscription.PoolSize; i++ {
+	for i := 1; i <= s.cfg.Subscriptions.OrganizationWebscrapeSubscription.PoolSize; i++ {
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			s.cfg.Subscriptions.OrganizationSubscription.GroupName,
+			s.cfg.Subscriptions.OrganizationWebscrapeSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.OrganizationSubscription.BufferSizeClient,
+				BufferSize: s.cfg.Subscriptions.OrganizationWebscrapeSubscription.BufferSizeClient,
 			},
 		)
 		if err != nil {
@@ -62,13 +62,13 @@ func (s *OrganizationSubscriber) Connect(ctx context.Context, worker subscriptio
 	return group.Wait()
 }
 
-func (s *OrganizationSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (s *OrganizationWebscrapeSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
 }
 
-func (s *OrganizationSubscriber) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
+func (s *OrganizationWebscrapeSubscriber) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
 
 	for {
 		event := sub.Recv()
@@ -84,11 +84,11 @@ func (s *OrganizationSubscriber) ProcessEvents(ctx context.Context, sub *esdb.Pe
 		}
 
 		if event.EventAppeared != nil {
-			s.log.EventAppeared(s.cfg.Subscriptions.OrganizationSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.OrganizationWebscrapeSubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
-				s.log.Errorf("(OrganizationSubscriber.when) err: {%v}", err)
+				s.log.Errorf("(OrganizationWebscrapeSubscriber.when) err: {%v}", err)
 
 				if err := sub.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
 					s.log.Errorf("(stream.Nack) err: {%v}", err)
@@ -107,8 +107,8 @@ func (s *OrganizationSubscriber) ProcessEvents(ctx context.Context, sub *esdb.Pe
 	}
 }
 
-func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "OrganizationSubscriber.When", evt)
+func (s *OrganizationWebscrapeSubscriber) When(ctx context.Context, evt eventstore.Event) error {
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "OrganizationWebscrapeSubscriber.When", evt)
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
@@ -117,33 +117,12 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 	}
 
 	switch evt.GetEventType() {
-	case orgevts.OrganizationCreateV1:
-		return s.organizationEventHandler.AdjustNewOrganizationFields(ctx, evt)
-	case orgevts.OrganizationUpdateV1:
-		return s.organizationEventHandler.AdjustUpdatedOrganizationFields(ctx, evt)
-	case orgevts.OrganizationRequestRenewalForecastV1:
-		return s.organizationEventHandler.OnRenewalForecastRequested(ctx, evt)
-	case orgevts.OrganizationRequestNextCycleDateV1:
-		return s.organizationEventHandler.OnNextCycleDateRequested(ctx, evt)
-	case
-		orgevts.OrganizationLinkDomainV1,
-		orgevts.OrganizationRequestScrapeByWebsiteV1,
-		orgevts.OrganizationPhoneNumberLinkV1,
-		orgevts.OrganizationEmailLinkV1,
-		orgevts.OrganizationAddSocialV1,
-		orgevts.OrganizationUpdateRenewalLikelihoodV1,
-		orgevts.OrganizationUpdateRenewalForecastV1,
-		orgevts.OrganizationUpdateBillingDetailsV1,
-		orgevts.OrganizationRefreshLastTouchpointV1,
-		orgevts.OrganizationHideV1,
-		orgevts.OrganizationShowV1,
-		orgevts.OrganizationUpsertCustomFieldV1:
-		return nil
+	case orgevts.OrganizationLinkDomainV1:
+		return s.organizationEventHandler.WebscrapeOrganizationByDomain(ctx, evt)
+	case orgevts.OrganizationRequestScrapeByWebsiteV1:
+		return s.organizationEventHandler.WebscrapeOrganizationByWebsite(ctx, evt)
 
 	default:
-		s.log.Warnf("(OrganizationSubscriber) Unknown EventType: {%s}", evt.EventType)
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
+		return nil
 	}
 }

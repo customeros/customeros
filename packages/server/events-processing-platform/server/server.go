@@ -165,6 +165,17 @@ func (server *server) Run(parentCtx context.Context) error {
 		}()
 	}
 
+	if server.cfg.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
+		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands, server.repositories, server.caches)
+		go func() {
+			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(organizationWebscrapeSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
 	if server.cfg.Subscriptions.InteractionEventSubscription.Enabled {
 		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.log, db, server.cfg, server.commands.InteractionEventCommands, server.repositories)
 		go func() {

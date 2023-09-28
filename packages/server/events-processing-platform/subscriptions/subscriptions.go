@@ -32,6 +32,8 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		nil,
 		&defaultSettings,
 		false,
+		false,
+		esdb.Start{},
 	); err != nil {
 		return err
 	}
@@ -41,6 +43,8 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.EmailValidationSubscription.Prefix}},
 		&defaultSettings,
 		false,
+		false,
+		esdb.Start{},
 	); err != nil {
 		return err
 	}
@@ -50,6 +54,8 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.PhoneNumberValidationSubscription.Prefix}},
 		&defaultSettings,
 		false,
+		false,
+		esdb.Start{},
 	); err != nil {
 		return err
 	}
@@ -59,6 +65,8 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.LocationValidationSubscription.Prefix}},
 		&defaultSettings,
 		false,
+		false,
+		esdb.Start{},
 	); err != nil {
 		return err
 	}
@@ -70,7 +78,26 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		s.cfg.Subscriptions.OrganizationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationSubscription.Prefix}},
 		&organizationSubSettings,
-		s.cfg.Subscriptions.OrganizationSubscription.DeletePersistentSubscription,
+		false,
+		false,
+		esdb.Start{},
+	); err != nil {
+		return err
+	}
+
+	organizationWebscrapeSubSettings := esdb.SubscriptionSettingsDefault()
+	organizationWebscrapeSubSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.MessageTimeoutSec * 1000
+	organizationWebscrapeSubSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.CheckpointLowerBound
+	if err := s.subscribeToAll(ctx,
+		s.cfg.Subscriptions.OrganizationWebscrapeSubscription.GroupName,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationWebscrapeSubscription.Prefix}},
+		&organizationWebscrapeSubSettings,
+		false,
+		false,
+		esdb.Position{
+			Commit:  s.cfg.Subscriptions.OrganizationWebscrapeSubscription.StartPosition,
+			Prepare: s.cfg.Subscriptions.OrganizationWebscrapeSubscription.StartPosition,
+		},
 	); err != nil {
 		return err
 	}
@@ -82,6 +109,8 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.InteractionEventSubscription.Prefix}},
 		&interactionEventSubSettings,
 		false,
+		false,
+		esdb.Start{},
 	); err != nil {
 		return err
 	}
@@ -89,7 +118,8 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	return nil
 }
 
-func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, filter *esdb.SubscriptionFilter, settings *esdb.PersistentSubscriptionSettings, deletePersistentSubscription bool) error {
+func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, filter *esdb.SubscriptionFilter, settings *esdb.PersistentSubscriptionSettings,
+	deletePersistentSubscription, updatePersistentSubscription bool, startPosition esdb.AllPosition) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Subscriptions.subscribeToAll")
 	defer span.Finish()
 	span.LogFields(log.String("groupName", groupName))
@@ -108,7 +138,7 @@ func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, fi
 	options := esdb.PersistentAllSubscriptionOptions{
 		Settings:  settings,
 		Filter:    filter,
-		StartFrom: esdb.Start{},
+		StartFrom: startPosition,
 	}
 	//if s.cfg.EventStoreConfig.AdminUsername != "" && s.cfg.EventStoreConfig.AdminPassword != "" {
 	//	options.Authenticated = &esdb.Credentials{Login: s.cfg.EventStoreConfig.AdminUsername, Password: s.cfg.EventStoreConfig.AdminPassword}
@@ -122,10 +152,12 @@ func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, fi
 		} else {
 			s.log.Warnf("err code: %v, error: %v", esdbErr.Code(), esdbErr.Error())
 			// UPDATING PERSISTENT SUBSCRIPTION IS NOT WORKING AS EXPECTED, FILTERS ARE REMOVED AFTER UPDATE
-			//err = s.db.UpdatePersistentSubscriptionToAll(ctx, groupName, options)
-			//if err != nil {
-			//	tracing.TraceErr(span, esdbErr)
-			//	s.log.Fatalf("err code: %v, err: %v", esdbErr.Code(), esdbErr.Error())
+			//if updatePersistentSubscription {
+			//	err = s.db.UpdatePersistentSubscriptionToAll(ctx, groupName, options)
+			//	if err != nil {
+			//		tracing.TraceErr(span, esdbErr)
+			//		s.log.Fatalf("err code: %v, err: %v", esdbErr.Code(), esdbErr.Error())
+			//	}
 			//}
 		}
 	}
