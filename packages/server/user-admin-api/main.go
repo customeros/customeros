@@ -46,7 +46,7 @@ func main() {
 	db, _ := InitDB(&config, appLogger)
 	defer db.SqlDB.Close()
 
-	authServices := authCommonService.InitServices(db.GormDB)
+	authServices := authCommonService.InitServices(nil, db.GormDB)
 
 	graphqlClient := graphql.NewClient(config.CustomerOS.CustomerOsAPI)
 	cosClient := service.NewCustomerOsClient(&config, graphqlClient)
