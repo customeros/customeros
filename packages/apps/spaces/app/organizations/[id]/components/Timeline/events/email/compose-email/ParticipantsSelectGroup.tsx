@@ -8,6 +8,7 @@ import { Box } from '@ui/layout/Box';
 import { EmailSubjectInput } from '@organization/components/Timeline/events/email/compose-email/EmailSubjectInput';
 import { Button } from '@ui/form/Button';
 import Image from 'next/image';
+import { Tooltip } from '@ui/overlay/Tooltip';
 
 interface ParticipantSelectGroupGroupProps extends InputProps {
   to: Array<{ label: string; value: string }>;
@@ -102,7 +103,20 @@ export const ParticipantsSelectGroup = ({
               </Text>
               <Text color='gray.500' noOfLines={1}>
                 {!!to?.length && (
-                  <>{to?.map((email) => email.value).join(', ')}</>
+                  <>
+                    {to?.map((email, index, self) => (
+                      <Tooltip
+                        key={email.value}
+                        label={email.value !== email.label ? email.value : ''}
+                      >
+                        <Text as='span' mr='1'>
+                          {`${email.label}${
+                            index !== self.length - 1 ? ',' : ''
+                          }`}
+                        </Text>
+                      </Tooltip>
+                    ))}
+                  </>
                 )}
               </Text>
             </Flex>
@@ -118,7 +132,18 @@ export const ParticipantsSelectGroup = ({
                   CC:
                 </Text>
                 <Text color='gray.500' noOfLines={1}>
-                  {[...cc].map((email) => email.value).join(', ')}
+                  {[...cc].map((email, index, self) => (
+                    <Tooltip
+                      key={email.value}
+                      label={email.value !== email.label ? email.value : ''}
+                    >
+                      <Text as='span' mr='1'>
+                        {`${email.label}${
+                          index !== self.length - 1 ? ',' : ''
+                        }`}
+                      </Text>
+                    </Tooltip>
+                  ))}
                 </Text>
               </Flex>
             )}
@@ -132,7 +157,18 @@ export const ParticipantsSelectGroup = ({
                   BCC:
                 </Text>
                 <Text color='gray.500' noOfLines={1}>
-                  {[...bcc].map((email) => email.value).join(', ')}
+                  {[...bcc].map((email, index, self) => (
+                    <Tooltip
+                      key={email.value}
+                      label={email.value !== email.label ? email.value : ''}
+                    >
+                      <Text as='span' mr='1'>
+                        {`${email.label}${
+                          index !== self.length - 1 ? ',' : ''
+                        }`}
+                      </Text>
+                    </Tooltip>
+                  ))}
                 </Text>
               </Flex>
             )}

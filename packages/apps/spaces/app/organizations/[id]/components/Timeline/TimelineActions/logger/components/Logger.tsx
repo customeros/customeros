@@ -10,7 +10,7 @@ import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
 import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
 
-import { Keymapper } from './Keymapper';
+import { Keymapper } from '@ui/form/RichTextEditor/components/Keymapper';
 import { TagsSelect } from './TagSelect';
 import noteIcon from 'public/images/event-ill-log.png';
 
@@ -49,7 +49,7 @@ export const Logger = () => {
             id: e.value,
           }))}
         />
-        <Keymapper />
+        <Keymapper onCreate={onCreateLogEntry} />
       </RichTextEditor>
       <Flex justifyContent='space-between' zIndex={8} fontSize='md'>
         <TagsSelect
