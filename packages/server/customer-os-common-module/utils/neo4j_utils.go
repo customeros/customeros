@@ -6,7 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -63,11 +63,27 @@ func NewNeo4jWriteSession(ctx context.Context, driver neo4j.DriverWithContext) n
 }
 
 func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, accessMode neo4j.AccessMode) neo4j.SessionWithContext {
-	err := driver.VerifyConnectivity(ctx)
-	if err != nil {
-		logrus.Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %v", err)
+	accessModeStr := "read"
+	if accessMode == neo4j.AccessModeWrite {
+		accessModeStr = "write"
 	}
-	logrus.Infof("(newNeo4jSession) Creating new session with access mode: %v", accessMode)
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		err := driver.VerifyConnectivity(ctx)
+		if err == nil {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+		if i == maxRetries-1 {
+			zap.L().With(
+				zap.String("accessMode", accessModeStr),
+			).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
+		}
+	}
+	zap.L().With(
+		zap.String("accessMode", accessModeStr),
+	).Sugar().Info("(newNeo4jSession) Creating new session")
+
 	return driver.NewSession(
 		ctx,
 		neo4j.SessionConfig{

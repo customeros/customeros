@@ -9,7 +9,7 @@ require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.12.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.13.0
 	github.com/nyaruka/phonenumbers v1.1.8
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230203114552-e5ca0d992aff
 	github.com/sirupsen/logrus v1.9.3
@@ -44,6 +44,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
