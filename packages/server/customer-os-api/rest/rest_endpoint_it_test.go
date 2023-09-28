@@ -68,7 +68,7 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 	commonServices := commonService.InitServices(postgresGormDB, driver)
-	commonAuthServices := commonAuthService.InitServices(postgresGormDB)
+	commonAuthServices := commonAuthService.InitServices(nil, postgresGormDB)
 	serviceContainer = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, nil)
 	dataloader.NewDataLoader(serviceContainer)
 	log.Printf("%v", serviceContainer)
