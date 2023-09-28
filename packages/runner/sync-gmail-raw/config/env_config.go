@@ -1,6 +1,7 @@
 package config
 
 import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+import authConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
 
 type Config struct {
 	Neo4jDb struct {
@@ -23,10 +24,7 @@ type Config struct {
 		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	}
 
-	GoogleOAuth struct {
-		ClientId     string `env:"GOOGLE_OAUTH_CLIENT_ID,required"`
-		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET,required"`
-	}
+	AuthConfig authConfig.Config
 
 	SyncData struct {
 		CronSync  string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
