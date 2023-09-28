@@ -3,16 +3,14 @@ package unit_tests
 import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
-	"github.com/stretchr/testify/require"
-	//"github.com/mrdulin/gqlgen-cnode/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	//"github.com/mrdulin/gqlgen-cnode/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"time"
 
-	//"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 
 	"testing"
@@ -27,7 +25,7 @@ var (
 	AppSource = "test app"
 )
 
-func TestMutationResolver_AttachmentCreate_UT(t *testing.T) {
+func TestMutationResolver_AttachmentCreate(t *testing.T) {
 
 	t.Run("should create attachment correctly", func(t *testing.T) {
 		testAttachmentService := new(MockedAttachmentService)
@@ -70,7 +68,16 @@ func TestMutationResolver_AttachmentCreate_UT(t *testing.T) {
 		require.NotNil(t, attachmentStruct)
 
 		attachment := attachmentStruct.Attachment_Create
+		timeToHardcode := time.Date(2023, 9, 28, 12, 0, 0, 0, time.UTC)
+		timePointer := timeToHardcode
 		require.Equal(t, "", attachment.ID)
+		require.Equal(t, timePointer, attachment.CreatedAt)
 		require.Equal(t, "text/plain", attachment.MimeType)
+		require.Equal(t, "readme.txt", attachment.Name)
+		require.Equal(t, int64(123), attachment.Size)
+		require.Equal(t, "", attachment.Extension)
+		require.Equal(t, model.DataSource("NA"), attachment.Source)
+		require.Equal(t, model.DataSource("NA"), attachment.SourceOfTruth)
+		require.Equal(t, "", attachment.AppSource)
 	})
 }
