@@ -122,7 +122,6 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
           option: (props, state) => ({
             ...props,
             my: '2px',
-            borderRadius: 'md',
             color: 'gray.700',
             bg: state.isSelected ? 'primary.50' : 'white',
             boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
@@ -131,13 +130,13 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
           }),
           multiValue: (props, state) => ({
             ...props,
-            borderRadius: 'full',
             bg: 'gray.50',
             color: 'gray.500',
             ml: 0,
             mr: 1,
             border: '1px solid',
             borderColor: 'gray.200',
+
             ...chakraStyles?.multiValue?.(props, state),
           }),
           groupHeading: (props, state) => ({
