@@ -14,6 +14,9 @@ RUN go build -v -o /go/bin/app
 
 FROM alpine:3.14
 COPY --chown=65534:65534 --from=builder /go/bin/app .
+
+RUN apk add --no-cache tzdata
+
 USER 65534
 
 ENTRYPOINT [ "./app" ]
