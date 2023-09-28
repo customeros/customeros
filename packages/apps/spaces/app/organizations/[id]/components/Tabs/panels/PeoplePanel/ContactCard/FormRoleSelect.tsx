@@ -40,11 +40,7 @@ export const FormRoleSelect = ({
     return (
       <span onClick={(e) => e.stopPropagation()} ref={ref}>
         <FormSelect
-          isMulti={{
-            selectProps: {
-              size: 'sm',
-            },
-          }}
+          isMulti
           autoFocus
           menuIsOpen
           name={name}
