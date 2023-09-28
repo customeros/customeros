@@ -5,12 +5,14 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
       - packages/server/comms-api/**
       - packages/server/customer-os-api/graph/schemas/**
       - .github/workflows/build-comms-api.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
       - packages/server/comms-api/**
       - packages/server/customer-os-api/graph/schemas/**
       - .github/workflows/build-comms-api.yml
@@ -75,6 +77,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Prepare sources for docker build
+        run: |
+          mkdir tmp-sources
+          mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/customer-os-common-auth
+          mkdir tmp-sources/comms-api
+          
+          rsync -av --progress --exclude="tmp-sources" * tmp-sources/comms-api
+          cp .env tmp-sources/comms-api/.env
+          cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+          cp -r ../customer-os-common-auth/* tmp-sources/customer-os-common-auth
+          
+          cp Dockerfile tmp-sources/Dockerfile
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0

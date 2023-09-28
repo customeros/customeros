@@ -3,12 +3,9 @@ package repository
 import (
 	"errors"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"gorm.io/gorm"
 )
-
-const GSUITE_SERVICE_PRIVATE_KEY = "GSUITE_SERVICE_PRIVATE_KEY"
-const GSUITE_SERVICE_EMAIL_ADDRESS = "GSUITE_SERVICE_EMAIL_ADDRESS"
 
 type ApiKeyRepository interface {
 	GetApiKeyByTenantService(tenantId, serviceId string) (string, error)

@@ -3,12 +3,14 @@ package service
 import (
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/repository"
+	authService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/redis/go-redis/v9"
 )
 
 type Services struct {
+	AuthServices *authService.Services
+
 	MailService         MailService
 	CustomerOsService   CustomerOSService
 	RedisService        RedisService
@@ -16,16 +18,18 @@ type Services struct {
 	CommonServices      *commonService.Services
 }
 
-func InitServices(graphqlClient *graphql.Client, redisClient *redis.Client, config *c.Config, db *c.StorageDB) *Services {
-	cosService := NewCustomerOSService(graphqlClient, config)
-	apiKeyRepository := repository.NewApiKeyRepository(db)
+func InitServices(graphqlClient *graphql.Client, redisClient *redis.Client, cfg *c.Config, db *c.StorageDB) *Services {
+	cosService := NewCustomerOSService(graphqlClient, cfg)
+
 	services := Services{
 		CustomerOsService:   cosService,
-		MailService:         NewMailService(config, cosService, apiKeyRepository),
-		RedisService:        NewRedisService(redisClient, config),
-		FileStoreApiService: NewFileStoreApiService(config),
+		RedisService:        NewRedisService(redisClient, cfg),
+		FileStoreApiService: NewFileStoreApiService(cfg),
 		CommonServices:      commonService.InitServices(db.GormDB, nil),
 	}
+
+	services.MailService = NewMailService(cfg, &services)
+	services.AuthServices = authService.InitServices(&cfg.AuthConfig, db.GormDB)
 
 	return &services
 }

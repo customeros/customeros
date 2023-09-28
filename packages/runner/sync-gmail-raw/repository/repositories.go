@@ -3,17 +3,13 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
-	authRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
 	"gorm.io/gorm"
 )
 
 type Repositories struct {
-	OAuthRepositories *authRepository.Repositories
-
 	TenantRepository TenantRepository
 	UserRepository   UserRepository
 	EmailRepository  EmailRepository
-	ApiKeyRepository ApiKeyRepository
 
 	UserGmailImportPageTokenRepository UserGmailImportPageTokenRepository
 	UserGCalImportStateRepository      UserGCalImportStateRepository
@@ -25,12 +21,9 @@ type Repositories struct {
 func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 	repositories := Repositories{
 
-		OAuthRepositories: authRepository.InitRepositories(gormDb),
-
 		TenantRepository: NewTenantRepository(driver),
 		UserRepository:   NewUserRepository(driver),
 		EmailRepository:  NewEmailRepository(driver),
-		ApiKeyRepository: NewApiKeyRepository(gormDb),
 
 		UserGmailImportPageTokenRepository: NewUserGmailImportPageTokenRepository(gormDb),
 		UserGCalImportStateRepository:      NewUserGCalImportStateRepository(gormDb),
