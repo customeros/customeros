@@ -11,7 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.3.1
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.12.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.13.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230905205324-bb882f6be687
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230905205324-bb882f6be687
 	gorm.io/driver/postgres v1.5.2
