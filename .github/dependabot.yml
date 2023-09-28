@@ -39,6 +39,20 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
+    directory: "/packages/server/customer-os-webhooks"
+    schedule:
+      interval: "daily"
+      time: "04:30"
+    open-pull-requests-limit: 5
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/customer-os-webhooks"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
     directory: "/packages/server/customer-os-common-module"
     schedule:
       interval: "daily"
