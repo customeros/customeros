@@ -1,6 +1,7 @@
 package config
 
 import (
+	authConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
@@ -46,6 +47,7 @@ type Config struct {
 		Host   string `env:"REDIS_HOST,required"`
 		Scheme string `env:"REDIS_SCHEME,required"envDefault:"rediss"`
 	}
-	Jaeger tracing.JaegerConfig
-	Logger logger.Config
+	AuthConfig authConfig.Config
+	Jaeger     tracing.JaegerConfig
+	Logger     logger.Config
 }
