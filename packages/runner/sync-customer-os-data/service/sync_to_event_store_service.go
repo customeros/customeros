@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	emailgrpcservice "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
@@ -285,11 +286,13 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 			IndustryGroup:     utils.GetStringPropOrEmpty(v.Node.Props, "industryGroup"),
 			LastFundingRound:  utils.GetStringPropOrEmpty(v.Node.Props, "lastFundingRound"),
 			LastFundingAmount: utils.GetStringPropOrEmpty(v.Node.Props, "lastFundingAmount"),
-			AppSource:         utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-			Source:            utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-			SourceOfTruth:     utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-			CreatedAt:         utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-			UpdatedAt:         utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			SourceFields: &common_grpc_service.SourceFields{
+				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+			},
+			CreatedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+			UpdatedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
 		})
 		if err != nil {
 			failedRecords++

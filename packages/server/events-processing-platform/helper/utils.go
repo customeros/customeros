@@ -1,9 +1,7 @@
-package utils
+package helper
 
 import (
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"strings"
-	"time"
 )
 
 func CheckErrMessages(err error, messages ...string) bool {
@@ -13,12 +11,4 @@ func CheckErrMessages(err error, messages ...string) bool {
 		}
 	}
 	return false
-}
-
-func TimestampProtoToTime(pbTime *timestamp.Timestamp) *time.Time {
-	if pbTime == nil {
-		return nil
-	}
-	t := pbTime.AsTime()
-	return &t
 }

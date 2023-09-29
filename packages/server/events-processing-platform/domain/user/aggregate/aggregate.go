@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
@@ -13,25 +14,18 @@ const (
 )
 
 type UserAggregate struct {
-	*eventstore.AggregateBase
+	*aggregate.CommonTenantIdAggregate
 	User *models.User
 }
 
 func NewUserAggregateWithTenantAndID(tenant, id string) *UserAggregate {
-	if id == "" {
-		return nil
-	}
-	aggregate := NewUserAggregate()
-	aggregate.SetID(tenant + "-" + id)
-	return aggregate
-}
+	userAggregate := UserAggregate{}
+	userAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(UserAggregateType, tenant, id)
+	userAggregate.SetWhen(userAggregate.When)
+	userAggregate.User = &models.User{}
+	userAggregate.Tenant = tenant
 
-func NewUserAggregate() *UserAggregate {
-	userAggregate := &UserAggregate{User: models.NewUser()}
-	base := eventstore.NewAggregateBase(userAggregate.When)
-	base.SetType(UserAggregateType)
-	userAggregate.AggregateBase = base
-	return userAggregate
+	return &userAggregate
 }
 
 func (a *UserAggregate) When(event eventstore.Event) error {
@@ -66,14 +60,13 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	a.User.LastName = eventData.LastName
 	a.User.Internal = eventData.Internal
 	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.User.Source = common_models.Source{
-		Source:        eventData.Source,
-		SourceOfTruth: eventData.SourceOfTruth,
-		AppSource:     eventData.AppSource,
-	}
+	a.User.Source = eventData.SourceFields
 	a.User.CreatedAt = eventData.CreatedAt
 	a.User.UpdatedAt = eventData.UpdatedAt
 	a.User.Timezone = eventData.Timezone
+	if eventData.ExternalSystem.Available() {
+		a.User.ExternalSystems = []common_models.ExternalSystem{eventData.ExternalSystem}
+	}
 	return nil
 }
 
@@ -82,7 +75,6 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.User.Source.SourceOfTruth = eventData.SourceOfTruth
 	a.User.UpdatedAt = eventData.UpdatedAt
 	a.User.Name = eventData.Name
 	a.User.FirstName = eventData.FirstName
@@ -90,6 +82,9 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 	a.User.Internal = eventData.Internal
 	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 	a.User.Timezone = eventData.Timezone
+	if eventData.SourceOfTruth != "" {
+		a.User.Source.SourceOfTruth = eventData.SourceOfTruth
+	}
 	return nil
 }
 

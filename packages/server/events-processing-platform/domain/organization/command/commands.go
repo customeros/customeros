@@ -9,6 +9,7 @@ import (
 
 type UpsertOrganizationCommand struct {
 	eventstore.BaseCommand
+	IsCreateCommand   bool
 	IgnoreEmptyFields bool
 	DataFields        models.OrganizationDataFields
 	Source            common_models.Source

@@ -28,6 +28,7 @@ func NewRequestRenewalForecastCommandHandler(log logger.Logger, es eventstore.Ag
 func (h *requestRenewalForecastCommandHandler) Handle(ctx context.Context, command *command.RequestRenewalForecastCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestRenewalForecastCommandHandler.Handle")
 	defer span.Finish()
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
 	span.LogFields(log.Object("command", command))
 
 	if err := validator.GetValidator().Struct(command); err != nil {

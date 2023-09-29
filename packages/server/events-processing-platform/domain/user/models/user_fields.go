@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type UserCoreFields struct {
+type UserDataFields struct {
 	Name            string
 	FirstName       string
 	LastName        string
@@ -17,7 +17,7 @@ type UserCoreFields struct {
 type UserFields struct {
 	ID             string
 	Tenant         string
-	UserCoreFields UserCoreFields
+	UserDataFields UserDataFields
 	Source         commonModels.Source
 	CreatedAt      *time.Time
 	UpdatedAt      *time.Time

@@ -3,6 +3,7 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -30,7 +31,8 @@ func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
 func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*OrganizationAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadOrganizationAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("ObjectID", objectID))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("ObjectID", objectID))
 
 	organizationAggregate := NewOrganizationAggregateWithTenantAndID(tenant, objectID)
 

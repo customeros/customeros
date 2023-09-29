@@ -9,7 +9,7 @@ import (
 	log_entry_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
 	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
-	user_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
+	user_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 )
 
 type Commands struct {

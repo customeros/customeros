@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
@@ -41,7 +42,7 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.Repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, "LogEntry", eventData.ExternalSystem)
+		err = h.Repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, constants.NodeLabel_LogEntry, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link log entry %s with external system %s: %s", logEntryId, eventData.ExternalSystem.ExternalSystemId, err.Error())

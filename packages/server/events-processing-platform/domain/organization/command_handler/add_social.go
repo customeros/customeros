@@ -29,7 +29,8 @@ func NewAddSocialCommandHandler(log logger.Logger, cfg *config.Config, es events
 func (c *addSocialCommandHandler) Handle(ctx context.Context, command *command.AddSocialCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddSocialCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	span.LogFields(log.String("ObjectID", command.ObjectID))
 
 	if command.Tenant == "" {
 		return eventstore.ErrMissingTenant

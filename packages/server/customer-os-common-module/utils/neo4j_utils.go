@@ -436,3 +436,8 @@ func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, query str
 
 	return err
 }
+
+func ExecuteQueryInTx(ctx context.Context, tx neo4j.ManagedTransaction, query string, params map[string]any) error {
+	_, err := tx.Run(ctx, query, params)
+	return err
+}

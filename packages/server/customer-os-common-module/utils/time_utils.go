@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strings"
@@ -75,4 +76,12 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 	}
 
 	return nil, errors.New(fmt.Sprintf("cannot parse input as date time %s", input))
+}
+
+func TimestampProtoToTime(pbTime *timestamp.Timestamp) *time.Time {
+	if pbTime == nil {
+		return nil
+	}
+	t := pbTime.AsTime()
+	return &t
 }

@@ -1,9 +1,10 @@
-package commands
+package command_handler
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -13,7 +14,7 @@ import (
 )
 
 type LinkJobRoleCommandHandler interface {
-	Handle(ctx context.Context, command *LinkJobRoleCommand) error
+	Handle(ctx context.Context, command *command.LinkJobRoleCommand) error
 }
 
 type linkJobRoleCommandHandler struct {
@@ -26,7 +27,7 @@ func NewLinkJobRoleCommandHandler(log logger.Logger, cfg *config.Config, es even
 	return &linkJobRoleCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkJobRoleCommandHandler) Handle(ctx context.Context, command *LinkJobRoleCommand) error {
+func (c *linkJobRoleCommandHandler) Handle(ctx context.Context, command *command.LinkJobRoleCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkJobRoleCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))

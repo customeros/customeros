@@ -28,6 +28,7 @@ func NewUpsertCustomFieldCommandHandler(log logger.Logger, es eventstore.Aggrega
 func (c *upsertCustomFieldCommandHandler) Handle(ctx context.Context, command *command.UpsertCustomFieldCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpsertCustomFieldCommandHandler.Handle")
 	defer span.Finish()
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if err := validator.GetValidator().Struct(command); err != nil {

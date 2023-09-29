@@ -71,14 +71,12 @@ type LogEntryUpdateEvent struct {
 
 func NewLogEntryUpdateEvent(aggregate eventstore.Aggregate, content, contentType, sourceOfTruth string, updatedAt, startedAt time.Time) (eventstore.Event, error) {
 	eventData := LogEntryUpdateEvent{
-		Tenant:      aggregate.GetTenant(),
-		Content:     content,
-		ContentType: contentType,
-		UpdatedAt:   updatedAt,
-		StartedAt:   startedAt,
-	}
-	if sourceOfTruth != "" {
-		eventData.SourceOfTruth = sourceOfTruth
+		Tenant:        aggregate.GetTenant(),
+		Content:       content,
+		ContentType:   contentType,
+		UpdatedAt:     updatedAt,
+		StartedAt:     startedAt,
+		SourceOfTruth: sourceOfTruth,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
