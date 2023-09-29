@@ -1,1 +1,0 @@
-export { CardHeading } from './CardHeading';

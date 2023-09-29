@@ -12,7 +12,7 @@ export const SocialIcon = ({
   if (knownUrl === 'twitter')
     return (
       <Image
-        src={'/logos/twitterX.webp'}
+        src={'/integrationOptionLogos/twitterX.webp'}
         alt='Twitter'
         width={32}
         height={32}

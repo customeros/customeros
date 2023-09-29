@@ -1,7 +1,6 @@
 export { default as CustomerOsLogo } from './CustomerOsLogo';
 export { default as Icon } from './Icon';
 export { default as OpenlineLogo } from './OpenlineLogo';
-export { default as Affiliate } from './Affiliate';
 export { default as AlignCenter } from './AlignCenter';
 export { default as AlignJustify } from './AlignJustify';
 export { default as AlignLeft } from './AlignLeft';

@@ -1,6 +1,0 @@
-.divider {
-  display: flex;
-  border-bottom: 1px solid #86888d;
-  margin-bottom: var(--spacing-xs);
-  margin-top: var(--spacing-xs);
-}

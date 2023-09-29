@@ -1,1 +1,0 @@
-export { MessageDeprecate } from './MessageDeprecate';

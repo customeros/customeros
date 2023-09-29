@@ -1,3 +1,1 @@
-export { Table } from './Table';
-export { TableCell, TableHeaderCell } from './table-cells';
-export { TableSkeleton } from './skeletons/TableSkeleton';
+export { TableCell } from './table-cells';

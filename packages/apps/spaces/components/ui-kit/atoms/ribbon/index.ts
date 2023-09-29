@@ -1,1 +1,0 @@
-export { Ribbon } from './Ribbon';

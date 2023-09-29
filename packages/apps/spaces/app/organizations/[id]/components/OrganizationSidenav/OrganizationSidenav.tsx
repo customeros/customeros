@@ -10,7 +10,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { SidenavItem } from '@shared/components/RootSidenav/SidenavItem';
+import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 import { useLocalStorage } from 'usehooks-ts';
 

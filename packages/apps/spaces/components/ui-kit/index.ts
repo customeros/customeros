@@ -1,23 +1,6 @@
 export {
-  AvatarButton,
-  Avatar,
-  EditableContentInput,
-  Divider,
-  WorkspaceButton,
-  WorkspaceElementButton,
-  Button,
-  DeleteIconButton,
-  MessageDeprecate,
-  Address,
   DebouncedInput,
-  Input,
   Link,
-  TagsList,
-  TagInput,
-  TagListSkeleton,
-  Highlight,
-  Tooltip,
-  FileUpload,
 
   // ICONS
   IdCard,

@@ -12,7 +12,7 @@ import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
 import {
   GetOAuthUserSettings,
   OAuthUserSettingsInterface,
-} from '../../services/settings/settingsService';
+} from 'services/settings/settingsService';
 import { signIn, useSession } from 'next-auth/react';
 
 export const GoogleSidebarNotification = () => {
