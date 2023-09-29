@@ -34,6 +34,7 @@ func NewUpdateRenewalLikelihoodCommandHandler(log logger.Logger, cfg *config.Con
 func (h *updateRenewalLikelihoodCommandHandler) Handle(ctx context.Context, command *command.UpdateRenewalLikelihoodCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateRenewalLikelihoodCommandHandler.Handle")
 	defer span.Finish()
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
 	span.LogFields(log.Object("command", command))
 
 	if err := validator.GetValidator().Struct(command); err != nil {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -62,9 +62,9 @@ func (r *logEntryRepository) Create(ctx context.Context, tenant, logEntryId stri
 		"createdAt":     event.CreatedAt,
 		"updatedAt":     event.UpdatedAt,
 		"startedAt":     event.StartedAt,
-		"source":        utils.FirstNotEmpty(event.Source, constants.SourceOpenline),
-		"sourceOfTruth": utils.FirstNotEmpty(event.SourceOfTruth, constants.SourceOpenline),
-		"appSource":     utils.FirstNotEmpty(event.AppSource, constants.AppSourceEventProcessingPlatform),
+		"source":        helper.GetSource(event.Source),
+		"sourceOfTruth": helper.GetSourceOfTruth(event.SourceOfTruth),
+		"appSource":     helper.GetAppSource(event.AppSource),
 		"content":       event.Content,
 		"contentType":   event.ContentType,
 		"authorUserId":  event.AuthorUserId,
@@ -90,7 +90,7 @@ func (r *logEntryRepository) Update(ctx context.Context, tenant, logEntryId stri
 		"logEntryId":    logEntryId,
 		"updatedAt":     event.UpdatedAt,
 		"startedAt":     event.StartedAt,
-		"sourceOfTruth": utils.FirstNotEmpty(event.SourceOfTruth, constants.SourceOpenline),
+		"sourceOfTruth": helper.GetSourceOfTruth(event.SourceOfTruth),
 		"content":       event.Content,
 		"contentType":   event.ContentType,
 	})

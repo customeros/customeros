@@ -298,7 +298,7 @@ func (r *noteRepository) NoteLinkWithCreatorUserByExternalOwnerId(ctx context.Co
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, `
-				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalOwnerId:$userExternalOwnerId}]-(u:User)
+				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalIdSecond:$userExternalOwnerId}]-(u:User)
 				MATCH (n:Note {id:$noteId})-[:IS_LINKED_WITH]->(e)
 				MERGE (u)-[:CREATED]->(n)
 				`,

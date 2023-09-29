@@ -11,7 +11,7 @@ import (
 	logentrcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
 	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	phoneNumberCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
-	userCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
+	usercmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -25,7 +25,7 @@ func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore events
 		PhoneNumberCommands:      phoneNumberCommands.NewPhoneNumberCommands(log, cfg, aggregateStore),
 		LocationCommands:         locationCommands.NewLocationCommands(log, cfg, aggregateStore),
 		EmailCommands:            emailCommands.NewEmailCommands(log, cfg, aggregateStore),
-		UserCommands:             userCommands.NewUserCommands(log, cfg, aggregateStore),
+		UserCommands:             usercmdhnd.NewUserCommands(log, cfg, aggregateStore),
 		JobRoleCommands:          jobRoleCommands.NewJobRoleCommands(log, cfg, aggregateStore),
 		LogEntryCommands:         logentrcmdhnd.NewLogEntryCommands(log, cfg, aggregateStore),
 	}

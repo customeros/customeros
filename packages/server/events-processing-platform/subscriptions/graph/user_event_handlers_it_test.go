@@ -23,31 +23,27 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &GraphUserEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	myUserId, _ := uuid.NewUUID()
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, myUserId.String())
 	curTime := time.Now().UTC()
 
-	event, err := user_events.NewUserCreateEvent(userAggregate, &models.UserFields{
-		ID:     myUserId.String(),
-		Tenant: tenantName,
-		UserCoreFields: models.UserCoreFields{
-			FirstName:       "Bob",
-			LastName:        "Dole",
-			Name:            "Bob Dole",
-			Internal:        true,
-			ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
-			Timezone:        "Europe/Paris",
-		},
-		Source: commonModels.Source{
+	event, err := user_events.NewUserCreateEvent(userAggregate, models.UserDataFields{
+		FirstName:       "Bob",
+		LastName:        "Dole",
+		Name:            "Bob Dole",
+		Internal:        true,
+		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+		Timezone:        "Europe/Paris",
+	},
+		commonModels.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
 			AppSource:     "unit-test",
 		},
-		CreatedAt: nil,
-		UpdatedAt: nil,
-	}, curTime, curTime)
+		commonModels.ExternalSystem{},
+		curTime, curTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnUserCreate(context.Background(), event)
 	require.Nil(t, err)
@@ -74,13 +70,79 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	require.Equal(t, "Europe/Paris", utils.GetStringPropOrEmpty(props, "timezone"))
 }
 
+func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 0, "ExternalSystem": 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"IS_LINKED_WITH": 0,
+	})
+
+	userEventHandler := &GraphUserEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	myUserId, _ := uuid.NewUUID()
+	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, myUserId.String())
+	curTime := utils.Now()
+
+	event, err := user_events.NewUserCreateEvent(userAggregate, models.UserDataFields{
+		FirstName:       "Bob",
+		LastName:        "Dole",
+		Name:            "Bob Dole",
+		Internal:        true,
+		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+		Timezone:        "Europe/Paris",
+	}, commonModels.Source{
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		AppSource:     "unit-test",
+	}, commonModels.ExternalSystem{
+		ExternalSystemId: "sf",
+		ExternalId:       "123",
+		ExternalIdSecond: "ABC",
+	}, curTime, curTime)
+	require.Nil(t, err)
+	err = userEventHandler.OnUserCreate(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"User":               1,
+		"User_" + tenantName: 1,
+		"ExternalSystem":     1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"IS_LINKED_WITH":         1,
+		"USER_BELONGS_TO_TENANT": 1,
+	})
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, myUserId.String())
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	props := utils.GetPropsFromNode(*dbNode)
+
+	require.Equal(t, myUserId.String(), utils.GetStringPropOrEmpty(props, "id"))
+	require.Equal(t, "Bob", utils.GetStringPropOrEmpty(props, "firstName"))
+	require.Equal(t, "Dole", utils.GetStringPropOrEmpty(props, "lastName"))
+	require.Equal(t, "Bob Dole", utils.GetStringPropOrEmpty(props, "name"))
+	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(props, "source"))
+	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
+	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
+	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(props, "profilePhotoUrl"))
+	require.Equal(t, "Europe/Paris", utils.GetStringPropOrEmpty(props, "timezone"))
+}
+
 func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &GraphUserEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	jobRoleEventHandler := &GraphJobRoleEventHandler{
 		Repositories: testDatabase.Repositories,
@@ -94,24 +156,20 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 
 	description := "I clean things"
 
-	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, &models.UserFields{
-		ID:     myUserId.String(),
-		Tenant: tenantName,
-		UserCoreFields: models.UserCoreFields{
-			FirstName:       "Bob",
-			LastName:        "Dole",
-			Name:            "Bob Dole",
-			ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
-			Timezone:        "Africa/Abidjan",
-		},
-		Source: commonModels.Source{
+	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, models.UserDataFields{
+		FirstName:       "Bob",
+		LastName:        "Dole",
+		Name:            "Bob Dole",
+		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+		Timezone:        "Africa/Abidjan",
+	},
+		commonModels.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
 			AppSource:     "unit-test",
 		},
-		CreatedAt: nil,
-		UpdatedAt: nil,
-	}, curTime, curTime)
+		commonModels.ExternalSystem{},
+		curTime, curTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnUserCreate(context.Background(), userCreateEvent)
 	require.Nil(t, err)
@@ -175,7 +233,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &GraphUserEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	jobRoleEventHandler := &GraphJobRoleEventHandler{
 		Repositories: testDatabase.Repositories,
@@ -189,22 +247,15 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 
 	description := "I clean things"
 
-	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, &models.UserFields{
-		ID:     myUserId.String(),
-		Tenant: tenantName,
-		UserCoreFields: models.UserCoreFields{
-			FirstName: "Bob",
-			LastName:  "Dole",
-			Name:      "Bob Dole",
-		},
-		Source: commonModels.Source{
-			Source:        "N/A",
-			SourceOfTruth: "N/A",
-			AppSource:     "unit-test",
-		},
-		CreatedAt: nil,
-		UpdatedAt: nil,
-	}, curTime, curTime)
+	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, models.UserDataFields{
+		FirstName: "Bob",
+		LastName:  "Dole",
+		Name:      "Bob Dole",
+	}, commonModels.Source{
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		AppSource:     "unit-test",
+	}, commonModels.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnUserCreate(context.Background(), userCreateEvent)
 	require.Nil(t, err)

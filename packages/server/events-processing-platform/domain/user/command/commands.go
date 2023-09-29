@@ -1,4 +1,4 @@
-package commands
+package command
 
 import (
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
@@ -9,34 +9,22 @@ import (
 
 type UpsertUserCommand struct {
 	eventstore.BaseCommand
-	CoreFields models.UserCoreFields
-	Source     common_models.Source
-	CreatedAt  *time.Time
-	UpdatedAt  *time.Time
+	IsCreateCommand bool
+	DataFields      models.UserDataFields
+	Source          common_models.Source
+	ExternalSystem  common_models.ExternalSystem
+	CreatedAt       *time.Time
+	UpdatedAt       *time.Time
 }
 
-func UpsertUserCommandToUserDto(command *UpsertUserCommand) *models.UserFields {
-	return &models.UserFields{
-		ID:             command.ObjectID,
-		Tenant:         command.Tenant,
-		UserCoreFields: command.CoreFields,
-		Source:         command.Source,
-		CreatedAt:      command.CreatedAt,
-		UpdatedAt:      command.UpdatedAt,
-	}
-}
-
-func NewUpsertUserCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields models.UserCoreFields, createdAt, updatedAt *time.Time) *UpsertUserCommand {
+func NewUpsertUserCommand(objectID, tenant, userId string, source common_models.Source, externalSystem common_models.ExternalSystem, dataFields models.UserDataFields, createdAt, updatedAt *time.Time) *UpsertUserCommand {
 	return &UpsertUserCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
-		CoreFields:  coreFields,
-		Source: common_models.Source{
-			Source:        source,
-			SourceOfTruth: sourceOfTruth,
-			AppSource:     appSource,
-		},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		BaseCommand:    eventstore.NewBaseCommand(objectID, tenant, userId),
+		DataFields:     dataFields,
+		Source:         source,
+		ExternalSystem: externalSystem,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
 	}
 }
 
@@ -45,6 +33,7 @@ type LinkJobRoleCommand struct {
 	JobRoleId string
 }
 
+// TODO add userId
 func NewLinkJobRoleCommand(objectID, tenant, jobRoleId string) *LinkJobRoleCommand {
 	return &LinkJobRoleCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
@@ -59,6 +48,7 @@ type LinkPhoneNumberCommand struct {
 	Label         string
 }
 
+// TODO add userId
 func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
 		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, ""),
@@ -75,6 +65,7 @@ type LinkEmailCommand struct {
 	Label   string
 }
 
+// TODO add userId
 func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),

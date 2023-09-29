@@ -16,6 +16,12 @@ import (
 
 func (a *LogEntryAggregate) HandleCommand(ctx context.Context, command eventstore.Command) error {
 	switch c := command.(type) {
+	case *cmd.UpsertLogEntryCommand:
+		if c.IsCreateCommand {
+			return a.createLogEntry(ctx, c)
+		} else {
+			return a.updateLogEntry(ctx, c)
+		}
 	case *cmd.AddTagCommand:
 		return a.addTag(ctx, c)
 	case *cmd.RemoveTagCommand:
@@ -25,10 +31,11 @@ func (a *LogEntryAggregate) HandleCommand(ctx context.Context, command eventstor
 	}
 }
 
-func (a *LogEntryAggregate) CreateLogEntry(ctx context.Context, command *cmd.UpsertLogEntryCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.CreateLogEntry")
+func (a *LogEntryAggregate) createLogEntry(ctx context.Context, command *cmd.UpsertLogEntryCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.createLogEntry")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(command.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(command.UpdatedAt, createdAtNotNil)
@@ -44,10 +51,11 @@ func (a *LogEntryAggregate) CreateLogEntry(ctx context.Context, command *cmd.Ups
 	return a.Apply(createEvent)
 }
 
-func (a *LogEntryAggregate) UpdateLogEntry(ctx context.Context, command *cmd.UpsertLogEntryCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.UpdateLogEntry")
+func (a *LogEntryAggregate) updateLogEntry(ctx context.Context, command *cmd.UpsertLogEntryCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.updateLogEntry")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(command.UpdatedAt, utils.Now())
 	startedAtNotNil := utils.IfNotNilTimeWithDefault(command.DataFields.StartedAt, a.LogEntry.StartedAt)
@@ -82,7 +90,8 @@ func (a *LogEntryAggregate) UpdateLogEntry(ctx context.Context, command *cmd.Ups
 func (a *LogEntryAggregate) addTag(ctx context.Context, command *cmd.AddTagCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.addTag")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	taggedAtNotNil := utils.IfNotNilTimeWithDefault(command.TaggedAt, utils.Now())
 
@@ -99,7 +108,8 @@ func (a *LogEntryAggregate) addTag(ctx context.Context, command *cmd.AddTagComma
 func (a *LogEntryAggregate) removeTag(ctx context.Context, command *cmd.RemoveTagCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.removeTag")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	event, err := events.NewLogEntryRemoveTagEvent(a, command.TagId)
 	if err != nil {

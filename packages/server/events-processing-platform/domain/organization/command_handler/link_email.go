@@ -30,7 +30,8 @@ func NewLinkEmailCommandHandler(log logger.Logger, cfg *config.Config, es events
 func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *command.LinkEmailCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkEmailCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	span.LogFields(log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant

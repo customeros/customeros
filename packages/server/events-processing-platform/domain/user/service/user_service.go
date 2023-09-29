@@ -2,24 +2,29 @@ package service
 
 import (
 	"context"
-	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
+	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
+	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
+	"github.com/opentracing/opentracing-go/log"
+	"strings"
 )
 
 type userService struct {
-	user_grpc_service.UnimplementedUserGrpcServiceServer
+	pb.UnimplementedUserGrpcServiceServer
 	log          logger.Logger
 	repositories *repository.Repositories
-	userCommands *commands.UserCommands
+	userCommands *command_handler.UserCommands
 }
 
-func NewUserService(log logger.Logger, repositories *repository.Repositories, userCommands *commands.UserCommands) *userService {
+func NewUserService(log logger.Logger, repositories *repository.Repositories, userCommands *command_handler.UserCommands) *userService {
 	return &userService{
 		log:          log,
 		repositories: repositories,
@@ -27,13 +32,18 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, us
 	}
 }
 
-func (s *userService) UpsertUser(ctx context.Context, request *user_grpc_service.UpsertUserGrpcRequest) (*user_grpc_service.UserIdGrpcResponse, error) {
+func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.UpsertUser")
 	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.String("userRequestId", request.Id))
 
-	objectID := request.Id
+	userInputId := request.Id
+	if strings.TrimSpace(userInputId) == "" {
+		userInputId = uuid.New().String()
+	}
 
-	coreFields := models.UserCoreFields{
+	dataFields := models.UserDataFields{
 		Name:            request.Name,
 		FirstName:       request.FirstName,
 		LastName:        request.LastName,
@@ -41,23 +51,37 @@ func (s *userService) UpsertUser(ctx context.Context, request *user_grpc_service
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
 		Timezone:        request.Timezone,
 	}
-	command := commands.NewUpsertUserCommand(objectID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
-		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	sourceFields := common_models.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	if sourceFields.Source == "" && request.Source != "" {
+		sourceFields.Source = request.Source
+	}
+	if sourceFields.SourceOfTruth == "" && request.SourceOfTruth != "" {
+		sourceFields.SourceOfTruth = request.SourceOfTruth
+	}
+	if sourceFields.AppSource == "" && request.AppSource != "" {
+		sourceFields.AppSource = request.AppSource
+	}
+	externalSystem := common_models.ExternalSystem{}
+	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	command := command.NewUpsertUserCommand(userInputId, request.Tenant, request.UserId, sourceFields, externalSystem,
+		dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.userCommands.UpsertUser.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpsertSyncUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, objectID, err)
+		s.log.Errorf("(UpsertUserCommand.Handle) tenant:{%s}, user input id:{%s}, err: %s", request.Tenant, userInputId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("(created existing User): {%s}", objectID)
+	s.log.Infof("Upserted user {%s}", userInputId)
 
-	return &user_grpc_service.UserIdGrpcResponse{Id: objectID}, nil
+	return &pb.UserIdGrpcResponse{Id: userInputId}, nil
 }
 
-func (s *userService) LinkJobRoleToUser(ctx context.Context, request *user_grpc_service.LinkJobRoleToUserGrpcRequest) (*user_grpc_service.UserIdGrpcResponse, error) {
+func (s *userService) LinkJobRoleToUser(ctx context.Context, request *pb.LinkJobRoleToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
 	aggregateID := request.UserId
 
-	command := commands.NewLinkJobRoleCommand(aggregateID, request.Tenant, request.JobRoleId)
+	command := command.NewLinkJobRoleCommand(aggregateID, request.Tenant, request.JobRoleId)
 	if err := s.userCommands.LinkJobRoleCommand.Handle(ctx, command); err != nil {
 		s.log.Errorf("(LinkJobRoleToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
 		return nil, s.errResponse(err)
@@ -65,13 +89,13 @@ func (s *userService) LinkJobRoleToUser(ctx context.Context, request *user_grpc_
 
 	s.log.Infof("Linked job role {%s} to user {%s}", request.JobRoleId, aggregateID)
 
-	return &user_grpc_service.UserIdGrpcResponse{Id: aggregateID}, nil
+	return &pb.UserIdGrpcResponse{Id: aggregateID}, nil
 }
 
-func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *user_grpc_service.LinkPhoneNumberToUserGrpcRequest) (*user_grpc_service.UserIdGrpcResponse, error) {
+func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *pb.LinkPhoneNumberToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
 	aggregateID := request.UserId
 
-	command := commands.NewLinkPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
+	command := command.NewLinkPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.userCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
 		s.log.Errorf("(LinkPhoneNumberToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
 		return nil, s.errResponse(err)
@@ -79,13 +103,13 @@ func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *user_g
 
 	s.log.Infof("Linked phone number {%s} to user {%s}", request.PhoneNumberId, aggregateID)
 
-	return &user_grpc_service.UserIdGrpcResponse{Id: aggregateID}, nil
+	return &pb.UserIdGrpcResponse{Id: aggregateID}, nil
 }
 
-func (s *userService) LinkEmailToUser(ctx context.Context, request *user_grpc_service.LinkEmailToUserGrpcRequest) (*user_grpc_service.UserIdGrpcResponse, error) {
+func (s *userService) LinkEmailToUser(ctx context.Context, request *pb.LinkEmailToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
 	aggregateID := request.UserId
 
-	command := commands.NewLinkEmailCommand(aggregateID, request.Tenant, request.EmailId, request.Label, request.Primary)
+	command := command.NewLinkEmailCommand(aggregateID, request.Tenant, request.EmailId, request.Label, request.Primary)
 	if err := s.userCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
 		s.log.Errorf("(LinkEmailToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
 		return nil, s.errResponse(err)
@@ -93,9 +117,9 @@ func (s *userService) LinkEmailToUser(ctx context.Context, request *user_grpc_se
 
 	s.log.Infof("Linked email {%s} to user {%s}", request.EmailId, aggregateID)
 
-	return &user_grpc_service.UserIdGrpcResponse{Id: aggregateID}, nil
+	return &pb.UserIdGrpcResponse{Id: aggregateID}, nil
 }
 
 func (userService *userService) errResponse(err error) error {
-	return grpc_errors.ErrResponse(err)
+	return grpcerr.ErrResponse(err)
 }

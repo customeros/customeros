@@ -107,7 +107,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 		"				u.updatedAt=$now " +
 		" WITH u, ext " +
 		" MERGE (u)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
-		" ON CREATE SET r.externalOwnerId = $externalOwnerId, " +
+		" ON CREATE SET r.externalIdSecond = $externalOwnerId, " +
 		"				r.syncDate=$syncDate, " +
 		"				r.externalSource=$externalSource " +
 		" ON MATCH SET r.syncDate=$syncDate, r.externalSource=$externalSource " +
@@ -335,7 +335,7 @@ func (r *userRepository) GetUserIdByExternalOwnerId(ctx context.Context, tenant,
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
-					MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:IS_LINKED_WITH {externalOwnerId:$externalOwnerId}]->(e)
+					MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:IS_LINKED_WITH {externalIdSecond:$externalOwnerId}]->(e)
 				return u.id order by u.createdAt`
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)

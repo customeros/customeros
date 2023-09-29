@@ -1,9 +1,10 @@
-package commands
+package command_handler
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -13,7 +14,7 @@ import (
 )
 
 type LinkPhoneNumberCommandHandler interface {
-	Handle(ctx context.Context, command *LinkPhoneNumberCommand) error
+	Handle(ctx context.Context, command *command.LinkPhoneNumberCommand) error
 }
 
 type linkPhoneNumberCommandHandler struct {
@@ -26,7 +27,7 @@ func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es 
 	return &linkPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *LinkPhoneNumberCommand) error {
+func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *command.LinkPhoneNumberCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))

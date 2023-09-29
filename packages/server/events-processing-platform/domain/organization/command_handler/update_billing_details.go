@@ -34,6 +34,7 @@ func NewUpdateBillingDetailsCommandHandler(log logger.Logger, cfg *config.Config
 func (h *updateBillingDetailsCommandHandler) Handle(ctx context.Context, command *cmd.UpdateBillingDetailsCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateBillingDetailsCommandHandler.Handle")
 	defer span.Finish()
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
 	span.LogFields(log.Object("command", command))
 
 	if err := validator.GetValidator().Struct(command); err != nil {

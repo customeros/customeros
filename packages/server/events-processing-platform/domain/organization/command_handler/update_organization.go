@@ -32,7 +32,8 @@ func NewUpdateOrganizationCommandHandler(log logger.Logger, cfg *config.Config, 
 func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *command.UpdateOrganizationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	span.LogFields(log.String("ObjectID", command.ObjectID))
 
 	if err := validator.GetValidator().Struct(command); err != nil {
 		tracing.TraceErr(span, err)
