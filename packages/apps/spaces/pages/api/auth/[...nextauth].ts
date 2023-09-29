@@ -6,6 +6,8 @@ import {
   UserSignIn,
 } from '../../../services/admin/userAdminService';
 
+// This file persists in the pages router, as shown in example in documentation.
+// You can find a relevant guide here: https://next-auth.js.org/configuration/nextjs#in-app-router
 const providers = [
   Google({
     clientId: process.env.GMAIL_CLIENT_ID as string,

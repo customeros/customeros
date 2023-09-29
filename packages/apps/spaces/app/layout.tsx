@@ -45,19 +45,17 @@ export default async function RootLayout({
       />
       <body className='scrollbar'>
         <ThemeProvider>
-          <PageLayout>
-            <Providers>
-              {children}
-              <ToastContainer
-                position='bottom-right'
-                autoClose={8000}
-                limit={3}
-                closeOnClick={true}
-                hideProgressBar={true}
-                theme='colored'
-              />
-            </Providers>
-          </PageLayout>
+          <Providers>
+            {children}
+            <ToastContainer
+              position='bottom-right'
+              autoClose={8000}
+              limit={3}
+              closeOnClick={true}
+              hideProgressBar={true}
+              theme='colored'
+            />
+          </Providers>
         </ThemeProvider>
       </body>
     </html>
