@@ -104,15 +104,15 @@ func (s *syncService) Sync(parentCtx context.Context, runId string) {
 		syncRunDtls.FailedNotes = failed
 		syncRunDtls.SkippedNotes = skipped
 
-		completed, failed, skipped = s.emailMessageSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedEmailMessages = completed
-		syncRunDtls.FailedEmailMessages = failed
-		syncRunDtls.SkippedEmailMessages = skipped
+		//completed, failed, skipped = s.emailMessageSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		//syncRunDtls.CompletedEmailMessages = completed
+		//syncRunDtls.FailedEmailMessages = failed
+		//syncRunDtls.SkippedEmailMessages = skipped
 
-		completed, failed, skipped = s.meetingSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedMeetings = completed
-		syncRunDtls.FailedMeetings = failed
-		syncRunDtls.SkippedMeetings = skipped
+		//completed, failed, skipped = s.meetingSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		//syncRunDtls.CompletedMeetings = completed
+		//syncRunDtls.FailedMeetings = failed
+		//syncRunDtls.SkippedMeetings = skipped
 
 		completed, failed, skipped = s.interactionEventSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedInteractionEvents = completed
