@@ -32,6 +32,7 @@ type Repositories struct {
 	ActionRepository           ActionRepository
 	LogEntryRepository         LogEntryRepository
 	TagRepository              TagRepository
+	PlayerRepository           PlayerRepository
 	ExternalSystemRepository   ExternalSystemRepository
 	TimelineEventRepository    TimelineEventRepository
 	CustomFieldRepository      CustomFieldRepository
@@ -57,6 +58,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, log logger.Logg
 		ActionRepository:           NewActionRepository(driver),
 		LogEntryRepository:         NewLogEntryRepository(driver),
 		TagRepository:              NewTagRepository(driver),
+		PlayerRepository:           NewPlayerRepository(driver),
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),
 		TimelineEventRepository:    NewTimelineEventRepository(driver, log),
 		CustomFieldRepository:      NewCustomFieldRepository(driver),

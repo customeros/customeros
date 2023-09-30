@@ -23,7 +23,18 @@ message UpsertUserGrpcRequest {
   string timezone = 13;
   SourceFields sourceFields = 14;
   ExternalSystemFields externalSystemFields = 15;
-  string userId = 16;
+  string loggedInUserId = 16;
+}
+
+message AddPlayerInfoGrpcRequest {
+  string userId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string authId = 4;
+  string provider = 5;
+  string identityId = 6;
+  google.protobuf.Timestamp timestamp = 7;
+  SourceFields sourceFields = 8;
 }
 
 message LinkJobRoleToUserGrpcRequest {
@@ -55,6 +66,7 @@ message UserIdGrpcResponse {
 // User gRPC service
 service userGrpcService {
   rpc UpsertUser(UpsertUserGrpcRequest) returns (UserIdGrpcResponse);
+  rpc AddPlayerInfo(AddPlayerInfoGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkJobRoleToUser(LinkJobRoleToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkPhoneNumberToUser(LinkPhoneNumberToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkEmailToUser(LinkEmailToUserGrpcRequest) returns (UserIdGrpcResponse);

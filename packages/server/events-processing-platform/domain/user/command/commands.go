@@ -28,6 +28,26 @@ func NewUpsertUserCommand(objectID, tenant, userId string, source common_models.
 	}
 }
 
+type AddPlayerInfoCommand struct {
+	eventstore.BaseCommand
+	Provider   string
+	AuthId     string `json:"authId" validate:"required"`
+	IdentityId string `json:"identityId" validate:"required"`
+	Source     common_models.Source
+	Timestamp  *time.Time
+}
+
+func NewAddPlayerInfoCommand(objectID, tenant, userId string, source common_models.Source, provider, authId, identityId string, timestamp *time.Time) *AddPlayerInfoCommand {
+	return &AddPlayerInfoCommand{
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
+		Source:      source,
+		Timestamp:   timestamp,
+		Provider:    provider,
+		AuthId:      authId,
+		IdentityId:  identityId,
+	}
+}
+
 type LinkJobRoleCommand struct {
 	eventstore.BaseCommand
 	JobRoleId string
