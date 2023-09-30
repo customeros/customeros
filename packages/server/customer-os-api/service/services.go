@@ -89,7 +89,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
 	services.JobRoleService = NewJobRoleService(log, repositories, &services)
 	services.CalendarService = NewCalendarService(log, repositories, &services)
-	services.EmailService = NewEmailService(log, repositories, &services)
+	services.EmailService = NewEmailService(log, repositories, &services, grpcClients)
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
 	services.NoteService = NewNoteService(log, repositories, &services)
 	services.TimelineEventService = NewTimelineEventService(log, repositories, &services)

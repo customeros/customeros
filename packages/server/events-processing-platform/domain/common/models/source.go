@@ -11,6 +11,10 @@ type Source struct {
 	AppSource     string `json:"appSource"`
 }
 
+func (s *Source) Available() bool {
+	return s.Source != "" || s.SourceOfTruth != "" || s.AppSource != ""
+}
+
 func (s *Source) String() string {
 	output, _ := comutils.ToJson(s)
 	return output
@@ -21,6 +25,6 @@ func (s *Source) FromGrpc(grpcSource *grpccommon.SourceFields) {
 		return
 	}
 	s.Source = grpcSource.Source
-	s.SourceOfTruth = grpcSource.SourceOfTruth
+	s.SourceOfTruth = comutils.StringFirstNonEmpty(grpcSource.SourceOfTruth, grpcSource.Source)
 	s.AppSource = grpcSource.AppSource
 }

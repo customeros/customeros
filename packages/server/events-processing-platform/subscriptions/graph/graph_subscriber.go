@@ -139,13 +139,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	switch evt.GetEventType() {
 
-	case
-		phonenumberevents.PhoneNumberCreateV1,
-		phonenumberevents.PhoneNumberCreateV1Legacy:
+	case phonenumberevents.PhoneNumberCreateV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case
-		phonenumberevents.PhoneNumberUpdateV1,
-		phonenumberevents.PhoneNumberUpdateV1Legacy:
+	case phonenumberevents.PhoneNumberUpdateV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 	case phonenumberevents.PhoneNumberValidationFailedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
@@ -154,13 +150,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case phonenumberevents.PhoneNumberValidatedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
 
-	case
-		emailevents.EmailCreateV1,
-		emailevents.EmailCreateV1Legacy:
+	case emailevents.EmailCreateV1:
 		return s.emailEventHandler.OnEmailCreate(ctx, evt)
-	case
-		emailevents.EmailUpdateV1,
-		emailevents.EmailUpdateV1Legacy:
+	case emailevents.EmailUpdateV1:
 		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
 	case emailevents.EmailValidationFailedV1:
 		return s.emailEventHandler.OnEmailValidationFailed(ctx, evt)

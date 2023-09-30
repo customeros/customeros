@@ -9,24 +9,14 @@ import (
 
 func MapUserInputToEntity(input model.UserInput) *entity.UserEntity {
 	userEntity := entity.UserEntity{
-		FirstName:     input.FirstName,
-		LastName:      input.LastName,
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
-		Timezone:      utils.IfNotNilString(input.Timezone),
-		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-	}
-	return &userEntity
-}
-
-func MapUserUpdateInputToEntity(input model.UserUpdateInput) *entity.UserEntity {
-	userEntity := entity.UserEntity{
-		Id:            input.ID,
-		FirstName:     input.FirstName,
-		LastName:      input.LastName,
-		Timezone:      utils.IfNotNilString(input.Timezone),
-		SourceOfTruth: entity.DataSourceOpenline,
-		Source:        entity.DataSourceOpenline,
+		FirstName:       input.FirstName,
+		LastName:        input.LastName,
+		Name:            utils.IfNotNilString(input.Name),
+		Source:          entity.DataSourceOpenline,
+		SourceOfTruth:   entity.DataSourceOpenline,
+		Timezone:        utils.IfNotNilString(input.Timezone),
+		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
+		AppSource:       utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &userEntity
 }
@@ -39,6 +29,7 @@ func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 		ID:              userEntity.Id,
 		FirstName:       userEntity.FirstName,
 		LastName:        userEntity.LastName,
+		Name:            utils.StringPtrNillable(userEntity.Name),
 		Timezone:        utils.StringPtrNillable(userEntity.Timezone),
 		CreatedAt:       userEntity.CreatedAt,
 		UpdatedAt:       userEntity.UpdatedAt,
@@ -76,14 +67,6 @@ func MapRolesToModel(roles []string) []model.Role {
 		modelRoles = append(modelRoles, MapRoleToModel(role))
 	}
 	return modelRoles
-}
-
-func MapRolesToEntity(roles []model.Role) []string {
-	var entityRoles []string
-	for _, role := range roles {
-		entityRoles = append(entityRoles, MapRoleToEntity(role))
-	}
-	return entityRoles
 }
 
 func MapEntitiesToUsers(userEntities *entity.UserEntities) []*model.User {

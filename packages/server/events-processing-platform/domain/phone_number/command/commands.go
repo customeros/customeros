@@ -1,25 +1,18 @@
-package commands
+package command
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
 )
 
-type CreatePhoneNumberCommand struct {
-	eventstore.BaseCommand
-	RawPhoneNumber string
-	Source         models.Source
-	CreatedAt      *time.Time
-	UpdatedAt      *time.Time
-}
-
 type UpsertPhoneNumberCommand struct {
 	eventstore.BaseCommand
-	RawPhoneNumber string
-	Source         models.Source
-	CreatedAt      *time.Time
-	UpdatedAt      *time.Time
+	IsCreateCommand bool
+	RawPhoneNumber  string
+	Source          common_models.Source
+	CreatedAt       *time.Time
+	UpdatedAt       *time.Time
 }
 
 type FailedPhoneNumberValidationCommand struct {
@@ -43,31 +36,13 @@ type PhoneNumberValidatedCommand struct {
 	CountryCodeA2  string
 }
 
-func NewCreatePhoneNumberCommand(objectId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreatePhoneNumberCommand {
-	return &CreatePhoneNumberCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant, ""),
-		RawPhoneNumber: rawPhoneNumber,
-		Source: models.Source{
-			Source:        source,
-			SourceOfTruth: sourceOfTruth,
-			AppSource:     appSource,
-		},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-	}
-}
-
-func NewUpsertPhoneNumberCommand(objectId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertPhoneNumberCommand {
+func NewUpsertPhoneNumberCommand(objectId, tenant, loggedInUserId, rawPhoneNumber string, source common_models.Source, createdAt, updatedAt *time.Time) *UpsertPhoneNumberCommand {
 	return &UpsertPhoneNumberCommand{
-		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant, ""),
+		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant, loggedInUserId),
 		RawPhoneNumber: rawPhoneNumber,
-		Source: models.Source{
-			Source:        source,
-			SourceOfTruth: sourceOfTruth,
-			AppSource:     appSource,
-		},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		Source:         source,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
 	}
 }
 

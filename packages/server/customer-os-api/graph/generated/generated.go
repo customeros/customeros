@@ -611,7 +611,6 @@ type ComplexityRoot struct {
 		UserAddRole                              func(childComplexity int, id string, role model.Role) int
 		UserAddRoleInTenant                      func(childComplexity int, id string, tenant string, role model.Role) int
 		UserCreate                               func(childComplexity int, input model.UserInput) int
-		UserCreateInTenant                       func(childComplexity int, input model.UserInput, tenant string) int
 		UserDelete                               func(childComplexity int, id string) int
 		UserDeleteInTenant                       func(childComplexity int, id string, tenant string) int
 		UserRemoveRole                           func(childComplexity int, id string, role model.Role) int
@@ -881,6 +880,7 @@ type ComplexityRoot struct {
 		Internal        func(childComplexity int) int
 		JobRoles        func(childComplexity int) int
 		LastName        func(childComplexity int) int
+		Name            func(childComplexity int) int
 		PhoneNumbers    func(childComplexity int) int
 		Player          func(childComplexity int) int
 		ProfilePhotoURL func(childComplexity int) int
@@ -1120,7 +1120,6 @@ type MutationResolver interface {
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
 	TenantMerge(ctx context.Context, tenant model.TenantInput) (string, error)
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
-	UserCreateInTenant(ctx context.Context, input model.UserInput, tenant string) (*model.User, error)
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error)
 	UserAddRole(ctx context.Context, id string, role model.Role) (*model.User, error)
 	UserRemoveRole(ctx context.Context, id string, role model.Role) (*model.User, error)
@@ -4900,18 +4899,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UserCreate(childComplexity, args["input"].(model.UserInput)), true
 
-	case "Mutation.user_CreateInTenant":
-		if e.complexity.Mutation.UserCreateInTenant == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_user_CreateInTenant_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UserCreateInTenant(childComplexity, args["input"].(model.UserInput), args["tenant"].(string)), true
-
 	case "Mutation.user_Delete":
 		if e.complexity.Mutation.UserDelete == nil {
 			break
@@ -6532,6 +6519,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.LastName(childComplexity), true
+
+	case "User.name":
+		if e.complexity.User.Name == nil {
+			break
+		}
+
+		return e.complexity.User.Name(childComplexity), true
 
 	case "User.phoneNumbers":
 		if e.complexity.User.PhoneNumbers == nil {
@@ -8988,7 +8982,6 @@ enum TimelineEventType {
 
 extend type Mutation {
     user_Create(input: UserInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
-    user_CreateInTenant(input: UserInput!, tenant: String!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
     user_Update(input: UserUpdateInput!): User! @hasTenant
     user_AddRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_RemoveRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
@@ -9005,24 +8998,25 @@ Describes the User of customerOS.  A user is the person who logs into the Openli
 **A ` + "`" + `return` + "`" + ` object**
 """
 type User {
-    
+
     """
-    The unique ID associated with the customerOS user. 
+    The unique ID associated with the customerOS user.
     **Required**
     """
     id: ID!
 
     """
-    The first name of the customerOS user. 
+    The first name of the customerOS user.
     **Required**
     """
     firstName: String!
 
     """
-    The last name of the customerOS user. 
+    The last name of the customerOS user.
     **Required**
     """
     lastName: String!
+    name: String
     internal: Boolean!
     timezone: String
     profilePhotoUrl: String
@@ -9057,15 +9051,15 @@ type User {
 """
 Specifies how many pages of ` + "`" + `User` + "`" + ` information has been returned in the query response.
 **A ` + "`" + `return` + "`" + ` object.**
-"""   
+"""
 type UserPage implements Pages {
-    
+
     """
     A ` + "`" + `User` + "`" + ` entity in customerOS.
     **Required.  If no values it returns an empty array.**
     """
     content: [User!]!
-    
+
     """
     Total number of pages in the query response.
     **Required.**
@@ -9082,24 +9076,26 @@ type UserPage implements Pages {
 """
 Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 **A ` + "`" + `create` + "`" + ` object.**
-"""   
+"""
 input UserInput {
-    
+
     """
-    The first name of the customerOS user. 
+    The first name of the customerOS user.
     **Required**
     """
     firstName: String!
-    
+
     """
-    The last name of the customerOS user. 
+    The last name of the customerOS user.
     **Required**
     """
     lastName: String!
+    name: String
     timezone: String
+    profilePhotoUrl: String
 
     """
-    The email address of the customerOS user. 
+    The email address of the customerOS user.
     **Required**
     """
     email: EmailInput!
@@ -9138,7 +9134,9 @@ input UserUpdateInput {
     **Required**
     """
     lastName: String!
+    name: String
     timezone: String
+    profilePhotoUrl: String
 }
 
 type CustomerUser {
@@ -11860,30 +11858,6 @@ func (ec *executionContext) field_Mutation_user_AddRole_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_user_CreateInTenant_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.UserInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUserInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["tenant"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["tenant"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_user_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -13036,6 +13010,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(ctx context.Context, f
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -16110,6 +16086,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -18576,6 +18554,8 @@ func (ec *executionContext) fieldContext_Email_users(ctx context.Context, field 
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -20953,6 +20933,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(ctx context.Context, f
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -26322,6 +26304,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(ctx context.Context,
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -39925,6 +39909,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -39965,121 +39951,6 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_user_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_user_CreateInTenant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_user_CreateInTenant(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UserCreateInTenant(rctx, fc.Args["input"].(model.UserInput), fc.Args["tenant"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "CUSTOMER_OS_PLATFORM_OWNER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_user_CreateInTenant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_user_CreateInTenant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -40151,6 +40022,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -40272,6 +40145,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -40393,6 +40268,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -40508,6 +40385,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -40623,6 +40502,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -41360,6 +41241,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -43979,6 +43862,8 @@ func (ec *executionContext) fieldContext_Organization_owner(ctx context.Context,
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -45931,6 +45816,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(ctx context.Context, 
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -46817,6 +46704,8 @@ func (ec *executionContext) fieldContext_PlayerUser_user(ctx context.Context, fi
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -48983,6 +48872,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(ctx c
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -49870,6 +49761,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -49991,6 +49884,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -50413,6 +50308,8 @@ func (ec *executionContext) fieldContext_RenewalForecast_updatedBy(ctx context.C
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -50695,6 +50592,8 @@ func (ec *executionContext) fieldContext_RenewalLikelihood_updatedBy(ctx context
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -52146,6 +52045,47 @@ func (ec *executionContext) fieldContext_User_lastName(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_internal(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_internal(ctx, field)
 	if err != nil {
@@ -52930,6 +52870,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -53098,6 +53040,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(ctx con
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -59055,7 +58999,7 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"firstName", "lastName", "timezone", "email", "player", "appSource", "jobRoles"}
+	fieldsInOrder := [...]string{"firstName", "lastName", "name", "timezone", "profilePhotoUrl", "email", "player", "appSource", "jobRoles"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -59080,6 +59024,15 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 				return it, err
 			}
 			it.LastName = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		case "timezone":
 			var err error
 
@@ -59089,6 +59042,15 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 				return it, err
 			}
 			it.Timezone = data
+		case "profilePhotoUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURL = data
 		case "email":
 			var err error
 
@@ -59138,7 +59100,7 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "firstName", "lastName", "timezone"}
+	fieldsInOrder := [...]string{"id", "firstName", "lastName", "name", "timezone", "profilePhotoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -59172,6 +59134,15 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.LastName = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		case "timezone":
 			var err error
 
@@ -59181,6 +59152,15 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.Timezone = data
+		case "profilePhotoUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURL = data
 		}
 	}
 
@@ -64759,13 +64739,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "user_CreateInTenant":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_user_CreateInTenant(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "user_Update":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_user_Update(ctx, field)
@@ -68025,6 +67998,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "name":
+			out.Values[i] = ec._User_name(ctx, field, obj)
 		case "internal":
 			out.Values[i] = ec._User_internal(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

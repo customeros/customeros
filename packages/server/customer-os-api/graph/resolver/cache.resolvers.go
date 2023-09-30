@@ -26,7 +26,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	userId := common.GetUserIdFromContext(ctx)
 	userEmail := common.GetUserEmailFromContext(ctx)
 
-	user, err := r.Services.UserService.FindUserById(ctx, userId)
+	user, err := r.Services.UserService.GetById(ctx, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - find user by id")

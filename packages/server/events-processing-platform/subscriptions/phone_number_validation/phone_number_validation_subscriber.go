@@ -3,7 +3,7 @@ package phone_number_validation
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -26,7 +26,7 @@ type PhoneNumberValidationSubscriber struct {
 	repositories            *repository.Repositories
 }
 
-func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *commands.PhoneNumberCommands, repositories *repository.Repositories) *PhoneNumberValidationSubscriber {
+func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *command_handler.PhoneNumberCommands, repositories *repository.Repositories) *PhoneNumberValidationSubscriber {
 	return &PhoneNumberValidationSubscriber{
 		log: log,
 		db:  db,
@@ -116,12 +116,10 @@ func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventsto
 
 	switch evt.GetEventType() {
 	case
-		events.PhoneNumberCreateV1,
-		events.PhoneNumberCreateV1Legacy:
+		events.PhoneNumberCreateV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
 	case
 		events.PhoneNumberUpdateV1,
-		events.PhoneNumberUpdateV1Legacy,
 		events.PhoneNumberValidationFailedV1,
 		events.PhoneNumberValidationSkippedV1,
 		events.PhoneNumberValidatedV1:

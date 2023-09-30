@@ -1,9 +1,10 @@
-package commands
+package command_handler
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -12,7 +13,7 @@ import (
 )
 
 type FailEmailValidationCommandHandler interface {
-	Handle(ctx context.Context, command *FailedEmailValidationCommand) error
+	Handle(ctx context.Context, cmd *command.FailedEmailValidationCommand) error
 }
 
 type failEmailValidationCommandHandler struct {
@@ -25,19 +26,22 @@ func NewFailEmailValidationCommandHandler(log logger.Logger, cfg *config.Config,
 	return &failEmailValidationCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (h *failEmailValidationCommandHandler) Handle(ctx context.Context, command *FailedEmailValidationCommand) error {
+func (h *failEmailValidationCommandHandler) Handle(ctx context.Context, cmd *command.FailedEmailValidationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "failEmailValidationCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
-	emailAggregate, err := aggregate.LoadEmailAggregate(ctx, h.es, command.Tenant, command.ObjectID)
+	emailAggregate, err := aggregate.LoadEmailAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if err = emailAggregate.FailEmailValidation(ctx, command.Tenant, command.ValidationError); err != nil {
+	if err = emailAggregate.HandleCommand(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
+
 	return h.es.Save(ctx, emailAggregate)
 }

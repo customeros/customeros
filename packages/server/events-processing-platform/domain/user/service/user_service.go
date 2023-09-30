@@ -100,6 +100,10 @@ func (s *userService) AddPlayerInfo(ctx context.Context, request *pb.AddPlayerIn
 }
 
 func (s *userService) LinkJobRoleToUser(ctx context.Context, request *pb.LinkJobRoleToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddPlayerInfo")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "")
+
 	aggregateID := request.UserId
 
 	cmd := command.NewLinkJobRoleCommand(aggregateID, request.Tenant, request.JobRoleId)
@@ -114,24 +118,34 @@ func (s *userService) LinkJobRoleToUser(ctx context.Context, request *pb.LinkJob
 }
 
 func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *pb.LinkPhoneNumberToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
-	aggregateID := request.UserId
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("phoneNumberId", request.PhoneNumberId))
 
-	command := command.NewLinkPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
-	if err := s.userCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
-		s.log.Errorf("(LinkPhoneNumberToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+	objectId := request.UserId
+
+	cmd := command.NewLinkPhoneNumberCommand(objectId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
+	if err := s.userCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
+		s.log.Errorf("(LinkPhoneNumberToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, objectId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked phone number {%s} to user {%s}", request.PhoneNumberId, aggregateID)
+	s.log.Infof("Linked phone number {%s} to user {%s}", request.PhoneNumberId, objectId)
 
-	return &pb.UserIdGrpcResponse{Id: aggregateID}, nil
+	return &pb.UserIdGrpcResponse{Id: objectId}, nil
 }
 
 func (s *userService) LinkEmailToUser(ctx context.Context, request *pb.LinkEmailToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("emailId", request.EmailId))
+
 	aggregateID := request.UserId
 
-	command := command.NewLinkEmailCommand(aggregateID, request.Tenant, request.EmailId, request.Label, request.Primary)
-	if err := s.userCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewLinkEmailCommand(aggregateID, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
+	if err := s.userCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(LinkEmailToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
 		return nil, s.errResponse(err)
 	}

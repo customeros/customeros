@@ -45,7 +45,7 @@ func (c *linkJobRoleCommandHandler) Handle(ctx context.Context, command *command
 		return err
 	}
 
-	if err = userAggregate.LinkJobRole(ctx, command.Tenant, command.JobRoleId); err != nil {
+	if err = userAggregate.LinkJobRole(ctx, command.Tenant, command.JobRoleId, command.UserID); err != nil {
 		return err
 	}
 

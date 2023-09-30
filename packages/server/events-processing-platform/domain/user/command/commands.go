@@ -30,9 +30,9 @@ func NewUpsertUserCommand(objectID, tenant, userId string, source common_models.
 
 type AddPlayerInfoCommand struct {
 	eventstore.BaseCommand
-	Provider   string
+	Provider   string `json:"provider" validate:"required"`
 	AuthId     string `json:"authId" validate:"required"`
-	IdentityId string `json:"identityId" validate:"required"`
+	IdentityId string
 	Source     common_models.Source
 	Timestamp  *time.Time
 }
@@ -63,15 +63,14 @@ func NewLinkJobRoleCommand(objectID, tenant, jobRoleId string) *LinkJobRoleComma
 
 type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
-	PhoneNumberId string
+	PhoneNumberId string `json:"phoneNumberId" validate:"required"`
 	Primary       bool
 	Label         string
 }
 
-// TODO add userId
-func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
+func NewLinkPhoneNumberCommand(objectID, tenant, userId, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, userId),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -80,15 +79,14 @@ func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, pr
 
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
-	EmailId string
+	EmailId string `json:"emailId" validate:"required"`
 	Primary bool
 	Label   string
 }
 
-// TODO add userId
-func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(objectID, tenant, userId, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,

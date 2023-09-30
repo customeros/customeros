@@ -10,6 +10,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -17,6 +18,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	usergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -26,22 +30,60 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	createdUserEntity, err := r.Services.UserService.Create(ctx, &service.UserCreateData{
-		UserEntity:   mapper.MapUserInputToEntity(input),
-		EmailEntity:  mapper.MapEmailInputToEntity(input.Email),
-		PlayerEntity: mapper.MapPlayerInputToEntity(input.Player),
-	})
+	userId, err := r.Services.UserService.CreateUserByEvents(ctx, *mapper.MapUserInputToEntity(input))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
-		return nil, err
+		return nil, nil
+	}
+
+	if input.Player != nil {
+		_, err = r.Clients.UserClient.AddPlayerInfo(ctx, &usergrpc.AddPlayerInfoGrpcRequest{
+			UserId:         userId,
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AuthId:         input.Player.AuthID,
+			Provider:       input.Player.Provider,
+			IdentityId:     utils.IfNotNilString(input.Player.IdentityID),
+			SourceFields: &commongrpc.SourceFields{
+				Source:    string(entity.DataSourceOpenline),
+				AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+			},
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			r.log.Errorf("Failed to add player info for user %s: %s", userId, err.Error())
+		}
+	}
+
+	if input.Email != nil {
+		emailId, err := r.Services.EmailService.CreateEmailAddressByEvents(ctx, input.Email.Email, input.AppSource)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			r.log.Errorf("Failed to create email address for user %s: %s", userId, err.Error())
+		}
+		if emailId != "" {
+			_, err = r.Clients.UserClient.LinkEmailToUser(ctx, &usergrpc.LinkEmailToUserGrpcRequest{
+				Tenant:  common.GetTenantFromContext(ctx),
+				UserId:  userId,
+				EmailId: emailId,
+				Primary: utils.IfNotNilBool(input.Email.Primary),
+				Label:   utils.IfNotNilString(input.Email.Label, func() string { return input.Email.Label.String() }),
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				r.log.Errorf("Failed to link email address %s to user %s: %s", emailId, userId, err.Error())
+			}
+		}
+	}
+
+	createdUserEntity, err := r.Services.UserService.GetById(ctx, userId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "User details not yet available. User id: %s", userId)
+		return nil, nil
 	}
 	return mapper.MapEntityToUser(createdUserEntity), nil
-}
-
-// UserCreateInTenant is the resolver for the user_CreateInTenant field.
-func (r *mutationResolver) UserCreateInTenant(ctx context.Context, input model.UserInput, tenant string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UserCreateInTenant - user_CreateInTenant"))
 }
 
 // UserUpdate is the resolver for the user_Update field.
@@ -51,10 +93,35 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", input.ID))
 
-	updatedUserEntity, err := r.Services.UserService.Update(ctx, mapper.MapUserUpdateInputToEntity(input))
+	if input.ID != common.GetContext(ctx).UserId {
+		if !r.Services.UserService.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner}) {
+			return nil, fmt.Errorf("user can not update other user")
+		}
+	}
+
+	_, err := r.Clients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Id:             input.ID,
+		SourceFields: &commongrpc.SourceFields{
+			Source: string(entity.DataSourceOpenline),
+		},
+		FirstName:       input.FirstName,
+		LastName:        input.LastName,
+		Name:            utils.IfNotNilString(input.Name),
+		Timezone:        utils.IfNotNilString(input.Timezone),
+		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update user %s", input.ID)
+		return nil, nil
+	}
+
+	updatedUserEntity, err := r.Services.UserService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch user %s", input.ID)
 		return nil, err
 	}
 	return mapper.MapEntityToUser(updatedUserEntity), nil
@@ -172,7 +239,7 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
-	userEntity, err := r.Services.UserService.FindUserById(ctx, id)
+	userEntity, err := r.Services.UserService.GetById(ctx, id)
 	if err != nil || userEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "User with id %s not found", id)
@@ -277,3 +344,13 @@ func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) UserCreateInTenant(ctx context.Context, input model.UserInput, tenant string) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserCreateInTenant - user_CreateInTenant"))
+}

@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -64,7 +65,15 @@ func (r *userRepository) CreateUserInTx(ctx context.Context, tx neo4j.ManagedTra
 						u.profilePhotoUrl = $profilePhotoUrl,
 						u.timezone = $timezone,
 						u.syncedWithEventStore = true 
-		 ON MATCH SET 	u.syncedWithEventStore = true`, event.Tenant)
+		 ON MATCH SET 	u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.name is null OR u.name = '' THEN $name ELSE u.name END,
+						u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
+						u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
+						u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
+						u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
+						u.internal = $internal,
+						u.updatedAt = $updatedAt,
+						u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
+						u.syncedWithEventStore = true`, event.Tenant)
 	span.LogFields(log.String("query", query))
 
 	return utils.ExecuteQueryInTx(ctx, tx, query, map[string]any{
@@ -81,6 +90,7 @@ func (r *userRepository) CreateUserInTx(ctx context.Context, tx neo4j.ManagedTra
 		"appSource":       helper.GetAppSource(event.SourceFields.AppSource),
 		"createdAt":       event.CreatedAt,
 		"updatedAt":       event.UpdatedAt,
+		"overwrite":       helper.GetSourceOfTruth(event.SourceFields.SourceOfTruth) == constants.SourceOpenline,
 	})
 }
 
@@ -94,14 +104,14 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id})
-		 SET	u.name = $name,
-				u.firstName = $firstName,
-				u.lastName = $lastName,
-				u.sourceOfTruth = $sourceOfTruth,
+		 SET	u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.name is null OR u.name = '' THEN $name ELSE u.name END,
+				u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
+				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
+				u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
+				u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
 				u.updatedAt = $updatedAt,
 				u.internal = $internal,
-				u.profilePhotoUrl = $profilePhotoUrl,
-				u.timezone = $timezone,
+				u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
 				u.syncedWithEventStore = true`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -112,11 +122,12 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 				"name":            event.Name,
 				"firstName":       event.FirstName,
 				"lastName":        event.LastName,
-				"sourceOfTruth":   event.SourceOfTruth,
+				"sourceOfTruth":   event.Source,
 				"updatedAt":       event.UpdatedAt,
 				"internal":        event.Internal,
 				"profilePhotoUrl": event.ProfilePhotoUrl,
 				"timezone":        event.Timezone,
+				"overwrite":       event.Source == constants.SourceOpenline,
 			})
 		return nil, err
 	})

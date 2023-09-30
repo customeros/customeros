@@ -1,9 +1,10 @@
-package commands
+package command_handler
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -12,7 +13,7 @@ import (
 )
 
 type EmailValidatedCommandHandler interface {
-	Handle(ctx context.Context, command *EmailValidatedCommand) error
+	Handle(ctx context.Context, cmd *command.EmailValidatedCommand) error
 }
 
 type emailValidatedCommandHandler struct {
@@ -25,20 +26,22 @@ func NewEmailValidatedCommandHandler(log logger.Logger, cfg *config.Config, es e
 	return &emailValidatedCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (h *emailValidatedCommandHandler) Handle(ctx context.Context, command *EmailValidatedCommand) error {
+func (h *emailValidatedCommandHandler) Handle(ctx context.Context, cmd *command.EmailValidatedCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidatedCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
-	emailAggregate, err := aggregate.LoadEmailAggregate(ctx, h.es, command.Tenant, command.ObjectID)
+	emailAggregate, err := aggregate.LoadEmailAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if err = emailAggregate.EmailValidated(ctx, command.Tenant, command.RawEmail, command.IsReachable, command.ValidationError, command.Domain, command.Username, command.EmailAddress,
-		command.AcceptsMail, command.CanConnectSmtp, command.HasFullInbox, command.IsCatchAll, command.IsDeliverable, command.IsDisabled, command.IsValidSyntax); err != nil {
+	if err = emailAggregate.HandleCommand(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
+
 	return h.es.Save(ctx, emailAggregate)
 }

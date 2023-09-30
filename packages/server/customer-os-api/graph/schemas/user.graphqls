@@ -7,7 +7,6 @@ extend type Query {
 
 extend type Mutation {
     user_Create(input: UserInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
-    user_CreateInTenant(input: UserInput!, tenant: String!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
     user_Update(input: UserUpdateInput!): User! @hasTenant
     user_AddRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_RemoveRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
@@ -24,24 +23,25 @@ Describes the User of customerOS.  A user is the person who logs into the Openli
 **A `return` object**
 """
 type User {
-    
+
     """
-    The unique ID associated with the customerOS user. 
+    The unique ID associated with the customerOS user.
     **Required**
     """
     id: ID!
 
     """
-    The first name of the customerOS user. 
+    The first name of the customerOS user.
     **Required**
     """
     firstName: String!
 
     """
-    The last name of the customerOS user. 
+    The last name of the customerOS user.
     **Required**
     """
     lastName: String!
+    name: String
     internal: Boolean!
     timezone: String
     profilePhotoUrl: String
@@ -76,15 +76,15 @@ type User {
 """
 Specifies how many pages of `User` information has been returned in the query response.
 **A `return` object.**
-"""   
+"""
 type UserPage implements Pages {
-    
+
     """
     A `User` entity in customerOS.
     **Required.  If no values it returns an empty array.**
     """
     content: [User!]!
-    
+
     """
     Total number of pages in the query response.
     **Required.**
@@ -101,24 +101,26 @@ type UserPage implements Pages {
 """
 Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 **A `create` object.**
-"""   
+"""
 input UserInput {
-    
+
     """
-    The first name of the customerOS user. 
+    The first name of the customerOS user.
     **Required**
     """
     firstName: String!
-    
+
     """
-    The last name of the customerOS user. 
+    The last name of the customerOS user.
     **Required**
     """
     lastName: String!
+    name: String
     timezone: String
+    profilePhotoUrl: String
 
     """
-    The email address of the customerOS user. 
+    The email address of the customerOS user.
     **Required**
     """
     email: EmailInput!
@@ -157,7 +159,9 @@ input UserUpdateInput {
     **Required**
     """
     lastName: String!
+    name: String
     timezone: String
+    profilePhotoUrl: String
 }
 
 type CustomerUser {

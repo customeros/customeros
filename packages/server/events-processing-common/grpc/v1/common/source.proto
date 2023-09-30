@@ -6,5 +6,5 @@ option go_package = "github.com/openline-ai/openline-customer-os/packages/server
 message SourceFields {
   string appSource = 1;
   string source = 2;
-  string sourceOfTruth = 3;
+  string sourceOfTruth = 3 [deprecated = true];
 }

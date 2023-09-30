@@ -23,9 +23,9 @@ type EmailRepository interface {
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error
 	DeleteById(ctx context.Context, tenant, emailId string) error
 	GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, emailId, entityId string) (*dbtype.Node, error)
-	Exists(ctx context.Context, tenant string, email string) (bool, error)
-	GetByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
+	Exists(ctx context.Context, tenant, email string) (bool, error)
 	GetById(ctx context.Context, emailId string) (*dbtype.Node, error)
+	GetByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 }
 
 type emailRepository struct {
@@ -399,7 +399,8 @@ func (r *emailRepository) GetByEmail(ctx context.Context, tenant, email string) 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := fmt.Sprintf("MATCH (e:Email_%s) WHERE e.rawEmail = $email OR e.email = $email RETURN e LIMIT 1", tenant)
+	query := fmt.Sprintf("MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email_%s) "+
+		"WHERE e.rawEmail = $email OR e.email = $email RETURN e ORDER BY e.createdAt LIMIT 1", tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
@@ -407,7 +408,8 @@ func (r *emailRepository) GetByEmail(ctx context.Context, tenant, email string) 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
-				"email": email,
+				"tenant": tenant,
+				"email":  email,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})

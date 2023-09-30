@@ -60,18 +60,19 @@ func NewUserCreateEvent(aggregate eventstore.Aggregate, dataFields models.UserDa
 }
 
 type UserUpdateEvent struct {
-	Tenant          string    `json:"tenant" validate:"required"`
-	SourceOfTruth   string    `json:"sourceOfTruth"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	Name            string    `json:"name"`
-	FirstName       string    `json:"firstName"`
-	LastName        string    `json:"lastName"`
-	Internal        bool      `json:"internal"`
-	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
-	Timezone        string    `json:"timezone"`
+	Tenant          string                       `json:"tenant" validate:"required"`
+	Source          string                       `json:"source"`
+	UpdatedAt       time.Time                    `json:"updatedAt"`
+	Name            string                       `json:"name"`
+	FirstName       string                       `json:"firstName"`
+	LastName        string                       `json:"lastName"`
+	Internal        bool                         `json:"internal"`
+	ProfilePhotoUrl string                       `json:"profilePhotoUrl"`
+	Timezone        string                       `json:"timezone"`
+	ExternalSystem  common_models.ExternalSystem `json:"externalSystem"`
 }
 
-func NewUserUpdateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, sourceOfTruth string, updatedAt time.Time) (eventstore.Event, error) {
+func NewUserUpdateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, source string, updatedAt time.Time, externalSystem common_models.ExternalSystem) (eventstore.Event, error) {
 	eventData := UserUpdateEvent{
 		Tenant:          aggregate.GetTenant(),
 		Name:            dataFields.Name,
@@ -81,7 +82,10 @@ func NewUserUpdateEvent(aggregate eventstore.Aggregate, dataFields models.UserDa
 		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
 		Timezone:        dataFields.Timezone,
 		UpdatedAt:       updatedAt,
-		SourceOfTruth:   sourceOfTruth,
+		Source:          source,
+	}
+	if externalSystem.Available() {
+		eventData.ExternalSystem = externalSystem
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

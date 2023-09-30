@@ -77,9 +77,31 @@ func (h *GraphUserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving user %s: %s", userId, err.Error())
+		return err
 	}
 
-	return err
+	if eventData.ExternalSystem.Available() {
+		session := utils.NewNeo4jWriteSession(ctx, *h.repositories.Drivers.Neo4jDriver)
+		defer session.Close(ctx)
+
+		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			//var err error
+			if eventData.ExternalSystem.Available() {
+				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, constants.NodeLabel_User, eventData.ExternalSystem)
+				if innerErr != nil {
+					h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
+					return nil, innerErr
+				}
+			}
+			return nil, nil
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (h *GraphUserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt eventstore.Event) error {

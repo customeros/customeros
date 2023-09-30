@@ -26,6 +26,10 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comman
 		}
 	case *command.AddPlayerInfoCommand:
 		return a.addPlayerInfo(ctx, c)
+	case *command.LinkEmailCommand:
+		return a.linkEmail(ctx, c)
+	case *command.LinkPhoneNumberCommand:
+		return a.linkPhoneNumber(ctx, c)
 	default:
 		return errors.New("invalid command type")
 	}
@@ -38,6 +42,10 @@ func (a *UserAggregate) createUser(ctx context.Context, cmd *command.UpsertUserC
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+
+	if cmd.Source.Source == "" {
+		cmd.Source.Source = constants.SourceOpenline
+	}
 
 	createEvent, err := events.NewUserCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
@@ -57,32 +65,11 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-	sourceOfTruth := cmd.Source.SourceOfTruth
-	if sourceOfTruth == "" {
-		sourceOfTruth = a.User.Source.SourceOfTruth
+	if cmd.Source.Source == "" {
+		cmd.Source.Source = a.User.Source.SourceOfTruth
 	}
 
-	// do not change data if user was modified by openline
-	if sourceOfTruth != a.User.Source.SourceOfTruth && a.User.Source.SourceOfTruth == constants.SourceOpenline {
-		sourceOfTruth = a.User.Source.SourceOfTruth
-		if a.User.Name != "" {
-			cmd.DataFields.Name = a.User.Name
-		}
-		if a.User.FirstName != "" {
-			cmd.DataFields.Name = a.User.FirstName
-		}
-		if a.User.LastName != "" {
-			cmd.DataFields.Name = a.User.LastName
-		}
-		if a.User.Timezone != "" {
-			cmd.DataFields.Name = a.User.Timezone
-		}
-		if a.User.ProfilePhotoUrl != "" {
-			cmd.DataFields.Name = a.User.ProfilePhotoUrl
-		}
-	}
-
-	event, err := events.NewUserUpdateEvent(a, cmd.DataFields, sourceOfTruth, updatedAtNotNil)
+	event, err := events.NewUserUpdateEvent(a, cmd.DataFields, cmd.Source.Source, updatedAtNotNil, cmd.ExternalSystem)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserUpdateEvent")
@@ -115,7 +102,7 @@ func (a *UserAggregate) addPlayerInfo(ctx context.Context, cmd *command.AddPlaye
 	return a.Apply(event)
 }
 
-func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId string) error {
+func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId, loggedInUserId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.LinkJobRole")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
@@ -128,32 +115,46 @@ func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId strin
 		return errors.Wrap(err, "NewUserLinkJobRoleEvent")
 	}
 
-	// TODO add user id
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
 
 	return a.Apply(event)
 }
 
-func (a *UserAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNumberId, label string, primary bool) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.LinkPhoneNumber")
+func (a *UserAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.linkPhoneNumber")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewUserLinkPhoneNumberEvent(a, tenant, phoneNumberId, label, primary, updatedAtNotNil)
+	event, err := events.NewUserLinkPhoneNumberEvent(a, cmd.Tenant, cmd.PhoneNumberId, cmd.Label, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserLinkPhoneNumberEvent")
 	}
 
-	// TODO add user id
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
-	return a.Apply(event)
+	err = a.Apply(event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if cmd.Primary {
+		for k, v := range a.User.PhoneNumbers {
+			if k != cmd.PhoneNumberId && v.Primary {
+				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, cmd.PhoneNumberId, cmd.UserID); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
 
-func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId string) error {
+func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId, loggedInUserId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.SetPhoneNumberNonPrimary")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
@@ -172,33 +173,47 @@ func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, ph
 			return errors.Wrap(err, "NewUserLinkPhoneNumberEvent")
 		}
 
-		// TODO add user id
-		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
 		return a.Apply(event)
 	}
 	return nil
 }
 
-func (a *UserAggregate) LinkEmail(ctx context.Context, tenant, emailId, label string, primary bool) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.LinkEmail")
+func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.linkEmail")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewUserLinkEmailEvent(a, tenant, emailId, label, primary, updatedAtNotNil)
+	event, err := events.NewUserLinkEmailEvent(a, cmd.Tenant, cmd.EmailId, cmd.Label, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserLinkEmailEvent")
 	}
 
-	// TODO add user id
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
-	return a.Apply(event)
+	err = a.Apply(event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if cmd.Primary {
+		for k, v := range a.User.Emails {
+			if k != cmd.EmailId && v.Primary {
+				if err = a.SetEmailNonPrimary(ctx, cmd.Tenant, cmd.EmailId, cmd.UserID); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
 
-func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId string) error {
+func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId, loggedInUserId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.SetEmailNonPrimary")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
@@ -217,8 +232,7 @@ func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId 
 			return errors.Wrap(err, "NewUserLinkEmailEvent")
 		}
 
-		// TODO add user id
-		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
 		return a.Apply(event)
 	}
 	return nil
