@@ -193,11 +193,13 @@ func (s *syncToEventStoreService) upsertUsersIntoEventStore(ctx context.Context,
 			Name:            utils.GetStringPropOrEmpty(v.Node.Props, "name"),
 			ProfilePhotoUrl: utils.GetStringPropOrEmpty(v.Node.Props, "profilePhotoUrl"),
 			Timezone:        utils.GetStringPropOrEmpty(v.Node.Props, "timezone"),
-			AppSource:       utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-			Source:          utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-			SourceOfTruth:   utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-			CreatedAt:       utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-			UpdatedAt:       utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			SourceFields: &common_grpc_service.SourceFields{
+				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+			},
+			CreatedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+			UpdatedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
 		})
 		if err != nil {
 			failedRecords++

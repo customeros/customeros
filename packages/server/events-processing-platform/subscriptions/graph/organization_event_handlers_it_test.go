@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -21,6 +22,96 @@ import (
 )
 
 const customerOsIdPattern = `^C-[A-HJ-NP-Z2-9]{3}-[A-HJ-NP-Z2-9]{3}$`
+
+func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{
+		FirstName: "logged-in",
+		LastName:  "user",
+	})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Organization": 0,
+		"User":         1, "User_" + tenantName: 1,
+		"Action": 0, "TimelineEvent": 0})
+
+	orgId := uuid.New().String()
+
+	// prepare event handler
+	orgEventHandler := &GraphOrganizationEventHandler{
+		repositories:         testDatabase.Repositories,
+		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+	now := utils.Now()
+	event, err := events.NewOrganizationCreateEvent(orgAggregate, &models.OrganizationFields{
+		ID: orgId,
+		OrganizationDataFields: models.OrganizationDataFields{
+			Name: "test org",
+		},
+	}, now, now)
+	require.Nil(t, err)
+	metadata := make(map[string]string)
+	metadata["user-id"] = userId
+	err = event.SetMetadata(metadata)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = orgEventHandler.OnOrganizationCreate(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"User": 1, "User_" + tenantName: 1,
+		"Organization": 1, "Organization_" + tenantName: 1,
+		"Action": 1, "Action_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"ACTION_ON": 1,
+		"OWNS":      1,
+	})
+
+	orgDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	require.Nil(t, err)
+	require.NotNil(t, orgDbNode)
+
+	// verify organization
+	organization := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+	require.Equal(t, orgId, organization.ID)
+	require.Equal(t, "test org", organization.Name)
+	require.Equal(t, now, organization.CreatedAt)
+	require.NotNil(t, organization.UpdatedAt)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.SourceOfTruth)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, now, action.CreatedAt)
+	require.Equal(t, entity.ActionCreated, action.Type)
+	require.Equal(t, "", action.Content)
+	require.Equal(t, "", action.Metadata)
+
+	// Check last touch point request was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[orgAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+	generatedEvent := eventList[0]
+	require.Equal(t, events.OrganizationRefreshLastTouchpointV1, generatedEvent.EventType)
+	var eventData events.OrganizationRefreshLastTouchpointEvent
+	err = generatedEvent.GetJsonData(&eventData)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData.Tenant)
+}
 
 func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 	ctx := context.TODO()
@@ -48,7 +139,7 @@ func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &GraphOrganizationEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
@@ -130,7 +221,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByUser(t *testing
 
 	// prepare event handler
 	orgEventHandler := &GraphOrganizationEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
@@ -201,7 +292,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByInternalProcess
 
 	// prepare event handler
 	orgEventHandler := &GraphOrganizationEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
@@ -274,7 +365,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ResetAmount(t *te
 
 	// prepare event handler
 	orgEventHandler := &GraphOrganizationEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
@@ -341,7 +432,7 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate(t *testing.T) {
 		},
 	})
 	orgEventHandler := &GraphOrganizationEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
@@ -412,7 +503,7 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate_SetNotByUser(t *te
 		},
 	})
 	orgEventHandler := &GraphOrganizationEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
@@ -457,7 +548,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 		Hide: false,
 	})
 	orgEventHandler := &GraphOrganizationEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
@@ -491,7 +582,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 		Hide: true,
 	})
 	orgEventHandler := &GraphOrganizationEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)

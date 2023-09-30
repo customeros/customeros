@@ -49,7 +49,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		repositories:             repositories,
 		cfg:                      cfg,
 		contactEventHandler:      &GraphContactEventHandler{Repositories: repositories},
-		organizationEventHandler: &GraphOrganizationEventHandler{log: log, Repositories: repositories, organizationCommands: commands.OrganizationCommands},
+		organizationEventHandler: &GraphOrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.OrganizationCommands},
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
 		userEventHandler:         &GraphUserEventHandler{repositories: repositories, log: log},
@@ -104,17 +104,21 @@ func (s *GraphSubscriber) ProcessEvents(ctx context.Context, stream *esdb.Persis
 		if event.EventAppeared != nil {
 			s.log.EventAppeared(s.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
 
-			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
-			if err != nil {
-				s.log.Errorf("(GraphSubscriber.when) err: {%v}", err)
+			if event.EventAppeared.Event.Event == nil {
+				s.log.Errorf("(GraphSubscriber) event.EventAppeared.Event.Event is nil")
+			} else {
+				err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
+				if err != nil {
+					s.log.Errorf("(GraphSubscriber.when) err: {%v}", err)
 
-				if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
-					s.log.Errorf("(stream.Nack) err: {%v}", err)
-					return errors.Wrap(err, "stream.Nack")
+					if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
+						s.log.Errorf("(stream.Nack) err: {%v}", err)
+						return errors.Wrap(err, "stream.Nack")
+					}
 				}
 			}
 
-			err = stream.Ack(event.EventAppeared.Event)
+			err := stream.Ack(event.EventAppeared.Event)
 			if err != nil {
 				s.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")

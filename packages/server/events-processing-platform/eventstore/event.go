@@ -55,6 +55,9 @@ func NewBaseEvent(aggregate Aggregate, eventType string) Event {
 }
 
 func NewEventFromRecorded(event *esdb.RecordedEvent) Event {
+	if event == nil {
+		return Event{}
+	}
 	return Event{
 		EventID:     event.EventID.String(),
 		EventType:   event.EventType,
