@@ -1,27 +1,21 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "common/source.proto";
 
 option go_package = "api/grpc/v1/phone_number;phone_number_grpc_service";
 
 message UpsertPhoneNumberGrpcRequest {
   string tenant = 1;
   string phoneNumber = 2;
-  string appSource = 3;
-  string source = 4;
-  string sourceOfTruth = 5;
+  string appSource = 3 [deprecated = true];
+  string source = 4 [deprecated = true];
+  string sourceOfTruth = 5 [deprecated = true];
   google.protobuf.Timestamp  createdAt = 6;
   google.protobuf.Timestamp  updatedAt = 7;
   string id = 8;
-}
-
-message CreatePhoneNumberGrpcRequest {
-  string tenant = 1;
-  string phoneNumber = 2;
-  string appSource = 3;
-  string source = 4;
-  string sourceOfTruth = 5;
-  google.protobuf.Timestamp  createdAt = 6;
+  string loggedInUserId = 9;
+  SourceFields sourceFields = 10;
 }
 
 message PhoneNumberIdGrpcResponse {
@@ -29,6 +23,5 @@ message PhoneNumberIdGrpcResponse {
 }
 
 service phoneNumberGrpcService {
-  rpc CreatePhoneNumber(CreatePhoneNumberGrpcRequest) returns (PhoneNumberIdGrpcResponse);
   rpc UpsertPhoneNumber(UpsertPhoneNumberGrpcRequest) returns (PhoneNumberIdGrpcResponse);
 }

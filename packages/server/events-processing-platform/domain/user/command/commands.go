@@ -68,10 +68,9 @@ type LinkPhoneNumberCommand struct {
 	Label         string
 }
 
-// TODO add userId
-func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
+func NewLinkPhoneNumberCommand(objectID, tenant, userId, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, userId),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -85,10 +84,9 @@ type LinkEmailCommand struct {
 	Label   string
 }
 
-// TODO add userId
-func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(objectID, tenant, userId, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,

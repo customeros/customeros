@@ -39,7 +39,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
 
-	organizationId := utils.UUIDIfEmpty(request.Id)
+	organizationId := utils.NewUUIDIfEmpty(request.Id)
 
 	coreFields := models.OrganizationDataFields{
 		Name:              request.Name,

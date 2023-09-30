@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
@@ -24,8 +25,11 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
 	curTime := time.Now().UTC()
-
-	event, err := events.NewEmailCreateEvent(emailAggregate, tenantName, email, "N/A", "N/A", "unit-test", curTime, curTime)
+	event, err := events.NewEmailCreateEvent(emailAggregate, tenantName, email, commonModels.Source{
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		AppSource:     "unit-test",
+	}, curTime, curTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)

@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -93,9 +94,9 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumb
 				"id":             phoneNumberId,
 				"rawPhoneNumber": event.RawPhoneNumber,
 				"tenant":         event.Tenant,
-				"source":         event.Source,
-				"sourceOfTruth":  event.SourceOfTruth,
-				"appSource":      event.AppSource,
+				"source":         helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
+				"sourceOfTruth":  helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
+				"appSource":      helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
 				"createdAt":      event.CreatedAt,
 				"updatedAt":      event.UpdatedAt,
 			})
