@@ -30,9 +30,9 @@ func NewUpsertUserCommand(objectID, tenant, userId string, source common_models.
 
 type AddPlayerInfoCommand struct {
 	eventstore.BaseCommand
-	Provider   string
+	Provider   string `json:"provider" validate:"required"`
 	AuthId     string `json:"authId" validate:"required"`
-	IdentityId string `json:"identityId" validate:"required"`
+	IdentityId string
 	Source     common_models.Source
 	Timestamp  *time.Time
 }
@@ -63,7 +63,7 @@ func NewLinkJobRoleCommand(objectID, tenant, jobRoleId string) *LinkJobRoleComma
 
 type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
-	PhoneNumberId string
+	PhoneNumberId string `json:"phoneNumberId" validate:"required"`
 	Primary       bool
 	Label         string
 }
@@ -79,7 +79,7 @@ func NewLinkPhoneNumberCommand(objectID, tenant, userId, phoneNumberId, label st
 
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
-	EmailId string
+	EmailId string `json:"emailId" validate:"required"`
 	Primary bool
 	Label   string
 }

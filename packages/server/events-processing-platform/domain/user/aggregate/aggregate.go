@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -63,6 +64,9 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	a.User.Internal = eventData.Internal
 	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 	a.User.Source = eventData.SourceFields
+	if a.User.Source.SourceOfTruth == "" {
+		a.User.Source.SourceOfTruth = eventData.SourceFields.Source
+	}
 	a.User.CreatedAt = eventData.CreatedAt
 	a.User.UpdatedAt = eventData.UpdatedAt
 	a.User.Timezone = eventData.Timezone
@@ -77,15 +81,53 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
+
+	if eventData.Source != a.User.Source.SourceOfTruth && a.User.Source.SourceOfTruth == constants.SourceOpenline {
+		if a.User.Name == "" {
+			a.User.Name = eventData.Name
+		}
+		if a.User.FirstName == "" {
+			a.User.FirstName = eventData.FirstName
+		}
+		if a.User.LastName == "" {
+			a.User.LastName = eventData.LastName
+		}
+		if a.User.Timezone == "" {
+			a.User.Timezone = eventData.Timezone
+		}
+		if a.User.ProfilePhotoUrl == "" {
+			a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+		}
+	} else {
+		a.User.Name = eventData.Name
+		a.User.FirstName = eventData.FirstName
+		a.User.LastName = eventData.LastName
+		a.User.Timezone = eventData.Timezone
+		a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+	}
+
 	a.User.UpdatedAt = eventData.UpdatedAt
-	a.User.Name = eventData.Name
-	a.User.FirstName = eventData.FirstName
-	a.User.LastName = eventData.LastName
 	a.User.Internal = eventData.Internal
-	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.User.Timezone = eventData.Timezone
-	if eventData.SourceOfTruth != "" {
-		a.User.Source.SourceOfTruth = eventData.SourceOfTruth
+	if eventData.Source == constants.SourceOpenline {
+		a.User.Source.SourceOfTruth = eventData.Source
+	}
+	if eventData.ExternalSystem.Available() {
+		found := false
+		for _, externalSystem := range a.User.ExternalSystems {
+			if externalSystem.ExternalSystemId == eventData.ExternalSystem.ExternalSystemId &&
+				externalSystem.ExternalId == eventData.ExternalSystem.ExternalId {
+				found = true
+				externalSystem.ExternalUrl = eventData.ExternalSystem.ExternalUrl
+				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
+				externalSystem.ExternalSource = eventData.ExternalSystem.ExternalSource
+				if eventData.ExternalSystem.ExternalIdSecond != "" {
+					externalSystem.ExternalIdSecond = eventData.ExternalSystem.ExternalIdSecond
+				}
+			}
+		}
+		if !found {
+			a.User.ExternalSystems = append(a.User.ExternalSystems, eventData.ExternalSystem)
+		}
 	}
 	return nil
 }

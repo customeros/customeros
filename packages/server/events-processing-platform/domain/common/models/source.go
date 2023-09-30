@@ -25,6 +25,6 @@ func (s *Source) FromGrpc(grpcSource *grpccommon.SourceFields) {
 		return
 	}
 	s.Source = grpcSource.Source
-	s.SourceOfTruth = grpcSource.SourceOfTruth
+	s.SourceOfTruth = comutils.StringFirstNonEmpty(grpcSource.SourceOfTruth, grpcSource.Source)
 	s.AppSource = grpcSource.AppSource
 }

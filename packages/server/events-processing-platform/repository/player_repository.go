@@ -41,8 +41,8 @@ func (r *playerRepository) Merge(ctx context.Context, tenant, userId string, eve
 							  p.source=$source,
 							  p.sourceOfTruth=$sourceOfTruth
 				ON MATCH SET p.updatedAt=$updatedAt
-				MERGE (u)-[r:IDENTIFIES]->(p)
-				SET r.default = CASE WHEN NOT EXISTS((p)-[:%s {default: true}]->(:User)) THEN true ELSE false END
+				MERGE (p)-[r:IDENTIFIES]->(u)
+				SET r.default = CASE WHEN NOT EXISTS((p)-[:IDENTIFIES {default: true}]->(:User)) THEN true ELSE false END
 				`
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
@@ -50,6 +50,7 @@ func (r *playerRepository) Merge(ctx context.Context, tenant, userId string, eve
 
 	return r.executeQuery(ctx, query, map[string]any{
 		"tenant":        tenant,
+		"userId":        userId,
 		"authId":        event.AuthId,
 		"provider":      event.Provider,
 		"identityId":    event.IdentityId,

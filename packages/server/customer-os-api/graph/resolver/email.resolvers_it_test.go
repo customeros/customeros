@@ -208,57 +208,6 @@ func TestMutationResolver_EmailUpdateInContact_ReplaceEmail(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Email", "Email_" + tenantName})
 }
 
-func TestMutationResolver_EmailMergeToUser(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	// Create a tenant in the Neo4j database
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_user"),
-		client.Var("userId", userId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailMergeToUser model.Email
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	email := emailStruct.EmailMergeToUser
-
-	// Check that the fields of the email struct have the expected values
-	require.NotNil(t, email.ID, "Email ID is nil")
-	require.NotNil(t, email.CreatedAt, "Missing createdAt field")
-	require.NotNil(t, email.UpdatedAt, "Missing updatedAt field")
-	require.Equal(t, true, email.Primary, "Email Primary field is not true")
-	require.Equal(t, "test@gmail.com", *email.Email)
-	require.Equal(t, "test@gmail.com", *email.RawEmail)
-	require.Nil(t, email.EmailValidationDetails.Validated)
-	if email.Label == nil {
-		t.Errorf("Email Label field is nil")
-	} else {
-		require.Equal(t, model.EmailLabelWork, *email.Label, "Email Label field is not expected value")
-	}
-	require.Equal(t, model.DataSourceOpenline, email.Source, "Email Source field is not expected value")
-	require.Equal(t, model.DataSourceOpenline, email.SourceOfTruth, "Email Source of truth field is not expected value")
-	require.Equal(t, "test", email.AppSource, "Email App source field is not expected value")
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"), "Incorrect number of User nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
-
-	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName})
-}
-
 func TestMutationResolver_EmailUpdateInUser(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

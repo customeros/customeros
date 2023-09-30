@@ -1493,6 +1493,7 @@ type User struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName        string  `json:"lastName"`
+	Name            *string `json:"name,omitempty"`
 	Internal        bool    `json:"internal"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
@@ -1521,8 +1522,10 @@ type UserInput struct {
 	FirstName string `json:"firstName"`
 	// The last name of the customerOS user.
 	// **Required**
-	LastName string  `json:"lastName"`
-	Timezone *string `json:"timezone,omitempty"`
+	LastName        string  `json:"lastName"`
+	Name            *string `json:"name,omitempty"`
+	Timezone        *string `json:"timezone,omitempty"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	// The email address of the customerOS user.
 	// **Required**
 	Email *EmailInput `json:"email"`
@@ -1579,8 +1582,10 @@ type UserUpdateInput struct {
 	FirstName string `json:"firstName"`
 	// The last name of the customerOS user.
 	// **Required**
-	LastName string  `json:"lastName"`
-	Timezone *string `json:"timezone,omitempty"`
+	LastName        string  `json:"lastName"`
+	Name            *string `json:"name,omitempty"`
+	Timezone        *string `json:"timezone,omitempty"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 }
 
 type Workspace struct {

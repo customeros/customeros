@@ -5,10 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -27,35 +27,25 @@ func NewLinkEmailCommandHandler(log logger.Logger, cfg *config.Config, es events
 	return &linkEmailCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *command.LinkEmailCommand) error {
+func (c *linkEmailCommandHandler) Handle(ctx context.Context, cmd *command.LinkEmailCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkEmailCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	span.LogFields(log.String("Tenant", cmd.Tenant), log.String("ObjectID", cmd.ObjectID))
 
-	if len(command.Tenant) == 0 {
-		return eventstore.ErrMissingTenant
-	}
-	if len(command.EmailId) == 0 {
-		return errors.ErrMissingEmailId
+	if err := validator.GetValidator().Struct(cmd); err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
-	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.ObjectID)
+	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if err = userAggregate.LinkEmail(ctx, command.Tenant, command.EmailId, command.Label, command.Primary); err != nil {
+	if err = userAggregate.HandleCommand(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
 		return err
-	}
-	if command.Primary {
-		for k, v := range userAggregate.User.Emails {
-			if k != command.EmailId && v.Primary {
-				if err = userAggregate.SetEmailNonPrimary(ctx, command.Tenant, command.EmailId); err != nil {
-					return err
-				}
-			}
-		}
 	}
 
 	span.LogFields(log.String("User", userAggregate.User.String()))
