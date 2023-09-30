@@ -35,7 +35,7 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, us
 func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.UpsertUser")
 	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("userRequestId", request.Id))
 
 	userInputId := request.Id
@@ -65,9 +65,9 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 	externalSystem := common_models.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	command := command.NewUpsertUserCommand(userInputId, request.Tenant, request.UserId, sourceFields, externalSystem,
+	cmd := command.NewUpsertUserCommand(userInputId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem,
 		dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
-	if err := s.userCommands.UpsertUser.Handle(ctx, command); err != nil {
+	if err := s.userCommands.UpsertUser.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertUserCommand.Handle) tenant:{%s}, user input id:{%s}, err: %s", request.Tenant, userInputId, err.Error())
 		return nil, s.errResponse(err)
@@ -78,11 +78,32 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 	return &pb.UserIdGrpcResponse{Id: userInputId}, nil
 }
 
+func (s *userService) AddPlayerInfo(ctx context.Context, request *pb.AddPlayerInfoGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddPlayerInfo")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+
+	sourceFields := common_models.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	cmd := command.NewAddPlayerInfoCommand(request.UserId, request.Tenant, request.LoggedInUserId, sourceFields,
+		request.Provider, request.AuthId, request.IdentityId, utils.TimestampProtoToTime(request.Timestamp))
+	if err := s.userCommands.AddPlayerInfo.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddPlayerInfoCommand.Handle) tenant:{%s}, user input id:{%s}, err: %s", request.Tenant, request.UserId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Added player info to user {%s}", request.UserId)
+
+	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
+}
+
 func (s *userService) LinkJobRoleToUser(ctx context.Context, request *pb.LinkJobRoleToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
 	aggregateID := request.UserId
 
-	command := command.NewLinkJobRoleCommand(aggregateID, request.Tenant, request.JobRoleId)
-	if err := s.userCommands.LinkJobRoleCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewLinkJobRoleCommand(aggregateID, request.Tenant, request.JobRoleId)
+	if err := s.userCommands.LinkJobRoleCommand.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(LinkJobRoleToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
 		return nil, s.errResponse(err)
 	}

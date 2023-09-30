@@ -42,6 +42,8 @@ func (a *UserAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case events.UserEmailLinkV1:
 		return a.onEmailLink(event)
+	case events.UserAddPlayerV1:
+		return a.onAddPlayer(event)
 
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -130,5 +132,31 @@ func (a *UserAggregate) onJobRoleLink(event eventstore.Event) error {
 	}
 	a.User.JobRoles[eventData.JobRoleId] = true
 	a.User.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *UserAggregate) onAddPlayer(event eventstore.Event) error {
+	var eventData events.UserAddPlayerInfoEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.User.Players == nil {
+		a.User.Players = make([]models.PlayerInfo, 0)
+	}
+	found := false
+	for _, player := range a.User.Players {
+		if player.AuthId == eventData.AuthId && player.Provider == eventData.Provider {
+			found = true
+			player.IdentityId = eventData.IdentityId
+		}
+	}
+	if !found {
+		a.User.Players = append(a.User.Players, models.PlayerInfo{
+			AuthId:     eventData.AuthId,
+			Provider:   eventData.Provider,
+			IdentityId: eventData.IdentityId,
+		})
+	}
+
 	return nil
 }
