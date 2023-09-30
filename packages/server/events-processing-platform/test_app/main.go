@@ -5,9 +5,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -17,6 +19,8 @@ const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 type Clients struct {
 	InteractionEventClient interaction_event_grpc_service.InteractionEventGrpcServiceClient
 	OrganizationClient     organization_grpc_service.OrganizationGrpcServiceClient
+	EmailClient            email_grpc_service.EmailGrpcServiceClient
+	PhoneNumberClient      phone_number_grpc_service.PhoneNumberGrpcServiceClient
 	LogEntryClient         log_entry_grpc_service.LogEntryGrpcServiceClient
 }
 
@@ -32,7 +36,9 @@ func main() {
 	//testShowOrganization()
 	//testCreateLogEntry()
 	//testUpdateLogEntry()
-	testAddCustomField()
+	//testAddCustomField()
+	//testCreateEmail()
+	//testCreatePhoneNumber()
 }
 
 func InitClients() {
@@ -44,6 +50,8 @@ func InitClients() {
 		InteractionEventClient: interaction_event_grpc_service.NewInteractionEventGrpcServiceClient(conn),
 		OrganizationClient:     organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
 		LogEntryClient:         log_entry_grpc_service.NewLogEntryGrpcServiceClient(conn),
+		EmailClient:            email_grpc_service.NewEmailGrpcServiceClient(conn),
+		PhoneNumberClient:      phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
 	}
 }
 
@@ -169,6 +177,35 @@ func testAddCustomField() {
 		CustomFieldValue: &organization_grpc_service.CustomFieldValue{
 			StringValue: utils.StringPtr("super secret value"),
 		},
+	})
+	print(result)
+}
+
+func testCreateEmail() {
+	tenant := "openline"
+	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
+	rawEmail := "aa@test.com"
+
+	result, _ := clients.EmailClient.UpsertEmail(context.TODO(), &email_grpc_service.UpsertEmailGrpcRequest{
+		Tenant:         tenant,
+		RawEmail:       rawEmail,
+		LoggedInUserId: userId,
+		SourceFields: &common_grpc_service.SourceFields{
+			AppSource: "test_app",
+		},
+	})
+	print(result)
+}
+
+func testCreatePhoneNumber() {
+	tenant := "openline"
+	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
+	rawPhoneNumber := "+1234"
+
+	result, _ := clients.PhoneNumberClient.UpsertPhoneNumber(context.TODO(), &phone_number_grpc_service.UpsertPhoneNumberGrpcRequest{
+		Tenant:         tenant,
+		PhoneNumber:    rawPhoneNumber,
+		LoggedInUserId: userId,
 	})
 	print(result)
 }

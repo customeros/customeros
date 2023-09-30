@@ -3,6 +3,7 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -20,7 +21,8 @@ func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
 func LoadEmailAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*EmailAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadEmailAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("ObjectID", objectID))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("ObjectID", objectID))
 
 	emailAggregate := NewEmailAggregateWithTenantAndID(tenant, objectID)
 
@@ -33,7 +35,7 @@ func LoadEmailAggregate(ctx context.Context, eventStore eventstore.AggregateStor
 		}
 	}
 
-	if err := eventStore.Load(ctx, emailAggregate); err != nil {
+	if err = eventStore.Load(ctx, emailAggregate); err != nil {
 		return nil, err
 	}
 

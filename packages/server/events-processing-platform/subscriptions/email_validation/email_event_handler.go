@@ -8,7 +8,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -22,7 +23,7 @@ import (
 )
 
 type emailEventHandler struct {
-	emailCommands *commands.EmailCommands
+	emailCommands *command_handler.EmailCommands
 	log           logger.Logger
 	cfg           *config.Config
 }
@@ -67,7 +68,7 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 
 	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {
-		return h.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, preValidationErr.Error()))
+		return h.emailCommands.FailEmailValidation.Handle(ctx, command.NewFailedEmailValidationCommand(emailId, eventData.Tenant, preValidationErr.Error()))
 	}
 	evJSON, err := json.Marshal(emailValidate)
 	if err != nil {
@@ -103,12 +104,12 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, errMsg)
 	}
 	email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
-	return h.emailCommands.EmailValidated.Handle(ctx, commands.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email, result.IsReachable,
+	return h.emailCommands.EmailValidated.Handle(ctx, command.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email, result.IsReachable,
 		result.Error, result.Domain, result.Username, email, result.AcceptsMail, result.CanConnectSmtp,
 		result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
 }
 
 func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, emailId, tenant string, errMsg string) error {
 	h.log.Errorf("Failed validating email %s for tenant %s: %s", emailId, tenant, errMsg)
-	return h.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, tenant, errMsg))
+	return h.emailCommands.FailEmailValidation.Handle(ctx, command.NewFailedEmailValidationCommand(emailId, tenant, errMsg))
 }

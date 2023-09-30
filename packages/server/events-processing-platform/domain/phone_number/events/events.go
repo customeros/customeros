@@ -2,40 +2,36 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
 )
 
 const (
-	PhoneNumberCreateV1       = "V1_PHONE_NUMBER_CREATE"
-	PhoneNumberCreateV1Legacy = "V1_PHONE_NUMBER_CREATED"
-
-	PhoneNumberUpdateV1       = "V1_PHONE_NUMBER_UPDATE"
-	PhoneNumberUpdateV1Legacy = "V1_PHONE_NUMBER_UPDATED"
-
+	PhoneNumberCreateV1            = "V1_PHONE_NUMBER_CREATE"
+	PhoneNumberUpdateV1            = "V1_PHONE_NUMBER_UPDATE"
 	PhoneNumberValidationFailedV1  = "V1_PHONE_NUMBER_VALIDATION_FAILED"
 	PhoneNumberValidationSkippedV1 = "V1_PHONE_NUMBER_VALIDATION_SKIPPED"
 	PhoneNumberValidatedV1         = "V1_PHONE_NUMBER_VALIDATED"
 )
 
 type PhoneNumberCreateEvent struct {
-	Tenant         string    `json:"tenant" validate:"required"`
-	RawPhoneNumber string    `json:"rawPhoneNumber" validate:"required"`
-	Source         string    `json:"source"`
-	SourceOfTruth  string    `json:"sourceOfTruth"`
-	AppSource      string    `json:"appSource"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	Tenant         string               `json:"tenant" validate:"required"`
+	RawPhoneNumber string               `json:"rawPhoneNumber" validate:"required"`
+	Source         string               `json:"source"`        //Deprecated
+	SourceOfTruth  string               `json:"sourceOfTruth"` //Deprecated
+	AppSource      string               `json:"appSource"`     //Deprecated
+	SourceFields   common_models.Source `json:"sourceFields"`
+	CreatedAt      time.Time            `json:"createdAt"`
+	UpdatedAt      time.Time            `json:"updatedAt"`
 }
 
-func NewPhoneNumberCreateEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewPhoneNumberCreateEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber string, source common_models.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := PhoneNumberCreateEvent{
 		Tenant:         tenant,
 		RawPhoneNumber: rawPhoneNumber,
-		Source:         source,
-		SourceOfTruth:  sourceOfTruth,
-		AppSource:      appSource,
+		SourceFields:   source,
 		CreatedAt:      createdAt,
 		UpdatedAt:      updatedAt,
 	}

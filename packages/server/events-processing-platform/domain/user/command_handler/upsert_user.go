@@ -27,27 +27,27 @@ func NewUpsertUserCommandHandler(log logger.Logger, cfg *config.Config, es event
 	return &upsertUserCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *upsertUserCommandHandler) Handle(ctx context.Context, command *command.UpsertUserCommand) error {
+func (c *upsertUserCommandHandler) Handle(ctx context.Context, cmd *command.UpsertUserCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertUserCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
-	span.LogFields(log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
-	if err := validator.GetValidator().Struct(command); err != nil {
+	if err := validator.GetValidator().Struct(cmd); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.ObjectID)
+	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	if aggregate.IsAggregateNotFound(userAggregate) {
-		command.IsCreateCommand = true
+		cmd.IsCreateCommand = true
 	}
-	if err = userAggregate.HandleCommand(ctx, command); err != nil {
+	if err = userAggregate.HandleCommand(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}

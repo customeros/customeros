@@ -7,7 +7,8 @@ import (
 	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -23,7 +24,7 @@ import (
 
 type PhoneNumberEventHandler struct {
 	repositories        *repository.Repositories
-	phoneNumberCommands *commands.PhoneNumberCommands
+	phoneNumberCommands *command_handler.PhoneNumberCommands
 	log                 logger.Logger
 	cfg                 *config.Config
 }
@@ -103,10 +104,10 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	if !result.Valid {
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, result.Error)
 	}
-	return h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, commands.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, result.CountryA2))
+	return h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, command.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, result.CountryA2))
 }
 
 func (h *PhoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, error string) error {
 	h.log.Errorf("Failed validating phone number %s for tenant %s: %s", phoneNumberId, tenant, error)
-	return h.phoneNumberCommands.FailedPhoneNumberValidation.Handle(ctx, commands.NewFailedPhoneNumberValidationCommand(phoneNumberId, tenant, rawPhoneNumber, countryCodeA2, error))
+	return h.phoneNumberCommands.FailedPhoneNumberValidation.Handle(ctx, command.NewFailedPhoneNumberValidationCommand(phoneNumberId, tenant, rawPhoneNumber, countryCodeA2, error))
 }

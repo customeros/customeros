@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"github.com/google/uuid"
+	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -43,14 +44,16 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	timeNow := time.Now().UTC()
 	emailId, _ := uuid.NewUUID()
 	response, err := emailClient.UpsertEmail(ctx, &email_grpc_service.UpsertEmailGrpcRequest{
-		Tenant:        "ziggy",
-		RawEmail:      "test@openline.ai",
-		AppSource:     "unit-test",
-		Source:        "N/A",
-		SourceOfTruth: "N/A",
-		CreatedAt:     timestamppb.New(timeNow),
-		UpdatedAt:     timestamppb.New(timeNow),
-		Id:            emailId.String(),
+		Tenant:   "ziggy",
+		RawEmail: "test@openline.ai",
+		SourceFields: &common_grpc_service.SourceFields{
+			AppSource:     "unit-test",
+			Source:        "N/A",
+			SourceOfTruth: "N/A",
+		},
+		CreatedAt: timestamppb.New(timeNow),
+		UpdatedAt: timestamppb.New(timeNow),
+		Id:        emailId.String(),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, response)
@@ -65,9 +68,9 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
 	require.Equal(t, "test@openline.ai", eventData.RawEmail)
-	require.Equal(t, "unit-test", eventData.AppSource)
-	require.Equal(t, "N/A", eventData.Source)
-	require.Equal(t, "N/A", eventData.SourceOfTruth)
+	require.Equal(t, "unit-test", eventData.SourceFields.AppSource)
+	require.Equal(t, "N/A", eventData.SourceFields.Source)
+	require.Equal(t, "N/A", eventData.SourceFields.SourceOfTruth)
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, "ziggy", eventData.Tenant)

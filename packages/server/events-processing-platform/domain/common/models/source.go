@@ -11,6 +11,10 @@ type Source struct {
 	AppSource     string `json:"appSource"`
 }
 
+func (s *Source) Available() bool {
+	return s.Source != "" || s.SourceOfTruth != "" || s.AppSource != ""
+}
+
 func (s *Source) String() string {
 	output, _ := comutils.ToJson(s)
 	return output

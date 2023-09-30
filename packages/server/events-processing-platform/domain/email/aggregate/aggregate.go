@@ -1,7 +1,6 @@
 package aggregate
 
 import (
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -38,13 +37,9 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case
-		events.EmailCreateV1,
-		events.EmailCreateV1Legacy:
+	case events.EmailCreateV1:
 		return a.onEmailCreate(event)
-	case
-		events.EmailUpdateV1,
-		events.EmailUpdateV1Legacy:
+	case events.EmailUpdateV1:
 		return a.onEmailUpdated(event)
 	case events.EmailValidationFailedV1:
 		return a.OnEmailFailedValidation(event)
@@ -64,10 +59,12 @@ func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Email.RawEmail = eventData.RawEmail
-	a.Email.Source = common_models.Source{
-		Source:        eventData.Source,
-		SourceOfTruth: eventData.SourceOfTruth,
-		AppSource:     eventData.AppSource,
+	if eventData.SourceFields.Available() {
+		a.Email.Source = eventData.SourceFields
+	} else {
+		a.Email.Source.Source = eventData.Source
+		a.Email.Source.SourceOfTruth = eventData.SourceOfTruth
+		a.Email.Source.AppSource = eventData.AppSource
 	}
 	a.Email.CreatedAt = eventData.CreatedAt
 	a.Email.UpdatedAt = eventData.UpdatedAt

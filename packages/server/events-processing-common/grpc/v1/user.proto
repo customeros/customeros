@@ -49,6 +49,7 @@ message LinkPhoneNumberToUserGrpcRequest {
   string phoneNumberId = 3;
   bool primary = 4;
   string label = 5;
+  string loggedInUserId = 6;
 }
 
 message LinkEmailToUserGrpcRequest {
@@ -57,6 +58,7 @@ message LinkEmailToUserGrpcRequest {
   string emailId = 3;
   bool primary = 4;
   string label = 5;
+  string loggedInUserId = 6;
 }
 
 message UserIdGrpcResponse {

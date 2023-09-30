@@ -3,7 +3,7 @@ package email_validation
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -24,7 +24,7 @@ type EmailValidationSubscriber struct {
 	emailEventHandler *emailEventHandler
 }
 
-func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *commands.EmailCommands) *EmailValidationSubscriber {
+func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *command_handler.EmailCommands) *EmailValidationSubscriber {
 	return &EmailValidationSubscriber{
 		log: log,
 		db:  db,
@@ -114,9 +114,7 @@ func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Eve
 	switch evt.GetEventType() {
 	case
 		email_events.EmailCreateV1,
-		email_events.EmailCreateV1Legacy,
-		email_events.EmailUpdateV1,
-		email_events.EmailUpdateV1Legacy:
+		email_events.EmailUpdateV1:
 		return s.emailEventHandler.ValidateEmail(ctx, evt)
 	case email_events.EmailValidationFailedV1:
 		return nil

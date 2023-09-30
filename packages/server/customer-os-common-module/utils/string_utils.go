@@ -14,7 +14,7 @@ func StringFirstNonEmpty(strs ...string) string {
 	return ""
 }
 
-func UUIDIfEmpty(str string) string {
+func NewUUIDIfEmpty(str string) string {
 	if strings.TrimSpace(str) == "" {
 		return uuid.New().String()
 	}

@@ -1,4 +1,4 @@
-package commands
+package command_handler
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
@@ -8,14 +8,12 @@ import (
 
 type EmailCommands struct {
 	UpsertEmail         UpsertEmailCommandHandler
-	CreateEmail         CreateEmailCommandHandler
 	FailEmailValidation FailEmailValidationCommandHandler
 	EmailValidated      EmailValidatedCommandHandler
 }
 
 func NewEmailCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *EmailCommands {
 	return &EmailCommands{
-		CreateEmail:         NewCreateEmailCommandHandler(log, cfg, es),
 		UpsertEmail:         NewUpsertEmailHandler(log, cfg, es),
 		FailEmailValidation: NewFailEmailValidationCommandHandler(log, cfg, es),
 		EmailValidated:      NewEmailValidatedCommandHandler(log, cfg, es),
