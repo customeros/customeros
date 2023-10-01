@@ -3,7 +3,6 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	local_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/errors"
@@ -42,10 +41,7 @@ func (a *UserAggregate) createUser(ctx context.Context, cmd *command.UpsertUserC
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
-
-	if cmd.Source.Source == "" {
-		cmd.Source.Source = constants.SourceOpenline
-	}
+	cmd.Source.SetDefaultValues()
 
 	createEvent, err := events.NewUserCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
@@ -87,6 +83,7 @@ func (a *UserAggregate) addPlayerInfo(ctx context.Context, cmd *command.AddPlaye
 	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	timestampNotNil := utils.IfNotNilTimeWithDefault(cmd.Timestamp, utils.Now())
+	cmd.Source.SetDefaultValues()
 
 	event, err := events.NewUserAddPlayerInfoEvent(a, models.PlayerInfo{
 		Provider:   cmd.Provider,

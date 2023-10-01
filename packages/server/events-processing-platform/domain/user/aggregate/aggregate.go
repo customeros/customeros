@@ -64,9 +64,6 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	a.User.Internal = eventData.Internal
 	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 	a.User.Source = eventData.SourceFields
-	if a.User.Source.SourceOfTruth == "" {
-		a.User.Source.SourceOfTruth = eventData.SourceFields.Source
-	}
 	a.User.CreatedAt = eventData.CreatedAt
 	a.User.UpdatedAt = eventData.UpdatedAt
 	a.User.Timezone = eventData.Timezone
