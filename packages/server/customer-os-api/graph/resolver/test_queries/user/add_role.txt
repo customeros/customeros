@@ -1,8 +1,0 @@
-mutation AddRole($userId: ID!, $role: Role!) {
-  user_AddRole(id: $userId, role: $role) {
-    id
-    firstName
-    lastName
-    roles
-  }
-}

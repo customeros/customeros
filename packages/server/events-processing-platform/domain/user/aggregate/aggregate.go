@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
@@ -45,6 +46,10 @@ func (a *UserAggregate) When(event eventstore.Event) error {
 		return a.onEmailLink(event)
 	case events.UserAddPlayerV1:
 		return a.onAddPlayer(event)
+	case events.UserAddRoleV1:
+		return a.onAddRole(event)
+	case events.UserRemoveRoleV1:
+		return a.onRemoveRole(event)
 
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -197,5 +202,25 @@ func (a *UserAggregate) onAddPlayer(event eventstore.Event) error {
 		})
 	}
 
+	return nil
+}
+
+func (a *UserAggregate) onAddRole(event eventstore.Event) error {
+	var eventData events.UserAddRoleEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.User.Roles = utils.AddToListIfNotExists(a.User.Roles, eventData.Role)
+	a.User.UpdatedAt = eventData.At
+	return nil
+}
+
+func (a *UserAggregate) onRemoveRole(event eventstore.Event) error {
+	var eventData events.UserRemoveRoleEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.User.Roles = utils.RemoveFromList(a.User.Roles, eventData.Role)
+	a.User.UpdatedAt = eventData.At
 	return nil
 }

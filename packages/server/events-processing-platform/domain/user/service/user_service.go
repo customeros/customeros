@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
@@ -51,7 +51,7 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
 		Timezone:        request.Timezone,
 	}
-	sourceFields := common_models.Source{}
+	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	if sourceFields.Source == "" && request.Source != "" {
 		sourceFields.Source = request.Source
@@ -62,7 +62,7 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 	if sourceFields.AppSource == "" && request.AppSource != "" {
 		sourceFields.AppSource = request.AppSource
 	}
-	externalSystem := common_models.ExternalSystem{}
+	externalSystem := cmnmod.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	cmd := command.NewUpsertUserCommand(userInputId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem,
@@ -83,7 +83,7 @@ func (s *userService) AddPlayerInfo(ctx context.Context, request *pb.AddPlayerIn
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 
-	sourceFields := common_models.Source{}
+	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	cmd := command.NewAddPlayerInfoCommand(request.UserId, request.Tenant, request.LoggedInUserId, sourceFields,
@@ -155,6 +155,40 @@ func (s *userService) LinkEmailToUser(ctx context.Context, request *pb.LinkEmail
 	return &pb.UserIdGrpcResponse{Id: aggregateID}, nil
 }
 
-func (userService *userService) errResponse(err error) error {
+func (s *userService) AddRole(ctx context.Context, request *pb.AddRoleGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddRole")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+
+	cmd := command.NewAddRole(request.UserId, request.Tenant, request.LoggedInUserId, request.Role)
+	if err := s.userCommands.AddRole.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddRoleCommand.Handle) tenant:{%s}, user id:{%s}, role: {%s}, err: %s", request.Tenant, request.UserId, request.Role, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Added role {%s} for user {%s}", request.Role, request.UserId)
+
+	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
+}
+
+func (s *userService) RemoveRole(ctx context.Context, request *pb.RemoveRoleGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.RemoveRole")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+
+	cmd := command.NewRemoveRole(request.UserId, request.Tenant, request.LoggedInUserId, request.Role)
+	if err := s.userCommands.RemoveRole.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RemoveRoleCommand.Handle) tenant:{%s}, user id:{%s}, role: {%s}, err: %s", request.Tenant, request.UserId, request.Role, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Removed role {%s} from user {%s}", request.Role, request.UserId)
+
+	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
+}
+
+func (s *userService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }

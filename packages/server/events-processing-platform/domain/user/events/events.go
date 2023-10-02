@@ -15,6 +15,8 @@ const (
 	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
 	UserEmailLinkV1       = "V1_USER_EMAIL_LINK"
 	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
+	UserAddRoleV1         = "V1_USER_ADD_ROLE"
+	UserRemoveRoleV1      = "V1_USER_REMOVE_ROLE"
 )
 
 type UserCreateEvent struct {
@@ -203,6 +205,54 @@ func NewUserAddPlayerInfoEvent(aggregate eventstore.Aggregate, dataFields models
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserAddPlayerV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type UserAddRoleEvent struct {
+	Tenant string    `json:"tenant" validate:"required"`
+	Role   string    `json:"role" validate:"required"`
+	At     time.Time `json:"at"`
+}
+
+func NewUserAddRoleEvent(aggregate eventstore.Aggregate, role string, at time.Time) (eventstore.Event, error) {
+	eventData := UserAddRoleEvent{
+		Tenant: aggregate.GetTenant(),
+		Role:   role,
+		At:     at,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, UserAddRoleV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type UserRemoveRoleEvent struct {
+	Tenant string    `json:"tenant" validate:"required"`
+	Role   string    `json:"role"`
+	At     time.Time `json:"at"`
+}
+
+func NewUserRemoveRoleEvent(aggregate eventstore.Aggregate, role string, at time.Time) (eventstore.Event, error) {
+	eventData := UserRemoveRoleEvent{
+		Tenant: aggregate.GetTenant(),
+		Role:   role,
+		At:     at,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, UserRemoveRoleV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

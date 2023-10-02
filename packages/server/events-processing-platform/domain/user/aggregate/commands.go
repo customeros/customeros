@@ -29,6 +29,10 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comman
 		return a.linkEmail(ctx, c)
 	case *command.LinkPhoneNumberCommand:
 		return a.linkPhoneNumber(ctx, c)
+	case *command.AddRoleCommand:
+		return a.addRole(ctx, c)
+	case *command.RemoveRoleCommand:
+		return a.removeRole(ctx, c)
 	default:
 		return errors.New("invalid command type")
 	}
@@ -233,4 +237,36 @@ func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId,
 		return a.Apply(event)
 	}
 	return nil
+}
+
+func (a *UserAggregate) addRole(ctx context.Context, cmd *command.AddRoleCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.addRole")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewUserAddRoleEvent(a, cmd.Role, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewUserAddRoleEvent")
+	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+
+	return a.Apply(event)
+}
+
+func (a *UserAggregate) removeRole(ctx context.Context, cmd *command.RemoveRoleCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.removeRole")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewUserRemoveRoleEvent(a, cmd.Role, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewUserRemoveRoleEvent")
+	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+
+	return a.Apply(event)
 }

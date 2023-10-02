@@ -1,8 +1,0 @@
-mutation RemoveRole($userId: ID!, $role: Role!) {
-  user_RemoveRole(id: $userId, role: $role) {
-    id
-    firstName
-    lastName
-    roles
-  }
-}

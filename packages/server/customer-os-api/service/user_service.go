@@ -27,6 +27,7 @@ import (
 
 type UserService interface {
 	CreateUserByEvents(ctx context.Context, UserEntity entity.UserEntity) (string, error)
+	Update(ctx context.Context, userId, firstName, lastName string, name, timezone, profilePhotoURL *string) (*entity.UserEntity, error)
 	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetById(ctx context.Context, userId string) (*entity.UserEntity, error)
 	FindUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error)
@@ -42,8 +43,8 @@ type UserService interface {
 	GetDistinctOrganizationOwners(ctx context.Context) (*entity.UserEntities, error)
 	AddRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
 	AddRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
-	DeleteRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
-	DeleteRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
+	RemoveRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
+	RemoveRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
 	ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool
 
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
@@ -73,6 +74,38 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, gr
 
 func (s *userService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
+}
+
+func (s *userService) Update(ctx context.Context, userId, firstName, lastName string, name, timezone, profilePhotoURL *string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("userId", userId))
+
+	if userId != common.GetContext(ctx).UserId {
+		if !s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner}) {
+			return nil, fmt.Errorf("user can not update other user")
+		}
+	}
+
+	_, err := s.grpcClients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Id:             userId,
+		SourceFields: &commongrpc.SourceFields{
+			Source: string(entity.DataSourceOpenline),
+		},
+		FirstName:       firstName,
+		LastName:        lastName,
+		Name:            utils.IfNotNilString(name),
+		Timezone:        utils.IfNotNilString(timezone),
+		ProfilePhotoUrl: utils.IfNotNilString(profilePhotoURL),
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.GetById(ctx, userId)
 }
 
 func (s *userService) ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool {
@@ -115,19 +148,23 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.AddRole")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("userId", userId), log.String("role", string(role)))
 
 	if !s.CanAddRemoveRole(ctx, role) {
-		return nil, fmt.Errorf("user can not add role: %s", role)
+		return nil, fmt.Errorf("logged-in user can not add role: %s", role)
 	}
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	updateDbUser, err := s.repositories.UserRepository.AddRole(ctx, session, common.GetContext(ctx).Tenant, userId, mapper.MapRoleToEntity(role))
+	_, err := s.grpcClients.UserClient.AddRole(ctx, &usergrpc.AddRoleGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		UserId:         userId,
+		Role:           mapper.MapRoleToEntity(role),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+
+	return s.GetById(ctx, userId)
 }
 
 func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAddJobRoleData) (*model.CustomerUser, error) {
@@ -171,61 +208,73 @@ func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAd
 	return result, nil
 }
 
-func (s *userService) AddRoleInTenant(parentCtx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
+func (s *userService) AddRoleInTenant(parentCtx context.Context, userId, tenant string, role model.Role) (*entity.UserEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.AddRoleInTenant")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("userId", userId), log.String("role", string(role)))
 
 	if !s.CanAddRemoveRole(ctx, role) {
-		return nil, fmt.Errorf("user can not add role: %s", role)
+		return nil, fmt.Errorf("logged-in user can not add role: %s", role)
 	}
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	updateDbUser, err := s.repositories.UserRepository.AddRole(ctx, session, tenant, userId, mapper.MapRoleToEntity(role))
+	_, err := s.grpcClients.UserClient.AddRole(ctx, &usergrpc.AddRoleGrpcRequest{
+		Tenant:         tenant,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		UserId:         userId,
+		Role:           mapper.MapRoleToEntity(role),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+
+	return s.GetById(ctx, userId)
 }
 
-func (s *userService) DeleteRole(parentCtx context.Context, userId string, role model.Role) (*entity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.DeleteRole")
+func (s *userService) RemoveRole(parentCtx context.Context, userId string, role model.Role) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.RemoveRole")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("userId", userId), log.String("role", string(role)))
 
 	if !s.CanAddRemoveRole(ctx, role) {
-		return nil, fmt.Errorf("user can not delete role: %s", role)
+		return nil, fmt.Errorf("logged-in user can not remove role: %s", role)
 	}
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	updateDbUser, err := s.repositories.UserRepository.DeleteRole(ctx, session, common.GetContext(ctx).Tenant, userId, mapper.MapRoleToEntity(role))
+	_, err := s.grpcClients.UserClient.RemoveRole(ctx, &usergrpc.RemoveRoleGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		UserId:         userId,
+		Role:           mapper.MapRoleToEntity(role),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+
+	return s.GetById(ctx, userId)
 }
 
-func (s *userService) DeleteRoleInTenant(parentCtx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.DeleteRoleInTenant")
+func (s *userService) RemoveRoleInTenant(parentCtx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.RemoveRoleInTenant")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("userId", userId), log.String("role", string(role)))
 
 	if !s.CanAddRemoveRole(ctx, role) {
-		return nil, fmt.Errorf("user can not delete role: %s", role)
+		return nil, fmt.Errorf("logged-in user can not remove role: %s", role)
 	}
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	updateDbUser, err := s.repositories.UserRepository.DeleteRole(ctx, session, tenant, userId, mapper.MapRoleToEntity(role))
+	_, err := s.grpcClients.UserClient.RemoveRole(ctx, &usergrpc.RemoveRoleGrpcRequest{
+		Tenant:         tenant,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		UserId:         userId,
+		Role:           mapper.MapRoleToEntity(role),
+	})
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+
+	return s.GetById(ctx, userId)
 }
 
 func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
