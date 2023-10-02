@@ -26,7 +26,7 @@ import (
 )
 
 type UserService interface {
-	CreateUserByEvents(ctx context.Context, UserEntity entity.UserEntity) (string, error)
+	Create(ctx context.Context, UserEntity entity.UserEntity) (string, error)
 	Update(ctx context.Context, userId, firstName, lastName string, name, timezone, profilePhotoURL *string) (*entity.UserEntity, error)
 	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetById(ctx context.Context, userId string) (*entity.UserEntity, error)
@@ -532,8 +532,8 @@ func (s *userService) GetDistinctOrganizationOwners(parentCtx context.Context) (
 	return &userEntities, nil
 }
 
-func (s *userService) CreateUserByEvents(ctx context.Context, userEntity entity.UserEntity) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateUserByEvents")
+func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.Create")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("userEntity", userEntity))
@@ -541,9 +541,8 @@ func (s *userService) CreateUserByEvents(ctx context.Context, userEntity entity.
 	response, err := s.grpcClients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commongrpc.SourceFields{
-			Source:        string(userEntity.Source),
-			SourceOfTruth: string(userEntity.SourceOfTruth),
-			AppSource:     userEntity.AppSource,
+			Source:    string(userEntity.Source),
+			AppSource: userEntity.AppSource,
 		},
 		LoggedInUserId:  common.GetUserIdFromContext(ctx),
 		FirstName:       userEntity.FirstName,

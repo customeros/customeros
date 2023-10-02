@@ -96,10 +96,14 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)
 
-	r.GET("/poc",
-		cosHandler.TracingEnhancer(ctx, "/poc"),
+	r.POST("/sync/users",
+		cosHandler.TracingEnhancer(ctx, "/sync/users"),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.PocHandler(serviceContainer))
+		rest.SyncUsersHandler(serviceContainer, server.log))
+	r.POST("/sync/user",
+		cosHandler.TracingEnhancer(ctx, "/sync/user"),
+		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		rest.SyncUserHandler(serviceContainer, server.log))
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)

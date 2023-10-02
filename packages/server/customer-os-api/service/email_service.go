@@ -310,9 +310,8 @@ func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email str
 			Tenant:   common.GetTenantFromContext(ctx),
 			RawEmail: email,
 			SourceFields: &commongrpc.SourceFields{
-				Source:        string(entity.DataSourceOpenline),
-				SourceOfTruth: string(entity.DataSourceOpenline),
-				AppSource:     *utils.FirstNotEmpty(utils.IfNotNilString(appSource), constants.AppSourceCustomerOsApi),
+				Source:    string(entity.DataSourceOpenline),
+				AppSource: *utils.FirstNotEmpty(utils.IfNotNilString(appSource), constants.AppSourceCustomerOsApi),
 			},
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 		})
