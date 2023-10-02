@@ -16,7 +16,10 @@ type Services struct {
 	CommonServices     *commonService.Services
 	CommonAuthServices *commonAuthService.Services
 
-	UserService UserService
+	TenantService     TenantService
+	EmailService      EmailService
+	UserService       UserService
+	SyncStatusService SyncStatusService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -25,9 +28,12 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services := Services{
 		CommonServices:     commonServices,
 		CommonAuthServices: commonAuthServices,
-		UserService:        NewUserService(log, repositories, grpcClients),
+		TenantService:      NewTenantService(log, repositories),
+		EmailService:       NewEmailService(log, repositories, grpcClients),
+		SyncStatusService:  NewSyncStatusService(log, repositories),
 	}
 
+	services.UserService = NewUserService(log, repositories, grpcClients, &services)
 	services.cfg = cfg
 	return &services
 }

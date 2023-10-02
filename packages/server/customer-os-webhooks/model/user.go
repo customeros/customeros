@@ -26,6 +26,7 @@ func (u *UserData) HasEmail() bool {
 
 func (u *UserData) Normalize() {
 	u.SetTimes()
+	u.ExternalSystem = strings.ToLower(strings.TrimSpace(u.ExternalSystem))
 
 	u.Email = strings.ToLower(strings.TrimSpace(u.Email))
 

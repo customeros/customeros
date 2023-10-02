@@ -28,11 +28,6 @@ var (
 	serviceContainer  *service.Services
 )
 
-const tenantName = "openline"
-const testUserId = "test-user-id"
-const testContactId = "test-contact-id"
-const testPlayerId = "test-player-id"
-
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
 	defer func(dbContainer testcontainers.Container, driver neo4j.DriverWithContext, ctx context.Context) {

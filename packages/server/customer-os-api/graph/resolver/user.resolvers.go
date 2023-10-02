@@ -30,7 +30,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	userId, err := r.Services.UserService.CreateUserByEvents(ctx, *mapper.MapUserInputToEntity(input))
+	userId, err := r.Services.UserService.Create(ctx, *mapper.MapUserInputToEntity(input))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
