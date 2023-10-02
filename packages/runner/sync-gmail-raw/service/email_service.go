@@ -93,24 +93,32 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 		}
 	}
 
-	for i := range email.Payload.Parts {
-		if email.Payload.Parts[i].MimeType == "text/html" {
-			emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
-			emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
-		} else if email.Payload.Parts[i].MimeType == "text/plain" {
-			emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
-			emailText = fmt.Sprintf("%s", string(emailTextBytes))
-		} else if strings.HasPrefix(email.Payload.Parts[i].MimeType, "multipart") {
-			for j := range email.Payload.Parts[i].Parts {
-				if email.Payload.Parts[i].Parts[j].MimeType == "text/html" {
-					emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
-					emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
-				} else if email.Payload.Parts[i].Parts[j].MimeType == "text/plain" {
-					emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
-					emailText = fmt.Sprintf("%s", string(emailTextBytes))
+	if email.Payload.Parts != nil && len(email.Payload.Parts) > 0 {
+		for i := range email.Payload.Parts {
+			if email.Payload.Parts[i].MimeType == "text/html" {
+				emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
+				emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
+			} else if email.Payload.Parts[i].MimeType == "text/plain" {
+				emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
+				emailText = fmt.Sprintf("%s", string(emailTextBytes))
+			} else if strings.HasPrefix(email.Payload.Parts[i].MimeType, "multipart") {
+				for j := range email.Payload.Parts[i].Parts {
+					if email.Payload.Parts[i].Parts[j].MimeType == "text/html" {
+						emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
+						emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
+					} else if email.Payload.Parts[i].Parts[j].MimeType == "text/plain" {
+						emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
+						emailText = fmt.Sprintf("%s", string(emailTextBytes))
+					}
 				}
 			}
 		}
+	} else if email.Payload.Body != nil && email.Payload.Body.Data != "" {
+		n, err := base64.URLEncoding.DecodeString(email.Payload.Body.Data)
+		if err != nil {
+			return nil, fmt.Errorf("unable to decode email body: %v", err)
+		}
+		emailText = fmt.Sprintf("%s", n)
 	}
 
 	rawEmailData := &EmailRawData{
