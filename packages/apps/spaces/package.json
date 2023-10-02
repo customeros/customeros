@@ -44,7 +44,7 @@
     "escape-string-regexp": "^5.0.0",
     "framer-motion": "^10.12.18",
     "fuse.js": "^6.6.2",
-    "graphql": "^16.6.0",
+    "graphql": "^16.8.1",
     "graphql-request": "^6.1.0",
     "graphql-tag": "^2.12.6",
     "html-react-parser": "^3.0.8",
