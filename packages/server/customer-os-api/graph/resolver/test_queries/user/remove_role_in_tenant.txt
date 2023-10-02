@@ -1,8 +1,0 @@
-mutation RemoveRoleInTenant($userId: ID!, $tenant: String!, $role: Role!) {
-  user_RemoveRoleInTenant(id: $userId, tenant: $tenant, role: $role) {
-    id
-    firstName
-    lastName
-    roles
-  }
-}

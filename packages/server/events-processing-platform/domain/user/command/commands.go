@@ -92,3 +92,27 @@ func NewLinkEmailCommand(objectID, tenant, userId, emailId, label string, primar
 		Label:       label,
 	}
 }
+
+type AddRoleCommand struct {
+	eventstore.BaseCommand
+	Role string `json:"role" validate:"required"`
+}
+
+func NewAddRole(objectID, tenant, userId, role string) *AddRoleCommand {
+	return &AddRoleCommand{
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
+		Role:        role,
+	}
+}
+
+type RemoveRoleCommand struct {
+	eventstore.BaseCommand
+	Role string
+}
+
+func NewRemoveRole(objectID, tenant, userId, role string) *RemoveRoleCommand {
+	return &RemoveRoleCommand{
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
+		Role:        role,
+	}
+}

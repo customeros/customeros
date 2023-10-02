@@ -175,3 +175,45 @@ func (h *GraphUserEventHandler) OnAddPlayer(ctx context.Context, evt eventstore.
 
 	return err
 }
+
+func (h *GraphUserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnAddRole")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.UserAddRoleEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.repositories.UserRepository.AddRole(ctx, eventData.Tenant, userId, eventData.Role, eventData.At)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while adding role %s to user %s: %s", eventData.Role, userId, err.Error())
+	}
+
+	return err
+}
+
+func (h *GraphUserEventHandler) OnRemoveRole(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnRemoveRole")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.UserRemoveRoleEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.repositories.UserRepository.RemoveRole(ctx, eventData.Tenant, userId, eventData.Role, eventData.At)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while removing role %s from user %s: %s", eventData.Role, userId, err.Error())
+	}
+
+	return err
+}

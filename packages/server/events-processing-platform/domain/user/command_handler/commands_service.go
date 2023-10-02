@@ -9,6 +9,8 @@ import (
 type UserCommands struct {
 	UpsertUser             UpsertUserCommandHandler
 	AddPlayerInfo          AddPlayerInfoCommandHandler
+	AddRole                AddRoleCommandHandler
+	RemoveRole             RemoveRoleCommandHandler
 	LinkJobRoleCommand     LinkJobRoleCommandHandler
 	LinkPhoneNumberCommand LinkPhoneNumberCommandHandler
 	LinkEmailCommand       LinkEmailCommandHandler
@@ -21,5 +23,7 @@ func NewUserCommands(log logger.Logger, cfg *config.Config, es eventstore.Aggreg
 		LinkPhoneNumberCommand: NewLinkPhoneNumberCommandHandler(log, cfg, es),
 		LinkEmailCommand:       NewLinkEmailCommandHandler(log, cfg, es),
 		LinkJobRoleCommand:     NewLinkJobRoleCommandHandler(log, cfg, es),
+		AddRole:                NewAddRoleCommandHandler(log, cfg, es),
+		RemoveRole:             NewRemoveRoleCommandHandler(log, cfg, es),
 	}
 }

@@ -1,8 +1,0 @@
-mutation AddRoleInTenant($userId: ID!, $tenant: String!, $role: Role!) {
-  user_AddRoleInTenant(id: $userId, tenant: $tenant, role: $role) {
-    id
-    firstName
-    lastName
-    roles
-  }
-}

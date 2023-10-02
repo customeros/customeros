@@ -22,8 +22,6 @@ type UserRepository interface {
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error)
 	GetAllAuthorsForLogEntries(ctx context.Context, tenant string, logEntryIDs []string) ([]*utils.DbNodeAndId, error)
-	AddRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error)
-	DeleteRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error)
 	GetDistinctOrganizationOwners(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetUsers(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 }
@@ -36,59 +34,6 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 	return &userRepository{
 		driver: driver,
 	}
-}
-
-func (r *userRepository) AddRole(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.AddRole")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" SET 	u.roles = CASE " +
-		" 		WHEN NOT $role IN u.roles THEN u.roles + $role " +
-		" 		ELSE u.roles " +
-		" 		END, " +
-		"		u.updatedAt=datetime({timezone: 'UTC'}) " +
-		" RETURN u"
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant": tenant,
-				"role":   role,
-				"userId": userId,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
-func (r *userRepository) DeleteRole(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.DeleteRole")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" SET 	u.roles = [item IN u.roles WHERE item <> $role], " +
-		"		u.updatedAt=datetime({timezone: 'UTC'}) " +
-		" RETURN u"
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant": tenant,
-				"role":   role,
-				"userId": userId,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
 }
 
 func (r *userRepository) FindUserByEmail(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error) {

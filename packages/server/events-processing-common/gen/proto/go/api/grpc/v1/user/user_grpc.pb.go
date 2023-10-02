@@ -27,6 +27,8 @@ type UserGrpcServiceClient interface {
 	LinkJobRoleToUser(ctx context.Context, in *LinkJobRoleToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	LinkPhoneNumberToUser(ctx context.Context, in *LinkPhoneNumberToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	LinkEmailToUser(ctx context.Context, in *LinkEmailToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
+	AddRole(ctx context.Context, in *AddRoleGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
+	RemoveRole(ctx context.Context, in *RemoveRoleGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 }
 
 type userGrpcServiceClient struct {
@@ -82,6 +84,24 @@ func (c *userGrpcServiceClient) LinkEmailToUser(ctx context.Context, in *LinkEma
 	return out, nil
 }
 
+func (c *userGrpcServiceClient) AddRole(ctx context.Context, in *AddRoleGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
+	out := new(UserIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/userGrpcService/AddRole", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userGrpcServiceClient) RemoveRole(ctx context.Context, in *RemoveRoleGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
+	out := new(UserIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/userGrpcService/RemoveRole", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserGrpcServiceServer is the server API for UserGrpcService service.
 // All implementations should embed UnimplementedUserGrpcServiceServer
 // for forward compatibility
@@ -91,6 +111,8 @@ type UserGrpcServiceServer interface {
 	LinkJobRoleToUser(context.Context, *LinkJobRoleToUserGrpcRequest) (*UserIdGrpcResponse, error)
 	LinkPhoneNumberToUser(context.Context, *LinkPhoneNumberToUserGrpcRequest) (*UserIdGrpcResponse, error)
 	LinkEmailToUser(context.Context, *LinkEmailToUserGrpcRequest) (*UserIdGrpcResponse, error)
+	AddRole(context.Context, *AddRoleGrpcRequest) (*UserIdGrpcResponse, error)
+	RemoveRole(context.Context, *RemoveRoleGrpcRequest) (*UserIdGrpcResponse, error)
 }
 
 // UnimplementedUserGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -111,6 +133,12 @@ func (UnimplementedUserGrpcServiceServer) LinkPhoneNumberToUser(context.Context,
 }
 func (UnimplementedUserGrpcServiceServer) LinkEmailToUser(context.Context, *LinkEmailToUserGrpcRequest) (*UserIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkEmailToUser not implemented")
+}
+func (UnimplementedUserGrpcServiceServer) AddRole(context.Context, *AddRoleGrpcRequest) (*UserIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddRole not implemented")
+}
+func (UnimplementedUserGrpcServiceServer) RemoveRole(context.Context, *RemoveRoleGrpcRequest) (*UserIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveRole not implemented")
 }
 
 // UnsafeUserGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -214,6 +242,42 @@ func _UserGrpcService_LinkEmailToUser_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserGrpcService_AddRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddRoleGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserGrpcServiceServer).AddRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/userGrpcService/AddRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserGrpcServiceServer).AddRole(ctx, req.(*AddRoleGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserGrpcService_RemoveRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveRoleGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserGrpcServiceServer).RemoveRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/userGrpcService/RemoveRole",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserGrpcServiceServer).RemoveRole(ctx, req.(*RemoveRoleGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserGrpcService_ServiceDesc is the grpc.ServiceDesc for UserGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -240,6 +304,14 @@ var UserGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkEmailToUser",
 			Handler:    _UserGrpcService_LinkEmailToUser_Handler,
+		},
+		{
+			MethodName: "AddRole",
+			Handler:    _UserGrpcService_AddRole_Handler,
+		},
+		{
+			MethodName: "RemoveRole",
+			Handler:    _UserGrpcService_RemoveRole_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

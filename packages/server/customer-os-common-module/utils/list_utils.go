@@ -15,6 +15,13 @@ func FilterEmpty(vals []string) []string {
 	return result
 }
 
+func AddToListIfNotExists(arr []string, valueToAdd string) []string {
+	if !Contains(arr, valueToAdd) {
+		arr = append(arr, valueToAdd)
+	}
+	return arr
+}
+
 func RemoveFromList(arr []string, valueToRemove string) []string {
 	var result []string
 	for _, val := range arr {

@@ -22,6 +22,7 @@ type User struct {
 	Source          common_models.Source           `json:"source"`
 	ExternalSystems []common_models.ExternalSystem `json:"externalSystem"`
 	Players         []PlayerInfo                   `json:"players"`
+	Roles           []string                       `json:"roles"`
 }
 
 type PlayerInfo struct {

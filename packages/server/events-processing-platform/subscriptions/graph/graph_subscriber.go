@@ -211,6 +211,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
 	case userevents.UserAddPlayerV1:
 		return s.userEventHandler.OnAddPlayer(ctx, evt)
+	case userevents.UserAddRoleV1:
+		return s.userEventHandler.OnAddRole(ctx, evt)
+	case userevents.UserRemoveRoleV1:
+		return s.userEventHandler.OnRemoveRole(ctx, evt)
 
 	case
 		locationevents.LocationCreateV1Legacy,

@@ -93,36 +93,12 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", input.ID))
 
-	if input.ID != common.GetContext(ctx).UserId {
-		if !r.Services.UserService.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner}) {
-			return nil, fmt.Errorf("user can not update other user")
-		}
-	}
-
-	_, err := r.Clients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Id:             input.ID,
-		SourceFields: &commongrpc.SourceFields{
-			Source: string(entity.DataSourceOpenline),
-		},
-		FirstName:       input.FirstName,
-		LastName:        input.LastName,
-		Name:            utils.IfNotNilString(input.Name),
-		Timezone:        utils.IfNotNilString(input.Timezone),
-		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
-	})
+	updatedUserEntity, err := r.Services.UserService.Update(ctx, input.ID, input.FirstName, input.LastName,
+		input.Name, input.Timezone, input.ProfilePhotoURL)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update user %s", input.ID)
+		graphql.AddErrorf(ctx, "Failed to update user %s %s", input.FirstName, input.LastName)
 		return nil, nil
-	}
-
-	updatedUserEntity, err := r.Services.UserService.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch user %s", input.ID)
-		return nil, err
 	}
 	return mapper.MapEntityToUser(updatedUserEntity), nil
 }
@@ -150,7 +126,7 @@ func (r *mutationResolver) UserRemoveRole(ctx context.Context, id string, role m
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
-	userResult, err := r.Services.UserService.DeleteRole(ctx, id, role)
+	userResult, err := r.Services.UserService.RemoveRole(ctx, id, role)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove role %s from user %s", role, id)
@@ -182,7 +158,7 @@ func (r *mutationResolver) UserRemoveRoleInTenant(ctx context.Context, id string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
-	userResult, err := r.Services.UserService.DeleteRoleInTenant(ctx, id, tenant, role)
+	userResult, err := r.Services.UserService.RemoveRoleInTenant(ctx, id, tenant, role)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove role %s from user %s in tenant %s", role, id, tenant)
@@ -344,13 +320,3 @@ func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
 type userResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) UserCreateInTenant(ctx context.Context, input model.UserInput, tenant string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UserCreateInTenant - user_CreateInTenant"))
-}

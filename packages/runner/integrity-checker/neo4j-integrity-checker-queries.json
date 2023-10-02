@@ -75,6 +75,14 @@
     {
       "name": "Check duplicate values",
       "query": "CALL {MATCH (t:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) with t.name as tenant, tag.name as tag_name, count(tag) as size_tags where size_tags > 1 return count(tag_name) as cnt} return sum(cnt)"
+    },
+    {
+      "name": "Check synced with event store",
+      "query": "MATCH (n:User) where n.syncedWithEventStore is null or n.syncedWithEventStore = false return count(n)"
+    },
+    {
+      "name": "Check source fields",
+      "query": "MATCH (n:User|Email|PhoneNumber) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
     }
   ]
 }
