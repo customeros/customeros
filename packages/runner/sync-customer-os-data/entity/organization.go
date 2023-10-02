@@ -55,6 +55,8 @@ type OrganizationData struct {
 	// If true, the organization will be created by domain,
 	// Missing domains, or blacklisted domains will result in no organization being created
 	CreateByDomain bool `json:"createByDomain,omitempty"`
+	Whitelisted    bool `json:"whitelisted,omitempty"`
+	UpdateOnly     bool `json:"updateOnly,omitempty"`
 }
 
 func (o *OrganizationData) HasDomains() bool {

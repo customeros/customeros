@@ -1,38 +1,30 @@
-import React, { useEffect, useRef } from 'react';
-import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
-import { Box, Flex } from '@chakra-ui/react';
-import { Button } from '@ui/form/Button';
-import { TagSuggestor } from './TagSuggestor';
-
-import { TagsSelect } from './TagSelect';
+import React from 'react';
 import Image from 'next/image';
-import noteIcon from '../../../../../../../../public/images/event-ill-log.png';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useField } from 'react-inverted-form';
 
+import { Button } from '@ui/form/Button';
+import { Box, Flex } from '@chakra-ui/react';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { TagSuggestor } from '@ui/form/RichTextEditor/TagSuggestor';
+import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
-import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/TimelineActions/TimelineActionsContext/TimelineActionLogEntryContext';
+import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
+
+import { Keymapper } from '@ui/form/RichTextEditor/components/Keymapper';
+import { TagsSelect } from './TagSelect';
+import noteIcon from 'public/images/event-ill-log.png';
 
 export const Logger = () => {
   const { onCreateLogEntry, remirrorProps, isSaving } =
     useTimelineActionLogEntryContext();
   const client = getGraphQLClient();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { getInputProps } = useField(
+    'content',
+    'organization-create-log-entry',
+  );
+  const { value } = getInputProps();
   const { data } = useGetTagsQuery(client);
-  //
-  // const createLogEntryMutation = useCreateLogEntryMutation(client, {
-  //   onSuccess: () => {
-  //     // reset();
-  //     timeoutRef.current = setTimeout(() => invalidateQuery(), 500);
-  //   },
-  // });
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  const isLogEmpty = !value?.length || value === `<p style=""></p>`;
 
   return (
     <Flex
@@ -40,13 +32,13 @@ export const Logger = () => {
       position='relative'
       className='customeros-logger'
     >
-      <Box position='absolute' top={-6} right={-6}>
+      <Box position='absolute' top={-4} right={-6}>
         <Image src={noteIcon} alt='' height={123} width={174} />
       </Box>
 
       <RichTextEditor
         {...remirrorProps}
-        placeholder='Log conversation you had with a customer'
+        placeholder='Log a conversation you had with a customer'
         formId='organization-create-log-entry'
         name='content'
         showToolbar={false}
@@ -57,8 +49,9 @@ export const Logger = () => {
             id: e.value,
           }))}
         />
+        <Keymapper onCreate={onCreateLogEntry} />
       </RichTextEditor>
-      <Flex justifyContent='space-between' zIndex={8}>
+      <Flex justifyContent='space-between' zIndex={8} fontSize='md'>
         <TagsSelect
           formId='organization-create-log-entry'
           name='tags'
@@ -75,10 +68,10 @@ export const Logger = () => {
           pr={3}
           size='sm'
           fontSize='sm'
-          isDisabled={isSaving}
+          isDisabled={isSaving || isLogEmpty}
           isLoading={isSaving}
           loadingText='Sending'
-          onClick={onCreateLogEntry}
+          onClick={() => onCreateLogEntry()}
         >
           Log
         </Button>

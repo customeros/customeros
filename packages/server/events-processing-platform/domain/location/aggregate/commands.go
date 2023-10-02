@@ -3,6 +3,7 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	models_common "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
@@ -26,9 +27,7 @@ func (a *LocationAggregate) CreateLocation(ctx context.Context, tenant, name, ra
 		return errors.Wrap(err, "NewLocationCreateEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
 
 	return a.Apply(event)
 }
@@ -49,9 +48,7 @@ func (a *LocationAggregate) UpdateLocation(ctx context.Context, tenant, name, ra
 		return errors.Wrap(err, "NewLocationUpdateEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
 
 	return a.Apply(event)
 }
@@ -67,9 +64,7 @@ func (a *LocationAggregate) FailLocationValidation(ctx context.Context, tenant, 
 		return errors.Wrap(err, "NewLocationFailedValidationEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
 
 	return a.Apply(event)
 }
@@ -85,9 +80,7 @@ func (a *LocationAggregate) SkipLocationValidation(ctx context.Context, tenant, 
 		return errors.Wrap(err, "NewLocationSkippedValidationEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
 
 	return a.Apply(event)
 }
@@ -103,9 +96,7 @@ func (a *LocationAggregate) LocationValidated(ctx context.Context, tenant, rawAd
 		return errors.Wrap(err, "NewLocationValidatedEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
 
 	return a.Apply(event)
 }

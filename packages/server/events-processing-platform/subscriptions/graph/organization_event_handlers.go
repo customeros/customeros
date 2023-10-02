@@ -15,10 +15,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 type ActionForecastMetadata struct {
@@ -27,7 +29,7 @@ type ActionForecastMetadata struct {
 }
 
 type GraphOrganizationEventHandler struct {
-	Repositories         *repository.Repositories
+	repositories         *repository.Repositories
 	organizationCommands *cmdhnd.OrganizationCommands
 	log                  logger.Logger
 }
@@ -48,25 +50,84 @@ func (h *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.OrganizationRepository.CreateOrganization(ctx, organizationId, eventData)
+	err := h.repositories.OrganizationRepository.CreateOrganization(ctx, organizationId, eventData)
 
-	if err == nil {
-		evtMetadata := eventMetadata{}
-		if err = json.Unmarshal(evt.Metadata, &evtMetadata); err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "json.Unmarshal")
-		} else {
-			if evtMetadata.UserId != "" {
-				err = h.Repositories.OrganizationRepository.ReplaceOwner(ctx, eventData.Tenant, organizationId, evtMetadata.UserId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					h.log.Errorf("Failed to replace owner of organization %s with user %s", organizationId, evtMetadata.UserId)
-				}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// set customer os id
+	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+	if customerOsErr != nil {
+		tracing.TraceErr(span, customerOsErr)
+		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
+	}
+
+	// Set organization owner
+	evtMetadata := eventMetadata{}
+	if err = json.Unmarshal(evt.Metadata, &evtMetadata); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "json.Unmarshal")
+	} else {
+		if evtMetadata.UserId != "" {
+			err = h.repositories.OrganizationRepository.ReplaceOwner(ctx, eventData.Tenant, organizationId, evtMetadata.UserId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed to replace owner of organization %s with user %s", organizationId, evtMetadata.UserId)
 			}
 		}
 	}
 
+	// Set create action
+	_, err = h.repositories.ActionRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated, "", "", eventData.CreatedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
+	}
+
+	// Request last touch point update
+	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, organizationId, evtMetadata.UserId))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("RefreshLastTouchpointCommand failed: %v", err.Error())
+	}
+
 	return err
+}
+
+func (h *GraphOrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.setCustomerOsId")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("OrganizationId", organizationId))
+
+	orgDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	organizationEntity := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+
+	if organizationEntity.CustomerOsId != "" {
+		return nil
+	}
+	var customerOsId string
+	maxAttempts := 20
+	for attempt := 1; attempt < maxAttempts+1; attempt++ {
+		customerOsId = generateNewRandomCustomerOsId()
+		customerOsIdsEntity := postgresentity.CustomerOsIds{
+			Tenant:       tenant,
+			CustomerOSID: customerOsId,
+			Entity:       postgresentity.Organization,
+			EntityId:     organizationId,
+			Attempts:     attempt,
+		}
+		innerErr := h.repositories.CustomerOsIdsRepository.Reserve(customerOsIdsEntity)
+		if innerErr == nil {
+			break
+		}
+	}
+	return h.repositories.OrganizationRepository.SetCustomerOsIdIfMissing(ctx, tenant, organizationId, customerOsId)
 }
 
 func (h *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt eventstore.Event) error {
@@ -82,9 +143,16 @@ func (h *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	if eventData.IgnoreEmptyFields {
-		return h.Repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
+		return h.repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
 	} else {
-		return h.Repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+		err := h.repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+		// set customer os id
+		customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+		if customerOsErr != nil {
+			tracing.TraceErr(span, customerOsErr)
+			h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
+		}
+		return err
 	}
 }
 
@@ -100,7 +168,7 @@ func (h *GraphOrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx co
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.PhoneNumberRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.repositories.PhoneNumberRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err
 }
@@ -117,7 +185,7 @@ func (h *GraphOrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.EmailRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.repositories.EmailRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err
 }
@@ -133,8 +201,12 @@ func (h *GraphOrganizationEventHandler) OnDomainLinkedToOrganization(ctx context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
+	if strings.TrimSpace(eventData.Domain) == "" {
+		return nil
+	}
+
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.OrganizationRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, eventData.Domain)
+	err := h.repositories.OrganizationRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
 
 	return err
 }
@@ -151,7 +223,7 @@ func (h *GraphOrganizationEventHandler) OnSocialAddedToOrganization(ctx context.
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.SocialRepository.CreateSocialFor(ctx, eventData.Tenant, organizationId, "Organization", eventData)
+	err := h.repositories.SocialRepository.CreateSocialFor(ctx, eventData.Tenant, organizationId, "Organization", eventData)
 
 	return err
 }
@@ -170,14 +242,14 @@ func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Co
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	err := h.Repositories.OrganizationRepository.UpdateRenewalLikelihood(ctx, organizationId, eventData)
+	err := h.repositories.OrganizationRepository.UpdateRenewalLikelihood(ctx, organizationId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 
 	if eventData.PreviousLikelihood != eventData.RenewalLikelihood {
 		if string(eventData.RenewalLikelihood) != "" {
-			userDbNode, err := h.Repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedBy)
+			userDbNode, err := h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedBy)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("GetUser failed for id: %s", eventData.UpdatedBy, err.Error())
@@ -195,7 +267,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Co
 				tracing.TraceErr(span, err)
 				h.log.Errorf("ToJson failed: %s", err.Error())
 			}
-			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt)
+			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -226,7 +298,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Cont
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	err := h.Repositories.OrganizationRepository.UpdateRenewalForecast(ctx, organizationId, eventData)
+	err := h.repositories.OrganizationRepository.UpdateRenewalForecast(ctx, organizationId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -242,7 +314,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Cont
 				message = fmt.Sprintf("Renewal forecast set by default to $%s, by discounting the billing amount using the renewal likelihood", strAmount)
 			}
 		} else if eventData.UpdatedBy != "" {
-			userDbNode, err := h.Repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedBy)
+			userDbNode, err := h.repositories.UserRepository.GetUser(ctx, eventData.Tenant, eventData.UpdatedBy)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("GetUser failed for id: %s", eventData.UpdatedBy, err.Error())
@@ -264,7 +336,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Cont
 			h.log.Errorf("ToJson failed: %s", err.Error())
 		}
 		if message != "" {
-			_, err = h.Repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalForecastUpdated, message, metadata, eventData.UpdatedAt)
+			_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionRenewalForecastUpdated, message, metadata, eventData.UpdatedAt)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating forecast update action for organization %s: %s", organizationId, err.Error())
@@ -297,7 +369,7 @@ func (h *GraphOrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Conte
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	err := h.Repositories.OrganizationRepository.UpdateBillingDetails(ctx, organizationId, eventData)
+	err := h.repositories.OrganizationRepository.UpdateBillingDetails(ctx, organizationId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -330,7 +402,7 @@ func (h *GraphOrganizationEventHandler) OnOrganizationHide(ctx context.Context, 
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.OrganizationRepository.SetVisibility(ctx, eventData.Tenant, organizationId, true)
+	err := h.repositories.OrganizationRepository.SetVisibility(ctx, eventData.Tenant, organizationId, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -349,9 +421,85 @@ func (h *GraphOrganizationEventHandler) OnOrganizationShow(ctx context.Context, 
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.OrganizationRepository.SetVisibility(ctx, eventData.Tenant, organizationId, false)
+	err := h.repositories.OrganizationRepository.SetVisibility(ctx, eventData.Tenant, organizationId, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
+	// set customer os id
+	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
+	if customerOsErr != nil {
+		tracing.TraceErr(span, customerOsErr)
+		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
+	}
+
 	return err
+}
+
+func (h *GraphOrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnRefreshLastTouchpoint")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationRefreshLastTouchpointEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	lastTouchpointAt, lastTouchpointId, err := h.repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to calculate last touchpoint: %v", err.Error())
+		span.LogFields(log.Bool("last touchpoint failed", true))
+		return nil
+	}
+
+	if lastTouchpointAt == nil {
+		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
+		span.LogFields(log.Bool("last touchpoint not found", true))
+		return nil
+	}
+
+	if err = h.repositories.OrganizationRepository.UpdateLastTouchpoint(ctx, eventData.Tenant, organizationId, *lastTouchpointAt, lastTouchpointId); err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to update last touchpoint for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
+	}
+
+	return nil
+}
+
+func (h *GraphOrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnUpsertCustomField")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationUpsertCustomField
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	customFieldExists, err := h.repositories.CustomFieldRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to check if custom field exists: %s", err.Error())
+		return err
+	}
+	if !customFieldExists {
+		err = h.repositories.CustomFieldRepository.AddCustomFieldToOrganization(ctx, eventData.Tenant, organizationId, eventData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to add custom field to organization: %s", err.Error())
+			return err
+		}
+	} else {
+		//TODO implement update custom field
+	}
+
+	return nil
 }

@@ -18,6 +18,7 @@ export const theme = extendTheme({
   },
   colors,
   shadows,
+
   components: {
     Avatar,
     Button,
@@ -26,5 +27,13 @@ export const theme = extendTheme({
     Textarea,
     Checkbox,
     Tooltip,
+  },
+  styles: {
+    global: () => ({
+      // Optionally set global CSS styles
+      body: {
+        '--chakra-colors-chakra-body-text': colors.gray['700'], // no idea how to change this variable
+      },
+    }),
   },
 });

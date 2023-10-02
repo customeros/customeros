@@ -3,7 +3,7 @@ import { CardBody } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import sanitizeHtml from 'sanitize-html';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
@@ -26,6 +26,7 @@ import { InteractionEvent } from '@graphql/types';
 import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
 import { TimelineEventPreviewHeader } from '@organization/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import { TimelinePreviewBackdrop } from '@organization/components/Timeline/preview/TimelinePreviewBackdrop';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -210,7 +211,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
   return (
     <TimelinePreviewBackdrop onCloseModal={handleClosePreview}>
-      <Flex flexDir='column' maxH='calc(100vh - 5rem)'>
+      <Flex flexDir='column' maxH='calc(100vh - 5rem)' fontSize='sm'>
         <TimelineEventPreviewHeader
           //@ts-expect-error alias
           date={event.date}
@@ -227,6 +228,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
               maxWidth='calc(100% - 70px)'
               overflow='hidden'
               textOverflow='ellipsis'
+              fontSize='sm'
             >
               <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
               <EmailMetaDataEntry entryType='To' content={to} />
@@ -248,7 +250,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             </div>
           </Flex>
 
-          <Text color='gray.700' size='sm'>
+          <Text color='gray.700' size='sm' fontSize='sm'>
             {event?.content && (
               <RichTextPreview
                 htmlContent={sanitizeHtml(event.content)}

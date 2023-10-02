@@ -9,7 +9,7 @@ import { Icons } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
 
 import { getParticipants, getParticipantName } from '../utils';
-import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { MeetingIcon } from './icons';
 
 interface MeetingStubProps {
@@ -43,7 +43,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
     >
       <CardBody px='3' py='2'>
         <Flex w='full' justify='space-between' position='relative' gap='3'>
-          <VStack spacing='0' alignItems='flex-start'>
+          <VStack spacing='0' alignItems='flex-start' maxW={'461px'}>
             <Text
               fontSize='sm'
               fontWeight='semibold'
@@ -79,7 +79,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
             </Flex>
 
             {(note || agenda) && (
-              <Flex align='flex-start'>
+              <Flex align='flex-start' maxW={'517px'}>
                 {note && (
                   <Icons.File2 boxSize='3' mt='1' mr='1' color='gray.500' />
                 )}

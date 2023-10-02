@@ -3,7 +3,7 @@ import { useState, useEffect, PropsWithChildren } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Card } from '@ui/presentation/Card';
 import { ScaleFade } from '@ui/transitions/ScaleFade';
-import { useTimelineEventPreviewContext } from './TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface TimelinePreviewBackdropProps extends PropsWithChildren {
   onCloseModal: () => void;
@@ -31,7 +31,7 @@ export const TimelinePreviewBackdrop = ({
       bottom='0'
       left='0'
       right='0'
-      zIndex={1}
+      zIndex={10}
       cursor='pointer'
       backdropFilter='blur(3px)'
       justify='center'

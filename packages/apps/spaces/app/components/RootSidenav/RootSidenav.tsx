@@ -14,12 +14,12 @@ import { signOut } from 'next-auth/react';
 import { useJune } from '@spaces/hooks/useJune';
 import { SignOut } from '@spaces/atoms/icons';
 import { Box } from '@chakra-ui/react';
+import { useRecoilState } from 'recoil';
+import { globalCacheData } from '@spaces/globalState/globalCache';
+import { GoogleSidebarNotification } from '../../../components/google-re-allow-access-oauth-token/GoogleSidebarNotification';
 
-interface RootSidenavProps {
-  isOwner: boolean;
-}
-
-export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
+export const RootSidenav = () => {
+  const [globalCache] = useRecoilState(globalCacheData);
   const router = useRouter();
   const pathname = usePathname();
   const analytics = useJune();
@@ -109,7 +109,7 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
             />
           )}
         />
-        {isOwner && (
+        {globalCache?.isOwner && (
           <SidenavItem
             label='My portfolio'
             isActive={checkIsActive('portfolio')}
@@ -131,6 +131,8 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
         flexGrow='1'
         justifyContent='flex-end'
       >
+        <GoogleSidebarNotification />
+
         <SidenavItem
           label='Settings'
           isActive={checkIsActive('settings')}

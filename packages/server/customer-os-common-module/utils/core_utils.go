@@ -43,15 +43,6 @@ func StringPtrFirstNonEmptyNillable(strs ...string) *string {
 	return nil
 }
 
-func StringFirstNonEmpty(strs ...string) string {
-	for _, s := range strs {
-		if len(s) > 0 {
-			return s
-		}
-	}
-	return ""
-}
-
 func BoolPtr(b bool) *bool {
 	return &b
 }
@@ -361,4 +352,8 @@ func ExtractDomainFromUrl(inputURL string) string {
 	}
 
 	return strings.ToLower(domain)
+}
+
+func IsEmptyString(s *string) bool {
+	return s == nil || *s == ""
 }

@@ -6,7 +6,7 @@ import {
   JobRoleParticipant,
   UserParticipant,
 } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { Avatar } from '@ui/media/Avatar';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -16,6 +16,7 @@ import { Button } from '@ui/form/Button';
 import { SlackMessageCard } from '@organization/components/Timeline/events/slack/SlackMessageCard';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { InteractionEventWithDate } from '@organization/components/Timeline/types';
+import { User02 } from '@ui/media/icons/User02';
 
 export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
   slackEvent,
@@ -90,15 +91,21 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
           <Flex mt={1}>
             <Flex columnGap={1} mr={1}>
               {uniqThreadParticipants?.map(
-                ({ id, name, firstName, lastName, ...rest }) => (
-                  <Avatar
-                    name={name || `${firstName} ${lastName}`}
-                    key={`uniq-slack-thread-participant-${slackEvent.id}-${id}`}
-                    variant='roundedSquareSmall'
-                    size='xs'
-                    src={rest?.profilePhotoUrl || undefined}
-                  />
-                ),
+                ({ id, name, firstName, lastName, profilePhotoUrl }) => {
+                  const displayName =
+                    name ?? [firstName, lastName].filter(Boolean).join(' ');
+
+                  return (
+                    <Avatar
+                      size='xs'
+                      name={displayName}
+                      variant='roundedSquareSmall'
+                      icon={<User02 color='primary.700' />}
+                      src={profilePhotoUrl ? profilePhotoUrl : undefined}
+                      key={`uniq-slack-thread-participant-${slackEvent.id}-${id}`}
+                    />
+                  );
+                },
               )}
             </Flex>
             <Button variant='link' fontSize='sm' size='sm'>

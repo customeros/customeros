@@ -20,18 +20,18 @@ type LogEntryEntity struct {
 
 type LogEntryEntities []LogEntryEntity
 
-func (LogEntryEntity) IsTimelineEvent() {
+func (*LogEntryEntity) IsTimelineEvent() {
 }
 
-func (LogEntryEntity) TimelineEventLabel() string {
+func (*LogEntryEntity) TimelineEventLabel() string {
 	return NodeLabel_LogEntry
 }
 
-func (logEntry LogEntryEntity) SetDataloaderKey(key string) {
+func (logEntry *LogEntryEntity) SetDataloaderKey(key string) {
 	logEntry.DataloaderKey = key
 }
 
-func (logEntry LogEntryEntity) GetDataloaderKey() string {
+func (logEntry *LogEntryEntity) GetDataloaderKey() string {
 	return logEntry.DataloaderKey
 }
 

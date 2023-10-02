@@ -1,1 +1,0 @@
-export { SettingsMainSection } from './SettingsMainSection';

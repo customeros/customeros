@@ -13,12 +13,13 @@ import (
 type App string
 
 const (
-	CUSTOMER_OS_API App = "customer-os-api"
-	FILE_STORE_API  App = "file-store-api"
-	SETTINGS_API    App = "settings-api"
-	VALIDATION_API  App = "validation-api"
-	ANTHROPIC_API   App = "anthropic-api"
-	OPENAI_API      App = "openai-api"
+	CUSTOMER_OS_API      App = "customer-os-api"
+	CUSTOMER_OS_WEBHOOKS App = "customer-os-webhooks"
+	FILE_STORE_API       App = "file-store-api"
+	SETTINGS_API         App = "settings-api"
+	VALIDATION_API       App = "validation-api"
+	ANTHROPIC_API        App = "anthropic-api"
+	OPENAI_API           App = "openai-api"
 )
 
 const ApiKeyHeader = "X-Openline-API-KEY"

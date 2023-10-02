@@ -7,19 +7,27 @@ import (
 )
 
 type User struct {
-	ID              string                     `json:"id"`
-	Name            string                     `json:"name"`
-	FirstName       string                     `json:"firstName"`
-	LastName        string                     `json:"lastName"`
-	Internal        bool                       `json:"internal"`
-	ProfilePhotoUrl string                     `json:"profilePhotoUrl"`
-	Timezone        string                     `json:"timezone"`
-	Source          common_models.Source       `json:"source"`
-	CreatedAt       time.Time                  `json:"createdAt"`
-	UpdatedAt       time.Time                  `json:"updatedAt"`
-	PhoneNumbers    map[string]UserPhoneNumber `json:"phoneNumbers"`
-	Emails          map[string]UserEmail       `json:"emails"`
-	JobRoles        map[string]bool            `json:"jobRoles"`
+	ID              string                         `json:"id"`
+	Name            string                         `json:"name"`
+	FirstName       string                         `json:"firstName"`
+	LastName        string                         `json:"lastName"`
+	Internal        bool                           `json:"internal"`
+	ProfilePhotoUrl string                         `json:"profilePhotoUrl"`
+	Timezone        string                         `json:"timezone"`
+	CreatedAt       time.Time                      `json:"createdAt"`
+	UpdatedAt       time.Time                      `json:"updatedAt"`
+	PhoneNumbers    map[string]UserPhoneNumber     `json:"phoneNumbers"`
+	Emails          map[string]UserEmail           `json:"emails"`
+	JobRoles        map[string]bool                `json:"jobRoles"`
+	Source          common_models.Source           `json:"source"`
+	ExternalSystems []common_models.ExternalSystem `json:"externalSystem"`
+	Players         []PlayerInfo                   `json:"players"`
+}
+
+type PlayerInfo struct {
+	Provider   string `json:"provider"`
+	AuthId     string `json:"authId"`
+	IdentityId string `json:"identityId"`
 }
 
 type UserPhoneNumber struct {

@@ -10,14 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
-	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/gmail/v1"
-	"google.golang.org/api/option"
 	"strings"
 )
 
@@ -28,32 +22,9 @@ type emailService struct {
 }
 
 type EmailService interface {
-	ServiceAccountCredentialsExistsForTenant(tenant string) (bool, error)
-
-	GetGmailServiceWithServiceAccount(username string, tenant string) (*gmail.Service, error)
-	GetGmailServiceWithOauthToken(tokenEntity authEntity.OAuthTokenEntity) (*gmail.Service, error)
-
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 	ReadEmailFromGoogle(gmailService *gmail.Service, userId, messageId string) (*EmailRawData, error)
 	ReadNewEmailsForUsername(gmailService *gmail.Service, tenant, username string) error
-}
-
-func (s *emailService) ServiceAccountCredentialsExistsForTenant(tenant string) (bool, error) {
-	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, repository.GSUITE_SERVICE_PRIVATE_KEY)
-	if err != nil {
-		return false, nil
-	}
-
-	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, repository.GSUITE_SERVICE_EMAIL_ADDRESS)
-	if err != nil {
-		return false, nil
-	}
-
-	if privateKey == "" || serviceEmail == "" {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error) {
@@ -122,24 +93,32 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 		}
 	}
 
-	for i := range email.Payload.Parts {
-		if email.Payload.Parts[i].MimeType == "text/html" {
-			emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
-			emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
-		} else if email.Payload.Parts[i].MimeType == "text/plain" {
-			emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
-			emailText = fmt.Sprintf("%s", string(emailTextBytes))
-		} else if strings.HasPrefix(email.Payload.Parts[i].MimeType, "multipart") {
-			for j := range email.Payload.Parts[i].Parts {
-				if email.Payload.Parts[i].Parts[j].MimeType == "text/html" {
-					emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
-					emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
-				} else if email.Payload.Parts[i].Parts[j].MimeType == "text/plain" {
-					emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
-					emailText = fmt.Sprintf("%s", string(emailTextBytes))
+	if email.Payload.Parts != nil && len(email.Payload.Parts) > 0 {
+		for i := range email.Payload.Parts {
+			if email.Payload.Parts[i].MimeType == "text/html" {
+				emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
+				emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
+			} else if email.Payload.Parts[i].MimeType == "text/plain" {
+				emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
+				emailText = fmt.Sprintf("%s", string(emailTextBytes))
+			} else if strings.HasPrefix(email.Payload.Parts[i].MimeType, "multipart") {
+				for j := range email.Payload.Parts[i].Parts {
+					if email.Payload.Parts[i].Parts[j].MimeType == "text/html" {
+						emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
+						emailHtml = fmt.Sprintf("%s", emailHtmlBytes)
+					} else if email.Payload.Parts[i].Parts[j].MimeType == "text/plain" {
+						emailTextBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Parts[j].Body.Data)
+						emailText = fmt.Sprintf("%s", string(emailTextBytes))
+					}
 				}
 			}
 		}
+	} else if email.Payload.Body != nil && email.Payload.Body.Data != "" {
+		n, err := base64.URLEncoding.DecodeString(email.Payload.Body.Data)
+		if err != nil {
+			return nil, fmt.Errorf("unable to decode email body: %v", err)
+		}
+		emailText = fmt.Sprintf("%s", n)
 	}
 
 	rawEmailData := &EmailRawData{
@@ -231,95 +210,6 @@ func (s *emailService) ReadNewEmailsForUsername(gmailService *gmail.Service, ten
 	}
 
 	return nil
-}
-
-func (s *emailService) GetGmailServiceWithServiceAccount(username string, tenant string) (*gmail.Service, error) {
-	tok, err := s.getServiceAccountAuthToken(username, tenant)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
-	}
-	ctx := context.Background()
-	client := tok.Client(ctx)
-
-	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
-	return srv, err
-}
-
-func (s *emailService) getServiceAccountAuthToken(identityId, tenant string) (*jwt.Config, error) {
-	privateKey, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, repository.GSUITE_SERVICE_PRIVATE_KEY)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
-	}
-
-	serviceEmail, err := s.repositories.ApiKeyRepository.GetApiKeyByTenantService(tenant, repository.GSUITE_SERVICE_EMAIL_ADDRESS)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
-	}
-	conf := &jwt.Config{
-		Email:      serviceEmail,
-		PrivateKey: []byte(privateKey),
-		TokenURL:   google.JWTTokenURL,
-		Scopes:     []string{"https://mail.google.com/"},
-		Subject:    identityId,
-	}
-	return conf, nil
-}
-
-func (s *emailService) GetGmailServiceWithOauthToken(tokenEntity authEntity.OAuthTokenEntity) (*gmail.Service, error) {
-	oauth2Config := &oauth2.Config{
-		ClientID:     s.cfg.GoogleOAuth.ClientId,
-		ClientSecret: s.cfg.GoogleOAuth.ClientSecret,
-		Endpoint:     google.Endpoint,
-	}
-
-	token := oauth2.Token{
-		AccessToken:  tokenEntity.AccessToken,
-		RefreshToken: tokenEntity.RefreshToken,
-		Expiry:       tokenEntity.ExpiresAt,
-	}
-
-	tokenSource := oauth2Config.TokenSource(context.TODO(), &token)
-	reuseTokenSource := oauth2.ReuseTokenSource(&token, tokenSource)
-
-	if !token.Valid() {
-		newToken, err := reuseTokenSource.Token()
-		if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
-			err := s.repositories.OAuthRepositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
-			if err != nil {
-				logrus.Errorf("failed to mark token for manual refresh: %v", err)
-				return nil, err
-			}
-			return nil, fmt.Errorf("token is invalid and marked for manual refresh")
-		} else if err != nil {
-			logrus.Errorf("failed to get new token: %v", err)
-			return nil, err
-		}
-
-		if newToken.AccessToken != tokenEntity.AccessToken {
-
-			_, err := s.repositories.OAuthRepositories.OAuthTokenRepository.Update(tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
-			if err != nil {
-				logrus.Errorf("failed to update token: %v", err)
-				return nil, err
-			}
-		}
-
-	}
-
-	gmailService, err := gmail.NewService(context.TODO(), option.WithTokenSource(reuseTokenSource))
-	if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
-		err := s.repositories.OAuthRepositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
-		if err != nil {
-			logrus.Errorf("failed to mark token for manual refresh: %v", err)
-			return nil, err
-		}
-		return nil, fmt.Errorf("token is invalid and marked for manual refresh")
-	} else if err != nil {
-		logrus.Errorf("failed to create gmail service for token: %v", err)
-		return nil, err
-	}
-
-	return gmailService, nil
 }
 
 type EmailRawData struct {

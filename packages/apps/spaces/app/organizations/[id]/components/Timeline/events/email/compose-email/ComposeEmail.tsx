@@ -10,6 +10,7 @@ import {
   BasicEditorExtentions,
   RemirrorProps,
 } from '@ui/form/RichTextEditor/types';
+import { Keymapper } from '@ui/form/RichTextEditor/components/Keymapper';
 
 interface ComposeEmail {
   onModeChange?: (status: 'reply' | 'reply-all' | 'forward') => void;
@@ -45,7 +46,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       borderRadius={modal ? 0 : 'lg'}
       borderBottomRadius='2xl'
       as='form'
-      p={6}
+      p={4}
       overflow='visible'
       maxHeight={modal ? '50vh' : 'auto'}
       pt={1}
@@ -78,6 +79,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           name='content'
           showToolbar
         >
+          <Keymapper onCreate={onSubmit} />
           <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
         </RichTextEditor>
       </Box>

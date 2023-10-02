@@ -176,12 +176,24 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 	}
 
 	organizationSyncMutex.Lock()
-	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput)
+	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput.ExternalSystem, orgInput.ExternalId, orgInput.Domains)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)
 		reason = fmt.Sprintf("failed finding existing matched organization with external reference %v for tenant %v :%v", orgInput.ExternalId, tenant, err)
 		s.log.Errorf(reason)
+	}
+
+	if !failedSync && orgInput.UpdateOnly && organizationId == "" {
+		organizationSyncMutex.Unlock()
+		if err := dataService.MarkProcessed(ctx, orgInput.SyncId, runId, true, true, "This record is for update only, organization not available yet."); err != nil {
+			*failed++
+			span.LogFields(log.Bool("failedSync", true))
+			return
+		}
+		*skipped++
+		span.LogFields(log.Bool("skippedSync", true))
+		return
 	}
 
 	newOrganization := len(organizationId) == 0
@@ -194,7 +206,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 	span.LogFields(log.String("organizationId", organizationId))
 
 	if !failedSync {
-		err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, orgInput, orgHasWhitelistedDomain)
+		err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, orgInput, orgHasWhitelistedDomain || orgInput.Whitelisted)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
@@ -202,8 +214,6 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 			s.log.Errorf(reason)
 		}
 	}
-	organizationSyncMutex.Unlock()
-
 	if orgInput.HasDomains() && !failedSync {
 		for _, domain := range orgInput.Domains {
 			err = s.repositories.OrganizationRepository.MergeOrganizationDomain(ctx, tenant, organizationId, domain, orgInput.ExternalSystem)
@@ -216,6 +226,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 			}
 		}
 	}
+	organizationSyncMutex.Unlock()
 
 	if newOrganization && !failedSync {
 		err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, orgInput.Id, orgInput.ExternalSystem, constants.AppSourceSyncCustomerOsData)

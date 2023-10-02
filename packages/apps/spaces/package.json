@@ -12,6 +12,7 @@
     "codegen": "graphql-codegen --require dotenv/config --config codegen.ts",
     "codegen:graphql": "graphql-codegen --require dotenv/config --config graphql-codegen.ts",
     "codegen:icons": "node scripts/codegen-icons.js",
+    "codegen:logos": "node scripts/codegen-logos.js",
     "preatify": "yarn prettier --write ."
   },
   "dependencies": {
@@ -43,7 +44,7 @@
     "escape-string-regexp": "^5.0.0",
     "framer-motion": "^10.12.18",
     "fuse.js": "^6.6.2",
-    "graphql": "^16.6.0",
+    "graphql": "^16.8.1",
     "graphql-request": "^6.1.0",
     "graphql-tag": "^2.12.6",
     "html-react-parser": "^3.0.8",

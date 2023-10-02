@@ -1,0 +1,39 @@
+extend type Mutation {
+    customFieldTemplate_Create(input: CustomFieldTemplateInput!): CustomFieldTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type CustomFieldTemplate  implements Node {
+    id: ID!
+    createdAt: Time!
+    updatedAt: Time!
+    name: String!
+    type: CustomFieldTemplateType!
+    order: Int!
+    mandatory: Boolean!
+    length: Int
+    min: Int
+    max: Int
+}
+
+input CustomFieldTemplateInput {
+    name:      String!
+    type:      CustomFieldTemplateType!
+    order:     Int!
+    mandatory: Boolean
+    length:    Int
+    min:       Int
+    max:       Int
+}
+
+enum CustomFieldTemplateType {
+    TEXT
+    LINK
+    #    INTEGER
+    #    DECIMAL
+    #    DATE
+    #    DATETIME
+    #    TIME
+    #    BOOL
+    #    ENUM
+    #    ENTITY
+}

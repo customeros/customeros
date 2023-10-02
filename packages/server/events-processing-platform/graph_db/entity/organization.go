@@ -15,30 +15,30 @@ const (
 )
 
 type OrganizationEntity struct {
-	ID                 string
-	TenantOrganization bool
-	Name               string
-	Description        string
-	Website            string
-	Industry           string
-	SubIndustry        string
-	IndustryGroup      string
-	TargetAudience     string
-	ValueProposition   string
-	IsPublic           bool
-	Hide               bool
-	Market             string
-	LastFundingRound   string
-	LastFundingAmount  string
-	Note               string
-	Employees          int64
-	CreatedAt          time.Time
-	LastTouchpointAt   *time.Time
-	UpdatedAt          time.Time
-	LastTouchpointId   *string
-	Source             DataSource
-	SourceOfTruth      DataSource
-	AppSource          string
+	ID                string
+	CustomerOsId      string
+	Name              string
+	Description       string
+	Website           string
+	Industry          string
+	SubIndustry       string
+	IndustryGroup     string
+	TargetAudience    string
+	ValueProposition  string
+	IsPublic          bool
+	Hide              bool
+	Market            string
+	LastFundingRound  string
+	LastFundingAmount string
+	Note              string
+	Employees         int64
+	CreatedAt         time.Time
+	LastTouchpointAt  *time.Time
+	UpdatedAt         time.Time
+	LastTouchpointId  *string
+	Source            DataSource
+	SourceOfTruth     DataSource
+	AppSource         string
 
 	LinkedOrganizationType *string
 

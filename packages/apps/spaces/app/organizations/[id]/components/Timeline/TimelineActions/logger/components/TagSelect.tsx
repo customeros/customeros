@@ -22,7 +22,13 @@ interface Tag {
   label: string;
   value: string;
 }
-const suggestedTags = ['meeting', 'call', 'voicemail', 'email', 'text-message'];
+export const suggestedTags = [
+  'meeting',
+  'call',
+  'voicemail',
+  'email',
+  'text-message',
+];
 
 export const TagsSelect: FC<EmailParticipantSelect> = ({
   formId,
@@ -30,11 +36,12 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
   tags = [],
 }) => {
   const { getInputProps } = useField(name, formId);
-  const { onChange, value: selectedTags } = getInputProps();
+  const { onChange, value: selectedTags, onBlur } = getInputProps();
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [focusedOption, setFocusedOption] = useState<Tag | null>(null);
   const [inputVal, setInputVal] = useState('');
   const scope = useTagButtonSlideAnimation(!!selectedTags?.length);
+
   const getFilteredSuggestions = (
     filterString: string,
     callback: (options: OptionsOrGroups<any, any>) => void,
@@ -60,11 +67,8 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
     }
   };
 
-  // this function is needed as tags are selected on 'Space' not 'Enter'
+  // this function is needed as tags are selected on 'Space' & 'Enter'
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.code === 'Enter') {
-      event.preventDefault();
-    }
     if (event.code === 'Backspace') {
       if (inputVal.length) {
         return;
@@ -73,7 +77,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       const newSelected = [...selectedTags].slice(0, selectedTags.length - 1);
       onChange(newSelected);
     }
-    if (event.code === 'Space') {
+    if (event.code === 'Space' || event.code === 'Enter') {
       event.preventDefault();
       if (!isMenuOpen) return;
 
@@ -140,6 +144,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               placeholder=''
               backspaceRemovesValue
               onKeyDown={handleKeyDown}
+              onChange={onChange}
               noOptionsMessage={() => null}
               loadOptions={(inputValue: string, callback) => {
                 getFilteredSuggestions(inputValue, callback);
@@ -151,6 +156,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
                 return input;
               }}
+              onBlur={() => onBlur(selectedTags)}
               onMenuClose={() => setFocusedOption(null)}
               value={selectedTags}
               inputValue={inputVal}

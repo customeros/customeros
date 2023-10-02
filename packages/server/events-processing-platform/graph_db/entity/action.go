@@ -12,6 +12,7 @@ type ActionEntity struct {
 	Metadata      string
 	Type          ActionType
 	Source        DataSource
+	SourceOfTruth DataSource
 	AppSource     string
 	DataloaderKey string
 }

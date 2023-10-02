@@ -4,8 +4,9 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
 import User from '@spaces/atoms/icons/User';
-import linkifyHtml from 'linkify-html';
+
 import { ViewInIntercomButton } from './ViewInIntercomButton';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 interface IntercomMessageCardProps extends PropsWithChildren {
   name: string;
@@ -29,13 +30,6 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
   w,
   showDateOnHover,
 }) => {
-  const displayContent: string = (() => {
-    return linkifyHtml(content, {
-      defaultProtocol: 'https',
-      rel: 'noopener noreferrer',
-    });
-  })();
-
   return (
     <>
       <Card
@@ -74,13 +68,13 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
             />
             <Flex direction='column' flex={1} position='relative'>
               <Flex justifyContent='space-between' flex={1}>
-                <Flex>
+                <Flex align='baseline'>
                   <Text color='gray.700' fontWeight={600}>
                     {name}
                   </Text>
                   <Text
                     color={showDateOnHover ? 'transparent' : 'gray.500'}
-                    ml={2}
+                    ml='2'
                     fontSize='xs'
                     className='intercom-stub-date'
                   >
@@ -90,10 +84,11 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
 
                 <ViewInIntercomButton url={sourceUrl} />
               </Flex>
-              <Text
+
+              <HtmlContentRenderer
                 pointerEvents={showDateOnHover ? 'none' : 'initial'}
                 noOfLines={showDateOnHover ? 4 : undefined}
-                dangerouslySetInnerHTML={{ __html: displayContent }}
+                htmlContent={content}
               />
               {children}
             </Flex>

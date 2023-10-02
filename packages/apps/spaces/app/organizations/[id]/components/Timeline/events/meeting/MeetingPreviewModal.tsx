@@ -20,7 +20,7 @@ import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea
 import { useUpdateMeetingMutation } from '@organization/graphql/updateMeeting.generated';
 import { useAddMeetingNoteMutation } from '@organization/graphql/addMeetingNote.generated';
 
-import { useTimelineEventPreviewContext } from '../../preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getParticipantEmail } from '../utils';
 import { MeetingIcon, HubspotIcon, CalcomIcon } from './icons';
 
@@ -132,13 +132,16 @@ export const MeetingPreviewModal = ({
   return (
     <>
       <CardHeader
+        position='sticky'
+        top={0}
+        pt={4}
+        p='4'
+        pb='1'
+        borderRadius='xl'
         as={Flex}
         justify='space-between'
         gap='4'
         align='center'
-        px='6'
-        pt='4'
-        pb='2'
       >
         <Text
           fontSize='lg'
@@ -178,19 +181,34 @@ export const MeetingPreviewModal = ({
         maxH='calc(100vh - 4rem - 56px - 51px - 16px - 16px);'
       >
         <VStack w='full' align='flex-start' spacing='4'>
-          <Flex flexDir='column'>
-            <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
-              When
-            </Text>
-            <Tooltip
-              label={`Organizer's time: ${creatorTimeZone ? zoned : 'unknown'}`}
-              fontSize='xs'
-              placement='bottom'
-            >
-              <Text fontSize='sm' color='gray.700' w='full'>
-                {when}
+          <Flex flexDir='row' alignItems={'center'} w={'100%'}>
+            <Flex flexGrow={1} flexDir='column'>
+              <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
+                When
               </Text>
-            </Tooltip>
+              <Tooltip
+                  label={`Organizer's time: ${creatorTimeZone ? zoned : 'unknown'}`}
+                  fontSize='xs'
+                  placement='bottom'
+              >
+                <Text fontSize='sm' color='gray.700' w='full'>
+                  {when}
+                </Text>
+              </Tooltip>
+            </Flex>
+
+            <Center minW='12' h='10' position='relative'>
+              <MeetingIcon />
+              <Text
+                  position='absolute'
+                  fontSize='xl'
+                  fontWeight='semibold'
+                  mt='4px'
+                  color='gray.700'
+              >
+                {new Date(event?.startedAt).getDate()}
+              </Text>
+            </Center>
           </Flex>
 
           <Flex flexDir='column'>
@@ -219,7 +237,7 @@ export const MeetingPreviewModal = ({
           </Flex>
 
           {event?.agenda && (
-            <Flex flexDir='column'>
+            <Flex flexDir='column' w={'inherit'}>
               <Text fontSize='sm' fontWeight='semibold' color='gray.700'>
                 Description
               </Text>
@@ -243,19 +261,6 @@ export const MeetingPreviewModal = ({
             placeholder='Write some notes from this meeting'
           />
         </VStack>
-
-        <Center minW='12' h='10' position='relative'>
-          <MeetingIcon />
-          <Text
-            position='absolute'
-            fontSize='xl'
-            fontWeight='semibold'
-            mt='4px'
-            color='gray.700'
-          >
-            {new Date(event?.startedAt).getDate()}
-          </Text>
-        </Center>
       </CardBody>
       <CardFooter p='6' pt='0'>
         {externalSystem && externalUrl && (

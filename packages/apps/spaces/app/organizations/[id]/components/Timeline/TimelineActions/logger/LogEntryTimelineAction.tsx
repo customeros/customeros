@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { SlideFade } from '@ui/transitions/SlideFade';
 import { Box } from '@ui/layout/Box';
 import { Logger } from '../logger/components/Logger';
-import { useTimelineActionContext } from '../TimelineActionsContext/TimelineActionContext';
+import { useTimelineActionContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionContext';
 
 interface LogEntryTimelineActionProps {
   onScrollBottom: () => void;
@@ -32,6 +32,7 @@ export const LogEntryTimelineAction: React.FC<LogEntryTimelineActionProps> = ({
             m={6}
             mt={2}
             p={6}
+            pt={4}
             bg={'white'}
             border='1px solid'
             borderColor='gray.100'

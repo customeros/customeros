@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	utils_common "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
 	models_common "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
@@ -10,7 +10,6 @@ import (
 	grpcErrors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
 )
 
 type locationService struct {
@@ -47,8 +46,8 @@ func (s *locationService) UpsertLocation(ctx context.Context, request *location_
 		PlusFour:     request.PlusFour,
 		Commercial:   request.Commercial,
 		Predirection: request.Predirection,
-		Latitude:     utils_common.ParseStringToFloat(request.Latitude),
-		Longitude:    utils_common.ParseStringToFloat(request.Longitude),
+		Latitude:     utils.ParseStringToFloat(request.Latitude),
+		Longitude:    utils.ParseStringToFloat(request.Longitude),
 	}
 
 	source := models_common.Source{

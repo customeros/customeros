@@ -11,7 +11,7 @@ func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *
 		Name:      input.Name,
 		Type:      input.Type.String(),
 		Order:     int64(input.Order),
-		Mandatory: input.Mandatory,
+		Mandatory: utils.IfNotNilBool(input.Mandatory),
 		Length:    utils.IntPtrToInt64Ptr(input.Length),
 		Min:       utils.IntPtrToInt64Ptr(input.Min),
 		Max:       utils.IntPtrToInt64Ptr(input.Max),
@@ -45,4 +45,15 @@ func MapEntitiesToCustomFieldTemplates(entities *entity.CustomFieldTemplateEntit
 		customFieldTemplates = append(customFieldTemplates, MapEntityToCustomFieldTemplate(&v))
 	}
 	return customFieldTemplates
+}
+
+func MapTemplateTypeToFieldDataType(templateType string) *model.CustomFieldDataType {
+	switch templateType {
+	case model.CustomFieldTemplateTypeText.String():
+		return utils.ToPtr(model.CustomFieldDataTypeText)
+	case model.CustomFieldTemplateTypeLink.String():
+		return utils.ToPtr(model.CustomFieldDataTypeText)
+	default:
+		return utils.ToPtr(model.CustomFieldDataTypeText)
+	}
 }

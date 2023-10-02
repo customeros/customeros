@@ -447,6 +447,7 @@ type ComplexityRoot struct {
 		ContentType   func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		CreatedBy     func(childComplexity int) int
+		ExternalLinks func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
@@ -507,6 +508,7 @@ type ComplexityRoot struct {
 		CustomFieldDeleteFromFieldSetByID        func(childComplexity int, contactID string, fieldSetID string, id string) int
 		CustomFieldMergeToContact                func(childComplexity int, contactID string, input model.CustomFieldInput) int
 		CustomFieldMergeToFieldSet               func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
+		CustomFieldTemplateCreate                func(childComplexity int, input model.CustomFieldTemplateInput) int
 		CustomFieldUpdateInContact               func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
 		CustomFieldUpdateInFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
 		CustomFieldsMergeAndUpdateInContact      func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
@@ -542,6 +544,7 @@ type ComplexityRoot struct {
 		LogEntryAddTag                           func(childComplexity int, id string, input model.TagIDOrNameInput) int
 		LogEntryCreateForOrganization            func(childComplexity int, organizationID string, input model.LogEntryInput) int
 		LogEntryRemoveTag                        func(childComplexity int, id string, input model.TagIDOrNameInput) int
+		LogEntryResetTags                        func(childComplexity int, id string, input []*model.TagIDOrNameInput) int
 		LogEntryUpdate                           func(childComplexity int, id string, input model.LogEntryUpdateInput) int
 		MeetingAddNewLocation                    func(childComplexity int, meetingID string) int
 		MeetingAddNote                           func(childComplexity int, meetingID string, note *model.NoteInput) int
@@ -608,7 +611,6 @@ type ComplexityRoot struct {
 		UserAddRole                              func(childComplexity int, id string, role model.Role) int
 		UserAddRoleInTenant                      func(childComplexity int, id string, tenant string, role model.Role) int
 		UserCreate                               func(childComplexity int, input model.UserInput) int
-		UserCreateInTenant                       func(childComplexity int, input model.UserInput, tenant string) int
 		UserDelete                               func(childComplexity int, id string) int
 		UserDeleteInTenant                       func(childComplexity int, id string, tenant string) int
 		UserRemoveRole                           func(childComplexity int, id string, role model.Role) int
@@ -651,6 +653,7 @@ type ComplexityRoot struct {
 		Contacts                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		CreatedAt                     func(childComplexity int) int
 		CustomFields                  func(childComplexity int) int
+		CustomerOsID                  func(childComplexity int) int
 		Description                   func(childComplexity int) int
 		Domains                       func(childComplexity int) int
 		Emails                        func(childComplexity int) int
@@ -877,6 +880,7 @@ type ComplexityRoot struct {
 		Internal        func(childComplexity int) int
 		JobRoles        func(childComplexity int) int
 		LastName        func(childComplexity int) int
+		Name            func(childComplexity int) int
 		PhoneNumbers    func(childComplexity int) int
 		Player          func(childComplexity int) int
 		ProfilePhotoURL func(childComplexity int) int
@@ -981,6 +985,8 @@ type JobRoleResolver interface {
 type LogEntryResolver interface {
 	CreatedBy(ctx context.Context, obj *model.LogEntry) (*model.User, error)
 	Tags(ctx context.Context, obj *model.LogEntry) ([]*model.Tag, error)
+
+	ExternalLinks(ctx context.Context, obj *model.LogEntry) ([]*model.ExternalSystem, error)
 }
 type MeetingResolver interface {
 	AttendedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
@@ -1021,6 +1027,7 @@ type MutationResolver interface {
 	FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error)
 	FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error)
 	FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error)
+	CustomFieldTemplateCreate(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error)
 	EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error)
 	EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error)
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
@@ -1049,6 +1056,7 @@ type MutationResolver interface {
 	LogEntryUpdate(ctx context.Context, id string, input model.LogEntryUpdateInput) (string, error)
 	LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
+	LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
@@ -1112,7 +1120,6 @@ type MutationResolver interface {
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
 	TenantMerge(ctx context.Context, tenant model.TenantInput) (string, error)
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
-	UserCreateInTenant(ctx context.Context, input model.UserInput, tenant string) (*model.User, error)
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error)
 	UserAddRole(ctx context.Context, id string, role model.Role) (*model.User, error)
 	UserRemoveRole(ctx context.Context, id string, role model.Role) (*model.User, error)
@@ -3192,6 +3199,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LogEntry.CreatedBy(childComplexity), true
 
+	case "LogEntry.externalLinks":
+		if e.complexity.LogEntry.ExternalLinks == nil {
+			break
+		}
+
+		return e.complexity.LogEntry.ExternalLinks(childComplexity), true
+
 	case "LogEntry.id":
 		if e.complexity.LogEntry.ID == nil {
 			break
@@ -3649,6 +3663,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CustomFieldMergeToFieldSet(childComplexity, args["contactId"].(string), args["fieldSetId"].(string), args["input"].(model.CustomFieldInput)), true
 
+	case "Mutation.customFieldTemplate_Create":
+		if e.complexity.Mutation.CustomFieldTemplateCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_customFieldTemplate_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CustomFieldTemplateCreate(childComplexity, args["input"].(model.CustomFieldTemplateInput)), true
+
 	case "Mutation.customFieldUpdateInContact":
 		if e.complexity.Mutation.CustomFieldUpdateInContact == nil {
 			break
@@ -4068,6 +4094,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.LogEntryRemoveTag(childComplexity, args["id"].(string), args["input"].(model.TagIDOrNameInput)), true
+
+	case "Mutation.logEntry_ResetTags":
+		if e.complexity.Mutation.LogEntryResetTags == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_logEntry_ResetTags_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LogEntryResetTags(childComplexity, args["id"].(string), args["input"].([]*model.TagIDOrNameInput)), true
 
 	case "Mutation.logEntry_Update":
 		if e.complexity.Mutation.LogEntryUpdate == nil {
@@ -4861,18 +4899,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UserCreate(childComplexity, args["input"].(model.UserInput)), true
 
-	case "Mutation.user_CreateInTenant":
-		if e.complexity.Mutation.UserCreateInTenant == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_user_CreateInTenant_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UserCreateInTenant(childComplexity, args["input"].(model.UserInput), args["tenant"].(string)), true
-
 	case "Mutation.user_Delete":
 		if e.complexity.Mutation.UserDelete == nil {
 			break
@@ -5122,6 +5148,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.CustomFields(childComplexity), true
+
+	case "Organization.customerOsId":
+		if e.complexity.Organization.CustomerOsID == nil {
+			break
+		}
+
+		return e.complexity.Organization.CustomerOsID(childComplexity), true
 
 	case "Organization.description":
 		if e.complexity.Organization.Description == nil {
@@ -6487,6 +6520,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.LastName(childComplexity), true
 
+	case "User.name":
+		if e.complexity.User.Name == nil {
+			break
+		}
+
+		return e.complexity.User.Name(childComplexity), true
+
 	case "User.phoneNumbers":
 		if e.complexity.User.PhoneNumbers == nil {
 			break
@@ -7316,23 +7356,16 @@ Describes a custom, user-defined field associated with a ` + "`" + `Contact` + "
 **A ` + "`" + `create` + "`" + ` object.**
 """
 input CustomFieldInput {
-
-    """
-    The unique ID associated with the custom field.
-    """
-    id: ID
-
+    id: ID @deprecated
     """
     The name of the custom field.
-    **Required**
     """
-    name: String!
+    name: String
 
     """
     Datatype of the custom field.
-    **Required**
     """
-    datatype: CustomFieldDataType!
+    datatype: CustomFieldDataType
 
     """
     The value of the custom field.
@@ -7412,6 +7445,45 @@ enum EntityType {
 input CustomFieldEntityType {
     id:        ID!
     entityType: EntityType!
+}`, BuiltIn: false},
+	{Name: "../schemas/custom_field_template.graphqls", Input: `extend type Mutation {
+    customFieldTemplate_Create(input: CustomFieldTemplateInput!): CustomFieldTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type CustomFieldTemplate  implements Node {
+    id: ID!
+    createdAt: Time!
+    updatedAt: Time!
+    name: String!
+    type: CustomFieldTemplateType!
+    order: Int!
+    mandatory: Boolean!
+    length: Int
+    min: Int
+    max: Int
+}
+
+input CustomFieldTemplateInput {
+    name:      String!
+    type:      CustomFieldTemplateType!
+    order:     Int!
+    mandatory: Boolean
+    length:    Int
+    min:       Int
+    max:       Int
+}
+
+enum CustomFieldTemplateType {
+    TEXT
+    LINK
+    #    INTEGER
+    #    DECIMAL
+    #    DATE
+    #    DATETIME
+    #    TIME
+    #    BOOL
+    #    ENUM
+    #    ENTITY
 }`, BuiltIn: false},
 	{Name: "../schemas/dashboard.graphqls", Input: `extend type Query {
     """
@@ -7619,19 +7691,6 @@ type FieldSetTemplate  implements Node {
     customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
 }
 
-type CustomFieldTemplate  implements Node {
-    id: ID!
-    createdAt: Time!
-    updatedAt: Time!
-    name: String!
-    type: CustomFieldTemplateType!
-    order: Int!
-    mandatory: Boolean!
-    length: Int
-    min: Int
-    max: Int
-}
-
 input EntityTemplateInput {
     name: String!
     extends: EntityTemplateExtension
@@ -7643,29 +7702,6 @@ input FieldSetTemplateInput {
     name: String!
     order: Int!
     customFieldTemplateInputs: [CustomFieldTemplateInput!]
-}
-
-input CustomFieldTemplateInput {
-    name: String!
-    type: CustomFieldTemplateType!
-    order: Int!
-    mandatory: Boolean!
-    length: Int
-    min: Int
-    max: Int
-}
-
-enum CustomFieldTemplateType {
-    TEXT
-    LINK
-    #    INTEGER
-    #    DECIMAL
-    #    DATE
-    #    DATETIME
-    #    TIME
-    #    BOOL
-    #    ENUM
-    #    ENTITY
 }`, BuiltIn: false},
 	{Name: "../schemas/external_system.graphqls", Input: `input ExternalSystemReferenceInput {
     externalId: ID!
@@ -8101,6 +8137,7 @@ extend type Mutation {
     logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     logEntry_AddTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     logEntry_RemoveTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    logEntry_ResetTags(id: ID!, input: [TagIdOrNameInput!]): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LogEntry {
@@ -8115,6 +8152,7 @@ type LogEntry {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }
 
 input LogEntryInput {
@@ -8216,7 +8254,7 @@ input MeetingUpdateInput {
     externalSystem: ExternalSystemReferenceInput
 }
 
-union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
+union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant | EmailParticipant
 
 type Meeting implements Node {
     id: ID!
@@ -8330,6 +8368,7 @@ type LinkedOrganization {
 
 type Organization implements Node {
     id: ID!
+    customerOsId: String!
     createdAt:   Time!
     updatedAt:   Time!
     name:        String!
@@ -8423,43 +8462,43 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
-    name: String!
-    description: String
-    note:        String
-    domains:     [String!]
-    website:     String
-    industry:    String
-    subIndustry: String
+    name:          String!
+    description:   String
+    note:          String
+    domains:       [String!]
+    website:       String
+    industry:      String
+    subIndustry:   String
     industryGroup: String
-    isPublic:    Boolean
-    customFields: [CustomFieldInput!] @deprecated
-    fieldSets: [FieldSetInput!] @deprecated
-    templateId: ID @deprecated
-    market:      Market
-    employees:   Int64
-    appSource: String
+    isPublic:      Boolean
+    customFields:  [CustomFieldInput!]
+    fieldSets:     [FieldSetInput!] @deprecated
+    templateId:    ID @deprecated
+    market:        Market
+    employees:     Int64
+    appSource:     String
 }
 
 input OrganizationUpdateInput {
-    id:          ID!
+    id:   ID!
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """
-    patch:       Boolean
-    name:        String!
-    description: String
-    note:        String
-    domains:     [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
-    website:     String
-    industry:    String
-    subIndustry: String
-    industryGroup: String
-    isPublic:    Boolean
-    market:      Market
-    employees:   Int64
-    targetAudience: String
-    valueProposition: String
-    lastFundingRound: FundingRound
+    patch:             Boolean
+    name:              String!
+    description:       String
+    note:              String
+    domains:           [String!] @deprecated(reason: "to be implemented in separate mutation, add and remove by domain")
+    website:           String
+    industry:          String
+    subIndustry:       String
+    industryGroup:     String
+    isPublic:          Boolean
+    market:            Market
+    employees:         Int64
+    targetAudience:    String
+    valueProposition:  String
+    lastFundingRound:  FundingRound
     lastFundingAmount: String
 }
 
@@ -8943,7 +8982,6 @@ enum TimelineEventType {
 
 extend type Mutation {
     user_Create(input: UserInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
-    user_CreateInTenant(input: UserInput!, tenant: String!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
     user_Update(input: UserUpdateInput!): User! @hasTenant
     user_AddRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_RemoveRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
@@ -8960,24 +8998,25 @@ Describes the User of customerOS.  A user is the person who logs into the Openli
 **A ` + "`" + `return` + "`" + ` object**
 """
 type User {
-    
+
     """
-    The unique ID associated with the customerOS user. 
+    The unique ID associated with the customerOS user.
     **Required**
     """
     id: ID!
 
     """
-    The first name of the customerOS user. 
+    The first name of the customerOS user.
     **Required**
     """
     firstName: String!
 
     """
-    The last name of the customerOS user. 
+    The last name of the customerOS user.
     **Required**
     """
     lastName: String!
+    name: String
     internal: Boolean!
     timezone: String
     profilePhotoUrl: String
@@ -9012,15 +9051,15 @@ type User {
 """
 Specifies how many pages of ` + "`" + `User` + "`" + ` information has been returned in the query response.
 **A ` + "`" + `return` + "`" + ` object.**
-"""   
+"""
 type UserPage implements Pages {
-    
+
     """
     A ` + "`" + `User` + "`" + ` entity in customerOS.
     **Required.  If no values it returns an empty array.**
     """
     content: [User!]!
-    
+
     """
     Total number of pages in the query response.
     **Required.**
@@ -9037,24 +9076,26 @@ type UserPage implements Pages {
 """
 Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 **A ` + "`" + `create` + "`" + ` object.**
-"""   
+"""
 input UserInput {
-    
+
     """
-    The first name of the customerOS user. 
+    The first name of the customerOS user.
     **Required**
     """
     firstName: String!
-    
+
     """
-    The last name of the customerOS user. 
+    The last name of the customerOS user.
     **Required**
     """
     lastName: String!
+    name: String
     timezone: String
+    profilePhotoUrl: String
 
     """
-    The email address of the customerOS user. 
+    The email address of the customerOS user.
     **Required**
     """
     email: EmailInput!
@@ -9093,7 +9134,9 @@ input UserUpdateInput {
     **Required**
     """
     lastName: String!
+    name: String
     timezone: String
+    profilePhotoUrl: String
 }
 
 type CustomerUser {
@@ -9643,6 +9686,21 @@ func (ec *executionContext) field_Mutation_customFieldMergeToFieldSet_args(ctx c
 		}
 	}
 	args["input"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_customFieldTemplate_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CustomFieldTemplateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCustomFieldTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -10442,6 +10500,30 @@ func (ec *executionContext) field_Mutation_logEntry_RemoveTag_args(ctx context.C
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg1, err = ec.unmarshalNTagIdOrNameInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_logEntry_ResetTags_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 []*model.TagIDOrNameInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagIDOrNameInputᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -11776,30 +11858,6 @@ func (ec *executionContext) field_Mutation_user_AddRole_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_user_CreateInTenant_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.UserInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUserInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["tenant"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["tenant"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_user_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -12952,6 +13010,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(ctx context.Context, f
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -16026,6 +16086,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -18492,6 +18554,8 @@ func (ec *executionContext) fieldContext_Email_users(ctx context.Context, field 
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -18674,6 +18738,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -20867,6 +20933,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(ctx context.Context, f
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -23973,6 +24041,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -24710,6 +24780,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -26232,6 +26304,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(ctx context.Context,
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -26452,6 +26526,62 @@ func (ec *executionContext) fieldContext_LogEntry_appSource(ctx context.Context,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LogEntry_externalLinks(ctx context.Context, field graphql.CollectedField, obj *model.LogEntry) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LogEntry_externalLinks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.LogEntry().ExternalLinks(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ExternalSystem)
+	fc.Result = res
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LogEntry_externalLinks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LogEntry",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_ExternalSystem_type(ctx, field)
+			case "syncDate":
+				return ec.fieldContext_ExternalSystem_syncDate(ctx, field)
+			case "externalId":
+				return ec.fieldContext_ExternalSystem_externalId(ctx, field)
+			case "externalUrl":
+				return ec.fieldContext_ExternalSystem_externalUrl(ctx, field)
+			case "externalSource":
+				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
 		},
 	}
 	return fc, nil
@@ -30008,6 +30138,113 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetDeleteFromContact(ctx 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_customFieldTemplate_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_customFieldTemplate_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CustomFieldTemplateCreate(rctx, fc.Args["input"].(model.CustomFieldTemplateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CustomFieldTemplate); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.CustomFieldTemplate`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CustomFieldTemplate)
+	fc.Result = res
+	return ec.marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_customFieldTemplate_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomFieldTemplate_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CustomFieldTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
+			case "type":
+				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
+			case "order":
+				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
+			case "mandatory":
+				return ec.fieldContext_CustomFieldTemplate_mandatory(ctx, field)
+			case "length":
+				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
+			case "min":
+				return ec.fieldContext_CustomFieldTemplate_min(ctx, field)
+			case "max":
+				return ec.fieldContext_CustomFieldTemplate_max(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomFieldTemplate", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_customFieldTemplate_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_emailMergeToContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_emailMergeToContact(ctx, field)
 	if err != nil {
@@ -32225,6 +32462,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -32776,6 +33015,91 @@ func (ec *executionContext) fieldContext_Mutation_logEntry_RemoveTag(ctx context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_logEntry_RemoveTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_logEntry_ResetTags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_logEntry_ResetTags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().LogEntryResetTags(rctx, fc.Args["id"].(string), fc.Args["input"].([]*model.TagIDOrNameInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_logEntry_ResetTags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_logEntry_ResetTags_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -34335,6 +34659,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -34514,6 +34840,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -35717,6 +36045,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -35896,6 +36226,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -36075,6 +36407,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -36496,6 +36830,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -36675,6 +37011,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -36854,6 +37192,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -37033,6 +37373,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -37212,6 +37554,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -37391,6 +37735,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -39563,6 +39909,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -39603,121 +39951,6 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_user_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_user_CreateInTenant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_user_CreateInTenant(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UserCreateInTenant(rctx, fc.Args["input"].(model.UserInput), fc.Args["tenant"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "CUSTOMER_OS_PLATFORM_OWNER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_user_CreateInTenant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "firstName":
-				return ec.fieldContext_User_firstName(ctx, field)
-			case "lastName":
-				return ec.fieldContext_User_lastName(ctx, field)
-			case "internal":
-				return ec.fieldContext_User_internal(ctx, field)
-			case "timezone":
-				return ec.fieldContext_User_timezone(ctx, field)
-			case "profilePhotoUrl":
-				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
-			case "player":
-				return ec.fieldContext_User_player(ctx, field)
-			case "roles":
-				return ec.fieldContext_User_roles(ctx, field)
-			case "emails":
-				return ec.fieldContext_User_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_User_phoneNumbers(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_User_jobRoles(ctx, field)
-			case "calendars":
-				return ec.fieldContext_User_calendars(ctx, field)
-			case "source":
-				return ec.fieldContext_User_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_User_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_User_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_user_CreateInTenant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -39789,6 +40022,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -39910,6 +40145,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -40031,6 +40268,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -40146,6 +40385,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -40261,6 +40502,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -40998,6 +41241,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -41677,6 +41922,50 @@ func (ec *executionContext) fieldContext_Organization_id(ctx context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_customerOsId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_customerOsId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CustomerOsID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_customerOsId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -43573,6 +43862,8 @@ func (ec *executionContext) fieldContext_Organization_owner(ctx context.Context,
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -44021,6 +44312,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -44247,6 +44540,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -45521,6 +45816,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(ctx context.Context, 
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -45703,6 +46000,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -46405,6 +46704,8 @@ func (ec *executionContext) fieldContext_PlayerUser_user(ctx context.Context, fi
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -48041,6 +48342,8 @@ func (ec *executionContext) fieldContext_Query_logEntry(ctx context.Context, fie
 				return ec.fieldContext_LogEntry_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_LogEntry_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_LogEntry_externalLinks(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type LogEntry", field.Name)
 		},
@@ -48384,6 +48687,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -48567,6 +48872,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(ctx c
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -49454,6 +49761,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -49575,6 +49884,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -49997,6 +50308,8 @@ func (ec *executionContext) fieldContext_RenewalForecast_updatedBy(ctx context.C
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -50279,6 +50592,8 @@ func (ec *executionContext) fieldContext_RenewalLikelihood_updatedBy(ctx context
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -50936,6 +51251,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Organization_createdAt(ctx, field)
 			case "updatedAt":
@@ -51716,6 +52033,47 @@ func (ec *executionContext) _User_lastName(ctx context.Context, field graphql.Co
 }
 
 func (ec *executionContext) fieldContext_User_lastName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -52512,6 +52870,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -52680,6 +53040,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(ctx con
 				return ec.fieldContext_User_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
 			case "timezone":
@@ -55529,7 +55891,7 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -55538,7 +55900,7 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datatype"))
-			data, err := ec.unmarshalNCustomFieldDataType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx, v)
+			data, err := ec.unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -55612,7 +55974,7 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mandatory"))
-			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -58637,7 +58999,7 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"firstName", "lastName", "timezone", "email", "player", "appSource", "jobRoles"}
+	fieldsInOrder := [...]string{"firstName", "lastName", "name", "timezone", "profilePhotoUrl", "email", "player", "appSource", "jobRoles"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -58662,6 +59024,15 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 				return it, err
 			}
 			it.LastName = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		case "timezone":
 			var err error
 
@@ -58671,6 +59042,15 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 				return it, err
 			}
 			it.Timezone = data
+		case "profilePhotoUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURL = data
 		case "email":
 			var err error
 
@@ -58720,7 +59100,7 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "firstName", "lastName", "timezone"}
+	fieldsInOrder := [...]string{"id", "firstName", "lastName", "name", "timezone", "profilePhotoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -58754,6 +59134,15 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.LastName = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
 		case "timezone":
 			var err error
 
@@ -58763,6 +59152,15 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 				return it, err
 			}
 			it.Timezone = data
+		case "profilePhotoUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURL = data
 		}
 	}
 
@@ -58979,6 +59377,13 @@ func (ec *executionContext) _MeetingParticipant(ctx context.Context, sel ast.Sel
 			return graphql.Null
 		}
 		return ec._OrganizationParticipant(ctx, sel, obj)
+	case model.EmailParticipant:
+		return ec._EmailParticipant(ctx, sel, &obj)
+	case *model.EmailParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EmailParticipant(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -59032,6 +59437,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._CustomField(ctx, sel, obj)
+	case model.CustomFieldTemplate:
+		return ec._CustomFieldTemplate(ctx, sel, &obj)
+	case *model.CustomFieldTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._CustomFieldTemplate(ctx, sel, obj)
 	case model.EntityTemplate:
 		return ec._EntityTemplate(ctx, sel, &obj)
 	case *model.EntityTemplate:
@@ -59046,13 +59458,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._FieldSetTemplate(ctx, sel, obj)
-	case model.CustomFieldTemplate:
-		return ec._CustomFieldTemplate(ctx, sel, &obj)
-	case *model.CustomFieldTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._CustomFieldTemplate(ctx, sel, obj)
 	case model.InteractionSession:
 		return ec._InteractionSession(ctx, sel, &obj)
 	case *model.InteractionSession:
@@ -61018,7 +61423,7 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
-var emailParticipantImplementors = []string{"EmailParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
+var emailParticipantImplementors = []string{"EmailParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _EmailParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.EmailParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, emailParticipantImplementors)
@@ -63023,6 +63428,42 @@ func (ec *executionContext) _LogEntry(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "externalLinks":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LogEntry_externalLinks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -63665,6 +64106,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "customFieldTemplate_Create":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_customFieldTemplate_Create(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "emailMergeToContact":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailMergeToContact(ctx, field)
@@ -63857,6 +64305,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "logEntry_RemoveTag":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_logEntry_RemoveTag(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logEntry_ResetTags":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logEntry_ResetTags(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -64284,13 +64739,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "user_CreateInTenant":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_user_CreateInTenant(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "user_Update":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_user_Update(ctx, field)
@@ -64695,6 +65143,11 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = graphql.MarshalString("Organization")
 		case "id":
 			out.Values[i] = ec._Organization_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "customerOsId":
+			out.Values[i] = ec._Organization_customerOsId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -67545,6 +67998,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "name":
+			out.Values[i] = ec._User_name(ctx, field, obj)
 		case "internal":
 			out.Values[i] = ec._User_internal(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -68762,6 +69217,10 @@ func (ec *executionContext) unmarshalNCustomFieldInput2ᚖgithubᚗcomᚋopenlin
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNCustomFieldTemplate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplate(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldTemplate) graphql.Marshaler {
+	return ec._CustomFieldTemplate(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CustomFieldTemplate) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -68814,6 +69273,11 @@ func (ec *executionContext) marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenli
 		return graphql.Null
 	}
 	return ec._CustomFieldTemplate(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCustomFieldTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInput(ctx context.Context, v interface{}) (model.CustomFieldTemplateInput, error) {
+	res, err := ec.unmarshalInputCustomFieldTemplateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNCustomFieldTemplateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInput(ctx context.Context, v interface{}) (*model.CustomFieldTemplateInput, error) {
@@ -71592,6 +72056,22 @@ func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 		return graphql.Null
 	}
 	return ec._Country(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx context.Context, v interface{}) (*model.CustomFieldDataType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.CustomFieldDataType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldDataType(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldDataType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldInput, error) {

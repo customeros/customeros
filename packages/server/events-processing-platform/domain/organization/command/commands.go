@@ -9,6 +9,7 @@ import (
 
 type UpsertOrganizationCommand struct {
 	eventstore.BaseCommand
+	IsCreateCommand   bool
 	IgnoreEmptyFields bool
 	DataFields        models.OrganizationDataFields
 	Source            common_models.Source
@@ -206,5 +207,38 @@ type ShowOrganizationCommand struct {
 func NewShowOrganizationCommand(tenant, orgId, userId string) *ShowOrganizationCommand {
 	return &ShowOrganizationCommand{
 		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
+	}
+}
+
+type RefreshLastTouchpointCommand struct {
+	eventstore.BaseCommand
+}
+
+func NewRefreshLastTouchpointCommand(tenant, orgId, userId string) *RefreshLastTouchpointCommand {
+	return &RefreshLastTouchpointCommand{
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
+	}
+}
+
+type UpsertCustomFieldCommand struct {
+	eventstore.BaseCommand
+	Source          common_models.Source
+	CreatedAt       *time.Time
+	UpdatedAt       *time.Time
+	CustomFieldData models.CustomField
+}
+
+func NewUpsertCustomFieldCommand(organizationId, tenant, source, sourceOfTruth, appSource, userId string,
+	createdAt, updatedAt *time.Time, customField models.CustomField) *UpsertCustomFieldCommand {
+	return &UpsertCustomFieldCommand{
+		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
+		Source: common_models.Source{
+			Source:        source,
+			SourceOfTruth: sourceOfTruth,
+			AppSource:     appSource,
+		},
+		CreatedAt:       createdAt,
+		UpdatedAt:       updatedAt,
+		CustomFieldData: customField,
 	}
 }

@@ -16,9 +16,10 @@ export const multiCreatableSelectStyles = (
     background: 'gray.100',
     border: '1px solid',
     borderColor: 'gray.200',
-    fontSize: 'md',
+    fontSize: 'sm',
     marginRight: 1,
     cursor: 'default',
+    height: '4',
   }),
   clearIndicator: (base: CSSWithMultiValues) => ({
     ...base,
@@ -44,6 +45,7 @@ export const multiCreatableSelectStyles = (
     borderColor: 'gray.200',
     borderRadius: 'lg',
     maxHeight: '12rem',
+    zIndex: 11,
   }),
   option: (
     props: CSSWithMultiValues,
@@ -55,6 +57,7 @@ export const multiCreatableSelectStyles = (
     color: 'gray.700',
     bg: isSelected ? 'primary.50' : 'white',
     boxShadow: isFocused ? 'menuOptionsFocus' : 'none',
+    fontSize: 'sm',
     _hover: { bg: isSelected ? 'primary.50' : 'gray.100' },
   }),
   groupHeading: (props: CSSWithMultiValues) => ({

@@ -7,15 +7,17 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"time"
 )
 
 type OrganizationRepository interface {
-	GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error)
+	GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId string, domains []string) (string, error)
 	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData, orgWhitelisted bool) error
 	MergeOrganizationRelationshipAndStage(ctx context.Context, tenant, organizationId, relationship, stage, externalSystem string) error
 	MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
@@ -36,15 +38,17 @@ type OrganizationRepository interface {
 
 type organizationRepository struct {
 	driver *neo4j.DriverWithContext
+	log    logger.Logger
 }
 
-func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {
+func NewOrganizationRepository(driver *neo4j.DriverWithContext, log logger.Logger) OrganizationRepository {
 	return &organizationRepository{
 		driver: driver,
+		log:    log,
 	}
 }
 
-func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error) {
+func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId string, domains []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMatchedOrganizationId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -64,9 +68,9 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 		queryResult, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":                 tenant,
-				"externalSystem":         organization.ExternalSystem,
-				"organizationExternalId": organization.ExternalId,
-				"domains":                organization.Domains,
+				"externalSystem":         externalSystem,
+				"organizationExternalId": externalId,
+				"domains":                domains,
 			})
 		if err != nil {
 			return nil, err
@@ -117,7 +121,9 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
 		"				org:%s " +
-		" ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.name is null OR org.name = '' THEN $name ELSE org.name END, " +
+		" ON MATCH SET 	" +
+		"				org.hide = CASE WHEN $hide = false THEN org.hide = $hide ELSE org.hide END," +
+		"				org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.name is null OR org.name = '' THEN $name ELSE org.name END, " +
 		"				org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.description is null OR org.description = '' THEN $description ELSE org.description END, " +
 		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.website is null OR org.website = '' THEN $website ELSE org.website END, " +
 		"				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END, " +
@@ -443,6 +449,7 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CalculateAndGetLastTouchpoint")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -508,7 +515,16 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 	}
 
 	if len(records.([]*neo4j.Record)) > 0 {
-		return utils.TimePtr(records.([]*neo4j.Record)[0].Values[0].(time.Time)), records.([]*neo4j.Record)[0].Values[1].(string), nil
+		// Try to assert the value to time.Time
+		if t, ok := records.([]*neo4j.Record)[0].Values[0].(time.Time); ok {
+			// If assertion is successful, proceed
+			return utils.TimePtr(t), records.([]*neo4j.Record)[0].Values[1].(string), nil
+		} else {
+			err = errors.New(fmt.Sprintf("Value %v associated to timeline event id %s is not of type time.Time", records.([]*neo4j.Record)[0].Values[0], records.([]*neo4j.Record)[0].Values[1].(string)))
+			tracing.TraceErr(span, err)
+			r.log.Warnf("Failed to get last touchpoint. Skip setting it to organization: %v", err.Error())
+			return nil, "", nil
+		}
 	}
 	return nil, "", nil
 }

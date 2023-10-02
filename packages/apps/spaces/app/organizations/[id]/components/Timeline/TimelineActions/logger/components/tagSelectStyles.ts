@@ -1,6 +1,7 @@
 import omit from 'lodash/omit';
-import { StylesConfig, GroupBase } from 'chakra-react-select';
+import { StylesConfig, GroupBase, OptionProps } from 'chakra-react-select';
 import { CSSWithMultiValues } from '@chakra-ui/react';
+import { suggestedTags } from './TagSelect';
 
 type ChakraStylesConfig<
   OptionType = unknown,
@@ -20,10 +21,10 @@ export const tagsSelectStyles = (
     background: 'transparent',
     border: '1px solid',
     borderColor: 'transparent',
-    fontSize: 'md',
+    fontSize: 'var(--tag-select-font-size)',
     margin: 0,
     marginRight: 1,
-    cursor: 'default',
+    cursor: 'text',
     fontWeight: 500,
 
     '&:first-of-type': {
@@ -49,17 +50,38 @@ export const tagsSelectStyles = (
     minWidth: '300px',
     width: '100%',
     overflow: 'visible',
+    cursor: 'text',
+    fontSize: 'var(--tag-select-font-size)',
+    padding: 0,
     _focusVisible: { border: 'none !important' },
     _focus: { border: 'none !important' },
   }),
-  menuList: (props: CSSWithMultiValues) => ({
-    ...props,
-    padding: '2',
-    boxShadow: 'md',
-    borderColor: 'gray.200',
-    borderRadius: 'lg',
-    maxHeight: '12rem',
-  }),
+  menuList: (
+    props: CSSWithMultiValues,
+    data: { options: Array<OptionProps & { value: string }> },
+  ) => {
+    const isNew =
+      data?.options?.length === 1 &&
+      data?.options?.[0]?.label === data.options?.[0]?.value &&
+      !suggestedTags.includes(data.options?.[0]?.label);
+
+    if (isNew) {
+      return {
+        position: 'absolute',
+        bottom: '-999999999px',
+      };
+    }
+
+    return {
+      ...props,
+      padding: '2',
+      boxShadow: 'md',
+      borderColor: 'gray.200',
+      borderRadius: 'lg',
+      maxHeight: '150px',
+      fontSize: 'inherit',
+    };
+  },
   option: (
     props: CSSWithMultiValues,
     { isSelected, isFocused }: { isSelected: boolean; isFocused: boolean },
@@ -77,16 +99,22 @@ export const tagsSelectStyles = (
     color: 'gray.400',
     textTransform: 'uppercase',
     fontWeight: 'regular',
+    fontSize: 'inherit',
   }),
   input: (props: CSSWithMultiValues) => ({
     ...props,
     color: 'gray.500',
     fontWeight: 'regular',
+    cursor: 'text',
+    padding: 0,
+    fontSize: 'var(--tag-select-font-size)',
   }),
   valueContainer: (props: CSSWithMultiValues) => ({
     ...props,
+    padding: 0,
     maxH: '86px',
     overflowY: 'auto',
+    fontSize: 'inherit',
   }),
   ...omit<ChakraStylesConfig<unknown, GroupBase<unknown>>>(chakraStyles, [
     'container',

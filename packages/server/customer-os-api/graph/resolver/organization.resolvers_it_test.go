@@ -55,6 +55,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	inputOrganizationEntity := entity.OrganizationEntity{
 		Name:              "Organization name",
+		CustomerOsId:      "C-123-ABC",
 		Description:       "Organization description",
 		Website:           "Organization_website.com",
 		Industry:          "tech",
@@ -67,14 +68,14 @@ func TestQueryResolver_Organization(t *testing.T) {
 		Note:              "Some note",
 		IsPublic:          true,
 	}
-	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
-	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain1.com")
-	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain2.com")
+	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
+	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain1.com")
+	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain2.com")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "otherOrganization")
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 
-	rawResponse := callGraphQL(t, "organization/get_organization_by_id", map[string]interface{}{"organizationId": organizationId1})
+	rawResponse := callGraphQL(t, "organization/get_organization_by_id", map[string]interface{}{"organizationId": organizationId})
 
 	var organizationStruct struct {
 		Organization model.Organization
@@ -82,7 +83,8 @@ func TestQueryResolver_Organization(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	require.Nil(t, err)
 	require.NotNil(t, organizationStruct)
-	require.Equal(t, organizationId1, organizationStruct.Organization.ID)
+	require.Equal(t, organizationId, organizationStruct.Organization.ID)
+	require.Equal(t, inputOrganizationEntity.CustomerOsId, organizationStruct.Organization.CustomerOsID)
 	require.Equal(t, inputOrganizationEntity.Name, organizationStruct.Organization.Name)
 	require.Equal(t, inputOrganizationEntity.Description, *organizationStruct.Organization.Description)
 	require.Equal(t, []string{"domain1.com", "domain2.com"}, organizationStruct.Organization.Domains)

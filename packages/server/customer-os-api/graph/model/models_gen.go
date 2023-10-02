@@ -376,14 +376,11 @@ type CustomFieldEntityType struct {
 // Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
 type CustomFieldInput struct {
-	// The unique ID associated with the custom field.
 	ID *string `json:"id,omitempty"`
 	// The name of the custom field.
-	// **Required**
-	Name string `json:"name"`
+	Name *string `json:"name,omitempty"`
 	// Datatype of the custom field.
-	// **Required**
-	Datatype CustomFieldDataType `json:"datatype"`
+	Datatype *CustomFieldDataType `json:"datatype,omitempty"`
 	// The value of the custom field.
 	// **Required**
 	Value      AnyTypeValue `json:"value"`
@@ -410,7 +407,7 @@ type CustomFieldTemplateInput struct {
 	Name      string                  `json:"name"`
 	Type      CustomFieldTemplateType `json:"type"`
 	Order     int                     `json:"order"`
-	Mandatory bool                    `json:"mandatory"`
+	Mandatory *bool                   `json:"mandatory,omitempty"`
 	Length    *int                    `json:"length,omitempty"`
 	Min       *int                    `json:"min,omitempty"`
 	Max       *int                    `json:"max,omitempty"`
@@ -515,6 +512,8 @@ type EmailParticipant struct {
 func (EmailParticipant) IsInteractionEventParticipant() {}
 
 func (EmailParticipant) IsInteractionSessionParticipant() {}
+
+func (EmailParticipant) IsMeetingParticipant() {}
 
 // Describes an email address associated with a `Contact` in customerOS.
 // **An `update` object.**
@@ -918,17 +917,18 @@ type LocationUpdateInput struct {
 }
 
 type LogEntry struct {
-	ID            string     `json:"id"`
-	Content       *string    `json:"content,omitempty"`
-	ContentType   *string    `json:"contentType,omitempty"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	StartedAt     time.Time  `json:"startedAt"`
-	CreatedBy     *User      `json:"createdBy,omitempty"`
-	Tags          []*Tag     `json:"tags"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
+	ID            string            `json:"id"`
+	Content       *string           `json:"content,omitempty"`
+	ContentType   *string           `json:"contentType,omitempty"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	StartedAt     time.Time         `json:"startedAt"`
+	CreatedBy     *User             `json:"createdBy,omitempty"`
+	Tags          []*Tag            `json:"tags"`
+	Source        DataSource        `json:"source"`
+	SourceOfTruth DataSource        `json:"sourceOfTruth"`
+	AppSource     string            `json:"appSource"`
+	ExternalLinks []*ExternalSystem `json:"externalLinks"`
 }
 
 func (LogEntry) IsTimelineEvent() {}
@@ -1093,6 +1093,7 @@ type OrgAccountDetails struct {
 
 type Organization struct {
 	ID                            string                           `json:"id"`
+	CustomerOsID                  string                           `json:"customerOsId"`
 	CreatedAt                     time.Time                        `json:"createdAt"`
 	UpdatedAt                     time.Time                        `json:"updatedAt"`
 	Name                          string                           `json:"name"`
@@ -1492,6 +1493,7 @@ type User struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName        string  `json:"lastName"`
+	Name            *string `json:"name,omitempty"`
 	Internal        bool    `json:"internal"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
@@ -1520,8 +1522,10 @@ type UserInput struct {
 	FirstName string `json:"firstName"`
 	// The last name of the customerOS user.
 	// **Required**
-	LastName string  `json:"lastName"`
-	Timezone *string `json:"timezone,omitempty"`
+	LastName        string  `json:"lastName"`
+	Name            *string `json:"name,omitempty"`
+	Timezone        *string `json:"timezone,omitempty"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	// The email address of the customerOS user.
 	// **Required**
 	Email *EmailInput `json:"email"`
@@ -1578,8 +1582,10 @@ type UserUpdateInput struct {
 	FirstName string `json:"firstName"`
 	// The last name of the customerOS user.
 	// **Required**
-	LastName string  `json:"lastName"`
-	Timezone *string `json:"timezone,omitempty"`
+	LastName        string  `json:"lastName"`
+	Name            *string `json:"name,omitempty"`
+	Timezone        *string `json:"timezone,omitempty"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 }
 
 type Workspace struct {

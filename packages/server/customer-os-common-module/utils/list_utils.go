@@ -43,9 +43,9 @@ func LowercaseStrings(arr []string) {
 	}
 }
 
-func Contains(list []string, str string) bool {
-	for _, v := range list {
-		if v == str {
+func Contains(slice []string, value string) bool {
+	for _, v := range slice {
+		if v == value {
 			return true
 		}
 	}

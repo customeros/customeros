@@ -104,15 +104,15 @@ func (s *syncService) Sync(parentCtx context.Context, runId string) {
 		syncRunDtls.FailedNotes = failed
 		syncRunDtls.SkippedNotes = skipped
 
-		completed, failed, skipped = s.emailMessageSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedEmailMessages = completed
-		syncRunDtls.FailedEmailMessages = failed
-		syncRunDtls.SkippedEmailMessages = skipped
+		//completed, failed, skipped = s.emailMessageSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		//syncRunDtls.CompletedEmailMessages = completed
+		//syncRunDtls.FailedEmailMessages = failed
+		//syncRunDtls.SkippedEmailMessages = skipped
 
-		completed, failed, skipped = s.meetingSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedMeetings = completed
-		syncRunDtls.FailedMeetings = failed
-		syncRunDtls.SkippedMeetings = skipped
+		//completed, failed, skipped = s.meetingSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		//syncRunDtls.CompletedMeetings = completed
+		//syncRunDtls.FailedMeetings = failed
+		//syncRunDtls.SkippedMeetings = skipped
 
 		completed, failed, skipped = s.interactionEventSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedInteractionEvents = completed
@@ -148,7 +148,7 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 			return intercom.NewIntercomDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
 		},
 		string(entity.AirbyteSourceSalesforce): func() source.SourceDataService {
-			return salesforce.NewSalesforceDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
+			return salesforce.NewSalesforceDataService(s.repositories.Dbs.RawDataStoreDB, s.repositories, tenantToSync.Tenant, s.log)
 		},
 		string(entity.OpenlineSourceSlack): func() source.SourceDataService {
 			return slack.NewSlackDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)

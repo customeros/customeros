@@ -13,8 +13,8 @@ import (
 
 type EmailRepository interface {
 	GetEmailId(ctx context.Context, tenant, email string) (string, error)
-	GetEmailsByRawEmail(ctx context.Context, tenant string, rawEmails []string) ([]*dbtype.Node, error)
-	FindUserByEmail(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
+	GetEmailIdInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email string) (string, error)
+	FindEmailByUserId(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
 	CreateEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, appSource string) (string, error)
 	CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, source, appSource string) (string, error)
 }
@@ -55,38 +55,28 @@ func (r *emailRepository) GetEmailId(ctx context.Context, tenant, email string) 
 	return records.([]*db.Record)[0].Values[0].(string), nil
 }
 
-func (r *emailRepository) GetEmailsByRawEmail(ctx context.Context, tenant string, rawEmails []string) ([]*dbtype.Node, error) {
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx,
-			"MATCH (e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
-				" WHERE e.rawEmail in $rawEmails "+
-				" RETURN e",
-			map[string]interface{}{
-				"tenant":    tenant,
-				"rawEmails": rawEmails,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
+func (r *emailRepository) GetEmailIdInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email string) (string, error) {
+	dbResult, err := tx.Run(ctx,
+		"MATCH (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+			" RETURN e.id limit 1",
+		map[string]interface{}{
+			"tenant": tenant,
+			"email":  email,
+		})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	records, err := dbResult.Collect(ctx)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	dbNodes := make([]*dbtype.Node, 0)
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	if len(records) == 0 {
+		return "", nil
 	}
-	return dbNodes, nil
+	return records[0].Values[0].(string), nil
 }
 
-func (r *emailRepository) FindUserByEmail(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
+func (r *emailRepository) FindEmailByUserId(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

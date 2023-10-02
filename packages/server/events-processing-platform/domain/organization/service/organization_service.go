@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/google/uuid"
-	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
@@ -14,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,11 +37,9 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 func (s *organizationService) UpsertOrganization(ctx context.Context, request *pb.UpsertOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertOrganization")
 	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
 
-	organizationId := request.Id
-	if organizationId == "" {
-		organizationId = uuid.New().String()
-	}
+	organizationId := utils.NewUUIDIfEmpty(request.Id)
 
 	coreFields := models.OrganizationDataFields{
 		Name:              request.Name,
@@ -63,9 +60,9 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 	}
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
-	source := common_utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
-	sourceOfTruth := common_utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
-	appSource := common_utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
+	source := utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
+	sourceOfTruth := utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
+	appSource := utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
 
 	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, source, sourceOfTruth, appSource, request.UserId, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
@@ -82,6 +79,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context, request *pb.LinkPhoneNumberToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkPhoneNumberToOrganization")
 	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "")
 
 	command := cmd.NewLinkPhoneNumberCommand(request.OrganizationId, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
@@ -98,6 +96,7 @@ func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context,
 func (s *organizationService) LinkEmailToOrganization(ctx context.Context, request *pb.LinkEmailToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToOrganization")
 	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "")
 
 	command := cmd.NewLinkEmailCommand(request.OrganizationId, request.Tenant, request.EmailId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
@@ -114,6 +113,7 @@ func (s *organizationService) LinkEmailToOrganization(ctx context.Context, reque
 func (s *organizationService) LinkDomainToOrganization(ctx context.Context, request *pb.LinkDomainToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkDomainToOrganization")
 	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "")
 
 	command := cmd.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, request.UserId)
 	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, command); err != nil {
@@ -127,10 +127,11 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Context, req *pb.OrganizationRenewalLikelihoodRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Context, request *pb.OrganizationRenewalLikelihoodRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalLikelihood")
 	defer span.Finish()
-	span.LogFields(log.Object("request", req))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.Object("request", request))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -138,26 +139,27 @@ func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Co
 	}
 
 	fields := models.RenewalLikelihoodFields{
-		RenewalLikelihood: mapper.MapRenewalLikelihoodToModels(req.Likelihood),
-		Comment:           req.Comment,
-		UpdatedBy:         req.UserId,
+		RenewalLikelihood: mapper.MapRenewalLikelihoodToModels(request.Likelihood),
+		Comment:           request.Comment,
+		UpdatedBy:         request.UserId,
 	}
-	command := cmd.NewUpdateRenewalLikelihoodCommand(req.Tenant, req.OrganizationId, fields)
+	command := cmd.NewUpdateRenewalLikelihoodCommand(request.Tenant, request.OrganizationId, fields)
 	if err := s.organizationCommands.UpdateRenewalLikelihoodCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed update renewal likelihood for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())
+		s.log.Errorf("Failed update renewal likelihood for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Updated renewal likelihood for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+	s.log.Infof("Updated renewal likelihood for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Context, req *pb.OrganizationRenewalForecastRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Context, request *pb.OrganizationRenewalForecastRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalForecast")
 	defer span.Finish()
-	span.LogFields(log.Object("request", req))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.Object("request", request))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -165,26 +167,27 @@ func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Cont
 	}
 
 	fields := models.RenewalForecastFields{
-		Amount:    req.Amount,
-		Comment:   req.Comment,
-		UpdatedBy: req.UserId,
+		Amount:    request.Amount,
+		Comment:   request.Comment,
+		UpdatedBy: request.UserId,
 	}
-	command := cmd.NewUpdateRenewalForecastCommand(req.Tenant, req.OrganizationId, fields, "")
+	command := cmd.NewUpdateRenewalForecastCommand(request.Tenant, request.OrganizationId, fields, "")
 	if err := s.organizationCommands.UpdateRenewalForecastCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed update renewal forecast for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())
+		s.log.Errorf("Failed update renewal forecast for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Updated renewal forecast for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+	s.log.Infof("Updated renewal forecast for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Context, req *pb.OrganizationBillingDetailsRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Context, request *pb.OrganizationBillingDetailsRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationBillingDetails")
 	defer span.Finish()
-	span.LogFields(log.Object("request", req))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.Object("request", request))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -192,88 +195,129 @@ func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Conte
 	}
 
 	fields := models.BillingDetailsFields{
-		Amount:            req.Amount,
-		UpdatedBy:         req.UserId,
-		Frequency:         mapper.MapFrequencyToString(req.Frequency),
-		RenewalCycle:      mapper.MapFrequencyToString(req.RenewalCycle),
-		RenewalCycleStart: utils.TimestampProtoToTime(req.CycleStart),
+		Amount:            request.Amount,
+		UpdatedBy:         request.UserId,
+		Frequency:         mapper.MapFrequencyToString(request.Frequency),
+		RenewalCycle:      mapper.MapFrequencyToString(request.RenewalCycle),
+		RenewalCycleStart: utils.TimestampProtoToTime(request.CycleStart),
 	}
-	command := cmd.NewUpdateBillingDetailsCommand(req.Tenant, req.OrganizationId, fields)
+	command := cmd.NewUpdateBillingDetailsCommand(request.Tenant, request.OrganizationId, fields)
 	if err := s.organizationCommands.UpdateBillingDetailsCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed update billing details for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())
+		s.log.Errorf("Failed update billing details for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Updated billing details for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+	s.log.Infof("Updated billing details for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, req *pb.RequestRenewNextCycleDateRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, request *pb.RequestRenewNextCycleDateRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RequestRenewNextCycleDate")
 	defer span.Finish()
-	span.LogFields(log.Object("request", req))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "")
+	span.LogFields(log.Object("request", request))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := cmd.NewRequestNextCycleDateCommand(req.Tenant, req.OrganizationId)
+	command := cmd.NewRequestNextCycleDateCommand(request.Tenant, request.OrganizationId)
 	if err := s.organizationCommands.RequestNextCycleDateCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed request next cycle date for tenant: %s organizationID: %s, err: %s", req.Tenant, req.OrganizationId, err.Error())
+		s.log.Errorf("Failed request next cycle date for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Requested next cycle date renewal for tenant:%s organizationID: %s", req.Tenant, req.OrganizationId)
+	s.log.Infof("Requested next cycle date renewal for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) HideOrganization(ctx context.Context, req *pb.OrganizationIdGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) HideOrganization(ctx context.Context, request *pb.OrganizationIdGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.HideOrganization")
 	defer span.Finish()
-	span.LogFields(log.Object("request", req))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.Object("request", request))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := cmd.NewHideOrganizationCommand(req.Tenant, req.OrganizationId, req.UserId)
+	command := cmd.NewHideOrganizationCommand(request.Tenant, request.OrganizationId, request.UserId)
 	if err := s.organizationCommands.HideOrganizationCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed hide organization with id  %s for tenant %s, err: %s", req.OrganizationId, req.Tenant, err.Error())
+		s.log.Errorf("Failed hide organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Hidden organization with id %s for tenant %s", req.OrganizationId, req.Tenant)
+	s.log.Infof("Hidden organization with id %s for tenant %s", request.OrganizationId, request.Tenant)
 
-	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) ShowOrganization(ctx context.Context, req *pb.OrganizationIdGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) ShowOrganization(ctx context.Context, request *pb.OrganizationIdGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.ShowOrganization")
 	defer span.Finish()
-	span.LogFields(log.Object("request", req))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.Object("request", request))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := cmd.NewShowOrganizationCommand(req.Tenant, req.OrganizationId, req.UserId)
+	command := cmd.NewShowOrganizationCommand(request.Tenant, request.OrganizationId, request.UserId)
 	if err := s.organizationCommands.ShowOrganizationCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed show organization with id  %s for tenant %s, err: %s", req.OrganizationId, req.Tenant, err.Error())
+		s.log.Errorf("Failed show organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Show organization with id %s for tenant %s", req.OrganizationId, req.Tenant)
+	s.log.Infof("Show organization with id %s for tenant %s", request.OrganizationId, request.Tenant)
 
-	return &pb.OrganizationIdGrpcResponse{Id: req.OrganizationId}, nil
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Context, request *pb.CustomFieldForOrganizationGrpcRequest) (*pb.CustomFieldIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertCustomFieldToOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+
+	customFieldId := request.CustomFieldId
+	if customFieldId == "" {
+		customFieldId = uuid.New().String()
+	}
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	customField := models.CustomField{
+		Id:         customFieldId,
+		Name:       request.CustomFieldName,
+		TemplateId: request.CustomFieldTemplateId,
+		CustomFieldValue: models.CustomFieldValue{
+			Str:     request.CustomFieldValue.StringValue,
+			Bool:    request.CustomFieldValue.BoolValue,
+			Time:    utils.TimestampProtoToTime(request.CustomFieldValue.DatetimeValue),
+			Int:     request.CustomFieldValue.IntegerValue,
+			Decimal: request.CustomFieldValue.DecimalValue,
+		},
+		CustomFieldDataType: mapper.MapCustomFieldDataType(request.CustomFieldDataType),
+	}
+
+	command := cmd.NewUpsertCustomFieldCommand(request.OrganizationId, request.Tenant,
+		sourceFields.Source, sourceFields.SourceOfTruth, sourceFields.AppSource, request.UserId,
+		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), customField)
+	if err := s.organizationCommands.UpsertCustomFieldCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
+		return nil, s.errResponse(err)
+	}
+
+	return &pb.CustomFieldIdGrpcResponse{Id: customFieldId}, nil
 }
 
 func (s *organizationService) errResponse(err error) error {

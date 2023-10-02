@@ -2,7 +2,10 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	cmn_repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	repository "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +16,8 @@ type Drivers struct {
 type Repositories struct {
 	Drivers Drivers
 
-	CommonRepositories *commonRepository.Repositories
+	CommonRepositories      *cmn_repository.Repositories
+	CustomerOsIdsRepository repository.CustomerOsIdsRepository
 
 	ContactRepository          ContactRepository
 	OrganizationRepository     OrganizationRepository
@@ -28,15 +32,19 @@ type Repositories struct {
 	ActionRepository           ActionRepository
 	LogEntryRepository         LogEntryRepository
 	TagRepository              TagRepository
+	PlayerRepository           PlayerRepository
 	ExternalSystemRepository   ExternalSystemRepository
+	TimelineEventRepository    TimelineEventRepository
+	CustomFieldRepository      CustomFieldRepository
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, log logger.Logger) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
-		CommonRepositories:         commonRepository.InitRepositories(gormDb, driver),
+		CommonRepositories:         cmn_repository.InitRepositories(gormDb, driver),
+		CustomerOsIdsRepository:    repository.NewCustomerOsIdsRepository(gormDb),
 		PhoneNumberRepository:      NewPhoneNumberRepository(driver),
 		EmailRepository:            NewEmailRepository(driver),
 		ContactRepository:          NewContactRepository(driver),
@@ -50,7 +58,16 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		ActionRepository:           NewActionRepository(driver),
 		LogEntryRepository:         NewLogEntryRepository(driver),
 		TagRepository:              NewTagRepository(driver),
+		PlayerRepository:           NewPlayerRepository(driver),
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),
+		TimelineEventRepository:    NewTimelineEventRepository(driver, log),
+		CustomFieldRepository:      NewCustomFieldRepository(driver),
 	}
+
+	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})
+	if err != nil {
+		panic(err)
+	}
+
 	return &repositories
 }

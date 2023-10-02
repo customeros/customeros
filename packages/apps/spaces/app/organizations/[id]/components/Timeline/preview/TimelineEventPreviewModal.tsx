@@ -5,11 +5,13 @@ import { MeetingPreviewModal } from '../events/meeting/MeetingPreviewModal';
 import { SlackThreadPreviewModal } from '../events/slack/SlackThreadPreviewModal';
 import { ActionPreviewModal } from '../events/action/ActionPreviewModal';
 
-import { useTimelineEventPreviewContext } from './TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { TimelinePreviewBackdrop } from '@organization/components/Timeline/preview/TimelinePreviewBackdrop';
 import { IntercomThreadPreviewModal } from '@organization/components/Timeline/events/intercom/IntercomThreadPreviewModal';
 import { LogEntryPreviewModal } from '@organization/components/Timeline/events/logEntry/LogEntryPreviewModal';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
+import { ExternalSystemType } from '@spaces/graphql';
+import { LogEntryUpdateModalContextProvider } from '@organization/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
 
 interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;
@@ -29,8 +31,14 @@ export const TimelineEventPreviewModal = ({
   const isAction = event?.__typename === 'Action';
   const isLogEntry = event?.__typename === 'LogEntry';
   const isInteraction = event?.__typename === 'InteractionEvent';
-  const isSlack = isInteraction && event?.channel === 'SLACK';
-  const isIntercom = isInteraction && event?.channel === 'CHAT';
+  const isSlack =
+    isInteraction &&
+    event?.channel === 'CHAT' &&
+    event?.externalLinks?.[0].type === ExternalSystemType.Slack;
+  const isIntercom =
+    isInteraction &&
+    event?.channel === 'CHAT' &&
+    event?.externalLinks?.[0].type === ExternalSystemType.Intercom;
   const isEmail = isInteraction && event?.channel === 'EMAIL';
 
   // Email handles close logic from within and use outside click cannot be used because preview should be closed only on backdrop click
@@ -40,12 +48,14 @@ export const TimelineEventPreviewModal = ({
   }
 
   return (
-    <TimelinePreviewBackdrop onCloseModal={closeModal}>
-      {isMeeting && <MeetingPreviewModal invalidateQuery={invalidateQuery} />}
-      {isSlack && <SlackThreadPreviewModal />}
-      {isIntercom && <IntercomThreadPreviewModal />}
-      {isAction && <ActionPreviewModal type={event.actionType} />}
-      {isLogEntry && <LogEntryPreviewModal />}
-    </TimelinePreviewBackdrop>
+    <LogEntryUpdateModalContextProvider>
+      <TimelinePreviewBackdrop onCloseModal={closeModal}>
+        {isMeeting && <MeetingPreviewModal invalidateQuery={invalidateQuery} />}
+        {isSlack && <SlackThreadPreviewModal />}
+        {isIntercom && <IntercomThreadPreviewModal />}
+        {isAction && <ActionPreviewModal type={event.actionType} />}
+        {isLogEntry && <LogEntryPreviewModal />}
+      </TimelinePreviewBackdrop>
+    </LogEntryUpdateModalContextProvider>
   );
 };

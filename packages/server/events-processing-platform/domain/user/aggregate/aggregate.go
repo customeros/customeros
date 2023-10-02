@@ -1,6 +1,8 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
@@ -13,25 +15,18 @@ const (
 )
 
 type UserAggregate struct {
-	*eventstore.AggregateBase
+	*aggregate.CommonTenantIdAggregate
 	User *models.User
 }
 
 func NewUserAggregateWithTenantAndID(tenant, id string) *UserAggregate {
-	if id == "" {
-		return nil
-	}
-	aggregate := NewUserAggregate()
-	aggregate.SetID(tenant + "-" + id)
-	return aggregate
-}
+	userAggregate := UserAggregate{}
+	userAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(UserAggregateType, tenant, id)
+	userAggregate.SetWhen(userAggregate.When)
+	userAggregate.User = &models.User{}
+	userAggregate.Tenant = tenant
 
-func NewUserAggregate() *UserAggregate {
-	userAggregate := &UserAggregate{User: models.NewUser()}
-	base := eventstore.NewAggregateBase(userAggregate.When)
-	base.SetType(UserAggregateType)
-	userAggregate.AggregateBase = base
-	return userAggregate
+	return &userAggregate
 }
 
 func (a *UserAggregate) When(event eventstore.Event) error {
@@ -48,6 +43,8 @@ func (a *UserAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case events.UserEmailLinkV1:
 		return a.onEmailLink(event)
+	case events.UserAddPlayerV1:
+		return a.onAddPlayer(event)
 
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -66,14 +63,13 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	a.User.LastName = eventData.LastName
 	a.User.Internal = eventData.Internal
 	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.User.Source = common_models.Source{
-		Source:        eventData.Source,
-		SourceOfTruth: eventData.SourceOfTruth,
-		AppSource:     eventData.AppSource,
-	}
+	a.User.Source = eventData.SourceFields
 	a.User.CreatedAt = eventData.CreatedAt
 	a.User.UpdatedAt = eventData.UpdatedAt
 	a.User.Timezone = eventData.Timezone
+	if eventData.ExternalSystem.Available() {
+		a.User.ExternalSystems = []common_models.ExternalSystem{eventData.ExternalSystem}
+	}
 	return nil
 }
 
@@ -82,14 +78,54 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.User.Source.SourceOfTruth = eventData.SourceOfTruth
+
+	if eventData.Source != a.User.Source.SourceOfTruth && a.User.Source.SourceOfTruth == constants.SourceOpenline {
+		if a.User.Name == "" {
+			a.User.Name = eventData.Name
+		}
+		if a.User.FirstName == "" {
+			a.User.FirstName = eventData.FirstName
+		}
+		if a.User.LastName == "" {
+			a.User.LastName = eventData.LastName
+		}
+		if a.User.Timezone == "" {
+			a.User.Timezone = eventData.Timezone
+		}
+		if a.User.ProfilePhotoUrl == "" {
+			a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+		}
+	} else {
+		a.User.Name = eventData.Name
+		a.User.FirstName = eventData.FirstName
+		a.User.LastName = eventData.LastName
+		a.User.Timezone = eventData.Timezone
+		a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+	}
+
 	a.User.UpdatedAt = eventData.UpdatedAt
-	a.User.Name = eventData.Name
-	a.User.FirstName = eventData.FirstName
-	a.User.LastName = eventData.LastName
 	a.User.Internal = eventData.Internal
-	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.User.Timezone = eventData.Timezone
+	if eventData.Source == constants.SourceOpenline {
+		a.User.Source.SourceOfTruth = eventData.Source
+	}
+	if eventData.ExternalSystem.Available() {
+		found := false
+		for _, externalSystem := range a.User.ExternalSystems {
+			if externalSystem.ExternalSystemId == eventData.ExternalSystem.ExternalSystemId &&
+				externalSystem.ExternalId == eventData.ExternalSystem.ExternalId {
+				found = true
+				externalSystem.ExternalUrl = eventData.ExternalSystem.ExternalUrl
+				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
+				externalSystem.ExternalSource = eventData.ExternalSystem.ExternalSource
+				if eventData.ExternalSystem.ExternalIdSecond != "" {
+					externalSystem.ExternalIdSecond = eventData.ExternalSystem.ExternalIdSecond
+				}
+			}
+		}
+		if !found {
+			a.User.ExternalSystems = append(a.User.ExternalSystems, eventData.ExternalSystem)
+		}
+	}
 	return nil
 }
 
@@ -135,5 +171,31 @@ func (a *UserAggregate) onJobRoleLink(event eventstore.Event) error {
 	}
 	a.User.JobRoles[eventData.JobRoleId] = true
 	a.User.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *UserAggregate) onAddPlayer(event eventstore.Event) error {
+	var eventData events.UserAddPlayerInfoEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.User.Players == nil {
+		a.User.Players = make([]models.PlayerInfo, 0)
+	}
+	found := false
+	for _, player := range a.User.Players {
+		if player.AuthId == eventData.AuthId && player.Provider == eventData.Provider {
+			found = true
+			player.IdentityId = eventData.IdentityId
+		}
+	}
+	if !found {
+		a.User.Players = append(a.User.Players, models.PlayerInfo{
+			AuthId:     eventData.AuthId,
+			Provider:   eventData.Provider,
+			IdentityId: eventData.IdentityId,
+		})
+	}
+
 	return nil
 }

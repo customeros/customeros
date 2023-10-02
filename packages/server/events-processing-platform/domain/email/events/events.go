@@ -2,43 +2,37 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
 )
 
 const (
-	EmailCreateV1       = "V1_EMAIL_CREATE"
-	EmailCreateV1Legacy = "V1_EMAIL_CREATED"
-
-	EmailUpdateV1       = "V1_EMAIL_UPDATE"
-	EmailUpdateV1Legacy = "V1_EMAIL_UPDATED"
-
+	EmailCreateV1           = "V1_EMAIL_CREATE"
+	EmailUpdateV1           = "V1_EMAIL_UPDATE"
 	EmailValidationFailedV1 = "V1_EMAIL_VALIDATION_FAILED"
 	EmailValidatedV1        = "V1_EMAIL_VALIDATED"
 )
 
-// TODO handle case when any event arrives before EmailCreateV1 event
-
 type EmailCreateEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
-	RawEmail      string    `json:"rawEmail" validate:"required"`
-	Source        string    `json:"source"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	AppSource     string    `json:"appSource"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	Tenant        string               `json:"tenant" validate:"required"`
+	RawEmail      string               `json:"rawEmail" validate:"required"`
+	Source        string               `json:"source"`        //Deprecated
+	SourceOfTruth string               `json:"sourceOfTruth"` //Deprecated
+	AppSource     string               `json:"appSource"`     //Deprecated
+	SourceFields  common_models.Source `json:"sourceFields"`
+	CreatedAt     time.Time            `json:"createdAt"`
+	UpdatedAt     time.Time            `json:"updatedAt"`
 }
 
-func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source common_models.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := EmailCreateEvent{
-		Tenant:        tenant,
-		RawEmail:      rawEmail,
-		Source:        source,
-		SourceOfTruth: sourceOfTruth,
-		AppSource:     appSource,
-		CreatedAt:     createdAt,
-		UpdatedAt:     updatedAt,
+		Tenant:       tenant,
+		RawEmail:     rawEmail,
+		SourceFields: source,
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

@@ -5,24 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
-	"net/mail"
 	"regexp"
 	"strings"
 	"time"
 )
 
-const Source = "gmail"
-const AppSource = "sync-gmail"
+const GmailSource = "gmail"
 
 type emailService struct {
 	cfg          *config.Config
@@ -35,14 +30,14 @@ type EmailService interface {
 
 	SyncEmailsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain)
 
-	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawEmailState, *string, error)
-	SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawEmailState, *string, error)
+	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error)
+	SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawState, *string, error)
 }
 
 func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error) {
 	ctx := context.Background()
 
-	email, err := s.repositories.EmailRepository.FindUserByEmail(ctx, tenant, userId)
+	email, err := s.repositories.EmailRepository.FindEmailByUserId(ctx, tenant, userId)
 	if err != nil {
 		logrus.Errorf("failed to find user by email: %v", err)
 		return nil, err
@@ -63,7 +58,7 @@ func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSo
 	s.syncEmails(externalSystemId, tenant, emailsIdsForSync, personalEmailProviderList, organizationAllowedForImport)
 }
 
-func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawEmailState, *string, error) {
+func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
 	personalEmailProviderList, err := s.services.Repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		logrus.Errorf("failed to get personal email provider list: %v", err)
@@ -79,7 +74,7 @@ func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, em
 	return s.syncEmail(externalSystemId, tenant, emailId, personalEmailProviderList, organizationAllowedForImport)
 }
 
-func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawEmailState, *string, error) {
+func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawState, *string, error) {
 	rawEmail, err := s.repositories.RawEmailRepository.GetEmailForSyncByMessageId(externalSystemId, tenant, usernameSource, messageId)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
@@ -124,7 +119,7 @@ func (s *emailService) syncEmails(externalSystemId, tenant string, emails []enti
 	}
 }
 
-func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, personalEmailProviderList []commonEntity.PersonalEmailProvider, whitelistDomainList []commonEntity.WhitelistDomain) (entity.RawEmailState, *string, error) {
+func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, personalEmailProviderList []commonEntity.PersonalEmailProvider, whitelistDomainList []commonEntity.WhitelistDomain) (entity.RawState, *string, error) {
 	ctx := context.Background()
 
 	emailIdString := emailId.String()
@@ -151,7 +146,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		return entity.SKIPPED, &reason, nil
 	}
 
-	interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.MessageId)
+	interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, externalSystemId, rawEmail.MessageId)
 	if err != nil {
 		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
 		return entity.ERROR, nil, err
@@ -161,21 +156,21 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		now := time.Now().UTC()
 
-		emailSentDate, err := convertToUTC(rawEmailData.Sent)
+		emailSentDate, err := s.services.SyncService.ConvertToUTC(rawEmailData.Sent)
 		if err != nil {
 			logrus.Errorf("failed to convert email sent date to UTC for email with id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
 		}
 
-		from := extractEmailAddresses(rawEmailData.From)[0]
-		to := extractEmailAddresses(rawEmailData.To)
-		cc := extractEmailAddresses(rawEmailData.Cc)
-		bcc := extractEmailAddresses(rawEmailData.Bcc)
+		from := s.extractEmailAddresses(rawEmailData.From)[0]
+		to := s.extractEmailAddresses(rawEmailData.To)
+		cc := s.extractEmailAddresses(rawEmailData.Cc)
+		bcc := s.extractEmailAddresses(rawEmailData.Bcc)
 
 		references := extractLines(rawEmailData.Reference)
 		inReplyTo := extractLines(rawEmailData.InReplyTo)
 
-		allEmailsString, err := s.buildEmailsListExcludingPersonalEmails(personalEmailProviderList, rawEmail.UsernameSource, from, to, cc, bcc)
+		allEmailsString, err := s.services.SyncService.BuildEmailsListExcludingPersonalEmails(personalEmailProviderList, rawEmail.UsernameSource, from, to, cc, bcc)
 		if err != nil {
 			logrus.Errorf("failed to build emails list: %v", err)
 			return entity.ERROR, nil, err
@@ -220,13 +215,13 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			sessionIdentifier = rawEmailData.MessageId
 		}
 
-		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, sessionIdentifier, now, emailForCustomerOS, Source, AppSource)
+		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, sessionIdentifier, now, emailForCustomerOS, GmailSource, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction session for raw email id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
 		}
 
-		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS, Source, AppSource)
+		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS, GmailSource, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction event for raw email id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
@@ -242,7 +237,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//from
 		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
-		fromEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, getWhitelistedDomain(extractDomain(from), whitelistDomainList), personalEmailProviderList, now)
+		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, s.services.SyncService.GetWhitelistedDomain(extractDomain(from), whitelistDomainList), personalEmailProviderList, now, GmailSource)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 			return entity.ERROR, nil, err
@@ -261,7 +256,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//to
 		for _, toEmail := range to {
-			toEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, getWhitelistedDomain(extractDomain(toEmail), whitelistDomainList), personalEmailProviderList, now)
+			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, s.services.SyncService.GetWhitelistedDomain(extractDomain(toEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -281,7 +276,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//cc
 		for _, ccEmail := range cc {
-			ccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, getWhitelistedDomain(extractDomain(ccEmail), whitelistDomainList), personalEmailProviderList, now)
+			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, s.services.SyncService.GetWhitelistedDomain(extractDomain(ccEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -302,7 +297,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		//bcc
 		for _, bccEmail := range bcc {
 
-			bccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, getWhitelistedDomain(extractDomain(bccEmail), whitelistDomainList), personalEmailProviderList, now)
+			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, s.services.SyncService.GetWhitelistedDomain(extractDomain(bccEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -400,41 +395,6 @@ type EmailChannelData struct {
 	Reference []string `json:"Reference"`
 }
 
-func getWhitelistedDomain(domain string, whitelistedDomains []commonEntity.WhitelistDomain) *commonEntity.WhitelistDomain {
-	for _, allowedOrganization := range whitelistedDomains {
-		if strings.Contains(domain, allowedOrganization.Domain) {
-			return &allowedOrganization
-		}
-	}
-	return nil
-}
-
-func (s *emailService) buildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
-	var allEmails []string
-
-	if from != "" && from != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, extractDomain(from)) {
-		allEmails = append(allEmails, from)
-	}
-	allEmails = append(allEmails, from)
-	for _, email := range [][]string{to, cc, bcc} {
-		for _, email := range email {
-			if email != "" && email != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, extractDomain(email)) {
-				allEmails = append(allEmails, email)
-			}
-		}
-	}
-	return allEmails, nil
-}
-
-func hasPersonalEmailProvider(providers []commonEntity.PersonalEmailProvider, domain string) bool {
-	for _, provider := range providers {
-		if provider.ProviderDomain == domain {
-			return true
-		}
-	}
-	return false
-}
-
 func buildEmailChannelData(subject string, references, inReplyTo []string) (*string, error) {
 	emailContent := EmailChannelData{
 		Subject:   subject,
@@ -449,50 +409,12 @@ func buildEmailChannelData(subject string, references, inReplyTo []string) (*str
 
 	return &jsonContentString, nil
 }
-
-func convertToUTC(datetimeStr string) (time.Time, error) {
-	var err error
-
-	t1, err := time.Parse(time.RFC3339, datetimeStr)
-	if err == nil {
-		return t1.UTC(), nil
-	}
-
-	t2, err := time.Parse(time.RFC1123Z, datetimeStr)
-	if err == nil {
-		return t2.UTC(), nil
-	}
-
-	layouts := []string{
-		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
-		"Mon, 2 Jan 2006 15:04:05 -0700",
-		"Mon, 02 Jan 2006 15:04:05 +0000 (GMT)",
-		"Thu, 29 Jun 2023 03:53:38 -0700 (PDT)",
-		"Wed, 29 Sep 2021 13:02:25 GMT",
-	}
-	var parsedTime time.Time
-
-	// Try parsing with each layout until successful
-	for _, layout := range layouts {
-		parsedTime, err = time.Parse(layout, datetimeStr)
-		if err == nil {
-			break
-		}
-	}
-
-	if err != nil {
-		return time.Time{}, fmt.Errorf("unable to parse datetime string: %v", err)
-	}
-
-	return parsedTime.UTC(), nil
-}
-
 func extractLines(input string) []string {
 	lines := strings.Fields(input)
 	return lines
 }
 
-func extractEmailAddresses(input string) []string {
+func (s *emailService) extractEmailAddresses(input string) []string {
 	// Regular expression pattern to match email addresses between <>
 	emailPattern := `<(.*?)>`
 
@@ -528,12 +450,12 @@ func extractEmailAddresses(input string) []string {
 
 			// Convert the map keys to an array of email addresses
 			for email := range emailMap {
-				if isValidEmailSyntax(email) {
+				if s.services.SyncService.IsValidEmailSyntax(email) {
 					emailAddresses = append(emailAddresses, email)
 				}
 			}
 
-		} else if isValidEmailSyntax(email) {
+		} else if s.services.SyncService.IsValidEmailSyntax(email) {
 			emailAddresses = append(emailAddresses, email)
 		}
 	}
@@ -547,133 +469,6 @@ func extractEmailAddresses(input string) []string {
 	}
 
 	return nil
-}
-
-func isValidEmailSyntax(email string) bool {
-	_, err := mail.ParseAddress(email)
-	return err == nil
-}
-
-func extractDomain(email string) string {
-	parts := strings.Split(email, "@")
-	if len(parts) != 2 {
-		return "" // Invalid email format
-	}
-	split := strings.Split(parts[1], ".")
-	if len(split) < 2 {
-		return parts[1]
-	}
-	return strings.ToLower(split[len(split)-2] + "." + split[len(split)-1])
-}
-
-func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *commonEntity.WhitelistDomain, personalEmailProviderList []commonEntity.PersonalEmailProvider, now time.Time) (string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
-	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant))
-	span.LogFields(log.String("email", email))
-
-	fromEmailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, email)
-	if err != nil {
-		return "", fmt.Errorf("unable to retrieve email id for tenant: %v", err)
-	}
-	if fromEmailId != "" {
-		return fromEmailId, nil
-	}
-
-	//if it's a personal email, we create just the email node in tenant
-	domain := extractDomain(email)
-	for _, personalEmailProvider := range personalEmailProviderList {
-		if strings.Contains(domain, personalEmailProvider.ProviderDomain) {
-			emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, email, Source, AppSource)
-			if err != nil {
-				return "", fmt.Errorf("unable to create email: %v", err)
-			}
-			return emailId, nil
-		}
-	}
-
-	var domainNode *neo4j.Node
-	var organizationNode *neo4j.Node
-	var organizationId string
-
-	domainNode, err = s.repositories.DomainRepository.GetDomainInTx(ctx, tx, domain)
-	if err != nil {
-		return "", fmt.Errorf("unable to retrieve domain for tenant: %v", err)
-	}
-
-	if domainNode == nil {
-		domainNode, err = s.repositories.DomainRepository.CreateDomain(ctx, tx, domain, Source, AppSource, now)
-		if err != nil {
-			return "", fmt.Errorf("unable to create domain: %v", err)
-		}
-	}
-
-	organizationNode, err = s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
-	if err != nil {
-		return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
-	}
-
-	if organizationNode == nil {
-
-		var organizationName string
-
-		if whitelistDomain == nil || whitelistDomain.Name == "" {
-
-			//TODO to insert into the allowed organization table with allowed = false t have it for the next time ????
-			organizationName, err = s.services.OpenAiService.AskForOrganizationNameByDomain(tenant, interactionEventId, domain)
-			if err != nil {
-				return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
-			}
-			if organizationName == "" {
-				return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
-			}
-		} else {
-			organizationName = whitelistDomain.Name
-		}
-
-		hide := whitelistDomain == nil || !whitelistDomain.Allowed
-		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, Source, "openline", AppSource, now, hide)
-		if err != nil {
-			return "", fmt.Errorf("unable to create organization for tenant: %v", err)
-		}
-
-		organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
-		domainName := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain")
-		err = s.repositories.OrganizationRepository.LinkDomainToOrganization(ctx, tx, tenant, domainName, organizationId)
-		if err != nil {
-			return "", fmt.Errorf("unable to link domain to organization: %v", err)
-		}
-
-		_, err := s.repositories.ActionRepository.Create(ctx, tx, tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated, Source, AppSource)
-		if err != nil {
-			return "", fmt.Errorf("unable to create action: %v", err)
-		}
-	} else {
-		organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
-	}
-
-	firstName := ""
-	lastname := ""
-
-	//split email address by @ and take the first part to determine first name and last name
-	emailParts := strings.Split(email, "@")
-	if len(emailParts) > 0 {
-		firstPart := emailParts[0]
-		nameParts := strings.Split(firstPart, ".")
-		if len(nameParts) > 0 {
-			firstName = nameParts[0]
-			if len(nameParts) > 1 {
-				lastname = nameParts[1]
-			}
-		}
-	}
-
-	emailId, err := s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, Source, AppSource)
-	if err != nil {
-		return "", fmt.Errorf("unable to create email linked to organization: %v", err)
-	}
-
-	return emailId, nil
 }
 
 type EmailRawData struct {

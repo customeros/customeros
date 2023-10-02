@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -58,5 +58,5 @@ func GetErrStatusCode(err error) codes.Code {
 }
 
 func CheckErrMessage(err error, msg string) bool {
-	return utils.CheckErrMessages(err, msg)
+	return helper.CheckErrMessages(err, msg)
 }

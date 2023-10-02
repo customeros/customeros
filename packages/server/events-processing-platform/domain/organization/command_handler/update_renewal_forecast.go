@@ -34,6 +34,7 @@ func NewUpdateRenewalForecastCommandHandler(log logger.Logger, cfg *config.Confi
 func (h *updateRenewalForecastCommandHandler) Handle(ctx context.Context, command *cmd.UpdateRenewalForecastCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateRenewalForecastCommandHandler.Handle")
 	defer span.Finish()
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
 	span.LogFields(log.Object("command", command))
 
 	if err := validator.GetValidator().Struct(command); err != nil {

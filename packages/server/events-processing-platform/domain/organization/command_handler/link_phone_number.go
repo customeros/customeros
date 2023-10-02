@@ -30,7 +30,8 @@ func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es 
 func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *command.LinkPhoneNumberCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	span.LogFields(log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant

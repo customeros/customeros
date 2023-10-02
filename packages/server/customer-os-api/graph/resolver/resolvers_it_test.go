@@ -88,7 +88,7 @@ func prepareClient() {
 	appLogger.InitLogger()
 
 	commonServices := commonService.InitServices(postgresGormDB, driver)
-	commonAuthServices := commonAuthService.InitServices(postgresGormDB)
+	commonAuthServices := commonAuthService.InitServices(nil, postgresGormDB)
 	testDialFactory := event_store.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	services = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpc_client.InitClients(gRPCconn))

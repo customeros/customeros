@@ -49,14 +49,14 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		repositories:             repositories,
 		cfg:                      cfg,
 		contactEventHandler:      &GraphContactEventHandler{Repositories: repositories},
-		organizationEventHandler: &GraphOrganizationEventHandler{log: log, Repositories: repositories, organizationCommands: commands.OrganizationCommands},
+		organizationEventHandler: &GraphOrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.OrganizationCommands},
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
-		userEventHandler:         &GraphUserEventHandler{Repositories: repositories},
+		userEventHandler:         &GraphUserEventHandler{repositories: repositories, log: log},
 		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
 		interactionEventHandler:  &GraphInteractionEventHandler{Repositories: repositories, Log: log},
-		logEntryEventHandler:     &GraphLogEntryEventHandler{Repositories: repositories, Log: log},
+		logEntryEventHandler:     &GraphLogEntryEventHandler{Repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
 	}
 }
 
@@ -104,17 +104,21 @@ func (s *GraphSubscriber) ProcessEvents(ctx context.Context, stream *esdb.Persis
 		if event.EventAppeared != nil {
 			s.log.EventAppeared(s.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
 
-			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
-			if err != nil {
-				s.log.Errorf("(GraphSubscriber.when) err: {%v}", err)
+			if event.EventAppeared.Event.Event == nil {
+				s.log.Errorf("(GraphSubscriber) event.EventAppeared.Event.Event is nil")
+			} else {
+				err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
+				if err != nil {
+					s.log.Errorf("(GraphSubscriber.when) err: {%v}", err)
 
-				if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
-					s.log.Errorf("(stream.Nack) err: {%v}", err)
-					return errors.Wrap(err, "stream.Nack")
+					if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
+						s.log.Errorf("(stream.Nack) err: {%v}", err)
+						return errors.Wrap(err, "stream.Nack")
+					}
 				}
 			}
 
-			err = stream.Ack(event.EventAppeared.Event)
+			err := stream.Ack(event.EventAppeared.Event)
 			if err != nil {
 				s.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
@@ -135,13 +139,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	switch evt.GetEventType() {
 
-	case
-		phonenumberevents.PhoneNumberCreateV1,
-		phonenumberevents.PhoneNumberCreateV1Legacy:
+	case phonenumberevents.PhoneNumberCreateV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case
-		phonenumberevents.PhoneNumberUpdateV1,
-		phonenumberevents.PhoneNumberUpdateV1Legacy:
+	case phonenumberevents.PhoneNumberUpdateV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 	case phonenumberevents.PhoneNumberValidationFailedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
@@ -150,13 +150,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case phonenumberevents.PhoneNumberValidatedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
 
-	case
-		emailevents.EmailCreateV1,
-		emailevents.EmailCreateV1Legacy:
+	case emailevents.EmailCreateV1:
 		return s.emailEventHandler.OnEmailCreate(ctx, evt)
-	case
-		emailevents.EmailUpdateV1,
-		emailevents.EmailUpdateV1Legacy:
+	case emailevents.EmailUpdateV1:
 		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
 	case emailevents.EmailValidationFailedV1:
 		return s.emailEventHandler.OnEmailValidationFailed(ctx, evt)
@@ -194,6 +190,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnOrganizationHide(ctx, evt)
 	case orgevents.OrganizationShowV1:
 		return s.organizationEventHandler.OnOrganizationShow(ctx, evt)
+	case orgevents.OrganizationRefreshLastTouchpointV1:
+		return s.organizationEventHandler.OnRefreshLastTouchpoint(ctx, evt)
+	case orgevents.OrganizationUpsertCustomFieldV1:
+		return s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1:
@@ -209,6 +209,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
 	case userevents.UserJobRoleLinkV1:
 		return s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
+	case userevents.UserAddPlayerV1:
+		return s.userEventHandler.OnAddPlayer(ctx, evt)
 
 	case
 		locationevents.LocationCreateV1Legacy,

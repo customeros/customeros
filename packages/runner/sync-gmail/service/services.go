@@ -15,7 +15,10 @@ type Services struct {
 	UserService      UserService
 	OpenAiService    OpenAiService
 	AnthropicService AnthropicService
-	EmailService     EmailService
+
+	SyncService    SyncService
+	EmailService   EmailService
+	MeetingService MeetingService
 }
 
 func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.Config) *Services {
@@ -29,7 +32,10 @@ func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.
 	services.UserService = NewUserService(repositories)
 	services.OpenAiService = NewOpenAiService(cfg, repositories)
 	services.AnthropicService = NewAnthropicService(cfg)
+
+	services.SyncService = NewSyncService(cfg, repositories, services)
 	services.EmailService = NewEmailService(cfg, repositories, services)
+	services.MeetingService = NewMeetingService(cfg, repositories, services)
 
 	return services
 }

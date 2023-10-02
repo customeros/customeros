@@ -47,8 +47,7 @@ files.forEach((name) => {
 
 
     const viewBox= getSvgViewBox(file)
-    console.log('🏷️ ----- viewBox: '
-        , viewBox);
+
     const outContent = makeIconComponent(componentName, svgInnerContent, viewBox);
 
     const formattedOutContent = format(outContent, {

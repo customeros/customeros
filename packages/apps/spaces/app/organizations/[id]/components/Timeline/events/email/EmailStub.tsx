@@ -6,7 +6,7 @@ import { VStack } from '@ui/layout/Stack';
 import { convert } from 'html-to-text';
 import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
 import { EmailParticipant } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
 import Image from 'next/image';
 import { InteractionEventWithDate } from '../../types';

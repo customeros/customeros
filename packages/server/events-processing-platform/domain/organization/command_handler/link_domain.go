@@ -30,7 +30,8 @@ func NewLinkDomainCommandHandler(log logger.Logger, cfg *config.Config, es event
 func (c *linkDomainCommandHandler) Handle(ctx context.Context, command *command.LinkDomainCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LinkDomainCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	span.LogFields(log.String("ObjectID", command.ObjectID))
 
 	if command.Tenant == "" {
 		return eventstore.ErrMissingTenant

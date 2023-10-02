@@ -58,23 +58,16 @@ Describes a custom, user-defined field associated with a `Contact` of type Strin
 **A `create` object.**
 """
 input CustomFieldInput {
-
-    """
-    The unique ID associated with the custom field.
-    """
-    id: ID
-
+    id: ID @deprecated
     """
     The name of the custom field.
-    **Required**
     """
-    name: String!
+    name: String
 
     """
     Datatype of the custom field.
-    **Required**
     """
-    datatype: CustomFieldDataType!
+    datatype: CustomFieldDataType
 
     """
     The value of the custom field.

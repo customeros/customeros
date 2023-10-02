@@ -29,6 +29,7 @@ func NewRequestNextCycleDateCommandHandler(log logger.Logger, es eventstore.Aggr
 func (h *requestNextCycleDateCommandHandler) Handle(ctx context.Context, command *cmd.RequestNextCycleDateCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestNextCycleDateCommandHandler.Handle")
 	defer span.Finish()
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
 	span.LogFields(log.Object("command", command))
 
 	if err := validator.GetValidator().Struct(command); err != nil {

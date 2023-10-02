@@ -1,24 +1,42 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+import "common/external_system.proto";
 
 option go_package = "api/grpc/v1/user;user_grpc_service";
 
+// Request to upsert a user
 message UpsertUserGrpcRequest {
   string id = 1;
   string tenant = 2;
   string firstName = 3;
   string lastName = 4;
   string name = 5;
-  string appSource = 6;
-  string source = 7;
-  string sourceOfTruth = 8;
-  google.protobuf.Timestamp  createdAt = 9;
-  google.protobuf.Timestamp  updatedAt = 10;
+  string appSource = 6 [deprecated = true];
+  string source = 7 [deprecated = true];
+  string sourceOfTruth = 8 [deprecated = true];
+  google.protobuf.Timestamp createdAt = 9;
+  google.protobuf.Timestamp updatedAt = 10;
   bool internal = 11;
   string profilePhotoUrl = 12;
   string timezone = 13;
+  SourceFields sourceFields = 14;
+  ExternalSystemFields externalSystemFields = 15;
+  string loggedInUserId = 16;
 }
+
+message AddPlayerInfoGrpcRequest {
+  string userId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string authId = 4;
+  string provider = 5;
+  string identityId = 6;
+  google.protobuf.Timestamp timestamp = 7;
+  SourceFields sourceFields = 8;
+}
+
 message LinkJobRoleToUserGrpcRequest {
   string tenant = 1;
   string userId = 2;
@@ -31,6 +49,7 @@ message LinkPhoneNumberToUserGrpcRequest {
   string phoneNumberId = 3;
   bool primary = 4;
   string label = 5;
+  string loggedInUserId = 6;
 }
 
 message LinkEmailToUserGrpcRequest {
@@ -39,14 +58,17 @@ message LinkEmailToUserGrpcRequest {
   string emailId = 3;
   bool primary = 4;
   string label = 5;
+  string loggedInUserId = 6;
 }
 
 message UserIdGrpcResponse {
   string id = 1;
 }
 
+// User gRPC service
 service userGrpcService {
   rpc UpsertUser(UpsertUserGrpcRequest) returns (UserIdGrpcResponse);
+  rpc AddPlayerInfo(AddPlayerInfoGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkJobRoleToUser(LinkJobRoleToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkPhoneNumberToUser(LinkPhoneNumberToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkEmailToUser(LinkEmailToUserGrpcRequest) returns (UserIdGrpcResponse);

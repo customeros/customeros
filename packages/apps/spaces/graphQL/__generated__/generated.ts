@@ -422,18 +422,11 @@ export type CustomFieldEntityType = {
  * **A `create` object.**
  */
 export type CustomFieldInput = {
-  /**
-   * Datatype of the custom field.
-   * **Required**
-   */
-  datatype: CustomFieldDataType;
-  /** The unique ID associated with the custom field. */
+  /** Datatype of the custom field. */
+  datatype?: InputMaybe<CustomFieldDataType>;
   id?: InputMaybe<Scalars['ID']>;
-  /**
-   * The name of the custom field.
-   * **Required**
-   */
-  name: Scalars['String'];
+  /** The name of the custom field. */
+  name?: InputMaybe<Scalars['String']>;
   templateId?: InputMaybe<Scalars['ID']>;
   /**
    * The value of the custom field.
@@ -458,7 +451,7 @@ export type CustomFieldTemplate = Node & {
 
 export type CustomFieldTemplateInput = {
   length?: InputMaybe<Scalars['Int']>;
-  mandatory: Scalars['Boolean'];
+  mandatory?: InputMaybe<Scalars['Boolean']>;
   max?: InputMaybe<Scalars['Int']>;
   min?: InputMaybe<Scalars['Int']>;
   name: Scalars['String'];
@@ -815,6 +808,7 @@ export enum GCliSearchResultType {
 export type GlobalCache = {
   __typename?: 'GlobalCache';
   gCliCache: Array<GCliItem>;
+  gmailOauthTokenNeedsManualRefresh: Scalars['Boolean'];
   isOwner: Scalars['Boolean'];
   user: User;
 };
@@ -1068,6 +1062,36 @@ export type LocationUpdateInput = {
   zip?: InputMaybe<Scalars['String']>;
 };
 
+export type LogEntry = {
+  __typename?: 'LogEntry';
+  appSource: Scalars['String'];
+  content?: Maybe<Scalars['String']>;
+  contentType?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  externalLinks: Array<ExternalSystem>;
+  id: Scalars['ID'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  startedAt: Scalars['Time'];
+  tags: Array<Tag>;
+  updatedAt: Scalars['Time'];
+};
+
+export type LogEntryInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
+  tags?: InputMaybe<Array<TagIdOrNameInput>>;
+};
+
+export type LogEntryUpdateInput = {
+  content?: InputMaybe<Scalars['String']>;
+  contentType?: InputMaybe<Scalars['String']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
+};
+
 export enum Market {
   B2B = 'B2B',
   B2C = 'B2C',
@@ -1117,7 +1141,7 @@ export type MeetingInput = {
   status?: InputMaybe<MeetingStatus>;
 };
 
-export type MeetingParticipant = ContactParticipant | OrganizationParticipant | UserParticipant;
+export type MeetingParticipant = ContactParticipant | EmailParticipant | OrganizationParticipant | UserParticipant;
 
 export type MeetingParticipantInput = {
   contactId?: InputMaybe<Scalars['ID']>;
@@ -1192,6 +1216,7 @@ export type Mutation = {
   customFieldDeleteFromFieldSetById: Result;
   customFieldMergeToContact: CustomField;
   customFieldMergeToFieldSet: CustomField;
+  customFieldTemplate_Create: CustomFieldTemplate;
   customFieldUpdateInContact: CustomField;
   customFieldUpdateInFieldSet: CustomField;
   customFieldsMergeAndUpdateInContact: Contact;
@@ -1224,6 +1249,11 @@ export type Mutation = {
   location_RemoveFromContact: Contact;
   location_RemoveFromOrganization: Organization;
   location_Update: Location;
+  logEntry_AddTag: Scalars['ID'];
+  logEntry_CreateForOrganization: Scalars['ID'];
+  logEntry_RemoveTag: Scalars['ID'];
+  logEntry_ResetTags: Scalars['ID'];
+  logEntry_Update: Scalars['ID'];
   meeting_AddNewLocation: Location;
   meeting_AddNote: Meeting;
   meeting_Create: Meeting;
@@ -1259,8 +1289,14 @@ export type Mutation = {
   organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
+  organization_UpdateBillingDetails: Scalars['ID'];
+  /** @deprecated Use organization_UpdateBillingDetails instead */
   organization_UpdateBillingDetailsAsync: Scalars['ID'];
+  organization_UpdateRenewalForecast: Scalars['ID'];
+  /** @deprecated Use organization_UpdateRenewalForecast instead */
   organization_UpdateRenewalForecastAsync: Scalars['ID'];
+  organization_UpdateRenewalLikelihood: Scalars['ID'];
+  /** @deprecated Use organization_UpdateRenewalLikelihood instead */
   organization_UpdateRenewalLikelihoodAsync: Scalars['ID'];
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
@@ -1404,6 +1440,11 @@ export type MutationCustomFieldMergeToFieldSetArgs = {
   contactId: Scalars['ID'];
   fieldSetId: Scalars['ID'];
   input: CustomFieldInput;
+};
+
+
+export type MutationCustomFieldTemplate_CreateArgs = {
+  input: CustomFieldTemplateInput;
 };
 
 
@@ -1592,6 +1633,36 @@ export type MutationLocation_RemoveFromOrganizationArgs = {
 
 export type MutationLocation_UpdateArgs = {
   input: LocationUpdateInput;
+};
+
+
+export type MutationLogEntry_AddTagArgs = {
+  id: Scalars['ID'];
+  input: TagIdOrNameInput;
+};
+
+
+export type MutationLogEntry_CreateForOrganizationArgs = {
+  input: LogEntryInput;
+  organizationId: Scalars['ID'];
+};
+
+
+export type MutationLogEntry_RemoveTagArgs = {
+  id: Scalars['ID'];
+  input: TagIdOrNameInput;
+};
+
+
+export type MutationLogEntry_ResetTagsArgs = {
+  id: Scalars['ID'];
+  input?: InputMaybe<Array<TagIdOrNameInput>>;
+};
+
+
+export type MutationLogEntry_UpdateArgs = {
+  id: Scalars['ID'];
+  input: LogEntryUpdateInput;
 };
 
 
@@ -1791,13 +1862,28 @@ export type MutationOrganization_UpdateArgs = {
 };
 
 
+export type MutationOrganization_UpdateBillingDetailsArgs = {
+  input: BillingDetailsInput;
+};
+
+
 export type MutationOrganization_UpdateBillingDetailsAsyncArgs = {
   input: BillingDetailsInput;
 };
 
 
+export type MutationOrganization_UpdateRenewalForecastArgs = {
+  input: RenewalForecastInput;
+};
+
+
 export type MutationOrganization_UpdateRenewalForecastAsyncArgs = {
   input: RenewalForecastInput;
+};
+
+
+export type MutationOrganization_UpdateRenewalLikelihoodArgs = {
+  input: RenewalLikelihoodInput;
 };
 
 
@@ -2043,6 +2129,7 @@ export type Organization = Node & {
   contacts: ContactsPage;
   createdAt: Scalars['Time'];
   customFields: Array<CustomField>;
+  customerOsId: Scalars['String'];
   description?: Maybe<Scalars['String']>;
   domains: Array<Scalars['String']>;
   emails: Array<Email>;
@@ -2436,6 +2523,7 @@ export type Query = {
   interactionSession: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
   issue: Issue;
+  logEntry: LogEntry;
   meeting: Meeting;
   organization?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
@@ -2546,6 +2634,11 @@ export type QueryInteractionSession_BySessionIdentifierArgs = {
 
 
 export type QueryIssueArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryLogEntryArgs = {
   id: Scalars['ID'];
 };
 
@@ -2745,6 +2838,11 @@ export type Tag = {
   updatedAt: Scalars['Time'];
 };
 
+export type TagIdOrNameInput = {
+  id?: InputMaybe<Scalars['ID']>;
+  name?: InputMaybe<Scalars['String']>;
+};
+
 export type TagInput = {
   appSource?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
@@ -2781,7 +2879,7 @@ export type TimeRange = {
   to: Scalars['Time'];
 };
 
-export type TimelineEvent = Action | Analysis | InteractionEvent | InteractionSession | Issue | Meeting | Note | PageView;
+export type TimelineEvent = Action | Analysis | InteractionEvent | InteractionSession | Issue | LogEntry | Meeting | Note | PageView;
 
 export enum TimelineEventType {
   Action = 'ACTION',
@@ -2789,6 +2887,7 @@ export enum TimelineEventType {
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',
   Issue = 'ISSUE',
+  LogEntry = 'LOG_ENTRY',
   Meeting = 'MEETING',
   Note = 'NOTE',
   PageView = 'PAGE_VIEW'
@@ -3232,7 +3331,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, potentialAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedById?: string | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedById?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleNext?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType }>, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'JobRoleParticipant', jobRoleParticipant: { __typename?: 'JobRole', contact?: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, accountDetails?: { __typename?: 'OrgAccountDetails', renewalForecast?: { __typename?: 'RenewalForecast', amount?: number | null, potentialAmount?: number | null, comment?: string | null, updatedAt?: any | null, updatedById?: string | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, renewalLikelihood?: { __typename?: 'RenewalLikelihood', probability?: RenewalLikelihoodProbability | null, previousProbability?: RenewalLikelihoodProbability | null, comment?: string | null, updatedById?: string | null, updatedAt?: any | null, updatedBy?: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null } | null } | null, billingDetails?: { __typename?: 'BillingDetails', renewalCycle?: RenewalCycle | null, frequency?: RenewalCycle | null, amount?: number | null, renewalCycleNext?: any | null } | null } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Action', id: string, actionType: ActionType, createdAt: any, source: DataSource, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'Analysis', id: string } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType }>, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'JobRoleParticipant', jobRoleParticipant: { __typename?: 'JobRole', contact?: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'LogEntry', id: string, createdBy?: { __typename?: 'User', lastName: string, firstName: string } | null } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -3254,7 +3353,7 @@ export type InteractionSessionFragmentFragment = { __typename?: 'InteractionSess
 
 export type InteractionEventFragmentFragment = { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, issue?: { __typename?: 'Issue', externalLinks: Array<{ __typename?: 'ExternalSystem', type: ExternalSystemType, externalId?: string | null, externalUrl?: string | null }> } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, emails: Array<{ __typename?: 'Email', email?: string | null }> }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, id: string, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'JobRoleParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null, id: string, contacts: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null }>, users: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }>, organizations: Array<{ __typename?: 'Organization', id: string, name: string }> } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }> };
 
-export type MeetingTimelineEventFragmentFragment = { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }> };
+export type MeetingTimelineEventFragmentFragment = { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }> };
 
 export type ContactNameFragmentFragment = { __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null };
 
@@ -3279,7 +3378,7 @@ export type GCliSearchQuery = { __typename?: 'Query', gcli_Search: Array<{ __typ
 export type Global_CacheQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Global_CacheQuery = { __typename?: 'Query', global_Cache: { __typename?: 'GlobalCache', isOwner: boolean, user: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null, rawEmail?: string | null, primary: boolean }> | null }, gCliCache: Array<{ __typename?: 'GCliItem', id: string, type: GCliSearchResultType, display: string, data?: Array<{ __typename?: 'GCliAttributeKeyValuePair', key: string, value: string, display?: string | null }> | null }> } };
+export type Global_CacheQuery = { __typename?: 'Query', global_Cache: { __typename?: 'GlobalCache', isOwner: boolean, gmailOauthTokenNeedsManualRefresh: boolean, user: { __typename?: 'User', id: string, firstName: string, lastName: string, emails?: Array<{ __typename?: 'Email', email?: string | null, rawEmail?: string | null, primary: boolean }> | null }, gCliCache: Array<{ __typename?: 'GCliItem', id: string, type: GCliSearchResultType, display: string, data?: Array<{ __typename?: 'GCliAttributeKeyValuePair', key: string, value: string, display?: string | null }> | null }> } };
 
 export type AddEmailToOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -3580,7 +3679,7 @@ export type CreateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, agenda?: string | null, agendaContentType?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
+export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, agenda?: string | null, agendaContentType?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
 
 export type GetEmailValidationQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3616,7 +3715,7 @@ export type LinkMeetingAttendeeMutationVariables = Exact<{
 }>;
 
 
-export type LinkMeetingAttendeeMutation = { __typename?: 'Mutation', meeting_LinkAttendedBy: { __typename?: 'Meeting', id: string, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> } };
+export type LinkMeetingAttendeeMutation = { __typename?: 'Mutation', meeting_LinkAttendedBy: { __typename?: 'Meeting', id: string, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> } };
 
 export type MeetingLinkRecordingMutationVariables = Exact<{
   meetingId: Scalars['ID'];
@@ -3624,7 +3723,7 @@ export type MeetingLinkRecordingMutationVariables = Exact<{
 }>;
 
 
-export type MeetingLinkRecordingMutation = { __typename?: 'Mutation', meeting_LinkRecording: { __typename?: 'Meeting', id: string, agenda?: string | null, meetingStartedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, recording?: { __typename?: 'Attachment', id: string } | null } };
+export type MeetingLinkRecordingMutation = { __typename?: 'Mutation', meeting_LinkRecording: { __typename?: 'Meeting', id: string, agenda?: string | null, meetingStartedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, recording?: { __typename?: 'Attachment', id: string } | null } };
 
 export type MeetingUnlinkAttachmentMutationVariables = Exact<{
   meetingId: Scalars['ID'];
@@ -3640,7 +3739,7 @@ export type UnlinkMeetingAttendeeMutationVariables = Exact<{
 }>;
 
 
-export type UnlinkMeetingAttendeeMutation = { __typename?: 'Mutation', meeting_UnlinkAttendedBy: { __typename?: 'Meeting', id: string, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> } };
+export type UnlinkMeetingAttendeeMutation = { __typename?: 'Mutation', meeting_UnlinkAttendedBy: { __typename?: 'Meeting', id: string, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> } };
 
 export type MeetingUnlinkRecordingMutationVariables = Exact<{
   meetingId: Scalars['ID'];
@@ -3686,7 +3785,7 @@ export type UpdateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }> } };
+export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string, createdAt: any, agenda?: string | null, agendaContentType?: string | null, conferenceUrl?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, meetingCreatedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'EmailParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }>, describedBy: Array<{ __typename?: 'Analysis', id: string, analysisType?: string | null, content?: string | null, contentType?: string | null }>, events: Array<{ __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, sentBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, sentTo: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } } | { __typename?: 'EmailParticipant' } | { __typename?: 'JobRoleParticipant' } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'PhoneNumberParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, firstName: string, lastName: string } }>, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }>, recording?: { __typename?: 'Attachment', id: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }>, note: Array<{ __typename?: 'Note', id: string, appSource: string }> } };
 
 export type UpdateNoteMutationVariables = Exact<{
   input: NoteUpdateInput;
@@ -5658,6 +5757,13 @@ export const DashboardView_OrganizationsDocument = gql`
         ... on Issue {
           id
         }
+        ... on LogEntry {
+          id
+          createdBy {
+            lastName
+            firstName
+          }
+        }
         ... on Note {
           id
           createdBy {
@@ -5823,6 +5929,7 @@ export const Global_CacheDocument = gql`
       lastName
     }
     isOwner
+    gmailOauthTokenNeedsManualRefresh
     gCliCache {
       id
       type

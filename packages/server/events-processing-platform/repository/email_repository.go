@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -94,9 +95,9 @@ func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event
 				"id":            emailId,
 				"rawEmail":      event.RawEmail,
 				"tenant":        event.Tenant,
-				"source":        event.Source,
-				"sourceOfTruth": event.SourceOfTruth,
-				"appSource":     event.AppSource,
+				"source":        helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
+				"sourceOfTruth": helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
+				"appSource":     helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
 				"createdAt":     event.CreatedAt,
 				"updatedAt":     event.UpdatedAt,
 			})
@@ -182,7 +183,8 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 					e.username = $username,
 					e.updatedAt = $validatedAt,
 					e.isReachable = $isReachable
-				WITH e
+				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
+				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 

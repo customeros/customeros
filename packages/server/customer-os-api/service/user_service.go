@@ -15,19 +15,20 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
-	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	jobrolegrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	usergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
+	"time"
 )
 
 type UserService interface {
-	Create(ctx context.Context, userCreateData *UserCreateData) (*entity.UserEntity, error)
-	Update(ctx context.Context, user *entity.UserEntity) (*entity.UserEntity, error)
+	CreateUserByEvents(ctx context.Context, UserEntity entity.UserEntity) (string, error)
 	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error)
+	GetById(ctx context.Context, userId string) (*entity.UserEntity, error)
 	FindUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error)
 	IsOwner(ctx context.Context, id string) (*bool, error)
 	GetContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
@@ -39,25 +40,16 @@ type UserService interface {
 	GetUserAuthorsForLogEntries(ctx context.Context, logEntryIDs []string) (*entity.UserEntities, error)
 	GetUsers(ctx context.Context, userIds []string) (*entity.UserEntities, error)
 	GetDistinctOrganizationOwners(ctx context.Context) (*entity.UserEntities, error)
-
-	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
-	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
-
 	AddRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
 	AddRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
 	DeleteRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
 	DeleteRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
+	ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool
 
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
 	addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity)
 
 	CustomerAddJobRole(ctx context.Context, entity *CustomerAddJobRoleData) (*model.CustomerUser, error)
-}
-
-type UserCreateData struct {
-	UserEntity   *entity.UserEntity
-	EmailEntity  *entity.EmailEntity
-	PlayerEntity *entity.PlayerEntity
 }
 
 type userService struct {
@@ -141,7 +133,7 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAddJobRoleData) (*model.CustomerUser, error) {
 	result := &model.CustomerUser{}
 
-	jobRoleCreate := &job_role_grpc_service.CreateJobRoleGrpcRequest{
+	jobRoleCreate := &jobrolegrpc.CreateJobRoleGrpcRequest{
 		Tenant:        common.GetTenantFromContext(ctx),
 		JobTitle:      entity.JobRoleEntity.JobTitle,
 		Description:   entity.JobRoleEntity.Description,
@@ -166,7 +158,7 @@ func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAd
 	result.JobRole = &model.CustomerJobRole{
 		ID: jobRole.Id,
 	}
-	user, err := s.grpcClients.UserClient.LinkJobRoleToUser(contextWithTimeout, &user_grpc_service.LinkJobRoleToUserGrpcRequest{
+	user, err := s.grpcClients.UserClient.LinkJobRoleToUser(contextWithTimeout, &usergrpc.LinkJobRoleToUserGrpcRequest{
 		UserId:    entity.UserId,
 		JobRoleId: jobRole.Id,
 		Tenant:    common.GetTenantFromContext(ctx),
@@ -234,41 +226,6 @@ func (s *userService) DeleteRoleInTenant(parentCtx context.Context, userId strin
 		return nil, err
 	}
 	return s.mapDbNodeToUserEntity(*updateDbUser), nil
-}
-
-func (s *userService) Create(parentCtx context.Context, userCreateData *UserCreateData) (*entity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	userDbNode, err := session.ExecuteWrite(ctx, s.createUserInDBTxWork(ctx, userCreateData))
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToUserEntity(*userDbNode.(*dbtype.Node)), nil
-}
-
-func (s *userService) Update(parentCtx context.Context, entity *entity.UserEntity) (*entity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.Update")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	if entity.Id != common.GetContext(ctx).UserId {
-		if !s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner}) {
-			return nil, fmt.Errorf("user can not update other user")
-		}
-	}
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	userDbNode, err := s.repositories.UserRepository.Update(ctx, session, common.GetContext(ctx).Tenant, *entity)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToUserEntity(*userDbNode), nil
 }
 
 func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -370,15 +327,12 @@ func (s *userService) GetNoteCreator(parentCtx context.Context, noteId string) (
 	}
 }
 
-func (s *userService) FindUserById(parentCtx context.Context, userId string) (*entity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.FindUserById")
+func (s *userService) GetById(parentCtx context.Context, userId string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	if userDbNode, err := s.repositories.UserRepository.GetById(ctx, session, common.GetContext(ctx).Tenant, userId); err != nil {
+	if userDbNode, err := s.repositories.UserRepository.GetById(ctx, common.GetContext(ctx).Tenant, userId); err != nil {
 		return nil, err
 	} else {
 		return s.mapDbNodeToUserEntity(*userDbNode), nil
@@ -398,40 +352,6 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 		return nil, err
 	}
 	return s.mapDbNodeToUserEntity(*userDbNode), nil
-}
-
-func (s *userService) createUserInDBTxWork(parentCtx context.Context, newUser *UserCreateData) func(tx neo4j.ManagedTransaction) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.createUserInDBTxWork")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	return func(tx neo4j.ManagedTransaction) (any, error) {
-		tenant := common.GetContext(ctx).Tenant
-		userDbNode, err := s.repositories.UserRepository.Create(ctx, tx, tenant, *newUser.UserEntity)
-		if err != nil {
-			return nil, err
-		}
-		var userId = utils.GetPropsFromNode(*userDbNode)["id"].(string)
-
-		playerDbNode, err := s.repositories.PlayerRepository.Merge(ctx, tx, newUser.PlayerEntity)
-		if err != nil {
-			return nil, err
-		}
-		var playerId = utils.GetPropsFromNode(*playerDbNode)["id"].(string)
-
-		err = s.repositories.PlayerRepository.LinkWithUserInTx(ctx, tx, playerId, userId, tenant, entity.IDENTIFIES)
-		if err != nil {
-			return nil, err
-		}
-
-		if newUser.EmailEntity != nil {
-			_, _, err := s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, tenant, entity.USER, userId, *newUser.EmailEntity)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return userDbNode, nil
-	}
 }
 
 func (s *userService) GetUsersForEmails(parentCtx context.Context, emailIds []string) (*entity.UserEntities, error) {
@@ -563,80 +483,41 @@ func (s *userService) GetDistinctOrganizationOwners(parentCtx context.Context) (
 	return &userEntities, nil
 }
 
-func (s *userService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.UserRepository.GetAllUserPhoneNumberRelationships(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.UserClient.LinkPhoneNumberToUser(context.Background(), &user_grpc_service.LinkPhoneNumberToUserGrpcRequest{
-				Primary:       utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
-				Label:         utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
-				UserId:        v.Values[1].(string),
-				PhoneNumberId: v.Values[2].(string),
-				Tenant:        v.Values[3].(string),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-			} else {
-				processedRecords++
-			}
-		}
+func (s *userService) CreateUserByEvents(ctx context.Context, userEntity entity.UserEntity) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.CreateUserByEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("userEntity", userEntity))
 
-		size -= batchSize
+	response, err := s.grpcClients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
+		Tenant: common.GetTenantFromContext(ctx),
+		SourceFields: &commongrpc.SourceFields{
+			Source:        string(userEntity.Source),
+			SourceOfTruth: string(userEntity.SourceOfTruth),
+			AppSource:     userEntity.AppSource,
+		},
+		LoggedInUserId:  common.GetUserIdFromContext(ctx),
+		FirstName:       userEntity.FirstName,
+		LastName:        userEntity.LastName,
+		Name:            userEntity.Name,
+		Internal:        false,
+		ProfilePhotoUrl: userEntity.ProfilePhotoUrl,
+		Timezone:        userEntity.Timezone,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing %s", err.Error())
+		return "", err
 	}
-
-	return processedRecords, failedRecords, outputErr
-}
-
-func (s *userService) UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
+	for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+		user, findErr := s.GetById(ctx, response.Id)
+		if user != nil && findErr == nil {
+			break
 		}
-		records, err := s.repositories.UserRepository.GetAllUserEmailRelationships(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.UserClient.LinkEmailToUser(context.Background(), &user_grpc_service.LinkEmailToUserGrpcRequest{
-				Primary: utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
-				Label:   utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
-				UserId:  v.Values[1].(string),
-				EmailId: v.Values[2].(string),
-				Tenant:  v.Values[3].(string),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
+		time.Sleep(time.Duration(i*100) * time.Millisecond)
 	}
-
-	return processedRecords, failedRecords, outputErr
+	span.LogFields(log.String("createdUserId", response.Id))
+	return response.Id, nil
 }
 
 func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
@@ -645,6 +526,7 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
 		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
+		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

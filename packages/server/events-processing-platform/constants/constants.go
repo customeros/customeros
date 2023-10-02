@@ -4,6 +4,8 @@ const (
 	AppSourceEventProcessingPlatform = "event-processing-platform"
 
 	ComponentNeo4jRepository = "neo4jRepository"
+	ComponentService         = "service"
+	ComponentCommandHandler  = "commandHandler"
 
 	SourceOpenline  = "openline"
 	SourceWebscrape = "webscrape"
@@ -20,6 +22,8 @@ const (
 
 	NodeLabel_Organization     = "Organization"
 	NodeLabel_InteractionEvent = "InteractionEvent"
+	NodeLabel_User             = "User"
+	NodeLabel_LogEntry         = "LogEntry"
 
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 	ApiKeyHeader    = "X-Openline-API-KEY"

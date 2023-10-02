@@ -13,6 +13,7 @@ import (
 
 const (
 	SpanTagTenant    = "tenant"
+	SpanTagUserId    = "user-id"
 	SpanTagComponent = "component"
 )
 
@@ -90,8 +91,26 @@ func SetNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span, tena
 	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)
 }
 
+func SetServiceSpanTags(ctx context.Context, span opentracing.Span, tenant, userId string) {
+	setTenantSpanTag(span, tenant)
+	setUseridSpanTag(span, userId)
+	span.SetTag(SpanTagComponent, constants.ComponentService)
+}
+
+func SetCommandHandlerSpanTags(ctx context.Context, span opentracing.Span, tenant, userId string) {
+	setTenantSpanTag(span, tenant)
+	setUseridSpanTag(span, userId)
+	span.SetTag(SpanTagComponent, constants.ComponentService)
+}
+
 func setTenantSpanTag(span opentracing.Span, tenant string) {
 	if tenant != "" {
 		span.SetTag(SpanTagTenant, tenant)
+	}
+}
+
+func setUseridSpanTag(span opentracing.Span, userId string) {
+	if userId != "" {
+		span.SetTag(SpanTagUserId, userId)
 	}
 }

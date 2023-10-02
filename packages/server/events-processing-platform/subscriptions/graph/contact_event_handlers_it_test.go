@@ -110,7 +110,11 @@ func TestGraphContactEventHandler_OnContactCreateWithEmail(t *testing.T) {
 	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
 
-	event, err = emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, "N/A", "N/A", "unit-test", curTime, curTime)
+	event, err = emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, commonModels.Source{
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		AppSource:     "unit-test",
+	}, curTime, curTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)
@@ -201,7 +205,11 @@ func TestGraphContactEventHandler_OnContactCreateWithEmailOutOfOrder(t *testing.
 	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
 
-	event, err = emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, "N/A", "N/A", "unit-test", curTime, curTime)
+	event, err = emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, commonModels.Source{
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		AppSource:     "unit-test",
+	}, curTime, curTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)
@@ -276,7 +284,11 @@ func TestGraphContactEventHandler_OnContactCreateWithVeryEmailOutOfOrder(t *test
 	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
 
-	event, err = emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, "N/A", "N/A", "unit-test", curTime, curTime)
+	event, err = emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, commonModels.Source{
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		AppSource:     "unit-test",
+	}, curTime, curTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)

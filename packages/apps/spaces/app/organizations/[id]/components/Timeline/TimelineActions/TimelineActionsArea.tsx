@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box } from '@ui/layout/Box';
 import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
-import { useTimelineActionContext } from './TimelineActionsContext/TimelineActionContext';
+import { useTimelineActionContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionContext';
 import { EmailTimelineAction } from './email/EmailTimelineAction';
 
 interface TimelineActionsAreaProps {

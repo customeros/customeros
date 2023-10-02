@@ -1,15 +1,16 @@
 import React from 'react';
+import copy from 'copy-to-clipboard';
+
 import { CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
+import { VStack } from '@ui/layout/Stack';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
-import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { DateTimeUtils } from '@spaces/utils/date';
 import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';
-import copy from 'copy-to-clipboard';
 import { SlackMessageCard } from '@organization/components/Timeline/events/slack/SlackMessageCard';
 import { getName } from '@spaces/utils/getParticipantsName';
 import {
@@ -20,6 +21,11 @@ import {
   UserParticipant,
 } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider';
+import { useGetTimelineEventsQuery } from '@organization/graphql/getTimelineEvents.generated';
+import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+
+import { MessageCardSkeleton } from '../../shared';
 
 const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
   const sender =
@@ -29,15 +35,32 @@ const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
   return sender;
 };
 export const SlackThreadPreviewModal: React.FC = () => {
+  const client = getGraphQLClient();
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const event = modalContent as InteractionEvent;
+
+  const timelineEventsIds =
+    event?.interactionSession?.events?.map((e) => e.id) || [];
+  const { data, isLoading } = useGetTimelineEventsQuery(client, {
+    ids: timelineEventsIds,
+  });
+
   const slackSender = getParticipant(event?.sentBy);
   const slackEventReplies =
-    event?.interactionSession?.events?.filter((e) => e?.id !== event?.id) || [];
+    (data?.timelineEvents as InteractionEvent[] | undefined)?.filter(
+      (e) => e?.id !== event?.id,
+    ) || [];
 
   return (
     <>
-      <CardHeader pb={1} position='sticky' top={0} borderRadius='xl'>
+      <CardHeader
+        py='4'
+        px='6'
+        pb='1'
+        position='sticky'
+        top={0}
+        borderRadius='xl'
+      >
         <Flex
           direction='row'
           justifyContent='space-between'
@@ -79,7 +102,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
           </Flex>
         </Flex>
       </CardHeader>
-      <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6}>
+      <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6} pt={0}>
         <SlackMessageCard
           w='full'
           name={getName(slackSender)}
@@ -90,6 +113,24 @@ export const SlackThreadPreviewModal: React.FC = () => {
           date={DateTimeUtils.timeAgo(event?.date, { addSuffix: true })}
         />
 
+        {isLoading && (
+          <>
+            <Flex marginY={2} alignItems='center'>
+              <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+                {timelineEventsIds.length - 1}{' '}
+                {timelineEventsIds.length - 1 === 1 ? 'reply' : 'replies'}
+              </Text>
+              <Divider />
+            </Flex>
+            <VStack w='full'>
+              {Array.from({ length: timelineEventsIds.length - 1 }).map(
+                (_, idx) => (
+                  <MessageCardSkeleton key={idx} />
+                ),
+              )}
+            </VStack>
+          </>
+        )}
         {!!slackEventReplies.length && (
           <>
             <Flex marginY={2} alignItems='center'>
@@ -102,7 +143,11 @@ export const SlackThreadPreviewModal: React.FC = () => {
 
             <Flex direction='column' gap={2}>
               {slackEventReplies.map((reply) => {
-                const replyParticipant = getParticipant(reply?.sentBy);
+                const sentBy = event?.interactionSession?.events?.find(
+                  (e) => e.id === reply.id,
+                )?.sentBy;
+
+                const replyParticipant = getParticipant(sentBy);
                 return (
                   <SlackMessageCard
                     key={`slack-event-thread-reply-preview-modal-${reply.id}`}

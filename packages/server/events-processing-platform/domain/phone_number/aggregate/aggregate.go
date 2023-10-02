@@ -1,7 +1,6 @@
 package aggregate
 
 import (
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -38,13 +37,9 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case
-		events.PhoneNumberCreateV1,
-		events.PhoneNumberCreateV1Legacy:
+	case events.PhoneNumberCreateV1:
 		return a.onPhoneNumberCreate(event)
-	case
-		events.PhoneNumberUpdateV1,
-		events.PhoneNumberUpdateV1Legacy:
+	case events.PhoneNumberUpdateV1:
 		return a.onPhoneNumberUpdate(event)
 	case events.PhoneNumberValidationSkippedV1:
 		return a.OnPhoneNumberSkippedValidation(event)
@@ -66,13 +61,15 @@ func (a *PhoneNumberAggregate) onPhoneNumberCreate(event eventstore.Event) error
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.PhoneNumber.RawPhoneNumber = eventData.RawPhoneNumber
-	a.PhoneNumber.Source = commonModels.Source{
-		Source:        eventData.Source,
-		SourceOfTruth: eventData.SourceOfTruth,
-		AppSource:     eventData.AppSource,
-	}
 	a.PhoneNumber.CreatedAt = eventData.CreatedAt
 	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt
+	if eventData.SourceFields.Available() {
+		a.PhoneNumber.Source = eventData.SourceFields
+	} else {
+		a.PhoneNumber.Source.Source = eventData.Source
+		a.PhoneNumber.Source.SourceOfTruth = eventData.SourceOfTruth
+		a.PhoneNumber.Source.AppSource = eventData.AppSource
+	}
 	return nil
 }
 

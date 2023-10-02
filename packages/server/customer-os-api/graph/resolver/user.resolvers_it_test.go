@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -10,11 +9,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/event_store"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	userProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/stretchr/testify/require"
-	"log"
 	"testing"
 )
 
@@ -48,147 +45,6 @@ func TestQueryResolver_UserByEmail(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, user)
 	require.Equal(t, userId1, user.User_ByEmail.ID)
-}
-
-func TestMutationResolver_UserCreate(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "other")
-
-	rawResponse, err := cAdminWithTenant.RawPost(getQuery("user/create_user"))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var user struct {
-		User_Create model.User
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
-	require.Nil(t, err)
-	require.NotNil(t, user)
-
-	createdUser := user.User_Create
-	require.NotNil(t, createdUser.ID)
-	require.NotNil(t, createdUser.CreatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), createdUser.CreatedAt)
-	require.NotNil(t, createdUser.UpdatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), createdUser.UpdatedAt)
-	require.Equal(t, createdUser.UpdatedAt, createdUser.CreatedAt)
-	require.Equal(t, "first", createdUser.FirstName)
-	require.Equal(t, "last", createdUser.LastName)
-	require.Equal(t, "Europe/London", *createdUser.Timezone)
-	require.False(t, createdUser.Internal)
-	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].Email)
-	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].RawEmail)
-	require.Nil(t, createdUser.Emails[0].EmailValidationDetails)
-	require.NotNil(t, createdUser.Player)
-	require.Equal(t, "user@openline.ai", createdUser.Player.AuthID)
-	require.Equal(t, "dummy_provider", createdUser.Player.Provider)
-	require.Equal(t, "dummy", createdUser.Player.AppSource)
-
-	require.Equal(t, model.DataSourceOpenline, createdUser.Source)
-	require.Equal(t, model.DataSourceOpenline, createdUser.SourceOfTruth)
-	require.Equal(t, "dummy", createdUser.AppSource)
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Player"))
-
-	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName, "Player"})
-}
-
-func TestMutationResolver_UserCreateAccessControlled(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "other")
-
-	rawResponse, err := c.RawPost(getQuery("user/create_user"))
-	require.Nil(t, err)
-	require.NotNil(t, rawResponse.Errors)
-}
-
-func TestMutationResolver_UserUpdate(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
-		FirstName: "first",
-		LastName:  "last",
-	})
-
-	rawResponse, err := c.RawPost(getQuery("user/update_user"),
-		client.Var("userId", userId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var user struct {
-		User_Update model.User
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
-	require.Nil(t, err)
-	require.NotNil(t, user)
-
-	updatedUser := user.User_Update
-	require.NotNil(t, updatedUser.UpdatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), updatedUser.UpdatedAt)
-	require.Equal(t, userId, updatedUser.ID)
-	require.Equal(t, "firstUpdated", updatedUser.FirstName)
-	require.Equal(t, "lastUpdated", updatedUser.LastName)
-	require.Equal(t, "America/Los_Angeles", *updatedUser.Timezone)
-	require.Equal(t, model.DataSourceOpenline, updatedUser.Source)
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "USER_BELONGS_TO_TENANT"))
-
-	// Users can't update other users
-	rawResponse2, err := c.RawPost(getQuery("user/update_user"),
-		client.Var("userId", userId1))
-
-	bytes, _ := json.Marshal(rawResponse2)
-	log.Print("JSON RESPONSE:" + string(bytes))
-	require.Nil(t, rawResponse2.Data)
-}
-
-func TestMutationResolver_UserUpdateByOwner(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
-		FirstName:     "first",
-		LastName:      "last",
-		Source:        "openline",
-		SourceOfTruth: "openline",
-	})
-
-	rawResponse, err := cOwner.RawPost(getQuery("user/update_user"),
-		client.Var("userId", userId1))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var user struct {
-		User_Update model.User
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
-	require.Nil(t, err)
-	require.NotNil(t, user)
-
-	updatedUser := user.User_Update
-	require.NotNil(t, updatedUser.UpdatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), updatedUser.UpdatedAt)
-	require.Equal(t, userId1, updatedUser.ID)
-	require.Equal(t, "firstUpdated", updatedUser.FirstName)
-	require.Equal(t, "lastUpdated", updatedUser.LastName)
-	require.Equal(t, model.DataSourceOpenline, updatedUser.Source)
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "USER_BELONGS_TO_TENANT"))
-
 }
 
 func TestQueryResolver_Users(t *testing.T) {

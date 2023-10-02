@@ -1,6 +1,7 @@
 package events
 
 import (
+	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -10,40 +11,41 @@ import (
 const (
 	UserCreateV1          = "V1_USER_CREATE"
 	UserUpdateV1          = "V1_USER_UPDATE"
+	UserAddPlayerV1       = "V1_USER_ADD_PLAYER"
 	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
 	UserEmailLinkV1       = "V1_USER_EMAIL_LINK"
 	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
 )
 
 type UserCreateEvent struct {
-	Tenant          string    `json:"tenant" validate:"required"`
-	Name            string    `json:"name"`
-	FirstName       string    `json:"firstName"`
-	LastName        string    `json:"lastName"`
-	Source          string    `json:"source"`
-	SourceOfTruth   string    `json:"sourceOfTruth"`
-	AppSource       string    `json:"appSource"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	Internal        bool      `json:"internal"`
-	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
-	Timezone        string    `json:"timezone"`
+	Tenant          string                       `json:"tenant" validate:"required"`
+	Name            string                       `json:"name"`
+	FirstName       string                       `json:"firstName"`
+	LastName        string                       `json:"lastName"`
+	SourceFields    common_models.Source         `json:"sourceFields"`
+	CreatedAt       time.Time                    `json:"createdAt"`
+	UpdatedAt       time.Time                    `json:"updatedAt"`
+	Internal        bool                         `json:"internal"`
+	ProfilePhotoUrl string                       `json:"profilePhotoUrl"`
+	Timezone        string                       `json:"timezone"`
+	ExternalSystem  common_models.ExternalSystem `json:"externalSystem"`
 }
 
-func NewUserCreateEvent(aggregate eventstore.Aggregate, userDto *models.UserFields, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewUserCreateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, source common_models.Source, externalSystem common_models.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UserCreateEvent{
-		Tenant:          userDto.Tenant,
-		Name:            userDto.UserCoreFields.Name,
-		FirstName:       userDto.UserCoreFields.FirstName,
-		LastName:        userDto.UserCoreFields.LastName,
-		Internal:        userDto.UserCoreFields.Internal,
-		ProfilePhotoUrl: userDto.UserCoreFields.ProfilePhotoUrl,
-		Timezone:        userDto.UserCoreFields.Timezone,
-		Source:          userDto.Source.Source,
-		SourceOfTruth:   userDto.Source.SourceOfTruth,
-		AppSource:       userDto.Source.AppSource,
+		Tenant:          aggregate.GetTenant(),
+		Name:            dataFields.Name,
+		FirstName:       dataFields.FirstName,
+		LastName:        dataFields.LastName,
+		Internal:        dataFields.Internal,
+		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
+		Timezone:        dataFields.Timezone,
+		SourceFields:    source,
 		CreatedAt:       createdAt,
 		UpdatedAt:       updatedAt,
+	}
+	if externalSystem.Available() {
+		eventData.ExternalSystem = externalSystem
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -58,28 +60,32 @@ func NewUserCreateEvent(aggregate eventstore.Aggregate, userDto *models.UserFiel
 }
 
 type UserUpdateEvent struct {
-	Tenant          string    `json:"tenant" validate:"required"`
-	SourceOfTruth   string    `json:"sourceOfTruth"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	Name            string    `json:"name"`
-	FirstName       string    `json:"firstName"`
-	LastName        string    `json:"lastName"`
-	Internal        bool      `json:"internal"`
-	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
-	Timezone        string    `json:"timezone"`
+	Tenant          string                       `json:"tenant" validate:"required"`
+	Source          string                       `json:"source"`
+	UpdatedAt       time.Time                    `json:"updatedAt"`
+	Name            string                       `json:"name"`
+	FirstName       string                       `json:"firstName"`
+	LastName        string                       `json:"lastName"`
+	Internal        bool                         `json:"internal"`
+	ProfilePhotoUrl string                       `json:"profilePhotoUrl"`
+	Timezone        string                       `json:"timezone"`
+	ExternalSystem  common_models.ExternalSystem `json:"externalSystem"`
 }
 
-func NewUserUpdateEvent(aggregate eventstore.Aggregate, userDto *models.UserFields, updatedAt time.Time) (eventstore.Event, error) {
+func NewUserUpdateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, source string, updatedAt time.Time, externalSystem common_models.ExternalSystem) (eventstore.Event, error) {
 	eventData := UserUpdateEvent{
-		Name:            userDto.UserCoreFields.Name,
-		FirstName:       userDto.UserCoreFields.FirstName,
-		LastName:        userDto.UserCoreFields.LastName,
-		Internal:        userDto.UserCoreFields.Internal,
-		ProfilePhotoUrl: userDto.UserCoreFields.ProfilePhotoUrl,
-		Timezone:        userDto.UserCoreFields.Timezone,
-		Tenant:          userDto.Tenant,
+		Tenant:          aggregate.GetTenant(),
+		Name:            dataFields.Name,
+		FirstName:       dataFields.FirstName,
+		LastName:        dataFields.LastName,
+		Internal:        dataFields.Internal,
+		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
+		Timezone:        dataFields.Timezone,
 		UpdatedAt:       updatedAt,
-		SourceOfTruth:   userDto.Source.SourceOfTruth,
+		Source:          source,
+	}
+	if externalSystem.Available() {
+		eventData.ExternalSystem = externalSystem
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -167,6 +173,36 @@ func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, labe
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserEmailLinkV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type UserAddPlayerInfoEvent struct {
+	Tenant       string               `json:"tenant" validate:"required"`
+	Provider     string               `json:"provider" validate:"required"`
+	AuthId       string               `json:"authId" validate:"required"`
+	IdentityId   string               `json:"identityId"`
+	CreatedAt    time.Time            `json:"createdAt"`
+	SourceFields common_models.Source `json:"sourceFields"`
+}
+
+func NewUserAddPlayerInfoEvent(aggregate eventstore.Aggregate, dataFields models.PlayerInfo, source common_models.Source, createdAt time.Time) (eventstore.Event, error) {
+	eventData := UserAddPlayerInfoEvent{
+		Tenant:       aggregate.GetTenant(),
+		Provider:     dataFields.Provider,
+		AuthId:       dataFields.AuthId,
+		IdentityId:   dataFields.IdentityId,
+		CreatedAt:    createdAt,
+		SourceFields: source,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, UserAddPlayerV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

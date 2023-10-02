@@ -44,12 +44,7 @@ func (s *organizationService) UpdateLastTouchpointByOrganizationId(ctx context.C
 }
 
 func (s *organizationService) UpdateLastTouchpointByOrganizationExternalId(ctx context.Context, tenant, organizationExternalId, externalSystem string) {
-	orgId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, entity.OrganizationData{
-		BaseData: entity.BaseData{
-			ExternalId:     organizationExternalId,
-			ExternalSystem: externalSystem,
-		},
-	})
+	orgId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, externalSystem, organizationExternalId, []string{})
 	if err != nil {
 		return
 	}

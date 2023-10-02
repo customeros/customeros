@@ -11,6 +11,7 @@ query global_Cache {
       lastName
     }
     isOwner
+    gmailOauthTokenNeedsManualRefresh
     gCliCache {
       id
       type

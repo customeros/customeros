@@ -3,6 +3,7 @@ import {
   JobRoleParticipant,
   Meeting,
   OrganizationParticipant,
+  EmailParticipant,
   UserParticipant,
 } from '@graphql/types';
 import { getName } from '@spaces/utils/getParticipantsName';
@@ -11,7 +12,8 @@ type Participant =
   | ContactParticipant
   | UserParticipant
   | JobRoleParticipant
-  | OrganizationParticipant;
+  | OrganizationParticipant
+  | EmailParticipant;
 
 export const getParticipant = (participant: Participant) => {
   switch (participant?.__typename) {
@@ -23,6 +25,8 @@ export const getParticipant = (participant: Participant) => {
       return participant.jobRoleParticipant?.contact;
     case 'OrganizationParticipant':
       return participant.organizationParticipant;
+    case 'EmailParticipant':
+      return participant.emailParticipant;
     default:
       return null;
   }
@@ -41,7 +45,7 @@ export const getParticipantEmail = (participant: Participant): string => {
 
   if (!contact) return '';
 
-  return contact.emails?.[0]?.email ?? getName(contact);
+  return getName(contact);
 };
 
 export const getParticipants = (

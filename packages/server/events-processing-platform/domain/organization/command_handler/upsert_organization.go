@@ -30,6 +30,7 @@ func NewUpsertOrganizationCommandHandler(log logger.Logger, cfg *config.Config, 
 func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *cmd.UpsertOrganizationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertOrganizationCommandHandler.Handle")
 	defer span.Finish()
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if err := validator.GetValidator().Struct(command); err != nil {
@@ -46,6 +47,7 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *
 	orgFields := cmd.UpsertOrganizationCommandToOrganizationFields(command)
 
 	if aggregate.IsAggregateNotFound(organizationAggregate) {
+		command.IsCreateCommand = true
 		if err = organizationAggregate.CreateOrganization(ctx, orgFields, command.UserID); err != nil {
 			tracing.TraceErr(span, err)
 			return err

@@ -15,6 +15,16 @@ const (
 	RenewalLikelihoodZERO   RenewalLikelihoodProbability = "ZERO"
 )
 
+type CustomFieldDataType string
+
+const (
+	CustomFieldDataTypeText     CustomFieldDataType = "TEXT"
+	CustomFieldDataTypeBool     CustomFieldDataType = "BOOL"
+	CustomFieldDataTypeDatetime CustomFieldDataType = "DATETIME"
+	CustomFieldDataTypeInteger  CustomFieldDataType = "INTEGER"
+	CustomFieldDataTypeDecimal  CustomFieldDataType = "DECIMAL"
+)
+
 func (r RenewalLikelihoodProbability) CamelCaseString() string {
 	switch r {
 	case RenewalLikelihoodHIGH:
@@ -32,6 +42,40 @@ func (r RenewalLikelihoodProbability) CamelCaseString() string {
 type Social struct {
 	PlatformName string `json:"platformName"`
 	Url          string `json:"url"`
+}
+
+type CustomFieldValue struct {
+	Str     *string    `json:"string,omitempty"`
+	Int     *int64     `json:"int,omitempty"`
+	Time    *time.Time `json:"time,omitempty"`
+	Bool    *bool      `json:"bool,omitempty"`
+	Decimal *float64   `json:"decimal,omitempty"`
+}
+
+func (c *CustomFieldValue) RealValue() any {
+	if c.Int != nil {
+		return *c.Int
+	} else if c.Decimal != nil {
+		return *c.Decimal
+	} else if c.Time != nil {
+		return *c.Time
+	} else if c.Bool != nil {
+		return *c.Bool
+	} else if c.Str != nil {
+		return *c.Str
+	}
+	return nil
+}
+
+type CustomField struct {
+	Id                  string               `json:"id"`
+	Name                string               `json:"name"`
+	TemplateId          *string              `json:"templateId,omitempty"`
+	CustomFieldValue    CustomFieldValue     `json:"customFieldValue"`
+	CustomFieldDataType CustomFieldDataType  `json:"customFieldDataType"`
+	Source              common_models.Source `json:"source"`
+	CreatedAt           time.Time            `json:"createdAt,omitempty"`
+	UpdatedAt           time.Time            `json:"updatedAt,omitempty"`
 }
 
 type Organization struct {
@@ -61,6 +105,7 @@ type Organization struct {
 	RenewalLikelihood RenewalLikelihood                  `json:"renewalLikelihood,omitempty"`
 	RenewalForecast   RenewalForecast                    `json:"renewalForecast,omitempty"`
 	BillingDetails    BillingDetails                     `json:"billingDetails,omitempty"`
+	CustomFields      map[string]CustomField             `json:"customFields,omitempty"`
 }
 
 type RenewalLikelihood struct {

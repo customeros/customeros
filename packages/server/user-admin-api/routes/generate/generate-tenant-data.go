@@ -251,16 +251,17 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 					attendedBy = append(attendedBy, getMeetingParticipantInput(attendee, userIds, contactIds))
 				}
 
-				noteInput := cosModel.NoteInput{HTML: meeting.Agenda, AppSource: &appSource}
+				contentType := "text/plain"
+				noteInput := cosModel.NoteInput{Content: &meeting.Agenda, ContentType: &contentType, AppSource: &appSource}
 				input := cosModel.MeetingInput{
-					Name:       meeting.Subject,
+					Name:       &meeting.Subject,
 					CreatedAt:  &meeting.StartedAt,
 					CreatedBy:  createdBy,
 					AttendedBy: attendedBy,
 					StartedAt:  &meeting.StartedAt,
 					EndedAt:    &meeting.EndedAt,
 					Note:       &noteInput,
-					AppSource:  appSource,
+					AppSource:  &appSource,
 				}
 				meetingId, err := cosClient.CreateMeeting(tenant, username, input)
 				if err != nil {

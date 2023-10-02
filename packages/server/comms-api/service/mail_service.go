@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -10,13 +9,9 @@ import (
 	mimemail "github.com/emersion/go-message/mail"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/repository"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/gmail/v1"
-	"google.golang.org/api/option"
 	"io"
 	"log"
 	"net/mail"
@@ -25,9 +20,8 @@ import (
 )
 
 type mailService struct {
-	customerOSService CustomerOSService
-	config            *c.Config
-	apiKeyRepository  repository.ApiKeyRepository
+	services *Services
+	config   *c.Config
 }
 
 type MailService interface {
@@ -44,8 +38,7 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 		threadId = utils.EnsureEmailRfcId(email.MessageID)
 	}
 
-	cosService := s.customerOSService
-	sessionId, err := cosService.GetInteractionSession(&threadId, tenant, user)
+	sessionId, err := s.services.CustomerOsService.GetInteractionSession(&threadId, tenant, user)
 
 	if err != nil {
 		log.Printf("failed retriving interaction session: error=%s", err.Error())
@@ -67,7 +60,7 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 			WithSessionType(&sessionType),
 		}
 
-		sessionId, err = cosService.CreateInteractionSession(sessionOpts...)
+		sessionId, err = s.services.CustomerOsService.CreateInteractionSession(sessionOpts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create interaction session: %v", err)
 		}
@@ -98,7 +91,7 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 		WithSentTo(sentTo),
 		WithAppSource(&appSource),
 	}
-	response, err := cosService.CreateInteractionEvent(eventOpts...)
+	response, err := s.services.CustomerOsService.CreateInteractionEvent(eventOpts...)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create interaction event: %v", err)
@@ -128,15 +121,19 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	subject := request.Subject
 	var h mimemail.Header
 
-	tenant, err := s.customerOSService.GetTenant(username)
+	tenant, err := s.services.CustomerOsService.GetTenant(username)
 	if err != nil {
 		log.Printf("unable to retrieve tenant for %s", *username)
 		return nil, fmt.Errorf("unable to retrieve tenant for %s", *username)
 	}
 
-	gSrv, err := s.newGmailService(username, &tenant.Tenant)
+	gSrv, err := s.services.AuthServices.GoogleService.GetGmailService(*username, tenant.Tenant)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
+	}
+
+	if gSrv == nil {
+		return nil, fmt.Errorf("unable to build a gmail service with service account or auth token: %v", err)
 	}
 
 	fromAddress := []*mimemail.Address{{"", *username}}
@@ -175,7 +172,7 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	}
 
 	if request.ReplyTo != nil {
-		event, err := s.customerOSService.GetInteractionEvent(request.ReplyTo, username)
+		event, err := s.services.CustomerOsService.GetInteractionEvent(request.ReplyTo, username)
 		if err != nil {
 			return nil, err
 		}
@@ -249,18 +246,6 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	return &retMail, nil
 }
 
-func (s *mailService) newGmailService(userId *string, tenant *string) (*gmail.Service, error) {
-	tok, err := s.getMailAuthToken(userId, tenant)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
-	}
-	ctx := context.Background()
-	client := tok.Client(ctx)
-
-	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
-	return srv, err
-}
-
 func toParticipantInputArr(from []*mail.Address, participantType *string) []cosModel.InteractionEventParticipantInput {
 	var to []cosModel.InteractionEventParticipantInput
 	for _, a := range from {
@@ -273,30 +258,9 @@ func toParticipantInputArr(from []*mail.Address, participantType *string) []cosM
 	return to
 }
 
-func (s *mailService) getMailAuthToken(identityId *string, tenant *string) (*jwt.Config, error) {
-	privateKey, err := s.apiKeyRepository.GetApiKeyByTenantService(*tenant, repository.GSUITE_SERVICE_PRIVATE_KEY)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
-	}
-
-	serviceEmail, err := s.apiKeyRepository.GetApiKeyByTenantService(*tenant, repository.GSUITE_SERVICE_EMAIL_ADDRESS)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
-	}
-	conf := &jwt.Config{
-		Email:      serviceEmail,
-		PrivateKey: []byte(privateKey),
-		TokenURL:   google.JWTTokenURL,
-		Scopes:     []string{"https://mail.google.com/"},
-		Subject:    *identityId,
-	}
-	return conf, nil
-}
-
-func NewMailService(config *c.Config, customerOSService CustomerOSService, apiKeyRepository repository.ApiKeyRepository) MailService {
+func NewMailService(config *c.Config, services *Services) MailService {
 	return &mailService{
-		config:            config,
-		customerOSService: customerOSService,
-		apiKeyRepository:  apiKeyRepository,
+		config:   config,
+		services: services,
 	}
 }

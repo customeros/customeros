@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { SlideFade } from '@ui/transitions/SlideFade';
 import { Box } from '@ui/layout/Box';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
-import { useTimelineActionEmailContext } from '../TimelineActionsContext/TimelineActionEmailContext';
-import { useTimelineActionContext } from '../TimelineActionsContext/TimelineActionContext';
+import { useTimelineActionEmailContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
+import { useTimelineActionContext } from '@organization/components/Timeline/TimelineActions/context/TimelineActionContext';
 
 interface EmailTimelineActionProps {
   onScrollBottom: () => void;

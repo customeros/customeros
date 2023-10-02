@@ -1,12 +1,15 @@
 package utils
 
 import (
+	"fmt"
+	"github.com/pkg/errors"
 	"time"
 )
 
 const customLayout1 = "2006-01-02 15:04:05"
-const customLayout2 = "2022-11-07T22:03:16.000+0000"
+const customLayout2 = "2006-01-02T15:04:05.000-0700"
 
+// Deprecated, use common module method instead
 func UnmarshalDateTime(input string) (*time.Time, error) {
 	if input == "" {
 		return nil, nil
@@ -19,14 +22,14 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 
 	// Try custom layouts
 	t, err = time.Parse(customLayout1, input)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		return &t, nil
 	}
 
 	t, err = time.Parse(customLayout2, input)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		return &t, nil
 	}
 
-	return &t, nil
+	return nil, errors.New(fmt.Sprintf("cannot parse input as date time %s", input))
 }

@@ -1,12 +1,12 @@
 'use client';
-import React, { FC, useRef } from 'react';
+import React, { FC, useCallback, useRef, useEffect } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { EmailStub, TimelineItem } from './events';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
-import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
@@ -16,11 +16,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SlackStub } from '@organization/components/Timeline/events/slack/SlackStub';
 import { MeetingStub } from './events/meeting/MeetingStub';
 import { TimelineEventPreviewModal } from '@organization/components/Timeline/preview/TimelineEventPreviewModal';
-import { InteractionEventWithDate, TimelineEvent } from './types';
+import {
+  InteractionEventWithDate,
+  LogEntryWithAliases,
+  TimelineEvent,
+} from './types';
 import { UserActionStub } from '@organization/components/Timeline/events/action/UserActionStub';
 import { IntercomStub } from '@organization/components/Timeline/events/intercom/IntercomStub';
 import { ExternalSystemType } from '@spaces/graphql';
 import { LogEntryStub } from '@organization/components/Timeline/events/logEntry/LogEntryStub';
+
+import { useTimelineMeta } from './shared/state';
 
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
@@ -42,13 +48,18 @@ const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
 export const NEW_DATE = new Date(new Date().setDate(new Date().getDate() + 1));
 
 function getEventDate(event?: TimelineEvent) {
-  return (event as InteractionEventWithDate)?.date || event?.createdAt;
+  return (
+    (event as InteractionEventWithDate)?.date ||
+    (event as LogEntryWithAliases)?.logEntryStartedAt ||
+    event?.createdAt
+  );
 }
 
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
   const virtuoso = useRef<VirtuosoHandle>(null);
   const queryClient = useQueryClient();
+  const [timelineMeta, setTimelineMeta] = useTimelineMeta();
 
   const client = getGraphQLClient();
   const { data, isInitialLoading, isFetchingNextPage, fetchNextPage } =
@@ -71,8 +82,20 @@ export const OrganizationTimeline: FC = () => {
         },
       },
     );
-  const invalidateQuery = () =>
+  const invalidateQuery = useCallback(() => {
     queryClient.invalidateQueries(['GetTimeline.infinite']);
+  }, []);
+
+  useEffect(() => {
+    setTimelineMeta({
+      ...timelineMeta,
+      getTimelineVariables: {
+        organizationId: id,
+        from: NEW_DATE.toISOString(),
+        size: 50,
+      },
+    });
+  }, [NEW_DATE, id]);
 
   if (isInitialLoading) {
     return (
@@ -171,6 +194,7 @@ export const OrganizationTimeline: FC = () => {
                     ),
                     getEventDate(timelineEvent as TimelineEvent),
                   );
+
             switch (timelineEvent.__typename) {
               case 'InteractionEvent': {
                 return (
@@ -238,12 +262,18 @@ export const OrganizationTimeline: FC = () => {
                 ) : null}
               </Flex>
             ),
-            Footer: () => (
-              <TimelineActions
-                invalidateQuery={invalidateQuery}
-                onScrollBottom={() => virtuoso?.current?.scrollBy({ top: 300 })}
-              />
-            ),
+            Footer: () => {
+              const memoizedScrollBy = useCallback(() => {
+                virtuoso?.current?.scrollBy({ top: 300 });
+              }, [virtuoso]);
+              return (
+                <TimelineActions
+                  virtuosoRef={virtuoso}
+                  invalidateQuery={invalidateQuery}
+                  onScrollBottom={memoizedScrollBy}
+                />
+              );
+            },
           }}
         />
         <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
