@@ -5,8 +5,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"time"
-
 	"github.com/stretchr/testify/mock"
 )
 
@@ -18,14 +16,13 @@ func (s *MockedAttachmentService) GetAttachmentById(ctx context.Context, id stri
 	return nil, nil
 }
 
-func (s *MockedAttachmentService) Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*entity.AttachmentEntity, error) {
-	timeToHardcode := time.Date(2023, 9, 28, 12, 0, 0, 0, time.UTC)
-	timePointer := &timeToHardcode
+func (s *MockedAttachmentService) Create(ctx context.Context, newEntity *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*entity.AttachmentEntity, error) {
 	return &entity.AttachmentEntity{
-		MimeType:  "text/plain",
-		Name:      "readme.txt",
-		Size:      123,
-		CreatedAt: timePointer,
+		MimeType:  newEntity.MimeType,
+		Name:      newEntity.Name,
+		Size:      newEntity.Size,
+		Extension: newEntity.Extension,
+		AppSource: newEntity.AppSource,
 	}, nil
 }
 func (s *MockedAttachmentService) GetAttachmentsForNode(ctx context.Context, linkedWith repository.LinkedWith, linkedNature *repository.LinkedNature, ids []string) (*entity.AttachmentEntities, error) {

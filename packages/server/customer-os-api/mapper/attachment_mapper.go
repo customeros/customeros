@@ -12,7 +12,8 @@ func MapEntityToAttachment(entity *entity.AttachmentEntity) *model.Attachment {
 	}
 	return &model.Attachment{
 		ID:        entity.Id,
-		CreatedAt: utils.IfNotNilTimeWithDefault(*entity.CreatedAt, utils.Now()), MimeType: entity.MimeType,
+		CreatedAt: utils.IfNotNilTimeWithDefault(entity.CreatedAt, utils.Now()),
+		MimeType:  entity.MimeType,
 		Size:      entity.Size,
 		Name:      entity.Name,
 		Extension: entity.Extension,
