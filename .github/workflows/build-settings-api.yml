@@ -2,7 +2,7 @@ name: settings-api
 
 on:
   push:
-    branches: [ "otter" , "3910-test-coverage-fix"]
+    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-common-auth/**
