@@ -2,7 +2,7 @@ name: sync-tracked-data
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter" , "3910-test-coverage-fix"]
     paths:
       - packages/runner/sync-tracked-data/**
       - .github/workflows/build-sync-tracked-data.yml
@@ -40,8 +40,14 @@ jobs:
       - name: Build
         run: make all
 
+      - name: Configure Test Folders
+        id: test-folders
+        run: |
+          test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
+          echo "::set-output name=test_folders::$test_folders"
+
       - name: Test
-        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
+        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
 
       - name: Test Report
         uses: mikepenz/action-junit-report@v4
