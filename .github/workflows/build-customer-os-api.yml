@@ -78,10 +78,9 @@ jobs:
       - name: Send Output to Slack
         run: |
           curl -X POST -H 'Content-type: application/json' --data '{
-            "text": "${{ github.workflow }}.Warning: coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}:\n```\n'$(cat test-coverage.txt)'```\n",
+            "text": ":warning: ${{ github.workflow }}.Coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}:\n```\n'$(cat test-coverage.txt)'```\n",
             "icon_url": ":warning:"
           }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-
 
   build-publish:
     needs:
