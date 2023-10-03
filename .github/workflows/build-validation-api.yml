@@ -2,7 +2,7 @@ name: validation-api
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter", "3920-test-coverage-announcer" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/validation-api/**
@@ -66,6 +66,29 @@ jobs:
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
+          coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
+          echo "::set-output name=computed_coverage::$coverage"
+
+      - name: Send Output to Slack
+        run: |
+          computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
+          warning_threshold=80.0
+          critical_threshold=50.0
+          if (( $(echo "$computed_coverage > $warning_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": "${{ github.workflow }} coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}:\n```\n'$(cat test-coverage.txt)'```\n"
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          elif (( $(echo "$computed_coverage < $warning_threshold && $computed_coverage > $critical_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": ":warning: ${{ github.workflow }} coverage is lower than the warning threshold of 80%:\n```\n'$(cat test-coverage.txt)'```\n"
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          elif (( $(echo "$computed_coverage < $critical_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": ":no_entry: ${{ github.workflow }} coverage is lower than the critical threshold of 50%:\n```\n'$(cat test-coverage.txt)'```\n"
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          fi
+
 
   build-publish:
     needs:
