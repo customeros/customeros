@@ -67,6 +67,7 @@ jobs:
           detailed_summary: true
 
       - name: Compute Code Coverage
+        id: compute_code_coverage
         working-directory: ./packages/server/comms-api
         run: |
           echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY

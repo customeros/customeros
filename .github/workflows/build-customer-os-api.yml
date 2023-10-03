@@ -139,4 +139,5 @@ jobs:
           context: packages/server/customer-os-api/tmp-sources/.
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
+
           labels: ${{ steps.meta.outputs.labels }}

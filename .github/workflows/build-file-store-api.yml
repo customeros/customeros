@@ -61,6 +61,7 @@ jobs:
           detailed_summary: true
 
       - name: Compute Code Coverage
+        id: compute_code_coverage
         run: |
           echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
