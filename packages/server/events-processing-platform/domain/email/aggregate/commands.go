@@ -38,6 +38,8 @@ func (a *EmailAggregate) createEmail(ctx context.Context, cmd *command.UpsertEma
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+	cmd.Source.SetDefaultValues()
+
 	event, err := events.NewEmailCreateEvent(a, cmd.Tenant, cmd.RawEmail, cmd.Source, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -56,11 +58,8 @@ func (a *EmailAggregate) updateEmail(ctx context.Context, cmd *command.UpsertEma
 	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-	if cmd.Source.SourceOfTruth == "" {
-		cmd.Source.SourceOfTruth = a.Email.Source.SourceOfTruth
-	}
 
-	event, err := events.NewEmailUpdateEvent(a, cmd.RawEmail, cmd.Tenant, cmd.Source.SourceOfTruth, updatedAtNotNil)
+	event, err := events.NewEmailUpdateEvent(a, cmd.RawEmail, cmd.Tenant, cmd.Source.Source, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewEmailUpdateEvent")

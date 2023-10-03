@@ -34,6 +34,8 @@ func (a *PhoneNumberAggregate) createPhoneNumber(ctx context.Context, cmd *comma
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+	cmd.Source.SetDefaultValues()
+
 	event, err := events.NewPhoneNumberCreateEvent(a, cmd.Tenant, cmd.RawPhoneNumber, cmd.Source, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -52,11 +54,8 @@ func (a *PhoneNumberAggregate) updatePhoneNumber(ctx context.Context, cmd *comma
 	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-	if cmd.Source.SourceOfTruth == "" {
-		cmd.Source.SourceOfTruth = a.PhoneNumber.Source.SourceOfTruth
-	}
 
-	event, err := events.NewPhoneNumberUpdateEvent(a, cmd.Tenant, cmd.Source.SourceOfTruth, updatedAtNotNil)
+	event, err := events.NewPhoneNumberUpdateEvent(a, cmd.Tenant, cmd.Source.Source, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewPhoneNumberUpdateEvent")

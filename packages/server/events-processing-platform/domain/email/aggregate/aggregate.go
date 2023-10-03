@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -76,7 +77,9 @@ func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Email.Source.SourceOfTruth = eventData.SourceOfTruth
+	if eventData.Source == constants.SourceOpenline {
+		a.Email.Source.SourceOfTruth = eventData.Source
+	}
 	a.Email.UpdatedAt = eventData.UpdatedAt
 	return nil
 }
