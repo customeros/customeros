@@ -73,7 +73,7 @@ jobs:
           echo "go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g'" > test-coverage.txt
 
       - name: Send Output to Slack
-        uses: montudor/action-slack@v4
+        uses: 8398a7/action-slack@v3
         with:
           status: success
           text: |
