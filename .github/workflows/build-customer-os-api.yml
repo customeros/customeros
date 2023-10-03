@@ -71,25 +71,12 @@ jobs:
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
-      - name: Send coverage report to Slack
-        uses: rtCamp/action-slack@v5
+      - name: Send files to Slack
+        uses: rtCamp/action-slack-notify@v2
         with:
-          slack_webhook_url: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-          text: "Coverage report: ${{ github.repository }} - ${{ github.sha }}"
-          attachments: |
-            [
-                {
-                    "fallback": "Coverage report",
-                    "color": "#36a64f",
-                    "fields": [
-                        {
-                            "title": "Coverage Report",
-                            "value": "$(cat $GITHUB_STEP_SUMMARY)",
-                            "short": false
-                        }
-                    ]
-                }
-            ]
+            slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+            text: "Sending a file to Slack"
+            files: $GITHUB_STEP_SUMMARY
 
 
   build-publish:
