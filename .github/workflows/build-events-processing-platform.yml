@@ -92,6 +92,7 @@ jobs:
             }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
           fi
 
+
   build-publish:
     needs:
       - test
