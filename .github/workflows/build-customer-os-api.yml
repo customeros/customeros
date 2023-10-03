@@ -75,12 +75,10 @@ jobs:
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "::set-output name=my_output::$coverage"
 
-
       - name: Send Output to Slack
         run: |
-          coverage="${{ steps.compute_code_coverage.outputs.coverage }}"
           curl -X POST -H 'Content-type: application/json' --data '{
-            "text": "${{ github.workflow }} with coverage $coverage:\n```\n'$(cat test-coverage.txt)'```\n"
+            "text": "${{ github.workflow }} with coverage ${{ steps.compute_code_coverage.outputs.coverage }}:\n```\n'$(cat test-coverage.txt)'```\n"
           }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
 
   build-publish:
