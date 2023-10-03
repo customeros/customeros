@@ -87,9 +87,9 @@ export const Table = <T extends object>({
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
     count: !data.length && isLoading ? 40 : totalItems,
-    overscan: 10,
+    overscan: 30,
     getScrollElement: () => scrollElementRef.current,
-    estimateSize: () => 21,
+    estimateSize: () => 80,
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -162,7 +162,9 @@ export const Table = <T extends object>({
           ))}
         </THeader>
         <TBody width='100%'>
-          {!virtualRows.length && <TRow justifyContent='center'>No data</TRow>}
+          {!virtualRows.length && (
+            <TRow justifyContent='center'>No results found</TRow>
+          )}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
             return (
@@ -294,7 +296,7 @@ const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
         borderStyle='hidden'
         border='1px solid'
         borderColor='gray.200'
-        height='calc(100vh - 70px)'
+        height='calc(100vh - 74px)'
         sx={{
           '&::-webkit-scrollbar': {
             width: '4px',

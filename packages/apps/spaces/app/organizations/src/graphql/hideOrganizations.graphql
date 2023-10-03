@@ -1,0 +1,9 @@
+mutation hideOrganizations(
+  $ids: [ID!]!
+) {
+  organization_HideAll(
+    ids: $ids
+  ) {
+    result
+  }
+}

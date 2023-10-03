@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { RecoilRoot } from 'recoil';
-
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { JuneProvider } from '@shared/components/Providers/JuneProvider';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import { NextAuthProvider } from './SessionProvider';
+import { JuneProvider } from 'app/components/Providers/JuneProvider';
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient());

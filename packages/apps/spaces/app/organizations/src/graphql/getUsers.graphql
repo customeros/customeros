@@ -1,0 +1,10 @@
+query getUsers($pagination: Pagination!, $where: Filter) {
+  users(pagination: $pagination, where: $where) {
+    content {
+      id
+      firstName
+      lastName
+    }
+    totalElements
+  }
+}

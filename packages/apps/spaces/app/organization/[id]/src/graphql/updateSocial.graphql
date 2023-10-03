@@ -1,0 +1,6 @@
+mutation updateSocial($input: SocialUpdateInput!) {
+  social_Update(input: $input) {
+    id
+    url
+  }
+}

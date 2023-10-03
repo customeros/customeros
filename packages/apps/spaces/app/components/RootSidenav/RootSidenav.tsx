@@ -1,5 +1,7 @@
 'use client';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import { signOut } from 'next-auth/react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -7,48 +9,72 @@ import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { Box } from '@ui/layout/Box';
 import { useLocalStorage } from 'usehooks-ts';
-import { signOut } from 'next-auth/react';
 import { useJune } from '@spaces/hooks/useJune';
 import { SignOut } from '@spaces/atoms/icons';
-import { Box } from '@chakra-ui/react';
-import { useRecoilState } from 'recoil';
-import { globalCacheData } from '@spaces/globalState/globalCache';
-import { GoogleSidebarNotification } from './components/GoogleSidebarNotification';
-import { SidenavItem } from './components/SidenavItem';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+
+import { GoogleSidebarNotification } from '../../../components/google-re-allow-access-oauth-token/GoogleSidebarNotification';
+import { SidenavItem } from './SidenavItem';
 
 export const RootSidenav = () => {
-  const [globalCache] = useRecoilState(globalCacheData);
+  const client = getGraphQLClient();
   const router = useRouter();
-  const pathname = usePathname();
   const analytics = useJune();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { root: 'organization' },
   );
 
-  useEffect(() => {
-    if (pathname === '/') {
-      setLastActivePosition({ ...lastActivePosition, root: 'organization' });
-    }
-    if (pathname && pathname !== '/') {
-      setLastActivePosition({
-        ...lastActivePosition,
-        root: pathname.substring(1),
-      });
-    }
-  }, []);
+  const { data } = useGlobalCacheQuery(client);
+  const globalCache = data?.global_Cache;
+
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });
+
     router.push(`/${path}`);
   };
 
-  const checkIsActive = (path: string) => pathname?.startsWith(`/${path}`);
+  const checkIsActive = (path: string, options?: { preset: string }) => {
+    const [_pathName, _searchParams] = path.split('?');
+    const presetParam = new URLSearchParams(searchParams?.toString()).get(
+      'preset',
+    );
+
+    if (options?.preset) {
+      return (
+        pathname?.startsWith(`/${_pathName}`) && presetParam === options.preset
+      );
+    } else {
+      return pathname?.startsWith(`/${_pathName}`) && !presetParam;
+    }
+  };
+
   const handleSignOutClick = () => {
     analytics?.reset();
     signOut();
   };
+
+  useEffect(() => {
+    const params = searchParams?.toString();
+
+    if (pathname === '/') {
+      setLastActivePosition({
+        ...lastActivePosition,
+        root: `organizations?${params}`,
+      });
+    }
+    if (pathname && pathname !== '/') {
+      setLastActivePosition({
+        ...lastActivePosition,
+        root: `${pathname.substring(1)}?${params}`,
+      });
+    }
+  }, []);
 
   return (
     <GridItem
@@ -89,8 +115,8 @@ export const RootSidenav = () => {
       <VStack spacing='2' w='full'>
         <SidenavItem
           label='Organizations'
-          isActive={checkIsActive('organization')}
-          onClick={() => handleItemClick('organization')}
+          isActive={checkIsActive('organizations')}
+          onClick={() => handleItemClick('organizations')}
           icon={(isActive) => (
             <Icons.Building7
               boxSize='6'
@@ -100,8 +126,8 @@ export const RootSidenav = () => {
         />
         <SidenavItem
           label='Customers'
-          isActive={checkIsActive('customers')}
-          onClick={() => handleItemClick('customers')}
+          isActive={checkIsActive('organizations', { preset: 'customer' })}
+          onClick={() => handleItemClick('organizations?preset=customer')}
           icon={(isActive) => (
             <Icons.CheckHeart
               boxSize='6'
@@ -112,8 +138,8 @@ export const RootSidenav = () => {
         {globalCache?.isOwner && (
           <SidenavItem
             label='My portfolio'
-            isActive={checkIsActive('portfolio')}
-            onClick={() => handleItemClick('portfolio')}
+            isActive={checkIsActive('organizations', { preset: 'portfolio' })}
+            onClick={() => handleItemClick('organizations?preset=portfolio')}
             icon={(isActive) => (
               <Icons.Briefcase1
                 boxSize='6'

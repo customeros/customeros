@@ -1,0 +1,17 @@
+query GetContactsEmailList(
+    $pagination: Pagination!
+    $where: Filter
+    $sort: [SortBy!]
+) {
+    contacts(pagination: $pagination, where: $where, sort: $sort) {
+        content {
+            id
+            firstName
+            lastName
+            emails {
+                id
+                email
+            }
+        }
+    }
+}

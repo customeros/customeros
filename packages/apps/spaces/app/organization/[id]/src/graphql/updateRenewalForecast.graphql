@@ -1,0 +1,3 @@
+mutation updateRenewalForecast($input: RenewalForecastInput!) {
+  organization_UpdateRenewalForecastAsync(input: $input)
+}

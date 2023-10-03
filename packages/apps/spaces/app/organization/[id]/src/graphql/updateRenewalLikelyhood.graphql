@@ -1,0 +1,3 @@
+mutation updateRenewalLikelihood($input: RenewalLikelihoodInput!) {
+  organization_UpdateRenewalLikelihoodAsync(input: $input)
+}

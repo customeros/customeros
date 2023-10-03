@@ -3,8 +3,8 @@ import { useRecoilState, useSetRecoilState } from 'recoil';
 import { globalCacheData } from '../../../../state/globalCache';
 import { useGlobalCache } from '@spaces/hooks/useGlobalCache';
 
-import { PageLayout } from '@shared/components/PageLayout/PageLayout';
-import { RootSidenav } from '@shared/components/RootSidenav/RootSidenav';
+import { PageLayout } from 'app/components/PageLayout/PageLayout';
+import { RootSidenav } from 'app/components/RootSidenav/RootSidenav';
 import { GridItem } from '@ui/layout/Grid';
 interface PageContentLayout {
   children: ReactNode;
@@ -25,7 +25,6 @@ export const PageContentLayout: FC<PageContentLayout> = ({ children }) => {
 
   return (
     <PageLayout>
-      <RootSidenav />
       <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
         {children}
       </GridItem>

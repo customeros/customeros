@@ -1,0 +1,5 @@
+mutation addMeetingNote($meetingId: ID!, $note: NoteInput!) {
+  meeting_AddNote(meetingId: $meetingId, note: $note) {
+    id
+  }
+}

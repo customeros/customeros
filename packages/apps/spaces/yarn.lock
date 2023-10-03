@@ -10571,6 +10571,11 @@ immediate@~3.0.5:
   resolved "https://registry.yarnpkg.com/immediate/-/immediate-3.0.6.tgz#9db1dbd0faf8de6fbe0f5dd5e56bb606280de69b"
   integrity sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==
 
+immer@^10.0.2:
+  version "10.0.2"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-10.0.2.tgz#11636c5b77acf529e059582d76faf338beb56141"
+  integrity sha512-Rx3CqeqQ19sxUtYV9CU911Vhy8/721wRFnJv3REVGWUmoAcIwzifTsdmJte/MV+0/XpM35LZdQMBGkRIoLPwQA==
+
 immutable@^4.0.0:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/immutable/-/immutable-4.3.2.tgz#f89d910f8dfb6e15c03b2cae2faaf8c1f66455fe"
@@ -14999,6 +15004,11 @@ ts-node@^10.9.1:
     make-error "^1.1.1"
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
+
+ts-pattern@^5.0.5:
+  version "5.0.5"
+  resolved "https://registry.yarnpkg.com/ts-pattern/-/ts-pattern-5.0.5.tgz#20f82d50ea56c1d9cd1aa772911f7bb545d9607d"
+  integrity sha512-tL0w8U/pgaacOmkb9fRlYzWEUDCfVjjv9dD4wHTgZ61MjhuMt46VNWTG747NqW6vRzoWIKABVhFSOJ82FvXrfA==
 
 tsconfig-paths@^3.14.2:
   version "3.14.2"
