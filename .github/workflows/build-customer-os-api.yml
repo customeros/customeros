@@ -93,6 +93,7 @@ jobs:
               "text": ":no_entry: ${{ github.workflow }} coverage is lower than the critical threshold of 50%:\n```\n'$(cat test-coverage.txt)'```\n"
             }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
           fi
+          
 
   build-publish:
     needs:
