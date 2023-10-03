@@ -3,7 +3,7 @@ import { Card, CardBody, CardProps } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
-import User from '@spaces/atoms/icons/User';
+import { User01 } from '@ui/media/icons/User01';
 
 import { ViewInIntercomButton } from './ViewInIntercomButton';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
@@ -56,9 +56,7 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
               name={name}
               variant='roundedSquare'
               size='md'
-              icon={
-                <User color={'var(--chakra-colors-gray-500)'} height='1.8rem' />
-              }
+              icon={<User01 color='gray.500' height='1.8rem' />}
               border={
                 profilePhotoUrl
                   ? 'none'

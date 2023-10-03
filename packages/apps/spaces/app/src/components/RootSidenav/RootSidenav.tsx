@@ -11,8 +11,8 @@ import { GridItem } from '@ui/layout/Grid';
 
 import { Box } from '@ui/layout/Box';
 import { useLocalStorage } from 'usehooks-ts';
-import { useJune } from '@spaces/hooks/useJune';
-import { SignOut } from '@spaces/atoms/icons';
+import { useJune } from 'app/src/hooks/useJune';
+import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
@@ -175,11 +175,7 @@ export const RootSidenav = () => {
           label='Sign out'
           isActive={false}
           onClick={handleSignOutClick}
-          icon={() => (
-            <Box boxSize={6}>
-              <SignOut color={'gray.500'} />
-            </Box>
-          )}
+          icon={() => <LogOut01 boxSize='6' color='gray.500' />}
         />
       </VStack>
     </GridItem>

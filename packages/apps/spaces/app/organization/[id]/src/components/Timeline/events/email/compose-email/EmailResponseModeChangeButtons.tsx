@@ -1,8 +1,9 @@
 'use client';
-import React, { FC, MouseEventHandler, ReactElement } from 'react';
-import ReplyMany from '@spaces/atoms/icons/ReplyMany';
-import Reply from '@spaces/atoms/icons/Reply';
-import Forward from '@spaces/atoms/icons/Forward';
+import { FC, MouseEventHandler, ReactElement } from 'react';
+
+import { CornerUpLeft2 } from '@ui/media/icons/CornerUpLeft2';
+import { CornerUpLeft } from '@ui/media/icons/CornerUpLeft';
+import { CornerUpRight } from '@ui/media/icons/CornerUpRight';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
 import { Flex } from '@ui/layout/Flex';
@@ -50,19 +51,19 @@ export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (
     transform='translateY(-16px)'
   >
     <TooltipButton label='Reply' onClick={() => handleModeChange(REPLY_MODE)}>
-      <Reply height='16px' color='gray.400' />
+      <CornerUpLeft height='16px' color='gray.400' />
     </TooltipButton>
     <TooltipButton
       label='Reply all'
       onClick={() => handleModeChange(REPLY_ALL_MODE)}
     >
-      <ReplyMany height='14px' color='gray.400' />
+      <CornerUpLeft2 height='14px' color='gray.400' />
     </TooltipButton>
     <TooltipButton
       label='Forward'
       onClick={() => handleModeChange(FORWARD_MODE)}
     >
-      <Forward height='14px' color='gray.400' />
+      <CornerUpRight height='14px' color='gray.400' />
     </TooltipButton>
   </Flex>
 );

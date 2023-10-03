@@ -29,6 +29,7 @@ export type GlobalCacheQuery = {
   __typename?: 'Query';
   global_Cache: {
     __typename?: 'GlobalCache';
+    gmailOauthTokenNeedsManualRefresh: boolean;
     isOwner: boolean;
     user: {
       __typename?: 'User';
@@ -70,6 +71,7 @@ export const GlobalCacheDocument = `
       firstName
       lastName
     }
+    gmailOauthTokenNeedsManualRefresh
     isOwner
     gCliCache {
       id

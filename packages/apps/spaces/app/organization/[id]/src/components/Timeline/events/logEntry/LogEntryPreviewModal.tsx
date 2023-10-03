@@ -1,4 +1,3 @@
-import React, { useEffect, useRef } from 'react';
 import { CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -6,8 +5,8 @@ import { Flex } from '@ui/layout/Flex';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
 import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import CopyLink from '@spaces/atoms/icons/CopyLink';
-import Times from '@spaces/atoms/icons/Times';
+import { Link03 } from '@ui/media/icons/Link03';
+import { XClose } from '@ui/media/icons/XClose';
 import copy from 'copy-to-clipboard';
 import { VStack } from '@ui/layout/Stack';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
@@ -76,7 +75,7 @@ export const LogEntryPreviewModal: React.FC = () => {
                 fontSize='sm'
                 size='sm'
                 mr={1}
-                icon={<CopyLink color='gray.500' height='18px' />}
+                icon={<Link03 color='gray.500' boxSize='4' />}
                 onClick={() => copy(window.location.href)}
               />
             </Tooltip>
@@ -87,7 +86,7 @@ export const LogEntryPreviewModal: React.FC = () => {
                 color='gray.500'
                 fontSize='sm'
                 size='sm'
-                icon={<Times color='gray.500' height='24px' />}
+                icon={<XClose color='gray.500' boxSize='5' />}
                 onClick={closeModal}
               />
             </Tooltip>

@@ -20,7 +20,7 @@ const config: CodegenConfig = {
   ],
   documents: './app/**/*.graphql',
   generates: {
-    'app/types/__generated__/graphql.types.ts': {
+    'app/src/types/__generated__/graphql.types.ts': {
       plugins: ['typescript'],
     },
     './': {
@@ -37,7 +37,7 @@ const config: CodegenConfig = {
         fetcher: 'graphql-request',
       },
       presetConfig: {
-        baseTypesPath: 'app/types/__generated__/graphql.types.ts',
+        baseTypesPath: 'app/src/types/__generated__/graphql.types.ts',
       },
       plugins: [
         'typescript-operations',

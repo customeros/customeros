@@ -35,7 +35,7 @@ export const useOrganizationsPageMethods = ({
 
   const createOrganization = useCreateOrganizationMutation(client, {
     onSuccess: ({ organization_Create: { id } }) => {
-      push(`/organizations/${id}`);
+      push(`/organization/${id}`);
     },
   });
 

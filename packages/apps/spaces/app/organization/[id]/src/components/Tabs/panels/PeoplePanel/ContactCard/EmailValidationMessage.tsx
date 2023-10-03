@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { EmailValidationDetails } from '@graphql/types';
 import { SimpleValidationIndicator } from '@ui/presentation/validation/simple-validation-indicator';
-import { useTenantName } from '@organization/src/hooks/useTenantName';
+import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
   validateEmail,
   VALIDATION_MESSAGES,
@@ -13,23 +14,26 @@ interface Props {
 }
 
 export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
+  const client = getGraphQLClient();
   const [isLoading, setIsLoading] = useState(!validationDetails);
   const [validationData, setValidationData] = useState<
     EmailValidationDetails | null | undefined
   >(validationDetails);
 
-  const { tenant } = useTenantName();
+  const { data: tenantNameQuery } = useTenantNameQuery(client);
 
   useEffect(() => {
-    if (!validationDetails && tenant) {
-      validateEmail({ email, tenant }).then((result) => {
-        setIsLoading(false);
-        if (result) {
-          setValidationData(result);
-        }
-      });
+    if (!validationDetails && tenantNameQuery?.tenant) {
+      validateEmail({ email, tenant: tenantNameQuery?.tenant }).then(
+        (result) => {
+          setIsLoading(false);
+          if (result) {
+            setValidationData(result);
+          }
+        },
+      );
     }
-  }, [email, tenant]);
+  }, [email, tenantNameQuery?.tenant]);
 
   if (!validationData && !isLoading) {
     return null;

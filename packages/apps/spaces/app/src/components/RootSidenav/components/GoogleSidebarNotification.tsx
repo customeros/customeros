@@ -1,22 +1,23 @@
-import React from 'react';
-import { useRecoilState } from 'recoil';
+import { signIn, useSession } from 'next-auth/react';
+
 import { FeaturedIcon } from '@ui/media/Icon';
 import { AlertCircle } from '@ui/media/icons/AlertCircle';
-import { Box } from '@chakra-ui/react';
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
-import { globalCacheData } from '@spaces/globalState/globalCache';
 import { Button } from '@ui/form/Button';
 import { useDisclosure } from '@ui/utils';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import {
   GetOAuthUserSettings,
   OAuthUserSettingsInterface,
 } from 'services/settings/settingsService';
-import { signIn, useSession } from 'next-auth/react';
 
 export const GoogleSidebarNotification = () => {
-  const [globalCache] = useRecoilState(globalCacheData);
+  const client = getGraphQLClient();
+  const { data: globalCacheQuery } = useGlobalCacheQuery(client);
   const { data: session } = useSession();
 
   const infoModal = useDisclosure();
@@ -50,7 +51,7 @@ export const GoogleSidebarNotification = () => {
 
   return (
     <>
-      {globalCache?.gmailOauthTokenNeedsManualRefresh && (
+      {globalCacheQuery?.global_Cache?.gmailOauthTokenNeedsManualRefresh && (
         <>
           <ConfirmDeleteDialog
             colorScheme={'purple'}

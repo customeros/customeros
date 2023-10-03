@@ -1,10 +1,11 @@
 import React from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import EmptyTimelineIlustration from '@spaces/atoms/icons/EmptyTimelineIlustration';
 import { useOrganization } from '@organization/src/hooks/useOrganization';
 import { useParams } from 'next/navigation';
 import { TimelineActions } from '@organization/src/components/Timeline/TimelineActions/TimelineActions';
+
+import EmptyTimelineIllustration from './assets/EmptyTimelineIllustration';
 
 interface EmptyTimelineProps {
   invalidateQuery: () => void;
@@ -36,7 +37,7 @@ export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
           height='100%'
           maxWidth='390px'
         >
-          <EmptyTimelineIlustration />
+          <EmptyTimelineIllustration />
           <Text
             color='gray.900'
             fontSize='lg'

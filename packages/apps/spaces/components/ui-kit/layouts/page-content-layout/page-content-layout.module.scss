@@ -1,9 +1,0 @@
-.pageContent {
-  height: 100vh;
-
-  display: grid;
-  grid-template-areas: "sidebar content";
-  grid-template-columns: 80px 1fr;
-  transition: all ease 0.25s;
-  background: #f7fafc;
-}

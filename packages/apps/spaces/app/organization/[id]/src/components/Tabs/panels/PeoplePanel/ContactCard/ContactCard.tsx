@@ -13,7 +13,6 @@ import { Icons } from '@ui/media/Icon';
 import { FormInput } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-import { FormSelect } from '@ui/form/SyncSelect';
 import { FormInputGroup } from '@ui/form/InputGroup';
 import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { useOutsideClick } from '@ui/utils';
@@ -32,7 +31,7 @@ import { useRemoveContactPhoneNumberMutation } from '@organization/src/graphql/r
 import { ContactFormDto, ContactForm } from './Contact.dto';
 import { invalidateQuery, timezoneOptions } from '../util';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import User from '@spaces/atoms/icons/User';
+import { User01 } from '@ui/media/icons/User01';
 import { EmailValidationMessage } from '@organization/src/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 import { Contact } from '@graphql/types';
 import { Fade } from '@ui/transitions/Fade';
@@ -253,12 +252,7 @@ export const ContactCard = ({
             name={state?.values?.name ?? data?.name}
             variant='shadowed'
             src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
-            icon={
-              <User
-                color={'var(--chakra-colors-primary-700)'}
-                height='1.8rem'
-              />
-            }
+            icon={<User01 color='gray.700' height='1.8rem' />}
           />
           <Flex ml='4' flexDir='column' flex='1'>
             <FormInput

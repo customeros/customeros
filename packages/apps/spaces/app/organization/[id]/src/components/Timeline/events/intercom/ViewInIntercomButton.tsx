@@ -1,7 +1,8 @@
 'use client';
-import React, { FC, useState } from 'react';
+import { FC, useState } from 'react';
+
 import { IconButton } from '@ui/form/IconButton';
-import ExternalLink from '@spaces/atoms/icons/ExternalLink';
+import { Link03 } from '@ui/media/icons/Link03';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import Intercom from '@ui/media/icons/Intercom';
@@ -30,7 +31,7 @@ export const ViewInIntercomButton: FC<{ url?: string | null }> = ({ url }) => {
         }}
         icon={
           hovered ? (
-            <ExternalLink height={16} color='var(--chakra-colors-gray-500)' />
+            <Link03 height={16} color='gray.500' />
           ) : (
             <Flex alignItems='center' justifyContent='center'>
               <Intercom height={10} />

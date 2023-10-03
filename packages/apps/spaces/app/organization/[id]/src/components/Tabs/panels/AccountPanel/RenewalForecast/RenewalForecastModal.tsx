@@ -23,7 +23,7 @@ import { invalidateAccountDetailsQuery } from '@organization/src/components/Tabs
 import { useParams } from 'next/navigation';
 import { useUpdateRenewalForecastMutation } from '@organization/src/graphql/updateRenewalForecast.generated';
 import { Box } from '@ui/layout/Box';
-import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
+import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { NEW_DATE } from '@organization/src/components/Timeline/OrganizationTimeline';
 import { useSession } from 'next-auth/react';

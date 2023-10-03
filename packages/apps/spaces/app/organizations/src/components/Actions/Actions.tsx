@@ -1,15 +1,14 @@
-import { Organization } from '@spaces/graphql';
+import { useState } from 'react';
 
-import { Icons } from '@ui/media/Icon';
-import { IconButton } from '@ui/form/IconButton';
 import {
   TableInstance,
   RowSelectionState,
 } from '@spaces/ui/presentation/Table';
-import { Menu, MenuButton, MenuList, MenuItem } from '@ui/overlay/Menu';
-import { useRecoilState } from 'recoil';
-import { tableMode } from '@spaces/finder/state';
+import { Icons } from '@ui/media/Icon';
+import { Organization } from '@graphql/types';
+import { IconButton } from '@ui/form/IconButton';
 import { Archive } from '@ui/media/icons/Archive';
+import { Menu, MenuButton, MenuList, MenuItem } from '@ui/overlay/Menu';
 
 interface OrganizationListActionsProps {
   table: TableInstance<Organization>;
@@ -30,7 +29,7 @@ export const OrganizationListActions = ({
   onArchiveOrganizations,
   onCreateOrganization,
 }: OrganizationListActionsProps) => {
-  const [mode, setMode] = useRecoilState(tableMode);
+  const [mode, setMode] = useState<'MERGE' | 'ARCHIVE' | null>(null);
 
   if (isSelectionEnabled) {
     if (Object.keys(selection).length > 1 && mode === 'MERGE') {

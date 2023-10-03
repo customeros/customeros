@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
-import { useJune } from '@spaces/hooks/useJune';
+import { useJune } from 'app/src/hooks/useJune';
 import { useSession } from 'next-auth/react';
 
 export const JuneProvider = ({ children }: { children: React.ReactNode }) => {

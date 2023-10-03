@@ -1,9 +1,10 @@
-import React, { PropsWithChildren } from 'react';
-import { Card, CardBody, CardProps } from '@ui/presentation/Card';
+import { PropsWithChildren } from 'react';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
-import User from '@spaces/atoms/icons/User';
+import { User01 } from '@ui/media/icons/User01';
+import { Card, CardBody, CardProps } from '@ui/presentation/Card';
 import { ViewInSlackButton } from '@organization/src/components/Timeline/events/slack/ViewInSlackButton';
 // @ts-expect-error types not available
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
@@ -67,9 +68,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
               name={name}
               variant='roundedSquare'
               size='md'
-              icon={
-                <User color={'var(--chakra-colors-gray-500)'} height='1.8rem' />
-              }
+              icon={<User01 color='gray.500' height='1.8rem' />}
               border={
                 profilePhotoUrl
                   ? 'none'

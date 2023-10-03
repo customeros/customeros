@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify';
-import Times from '@spaces/atoms/icons/Times';
+import { XClose } from '@ui/media/icons/XClose';
 import ExclamationWaves from '@spaces/atoms/icons/ExclamationWaves';
 
 export const toastError = (text: string, id: string) => {
@@ -8,7 +8,7 @@ export const toastError = (text: string, id: string) => {
     icon: ExclamationWaves,
     closeButton: ({ closeToast }) => (
       <div onClick={closeToast}>
-        <Times height={30} width={30} color='#F04438' />
+        <XClose height='30px' width='30px' color='#F04438' />
       </div>
     ),
   });

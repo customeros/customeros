@@ -14,7 +14,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { ExternalSystemType, Meeting } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useCopyToClipboard } from '@spaces/hooks/useCopyToClipboard';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { CardBody, CardHeader, CardFooter } from '@ui/presentation/Card';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { useUpdateMeetingMutation } from '@organization/src/graphql/updateMeeting.generated';

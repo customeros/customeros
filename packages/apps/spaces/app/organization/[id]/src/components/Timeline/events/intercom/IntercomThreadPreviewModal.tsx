@@ -10,8 +10,8 @@ import { VStack } from '@ui/layout/Stack';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
 import { DateTimeUtils } from '@spaces/utils/date';
-import CopyLink from '@spaces/atoms/icons/CopyLink';
-import Times from '@spaces/atoms/icons/Times';
+import { Link03 } from '@ui/media/icons/Link03';
+import { XClose } from '@ui/media/icons/XClose';
 import { getName } from '@spaces/utils/getParticipantsName';
 import {
   ContactParticipant,
@@ -101,7 +101,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
                 color='gray.500'
                 size='sm'
                 mr={1}
-                icon={<CopyLink color='gray.500' height='18px' />}
+                icon={<Link03 color='gray.500' boxSize='4' />}
                 onClick={() => copy(window.location.href)}
               />
             </Tooltip>
@@ -111,7 +111,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
                 aria-label='Close preview'
                 color='gray.500'
                 size='sm'
-                icon={<Times color='gray.500' height='24px' />}
+                icon={<XClose color='gray.500' boxSize='5' />}
                 onClick={closeModal}
               />
             </Tooltip>

@@ -1,11 +1,15 @@
 'use client';
-import { Box, Flex, Heading, Text } from '@chakra-ui/react';
-import HalfCirclePattern from '@spaces/atoms/icons/HalfCirclePattern';
-import { FeaturedIcon } from '@ui/media/Icon';
-import Search from '@spaces/atoms/icons/Search';
-import { Button } from '@ui/form/Button';
-import React from 'react';
 import { useRouter } from 'next/navigation';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
+import { Text } from '@ui/typography/Text';
+import { FeaturedIcon } from '@ui/media/Icon';
+import { Heading } from '@ui/typography/Heading';
+import { SearchSm } from '@ui/media/icons/SearchSm';
+
+import HalfCirclePattern from './src/assets/HalfCirclePattern';
 
 export default function NotFound() {
   const router = useRouter();
@@ -46,7 +50,7 @@ export default function NotFound() {
       >
         <FeaturedIcon colorScheme='primary' size='lg'>
           <Box>
-            <Search />
+            <SearchSm />
           </Box>
         </FeaturedIcon>
         <Heading fontWeight={600} fontSize='6xl' color='gray.900' py={6}>

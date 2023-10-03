@@ -6,9 +6,9 @@ import { Flex } from '@ui/layout/Flex';
 import { Divider } from '@ui/presentation/Divider';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
-import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
+import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { FormSelect } from '@ui/form/SyncSelect';
-import CoinsSwap from '@spaces/atoms/icons/CoinsSwap';
+import { Coins01 } from '@ui/media/icons/Coins01';
 import { Card, CardBody, CardFooter } from '@ui/layout/Card';
 import { FormCurrencyInput } from '@ui/form/CurrencyInput/FormCurrencyInput';
 import { BillingDetailsForm, BillingDetailsDTO } from './BillingDetails.dto';
@@ -130,11 +130,7 @@ export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
               min={0}
               onFocus={() => setIsFocused(true)}
               placeholder='Amount'
-              leftElement={
-                <Box color='gray.500'>
-                  <CurrencyDollar height='16px' />
-                </Box>
-              }
+              leftElement={<CurrencyDollar color='gray.500' />}
             />
 
             <FormSelect
@@ -146,11 +142,7 @@ export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
               options={frequencyOptions}
               formId={formId}
               onFocus={() => setIsFocused(true)}
-              leftElement={
-                <Box mr={3} color='gray.500'>
-                  <CoinsSwap height={16} />
-                </Box>
-              }
+              leftElement={<Coins01 mr='3' color='gray.500' />}
             />
           </Flex>
         </Flex>

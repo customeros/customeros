@@ -3,7 +3,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { InputProps } from '@ui/form/Input';
 import { EmailParticipantSelect } from '@organization/src/components/Timeline/events/email/compose-email/EmailParticipantSelect';
-import { useOutsideClick } from '@spaces/hooks/useOutsideClick';
+import { useOutsideClick } from '@ui/utils';
 import { Box } from '@ui/layout/Box';
 import { EmailSubjectInput } from '@organization/src/components/Timeline/events/email/compose-email/EmailSubjectInput';
 import { Button } from '@ui/form/Button';

@@ -36,7 +36,7 @@ import {
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
 import { Box } from '@ui/layout/Box';
-import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
+import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import React from 'react';
 
 const placeholders = {
