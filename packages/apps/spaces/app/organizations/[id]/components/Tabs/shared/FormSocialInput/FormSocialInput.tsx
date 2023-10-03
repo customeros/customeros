@@ -1,7 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { useField } from 'react-inverted-form';
-import { useQueryClient } from '@tanstack/react-query';
-
 import {
   InputGroup,
   InputGroupProps,
@@ -10,8 +8,6 @@ import {
 import { Input } from '@ui/form/Input';
 import { Social } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useAddSocialMutation } from '@organization/graphql/addSocial.generated';
-import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 import { useUpdateSocialMutation } from '@organization/graphql/updateSocial.generated';
 import { useRemoveSocialMutation } from '@organization/graphql/removeSocial.generated';
 
@@ -27,6 +23,11 @@ interface FormSocialInputProps extends InputGroupProps {
   organizationId: string;
   leftElement?: React.ReactNode;
   defaultValues: Array<SocialInputValue>;
+  addSocial: (props: {
+    newValue: string;
+    onSuccess: ({ id, url }: { id: string; url: string }) => void;
+  }) => void;
+  invalidateQuery: () => void;
 }
 
 export const FormSocialInput = ({
@@ -36,6 +37,8 @@ export const FormSocialInput = ({
   isReadOnly,
   organizationId,
   defaultValues,
+  addSocial,
+  invalidateQuery,
   ...rest
 }: FormSocialInputProps) => {
   const { getInputProps } = useField(name, formId);
@@ -47,14 +50,7 @@ export const FormSocialInput = ({
   const _leftElement = useMemo(() => leftElement, []);
 
   const client = getGraphQLClient();
-  const queryClient = useQueryClient();
-  const invalidateQuery = () =>
-    queryClient.invalidateQueries(
-      useOrganizationQuery.getKey({ id: organizationId }),
-    );
-  const addSocial = useAddSocialMutation(client, {
-    onSuccess: invalidateQuery,
-  });
+
   const updateSocial = useUpdateSocialMutation(client, {
     onSuccess: invalidateQuery,
   });
@@ -137,15 +133,13 @@ export const FormSocialInput = ({
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         if (newValue) {
-          addSocial.mutate(
-            { organizationId, input: { url: newValue } },
-            {
-              onSuccess: ({ organization_AddSocial: { id, url } }) => {
-                onBlur([...values, { id, url }]);
-                setNewValue('');
-              },
+          addSocial({
+            newValue,
+            onSuccess: ({ id, url }: { id: string; url: string }) => {
+              onBlur?.([...values, { id, url }]);
+              setNewValue('');
             },
-          );
+          });
         }
       }
     },
@@ -161,15 +155,13 @@ export const FormSocialInput = ({
 
   const handleAddBlur = useCallback(() => {
     if (newValue) {
-      addSocial.mutate(
-        { organizationId, input: { url: newValue } },
-        {
-          onSuccess: ({ organization_AddSocial: { id, url } }) => {
-            onBlur?.([...values, { id, url }]);
-            setNewValue('');
-          },
+      addSocial({
+        newValue,
+        onSuccess: ({ id, url }: { id: string; url: string }) => {
+          onBlur?.([...values, { id, url }]);
+          setNewValue('');
         },
-      );
+      });
     }
   }, [newValue, organizationId, values]);
 

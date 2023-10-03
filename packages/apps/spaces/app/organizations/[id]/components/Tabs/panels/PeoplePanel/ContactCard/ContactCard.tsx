@@ -13,7 +13,6 @@ import { Icons } from '@ui/media/Icon';
 import { FormInput } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-import { FormSelect } from '@ui/form/SyncSelect';
 import { FormInputGroup } from '@ui/form/InputGroup';
 import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { useOutsideClick } from '@ui/utils';
@@ -41,6 +40,7 @@ import { FormSocialInput } from '../../../shared/FormSocialInput';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { FormRoleSelect } from './FormRoleSelect';
 import { FormTimezoneSelect } from './FormTimezoneSelect';
+import { useAddContactSocialMutation } from '@organization/graphql/addContactSocial.generated';
 
 interface ContactCardProps {
   contact: Contact;
@@ -93,6 +93,9 @@ export const ContactCard = ({
   const removePhoneNumber = useRemoveContactPhoneNumberMutation(client, {
     onSuccess: invalidate,
   });
+  const addSocial = useAddContactSocialMutation(client, {
+    onSuccess: invalidate,
+  });
 
   const toggle = (e: MouseEvent<HTMLDivElement>) => {
     if (['name', 'role', 'title'].includes((e.target as any)?.id)) {
@@ -126,11 +129,7 @@ export const ContactCard = ({
     formId,
     defaultValues: data,
     stateReducer: (state, action, next) => {
-      if (
-        action.type === 'FIELD_BLUR' &&
-        //@ts-expect-error payload action type fix
-        !state.fields?.[action.payload.name]?.meta.pristine
-      ) {
+      if (action.type === 'FIELD_BLUR') {
         switch (action.payload.name) {
           case 'name':
           case 'timezone':
@@ -220,6 +219,23 @@ export const ContactCard = ({
     e.stopPropagation();
     e.preventDefault();
     onOpen();
+  };
+
+  const handleAddSocial = ({
+    newValue,
+    onSuccess,
+  }: {
+    newValue: string;
+    onSuccess: ({ id, url }: { id: string; url: string }) => void;
+  }) => {
+    addSocial.mutate(
+      { contactId: contact.id, input: { url: newValue } },
+      {
+        onSuccess: ({ contact_AddSocial: { id, url } }) => {
+          onSuccess({ id, url });
+        },
+      },
+    );
   };
 
   return (
@@ -370,7 +386,8 @@ export const ContactCard = ({
               )}
               {/* END TODO */}
               <FormSocialInput
-                isReadOnly
+                invalidateQuery={invalidate}
+                addSocial={handleAddSocial}
                 name='socials'
                 formId={formId}
                 placeholder='Social link'

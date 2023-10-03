@@ -38,6 +38,7 @@ import { FormUrlInput } from './FormUrlInput';
 import { Box } from '@ui/layout/Box';
 import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
 import React from 'react';
+import { useAddSocialMutation } from '@organization/graphql/addSocial.generated';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -66,6 +67,10 @@ export const AboutPanel = () => {
     onSuccess: invalidateQuery,
   });
   const updateOrganization = useUpdateOrganizationMutation(client, {
+    onSuccess: invalidateQuery,
+  });
+
+  const addSocial = useAddSocialMutation(client, {
     onSuccess: invalidateQuery,
   });
 
@@ -201,6 +206,23 @@ export const AboutPanel = () => {
     defaultValues.relationship?.value === 'CUSTOMER'
       ? customerStageOptions
       : otherStageOptions;
+
+  const handleAddSocial = ({
+    newValue,
+    onSuccess,
+  }: {
+    newValue: string;
+    onSuccess: ({ id, url }: { id: string; url: string }) => void;
+  }) => {
+    addSocial.mutate(
+      { organizationId: id, input: { url: newValue } },
+      {
+        onSuccess: ({ organization_AddSocial: { id, url } }) => {
+          onSuccess({ id, url });
+        },
+      },
+    );
+  };
 
   return (
     <Flex
@@ -339,10 +361,12 @@ export const AboutPanel = () => {
           <FormSocialInput
             bg='gray.25'
             name='socials'
+            formId='organization-about'
             organizationId={id}
+            addSocial={handleAddSocial}
+            invalidateQuery={invalidateQuery}
             defaultValues={defaultValues.socials}
             placeholder='Social link'
-            formId='organization-about'
             leftElement={<Icons.Share7 color='gray.500' />}
           />
         </VStack>
