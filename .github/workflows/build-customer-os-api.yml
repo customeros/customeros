@@ -75,7 +75,7 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload-file-path: "./cover.out"
+          payload-file-path: "cover.out"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
 
