@@ -66,6 +66,7 @@ jobs:
 
       - name: Compute Code Coverage
         run: |
+          ls
           echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
@@ -75,7 +76,7 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          payload-file-path: "cover.out"
+          payload-file-path: "./packages/server/customer-os-api/cover.out"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
 
