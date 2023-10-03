@@ -70,7 +70,7 @@ jobs:
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
-          echo "go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g'" > test-coverage.txt
+          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
 
       - name: Send Output to Slack
         run: |
