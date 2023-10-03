@@ -17,6 +17,10 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useTimelineActionContext } from './TimelineActionContext';
+import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
+import { useTimelineMeta } from '@organization/components/Timeline/shared/state';
+import { useUpdateCacheWithNewEvent } from '@organization/components/Timeline/hooks/updateCacheWithNewEvent';
+import { LogEntry } from '@graphql/types';
 
 export const noop = () => undefined;
 
@@ -66,6 +70,11 @@ export const TimelineActionEmailContextContextProvider = ({
     extensions: basicEditorExtensions,
   });
   const { closeEditor } = useTimelineActionContext();
+  const [timelineMeta] = useTimelineMeta();
+  const queryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
+  const updateTimelineCache = useUpdateCacheWithNewEvent<LogEntry>();
 
   const formId = 'compose-email-timeline-footer';
 
@@ -93,11 +102,13 @@ export const TimelineActionEmailContextContextProvider = ({
     reset();
   };
 
-  const handleEmailSendSuccess = () => {
+  const handleEmailSendSuccess = async (response: any) => {
+    await updateTimelineCache(response, queryKey);
+
+    // no timeout needed is this case as the event id is created when this is called
     invalidateQuery();
     setIsSending(false);
     handleResetEditor();
-    onClose();
   };
   const handleEmailSendError = () => {
     setIsSending(false);
@@ -119,7 +130,7 @@ export const TimelineActionEmailContextContextProvider = ({
       state.values.subject,
       handleEmailSendSuccess,
       handleEmailSendError,
-      session?.user?.email,
+      session?.user,
     );
   };
 

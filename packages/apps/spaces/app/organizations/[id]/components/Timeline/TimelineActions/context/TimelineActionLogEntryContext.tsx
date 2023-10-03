@@ -31,10 +31,11 @@ import {
   GetTimelineQuery,
   useInfiniteGetTimelineQuery,
 } from '@organization/graphql/getTimeline.generated';
-import { DataSource } from '@graphql/types';
+import { DataSource, LogEntry } from '@graphql/types';
 
 import { logEntryEditorExtensions } from './extensions';
 import { useTimelineMeta } from '../../shared/state';
+import { useUpdateCacheWithNewEvent } from '@organization/components/Timeline/hooks/updateCacheWithNewEvent';
 
 export const noop = () => undefined;
 
@@ -86,6 +87,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
+  const updateTimelineCache = useUpdateCacheWithNewEvent<LogEntry>();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const queryKey = useInfiniteGetTimelineQuery.getKey(
@@ -128,33 +130,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
         session.data?.user?.name,
         payload.logEntry as any,
       );
-
-      queryClient.setQueryData<InfiniteData<GetTimelineQuery>>(
-        queryKey,
-        (currentCache): InfiniteData<GetTimelineQuery> => {
-          const nextCache = {
-            ...currentCache,
-            pages: currentCache?.pages?.map((p, idx) => {
-              if (idx !== 0) return p;
-              return {
-                ...p,
-                organization: {
-                  ...p?.organization,
-                  timelineEvents: [
-                    newLogEntry,
-                    ...(p?.organization?.timelineEvents ?? []),
-                  ],
-                  timelineEventsTotalCount:
-                    p?.organization?.timelineEventsTotalCount + 1,
-                },
-              };
-            }),
-          } as InfiniteData<GetTimelineQuery>;
-
-          return nextCache;
-        },
-      );
-
+      await updateTimelineCache(newLogEntry, queryKey);
       virtuosoRef?.current?.scrollToIndex({
         index: (timelineEntries?.length ?? 0) + 1,
       });
