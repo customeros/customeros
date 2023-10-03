@@ -11,14 +11,8 @@ export function useJune(): AnalyticsBrowser | undefined {
       }) as any;
       setAnalytics(response);
     };
-    console.log(
-      '🏷️ ----- process.env.JUNE_ENABLED: ',
-      process.env.NEXT_PUBLIC_JUNE_ENABLED,
-    );
+
     if (`${process.env.NEXT_PUBLIC_JUNE_ENABLED}` === 'true') {
-      console.log(
-        '🏷️ ----- : Test log that will be remove as soon as issue is resolved on prod',
-      );
       loadAnalytics();
     }
   }, []);

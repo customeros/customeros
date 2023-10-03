@@ -1,4 +1,5 @@
 'use client';
+import React, { useEffect } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -6,8 +7,6 @@ import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 
-import { SidenavItem } from './SidenavItem';
-import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocalStorage } from 'usehooks-ts';
 import { signOut } from 'next-auth/react';
@@ -16,7 +15,8 @@ import { SignOut } from '@spaces/atoms/icons';
 import { Box } from '@chakra-ui/react';
 import { useRecoilState } from 'recoil';
 import { globalCacheData } from '@spaces/globalState/globalCache';
-import { GoogleSidebarNotification } from '../../../components/google-re-allow-access-oauth-token/GoogleSidebarNotification';
+import { GoogleSidebarNotification } from './components/GoogleSidebarNotification';
+import { SidenavItem } from './components/SidenavItem';
 
 export const RootSidenav = () => {
   const [globalCache] = useRecoilState(globalCacheData);

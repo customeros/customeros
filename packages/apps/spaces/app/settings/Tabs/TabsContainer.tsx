@@ -1,11 +1,12 @@
 'use client';
-
+import React from 'react';
 import { Flex } from '@ui/layout/Flex';
 
 export const TabsContainer = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Flex
-      w='50%'
+      maxW='50%'
+      minW='600px'
       h='100%'
       bg='gray.25'
       flexDir='column'

@@ -9,7 +9,7 @@ import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Receipt } from '@ui/media/icons/Receipt';
 
-import { SidenavItem } from '@shared/components/RootSidenav/SidenavItem';
+import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useLocalStorage } from 'usehooks-ts';
 
 export const SettingsSidenav = () => {

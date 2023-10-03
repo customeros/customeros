@@ -25,7 +25,7 @@ export const PageContentLayout: FC<PageContentLayout> = ({ children }) => {
 
   return (
     <PageLayout>
-      <RootSidenav/>
+      <RootSidenav />
       <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
         {children}
       </GridItem>

@@ -100,7 +100,6 @@ export const AuthPanel = () => {
         boxShadow='none'
         position='relative'
         background='gray.25'
-        minWidth={700}
       >
         <CardHeader px={6} pb={2}>
           <Flex gap='1' align='center' mb='2'>
@@ -113,12 +112,10 @@ export const AuthPanel = () => {
         </CardHeader>
 
         <CardBody padding={6} pr={0} pt={0} position='unset'>
-          <br />
-          <Text>
+          <Text noOfLines={2} mt={2} mb={3}>
             Enable OAuth Integration to get access to your google workspace
             emails and calendar events
           </Text>
-          <br />
           <Flex direction={'column'} gap={2} width={'250px'}>
             <Flex justifyContent={'space-between'}>
               <Flex gap='1' align='center'>
@@ -149,7 +146,7 @@ export const AuthPanel = () => {
                 isChecked={oAuthSettings.googleCalendarSyncEnabled}
                 colorScheme='green'
                 onChange={(event) => handleSyncGoogleCalendarClick(event)}
-              ></Switch>
+              />
             </Flex>
           </Flex>
         </CardBody>
@@ -163,7 +160,7 @@ export const AuthPanel = () => {
         boxShadow='none'
         position='relative'
         background='gray.25'
-        minWidth={609}
+        w='full'
       >
         <CardHeader px={6} pb={2}>
           <Heading as='h1' fontSize='lg' color='gray.700'>
