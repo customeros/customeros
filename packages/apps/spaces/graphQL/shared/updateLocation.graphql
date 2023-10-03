@@ -1,8 +1,0 @@
-mutation updateLocation($input: LocationUpdateInput!) {
-  location_Update(input: $input) {
-    locality
-    rawAddress
-    postalCode
-    street
-  }
-}

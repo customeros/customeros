@@ -1,4 +1,9 @@
-import { Action, InteractionEvent, Meeting } from '@graphql/types';
+import {
+  Action,
+  InteractionEvent,
+  Meeting,
+  ExternalSystemType,
+} from '@graphql/types';
 
 import { EmailPreviewModal } from '../events/email/EmailPreviewModal';
 import { MeetingPreviewModal } from '../events/meeting/MeetingPreviewModal';
@@ -10,7 +15,6 @@ import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/p
 import { IntercomThreadPreviewModal } from '@organization/src/components/Timeline/events/intercom/IntercomThreadPreviewModal';
 import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
-import { ExternalSystemType } from '@spaces/graphql';
 import { LogEntryUpdateModalContextProvider } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
 
 interface TimelineEventPreviewModalProps {

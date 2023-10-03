@@ -1,5 +1,0 @@
-mutation DeleteTag($id: ID!) {
-  tag_Delete(id: $id) {
-    result
-  }
-}

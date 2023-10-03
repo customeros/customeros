@@ -1,7 +1,7 @@
 import { SideSection } from './src/components/SideSection';
 import { MainSection } from './src/components/MainSection';
 import { TabsContainer, Panels } from './src/components/Tabs';
-import { OrganizationTimelineWithActionsContext } from '@organization/src/components/Timeline/OrganizationTimelineWithActionsContext';
+import { OrganizationTimelineWithActionsContext } from './src/components/Timeline/OrganizationTimelineWithActionsContext';
 
 interface OrganizationPageProps {
   params: { id: string };

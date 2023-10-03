@@ -1,5 +1,0 @@
-query GetOrganizationContacts($id: ID!) {
-  organization(id: $id) {
-    ...OrganizationContacts
-  }
-}

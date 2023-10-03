@@ -23,7 +23,7 @@ import {
 } from './types';
 import { UserActionStub } from '@organization/src/components/Timeline/events/action/UserActionStub';
 import { IntercomStub } from '@organization/src/components/Timeline/events/intercom/IntercomStub';
-import { ExternalSystemType } from '@spaces/graphql';
+import { ExternalSystemType } from '@graphql/types';
 import { LogEntryStub } from '@organization/src/components/Timeline/events/logEntry/LogEntryStub';
 
 import { useTimelineMeta } from './shared/state';

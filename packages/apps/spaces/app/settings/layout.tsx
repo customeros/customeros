@@ -1,5 +1,5 @@
-import { SettingsSidenav } from './SettingsSidenav';
-import { PageLayout } from '@shared/components/PageLayout';
+import { SettingsSidenav } from './src/components/SettingsSidenav';
+import { GridItem } from '@ui/layout/Grid';
 
 export default async function SettingsLayout({
   children,
@@ -7,9 +7,11 @@ export default async function SettingsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <PageLayout>
+    <>
       <SettingsSidenav />
-      {children}
-    </PageLayout>
+      <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
+        {children}
+      </GridItem>
+    </>
   );
 }

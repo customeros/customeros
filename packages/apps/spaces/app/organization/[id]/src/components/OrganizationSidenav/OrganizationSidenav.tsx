@@ -11,7 +11,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { SidenavItem } from 'app/components/RootSidenav/SidenavItem';
+import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 
 export const OrganizationSidenav = () => {

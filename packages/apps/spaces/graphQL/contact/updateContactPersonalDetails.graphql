@@ -1,8 +1,0 @@
-mutation updateContactPersonalDetails($input: ContactUpdateInput!) {
-  contact_Update(input: $input) {
-    id
-    title
-    firstName
-    lastName
-  }
-}

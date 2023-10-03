@@ -1,23 +1,26 @@
 import { Metadata } from 'next';
 import Script from 'next/script';
 import localFont from 'next/font/local';
+import { ToastContainer } from 'react-toastify';
 
-import { PageLayout } from './components/PageLayout';
-import { Providers } from './components/Providers/Providers';
-import { ThemeProvider } from './components/Providers/ThemeProvider';
+import { PageLayout } from './src/components/PageLayout';
+import { Providers } from './src/components/Providers/Providers';
+import { ThemeProvider } from './src/components/Providers/ThemeProvider';
 
 import 'react-toastify/dist/ReactToastify.css';
 import './../styles/globals.scss';
 import './../styles/date-picker.scss';
 import './../styles/remirror-editor.scss';
-import React from 'react';
-import { ToastContainer } from 'react-toastify';
 
 const barlow = localFont({
   src: [
-    { path: './fonts/Barlow-Regular.woff', weight: '400', style: 'normal' },
-    { path: './fonts/Barlow-Medium.woff', weight: '500', style: 'normal' },
-    { path: './fonts/Barlow-SemiBold.woff', weight: '600', style: 'normal' },
+    { path: './src/fonts/Barlow-Regular.woff', weight: '400', style: 'normal' },
+    { path: './src/fonts/Barlow-Medium.woff', weight: '500', style: 'normal' },
+    {
+      path: './src/fonts/Barlow-SemiBold.woff',
+      weight: '600',
+      style: 'normal',
+    },
   ],
   preload: true,
   display: 'swap',
@@ -45,17 +48,19 @@ export default async function RootLayout({
       />
       <body className='scrollbar'>
         <ThemeProvider>
-          <Providers>
-            {children}
-            <ToastContainer
-              position='bottom-right'
-              autoClose={8000}
-              limit={3}
-              closeOnClick={true}
-              hideProgressBar={true}
-              theme='colored'
-            />
-          </Providers>
+          <PageLayout>
+            <Providers>
+              {children}
+              <ToastContainer
+                position='bottom-right'
+                autoClose={8000}
+                limit={3}
+                closeOnClick={true}
+                hideProgressBar={true}
+                theme='colored'
+              />
+            </Providers>
+          </PageLayout>
         </ThemeProvider>
       </body>
     </html>

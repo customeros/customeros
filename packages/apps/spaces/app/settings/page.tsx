@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { TabsContainer } from './Tabs/TabsContainer';
-import { Panels } from './Tabs/Panels';
+import { TabsContainer } from './src/components/Tabs/TabsContainer';
+import { Panels } from './src/components/Tabs/Panels';
 
 interface SettingsPageProps {
   searchParams: { tab?: string };

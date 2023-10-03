@@ -1,9 +1,0 @@
-mutation mergeContacts($primaryContactId: ID!, $mergedContactIds: [ID!]!) {
-  contact_Merge(
-    primaryContactId: $primaryContactId
-    mergedContactIds: $mergedContactIds
-  ) {
-    id
-    ...ContactPersonalDetails
-  }
-}

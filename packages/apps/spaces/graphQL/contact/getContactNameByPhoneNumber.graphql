@@ -1,6 +1,0 @@
-query GetContactNameByPhoneNumber($e164: String!) {
-  contact_ByPhone(e164: $e164) {
-    id
-    ...ContactNameFragment
-  }
-}

@@ -1,4 +1,4 @@
-import { RootSidenav } from 'app/components/RootSidenav/RootSidenav';
+import { RootSidenav } from '@shared/components/RootSidenav/RootSidenav';
 
 import { GridItem } from '@ui/layout/Grid';
 

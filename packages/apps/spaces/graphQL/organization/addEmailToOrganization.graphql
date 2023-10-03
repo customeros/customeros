@@ -1,6 +1,0 @@
-mutation addEmailToOrganization($organizationId: ID!, $input: EmailInput!) {
-  emailMergeToOrganization(organizationId: $organizationId, input: $input) {
-    ...Email
-    label
-  }
-}

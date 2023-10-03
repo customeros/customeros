@@ -1,5 +1,0 @@
-mutation updateNote($input: NoteUpdateInput!) {
-  note_Update(input: $input) {
-    ...NoteContent
-  }
-}

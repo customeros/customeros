@@ -1,8 +1,0 @@
-query GetContactLocations($id: ID!) {
-  contact(id: $id) {
-    locations {
-      ...LocationBaseDetails
-      rawAddress
-    }
-  }
-}
