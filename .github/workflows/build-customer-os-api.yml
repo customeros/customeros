@@ -2,7 +2,7 @@ name: customer-os-api
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter", "3920-test-coverage-announcer" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-common-auth/**
@@ -69,7 +69,28 @@ jobs:
           echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+
+      - name: Send coverage report to Slack
+        uses: rtCamp/action-slack@v5
+        with:
+          slack_webhook_url: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          text: "Coverage report: ${{ github.repository }} - ${{ github.sha }}"
+          attachments: |
+            [
+                {
+                    "fallback": "Coverage report",
+                    "color": "#36a64f",
+                    "fields": [
+                        {
+                            "title": "Coverage Report",
+                            "value": "$(cat $GITHUB_STEP_SUMMARY)",
+                            "short": false
+                        }
+                    ]
+                }
+      ]
+
 
   build-publish:
     needs:
