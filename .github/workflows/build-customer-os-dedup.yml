@@ -2,7 +2,7 @@ name: customer-os-dedup
 
 on:
   push:
-    branches: [ "otter", "3920-test-coverage-announcer" ]
+    branches: [ "otter" ]
     paths:
       - packages/runner/customer-os-dedup/**
       - .github/workflows/build-customer-os-dedup.yml

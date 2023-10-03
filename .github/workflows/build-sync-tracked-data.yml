@@ -2,7 +2,7 @@ name: sync-tracked-data
 
 on:
   push:
-    branches: [ "otter", "3920-test-coverage-announcer" ]
+    branches: [ "otter" ]
     paths:
       - packages/runner/sync-tracked-data/**
       - .github/workflows/build-sync-tracked-data.yml

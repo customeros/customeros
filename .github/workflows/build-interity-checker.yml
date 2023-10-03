@@ -2,7 +2,7 @@ name: integrity-checker
 
 on:
   push:
-    branches: [ "otter", "3920-test-coverage-announcer" ]
+    branches: [ "otter" ]
     paths:
       - packages/runner/integrity-checker/**
       - .github/workflows/build-integrity-checker.yml

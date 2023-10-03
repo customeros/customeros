@@ -2,7 +2,7 @@ name: file-store-api
 
 on:
   push:
-    branches: [ "otter", "3920-test-coverage-announcer" ]
+    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/file-store-api/**

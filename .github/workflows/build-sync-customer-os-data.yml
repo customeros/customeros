@@ -2,7 +2,7 @@ name: sync-customer-os-data
 
 on:
   push:
-    branches: [ "otter", "3920-test-coverage-announcer" ]
+    branches: [ "otter" ]
     paths:
       - packages/runner/sync-customer-os-data/**
       - .github/workflows/build-sync-customer-os-data.yml
