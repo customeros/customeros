@@ -142,7 +142,7 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 }
 
 func (s *emailService) ReadNewEmailsForUsername(gmailService *gmail.Service, tenant, username string) error {
-	forUsername, err := s.repositories.UserGmailImportPageTokenRepository.GetGmailImportPageTokenForUsername(tenant, username)
+	forUsername, err := s.repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant, username)
 	if err != nil {
 		return fmt.Errorf("unable to retrieve history id for username: %v", err)
 	}
@@ -183,7 +183,7 @@ func (s *emailService) ReadNewEmailsForUsername(gmailService *gmail.Service, ten
 				countEmailsExists = countEmailsExists + 1
 
 				if countEmailsExists >= s.cfg.SyncData.BatchSize {
-					err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, "")
+					err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(tenant, username, "")
 					if err != nil {
 						return fmt.Errorf("unable to update the gmail page token for username: %v", err)
 					}
@@ -204,7 +204,7 @@ func (s *emailService) ReadNewEmailsForUsername(gmailService *gmail.Service, ten
 		}
 	}
 
-	err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, userMessages.NextPageToken)
+	err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(tenant, username, userMessages.NextPageToken)
 	if err != nil {
 		return fmt.Errorf("unable to update the gmail page token for username: %v", err)
 	}
