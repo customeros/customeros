@@ -47,18 +47,18 @@ func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string
 }
 
 type EmailUpdateEvent struct {
-	RawEmail      string    `json:"rawEmail" validate:"required"`
-	Tenant        string    `json:"tenant" validate:"required"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	RawEmail  string    `json:"rawEmail" validate:"required"`
+	Tenant    string    `json:"tenant" validate:"required"`
+	Source    string    `json:"source"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func NewEmailUpdateEvent(aggregate eventstore.Aggregate, rawEmail, tenant, sourceOfTruth string, updatedAt time.Time) (eventstore.Event, error) {
+func NewEmailUpdateEvent(aggregate eventstore.Aggregate, rawEmail, tenant, source string, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := EmailUpdateEvent{
-		RawEmail:      rawEmail,
-		Tenant:        tenant,
-		SourceOfTruth: sourceOfTruth,
-		UpdatedAt:     updatedAt,
+		RawEmail:  rawEmail,
+		Tenant:    tenant,
+		Source:    source,
+		UpdatedAt: updatedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

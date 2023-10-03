@@ -56,7 +56,7 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("(created existing PhoneNumber): {%s}", objectID)
+	s.log.Infof("(UpsertPhoneNumber): {%s}", objectID)
 
 	return &phone_number_grpc_service.PhoneNumberIdGrpcResponse{Id: objectID}, nil
 }

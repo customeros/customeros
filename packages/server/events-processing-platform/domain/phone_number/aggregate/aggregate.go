@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -78,7 +79,9 @@ func (a *PhoneNumberAggregate) onPhoneNumberUpdate(event eventstore.Event) error
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.PhoneNumber.Source.SourceOfTruth = eventData.SourceOfTruth
+	if eventData.Source == constants.SourceOpenline {
+		a.PhoneNumber.Source.SourceOfTruth = eventData.Source
+	}
 	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt
 	return nil
 }

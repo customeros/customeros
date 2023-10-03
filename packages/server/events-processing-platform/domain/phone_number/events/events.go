@@ -48,16 +48,16 @@ func NewPhoneNumberCreateEvent(aggregate eventstore.Aggregate, tenant, rawPhoneN
 }
 
 type PhoneNumberUpdatedEvent struct {
-	Tenant        string    `json:"tenant"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	Tenant    string    `json:"tenant"`
+	Source    string    `json:"source"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func NewPhoneNumberUpdateEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth string, updatedAt time.Time) (eventstore.Event, error) {
+func NewPhoneNumberUpdateEvent(aggregate eventstore.Aggregate, tenant, source string, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := PhoneNumberUpdatedEvent{
-		Tenant:        tenant,
-		SourceOfTruth: sourceOfTruth,
-		UpdatedAt:     updatedAt,
+		Tenant:    tenant,
+		Source:    source,
+		UpdatedAt: updatedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

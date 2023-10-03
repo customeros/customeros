@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -75,7 +76,7 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumb
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant}) 
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id}) 
 		 ON CREATE SET p.rawPhoneNumber = $rawPhoneNumber, 
 						p.validated = null,
@@ -85,24 +86,18 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumb
 						p.createdAt = $createdAt,
 						p.updatedAt = $updatedAt,
 						p.syncedWithEventStore = true 
-		 ON MATCH SET 	p.syncedWithEventStore = true
-`
+		 ON MATCH SET 	p.syncedWithEventStore = true`, event.Tenant)
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
-			map[string]any{
-				"id":             phoneNumberId,
-				"rawPhoneNumber": event.RawPhoneNumber,
-				"tenant":         event.Tenant,
-				"source":         helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
-				"sourceOfTruth":  helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
-				"appSource":      helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
-				"createdAt":      event.CreatedAt,
-				"updatedAt":      event.UpdatedAt,
-			})
-		return nil, err
+	return r.executeQuery(ctx, query, map[string]any{
+		"id":             phoneNumberId,
+		"rawPhoneNumber": event.RawPhoneNumber,
+		"tenant":         event.Tenant,
+		"source":         helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
+		"sourceOfTruth":  helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
+		"appSource":      helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
+		"createdAt":      event.CreatedAt,
+		"updatedAt":      event.UpdatedAt,
 	})
-	return err
 }
 
 func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error {
@@ -111,25 +106,22 @@ func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, phoneNumb
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId))
 
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id})
+		 SET 	p.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE p.sourceOfTruth END,
+				p.updatedAt = $updatedAt,
+				p.syncedWithEventStore = true`, event.Tenant)
+	span.LogFields(log.String("query", query))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id})
-		 SET p.sourceOfTruth = $sourceOfTruth,
-			p.updatedAt = $updatedAt,
-			p.syncedWithEventStore = true`
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
-			map[string]any{
-				"id":            phoneNumberId,
-				"tenant":        event.Tenant,
-				"sourceOfTruth": event.SourceOfTruth,
-				"updatedAt":     event.UpdatedAt,
-			})
-		return nil, err
+	return r.executeQuery(ctx, query, map[string]any{
+		"id":            phoneNumberId,
+		"tenant":        event.Tenant,
+		"sourceOfTruth": event.Source,
+		"updatedAt":     event.UpdatedAt,
+		"overwrite":     event.Source == constants.SourceOpenline,
 	})
-	return err
 }
 
 func (r *phoneNumberRepository) LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
@@ -345,4 +337,8 @@ func (r *phoneNumberRepository) GetCountryCodeA2ForPhoneNumber(ctx context.Conte
 		return "", err
 	}
 	return result.(string), nil
+}
+
+func (r *phoneNumberRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
+	return utils.ExecuteQuery(ctx, *r.driver, query, params)
 }

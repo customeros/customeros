@@ -65,9 +65,6 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-	if cmd.Source.Source == "" {
-		cmd.Source.Source = a.User.Source.SourceOfTruth
-	}
 
 	event, err := events.NewUserUpdateEvent(a, cmd.DataFields, cmd.Source.Source, updatedAtNotNil, cmd.ExternalSystem)
 	if err != nil {

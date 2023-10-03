@@ -72,10 +72,7 @@ func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
 	span.LogFields(log.String("emailId", emailId))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant}) 
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
               MERGE (e:Email:Email_%s {id:$id})
 				 SET e.rawEmail = $rawEmail, 
 					e.validated = null,
@@ -85,25 +82,22 @@ func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event
 					e.createdAt = $createdAt,
 					e.updatedAt = $updatedAt,
 					e.syncedWithEventStore = true 
-		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e)
+		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e)`, event.Tenant)
+	span.LogFields(log.String("query", query))
 
-`
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
-			map[string]any{
-				"id":            emailId,
-				"rawEmail":      event.RawEmail,
-				"tenant":        event.Tenant,
-				"source":        helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
-				"sourceOfTruth": helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
-				"appSource":     helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
-				"createdAt":     event.CreatedAt,
-				"updatedAt":     event.UpdatedAt,
-			})
-		return nil, err
+	return r.executeQuery(ctx, query, map[string]any{
+		"id":            emailId,
+		"rawEmail":      event.RawEmail,
+		"tenant":        event.Tenant,
+		"source":        helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
+		"sourceOfTruth": helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
+		"appSource":     helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
+		"createdAt":     event.CreatedAt,
+		"updatedAt":     event.UpdatedAt,
 	})
-	return err
 }
 
 func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error {
@@ -115,22 +109,19 @@ func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
-		 SET e.sourceOfTruth = $sourceOfTruth,
-			e.updatedAt = $updatedAt,
-			e.syncedWithEventStore = true`
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
+		 SET 	e.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE e.sourceOfTruth END,
+				e.updatedAt = $updatedAt,
+				e.syncedWithEventStore = true`, event.Tenant)
+	span.LogFields(log.String("query", query))
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
-			map[string]any{
-				"id":            emailId,
-				"tenant":        event.Tenant,
-				"sourceOfTruth": event.SourceOfTruth,
-				"updatedAt":     event.UpdatedAt,
-			})
-		return nil, err
+	return r.executeQuery(ctx, query, map[string]any{
+		"id":            emailId,
+		"tenant":        event.Tenant,
+		"sourceOfTruth": event.Source,
+		"updatedAt":     event.UpdatedAt,
+		"overwrite":     event.Source == constants.SourceOpenline,
 	})
-	return err
 }
 
 func (r *emailRepository) FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error {
@@ -332,4 +323,8 @@ func (r *emailRepository) LinkWithUser(ctx context.Context, tenant, userId, emai
 		return nil, err
 	})
 	return err
+}
+
+func (r *emailRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
+	return utils.ExecuteQuery(ctx, *r.driver, query, params)
 }
