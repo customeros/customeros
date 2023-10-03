@@ -71,12 +71,13 @@ jobs:
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
 #          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
-      - name: Send files to Slack
-        uses: rtCamp/action-slack-notify@v2
+      - name: Send GitHub Action trigger data to Slack workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
         with:
-            slack_webhook_url: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-            text: "GITHUB_STEP_SUMMARY"
-            files: $GITHUB_STEP_SUMMARY
+          payload-file-path: "./cover.out"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
 
 
   build-publish:
