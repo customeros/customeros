@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-const maxWorkers = 2
+const maxWorkers = 4
 
 type UserService interface {
 	SyncUsers(ctx context.Context, users []model.UserData) error
@@ -52,6 +52,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
+		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
 		return errors.ErrTenantNotValid
 	}
 

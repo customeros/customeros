@@ -39,7 +39,7 @@ type Config struct {
 	}
 	SyncCustomerOsData struct {
 		TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
-		BatchSize           int `env:"SYNC_CUSTOMER_OS_DATA_BATCH_SIZE" envDefault:"5"`
+		BatchSize           int `env:"SYNC_CUSTOMER_OS_DATA_BATCH_SIZE" envDefault:"10"`
 	}
 	SyncToEventStore struct {
 		BatchSize           int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"100"`
@@ -77,6 +77,8 @@ type Config struct {
 		EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"false"`
 		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
 		EventsProcessingPlatformApiKey  string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY"`
+		CustomerOsWebhooksAPI           string `env:"CUSTOMER_OS_WEBHOOKS_API,required"`
+		CustomerOsWebhooksAPIKey        string `env:"CUSTOMER_OS_WEBHOOKS_API_KEY,required"`
 	}
 	Jaeger tracing.Config
 }

@@ -1,36 +1,37 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"sync"
+	"net/http"
 	"time"
 )
 
 type userSyncService struct {
 	repositories *repository.Repositories
+	cfg          *config.Config
 	log          logger.Logger
 }
 
-func NewDefaultUserSyncService(repositories *repository.Repositories, log logger.Logger) SyncService {
+func NewDefaultUserSyncService(repositories *repository.Repositories, cfg *config.Config, log logger.Logger) SyncService {
 	return &userSyncService{
 		repositories: repositories,
+		cfg:          cfg,
 		log:          log,
 	}
 }
 
 func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 	completed, failed, skipped := 0, 0, 0
-	userSyncMutex := &sync.Mutex{}
 
 	for {
 		users := dataService.GetDataForSync(ctx, common.USERS, batchSize, runId)
@@ -39,38 +40,34 @@ func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDat
 		}
 		s.log.Infof("syncing %d users from %s for tenant %s", len(users), dataService.SourceId(), tenant)
 
-		var wg sync.WaitGroup
-		wg.Add(len(users))
-
-		// Channel to collect results
-		results := make(chan result, len(users))
-		done := make(chan struct{})
-
-		for _, v := range users {
-			v := v
-			go func(user entity.UserData) {
-				defer wg.Done()
-				var comp, fail, skip int
-				s.syncUser(ctx, userSyncMutex, v.(entity.UserData), dataService, syncDate, tenant, runId, &comp, &fail, &skip)
-				results <- result{comp, fail, skip}
-			}(v.(entity.UserData))
+		var usersForWebhooks []entity.UserData
+		for _, user := range users {
+			inputUser := user.(entity.UserData)
+			if inputUser.ExternalSystem == "" {
+				_ = dataService.MarkProcessed(ctx, inputUser.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
+				failed++
+			} else {
+				inputUser.AppSource = constants.AppSourceSyncCustomerOsData
+				usersForWebhooks = append(usersForWebhooks, inputUser)
+			}
 		}
-		// Wait for goroutines to finish
-		go func() {
-			wg.Wait()
-			close(done)
-		}()
-		go func() {
-			<-done
-			close(results)
-		}()
-
-		// Collect results
-		for r := range results {
-			completed += r.completed
-			failed += r.failed
-			skipped += r.skipped
+		if len(usersForWebhooks) > 0 {
+			err := s.postUsers(ctx, tenant, usersForWebhooks)
+			if err != nil {
+				s.log.Errorf("error while posting users to webhooks: %v", err.Error())
+				for _, userForWebhooks := range usersForWebhooks {
+					failed++
+					_ = dataService.MarkProcessed(ctx, userForWebhooks.SyncId, runId, false, false, "")
+				}
+			} else {
+				s.log.Infof("successfully posted %d users to webhooks", len(usersForWebhooks))
+				for _, userForWebhooks := range usersForWebhooks {
+					completed++
+					_ = dataService.MarkProcessed(ctx, userForWebhooks.SyncId, runId, true, false, "")
+				}
+			}
 		}
+
 		if len(users) < batchSize {
 			break
 		}
@@ -78,93 +75,36 @@ func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDat
 	return completed, failed, skipped
 }
 
-func (s *userSyncService) syncUser(ctx context.Context, userSyncMutex *sync.Mutex, userInput entity.UserData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserSyncService.syncUser")
-	defer span.Finish()
-	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
-
-	var failedSync = false
-	var reason string
-	userInput.Normalize()
-
-	if userInput.Skip {
-		if err := dataService.MarkProcessed(ctx, userInput.SyncId, runId, true, true, userInput.SkipReason); err != nil {
-			*failed++
-			span.LogFields(log.Bool("failedSync", true))
-			return
-		}
-		*skipped++
-		span.LogFields(log.Bool("skippedSync", true))
-		return
-	}
-
-	if userInput.ExternalSystem == "" {
-		_ = dataService.MarkProcessed(ctx, userInput.SyncId, runId, false, false, "External system is empty. Error during reading data from source")
-		*failed++
-		return
-	}
-
-	userSyncMutex.Lock()
-	userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, userInput)
+func (s *userSyncService) postUsers(ctx context.Context, tenant string, users []entity.UserData) error {
+	// Convert the users slice to JSON
+	jsonData, err := json.Marshal(users)
 	if err != nil {
-		failedSync = true
-		tracing.TraceErr(span, err)
-		reason = fmt.Sprintf("failed finding existing matched user with external reference %v for tenant %v :%v", userInput.ExternalId, tenant, err)
-		s.log.Errorf(reason)
+		return err
 	}
 
-	// Create new user id if not found
-	if len(userId) == 0 {
-		userUuid, _ := uuid.NewRandom()
-		userId = userUuid.String()
-	}
-	userInput.Id = userId
-	span.LogFields(log.String("userId", userId))
-
-	if !failedSync {
-		err = s.repositories.UserRepository.MergeUser(ctx, tenant, syncDate, userInput)
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merging user with external reference %v for tenant %v :%v", userInput.ExternalId, tenant, err)
-			s.log.Errorf(reason)
-		}
-	}
-	userSyncMutex.Unlock()
-
-	if userInput.HasEmail() && !failedSync {
-		err = s.repositories.UserRepository.MergeEmail(ctx, tenant, userInput)
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merging email for user with id %v for tenant %v :%v", userId, tenant, err)
-			s.log.Errorf(reason)
-		}
+	// Create a new POST request
+	req, err := http.NewRequest("POST", s.cfg.Service.CustomerOsWebhooksAPI+"/sync/users", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
 	}
 
-	if userInput.HasPhoneNumbers() && !failedSync {
-		for _, phoneNumber := range userInput.PhoneNumbers {
-			err = s.repositories.UserRepository.MergePhoneNumber(ctx, tenant, userInput, phoneNumber)
-			if err != nil {
-				failedSync = true
-				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("failed merging phone number for user with id %v for tenant %v :%v", userId, tenant, err)
-				s.log.Errorf(reason)
-			}
-		}
+	// Set the headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-OPENLINE-API-KEY", s.cfg.Service.CustomerOsWebhooksAPIKey)
+	req.Header.Set("tenant", tenant)
+
+	// Create a new HTTP client and send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check the status code to determine if the request was successful
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("API request failed with status code %d", resp.StatusCode)
 	}
 
-	s.log.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
-	if err := dataService.MarkProcessed(ctx, userInput.SyncId, runId, failedSync == false, false, reason); err != nil {
-		tracing.TraceErr(span, err)
-		*failed++
-		span.LogFields(log.Bool("failedSync", true))
-		return
-	}
-	if failedSync == true {
-		*failed++
-	} else {
-		*completed++
-	}
-	span.LogFields(log.Bool("failedSync", failedSync))
+	return nil
 }
