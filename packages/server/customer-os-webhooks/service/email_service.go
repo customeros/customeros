@@ -89,8 +89,8 @@ func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*en
 	if err != nil {
 		return nil, err
 	}
-	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
-	return emailEntity, nil
+
+	return s.mapDbNodeToEmailEntity(*emailNode), nil
 }
 
 func (s *emailService) GetById(ctx context.Context, emailId string) (*entity.EmailEntity, error) {
@@ -103,8 +103,8 @@ func (s *emailService) GetById(ctx context.Context, emailId string) (*entity.Ema
 	if err != nil {
 		return nil, err
 	}
-	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
-	return emailEntity, nil
+
+	return s.mapDbNodeToEmailEntity(*emailNode), nil
 }
 
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
