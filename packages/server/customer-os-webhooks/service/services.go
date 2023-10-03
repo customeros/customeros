@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
+	"gorm.io/gorm"
 )
 
 type Services struct {
@@ -23,8 +24,8 @@ type Services struct {
 	SyncStatusService  SyncStatusService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
-	repositories := repository.InitRepos(driver)
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, gormDB *gorm.DB, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
+	repositories := repository.InitRepos(driver, gormDB)
 
 	services := Services{
 		CommonServices:     commonServices,
