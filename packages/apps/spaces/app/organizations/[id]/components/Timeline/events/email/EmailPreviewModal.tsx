@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CardBody } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
@@ -26,7 +26,6 @@ import { InteractionEvent } from '@graphql/types';
 import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
 import { TimelineEventPreviewHeader } from '@organization/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import { TimelinePreviewBackdrop } from '@organization/components/Timeline/preview/TimelinePreviewBackdrop';
-import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -76,6 +75,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
   const from = getEmailParticipantsNameAndEmail(event?.sentBy || [], 'value');
   const formId = 'compose-email-preview-modal';
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
     to: getEmailParticipantsNameAndEmail(
@@ -105,11 +105,21 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   };
 
   const handleEmailSendSuccess = () => {
-    invalidateQuery();
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => invalidateQuery(), 2000);
     setIsSending(false);
     setDefaultValues(defaultValues);
-    closeModal();
   };
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleEmailSendError = () => {
     setIsSending(false);
   };
