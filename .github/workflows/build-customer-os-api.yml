@@ -77,7 +77,7 @@ jobs:
 
       - name: Send Output to Slack
         run: |
-          if [[steps.compute_code_coverage.outputs.computed_coverage < 80]]; then
+          if [[${{ steps.compute_code_coverage.outputs.computed_coverage }} < 80]]; then
             curl -X POST -H 'Content-type: application/json' --data '{
               "text": ":warning: ${{ github.workflow }}.Coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}:\n```\n'$(cat test-coverage.txt)'```\n",
               "icon_url": ":warning:"
