@@ -73,16 +73,23 @@ jobs:
           echo "go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g'" > test-coverage.txt
 
       - name: Send Output to Slack
-        uses: 8398a7/action-slack@v3
-        with:
-          status: success
-          text: |
-            Shell Command Output:
-            ```
-            $(cat test-coverage.txt)  # Read the output from the file
-            ```
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data '{
+            "text": "Shell Command Output:\n```\n'$(cat test-coverage.txt)'```\n"
+          }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+
+#
+#      - name: Send Output to Slack
+#        uses: 8398a7/action-slack@v3
+#        with:
+#          status: success
+#          text: |
+#            Shell Command Output:
+#            ```
+#            $(cat test-coverage.txt)  # Read the output from the file
+#            ```
+#        env:
+#          SLACK_WEBHOOK_URL: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
 
 
   build-publish:
