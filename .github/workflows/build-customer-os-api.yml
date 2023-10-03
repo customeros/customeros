@@ -66,17 +66,21 @@ jobs:
 
       - name: Compute Code Coverage
         run: |
-          ls
           echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+          echo "go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g'" > test-coverage.txt
 
-      - name: Send GitHub Action trigger data to Slack workflow
-        id: slack
-        uses: slackapi/slack-github-action@v1.24.0
+      - name: Send Output to Slack
+        uses: montudor/action-slack@v4
         with:
-          payload-file-path: "./packages/server/customer-os-api/cover.out"
+          status: success
+          text: |
+            Shell Command Output:
+            ```
+            $(cat test-coverage.txt)  # Read the output from the file
+            ```
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
 
