@@ -222,18 +222,35 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	}
 	syncMutex.Unlock()
 
-	// TODO merge phone numbers
-	//if userInput.HasPhoneNumbers() && !failedSync {
-	//	for _, phoneNumber := range userInput.PhoneNumbers {
-	//		err = s.repositories.UserRepository.MergePhoneNumber(ctx, tenant, userInput, phoneNumber)
-	//		if err != nil {
-	//			failedSync = true
-	//			tracing.TraceErr(span, err)
-	//			reason = fmt.Sprintf("failed merging phone number for user with id %v for tenant %v :%v", userId, tenant, err)
-	//			s.log.Errorf(reason)
-	//		}
-	//	}
-	//}
+	if !failedSync && userInput.HasPhoneNumbers() {
+		for _, phoneNumberDtls := range userInput.PhoneNumbers {
+			// Create or update phone number
+			phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumber(ctx, phoneNumberDtls.Number, userInput.ExternalSystem, userInput.AppSource)
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to create phone number for user %s: %s", userId, err.Error())
+				s.log.Error(reason)
+			}
+			// Link phone number to user
+			if phoneNumberId != "" {
+				_, err = s.grpcClients.UserClient.LinkPhoneNumberToUser(ctx, &usergrpc.LinkPhoneNumberToUserGrpcRequest{
+					Tenant:        common.GetTenantFromContext(ctx),
+					UserId:        userId,
+					PhoneNumberId: phoneNumberId,
+					Primary:       phoneNumberDtls.Primary,
+					Label:         phoneNumberDtls.Label,
+				})
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("Failed to link phone number %s for user %s: %s", phoneNumberDtls.Number, userId, err.Error())
+					s.log.Error(reason)
+				}
+			}
+		}
+	}
+
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {
 		return NewFailedSyncStatus(reason)

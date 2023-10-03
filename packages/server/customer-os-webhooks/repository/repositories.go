@@ -10,6 +10,7 @@ type Repositories struct {
 	UserRepository           UserRepository
 	TenantRepository         TenantRepository
 	EmailRepository          EmailRepository
+	PhoneNumberRepository    PhoneNumberRepository
 }
 
 type Drivers struct {
@@ -26,5 +27,6 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.UserRepository = NewUserRepository(driver)
 	repositories.TenantRepository = NewTenantRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
+	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
 	return &repositories
 }

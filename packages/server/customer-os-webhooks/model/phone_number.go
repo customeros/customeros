@@ -1,4 +1,6 @@
-package entity
+package model
+
+import "strings"
 
 type PhoneNumber struct {
 	Number  string `json:"number"`
@@ -26,4 +28,8 @@ func GetNonEmptyPhoneNumbers(phoneNumbers []PhoneNumber) []PhoneNumber {
 		}
 	}
 	return nonEmptyPhoneNumbers
+}
+
+func (p *PhoneNumber) Normalize() {
+	p.Number = strings.TrimSpace(p.Number)
 }
