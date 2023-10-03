@@ -79,7 +79,7 @@ jobs:
         run: |
           computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
           warning_threshold=80.0
-          if (( $(echo "$computed_coverage < $warning_threshold" | bc -l) )); then
+          if (( $(echo "$computed_coverage > $warning_threshold" | bc -l) )); then
             curl -X POST -H 'Content-type: application/json' --data '{
               "text": ":warning: ${{ github.workflow }}.Coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}:\n```\n'$(cat test-coverage.txt)'```\n"
             }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
