@@ -77,10 +77,9 @@ jobs:
 
       - name: Send Output to Slack
         run: |
-          icon="https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-medium/26a0-fe0f@2x.png"
           curl -X POST -H 'Content-type: application/json' --data '{
             "text": "${{ github.workflow }}.Warning: coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}:\n```\n'$(cat test-coverage.txt)'```\n",
-            "icon_url": "'"$icon"'"
+            "icon_url": ":warning:"
           }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
 
   build-publish:
