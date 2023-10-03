@@ -56,7 +56,7 @@ func SyncUsersHandler(services *service.Services, log logger.Logger) gin.Handler
 		if timeout > constants.RequestMaxTimeout {
 			timeout = constants.RequestMaxTimeout
 		}
-		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
 		err = services.UserService.SyncUsers(ctx, users)
@@ -101,7 +101,7 @@ func SyncUserHandler(services *service.Services, log logger.Logger) gin.HandlerF
 
 		// Context timeout, allocate per user
 		timeout := utils.LongDuration
-		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
 		err = services.UserService.SyncUsers(ctx, []model.UserData{user})
