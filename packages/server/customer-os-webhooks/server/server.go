@@ -56,8 +56,8 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	db, _ := InitDB(server.cfg, server.log)
-	defer db.SqlDB.Close()
+	postgresDb, _ := InitDB(server.cfg, server.log)
+	defer postgresDb.SqlDB.Close()
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
@@ -67,8 +67,8 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up Postgres repositories
-	commonServices := commonService.InitServices(db.GormDB, &neo4jDriver)
-	commonAuthServices := commonAuthService.InitServices(nil, db.GormDB)
+	commonServices := commonService.InitServices(postgresDb.GormDB, &neo4jDriver)
+	commonAuthServices := commonAuthService.InitServices(nil, postgresDb.GormDB)
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(server.cfg)
@@ -85,7 +85,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
 
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, commonAuthServices, grpcContainer)
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb.GormDB, server.cfg, commonServices, commonAuthServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,

@@ -102,7 +102,8 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	// Wait for all workers to finish
 	wg.Wait()
 
-	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), users[0].ExternalSystem, syncDate, statuses)
+	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), users[0].ExternalSystem,
+		users[0].AppSource, "user", syncDate, statuses)
 
 	return nil
 }
