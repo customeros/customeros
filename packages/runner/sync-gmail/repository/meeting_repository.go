@@ -8,10 +8,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
+	"time"
 )
 
 type MeetingRepository interface {
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
+	GetByExternalId(ctx context.Context, tx neo4j.ManagedTransaction, tenant, externalSystemId, externalId string) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, externalSystemId, externalId string, entity *entity.MeetingEntity, syncDate time.Time) (*dbtype.Node, error)
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
 	LinkWithEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, emailId string, relation entity.MeetingRelation) error
 	UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
@@ -27,8 +29,26 @@ func NewMeetingRepository(driver *neo4j.DriverWithContext) MeetingRepository {
 	}
 }
 
-func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error) {
-	query := "MERGE (m:Meeting_%s {id:randomUUID()}) " +
+func (r *meetingRepository) GetByExternalId(ctx context.Context, tx neo4j.ManagedTransaction, tenant, externalSystemId, externalId string) (*dbtype.Node, error) {
+	query := "MATCH (m:Meeting_%s)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})" +
+		" RETURN m"
+
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		map[string]any{
+			"externalId":       externalId,
+			"externalSystemId": externalSystemId,
+			"tenant":           tenant,
+		})
+	node, err := utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	if err != nil && err.Error() != "Result contains no more records" {
+		return nil, err
+	}
+	return node, nil
+}
+
+func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, externalSystemId, externalId string, entity *entity.MeetingEntity, syncDate time.Time) (*dbtype.Node, error) {
+	query := "MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId}) " +
+		" MERGE (m:Meeting_%s {id:randomUUID()}) " +
 		" ON CREATE SET m:Meeting, " +
 		" 				m:TimelineEvent, " +
 		" 				m:TimelineEvent_%s, " +
@@ -45,10 +65,17 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		"				m.source=$source, " +
 		"				m.sourceOfTruth=$sourceOfTruth, " +
 		"				m.status=$status " +
+		" WITH m, ext " +
+		" MERGE (m)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
+		" ON CREATE SET r.syncDate=$syncDate " +
+		" ON MATCH SET r.syncDate=$syncDate " +
 		" RETURN m"
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 		map[string]any{
+			"externalId":         externalId,
+			"externalSystemId":   externalSystemId,
+			"tenant":             tenant,
 			"name":               entity.Name,
 			"agenda":             utils.IfNotNilStringWithDefault(entity.Agenda, ""),
 			"agendaContentType":  utils.IfNotNilStringWithDefault(entity.AgendaContentType, ""),
@@ -62,6 +89,7 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 			"source":             entity.Source,
 			"sourceOfTruth":      entity.SourceOfTruth,
 			"status":             entity.Status,
+			"syncDate":           syncDate,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
