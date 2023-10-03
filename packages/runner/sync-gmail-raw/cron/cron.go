@@ -28,10 +28,6 @@ func StartCronJobs(config *config.Config, services *service.Services) *cron.Cron
 			lockAndRunJob(jobLock, config, services, syncEmails)
 		}(&jobLock1)
 
-		//go func(jobLock *sync.Mutex) {
-		//	lockAndRunJob(jobLock, config, services, syncCalendarEventsForAllTenantsWithServiceAccount)
-		//}(&jobLock3)
-
 		go func(jobLock *sync.Mutex) {
 			lockAndRunJob(jobLock, config, services, syncCalendarEventsForOauthTokens)
 		}(&jobLock4)

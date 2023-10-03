@@ -15,7 +15,7 @@ type Repositories struct {
 	EmailRepository  EmailRepository
 	ApiKeyRepository ApiKeyRepository
 
-	UserGmailImportPageTokenRepository UserGmailImportPageTokenRepository
+	UserGmailImportPageTokenRepository UserGmailImportStateRepository
 	UserGCalImportStateRepository      UserGCalImportStateRepository
 
 	RawEmailRepository         RawEmailRepository
@@ -32,7 +32,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		EmailRepository:  NewEmailRepository(driver),
 		ApiKeyRepository: NewApiKeyRepository(gormDb),
 
-		UserGmailImportPageTokenRepository: NewUserGmailImportPageTokenRepository(gormDb),
+		UserGmailImportPageTokenRepository: NewUserGmailImportStateRepository(gormDb),
 		UserGCalImportStateRepository:      NewUserGCalImportStateRepository(gormDb),
 
 		RawEmailRepository:         NewRawEmailRepository(gormDb),
@@ -41,7 +41,11 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 
 	var err error
 
-	err = gormDb.AutoMigrate(&entity.UserGmailImportPageToken{})
+	err = gormDb.AutoMigrate(&entity.UserGmailImportState{})
+	if err != nil {
+		panic(err)
+	}
+	err = gormDb.AutoMigrate(&entity.UserGmailImportStateHistory{})
 	if err != nil {
 		panic(err)
 	}
