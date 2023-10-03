@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { CardBody } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
@@ -22,10 +22,13 @@ import { useDisclosure } from '@ui/utils';
 import { useRemirror } from '@remirror/react';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { htmlToProsemirrorNode } from 'remirror';
-import { InteractionEvent } from '@graphql/types';
+import { InteractionEvent, LogEntry } from '@graphql/types';
 import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
 import { TimelineEventPreviewHeader } from '@organization/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import { TimelinePreviewBackdrop } from '@organization/components/Timeline/preview/TimelinePreviewBackdrop';
+import { useTimelineMeta } from '@organization/components/Timeline/shared/state';
+import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
+import { useUpdateCacheWithNewEvent } from '@organization/components/Timeline/hooks/updateCacheWithNewEvent';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -75,7 +78,11 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
   const from = getEmailParticipantsNameAndEmail(event?.sentBy || [], 'value');
   const formId = 'compose-email-preview-modal';
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [timelineMeta] = useTimelineMeta();
+  const queryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
+  const updateTimelineCache = useUpdateCacheWithNewEvent<LogEntry>();
 
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
     to: getEmailParticipantsNameAndEmail(
@@ -104,21 +111,13 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     }
   };
 
-  const handleEmailSendSuccess = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => invalidateQuery(), 2000);
+  const handleEmailSendSuccess = async (response: any) => {
+    await updateTimelineCache(response, queryKey);
+    // no timeout needed is this case as the event id is created when this is called
+    invalidateQuery();
     setIsSending(false);
     setDefaultValues(defaultValues);
   };
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleEmailSendError = () => {
     setIsSending(false);
@@ -215,7 +214,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       state.values.subject,
       handleEmailSendSuccess,
       handleEmailSendError,
-      session?.user?.email,
+      session?.user,
     );
   };
 
