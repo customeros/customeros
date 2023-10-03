@@ -25,11 +25,11 @@ type meetingService struct {
 }
 
 type MeetingService interface {
-	SyncCalendarEventsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain)
+	SyncCalendarEvents(externalSystemId, tenant string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain)
 }
 
-func (s *meetingService) SyncCalendarEventsForUser(externalSystemId, tenant string, userSource string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain) {
-	calendarEventsIdsForSync, err := s.repositories.RawCalendarEventRepository.GetCalendarEventsIdsForUserForSync(externalSystemId, tenant, userSource)
+func (s *meetingService) SyncCalendarEvents(externalSystemId, tenant string, personalEmailProviderList []commonEntity.PersonalEmailProvider, organizationAllowedForImport []commonEntity.WhitelistDomain) {
+	calendarEventsIdsForSync, err := s.repositories.RawCalendarEventRepository.GetCalendarEventsIdsForSync(externalSystemId, tenant)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 	}
@@ -74,28 +74,28 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		return entity.ERROR, nil, err
 	}
 
-	interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, externalSystemId, calendarEvent.ProviderId)
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Neo4jDriver)
+	defer session.Close(ctx)
+
+	tx, err := session.BeginTransaction(ctx)
 	if err != nil {
-		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", calendarEvent.ProviderId, tenant, err)
+		logrus.Errorf("failed to start transaction for calendar event with id %v: %v", rawCalendarIdString, err)
 		return entity.ERROR, nil, err
 	}
 
-	if interactionEventId != "" {
+	existingMeetingNode, err := s.repositories.MeetingRepository.GetByExternalId(ctx, tx, tenant, externalSystemId, calendarEvent.ProviderId)
+	if err != nil {
+		logrus.Errorf("failed to check if meeting exists for external id %v for tenant %v :%v", calendarEvent.ProviderId, tenant, err)
+		return entity.ERROR, nil, err
+	}
+
+	if existingMeetingNode != nil {
 		//todo update / delete
 		reason := "implement update / delete"
 		return entity.SKIPPED, &reason, nil
 	} else {
 
 		now := time.Now().UTC()
-
-		session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Neo4jDriver)
-		defer session.Close(ctx)
-
-		tx, err := session.BeginTransaction(ctx)
-		if err != nil {
-			logrus.Errorf("failed to start transaction for email with id %v: %v", rawCalendarIdString, err)
-			return entity.ERROR, nil, err
-		}
 
 		createdAt, err := s.services.SyncService.ConvertToUTC(rawCalendarEventData.Created)
 		if err != nil {
@@ -133,9 +133,9 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 			Status:             &status,
 		}
 
-		meetingNode, err := s.repositories.MeetingRepository.Create(ctx, tx, tenant, &meetingForCustomerOS)
+		meetingNode, err := s.repositories.MeetingRepository.Create(ctx, tx, tenant, externalSystemId, rawCalendarEventData.Id, &meetingForCustomerOS, now)
 		if err != nil {
-			logrus.Errorf("failed merge interaction session for raw email id %v :%v", rawCalendarIdString, err)
+			logrus.Errorf("failed merge meeting for raw calendar id %v :%v", rawCalendarIdString, err)
 			return entity.ERROR, nil, err
 		}
 		meetingId := utils.GetStringPropOrNil(meetingNode.Props, "id")

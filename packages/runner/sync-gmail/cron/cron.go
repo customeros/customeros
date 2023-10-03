@@ -158,12 +158,6 @@ func syncCalendarEvents(services *service.Services) {
 				return
 			}
 
-			usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
-			if err != nil {
-				logrus.Errorf("failed to get users for tenant: %v", err)
-				return
-			}
-
 			personalEmailProviderList, err := services.Repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 			if err != nil {
 				logrus.Errorf("failed to get personal email provider list: %v", err)
@@ -176,27 +170,7 @@ func syncCalendarEvents(services *service.Services) {
 				return
 			}
 
-			var wgTenant sync.WaitGroup
-			wgTenant.Add(len(usersForTenant))
-
-			for _, user := range usersForTenant {
-				go func(user entity.UserEntity) {
-					defer wgTenant.Done()
-					logrus.Infof("syncing calendar events for user: %s in tenant: %s", user, tenant.Name)
-
-					email, err := services.EmailService.FindEmailForUser(tenant.Name, user.Id)
-					if err != nil {
-						logrus.Errorf("failed to find email in tenant: %s for user: %s: %v ", tenant.Name, user.Id, err)
-						return
-					}
-
-					services.MeetingService.SyncCalendarEventsForUser(externalSystemId, tenant.Name, email.RawEmail, personalEmailProviderList, organizationAllowedForImport)
-
-					logrus.Infof("syncing calendar events for user: %s in tenant: %s completed", user, tenant)
-				}(*user)
-			}
-
-			wgTenant.Wait()
+			services.MeetingService.SyncCalendarEvents(externalSystemId, tenant.Name, personalEmailProviderList, organizationAllowedForImport)
 
 			logrus.Infof("syncing calendar events for tenant: %s completed", tenant)
 		}(*tenant)

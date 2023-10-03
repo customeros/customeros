@@ -8,7 +8,7 @@ import (
 )
 
 type RawCalendarEventRepository interface {
-	GetCalendarEventsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawCalendarEvent, error)
+	GetCalendarEventsIdsForSync(externalSystem, tenant string) ([]entity.RawCalendarEvent, error)
 	GetCalendarEventForSync(id uuid.UUID) (*entity.RawCalendarEvent, error)
 	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error
 }
@@ -21,12 +21,12 @@ func NewRawCalendarEventRepository(gormDb *gorm.DB) RawCalendarEventRepository {
 	return &rawCalendarEventRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *rawCalendarEventRepositoryImpl) GetCalendarEventsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawCalendarEvent, error) {
+func (repo *rawCalendarEventRepositoryImpl) GetCalendarEventsIdsForSync(externalSystem, tenant string) ([]entity.RawCalendarEvent, error) {
 	result := []entity.RawCalendarEvent{}
-	err := repo.gormDb.Select("id").Limit(25).Find(&result, "external_system = ? AND tenant_name = ? AND username_source = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenantName, userSource).Error
+	err := repo.gormDb.Distinct("provider_id").Select([]string{"id", "provider_id"}).Limit(25).Find(&result, "external_system = ? AND tenant_name = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenant).Error
 
 	if err != nil {
-		logrus.Errorf("Failed getting rawCalendarEvents: %s; %s", externalSystem, tenantName)
+		logrus.Errorf("Failed getting rawCalendarEvents: %s; %s", externalSystem, tenant)
 		return nil, err
 	}
 

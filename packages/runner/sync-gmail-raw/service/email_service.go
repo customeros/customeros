@@ -23,7 +23,7 @@ type emailService struct {
 
 type EmailService interface {
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
-	ReadEmailFromGoogle(gmailService *gmail.Service, userId, messageId string) (*EmailRawData, error)
+	ReadEmailFromGoogle(gmailService *gmail.Service, userId, providerMessageId string) (*EmailRawData, error)
 	ReadNewEmailsForUsername(gmailService *gmail.Service, tenant, username string) error
 }
 
