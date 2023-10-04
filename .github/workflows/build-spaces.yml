@@ -39,15 +39,15 @@ jobs:
           openline --help
           openline dev start -v
           openline dev ping
-          echo **************** PODS: ****************
+          echo "**************** PODS: ****************"
           kubectl -n openline get pods
-          echo **************** event-store-0 logs: ****************
+          echo "**************** event-store-0 logs: ****************"
           kubectl -n openline logs -f event-store-0
-          echo **************** Docker Image Inspect: ****************
+          echo "**************** Docker Image Inspect: ****************"
           docker image inspect eventstore/eventstore:22.10.3-bionic
-          echo **************** uname -amnoprsv: ****************
+          echo "**************** uname -amnoprsv: ****************"
           uname -amnoprsv
-          echo **************** lscpu: ****************
+          echo "**************** lscpu: ****************"
           lscpu
 
       - name: Log in to the Container registry
