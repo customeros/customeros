@@ -1,9 +1,0 @@
-query GetContactNotes($id: ID!, $pagination: Pagination) {
-  contact(id: $id) {
-    notes(pagination: $pagination) {
-      content {
-        ...NoteContent
-      }
-    }
-  }
-}

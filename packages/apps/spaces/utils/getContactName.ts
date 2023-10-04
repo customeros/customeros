@@ -1,4 +1,4 @@
-import { Contact, User } from '../graphQL/__generated__/generated';
+import { Contact, User } from '@graphql/types';
 
 export const getContactDisplayName = (
   contact?: Partial<Contact | User> | null,

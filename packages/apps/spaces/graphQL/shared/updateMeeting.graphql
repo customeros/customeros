@@ -1,5 +1,0 @@
-mutation updateMeeting($meetingId: ID!, $meetingInput: MeetingUpdateInput!) {
-  meeting_Update(meetingId: $meetingId, meeting: $meetingInput) {
-    ...MeetingTimelineEventFragment
-  }
-}

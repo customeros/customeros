@@ -1,8 +1,0 @@
-mutation meetingUnlinkRecording($meetingId: ID!, $attachmentId: ID!) {
-  meeting_UnlinkRecording(meetingId: $meetingId, attachmentId: $attachmentId) {
-    id
-    includes {
-      id
-    }
-  }
-}

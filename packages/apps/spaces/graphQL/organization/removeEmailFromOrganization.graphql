@@ -1,5 +1,0 @@
-mutation removeEmailFromOrganization($organizationId: ID!, $id: ID!) {
-  emailRemoveFromOrganizationById(organizationId: $organizationId, id: $id) {
-    result
-  }
-}

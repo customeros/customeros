@@ -1,8 +1,0 @@
-mutation updateContactEmail($contactId: ID!, $input: EmailUpdateInput!) {
-  emailUpdateInContact(contactId: $contactId, input: $input) {
-    primary
-    label
-    email
-    id
-  }
-}

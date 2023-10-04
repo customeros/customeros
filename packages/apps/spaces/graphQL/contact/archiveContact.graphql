@@ -1,5 +1,0 @@
-mutation archiveContact($id: ID!) {
-  contact_Archive(contactId: $id) {
-    result
-  }
-}

@@ -1,6 +1,0 @@
-mutation addEmailToContact($contactId: ID!, $input: EmailInput!) {
-  emailMergeToContact(contactId: $contactId, input: $input) {
-    ...Email
-    label
-  }
-}

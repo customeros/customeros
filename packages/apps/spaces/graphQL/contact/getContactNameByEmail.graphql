@@ -1,6 +1,0 @@
-query GetContactNameByEmail($email: String!) {
-  contact_ByEmail(email: $email) {
-    id
-    ...ContactNameFragment
-  }
-}

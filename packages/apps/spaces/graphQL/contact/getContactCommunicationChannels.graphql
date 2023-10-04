@@ -1,6 +1,0 @@
-query GetContactCommunicationChannels($id: ID!) {
-  contact(id: $id) {
-    ...ContactNameFragment
-    ...ContactCommunicationChannelsDetails
-  }
-}

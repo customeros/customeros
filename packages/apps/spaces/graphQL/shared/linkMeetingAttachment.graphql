@@ -1,5 +1,0 @@
-mutation linkMeetingAttachment($meetingId: ID!, $attachmentId: ID!) {
-  meeting_LinkAttachment(meetingId: $meetingId, attachmentId: $attachmentId) {
-    id
-  }
-}

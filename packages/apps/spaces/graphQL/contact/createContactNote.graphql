@@ -1,5 +1,0 @@
-mutation createContactNote($contactId: ID!, $input: NoteInput!) {
-  note_CreateForContact(contactId: $contactId, input: $input) {
-    ...NoteContent
-  }
-}

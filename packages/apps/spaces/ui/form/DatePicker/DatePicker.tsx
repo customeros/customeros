@@ -2,14 +2,14 @@ import React from 'react';
 import { FormControl, FormLabel } from '@chakra-ui/react';
 import { Flex } from '@ui/layout/Flex';
 import { Box } from '@ui/layout/Box';
-import Calendar from '@spaces/atoms/icons/Calendar';
+import { Calendar } from '@ui/media/icons/Calendar';
 import { Text } from '@ui/typography/Text';
 import {
   DatePicker as ReactDatePicker,
   DatePickerProps as ReactDatePickerProps,
 } from 'react-date-picker';
 import { DateTimeUtils } from '@spaces/utils/date';
-import Delete from '@spaces/atoms/icons/Delete';
+import { Delete } from '@ui/media/icons/Delete';
 import { useField } from 'react-inverted-form';
 
 interface DatePickerProps extends ReactDatePickerProps {
@@ -64,11 +64,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       >
         <ReactDatePicker
           id={id}
-          clearIcon={
-            value && (
-              <Delete color='var(--chakra-colors-gray-500)' height='1rem' />
-            )
-          }
+          clearIcon={value && <Delete color='gray.500' height='1rem' />}
           onChange={(val) => handleDateInputChange(val as DateInputValue)}
           defaultValue={value}
           formatShortWeekday={(_, date) =>
@@ -83,7 +79,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           calendarIcon={
             <Flex alignItems='center'>
               <Box mr={3} color='gray.500'>
-                <Calendar height={16} />
+                <Calendar />
               </Box>
               <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
                 {value

@@ -1,9 +1,0 @@
-query GetOrganizationNotes($id: ID!, $pagination: Pagination) {
-  organization(id: $id) {
-    notes(pagination: $pagination) {
-      content {
-        ...NoteContent
-      }
-    }
-  }
-}

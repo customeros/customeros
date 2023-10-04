@@ -1,5 +1,0 @@
-mutation removeNote($id: ID!) {
-  note_Delete(id: $id) {
-    result
-  }
-}

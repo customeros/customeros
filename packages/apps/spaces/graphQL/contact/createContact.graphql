@@ -1,6 +1,0 @@
-mutation createContact($input: ContactInput!) {
-  contact_Create(input: $input) {
-    ...ContactPersonalDetails
-    ...ContactCommunicationChannelsDetails
-  }
-}

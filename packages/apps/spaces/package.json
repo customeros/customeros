@@ -7,10 +7,7 @@
     "build": "next build",
     "build:cluster": "env-cmd -f .env.cluster next build",
     "start": "next start",
-    "icons-deprecated": "npx @svgr/cli --typescript --out-dir components/ui-kit/atoms/icons --ignore-existing -- public/icons",
-    "icons": "npx @svgr/cli --typescript --out-dir ui/media/icons -- public/svgIcons",
-    "codegen": "graphql-codegen --require dotenv/config --config codegen.ts",
-    "codegen:graphql": "graphql-codegen --require dotenv/config --config graphql-codegen.ts",
+    "codegen:graphql": "graphql-codegen --require dotenv/config --config scripts/codegen-graphql.ts",
     "codegen:icons": "node scripts/codegen-icons.js",
     "codegen:logos": "node scripts/codegen-logos.js",
     "preatify": "yarn prettier --write ."
@@ -49,6 +46,7 @@
     "graphql-tag": "^2.12.6",
     "html-react-parser": "^3.0.8",
     "html-to-text": "^9.0.5",
+    "immer": "^10.0.2",
     "jose": "^4.13.1",
     "jssip": "^3.10.0",
     "linkify-html": "^4.1.0",
@@ -75,6 +73,7 @@
     "sanitize-html": "^2.9.0",
     "sass": "^1.58.0",
     "slack-to-html": "^1.0.0",
+    "ts-pattern": "^5.0.5",
     "use-debounce": "^9.0.3",
     "usehooks-ts": "^2.9.1",
     "webpack": "^5.76.0"
@@ -112,7 +111,7 @@
     "react-devtools": "^4.27.2",
     "storybook": "^7.0.22",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.5",
+    "typescript": "^5.0.4",
     "undici": "5.19.1"
   },
   "resolutions": {

@@ -1,5 +1,0 @@
-mutation removeOrganizationFromContact($input: ContactOrganizationInput!) {
-  contact_RemoveOrganizationById(input: $input) {
-    ...ContactPersonalDetails
-  }
-}

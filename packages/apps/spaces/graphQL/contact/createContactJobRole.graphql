@@ -1,9 +1,0 @@
-mutation createContactJobRole($contactId: ID!, $input: JobRoleInput!) {
-  jobRole_Create(contactId: $contactId, input: $input) {
-    ...JobRole
-    organization {
-      id
-      name
-    }
-  }
-}

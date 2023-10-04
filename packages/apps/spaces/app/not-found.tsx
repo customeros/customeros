@@ -1,11 +1,15 @@
 'use client';
-import { Box, Flex, Heading, Text } from '@chakra-ui/react';
-import HalfCirclePattern from '@spaces/atoms/icons/HalfCirclePattern';
-import { FeaturedIcon } from '@ui/media/Icon';
-import Search from '@spaces/atoms/icons/Search';
-import { Button } from '@ui/form/Button';
-import React from 'react';
 import { useRouter } from 'next/navigation';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
+import { Text } from '@ui/typography/Text';
+import { FeaturedIcon } from '@ui/media/Icon';
+import { Heading } from '@ui/typography/Heading';
+import { SearchSm } from '@ui/media/icons/SearchSm';
+
+import HalfCirclePattern from './src/assets/HalfCirclePattern';
 
 export default function NotFound() {
   const router = useRouter();
@@ -15,7 +19,6 @@ export default function NotFound() {
       flex={1}
       as={Flex}
       flexDirection='column'
-      bgImage='/backgrounds/organization/half-circle-pattern.svg'
       backgroundRepeat='no-repeat'
       backgroundSize='contain'
       h='100vh'
@@ -45,9 +48,7 @@ export default function NotFound() {
         h='50vh'
       >
         <FeaturedIcon colorScheme='primary' size='lg'>
-          <Box>
-            <Search />
-          </Box>
+          <SearchSm boxSize='5' />
         </FeaturedIcon>
         <Heading fontWeight={600} fontSize='6xl' color='gray.900' py={6}>
           We lost this page
@@ -60,7 +61,7 @@ export default function NotFound() {
           colorScheme='primary'
           variant='outline'
           size='lg'
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/organizations')}
         >
           Take me home
         </Button>

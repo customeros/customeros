@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify';
 import CheckWaves from '@spaces/atoms/icons/CheckWaves';
-import Times from '@spaces/atoms/icons/Times';
+import { XClose } from '@ui/media/icons/XClose';
 
 export const toastSuccess = (text: string, id: string) => {
   return toast.success(text, {
@@ -8,7 +8,7 @@ export const toastSuccess = (text: string, id: string) => {
     icon: CheckWaves,
     closeButton: ({ closeToast }) => (
       <div onClick={closeToast}>
-        <Times height={30} width={30} color='#17B26A' />
+        <XClose height='30px' width='30px' color='#17B26A' />
       </div>
     ),
   });

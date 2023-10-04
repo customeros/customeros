@@ -1,8 +1,0 @@
-query getOrganizationsOptions($pagination: Pagination) {
-  organizations(pagination: $pagination) {
-    content {
-      id
-      name
-    }
-  }
-}

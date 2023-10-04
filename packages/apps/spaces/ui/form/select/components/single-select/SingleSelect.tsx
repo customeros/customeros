@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
+import { useDetectClickOutside } from '@shared/hooks/useDetectClickOutside';
 
 import { defaultState, reducer } from '../../reducer';
 import { SelectActionType, SelectOption, SelectState } from '../../types';

@@ -1,5 +1,0 @@
-mutation removePhoneNumberFromContact($contactId: ID!, $id: ID!) {
-  phoneNumberRemoveFromContactById(contactId: $contactId, id: $id) {
-    result
-  }
-}

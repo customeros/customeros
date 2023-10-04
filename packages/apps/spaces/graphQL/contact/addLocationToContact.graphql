@@ -1,5 +1,0 @@
-mutation addLocationToContact($contactId: ID!) {
-  contact_AddNewLocation(contactId: $contactId) {
-    id
-  }
-}

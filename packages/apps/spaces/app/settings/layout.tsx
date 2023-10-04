@@ -1,5 +1,7 @@
-import { SettingsSidenav } from './SettingsSidenav';
+import { GridItem } from '@ui/layout/Grid';
 import { PageLayout } from '@shared/components/PageLayout';
+
+import { SettingsSidenav } from './src/components/SettingsSidenav';
 
 export default async function SettingsLayout({
   children,
@@ -9,7 +11,9 @@ export default async function SettingsLayout({
   return (
     <PageLayout>
       <SettingsSidenav />
-      {children}
+      <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
+        {children}
+      </GridItem>
     </PageLayout>
   );
 }

@@ -53,7 +53,7 @@ const callbacks = {
     }
     return token;
   },
-  async session({ session, user, token }: any) {
+  async session({ session, token }: any) {
     if (token) {
       session.accessToken = token.accessToken;
       session.user.id = token.id;
