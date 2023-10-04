@@ -76,6 +76,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
       variant='outline'
       size='md'
       maxWidth={549}
+      ml={6}
       cursor='pointer'
       boxShadow='xs'
       borderColor='gray.200'
