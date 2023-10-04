@@ -59,7 +59,6 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
     },
   };
   const parsedContent = parse(linkifiedContent, parseOptions);
-  console.log('🏷️ ----- parsedContent: ', parsedContent);
   return (
     <Flex
       flexDir='column'
