@@ -7,11 +7,11 @@ import {
 } from '@remirror/react';
 import { Box } from '@ui/layout/Box';
 
-export const TagSuggestor: FC<{
+export const FloatingReferenceSuggestions: FC<{
   tags?: Array<{ label: string; id: string }>;
-}> = ({ tags = [] }) => {
-  const [options, setOptions] = useState<MentionAtomNodeAttributes[]>(tags);
-
+  mentionOptions?: Array<{ label: string; id: string }>;
+}> = ({ tags = [], mentionOptions = [] }) => {
+  const [options, setOptions] = useState<MentionAtomNodeAttributes[]>([]);
   const { state, getMenuProps, getItemProps, indexIsHovered, indexIsSelected } =
     useMentionAtom({
       items: options,
@@ -20,23 +20,21 @@ export const TagSuggestor: FC<{
     });
 
   useEffect(() => {
-    if (!state) {
-      return;
-    }
+    if (!state) return;
 
     const searchTerm = state.query.full.toLowerCase();
+    const options = state.name === 'tag' ? tags : mentionOptions;
 
-    const filteredOptions = tags
-      .filter((tag) => tag.label.toLowerCase().includes(searchTerm))
-      .sort()
-      .slice(0, 5);
+    let filteredOptions: { label: string; id: string; hide?: boolean }[] =
+      options
+        .filter((option) => option.label.toLowerCase().includes(searchTerm))
+        .sort()
+        .slice(0, 4);
 
-    if (filteredOptions.length > 0) {
-      setOptions(filteredOptions);
+    if (state.name === 'reference' && filteredOptions.length === 0) {
+      filteredOptions = [{ id: searchTerm, label: searchTerm, hide: true }];
     }
-    if (filteredOptions.length === 0) {
-      setOptions([{ id: searchTerm, label: searchTerm, hide: true }]);
-    }
+    setOptions(filteredOptions);
   }, [state]);
 
   const enabled = Boolean(state);
@@ -49,15 +47,15 @@ export const TagSuggestor: FC<{
     >
       <div {...getMenuProps()} className='floating-menu'>
         {enabled &&
-          options.map((tag, index) => {
+          options.map((reference, index) => {
             const isHighlighted = indexIsSelected(index);
             const isHovered = indexIsHovered(index);
-            if (tag?.hide) {
+            if (reference?.hide) {
               return (
                 <div
-                  key={`remirror-mention-tag-suggestion-${tag.label}-${tag.id}`}
+                  key={`remirror-mention-reference-suggestion-${reference.label}-${reference.id}`}
                   {...getItemProps({
-                    item: tag,
+                    item: reference,
                     index,
                   })}
                 />
@@ -65,18 +63,18 @@ export const TagSuggestor: FC<{
             }
             return (
               <Box
-                key={`remirror-mention-tag-suggestion-${tag.label}-${tag.id}`}
+                key={`remirror-mention-reference-suggestion-${reference.label}-${reference.id}`}
                 className={cx(
                   'floating-menu-option',
                   isHighlighted && 'highlighted',
                   isHovered && 'hovered',
                 )}
                 {...getItemProps({
-                  item: tag,
+                  item: reference,
                   index,
                 })}
               >
-                {tag.label}
+                {reference.label}
               </Box>
             );
           })}

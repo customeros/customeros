@@ -31,11 +31,9 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   const parseOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
       if (domNode instanceof Element) {
-        ['style', 'id', 'class'].forEach((attr) => {
-          if (domNode.attribs && domNode.attribs[attr]) {
-            delete domNode.attribs[attr];
-          }
-        });
+        if (domNode.attribs && domNode.attribs.style) {
+          delete domNode.attribs.style;
+        }
 
         if (domNode.children.length === 0 && domNode.name !== 'img') {
           return <React.Fragment />;

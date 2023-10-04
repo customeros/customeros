@@ -22,6 +22,8 @@ import { PreviewTags } from './preview/tags/PreviewTags';
 import { PreviewEditor } from './preview/PreviewEditor';
 import { useGetTagsQuery } from '@organization/src/graphql/getTags.generated';
 import { useLogEntryUpdateContext } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import React from 'react';
 
 const getAuthor = (user: User) => {
   if (!user?.firstName && !user.lastName) {
@@ -129,12 +131,20 @@ export const LogEntryPreviewModal: React.FC = () => {
               Entry
             </Text>
 
-            <PreviewEditor
-              isAuthor={isAuthor}
-              formId={formId}
-              initialContent={`${event?.content}`}
-              tags={data?.tags}
-            />
+            {!isAuthor && (
+              <HtmlContentRenderer
+                fontSize='sm'
+                noOfLines={undefined}
+                htmlContent={`${event?.content}`}
+              />
+            )}
+            {isAuthor && (
+              <PreviewEditor
+                formId={formId}
+                initialContent={`${event?.content}`}
+                tags={data?.tags}
+              />
+            )}
           </Flex>
 
           <PreviewTags

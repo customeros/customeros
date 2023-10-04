@@ -5,7 +5,7 @@ import { useField } from 'react-inverted-form';
 import { Button } from '@ui/form/Button';
 import { Box, Flex } from '@chakra-ui/react';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { TagSuggestor } from '@ui/form/RichTextEditor/TagSuggestor';
+import { FloatingReferenceSuggestions } from '@ui/form/RichTextEditor/FloatingReferenceSuggestions';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { useGetTagsQuery } from '@organization/src/graphql/getTags.generated';
 import { useTimelineActionLogEntryContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
@@ -13,8 +13,13 @@ import { useTimelineActionLogEntryContext } from '@organization/src/components/T
 import { Keymapper } from './Keymapper';
 import { TagsSelect } from './TagSelect';
 import noteIcon from 'public/images/event-ill-log.png';
+import { useGetMentionOptionsQuery } from '@organization/src/graphql/getMentionOptions.generated';
+import { useParams } from 'next/navigation';
+import { getMentionOptionLabel } from '@organization/src/components/Timeline/events/utils';
+import { Contact } from '@graphql/types';
 
 export const Logger = () => {
+  const id = useParams()?.id as string;
   const { onCreateLogEntry, remirrorProps, isSaving } =
     useTimelineActionLogEntryContext();
   const client = getGraphQLClient();
@@ -24,7 +29,14 @@ export const Logger = () => {
   );
   const { value } = getInputProps();
   const { data } = useGetTagsQuery(client);
+  const { data: mentionData } = useGetMentionOptionsQuery(client, {
+    id,
+  });
   const isLogEmpty = !value?.length || value === `<p style=""></p>`;
+
+  const mentionOptions = (mentionData?.organization?.contacts?.content ?? [])
+    .map((e) => ({ label: getMentionOptionLabel(e as Contact), id: e.id }))
+    .filter((e) => Boolean(e.label)) as { label: string; id: string }[];
 
   return (
     <Flex
@@ -43,11 +55,12 @@ export const Logger = () => {
         name='content'
         showToolbar={false}
       >
-        <TagSuggestor
+        <FloatingReferenceSuggestions
           tags={data?.tags?.map((e: { label: string; value: string }) => ({
             label: e.label,
             id: e.value,
           }))}
+          mentionOptions={mentionOptions}
         />
         <Keymapper />
       </RichTextEditor>
