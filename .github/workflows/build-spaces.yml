@@ -37,7 +37,7 @@ jobs:
         run: |
           curl http://openline.sh/install.sh | sh
           openline --help
-          openline dev start
+          openline dev start -v
           openline dev ping
           kubectl -n openline get pods
           kubectl -n openline logs -f event-store-0
