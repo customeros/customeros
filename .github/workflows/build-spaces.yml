@@ -41,7 +41,7 @@ jobs:
           openline dev ping
           kubectl -n openline get pods
           kubectl -n openline logs -f event-store-0
-          docker image inspect eventstore/eventstore:22.10.3-bionic | grep `Architecture|Os|Variant`
+          docker image inspect eventstore/eventstore:22.10.3-bionic
           uname -m
           lscpu
 
