@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { CardBody } from '@ui/presentation/Card';
-import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
 import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import sanitizeHtml from 'sanitize-html';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
 import { ComposeEmail } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
@@ -23,9 +21,9 @@ import { useRemirror } from '@remirror/react';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { htmlToProsemirrorNode } from 'remirror';
 import { InteractionEvent } from '@graphql/types';
-import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -61,7 +59,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const event = modalContent as InteractionEvent;
-
   const subject = event?.interactionSession?.name || '';
   const remirrorProps = useRemirror({
     extensions: basicEditorExtensions,
@@ -249,14 +246,9 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             </div>
           </Flex>
 
-          <Text color='gray.700' size='sm' fontSize='sm'>
-            {event?.content && (
-              <RichTextPreview
-                htmlContent={sanitizeHtml(event.content)}
-                extensions={basicEditorExtensions}
-              />
-            )}
-          </Text>
+          {event?.content && (
+            <HtmlContentRenderer htmlContent={event.content} />
+          )}
         </CardBody>
         <ComposeEmail
           formId={formId}

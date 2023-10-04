@@ -26,21 +26,21 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   const linkifiedContent = linkifyHtml(htmlContent, {
     defaultProtocol: 'https',
     rel: 'noopener noreferrer',
-  });
+  }).replace(/<\/?body>|<\/?html>|<\/?head>/g, '');
 
   const parseOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
       if (domNode instanceof Element) {
-        if (domNode.attribs && domNode.attribs.style) {
-          const styles = domNode.attribs.style.split(';');
-          const filteredStyles = styles.filter(
-            (style) =>
-              !style.includes('font-size') &&
-              !style.includes('font-family') &&
-              !style.includes('font-color'),
-          );
-          domNode.attribs.style = filteredStyles.join(';');
+        ['style', 'id', 'class'].forEach((attr) => {
+          if (domNode.attribs && domNode.attribs[attr]) {
+            delete domNode.attribs[attr];
+          }
+        });
+
+        if (domNode.children.length === 0 && domNode.name !== 'img') {
+          return <React.Fragment />;
         }
+
         switch (domNode.name) {
           case 'td': {
             return (
@@ -59,7 +59,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
     },
   };
   const parsedContent = parse(linkifiedContent, parseOptions);
-
+  console.log('🏷️ ----- parsedContent: ', parsedContent);
   return (
     <Flex
       flexDir='column'
