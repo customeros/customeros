@@ -40,6 +40,7 @@ jobs:
           openline dev start
           openline dev ping
           kubectl -n openline get pods
+          kubectl -n openline logs -f event-store-0
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
