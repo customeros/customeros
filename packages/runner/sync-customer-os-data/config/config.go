@@ -57,10 +57,6 @@ type Config struct {
 			Enabled   bool `env:"SYNC_TO_EVENT_STORE_LOCATIONS_ENABLED" envDefault:"true"`
 			BatchSize int  `env:"SYNC_TO_EVENT_STORE_LOCATIONS_BATCH_SIZE" envDefault:"-1"`
 		}
-		Users struct {
-			Enabled   bool `env:"SYNC_TO_EVENT_STORE_USERS_ENABLED" envDefault:"true"`
-			BatchSize int  `env:"SYNC_TO_EVENT_STORE_USERS_BATCH_SIZE" envDefault:"-1"`
-		}
 		Contacts struct {
 			Enabled   bool `env:"SYNC_TO_EVENT_STORE_CONTACTS_ENABLED" envDefault:"true"`
 			BatchSize int  `env:"SYNC_TO_EVENT_STORE_CONTACTS_BATCH_SIZE" envDefault:"-1"`

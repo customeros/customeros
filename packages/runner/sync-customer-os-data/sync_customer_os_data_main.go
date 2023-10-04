@@ -151,18 +151,6 @@ func main() {
 				}
 			})
 		}
-		if cfg.SyncToEventStore.Users.Enabled {
-			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
-				defer cancel()
-				services.SyncToEventStoreService.SyncUsers(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Users.BatchSize))
-				select {
-				case <-ctxWithTimeout.Done():
-					appLogger.Error("Timeout reached for syncing users to event store")
-				default:
-				}
-			})
-		}
 		if cfg.SyncToEventStore.Contacts.Enabled {
 			syncTasks = append(syncTasks, func() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
