@@ -16,3 +16,8 @@ type SignInRequest struct {
 	Provider   string     `json:"provider"`
 	OAuthToken OAuthToken `json:"oAuthToken"`
 }
+
+type RevokeRequest struct {
+	ProviderAccountId string `json:"providerAccountId"`
+	Provider          string `json:"provider"`
+}

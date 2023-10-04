@@ -195,6 +195,41 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 		}
 		ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+	rg.POST("/revoke", func(ginContext *gin.Context) {
+		log.Printf("revoke oauth token")
+
+		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
+		if apiKey != config.Service.ApiKey {
+			ginContext.JSON(http.StatusUnauthorized, gin.H{
+				"result": fmt.Sprintf("invalid api key"),
+			})
+			return
+		}
+
+		var revokeRequest model.RevokeRequest
+		if err := ginContext.BindJSON(&revokeRequest); err != nil {
+			log.Printf("unable to parse json: %v", err.Error())
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+			})
+			return
+		}
+		log.Printf("parsed json: %v", revokeRequest)
+
+		var oauthToken, _ = authServices.OAuthTokenService.GetByPlayerIdAndProvider(revokeRequest.ProviderAccountId, revokeRequest.Provider)
+
+		url := fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
+		resp, err := http.Get(url)
+		if err != nil {
+			ginContext.JSON(http.StatusInternalServerError, gin.H{})
+		}
+		if resp.StatusCode == 200 {
+			//toro remove from db
+			authServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, revokeRequest.Provider)
+		}
+
+		ginContext.JSON(http.StatusOK, gin.H{})
+	})
 }
 
 func isRequestEnablingGmailSync(signInRequest model.SignInRequest) bool {
