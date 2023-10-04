@@ -19,7 +19,6 @@ export default function NotFound() {
       flex={1}
       as={Flex}
       flexDirection='column'
-      bgImage='/backgrounds/organization/half-circle-pattern.svg'
       backgroundRepeat='no-repeat'
       backgroundSize='contain'
       h='100vh'
@@ -49,9 +48,7 @@ export default function NotFound() {
         h='50vh'
       >
         <FeaturedIcon colorScheme='primary' size='lg'>
-          <Box>
-            <SearchSm />
-          </Box>
+          <SearchSm boxSize='5' />
         </FeaturedIcon>
         <Heading fontWeight={600} fontSize='6xl' color='gray.900' py={6}>
           We lost this page
@@ -64,7 +61,7 @@ export default function NotFound() {
           colorScheme='primary'
           variant='outline'
           size='lg'
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/organizations')}
         >
           Take me home
         </Button>

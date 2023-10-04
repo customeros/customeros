@@ -6,7 +6,7 @@ import { useTimelineEventPreviewContext } from '@organization/src/components/Tim
 import React, { useCallback, useMemo } from 'react';
 import { Image } from '@ui/media/Image';
 import noteIcon from 'public/images/event-ill-log-stub.png';
-import { Box } from '@spaces/ui/layout/Box';
+import { Box } from '@ui/layout/Box';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Calendar } from '@ui/media/icons/Calendar';
 import { Phone } from '@ui/media/icons/Phone';

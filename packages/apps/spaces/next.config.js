@@ -6,7 +6,6 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
-const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const webpack = require('webpack');
@@ -14,17 +13,6 @@ const webpack = require('webpack');
 const config = {
   reactStrictMode: true,
   swcMinify: true,
-  modularizeImports: {
-    '@spaces/ui-kit': {
-      transform: '@spaces/ui-kit/{{ member }}',
-    },
-    '@spaces/atoms': {
-      transform: '@spaces/atoms/{{ member }}',
-    },
-    '@spaces/hooks/*/': {
-      transform: '@spaces/hooks/*/{{ member }}',
-    },
-  },
   images: {
     minimumCacheTTL: 31536000,
   },
@@ -41,13 +29,14 @@ const config = {
     WEB_CHAT_TRACKER_COLLECTOR_URL: process.env.WEB_CHAT_TRACKER_COLLECTOR_URL,
     WEB_CHAT_TRACKER_BUFFER_SIZE: process.env.WEB_CHAT_TRACKER_BUFFER_SIZE,
     WEB_CHAT_TRACKER_MINIMUM_VISIT_LENGTH:
-    process.env.WEB_CHAT_TRACKER_MINIMUM_VISIT_LENGTH,
+      process.env.WEB_CHAT_TRACKER_MINIMUM_VISIT_LENGTH,
     WEB_CHAT_TRACKER_HEARTBEAT_DELAY:
-    process.env.WEB_CHAT_TRACKER_HEARTBEAT_DELAY,
+      process.env.WEB_CHAT_TRACKER_HEARTBEAT_DELAY,
     COMMS_MAIL_API_KEY: process.env.COMMS_MAIL_API_KEY,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
     NEXT_PUBLIC_JUNE_ENABLED: process.env.NEXT_PUBLIC_JUNE_ENABLED,
-    CUSTOMER_OS_GOOGLE_MANAGE_ACCESS_URL: process.env.CUSTOMER_OS_GOOGLE_MANAGE_ACCESS_URL,
+    CUSTOMER_OS_GOOGLE_MANAGE_ACCESS_URL:
+      process.env.CUSTOMER_OS_GOOGLE_MANAGE_ACCESS_URL,
   },
   i18n: {
     locales: ['en'],

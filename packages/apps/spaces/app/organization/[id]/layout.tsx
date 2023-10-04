@@ -2,6 +2,7 @@ import { Hydrate } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { GridItem } from '@ui/layout/Grid';
+import { PageLayout } from '@shared/components/PageLayout';
 import { getDehydratedState } from '@shared/util/getDehydratedState';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 
@@ -20,12 +21,20 @@ export default async function OrganizationLayout({
 
   return (
     <Hydrate state={dehydratedState}>
-      <OrganizationSidenav />
-      <GridItem h='100%' area='content' overflow='hidden' columnGap={2} gap={0}>
-        <Flex flexDir='row' columnGap={2} h='100%'>
-          {children}
-        </Flex>
-      </GridItem>
+      <PageLayout>
+        <OrganizationSidenav />
+        <GridItem
+          h='100%'
+          area='content'
+          overflow='hidden'
+          columnGap={2}
+          gap={0}
+        >
+          <Flex flexDir='row' columnGap={2} h='100%'>
+            {children}
+          </Flex>
+        </GridItem>
+      </PageLayout>
     </Hydrate>
   );
 }

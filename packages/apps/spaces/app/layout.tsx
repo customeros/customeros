@@ -3,7 +3,6 @@ import Script from 'next/script';
 import localFont from 'next/font/local';
 import { ToastContainer } from 'react-toastify';
 
-import { PageLayout } from './src/components/PageLayout';
 import { Providers } from './src/components/Providers/Providers';
 import { ThemeProvider } from './src/components/Providers/ThemeProvider';
 
@@ -48,19 +47,17 @@ export default async function RootLayout({
       />
       <body className='scrollbar'>
         <ThemeProvider>
-          <PageLayout>
-            <Providers>
-              {children}
-              <ToastContainer
-                position='bottom-right'
-                autoClose={8000}
-                limit={3}
-                closeOnClick={true}
-                hideProgressBar={true}
-                theme='colored'
-              />
-            </Providers>
-          </PageLayout>
+          <Providers>
+            {children}
+            <ToastContainer
+              position='bottom-right'
+              autoClose={8000}
+              limit={3}
+              closeOnClick={true}
+              hideProgressBar={true}
+              theme='colored'
+            />
+          </Providers>
         </ThemeProvider>
       </body>
     </html>

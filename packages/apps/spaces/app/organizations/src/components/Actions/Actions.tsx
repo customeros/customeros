@@ -1,9 +1,6 @@
 import { useState } from 'react';
 
-import {
-  TableInstance,
-  RowSelectionState,
-} from '@spaces/ui/presentation/Table';
+import { TableInstance, RowSelectionState } from '@ui/presentation/Table';
 import { Icons } from '@ui/media/Icon';
 import { Organization } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';

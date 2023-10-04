@@ -8,7 +8,7 @@ import { Text } from '@ui/typography/Text';
 import { Heading } from '@ui/typography/Heading';
 import { Switch } from '@ui/form/Switch';
 import { Flex, FormLabel } from '@chakra-ui/react';
-import { Icons } from '@spaces/ui/media/Icon';
+import { Icons } from '@ui/media/Icon';
 import {
   GetOAuthUserSettings,
   OAuthUserSettingsInterface,
