@@ -17,6 +17,7 @@ interface SlackMessageCardProps extends PropsWithChildren {
   onClick?: () => void;
   date: string;
   w?: CardProps['w'];
+  ml?: CardProps['ml'];
   showDateOnHover?: boolean;
 }
 
@@ -29,6 +30,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   children,
   date,
   w,
+  ml,
   showDateOnHover,
 }) => {
   const displayContent: string = (() => {
@@ -45,6 +47,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   return (
     <>
       <Card
+        ml={ml}
         variant='outline'
         size='md'
         fontSize='14px'

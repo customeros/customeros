@@ -25,7 +25,8 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
     (slackEvent?.sentBy?.[0] as JobRoleParticipant)?.jobRoleParticipant
       ?.contact ||
     (slackEvent?.sentBy?.[0] as UserParticipant)?.userParticipant;
-
+  const isSentByTenantUser =
+    slackEvent?.sentBy?.[0]?.__typename === 'UserParticipant';
   const slackEventReplies = slackEvent.interactionSession?.events?.filter(
     (e) => e?.id !== slackEvent?.id,
   );
@@ -48,6 +49,7 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
       onClick={() => openModal(slackEvent)}
       date={DateTimeUtils.formatTime(slackEvent?.date)}
       showDateOnHover
+      ml={isSentByTenantUser ? 6 : 0}
     >
       {!!slackEventReplies?.length && (
         <Flex mt={1}>

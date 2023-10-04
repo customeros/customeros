@@ -18,6 +18,8 @@ interface MeetingStubProps {
 
 export const MeetingStub = ({ data }: MeetingStubProps) => {
   const owner = getParticipantName(data.createdBy[0]);
+  const isSentByTenantUser =
+    data.createdBy[0]?.__typename === 'UserParticipant';
   const firstParticipant = getParticipantName(data.attendedBy?.[0]);
   const [participants, remaining] = getParticipants(data);
   const { openModal } = useTimelineEventPreviewContext();
@@ -40,6 +42,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
       onClick={() => openModal(data)}
       _hover={{ boxShadow: 'md' }}
       transition='all 0.2s ease-out'
+      ml={isSentByTenantUser ? 6 : 0}
     >
       <CardBody px='3' py='2'>
         <Flex w='full' justify='space-between' position='relative' gap='3'>

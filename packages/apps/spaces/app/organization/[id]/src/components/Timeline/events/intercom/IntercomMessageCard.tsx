@@ -16,6 +16,7 @@ interface IntercomMessageCardProps extends PropsWithChildren {
   onClick?: () => void;
   date: string;
   w?: CardProps['w'];
+  ml?: CardProps['ml'];
   showDateOnHover?: boolean;
 }
 
@@ -28,6 +29,7 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
   children,
   date,
   w,
+  ml,
   showDateOnHover,
 }) => {
   return (
@@ -35,6 +37,7 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
       <Card
         variant='outline'
         size='md'
+        ml={ml}
         fontSize='14px'
         background='white'
         flexDirection='row'
