@@ -8,6 +8,7 @@ const apiPaths = [
   '/comms-api/',
   '/transcription-api/',
   '/validation-api/',
+  '/ua/',
 ];
 
 export default withAuth(
@@ -96,13 +97,23 @@ function getRedirectUrl(
     );
   } else if (request.nextUrl.pathname.startsWith('/validation-api/')) {
     newURL =
-      process.env.VALIDATION_API_PATH +
+        process.env.VALIDATION_API_PATH +
+        '/' +
+        request.nextUrl.pathname.substring('/validation-api/'.length);
+
+    requestHeaders.set(
+        'X-Openline-API-KEY',
+        process.env.VALIDATION_API_KEY as string,
+    );
+  } else if (request.nextUrl.pathname.startsWith('/ua/')) {
+    newURL =
+      process.env.USER_ADMIN_API_URL +
       '/' +
-      request.nextUrl.pathname.substring('/validation-api/'.length);
+      request.nextUrl.pathname.substring('/ua/'.length);
 
     requestHeaders.set(
       'X-Openline-API-KEY',
-      process.env.VALIDATION_API_KEY as string,
+      process.env.USER_ADMIN_API_KEY as string,
     );
   }
 

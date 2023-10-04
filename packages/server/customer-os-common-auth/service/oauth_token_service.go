@@ -8,6 +8,7 @@ import (
 type OAuthTokenService interface {
 	Save(tokenEntity entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
 	GetByPlayerIdAndProvider(playerId string, provider string) (*entity.OAuthTokenEntity, error)
+	DeleteByPlayerIdAndProvider(playerId string, provider string) error
 }
 
 type oAuthTokenService struct {
@@ -33,4 +34,8 @@ func (o oAuthTokenService) GetByPlayerIdAndProvider(playerId string, provider st
 	}
 
 	return authTokenEntity, nil
+}
+
+func (o oAuthTokenService) DeleteByPlayerIdAndProvider(playerId string, provider string) error {
+	return o.repositories.OAuthTokenRepository.DeleteByPlayerIdAndProvider(playerId, provider)
 }

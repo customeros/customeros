@@ -1,15 +1,10 @@
 import axios from 'axios';
 import {env} from "string-env-interpolation";
 
-export interface UserDetails{
-    playerIdentityId: string;
-    name: string;
-}
 export interface OAuthUserSettingsInterface {
     gmailSyncEnabled: boolean;
     googleCalendarSyncEnabled: boolean;
 }
-
 
 export function GetOAuthUserSettings(identifier:string): Promise<OAuthUserSettingsInterface> {
     return new Promise((resolve, reject) =>

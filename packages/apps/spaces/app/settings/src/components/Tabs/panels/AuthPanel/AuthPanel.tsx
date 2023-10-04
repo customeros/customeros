@@ -16,6 +16,9 @@ import {
 import { GetServerSidePropsContext } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../../../../../pages/api/auth/[...nextauth]';
+import {RevokeAccess} from "../../../../../../../services/admin/userAdminService";
+import {Button} from "@ui/form/Button";
+import {toastError, toastSuccess} from "@ui/presentation/Toast";
 
 export const AuthPanel = () => {
   const commonScopes = ['openid', 'email', 'profile'];
@@ -91,6 +94,36 @@ export const AuthPanel = () => {
     }
   };
 
+  const [revokeLoading, setRevokeLoading] = useState(false);
+  const handleRevokeGoogleAccess = async () => {
+    setRevokeLoading(true);
+    RevokeAccess({
+      // @ts-expect-error look into it
+      providerAccountId: session.user.playerIdentityId,
+      provider: 'google',
+    })
+        .then((data: any) => {
+          // @ts-expect-error look into it
+          GetOAuthUserSettings(session.user.playerIdentityId).then(
+              (res: OAuthUserSettingsInterface) => {
+                setOAuthSettings(res);
+              },
+          );
+          setRevokeLoading(false);
+          toastSuccess(
+              'We have successfully revoked access to your google account!',
+              'revoke-google-access',
+          );
+        })
+        .catch(() => {
+          setRevokeLoading(false);
+          toastError(
+              'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
+              'revoke-google-access',
+          );
+        });
+  };
+
   return (
     <>
       <Card
@@ -148,6 +181,22 @@ export const AuthPanel = () => {
                 onChange={(event) => handleSyncGoogleCalendarClick(event)}
               />
             </Flex>
+
+            {
+              oAuthSettings && (oAuthSettings.googleCalendarSyncEnabled || oAuthSettings.gmailSyncEnabled) &&
+                  (
+                      <Flex mt={2}>
+                        <Button
+                            fontSize={'14px'}
+                            isLoading={revokeLoading}
+                            loadingText={'Revoking google access...'}
+                            onClick={handleRevokeGoogleAccess}
+                        >
+                          Revoke Google access
+                        </Button>
+                      </Flex>
+                  )
+            }
           </Flex>
         </CardBody>
       </Card>

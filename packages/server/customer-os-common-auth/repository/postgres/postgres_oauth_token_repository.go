@@ -17,6 +17,8 @@ type OAuthTokenRepository interface {
 	Update(playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error)
 
 	MarkForManualRefresh(playerId, provider string) error
+
+	DeleteByPlayerIdAndProvider(playerId string, provider string) error
 }
 
 type oAuthTokenRepository struct {
@@ -121,6 +123,23 @@ func (repo oAuthTokenRepository) MarkForManualRefresh(playerId, provider string)
 	result := repo.db.Save(&existing)
 	if result.Error != nil {
 		return fmt.Errorf("updating oauth token failed: %w", result.Error)
+	}
+
+	return nil
+}
+
+func (repo oAuthTokenRepository) DeleteByPlayerIdAndProvider(playerId, provider string) error {
+	existing, err := repo.GetByPlayerIdAndProvider(playerId, provider)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return nil
+	}
+
+	err = repo.db.Delete(&existing).Error
+	if err != nil {
+		return fmt.Errorf("deleting oauth token failed: %w", err)
 	}
 
 	return nil
