@@ -106,7 +106,7 @@ export const TimelineActionEmailContextContextProvider = ({
     const to = [...state.values.to].map(({ value }) => value);
     const cc = [...state.values.cc].map(({ value }) => value);
     const bcc = [...state.values.bcc].map(({ value }) => value);
-    const params = new URLSearchParams(searchParams ?? '');
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
 
     setIsSending(true);
     const id = params.get('events');

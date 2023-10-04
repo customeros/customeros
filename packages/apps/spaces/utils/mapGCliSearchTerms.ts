@@ -1,4 +1,4 @@
-import { ComparisonOperator, Filter } from '../graphQL/__generated__/generated';
+import { ComparisonOperator, Filter } from '@graphql/types';
 
 export const mapGCliSearchTermsToFilterList = (
   searchTerms: any[],

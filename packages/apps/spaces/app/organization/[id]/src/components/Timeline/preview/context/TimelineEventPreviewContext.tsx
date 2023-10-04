@@ -52,7 +52,7 @@ export const TimelineEventPreviewContextContextProvider = ({
 
   const handleOpenModal = (content: TimelineEvent) => {
     setIsModalOpen(true);
-    const params = new URLSearchParams(searchParams ?? '');
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
     params.set('events', content.id);
     router.push(`?${params}`);
     setLastActivePosition({
@@ -64,7 +64,7 @@ export const TimelineEventPreviewContextContextProvider = ({
 
   const handleCloseModal = () => {
     if (!isModalOpen) return;
-    const params = new URLSearchParams(searchParams ?? '');
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
     params.delete('events');
     setIsModalOpen(false);
     setModalContent(null);

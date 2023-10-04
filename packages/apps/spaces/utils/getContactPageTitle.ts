@@ -1,4 +1,4 @@
-import { Contact } from '../graphQL/__generated__/generated';
+import { Contact } from '@graphql/types';
 import { getContactDisplayName } from './getContactName';
 
 export const getContactPageTitle = (contact: Partial<Contact>): string => {
@@ -8,9 +8,9 @@ export const getContactPageTitle = (contact: Partial<Contact>): string => {
   const contactName = getContactDisplayName(contact);
 
   if (contactName === 'Unnamed') {
-    if (!!contact?.emails?.[0]?.email?.length) {
+    if (contact?.emails?.[0]?.email?.length) {
       return contact.emails[0].email;
-    } else if (!!contact?.phoneNumbers?.length) {
+    } else if (contact?.phoneNumbers?.length) {
       const phoneNumber =
         contact.phoneNumbers[0]?.e164 ||
         contact.phoneNumbers[0]?.rawPhoneNumber;

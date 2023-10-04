@@ -26,7 +26,6 @@ import { InteractionEvent } from '@graphql/types';
 import { RichTextPreview } from '@ui/form/RichTextEditor/RichTextPreview';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
-import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -192,7 +191,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     const to = [...state.values.to].map(({ value }) => value);
     const cc = [...state.values.cc].map(({ value }) => value);
     const bcc = [...state.values.bcc].map(({ value }) => value);
-    const params = new URLSearchParams(searchParams ?? '');
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
 
     setIsSending(true);
     const id = params.get('events');
