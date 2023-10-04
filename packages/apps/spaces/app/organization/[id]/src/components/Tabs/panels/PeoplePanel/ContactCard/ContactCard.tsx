@@ -294,7 +294,7 @@ export const ContactCard = ({
               isCardOpen={isExpanded}
               isFocused={roleIsFocused}
               setIsFocused={setRoleIsFocused}
-              displayValue={data.role?.map((v) => v.label).join(', ')}
+              data={data.role}
             />
           </Flex>
           {isExpanded && (
