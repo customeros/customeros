@@ -26,6 +26,8 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
   });
 
   const { to, cc } = getEmailParticipantsByType(email?.sentTo || []);
+  const isSendByTenant = (email?.sentBy?.[0] as EmailParticipant)
+    ?.emailParticipant?.users?.length;
 
   return (
     <>
@@ -45,6 +47,7 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
         onClick={() => openModal(email)}
         _hover={{ boxShadow: 'md' }}
         transition='all 0.2s ease-out'
+        ml={isSendByTenant ? 6 : 0}
       >
         <CardBody px='3' py='2' pr='0' overflow={'hidden'} flexDirection='row'>
           <VStack align='flex-start' spacing={0}>

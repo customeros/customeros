@@ -75,7 +75,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
   const from = getEmailParticipantsNameAndEmail(event?.sentBy || [], 'value');
   const formId = 'compose-email-preview-modal';
-
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
     to: getEmailParticipantsNameAndEmail(
       [...(event?.sentBy ?? []), ...(to ?? [])],

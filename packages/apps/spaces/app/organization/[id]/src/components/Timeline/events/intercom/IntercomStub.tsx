@@ -26,7 +26,8 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
     (intercomEvent?.sentBy?.[0] as JobRoleParticipant)?.jobRoleParticipant
       ?.contact ||
     (intercomEvent?.sentBy?.[0] as UserParticipant)?.userParticipant;
-
+  const isSentByTenantUser =
+    intercomEvent?.sentBy?.[0]?.__typename === 'UserParticipant';
   if (!intercomSender) {
     return null;
   }
@@ -54,6 +55,7 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
       onClick={() => openModal(intercomEvent)}
       date={DateTimeUtils.formatTime(intercomEvent?.date)}
       showDateOnHover
+      ml={isSentByTenantUser ? 6 : 0}
     >
       {!!intercomEventReplies?.length && (
         <Flex mt={1}>
