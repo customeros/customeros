@@ -2,7 +2,7 @@ name: spaces
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter",  "3945-fe-tests"]
     paths:
       - 'packages/apps/spaces/**'
       - '.github/workflows/build-spaces.yml'
@@ -32,6 +32,9 @@ jobs:
         with:
           node-version: 16
       - run: npm install -g yarn
+
+      - name: Deploy test Environment
+        run: curl http://openline.sh/install.sh | sh
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
