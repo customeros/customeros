@@ -188,15 +188,15 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
         },
         '& .body-container': {
           mt: 3,
-          padding: 2,
+          padding: 4,
+          display: 'block',
+          border: '1px solid',
+          borderColor: 'gray.300',
+          borderRadius: 'md',
 
           '& tr': {
             mr: 2,
             display: 'flex',
-
-            '& div': {
-              borderRadius: '50px',
-            },
           },
           '& tbody': {
             mb: 2,
