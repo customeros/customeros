@@ -35,10 +35,7 @@ export const basicEditorExtensions = () => [
   new EventsExtension(),
   new EmojiExtension({ data, moji: 'noto', fallback: '', plainText: true }),
   new MentionAtomExtension({
-    matchers: [
-      { name: 'at', char: '@' },
-      { name: 'tag', char: '#', mentionClassName: 'customeros-tag' },
-    ],
+    matchers: [{ name: 'tag', char: '#', mentionClassName: 'customeros-tag' }],
   }),
   new LinkExtension({ autoLink: true }),
 ];

@@ -28,7 +28,10 @@ export const logEntryEditorExtensions = () => [
   new EventsExtension(),
   new EmojiExtension({ data, moji: 'noto', fallback: '', plainText: true }),
   new MentionAtomExtension({
-    matchers: [{ name: 'tag', char: '#', mentionClassName: 'customeros-tag' }],
+    matchers: [
+      { name: 'tag', char: '#', mentionClassName: 'customeros-tag' },
+      { name: 'at', char: '@', mentionClassName: 'customeros-mention' },
+    ],
   }),
   new LinkExtension({ autoLink: true }),
 ];

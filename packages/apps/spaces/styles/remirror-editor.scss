@@ -3882,6 +3882,13 @@ a {
     content: '#';
   }
 }
+.customeros-mention {
+  color: var(--chakra-colors-gray-700);
+  font-weight: var(--chakra-fontWeights-medium);
+  &:before {
+    content: '@';
+  }
+}
 
 .floating-menu {
   --menu-bg: #fff;

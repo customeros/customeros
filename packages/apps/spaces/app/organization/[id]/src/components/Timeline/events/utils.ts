@@ -5,6 +5,7 @@ import {
   OrganizationParticipant,
   EmailParticipant,
   UserParticipant,
+  Contact,
 } from '@graphql/types';
 import { getName } from '@spaces/utils/getParticipantsName';
 
@@ -75,4 +76,14 @@ export const getParticipants = (
       .split(' + ');
   }
   return [];
+};
+
+export const getMentionOptionLabel = (
+  contact: Pick<Contact, 'name' | 'firstName' | 'lastName' | 'emails'>,
+): string | undefined | null => {
+  return (
+    contact?.name ||
+    [contact?.firstName, contact?.lastName].filter(Boolean).join(' ') ||
+    contact?.emails?.[0]?.email
+  );
 };

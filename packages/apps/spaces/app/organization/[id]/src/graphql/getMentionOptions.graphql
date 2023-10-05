@@ -1,0 +1,15 @@
+query getMentionOptions($id: ID!) {
+  organization(id: $id) {
+    contacts(pagination: { page: 0, limit: 100 }) {
+      content {
+        id
+        name
+        firstName
+        lastName
+        emails {
+          email
+        }
+        }
+      }
+  }
+}
