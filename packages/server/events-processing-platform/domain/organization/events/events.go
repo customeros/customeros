@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -30,28 +30,29 @@ const (
 )
 
 type OrganizationCreateEvent struct {
-	Tenant            string    `json:"tenant" validate:"required"`
-	Name              string    `json:"name"`
-	Hide              bool      `json:"hide"`
-	Description       string    `json:"description"`
-	Website           string    `json:"website"`
-	Industry          string    `json:"industry"`
-	SubIndustry       string    `json:"subIndustry"`
-	IndustryGroup     string    `json:"industryGroup"`
-	TargetAudience    string    `json:"targetAudience"`
-	ValueProposition  string    `json:"valueProposition"`
-	IsPublic          bool      `json:"isPublic"`
-	Employees         int64     `json:"employees"`
-	Market            string    `json:"market"`
-	LastFundingRound  string    `json:"lastFundingRound"`
-	LastFundingAmount string    `json:"lastFundingAmount"`
-	ReferenceId       string    `json:"referenceId"`
-	Note              string    `json:"note"`
-	Source            string    `json:"source"`
-	SourceOfTruth     string    `json:"sourceOfTruth"`
-	AppSource         string    `json:"appSource"`
-	CreatedAt         time.Time `json:"createdAt"`
-	UpdatedAt         time.Time `json:"updatedAt"`
+	Tenant            string                `json:"tenant" validate:"required"`
+	Name              string                `json:"name"`
+	Hide              bool                  `json:"hide"`
+	Description       string                `json:"description"`
+	Website           string                `json:"website"`
+	Industry          string                `json:"industry"`
+	SubIndustry       string                `json:"subIndustry"`
+	IndustryGroup     string                `json:"industryGroup"`
+	TargetAudience    string                `json:"targetAudience"`
+	ValueProposition  string                `json:"valueProposition"`
+	IsPublic          bool                  `json:"isPublic"`
+	Employees         int64                 `json:"employees"`
+	Market            string                `json:"market"`
+	LastFundingRound  string                `json:"lastFundingRound"`
+	LastFundingAmount string                `json:"lastFundingAmount"`
+	ReferenceId       string                `json:"referenceId"`
+	Note              string                `json:"note"`
+	Source            string                `json:"source"`
+	SourceOfTruth     string                `json:"sourceOfTruth"`
+	AppSource         string                `json:"appSource"`
+	CreatedAt         time.Time             `json:"createdAt"`
+	UpdatedAt         time.Time             `json:"updatedAt"`
+	ExternalSystem    cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
 func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFields *models.OrganizationFields, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -79,6 +80,9 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
 	}
+	if organizationFields.ExternalSystem.Available() {
+		eventData.ExternalSystem = organizationFields.ExternalSystem
+	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
 		return eventstore.Event{}, err
@@ -92,26 +96,27 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 }
 
 type OrganizationUpdateEvent struct {
-	IgnoreEmptyFields bool      `json:"ignoreEmptyFields"`
-	Tenant            string    `json:"tenant" validate:"required"`
-	SourceOfTruth     string    `json:"sourceOfTruth"`
-	UpdatedAt         time.Time `json:"updatedAt"`
-	Name              string    `json:"name"`
-	Hide              bool      `json:"hide"`
-	Description       string    `json:"description"`
-	Website           string    `json:"website"`
-	Industry          string    `json:"industry"`
-	SubIndustry       string    `json:"subIndustry"`
-	IndustryGroup     string    `json:"industryGroup"`
-	TargetAudience    string    `json:"targetAudience"`
-	ValueProposition  string    `json:"valueProposition"`
-	IsPublic          bool      `json:"isPublic"`
-	Employees         int64     `json:"employees"`
-	Market            string    `json:"market"`
-	LastFundingRound  string    `json:"lastFundingRound"`
-	LastFundingAmount string    `json:"lastFundingAmount"`
-	ReferenceId       string    `json:"referenceId"`
-	Note              string    `json:"note"`
+	IgnoreEmptyFields bool                  `json:"ignoreEmptyFields"`
+	Tenant            string                `json:"tenant" validate:"required"`
+	Source            string                `json:"source"`
+	UpdatedAt         time.Time             `json:"updatedAt"`
+	Name              string                `json:"name"`
+	Hide              bool                  `json:"hide"`
+	Description       string                `json:"description"`
+	Website           string                `json:"website"`
+	Industry          string                `json:"industry"`
+	SubIndustry       string                `json:"subIndustry"`
+	IndustryGroup     string                `json:"industryGroup"`
+	TargetAudience    string                `json:"targetAudience"`
+	ValueProposition  string                `json:"valueProposition"`
+	IsPublic          bool                  `json:"isPublic"`
+	Employees         int64                 `json:"employees"`
+	Market            string                `json:"market"`
+	LastFundingRound  string                `json:"lastFundingRound"`
+	LastFundingAmount string                `json:"lastFundingAmount"`
+	ReferenceId       string                `json:"referenceId"`
+	Note              string                `json:"note"`
+	ExternalSystem    cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *models.OrganizationFields, updatedAt time.Time, ignoreEmptyFields bool) (eventstore.Event, error) {
@@ -135,7 +140,10 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		ReferenceId:       organizationFields.OrganizationDataFields.ReferenceId,
 		Note:              organizationFields.OrganizationDataFields.Note,
 		UpdatedAt:         updatedAt,
-		SourceOfTruth:     organizationFields.Source.SourceOfTruth,
+		Source:            organizationFields.Source.Source,
+	}
+	if organizationFields.ExternalSystem.Available() {
+		eventData.ExternalSystem = organizationFields.ExternalSystem
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -506,7 +514,7 @@ type OrganizationUpsertCustomField struct {
 	CustomFieldValue    models.CustomFieldValue `json:"customFieldValue"`
 }
 
-func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields common_models.Source, createdAt, updatedAt time.Time, customField models.CustomField, foundInEventStore bool) (eventstore.Event, error) {
+func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields cmnmod.Source, createdAt, updatedAt time.Time, customField models.CustomField, foundInEventStore bool) (eventstore.Event, error) {
 	eventData := OrganizationUpsertCustomField{
 		Tenant:              aggregate.GetTenant(),
 		Source:              sourceFields.Source,

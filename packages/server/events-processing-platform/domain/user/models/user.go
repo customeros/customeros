@@ -20,7 +20,7 @@ type User struct {
 	Emails          map[string]UserEmail           `json:"emails"`
 	JobRoles        map[string]bool                `json:"jobRoles"`
 	Source          common_models.Source           `json:"source"`
-	ExternalSystems []common_models.ExternalSystem `json:"externalSystem"`
+	ExternalSystems []common_models.ExternalSystem `json:"externalSystems"`
 	Players         []PlayerInfo                   `json:"players"`
 	Roles           []string                       `json:"roles"`
 }

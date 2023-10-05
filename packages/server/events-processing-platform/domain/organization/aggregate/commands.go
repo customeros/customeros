@@ -54,6 +54,7 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, createdAtNotNil)
+	organizationFields.Source.SetDefaultValues()
 
 	createEvent, err := events.NewOrganizationCreateEvent(a, organizationFields, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
@@ -84,9 +85,6 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 	var eventsOnUpdate []eventstore.Event
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, utils.Now())
-	if organizationFields.Source.SourceOfTruth == "" {
-		organizationFields.Source.SourceOfTruth = a.Organization.Source.SourceOfTruth
-	}
 
 	event, err := events.NewOrganizationUpdateEvent(a, organizationFields, updatedAtNotNil, organizationFields.IgnoreEmptyFields)
 	if err != nil {

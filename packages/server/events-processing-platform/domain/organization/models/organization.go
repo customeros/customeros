@@ -107,6 +107,7 @@ type Organization struct {
 	RenewalForecast   RenewalForecast                    `json:"renewalForecast,omitempty"`
 	BillingDetails    BillingDetails                     `json:"billingDetails,omitempty"`
 	CustomFields      map[string]CustomField             `json:"customFields,omitempty"`
+	ExternalSystems   []common_models.ExternalSystem     `json:"externalSystems"`
 }
 
 type RenewalLikelihood struct {

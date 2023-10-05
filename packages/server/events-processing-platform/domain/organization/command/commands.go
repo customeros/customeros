@@ -13,34 +13,33 @@ type UpsertOrganizationCommand struct {
 	IgnoreEmptyFields bool
 	DataFields        models.OrganizationDataFields
 	Source            common_models.Source
+	ExternalSystem    common_models.ExternalSystem
 	CreatedAt         *time.Time
 	UpdatedAt         *time.Time
 }
 
-func UpsertOrganizationCommandToOrganizationFields(command *UpsertOrganizationCommand) *models.OrganizationFields {
+func UpsertOrganizationCommandToOrganizationFieldsStruct(command *UpsertOrganizationCommand) *models.OrganizationFields {
 	return &models.OrganizationFields{
 		ID:                     command.ObjectID,
 		Tenant:                 command.Tenant,
 		OrganizationDataFields: command.DataFields,
 		Source:                 command.Source,
+		ExternalSystem:         command.ExternalSystem,
 		CreatedAt:              command.CreatedAt,
 		UpdatedAt:              command.UpdatedAt,
 		IgnoreEmptyFields:      command.IgnoreEmptyFields,
 	}
 }
 
-func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource, userId string, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time, ignoreEmptyFields bool) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(organizationId, tenant, userId string, source common_models.Source, externalSystem common_models.ExternalSystem, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time, ignoreEmptyFields bool) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
 		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant, userId),
 		IgnoreEmptyFields: ignoreEmptyFields,
 		DataFields:        coreFields,
-		Source: common_models.Source{
-			Source:        source,
-			SourceOfTruth: sourceOfTruth,
-			AppSource:     appSource,
-		},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		Source:            source,
+		ExternalSystem:    externalSystem,
+		CreatedAt:         createdAt,
+		UpdatedAt:         updatedAt,
 	}
 }
 
@@ -48,16 +47,16 @@ type UpdateOrganizationCommand struct {
 	eventstore.BaseCommand
 	IgnoreEmptyFields bool
 	DataFields        models.OrganizationDataFields
-	SourceOfTruth     string
+	Source            string
 	UpdatedAt         *time.Time
 }
 
-func NewUpdateOrganizationCommand(organizationId, tenant, sourceOfTruth string, dataFields models.OrganizationDataFields, updatedAt *time.Time, ignoreEmptyFields bool) *UpdateOrganizationCommand {
+func NewUpdateOrganizationCommand(organizationId, tenant, source string, dataFields models.OrganizationDataFields, updatedAt *time.Time, ignoreEmptyFields bool) *UpdateOrganizationCommand {
 	return &UpdateOrganizationCommand{
 		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant, ""),
 		IgnoreEmptyFields: ignoreEmptyFields,
 		DataFields:        dataFields,
-		SourceOfTruth:     sourceOfTruth,
+		Source:            source,
 		UpdatedAt:         updatedAt,
 	}
 }

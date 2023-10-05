@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -17,6 +18,7 @@ import (
 
 type OrganizationRepository interface {
 	CreateOrganization(ctx context.Context, organizationId string, event events.OrganizationCreateEvent) error
+	CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, organizationId string, event events.OrganizationCreateEvent) error
 	UpdateOrganization(ctx context.Context, organizationId string, event events.OrganizationUpdateEvent) error
 	UpdateOrganizationIgnoreEmptyInputParams(ctx context.Context, organizationId string, event events.OrganizationUpdateEvent) error
 	LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error
@@ -45,6 +47,20 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, organiz
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CreateOrganization")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return nil, r.CreateOrganizationInTx(ctx, tx, organizationId, event)
+	})
+	return err
+}
+
+func (r *organizationRepository) CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, organizationId string, event events.OrganizationCreateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CreateOrganizationInTx")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
@@ -71,10 +87,27 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, organiz
 						org.createdAt = $createdAt,
 						org.updatedAt = $updatedAt,
 						org.syncedWithEventStore = true 
-		 ON MATCH SET 	org.syncedWithEventStore = true`, event.Tenant)
+		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
+						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
+						org.hide = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.hide is null OR org.hide = true THEN $hide ELSE org.hide END,
+						org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.website is null OR org.website = '' THEN $website ELSE org.website END,
+						org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END,
+						org.subIndustry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.subIndustry is null OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,
+						org.industryGroup = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industryGroup is null OR org.industryGroup = '' THEN $industryGroup ELSE org.industryGroup END,
+						org.targetAudience = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.targetAudience is null OR org.targetAudience = '' THEN $targetAudience ELSE org.targetAudience END,
+						org.valueProposition = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.valueProposition is null OR org.valueProposition = '' THEN $valueProposition ELSE org.valueProposition END,
+						org.lastFundingRound = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingRound is null OR org.lastFundingRound = '' THEN $lastFundingRound ELSE org.lastFundingRound END,
+						org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,
+						org.referenceId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.referenceId is null OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,
+						org.note = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.note is null OR org.note = '' THEN $note ELSE org.note END,
+						org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.isPublic is null THEN $isPublic ELSE org.isPublic END,
+						org.employees = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.employees is null THEN $employees ELSE org.employees END,
+						org.market = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,
+						org.updatedAt=$updatedAt,
+						org.syncedWithEventStore = true`, event.Tenant)
 	span.LogFields(log.String("query", query))
 
-	return r.executeQuery(ctx, query, map[string]any{
+	return utils.ExecuteQueryInTx(ctx, tx, query, map[string]any{
 		"id":                organizationId,
 		"name":              event.Name,
 		"hide":              event.Hide,
@@ -93,11 +126,12 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, organiz
 		"lastFundingAmount": event.LastFundingAmount,
 		"referenceId":       event.ReferenceId,
 		"note":              event.Note,
-		"source":            event.Source,
-		"sourceOfTruth":     event.SourceOfTruth,
-		"appSource":         event.AppSource,
+		"source":            helper.GetSource(event.Source),
+		"sourceOfTruth":     helper.GetSource(event.SourceOfTruth),
+		"appSource":         helper.GetSource(event.AppSource),
 		"createdAt":         event.CreatedAt,
 		"updatedAt":         event.UpdatedAt,
+		"overwrite":         helper.GetSource(event.Source) == constants.SourceOpenline,
 	})
 }
 
@@ -108,23 +142,23 @@ func (r *organizationRepository) UpdateOrganization(ctx context.Context, organiz
 	span.LogFields(log.String("organizationId", organizationId))
 
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
-		 SET	org.name = $name,
-				org.description = $description,
-				org.hide = $hide,
-				org.website = $website,
-				org.industry = $industry,
-				org.subIndustry = $subIndustry,
-				org.industryGroup = $industryGroup,
-				org.targetAudience = $targetAudience,
-				org.valueProposition = $valueProposition,
-				org.lastFundingRound = $lastFundingRound,
-				org.lastFundingAmount = $lastFundingAmount,
-				org.referenceId = $referenceId,
-				org.note = $note,
-				org.isPublic = $isPublic,
-				org.employees = $employees,
-				org.market = $market,	
-				org.sourceOfTruth = $sourceOfTruth,
+		 SET	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
+				org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
+				org.hide = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.hide is null OR org.hide = true THEN $hide ELSE org.hide END,
+				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.website is null OR org.website = '' THEN $website ELSE org.website END,
+				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END,
+				org.subIndustry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.subIndustry is null OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,
+				org.industryGroup = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industryGroup is null OR org.industryGroup = '' THEN $industryGroup ELSE org.industryGroup END,
+				org.targetAudience = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.targetAudience is null OR org.targetAudience = '' THEN $targetAudience ELSE org.targetAudience END,
+				org.valueProposition = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.valueProposition is null OR org.valueProposition = '' THEN $valueProposition ELSE org.valueProposition END,
+				org.lastFundingRound = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingRound is null OR org.lastFundingRound = '' THEN $lastFundingRound ELSE org.lastFundingRound END,
+				org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,
+				org.referenceId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.referenceId is null OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,
+				org.note = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.note is null OR org.note = '' THEN $note ELSE org.note END,
+				org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.isPublic is null THEN $isPublic ELSE org.isPublic END,
+				org.employees = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.employees is null THEN $employees ELSE org.employees END,
+				org.market = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,
+				org.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE org.sourceOfTruth END,
 				org.updatedAt = $updatedAt,
 				org.syncedWithEventStore = true`, event.Tenant)
 
@@ -149,8 +183,9 @@ func (r *organizationRepository) UpdateOrganization(ctx context.Context, organiz
 		"lastFundingAmount": event.LastFundingAmount,
 		"referenceId":       event.ReferenceId,
 		"note":              event.Note,
-		"sourceOfTruth":     event.SourceOfTruth,
+		"sourceOfTruth":     helper.GetSource(event.Source),
 		"updatedAt":         event.UpdatedAt,
+		"overwrite":         helper.GetSource(event.Source) == constants.SourceOpenline,
 	})
 }
 
@@ -175,7 +210,7 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 				org.note = CASE WHEN $note <> '' THEN $note ELSE org.note END, 
 				org.market = CASE WHEN $market <> '' THEN $market ELSE org.market END, 
 				org.employees = CASE WHEN $employees <> 0 THEN $employees ELSE org.employees END, 
-				org.sourceOfTruth = $sourceOfTruth,
+				org.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE org.sourceOfTruth END,
 				org.updatedAt = $updatedAt,
 				org.syncedWithEventStore = true`, event.Tenant)
 
@@ -198,8 +233,9 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 		"lastFundingAmount": event.LastFundingAmount,
 		"referenceId":       event.ReferenceId,
 		"note":              event.Note,
-		"sourceOfTruth":     event.SourceOfTruth,
+		"sourceOfTruth":     helper.GetSource(event.Source),
 		"updatedAt":         event.UpdatedAt,
+		"overwrite":         helper.GetSource(event.Source) == constants.SourceOpenline,
 	})
 }
 

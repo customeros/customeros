@@ -1,7 +1,7 @@
 package models
 
 import (
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"time"
 )
 
@@ -29,10 +29,11 @@ type OrganizationFields struct {
 	Tenant                 string
 	IgnoreEmptyFields      bool
 	OrganizationDataFields OrganizationDataFields
-	Source                 commonModels.Source
 	CreatedAt              *time.Time
 	UpdatedAt              *time.Time
 	RenewalLikelihood      *RenewalLikelihoodFields
+	Source                 cmnmod.Source
+	ExternalSystem         cmnmod.ExternalSystem
 }
 
 type RenewalLikelihoodFields struct {

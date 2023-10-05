@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -96,6 +97,9 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	}
 	a.Organization.CreatedAt = eventData.CreatedAt
 	a.Organization.UpdatedAt = eventData.UpdatedAt
+	if eventData.ExternalSystem.Available() {
+		a.Organization.ExternalSystems = []common_models.ExternalSystem{eventData.ExternalSystem}
+	}
 	return nil
 }
 
@@ -104,67 +108,133 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Organization.Source.SourceOfTruth = eventData.SourceOfTruth
+	if eventData.Source == constants.SourceOpenline {
+		a.Organization.Source.SourceOfTruth = eventData.Source
+	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
-	if !eventData.IgnoreEmptyFields {
-		a.Organization.IsPublic = eventData.IsPublic
-		a.Organization.Hide = eventData.Hide
-		a.Organization.Name = eventData.Name
-		a.Organization.Description = eventData.Description
-		a.Organization.Website = eventData.Website
-		a.Organization.Industry = eventData.Industry
-		a.Organization.SubIndustry = eventData.SubIndustry
-		a.Organization.IndustryGroup = eventData.IndustryGroup
-		a.Organization.TargetAudience = eventData.TargetAudience
-		a.Organization.ValueProposition = eventData.ValueProposition
-		a.Organization.LastFundingRound = eventData.LastFundingRound
-		a.Organization.LastFundingAmount = eventData.LastFundingAmount
-		a.Organization.ReferenceId = eventData.ReferenceId
-		a.Organization.Note = eventData.Note
-		a.Organization.Employees = eventData.Employees
-		a.Organization.Market = eventData.Market
-	} else {
-		if eventData.Name != "" {
+
+	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == constants.SourceOpenline {
+		if a.Organization.Name != "" {
 			a.Organization.Name = eventData.Name
 		}
-		if eventData.Description != "" {
+		if a.Organization.Description != "" {
 			a.Organization.Description = eventData.Description
 		}
-		if eventData.Website != "" {
+		if a.Organization.Website != "" {
 			a.Organization.Website = eventData.Website
 		}
-		if eventData.Industry != "" {
+		if a.Organization.Industry != "" {
 			a.Organization.Industry = eventData.Industry
 		}
-		if eventData.SubIndustry != "" {
+		if a.Organization.SubIndustry != "" {
 			a.Organization.SubIndustry = eventData.SubIndustry
 		}
-		if eventData.IndustryGroup != "" {
+		if a.Organization.IndustryGroup != "" {
 			a.Organization.IndustryGroup = eventData.IndustryGroup
 		}
-		if eventData.TargetAudience != "" {
+		if a.Organization.TargetAudience != "" {
 			a.Organization.TargetAudience = eventData.TargetAudience
 		}
-		if eventData.ValueProposition != "" {
+		if a.Organization.ValueProposition != "" {
 			a.Organization.ValueProposition = eventData.ValueProposition
 		}
-		if eventData.LastFundingRound != "" {
+		if a.Organization.LastFundingRound != "" {
 			a.Organization.LastFundingRound = eventData.LastFundingRound
 		}
-		if eventData.LastFundingAmount != "" {
+		if a.Organization.LastFundingAmount != "" {
 			a.Organization.LastFundingAmount = eventData.LastFundingAmount
 		}
-		if eventData.ReferenceId != "" {
+		if a.Organization.ReferenceId != "" {
 			a.Organization.ReferenceId = eventData.ReferenceId
 		}
-		if eventData.Note != "" {
+		if a.Organization.Note != "" {
 			a.Organization.Note = eventData.Note
 		}
-		if eventData.Employees != 0 {
+		if a.Organization.Employees != 0 {
 			a.Organization.Employees = eventData.Employees
 		}
-		if eventData.Market != "" {
+		if a.Organization.Market != "" {
 			a.Organization.Market = eventData.Market
+		}
+	} else {
+		if !eventData.IgnoreEmptyFields {
+			a.Organization.IsPublic = eventData.IsPublic
+			a.Organization.Hide = eventData.Hide
+			a.Organization.Name = eventData.Name
+			a.Organization.Description = eventData.Description
+			a.Organization.Website = eventData.Website
+			a.Organization.Industry = eventData.Industry
+			a.Organization.SubIndustry = eventData.SubIndustry
+			a.Organization.IndustryGroup = eventData.IndustryGroup
+			a.Organization.TargetAudience = eventData.TargetAudience
+			a.Organization.ValueProposition = eventData.ValueProposition
+			a.Organization.LastFundingRound = eventData.LastFundingRound
+			a.Organization.LastFundingAmount = eventData.LastFundingAmount
+			a.Organization.ReferenceId = eventData.ReferenceId
+			a.Organization.Note = eventData.Note
+			a.Organization.Employees = eventData.Employees
+			a.Organization.Market = eventData.Market
+		} else {
+			if eventData.Name != "" {
+				a.Organization.Name = eventData.Name
+			}
+			if eventData.Description != "" {
+				a.Organization.Description = eventData.Description
+			}
+			if eventData.Website != "" {
+				a.Organization.Website = eventData.Website
+			}
+			if eventData.Industry != "" {
+				a.Organization.Industry = eventData.Industry
+			}
+			if eventData.SubIndustry != "" {
+				a.Organization.SubIndustry = eventData.SubIndustry
+			}
+			if eventData.IndustryGroup != "" {
+				a.Organization.IndustryGroup = eventData.IndustryGroup
+			}
+			if eventData.TargetAudience != "" {
+				a.Organization.TargetAudience = eventData.TargetAudience
+			}
+			if eventData.ValueProposition != "" {
+				a.Organization.ValueProposition = eventData.ValueProposition
+			}
+			if eventData.LastFundingRound != "" {
+				a.Organization.LastFundingRound = eventData.LastFundingRound
+			}
+			if eventData.LastFundingAmount != "" {
+				a.Organization.LastFundingAmount = eventData.LastFundingAmount
+			}
+			if eventData.ReferenceId != "" {
+				a.Organization.ReferenceId = eventData.ReferenceId
+			}
+			if eventData.Note != "" {
+				a.Organization.Note = eventData.Note
+			}
+			if eventData.Employees != 0 {
+				a.Organization.Employees = eventData.Employees
+			}
+			if eventData.Market != "" {
+				a.Organization.Market = eventData.Market
+			}
+		}
+	}
+	if eventData.ExternalSystem.Available() {
+		found := false
+		for _, externalSystem := range a.Organization.ExternalSystems {
+			if externalSystem.ExternalSystemId == eventData.ExternalSystem.ExternalSystemId &&
+				externalSystem.ExternalId == eventData.ExternalSystem.ExternalId {
+				found = true
+				externalSystem.ExternalUrl = eventData.ExternalSystem.ExternalUrl
+				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
+				externalSystem.ExternalSource = eventData.ExternalSystem.ExternalSource
+				if eventData.ExternalSystem.ExternalIdSecond != "" {
+					externalSystem.ExternalIdSecond = eventData.ExternalSystem.ExternalIdSecond
+				}
+			}
+		}
+		if !found {
+			a.Organization.ExternalSystems = append(a.Organization.ExternalSystems, eventData.ExternalSystem)
 		}
 	}
 	return nil

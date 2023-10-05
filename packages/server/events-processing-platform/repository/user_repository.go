@@ -126,12 +126,12 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 				"name":            event.Name,
 				"firstName":       event.FirstName,
 				"lastName":        event.LastName,
-				"sourceOfTruth":   event.Source,
+				"sourceOfTruth":   helper.GetSource(event.Source),
 				"updatedAt":       event.UpdatedAt,
 				"internal":        event.Internal,
 				"profilePhotoUrl": event.ProfilePhotoUrl,
 				"timezone":        event.Timezone,
-				"overwrite":       event.Source == constants.SourceOpenline,
+				"overwrite":       helper.GetSource(event.Source) == constants.SourceOpenline,
 			})
 		return nil, err
 	})
