@@ -52,7 +52,8 @@ jobs:
 
       - name: Run tests
         run: |
-          yarn add --dev jest
+          yarn add --dev jest --silent
+          npx ts-jest config:init
           yarn test
 
       - name: Log in to the Container registry
