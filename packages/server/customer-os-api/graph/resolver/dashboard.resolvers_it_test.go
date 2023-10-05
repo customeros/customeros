@@ -224,6 +224,12 @@ func TestQueryResolver_Search_Organization_By_Name(t *testing.T) {
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 2")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 3")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 4")
+	neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		ReferenceId: "100/200",
+	})
+	neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		CustomerOsId: "C-123-ABC",
+	})
 
 	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
 		Name:   "LOCATION 1",
@@ -239,15 +245,17 @@ func TestQueryResolver_Search_Organization_By_Name(t *testing.T) {
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId1)
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId2, locationId2)
 
-	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 7, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 5, neo4jt.GetCountOfRelationships(ctx, driver, "ORGANIZATION_BELONGS_TO_TENANT"))
+	require.Equal(t, 7, neo4jt.GetCountOfRelationships(ctx, driver, "ORGANIZATION_BELONGS_TO_TENANT"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 
 	require.Equal(t, int64(1), assert_Search_Organization_By_Name(t, "org 1").TotalElements)
 	require.Equal(t, int64(1), assert_Search_Organization_By_Name(t, "org 2").TotalElements)
 	require.Equal(t, int64(1), assert_Search_Organization_By_Name(t, "org 3").TotalElements)
 	require.Equal(t, int64(1), assert_Search_Organization_By_Name(t, "org 4").TotalElements)
+	require.Equal(t, int64(1), assert_Search_Organization_By_Name(t, "100").TotalElements)
+	require.Equal(t, int64(1), assert_Search_Organization_By_Name(t, "ABC").TotalElements)
 	require.Equal(t, int64(4), assert_Search_Organization_By_Name(t, "org").TotalElements)
 	require.Equal(t, int64(0), assert_Search_Organization_By_Name(t, "org excluded").TotalElements)
 }
