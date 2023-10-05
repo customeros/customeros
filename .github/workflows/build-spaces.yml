@@ -50,7 +50,9 @@ jobs:
 
       - name: Run tests
         run: |
-          cd packages/apps/spaces 
+          pwd
+          cd packages/apps/spaces
+          pwd
           yarn test
 
       - name: Log in to the Container registry
