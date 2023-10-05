@@ -264,6 +264,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			if filter.Filter.Property == "ORGANIZATION" {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "EMAIL" {
 				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
 				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
