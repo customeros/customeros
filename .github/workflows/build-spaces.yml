@@ -28,12 +28,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - run: npm install -g yarn
-
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: yarn
+          cache: 'yarn'
+
+      - run: npm install -g yarn
 
       - name: Deploy test Environment
         run: |
