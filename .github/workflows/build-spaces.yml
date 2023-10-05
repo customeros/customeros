@@ -38,7 +38,9 @@ jobs:
 
       - name: Run tests
         run: |
+          pwd
           cd packages/apps/spaces
+          pwd
           ls -la node_modules/.bin
           yarn test
 
