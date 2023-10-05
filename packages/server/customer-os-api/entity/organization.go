@@ -16,7 +16,8 @@ const (
 
 type OrganizationEntity struct {
 	ID                string
-	CustomerOsId      string
+	CustomerOsId      string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
+	ReferenceId       string `neo4jDb:"property:referenceId;lookupName:REFERENCE_ID;supportCaseSensitive:true"`
 	Name              string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	Description       string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
 	Website           string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`

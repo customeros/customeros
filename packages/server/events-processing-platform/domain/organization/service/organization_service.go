@@ -56,6 +56,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 		Market:            request.Market,
 		LastFundingRound:  request.LastFundingRound,
 		LastFundingAmount: request.LastFundingAmount,
+		ReferenceId:       request.ReferenceId,
 		Note:              request.Note,
 	}
 	sourceFields := cmnmod.Source{}

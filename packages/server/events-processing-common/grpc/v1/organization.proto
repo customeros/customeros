@@ -34,6 +34,7 @@ message UpsertOrganizationGrpcRequest {
   SourceFields sourceFields = 25;
   ExternalSystemFields externalSystemFields = 26;
   string loggedInUserId = 27;
+  string referenceId = 28;
 }
 
 message OrganizationIdGrpcRequest {

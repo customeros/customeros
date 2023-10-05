@@ -56,6 +56,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	inputOrganizationEntity := entity.OrganizationEntity{
 		Name:              "Organization name",
 		CustomerOsId:      "C-123-ABC",
+		ReferenceId:       "100/200",
 		Description:       "Organization description",
 		Website:           "Organization_website.com",
 		Industry:          "tech",
@@ -85,6 +86,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.NotNil(t, organizationStruct)
 	require.Equal(t, organizationId, organizationStruct.Organization.ID)
 	require.Equal(t, inputOrganizationEntity.CustomerOsId, organizationStruct.Organization.CustomerOsID)
+	require.Equal(t, inputOrganizationEntity.ReferenceId, *organizationStruct.Organization.ReferenceID)
 	require.Equal(t, inputOrganizationEntity.Name, organizationStruct.Organization.Name)
 	require.Equal(t, inputOrganizationEntity.Description, *organizationStruct.Organization.Description)
 	require.Equal(t, []string{"domain1.com", "domain2.com"}, organizationStruct.Organization.Domains)

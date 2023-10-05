@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	organizationAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -61,12 +62,14 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		ValueProposition:  "value-proposition",
 		LastFundingRound:  "Seed",
 		LastFundingAmount: "1.000.000",
+		ReferenceId:       "100/200",
 		Note:              "Some important notes",
 		IsPublic:          false,
-		AppSource:         "unit-test",
-		Source:            "N/A",
-		SourceOfTruth:     "N/A",
-		CreatedAt:         timestamppb.New(timeNow),
+		SourceFields: &common_grpc_service.SourceFields{
+			AppSource: "unit-test",
+			Source:    "N/A",
+		},
+		CreatedAt: timestamppb.New(timeNow),
 	})
 	if err != nil {
 		t.Errorf("Failed to create organization: %v", err)
@@ -102,6 +105,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "value-proposition", eventData.ValueProposition)
 	require.Equal(t, "Seed", eventData.LastFundingRound)
 	require.Equal(t, "1.000.000", eventData.LastFundingAmount)
+	require.Equal(t, "100/200", eventData.ReferenceId)
 	require.Equal(t, "Some important notes", eventData.Note)
 	require.Equal(t, false, eventData.IsPublic)
 

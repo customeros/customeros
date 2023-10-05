@@ -1094,6 +1094,7 @@ type OrgAccountDetails struct {
 type Organization struct {
 	ID                            string                           `json:"id"`
 	CustomerOsID                  string                           `json:"customerOsId"`
+	ReferenceID                   *string                          `json:"referenceId,omitempty"`
 	CreatedAt                     time.Time                        `json:"createdAt"`
 	UpdatedAt                     time.Time                        `json:"updatedAt"`
 	Name                          string                           `json:"name"`
@@ -1149,6 +1150,7 @@ func (this Organization) GetID() string { return this.ID }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
+	ReferenceID   *string             `json:"referenceId,omitempty"`
 	Name          string              `json:"name"`
 	Description   *string             `json:"description,omitempty"`
 	Note          *string             `json:"note,omitempty"`
@@ -1197,7 +1199,8 @@ type OrganizationRelationshipStage struct {
 }
 
 type OrganizationUpdateInput struct {
-	ID string `json:"id"`
+	ID          string  `json:"id"`
+	ReferenceID *string `json:"referenceId,omitempty"`
 	// Set to true when partial update is needed. Empty or missing fields will not be ignored.
 	Patch             *bool         `json:"patch,omitempty"`
 	Name              string        `json:"name"`
