@@ -15,7 +15,19 @@ interface HtmlContentRendererProps extends InteractivityProps, ChakraProps {
   htmlContent: string;
   showAsInlineText?: boolean;
 }
+function cleanHTML(inputHTML: string): string {
+  const tagsToRemove = ['!doctype', 'html', 'title', 'body', 'meta'];
+  let outputHTML = inputHTML;
 
+  outputHTML = outputHTML.replace(/<style[^>]*>.*<\/style>/gm, '');
+
+  tagsToRemove.forEach((tag) => {
+    const regExp = new RegExp(`</?${tag}.*?>`, 'gi');
+    outputHTML = outputHTML.replace(regExp, '');
+  });
+
+  return outputHTML;
+}
 export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   htmlContent,
   noOfLines,
@@ -31,6 +43,10 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   const parseOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
       if (domNode instanceof Element) {
+        if (domNode.tagName === 'style') {
+          return <React.Fragment />;
+        }
+
         if (domNode.attribs && domNode.attribs.style) {
           delete domNode.attribs.style;
         }
@@ -39,11 +55,24 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
           return <React.Fragment />;
         }
 
+        let newAttribs = {};
+        if (domNode.attribs) {
+          newAttribs = Object.keys(domNode.attribs).reduce(
+            (result: Record<string, string>, key) => {
+              if (key !== 'style') {
+                result[key] = domNode.attribs[key];
+              }
+              return result;
+            },
+            {},
+          );
+        }
+        const children = domToReact(domNode.children, parseOptions);
         switch (domNode.name) {
           case 'td': {
             return (
               <Flex flexDir='column' noOfLines={noOfLines}>
-                {domToReact(domNode.children)}
+                {children}
               </Flex>
             );
           }
@@ -51,12 +80,12 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
             return <ImageAttachment {...domNode.attribs} />;
           }
           default:
-            return;
+            return React.createElement(domNode.name, newAttribs, children);
         }
       }
     },
   };
-  const parsedContent = parse(linkifiedContent, parseOptions);
+  const parsedContent = parse(cleanHTML(linkifiedContent), parseOptions);
   return (
     <Flex
       flexDir='column'
@@ -105,6 +134,84 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
               content: '"#"',
             },
           },
+          '& .customeros-mention': {
+            color: 'gray.700',
+            fontWeight: 'medium',
+
+            '&:before': {
+              content: '"@"',
+            },
+          },
+        },
+        "[aria-hidden='true']": {
+          display: 'none',
+        },
+
+        // code to nicely present google meeting email notifications
+        '& h2.primary-text': {
+          color: 'gray.700',
+          fontWeight: 'medium',
+        },
+        '& a.primary-button-text': {
+          paddingY: 1,
+          paddingX: 2,
+          mb: 2,
+          border: '1px solid',
+          borderColor: 'primary.200',
+          color: 'primary.700',
+          background: 'primary.50',
+          borderRadius: 'lg',
+          width: 'fit-content',
+          '&:hover': {
+            textDecoration: 'none',
+            bg: `primary.100`,
+            color: `primary.700`,
+            borderColor: `primary.200`,
+          },
+          '&:focus-visible': {
+            textDecoration: 'none',
+            bg: `primary.100`,
+            color: `primary.700`,
+            borderColor: `primary.200`,
+            boxShadow: `0 0 0 4px var(--chakra-colors-primary-100)`,
+          },
+          '&:active': {
+            textDecoration: 'none',
+            bg: `primary.100`,
+            color: `primary.700`,
+            borderColor: `primary.200`,
+          },
+        },
+        '& .body-container': {
+          mt: 3,
+          padding: 2,
+
+          '& tr': {
+            mr: 2,
+            display: 'flex',
+
+            '& div': {
+              borderRadius: '50px',
+            },
+          },
+          '& tbody': {
+            mb: 2,
+          },
+
+          '& table': {
+            marginInlineStart: 0,
+            marginInlineEnd: 0,
+          },
+        },
+        '& .main-column-table-ltr': {
+          my: 3,
+        },
+        '& .grey-button-text:not(a)': {
+          paddingY: 1,
+          my: 2,
+          color: 'gray.700',
+          width: 'fit-content',
+          fontWeight: 'medium',
         },
         ...(showAsInlineText
           ? {
