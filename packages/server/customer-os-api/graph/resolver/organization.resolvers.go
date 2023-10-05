@@ -58,17 +58,18 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 
 	var err error
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
-		Tenant:        common.GetTenantFromContext(ctx),
-		UserId:        common.GetUserIdFromContext(ctx),
-		Name:          input.Name,
-		Description:   utils.IfNotNilString(input.Description),
-		Website:       utils.IfNotNilString(input.Website),
-		Industry:      utils.IfNotNilString(input.Industry),
-		SubIndustry:   utils.IfNotNilString(input.SubIndustry),
-		IndustryGroup: utils.IfNotNilString(input.IndustryGroup),
-		IsPublic:      utils.IfNotNilBool(input.IsPublic),
-		Market:        mapper.MapMarketFromModel(input.Market),
-		Employees:     utils.IfNotNilInt64(input.Employees),
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Name:           input.Name,
+		ReferenceId:    utils.IfNotNilString(input.ReferenceID),
+		Description:    utils.IfNotNilString(input.Description),
+		Website:        utils.IfNotNilString(input.Website),
+		Industry:       utils.IfNotNilString(input.Industry),
+		SubIndustry:    utils.IfNotNilString(input.SubIndustry),
+		IndustryGroup:  utils.IfNotNilString(input.IndustryGroup),
+		IsPublic:       utils.IfNotNilBool(input.IsPublic),
+		Market:         mapper.MapMarketFromModel(input.Market),
+		Employees:      utils.IfNotNilInt64(input.Employees),
 		SourceFields: &commongrpc.SourceFields{
 			Source:        string(entity.DataSourceOpenline),
 			SourceOfTruth: string(entity.DataSourceOpenline),
@@ -173,10 +174,11 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
 		Tenant:            common.GetTenantFromContext(ctx),
-		UserId:            common.GetUserIdFromContext(ctx),
+		LoggedInUserId:    common.GetUserIdFromContext(ctx),
 		Id:                input.ID,
 		IgnoreEmptyFields: utils.IfNotNilBool(input.Patch),
 		Name:              input.Name,
+		ReferenceId:       utils.IfNotNilString(input.ReferenceID),
 		Description:       utils.IfNotNilString(input.Description),
 		Website:           utils.IfNotNilString(input.Website),
 		Industry:          utils.IfNotNilString(input.Industry),

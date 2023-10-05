@@ -30,6 +30,7 @@ type OrganizationEntity struct {
 	Market            string
 	LastFundingRound  string
 	LastFundingAmount string
+	ReferenceId       string
 	Note              string
 	Employees         int64
 	CreatedAt         time.Time

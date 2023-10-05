@@ -40,6 +40,7 @@ type LinkedOrganization {
 type Organization implements Node {
     id: ID!
     customerOsId: String!
+    referenceId: String
     createdAt:   Time!
     updatedAt:   Time!
     name:        String!
@@ -133,6 +134,7 @@ input OrganizationInput {
     The name of the organization.
     **Required.**
     """
+    referenceId:   String
     name:          String!
     description:   String
     note:          String
@@ -152,6 +154,7 @@ input OrganizationInput {
 
 input OrganizationUpdateInput {
     id:   ID!
+    referenceId: String
     """
     Set to true when partial update is needed. Empty or missing fields will not be ignored.
     """

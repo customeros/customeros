@@ -222,7 +222,8 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 	_, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(primary:Organization {id:$primaryOrganizationId}),
 			(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(merged:Organization {id:$mergedOrganizationId})
-			SET primary.website = CASE WHEN primary.website is null OR primary.website = '' THEN merged.website ELSE primary.website END, 
+			SET primary.referenceId = CASE WHEN primary.referenceId is null OR primary.referenceId = '' THEN merged.referenceId ELSE primary.referenceId END, 
+				primary.website = CASE WHEN primary.website is null OR primary.website = '' THEN merged.website ELSE primary.website END, 
 				primary.industry = CASE WHEN primary.industry is null OR primary.industry = '' THEN merged.industry ELSE primary.industry END, 
 				primary.subIndustry = CASE WHEN primary.subIndustry is null OR primary.subIndustry = '' THEN merged.subIndustry ELSE primary.subIndustry END, 
 				primary.industryGroup = CASE WHEN primary.industryGroup is null OR primary.industryGroup = '' THEN merged.industryGroup ELSE primary.industryGroup END, 

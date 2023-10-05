@@ -711,6 +711,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
 			ON CREATE SET 	org.name=$name, 
 							org.customerOsId=$customerOsId,
+							org.referenceId=$referenceId,
 							org.description=$description, 
 							org.website=$website,
 							org.industry=$industry, 
@@ -744,6 +745,7 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                              organizationId.String(),
 		"customerOsId":                    organization.CustomerOsId,
+		"referenceId":                     organization.ReferenceId,
 		"tenant":                          tenant,
 		"name":                            organization.Name,
 		"description":                     organization.Description,

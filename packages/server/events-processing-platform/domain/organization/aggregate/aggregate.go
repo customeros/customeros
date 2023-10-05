@@ -84,6 +84,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.ValueProposition = eventData.ValueProposition
 	a.Organization.LastFundingRound = eventData.LastFundingRound
 	a.Organization.LastFundingAmount = eventData.LastFundingAmount
+	a.Organization.ReferenceId = eventData.ReferenceId
 	a.Organization.Note = eventData.Note
 	a.Organization.IsPublic = eventData.IsPublic
 	a.Organization.Employees = eventData.Employees
@@ -118,6 +119,7 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		a.Organization.ValueProposition = eventData.ValueProposition
 		a.Organization.LastFundingRound = eventData.LastFundingRound
 		a.Organization.LastFundingAmount = eventData.LastFundingAmount
+		a.Organization.ReferenceId = eventData.ReferenceId
 		a.Organization.Note = eventData.Note
 		a.Organization.Employees = eventData.Employees
 		a.Organization.Market = eventData.Market
@@ -151,6 +153,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		}
 		if eventData.LastFundingAmount != "" {
 			a.Organization.LastFundingAmount = eventData.LastFundingAmount
+		}
+		if eventData.ReferenceId != "" {
+			a.Organization.ReferenceId = eventData.ReferenceId
 		}
 		if eventData.Note != "" {
 			a.Organization.Note = eventData.Note
