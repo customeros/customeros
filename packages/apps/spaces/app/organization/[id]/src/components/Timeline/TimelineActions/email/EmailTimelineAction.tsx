@@ -4,6 +4,7 @@ import { Box } from '@ui/layout/Box';
 import { ComposeEmail } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
 import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
 import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
+import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 
 interface EmailTimelineActionProps {
   onScrollBottom: () => void;
@@ -12,9 +13,15 @@ interface EmailTimelineActionProps {
 export const EmailTimelineAction: React.FC<EmailTimelineActionProps> = ({
   onScrollBottom,
 }) => {
-  const { remirrorProps, isSending, onCreateEmail, formId, state } =
-    useTimelineActionEmailContext();
-  const { openedEditor } = useTimelineActionContext();
+  const {
+    remirrorProps,
+    isSending,
+    onCreateEmail,
+    formId,
+    state,
+    checkCanExitSafely,
+  } = useTimelineActionEmailContext();
+  const { openedEditor, showEditor } = useTimelineActionContext();
   const isEmail = openedEditor === 'email';
   const virtuoso = useRef(null);
 
@@ -23,6 +30,14 @@ export const EmailTimelineAction: React.FC<EmailTimelineActionProps> = ({
       onScrollBottom();
     }
   }, [isEmail]);
+
+  const handleClose = () => {
+    const canClose = checkCanExitSafely();
+
+    if (canClose) {
+      showEditor(null);
+    }
+  };
 
   return (
     <>
@@ -47,7 +62,9 @@ export const EmailTimelineAction: React.FC<EmailTimelineActionProps> = ({
               onSubmit={onCreateEmail}
               isSending={isSending}
               remirrorProps={remirrorProps}
-            />
+            >
+              <KeymapperClose onClose={handleClose} />
+            </ComposeEmail>
           </Box>
         </SlideFade>
       )}

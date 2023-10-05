@@ -1,5 +1,5 @@
 'use client';
-import React, { FC, useRef } from 'react';
+import React, { FC, PropsWithChildren, useRef } from 'react';
 
 import { ModeChangeButtons } from '@organization/src/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
 import { Box } from '@ui/layout/Box';
@@ -10,8 +10,9 @@ import {
   BasicEditorExtentions,
   RemirrorProps,
 } from '@ui/form/RichTextEditor/types';
+import { KeymapperCreate } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperCreate';
 
-interface ComposeEmail {
+interface ComposeEmail extends PropsWithChildren {
   onModeChange?: (status: 'reply' | 'reply-all' | 'forward') => void;
   onSubmit: () => void;
   formId: string;
@@ -33,6 +34,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
   cc,
   bcc,
   remirrorProps,
+  children,
 }) => {
   const myRef = useRef<HTMLDivElement>(null);
   const height =
@@ -78,6 +80,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           name='content'
           showToolbar
         >
+          {children}
+          <KeymapperCreate onCreate={onSubmit} />
           <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
         </RichTextEditor>
       </Box>

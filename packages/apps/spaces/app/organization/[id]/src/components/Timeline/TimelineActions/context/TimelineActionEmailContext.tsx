@@ -3,6 +3,7 @@ import React, {
   useContext,
   createContext,
   PropsWithChildren,
+  useEffect,
 } from 'react';
 
 import { useForm } from 'react-inverted-form';
@@ -145,6 +146,23 @@ export const TimelineActionEmailContextContextProvider = ({
       return true;
     }
   };
+
+  useEffect(() => {
+    const handleCloseOnEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleCheckCanExitSafely();
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleCloseOnEsc);
+    }
+    if (!isOpen) {
+      document.removeEventListener('keydown', handleCloseOnEsc);
+    }
+    return () => {
+      document.removeEventListener('keydown', handleCloseOnEsc);
+    };
+  }, [isOpen]);
 
   return (
     <TimelineActionEmailContextContext.Provider

@@ -24,6 +24,7 @@ import { InteractionEvent } from '@graphql/types';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -259,7 +260,9 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onSubmit={handleSubmit}
           isSending={isSending}
           remirrorProps={remirrorProps}
-        />
+        >
+          <KeymapperClose onClose={handleClosePreview} />
+        </ComposeEmail>
         <ConfirmDeleteDialog
           label='Discard this email?'
           description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'

@@ -143,6 +143,7 @@ export const LogEntryPreviewModal: React.FC = () => {
                 formId={formId}
                 initialContent={`${event?.content}`}
                 tags={data?.tags}
+                onClose={closeModal}
               />
             )}
           </Flex>
