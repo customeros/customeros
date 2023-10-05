@@ -41,7 +41,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 
 	organizationId := utils.NewUUIDIfEmpty(request.Id)
 
-	coreFields := models.OrganizationDataFields{
+	dataFields := models.OrganizationDataFields{
 		Name:              request.Name,
 		Hide:              request.Hide,
 		Description:       request.Description,
@@ -61,11 +61,15 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 	}
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
-	source := utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
-	sourceOfTruth := utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
-	appSource := utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
+	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
+	sourceFields.SourceOfTruth = utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
+	sourceFields.AppSource = utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
 
-	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, source, sourceOfTruth, appSource, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
+	externalSystem := cmnmod.ExternalSystem{}
+	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
+		sourceFields, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertSyncOrganization.Handle) tenant:%s, organizationID: %s , err: {%v}", request.Tenant, organizationId, err)

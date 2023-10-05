@@ -30,7 +30,7 @@ type UserCreateEvent struct {
 	Internal        bool                         `json:"internal"`
 	ProfilePhotoUrl string                       `json:"profilePhotoUrl"`
 	Timezone        string                       `json:"timezone"`
-	ExternalSystem  common_models.ExternalSystem `json:"externalSystem"`
+	ExternalSystem  common_models.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
 func NewUserCreateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, source common_models.Source, externalSystem common_models.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -71,7 +71,7 @@ type UserUpdateEvent struct {
 	Internal        bool                         `json:"internal"`
 	ProfilePhotoUrl string                       `json:"profilePhotoUrl"`
 	Timezone        string                       `json:"timezone"`
-	ExternalSystem  common_models.ExternalSystem `json:"externalSystem"`
+	ExternalSystem  common_models.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
 func NewUserUpdateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, source string, updatedAt time.Time, externalSystem common_models.ExternalSystem) (eventstore.Event, error) {

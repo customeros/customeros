@@ -248,7 +248,7 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
 
 	if eventData.Market != market || eventData.Industry != industry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry, span)
 		return err
 	} else {
 		h.log.Infof("No need to update organization %s", organizationId)
@@ -256,9 +256,9 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	return nil
 }
 
-func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, sourceOfTruth, market, industry string, span opentracing.Span) error {
+func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, span opentracing.Span) error {
 	err := h.organizationCommands.UpdateOrganization.Handle(ctx,
-		cmd.NewUpdateOrganizationCommand(organizationId, tenant, sourceOfTruth,
+		cmd.NewUpdateOrganizationCommand(organizationId, tenant, source,
 			models.OrganizationDataFields{
 				Market:   market,
 				Industry: industry,

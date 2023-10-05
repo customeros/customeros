@@ -44,7 +44,7 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *
 		return err
 	}
 
-	orgFields := cmd.UpsertOrganizationCommandToOrganizationFields(command)
+	orgFields := cmd.UpsertOrganizationCommandToOrganizationFieldsStruct(command)
 
 	if aggregate.IsAggregateNotFound(organizationAggregate) {
 		command.IsCreateCommand = true

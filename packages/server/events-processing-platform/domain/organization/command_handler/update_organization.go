@@ -52,7 +52,7 @@ func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *
 		IgnoreEmptyFields:      command.IgnoreEmptyFields,
 		OrganizationDataFields: command.DataFields,
 		Source: commonModels.Source{
-			SourceOfTruth: command.SourceOfTruth,
+			Source: command.Source,
 		},
 		UpdatedAt: command.UpdatedAt,
 	}

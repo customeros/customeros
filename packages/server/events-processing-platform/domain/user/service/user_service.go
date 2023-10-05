@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
@@ -14,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go/log"
-	"strings"
 )
 
 type userService struct {
@@ -38,10 +36,7 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("userRequestId", request.Id))
 
-	userInputId := request.Id
-	if strings.TrimSpace(userInputId) == "" {
-		userInputId = uuid.New().String()
-	}
+	userInputId := utils.NewUUIDIfEmpty(request.Id)
 
 	dataFields := models.UserDataFields{
 		Name:            request.Name,
@@ -53,15 +48,9 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 	}
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
-	if sourceFields.Source == "" && request.Source != "" {
-		sourceFields.Source = request.Source
-	}
-	if sourceFields.SourceOfTruth == "" && request.SourceOfTruth != "" {
-		sourceFields.SourceOfTruth = request.SourceOfTruth
-	}
-	if sourceFields.AppSource == "" && request.AppSource != "" {
-		sourceFields.AppSource = request.AppSource
-	}
+	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
+	sourceFields.SourceOfTruth = utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
+	sourceFields.AppSource = utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
 	externalSystem := cmnmod.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
