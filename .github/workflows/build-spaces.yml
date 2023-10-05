@@ -35,11 +35,13 @@ jobs:
 
       - run: npm install -g yarn
 
+
       - name: Run tests
         run: |
           pwd
           cd packages/apps/spaces
           pwd
+          yarn cache clean
           yarn test
 
       - name: Log in to the Container registry
