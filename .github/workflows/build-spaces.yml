@@ -43,12 +43,6 @@ jobs:
           openline dev ping
           echo "**************** PODS: ****************"
           kubectl -n openline get pods
-          echo "**************** Docker Image Inspect: ****************"
-          docker image inspect eventstore/eventstore:22.10.3-bionic
-          echo "**************** uname -amnoprsv: ****************"
-          uname -amnoprsv
-          echo "**************** lscpu: ****************"
-          lscpu
           echo "**************** docker ps -a: ****************"
           docker ps -a
           echo "**************** kubectl -n openline describe pod event-store-0: ****************"
