@@ -10,7 +10,8 @@
     "codegen:graphql": "graphql-codegen --require dotenv/config --config scripts/codegen-graphql.ts",
     "codegen:icons": "node scripts/codegen-icons.js",
     "codegen:logos": "node scripts/codegen-logos.js",
-    "preatify": "yarn prettier --write ."
+    "preatify": "yarn prettier --write .",
+    "test": "jest"
   },
   "dependencies": {
     "@apollo/client": "3.7.14",
@@ -85,6 +86,7 @@
     "@graphql-codegen/typescript-react-apollo": "^3.3.7",
     "@graphql-codegen/typescript-react-query": "^4.1.0",
     "@graphql-eslint/eslint-plugin": "^3.15.0",
+    "@jest/globals": "^29.7.0",
     "@svgr/cli": "^6.5.1",
     "@svgr/webpack": "^6.5.1",
     "@tanstack/react-query-devtools": "^4.29.19",
@@ -111,7 +113,7 @@
     "prettier": "^2.8.4",
     "react-devtools": "^4.27.2",
     "storybook": "^7.0.22",
-    "ts-node": "^10.9.1",
+    "ts-jest": "^29.1.1",
     "typescript": "^5.0.4",
     "undici": "5.19.1"
   },

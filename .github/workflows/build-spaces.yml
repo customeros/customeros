@@ -54,6 +54,8 @@ jobs:
           echo "**************** kubectl -n openline describe pod event-store-0: ****************"
           kubectl -n openline describe pod event-store-0
 
+      - name: Deploy test Environment
+        run: yarn test
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
