@@ -31,6 +31,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+          cache: yarn
       - run: npm install -g yarn
 
       - name: Deploy test Environment
@@ -50,11 +51,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pwd
           cd packages/apps/spaces
-          pwd
-          ls
-          cat package.json
           yarn test
 
       - name: Log in to the Container registry
