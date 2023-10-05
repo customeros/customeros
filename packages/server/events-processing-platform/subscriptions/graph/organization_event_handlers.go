@@ -28,7 +28,7 @@ type ActionForecastMetadata struct {
 	Reason     string `json:"reason"`
 }
 
-type GraphOrganizationEventHandler struct {
+type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
 	organizationCommands *cmdhnd.OrganizationCommands
 	log                  logger.Logger
@@ -38,8 +38,8 @@ type eventMetadata struct {
 	UserId string `json:"user-id"`
 }
 
-func (h *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationCreate")
+func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationCreate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -96,8 +96,8 @@ func (h *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.setCustomerOsId")
+func (h *OrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.setCustomerOsId")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("OrganizationId", organizationId))
 
@@ -130,8 +130,8 @@ func (h *GraphOrganizationEventHandler) setCustomerOsId(ctx context.Context, ten
 	return h.repositories.OrganizationRepository.SetCustomerOsIdIfMissing(ctx, tenant, organizationId, customerOsId)
 }
 
-func (h *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationUpdate")
+func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationUpdate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -156,8 +156,8 @@ func (h *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context
 	}
 }
 
-func (h *GraphOrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnPhoneNumberLinkedToOrganization")
+func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnPhoneNumberLinkedToOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -173,8 +173,8 @@ func (h *GraphOrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx co
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnEmailLinkedToOrganization")
+func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailLinkedToOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -190,8 +190,8 @@ func (h *GraphOrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnDomainLinkedToOrganization")
+func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnDomainLinkedToOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -211,8 +211,8 @@ func (h *GraphOrganizationEventHandler) OnDomainLinkedToOrganization(ctx context
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnSocialAddedToOrganization")
+func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnSocialAddedToOrganization")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -228,8 +228,8 @@ func (h *GraphOrganizationEventHandler) OnSocialAddedToOrganization(ctx context.
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnRenewalLikelihoodUpdate")
+func (h *OrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalLikelihoodUpdate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -274,7 +274,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Co
 			}
 		}
 
-		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId))
+		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId, ""))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("RequestRenewalForecastCommand failed: %v", err.Error())
@@ -284,8 +284,8 @@ func (h *GraphOrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Co
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnRenewalForecastUpdate")
+func (h *OrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalForecastUpdate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -345,7 +345,7 @@ func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Cont
 	}
 
 	if eventData.UpdatedBy != "" && eventData.Amount == nil {
-		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId))
+		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId, ""))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("RequestRenewalForecastCommand failed: %v", err.Error())
@@ -355,8 +355,8 @@ func (h *GraphOrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Cont
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnRenewalForecastUpdate")
+func (h *OrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalForecastUpdate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -375,12 +375,12 @@ func (h *GraphOrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Conte
 	}
 
 	if eventData.UpdatedBy != "" {
-		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId))
+		err = h.organizationCommands.RequestRenewalForecastCommand.Handle(ctx, cmd.NewRequestRenewalForecastCommand(eventData.Tenant, organizationId, ""))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("RequestRenewalForecastCommand failed: %v", err.Error())
 		}
-		err = h.organizationCommands.RequestNextCycleDateCommand.Handle(ctx, cmd.NewRequestNextCycleDateCommand(eventData.Tenant, organizationId))
+		err = h.organizationCommands.RequestNextCycleDateCommand.Handle(ctx, cmd.NewRequestNextCycleDateCommand(eventData.Tenant, organizationId, ""))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("RequestNextCycleDateCommand failed: %v", err.Error())
@@ -390,8 +390,8 @@ func (h *GraphOrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Conte
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationHide")
+func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationHide")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -409,8 +409,8 @@ func (h *GraphOrganizationEventHandler) OnOrganizationHide(ctx context.Context, 
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnOrganizationShow")
+func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationShow")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -436,8 +436,8 @@ func (h *GraphOrganizationEventHandler) OnOrganizationShow(ctx context.Context, 
 	return err
 }
 
-func (h *GraphOrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnRefreshLastTouchpoint")
+func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshLastTouchpoint")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -471,8 +471,8 @@ func (h *GraphOrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Cont
 	return nil
 }
 
-func (h *GraphOrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphOrganizationEventHandler.OnUpsertCustomField")
+func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpsertCustomField")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 

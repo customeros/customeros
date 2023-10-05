@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "common/source.proto";
+import "common/external_system.proto";
 
 option go_package = "api/grpc/v1/organization;organization_grpc_service";
 
@@ -26,17 +27,20 @@ message UpsertOrganizationGrpcRequest {
   string valueProposition = 18;
   string lastFundingRound = 19;
   string lastFundingAmount = 20;
-  string userId = 21;
+  string userId = 21 [deprecated = true];
   bool hide = 22;
   string note = 23;
   bool ignoreEmptyFields = 24;
   SourceFields sourceFields = 25;
+  ExternalSystemFields externalSystemFields = 26;
+  string loggedInUserId = 27;
 }
 
 message OrganizationIdGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
-  string userId = 3;
+  string userId = 3 [deprecated = true];
+  string loggedInUserId = 4;
 }
 
 message LinkPhoneNumberToOrganizationGrpcRequest {
@@ -45,6 +49,7 @@ message LinkPhoneNumberToOrganizationGrpcRequest {
   string phoneNumberId = 3;
   bool primary = 4;
   string label = 5;
+  string loggedInUserId = 6;
 }
 
 message LinkEmailToOrganizationGrpcRequest {
@@ -53,13 +58,15 @@ message LinkEmailToOrganizationGrpcRequest {
   string emailId = 3;
   bool primary = 4;
   string label = 5;
+  string loggedInUserId = 6;
 }
 
 message LinkDomainToOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
   string domain = 3;
-  string userId = 4;
+  string userId = 4 [deprecated = true];
+  string loggedInUserId = 5;
 }
 
 enum CustomFieldDataType {
@@ -81,7 +88,7 @@ message CustomFieldValue {
 message CustomFieldForOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
-  string userId = 3;
+  string userId = 3 [deprecated = true];
   string customFieldId = 4;
   string customFieldName = 5;
   CustomFieldValue customFieldValue = 6;
@@ -90,6 +97,7 @@ message CustomFieldForOrganizationGrpcRequest {
   SourceFields sourceFields = 9;
   google.protobuf.Timestamp  createdAt = 10;
   google.protobuf.Timestamp  updatedAt = 11;
+  string loggedInUserId = 12;
 }
 
 enum Likelihood {
@@ -103,17 +111,19 @@ enum Likelihood {
 message OrganizationRenewalLikelihoodRequest {
   string tenant = 1;
   string organizationId = 2;
-  string userId = 3;
+  string userId = 3 [deprecated = true];
   Likelihood likelihood = 4;
   optional string comment = 5;
+  string loggedInUserId = 6;
 }
 
 message OrganizationRenewalForecastRequest {
   string tenant = 1;
   string organizationId = 2;
-  string userId = 3;
+  string userId = 3 [deprecated = true];
   optional double amount = 4;
   optional string comment = 5;
+  string loggedInUserId = 6;
 }
 
 enum Frequency {
@@ -128,16 +138,18 @@ enum Frequency {
 message OrganizationBillingDetailsRequest {
   string tenant = 1;
   string organizationId = 2;
-  string userId = 3;
+  string userId = 3 [deprecated = true];
   optional double amount = 4;
   optional Frequency frequency = 5;
   optional Frequency renewalCycle = 6;
   optional google.protobuf.Timestamp  cycleStart = 7;
+  string loggedInUserId = 8;
 }
 
 message RequestRenewNextCycleDateRequest {
   string tenant = 1;
   string organizationId = 2;
+  string loggedInUserId = 3;
 }
 
 message OrganizationIdGrpcResponse {

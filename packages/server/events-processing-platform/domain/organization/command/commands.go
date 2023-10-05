@@ -69,9 +69,9 @@ type LinkPhoneNumberCommand struct {
 	Label         string
 }
 
-func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
+func NewLinkPhoneNumberCommand(objectID, tenant, userId, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, userId),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -85,9 +85,9 @@ type LinkEmailCommand struct {
 	Label   string
 }
 
-func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(objectID, tenant, userId, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
@@ -99,9 +99,9 @@ type UpdateRenewalLikelihoodCommand struct {
 	Fields models.RenewalLikelihoodFields
 }
 
-func NewUpdateRenewalLikelihoodCommand(tenant, orgId string, fields models.RenewalLikelihoodFields) *UpdateRenewalLikelihoodCommand {
+func NewUpdateRenewalLikelihoodCommand(tenant, orgId, userId string, fields models.RenewalLikelihoodFields) *UpdateRenewalLikelihoodCommand {
 	return &UpdateRenewalLikelihoodCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, ""),
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
 		Fields:      fields,
 	}
 }
@@ -110,9 +110,9 @@ type RequestNextCycleDateCommand struct {
 	eventstore.BaseCommand
 }
 
-func NewRequestNextCycleDateCommand(tenant, orgId string) *RequestNextCycleDateCommand {
+func NewRequestNextCycleDateCommand(tenant, orgId, userId string) *RequestNextCycleDateCommand {
 	return &RequestNextCycleDateCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, ""),
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
 	}
 }
 
@@ -120,9 +120,9 @@ type RequestRenewalForecastCommand struct {
 	eventstore.BaseCommand
 }
 
-func NewRequestRenewalForecastCommand(tenant, orgId string) *RequestRenewalForecastCommand {
+func NewRequestRenewalForecastCommand(tenant, orgId, userId string) *RequestRenewalForecastCommand {
 	return &RequestRenewalForecastCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, ""),
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
 	}
 }
 
@@ -132,9 +132,9 @@ type UpdateRenewalForecastCommand struct {
 	RenewalLikelihood models.RenewalLikelihoodProbability
 }
 
-func NewUpdateRenewalForecastCommand(tenant, orgId string, fields models.RenewalForecastFields, renewalLikelihood models.RenewalLikelihoodProbability) *UpdateRenewalForecastCommand {
+func NewUpdateRenewalForecastCommand(tenant, orgId, userId string, fields models.RenewalForecastFields, renewalLikelihood models.RenewalLikelihoodProbability) *UpdateRenewalForecastCommand {
 	return &UpdateRenewalForecastCommand{
-		BaseCommand:       eventstore.NewBaseCommand(orgId, tenant, ""),
+		BaseCommand:       eventstore.NewBaseCommand(orgId, tenant, userId),
 		Fields:            fields,
 		RenewalLikelihood: renewalLikelihood,
 	}
@@ -145,9 +145,9 @@ type UpdateBillingDetailsCommand struct {
 	Fields models.BillingDetailsFields
 }
 
-func NewUpdateBillingDetailsCommand(tenant, orgId string, fields models.BillingDetailsFields) *UpdateBillingDetailsCommand {
+func NewUpdateBillingDetailsCommand(tenant, orgId, userId string, fields models.BillingDetailsFields) *UpdateBillingDetailsCommand {
 	return &UpdateBillingDetailsCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, ""),
+		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
 		Fields:      fields,
 	}
 }

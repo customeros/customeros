@@ -33,7 +33,7 @@ type GraphSubscriber struct {
 	repositories             *repository.Repositories
 	phoneNumberEventHandler  *GraphPhoneNumberEventHandler
 	contactEventHandler      *GraphContactEventHandler
-	organizationEventHandler *GraphOrganizationEventHandler
+	organizationEventHandler *OrganizationEventHandler
 	emailEventHandler        *GraphEmailEventHandler
 	userEventHandler         *GraphUserEventHandler
 	locationEventHandler     *GraphLocationEventHandler
@@ -49,7 +49,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		repositories:             repositories,
 		cfg:                      cfg,
 		contactEventHandler:      &GraphContactEventHandler{Repositories: repositories},
-		organizationEventHandler: &GraphOrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.OrganizationCommands},
+		organizationEventHandler: &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.OrganizationCommands},
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
 		userEventHandler:         &GraphUserEventHandler{repositories: repositories, log: log},

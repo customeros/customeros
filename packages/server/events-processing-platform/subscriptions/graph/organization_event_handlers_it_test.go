@@ -43,7 +43,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	orgId := uuid.New().String()
 
 	// prepare event handler
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
@@ -138,7 +138,7 @@ func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 		"User": 1, "User_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
 
 	// prepare event handler
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
@@ -220,7 +220,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByUser(t *testing
 	})
 
 	// prepare event handler
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
@@ -291,7 +291,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByInternalProcess
 	})
 
 	// prepare event handler
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
@@ -364,7 +364,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ResetAmount(t *te
 	})
 
 	// prepare event handler
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
@@ -431,7 +431,7 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate(t *testing.T) {
 			RenewalCycleNext:  utils.TimePtr(minAgo),
 		},
 	})
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
@@ -502,7 +502,7 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate_SetNotByUser(t *te
 			RenewalCycleNext:  utils.TimePtr(minAgo),
 		},
 	})
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
@@ -547,7 +547,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 		Name: "test org",
 		Hide: false,
 	})
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
@@ -581,7 +581,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 		Name: "test org",
 		Hide: true,
 	})
-	orgEventHandler := &GraphOrganizationEventHandler{
+	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
 		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
