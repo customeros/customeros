@@ -40,7 +40,7 @@ jobs:
           pwd
           cd packages/apps/spaces
           pwd
-          ls -la node_modules/.bin
+#          ls -la node_modules/.bin
           yarn test
 
       - name: Log in to the Container registry
