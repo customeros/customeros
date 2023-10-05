@@ -420,7 +420,7 @@ func (h *organizationEventHandler) OnRenewalForecastRequested(ctx context.Contex
 		return errors.Wrap(err, "calculateForecastAmount")
 	}
 	err = h.organizationCommands.UpdateRenewalForecastCommand.Handle(ctx, cmd.NewUpdateRenewalForecastCommand(
-		eventData.Tenant, organizationId, models.RenewalForecastFields{
+		eventData.Tenant, organizationId, "", models.RenewalForecastFields{
 			Amount:          amount,
 			PotentialAmount: potentialAmount,
 			UpdatedBy:       "",
@@ -567,7 +567,7 @@ func (h *organizationEventHandler) OnNextCycleDateRequested(ctx context.Context,
 	nextRenewalDate := h.calculateRenewalCycleNext(ctx, organizationEntity.BillingDetails)
 
 	err = h.organizationCommands.UpdateBillingDetailsCommand.Handle(ctx, cmd.NewUpdateBillingDetailsCommand(
-		eventData.Tenant, organizationId, models.BillingDetailsFields{
+		eventData.Tenant, organizationId, "", models.BillingDetailsFields{
 			Amount:            organizationEntity.BillingDetails.Amount,
 			Frequency:         organizationEntity.BillingDetails.Frequency,
 			RenewalCycle:      organizationEntity.BillingDetails.RenewalCycle,
