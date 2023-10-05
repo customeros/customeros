@@ -10,6 +10,7 @@ import { Flex } from '@ui/layout/Flex';
 import { ImageAttachment } from './ImageAttachment';
 import { ChakraProps } from '@chakra-ui/react';
 import { InteractivityProps } from '@chakra-ui/styled-system';
+import sanitizeHtml from 'sanitize-html';
 
 interface HtmlContentRendererProps extends InteractivityProps, ChakraProps {
   htmlContent: string;
@@ -23,14 +24,33 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   showAsInlineText,
   ...rest
 }) => {
-  const linkifiedContent = linkifyHtml(htmlContent, {
-    defaultProtocol: 'https',
-    rel: 'noopener noreferrer',
-  }).replace(/<\/?body>|<\/?html>|<\/?head>/g, '');
+  const linkifiedContent = sanitizeHtml(
+    linkifyHtml(htmlContent, {
+      defaultProtocol: 'https',
+      rel: 'noopener noreferrer',
+    }),
+    {
+      ...sanitizeHtml.defaults,
+      allowedAttributes: {
+        a: ['href', 'name', 'target'],
+        // We don't currently allow img itself by default, but
+        // these attributes would make sense if we did.
+        img: ['src', 'srcset', 'alt', 'title', 'width', 'height', 'loading'],
+        '*': ['class', 'aria-hidden'],
+      },
+      allowedClasses: {
+        '*': ['*'],
+      },
+    },
+  );
 
   const parseOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
       if (domNode instanceof Element) {
+        if (domNode.tagName === 'style') {
+          return <React.Fragment />;
+        }
+
         if (domNode.attribs && domNode.attribs.style) {
           delete domNode.attribs.style;
         }
@@ -39,11 +59,24 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
           return <React.Fragment />;
         }
 
+        let newAttribs = {};
+        if (domNode.attribs) {
+          newAttribs = Object.keys(domNode.attribs).reduce(
+            (result: Record<string, string>, key) => {
+              if (key !== 'style') {
+                result[key] = domNode.attribs[key];
+              }
+              return result;
+            },
+            {},
+          );
+        }
+        const children = domToReact(domNode.children, parseOptions);
         switch (domNode.name) {
           case 'td': {
             return (
               <Flex flexDir='column' noOfLines={noOfLines}>
-                {domToReact(domNode.children)}
+                {children}
               </Flex>
             );
           }
@@ -51,7 +84,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
             return <ImageAttachment {...domNode.attribs} />;
           }
           default:
-            return;
+            return React.createElement(domNode.name, newAttribs, children);
         }
       }
     },
@@ -105,6 +138,82 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
               content: '"#"',
             },
           },
+          '& .customeros-mention': {
+            color: 'gray.700',
+            fontWeight: 'medium',
+
+            '&:before': {
+              content: '"@"',
+            },
+          },
+        },
+        "[aria-hidden='true']": {
+          display: 'none',
+        },
+
+        // code to nicely present google meeting email notifications
+        '& h2.primary-text': {
+          color: 'gray.700',
+          fontWeight: 'medium',
+        },
+        '& a.primary-button-text': {
+          paddingY: 1,
+          paddingX: 2,
+          mb: 2,
+          border: '1px solid',
+          borderColor: 'primary.200',
+          color: 'primary.700',
+          background: 'primary.50',
+          borderRadius: 'lg',
+          width: 'fit-content',
+          '&:hover': {
+            textDecoration: 'none',
+            bg: `primary.100`,
+            color: `primary.700`,
+            borderColor: `primary.200`,
+          },
+          '&:focus-visible': {
+            textDecoration: 'none',
+            bg: `primary.100`,
+            color: `primary.700`,
+            borderColor: `primary.200`,
+            boxShadow: `0 0 0 4px var(--chakra-colors-primary-100)`,
+          },
+          '&:active': {
+            textDecoration: 'none',
+            bg: `primary.100`,
+            color: `primary.700`,
+            borderColor: `primary.200`,
+          },
+        },
+        '& .body-container': {
+          mt: 3,
+          padding: 4,
+          display: 'block',
+          border: '1px solid',
+          borderColor: 'gray.300',
+          borderRadius: 'md',
+
+          '& tr': {
+            mr: 2,
+            display: 'flex',
+          },
+          '& tbody': {
+            mb: 2,
+          },
+
+          '& table': {
+            marginInlineStart: 0,
+            marginInlineEnd: 0,
+          },
+        },
+        '& .main-column-table-ltr': {
+          my: 3,
+        },
+        '& .grey-button-text:not(a)': {
+          color: 'gray.700',
+          width: 'fit-content',
+          fontWeight: 'medium',
         },
         ...(showAsInlineText
           ? {
