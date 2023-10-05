@@ -52,7 +52,7 @@ jobs:
 
       - name: Run tests
         run: |
-          yarn add --dev jest --silent
+          yarn add -D jest ts-jest @types/jest @jest/globals --silent
           npx ts-jest config:init
           yarn test
 
