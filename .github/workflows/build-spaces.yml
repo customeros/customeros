@@ -41,7 +41,7 @@ jobs:
           pwd
           cd packages/apps/spaces
           pwd
-          yarn cache clean
+          yarn add --dev jest
           yarn test
 
       - name: Log in to the Container registry
