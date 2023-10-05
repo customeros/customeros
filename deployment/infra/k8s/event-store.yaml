@@ -14,7 +14,7 @@ spec:
         app: event-store
     spec:                        # Spec for the container which will run in the Pod
       containers:
-        - image: eventstore/eventstore:22.10.1-alpha-arm64v8
+        - image: eventstore/eventstore:$IMAGE_VERSION
           name: event-store
           imagePullPolicy: IfNotPresent
           ports:
