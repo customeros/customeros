@@ -10,24 +10,13 @@ import { Flex } from '@ui/layout/Flex';
 import { ImageAttachment } from './ImageAttachment';
 import { ChakraProps } from '@chakra-ui/react';
 import { InteractivityProps } from '@chakra-ui/styled-system';
+import sanitizeHtml from 'sanitize-html';
 
 interface HtmlContentRendererProps extends InteractivityProps, ChakraProps {
   htmlContent: string;
   showAsInlineText?: boolean;
 }
-function cleanHTML(inputHTML: string): string {
-  const tagsToRemove = ['!doctype', 'html', 'title', 'body', 'meta'];
-  let outputHTML = inputHTML;
 
-  outputHTML = outputHTML.replace(/<style[^>]*>.*<\/style>/gm, '');
-
-  tagsToRemove.forEach((tag) => {
-    const regExp = new RegExp(`</?${tag}.*?>`, 'gi');
-    outputHTML = outputHTML.replace(regExp, '');
-  });
-
-  return outputHTML;
-}
 export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   htmlContent,
   noOfLines,
@@ -35,10 +24,25 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   showAsInlineText,
   ...rest
 }) => {
-  const linkifiedContent = linkifyHtml(htmlContent, {
-    defaultProtocol: 'https',
-    rel: 'noopener noreferrer',
-  }).replace(/<\/?body>|<\/?html>|<\/?head>/g, '');
+  const linkifiedContent = sanitizeHtml(
+    linkifyHtml(htmlContent, {
+      defaultProtocol: 'https',
+      rel: 'noopener noreferrer',
+    }),
+    {
+      ...sanitizeHtml.defaults,
+      allowedAttributes: {
+        a: ['href', 'name', 'target'],
+        // We don't currently allow img itself by default, but
+        // these attributes would make sense if we did.
+        img: ['src', 'srcset', 'alt', 'title', 'width', 'height', 'loading'],
+        '*': ['class', 'aria-hidden'],
+      },
+      allowedClasses: {
+        '*': ['*'],
+      },
+    },
+  );
 
   const parseOptions: HTMLReactParserOptions = {
     replace: (domNode) => {
@@ -85,7 +89,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
       }
     },
   };
-  const parsedContent = parse(cleanHTML(linkifiedContent), parseOptions);
+  const parsedContent = parse(linkifiedContent, parseOptions);
   return (
     <Flex
       flexDir='column'
@@ -207,8 +211,6 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
           my: 3,
         },
         '& .grey-button-text:not(a)': {
-          paddingY: 1,
-          my: 2,
           color: 'gray.700',
           width: 'fit-content',
           fontWeight: 'medium',
