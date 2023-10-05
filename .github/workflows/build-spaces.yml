@@ -53,6 +53,8 @@ jobs:
           pwd
           cd packages/apps/spaces
           pwd
+          ls
+          cat package.json
           yarn test
 
       - name: Log in to the Container registry
