@@ -45,28 +45,34 @@ export default async function RootLayout({
                     })(window, document, "clarity", "script", "fryzkewrjw");`,
         }}
       />
-      <Script
-        async
-        strategy='afterInteractive'
-        id='openline-customer-os-heap-script'
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=document.createElement("script");r.type="text/javascript",r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(r,a);for(var n=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","resetIdentity","removeEventProperty","setEventProperties","track","unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};
-  heap.load("3563674186");
-            `,
-        }}
-      />
-      <Script
-        async
-        strategy='afterInteractive'
-        id='openline-customer-os-heap-script'
-        dangerouslySetInnerHTML={{
-          __html: `
+      {`${process.env.NEXT_PUBLIC_PRODUCTION}` === 'true' && (
+        <Script
+          async
+          strategy='afterInteractive'
+          id='openline-customer-os-prod-heap-script'
+          dangerouslySetInnerHTML={{
+            __html: `
             window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=document.createElement("script");r.type="text/javascript",r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(r,a);for(var n=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","resetIdentity","removeEventProperty","setEventProperties","track","unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};
             heap.load("1078792267");
             `,
-        }}
-      />
+          }}
+        />
+      )}
+
+      {`${process.env.NEXT_PUBLIC_PRODUCTION}` !== 'true' && (
+        <Script
+          async
+          strategy='afterInteractive'
+          id='openline-customer-os-dev-heap-script'
+          dangerouslySetInnerHTML={{
+            __html: `
+            window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=document.createElement("script");r.type="text/javascript",r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(r,a);for(var n=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","resetIdentity","removeEventProperty","setEventProperties","track","unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};
+  heap.load("3563674186");
+            `,
+          }}
+        />
+      )}
+
       <body className='scrollbar'>
         <ThemeProvider>
           <Providers>
