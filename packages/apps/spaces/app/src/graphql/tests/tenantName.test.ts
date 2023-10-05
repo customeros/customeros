@@ -8,7 +8,7 @@ describe('graphql suite', () => {
       const res = await client.request(TenantNameDocument);
       expect(res).toEqual(expected);
     } catch (e) {
-      console.error(e);
+      expect(e).toBeNull();
     }
   });
 });
