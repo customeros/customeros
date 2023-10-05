@@ -9,9 +9,7 @@ import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 
-import { Box } from '@ui/layout/Box';
 import { useLocalStorage } from 'usehooks-ts';
-import { useJune } from 'app/src/hooks/useJune';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -23,7 +21,6 @@ import logo from './customer-os.png';
 export const RootSidenav = () => {
   const client = getGraphQLClient();
   const router = useRouter();
-  const analytics = useJune();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
@@ -56,7 +53,6 @@ export const RootSidenav = () => {
   };
 
   const handleSignOutClick = () => {
-    analytics?.reset();
     signOut();
   };
 

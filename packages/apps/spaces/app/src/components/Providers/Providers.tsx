@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { NextAuthProvider } from './SessionProvider';
-import { JuneProvider } from '@shared/components/Providers/JuneProvider';
+import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvider';
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient());
@@ -16,7 +16,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
       <ReactQueryDevtools initialIsOpen={false} position='bottom-right' />
       <RecoilRoot>
         <NextAuthProvider>
-          <JuneProvider>{children}</JuneProvider>
+          <AnalyticsProvider>{children}</AnalyticsProvider>
         </NextAuthProvider>
       </RecoilRoot>
     </QueryClientProvider>
