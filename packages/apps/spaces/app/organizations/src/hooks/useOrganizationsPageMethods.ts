@@ -163,9 +163,6 @@ export const useOrganizationsPageMethods = ({
               ),
             ];
 
-            console.log('aici', targetIndex);
-            console.log(allIndexes);
-            console.log(targetOrganization);
             if (!targetOrganization) return;
 
             set(
