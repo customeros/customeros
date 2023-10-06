@@ -243,6 +243,9 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 			IndustryGroup:     utils.GetStringPropOrEmpty(v.Node.Props, "industryGroup"),
 			LastFundingRound:  utils.GetStringPropOrEmpty(v.Node.Props, "lastFundingRound"),
 			LastFundingAmount: utils.GetStringPropOrEmpty(v.Node.Props, "lastFundingAmount"),
+			Note:              utils.GetStringPropOrEmpty(v.Node.Props, "note"),
+			ReferenceId:       utils.GetStringPropOrEmpty(v.Node.Props, "referenceId"),
+			IsCustomer:        utils.GetBoolPropOrFalse(v.Node.Props, "isCustomer"),
 			SourceFields: &common_grpc_service.SourceFields{
 				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
 				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),

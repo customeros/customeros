@@ -27,7 +27,7 @@ type OrganizationEntity struct {
 	TargetAudience    string
 	ValueProposition  string
 	IsPublic          bool
-	IsCustomer        bool
+	IsCustomer        bool `neo4jDb:"property:isCustomer;lookupName:IS_CUSTOMER;supportCaseSensitive:false"`
 	Hide              bool
 	Market            string
 	LastFundingRound  string
