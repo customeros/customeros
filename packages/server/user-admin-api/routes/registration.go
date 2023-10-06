@@ -101,6 +101,8 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 				log.Printf("tenant found %s", *tenant)
 				var appSource = APP_SOURCE
 				playerId, errorIsPlayer := cosClient.IsPlayer(signInRequest.Email, signInRequest.Provider)
+				//user exists if i don't have player
+				//if user exists but not player -> send event to create player
 				if errorIsPlayer != nil {
 					playerId, err = cosClient.CreateUser(&model.UserInput{
 						FirstName: userInfo.GivenName,
@@ -218,14 +220,37 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 
 		var oauthToken, _ = authServices.OAuthTokenService.GetByPlayerIdAndProvider(revokeRequest.ProviderAccountId, revokeRequest.Provider)
 
-		url := fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
-		resp, err := http.Get(url)
-		if err != nil {
-			ginContext.JSON(http.StatusInternalServerError, gin.H{})
+		var resp *http.Response
+		var err error
+
+		if oauthToken.RefreshToken != "" {
+			url := fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
+			resp, err = http.Get(url)
+			if err != nil {
+				ginContext.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+		} else if oauthToken.AccessToken != "" {
+			url := fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.AccessToken)
+			resp, err = http.Get(url)
+			if err != nil {
+				ginContext.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
 		}
-		if resp.StatusCode == 200 {
+
+		if resp == nil || resp.StatusCode == 200 {
 			//toro remove from db
-			authServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, revokeRequest.Provider)
+			err := authServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, revokeRequest.Provider)
+			if err != nil {
+				ginContext.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
+		} else {
+			if resp != nil && resp.StatusCode != 200 {
+				ginContext.JSON(http.StatusInternalServerError, gin.H{})
+				return
+			}
 		}
 
 		ginContext.JSON(http.StatusOK, gin.H{})
