@@ -16,6 +16,7 @@ query GetOrganization($organizationId: ID!){
     lastFundingAmount
     note
     isPublic
+    isCustomer
     createdAt
     lastTouchPointTimelineEventId
     lastTouchPointAt

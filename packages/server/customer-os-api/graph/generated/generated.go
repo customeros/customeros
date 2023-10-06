@@ -664,6 +664,7 @@ type ComplexityRoot struct {
 		ID                            func(childComplexity int) int
 		Industry                      func(childComplexity int) int
 		IndustryGroup                 func(childComplexity int) int
+		IsCustomer                    func(childComplexity int) int
 		IsPublic                      func(childComplexity int) int
 		IssueSummaryByStatus          func(childComplexity int) int
 		JobRoles                      func(childComplexity int) int
@@ -5227,6 +5228,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.IndustryGroup(childComplexity), true
 
+	case "Organization.isCustomer":
+		if e.complexity.Organization.IsCustomer == nil {
+			break
+		}
+
+		return e.complexity.Organization.IsCustomer(childComplexity), true
+
 	case "Organization.isPublic":
 		if e.complexity.Organization.IsPublic == nil {
 			break
@@ -8391,6 +8399,7 @@ type Organization implements Node {
     targetAudience: String
     valueProposition: String
     isPublic:    Boolean
+    isCustomer:  Boolean
     market:      Market
     employees:   Int64
     lastFundingRound: FundingRound
@@ -8481,6 +8490,7 @@ input OrganizationInput {
     subIndustry:   String
     industryGroup: String
     isPublic:      Boolean
+    isCustomer:    Boolean
     customFields:  [CustomFieldInput!]
     fieldSets:     [FieldSetInput!] @deprecated
     templateId:    ID @deprecated
@@ -8505,6 +8515,7 @@ input OrganizationUpdateInput {
     subIndustry:       String
     industryGroup:     String
     isPublic:          Boolean
+    isCustomer:        Boolean
     market:            Market
     employees:         Int64
     targetAudience:    String
@@ -18779,6 +18790,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -24084,6 +24097,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -24825,6 +24840,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -32509,6 +32526,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -34708,6 +34727,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -34891,6 +34912,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -36098,6 +36121,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -36281,6 +36306,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -36464,6 +36491,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -36889,6 +36918,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -37072,6 +37103,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -37255,6 +37288,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -37438,6 +37473,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -37621,6 +37658,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -37804,6 +37843,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -42598,6 +42639,47 @@ func (ec *executionContext) fieldContext_Organization_isPublic(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_isCustomer(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_isCustomer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsCustomer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_isCustomer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_market(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_market(ctx, field)
 	if err != nil {
@@ -44424,6 +44506,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -44654,6 +44738,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -46116,6 +46202,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -48805,6 +48893,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -51371,6 +51461,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
@@ -58078,7 +58170,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceId", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "customFields", "fieldSets", "templateId", "market", "employees", "appSource"}
+	fieldsInOrder := [...]string{"referenceId", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "customFields", "fieldSets", "templateId", "market", "employees", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -58175,6 +58267,15 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.IsPublic = data
+		case "isCustomer":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isCustomer"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsCustomer = data
 		case "customFields":
 			var err error
 
@@ -58242,7 +58343,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "referenceId", "patch", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
+	fieldsInOrder := [...]string{"id", "referenceId", "patch", "name", "description", "note", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "isCustomer", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -58357,6 +58458,15 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.IsPublic = data
+		case "isCustomer":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isCustomer"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsCustomer = data
 		case "market":
 			var err error
 
@@ -65332,6 +65442,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_valueProposition(ctx, field, obj)
 		case "isPublic":
 			out.Values[i] = ec._Organization_isPublic(ctx, field, obj)
+		case "isCustomer":
+			out.Values[i] = ec._Organization_isCustomer(ctx, field, obj)
 		case "market":
 			out.Values[i] = ec._Organization_market(ctx, field, obj)
 		case "employees":

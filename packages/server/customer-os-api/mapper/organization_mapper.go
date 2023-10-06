@@ -24,6 +24,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		TargetAudience:                utils.StringPtr(entity.TargetAudience),
 		ValueProposition:              utils.StringPtr(entity.ValueProposition),
 		IsPublic:                      utils.BoolPtr(entity.IsPublic),
+		IsCustomer:                    utils.BoolPtr(entity.IsCustomer),
 		Employees:                     utils.Int64Ptr(entity.Employees),
 		Market:                        MapMarketToModel(entity.Market),
 		LastFundingRound:              MapFundingRoundToModel(entity.LastFundingRound),

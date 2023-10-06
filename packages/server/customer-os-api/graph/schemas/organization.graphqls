@@ -54,6 +54,7 @@ type Organization implements Node {
     targetAudience: String
     valueProposition: String
     isPublic:    Boolean
+    isCustomer:  Boolean
     market:      Market
     employees:   Int64
     lastFundingRound: FundingRound
@@ -144,6 +145,7 @@ input OrganizationInput {
     subIndustry:   String
     industryGroup: String
     isPublic:      Boolean
+    isCustomer:    Boolean
     customFields:  [CustomFieldInput!]
     fieldSets:     [FieldSetInput!] @deprecated
     templateId:    ID @deprecated
@@ -168,6 +170,7 @@ input OrganizationUpdateInput {
     subIndustry:       String
     industryGroup:     String
     isPublic:          Boolean
+    isCustomer:        Boolean
     market:            Market
     employees:         Int64
     targetAudience:    String

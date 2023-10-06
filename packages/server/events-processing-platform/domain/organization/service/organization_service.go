@@ -52,6 +52,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 		TargetAudience:    request.TargetAudience,
 		ValueProposition:  request.ValueProposition,
 		IsPublic:          request.IsPublic,
+		IsCustomer:        request.IsCustomer,
 		Employees:         request.Employees,
 		Market:            request.Market,
 		LastFundingRound:  request.LastFundingRound,

@@ -768,6 +768,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		LastFundingAmount: utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
 		Note:              utils.GetStringPropOrEmpty(props, "note"),
 		IsPublic:          utils.GetBoolPropOrFalse(props, "isPublic"),
+		IsCustomer:        utils.GetBoolPropOrFalse(props, "isCustomer"),
 		Hide:              utils.GetBoolPropOrFalse(props, "hide"),
 		Employees:         utils.GetInt64PropOrZero(props, "employees"),
 		Market:            utils.GetStringPropOrEmpty(props, "market"),

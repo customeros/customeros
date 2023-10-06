@@ -41,6 +41,7 @@ type OrganizationCreateEvent struct {
 	TargetAudience    string                `json:"targetAudience"`
 	ValueProposition  string                `json:"valueProposition"`
 	IsPublic          bool                  `json:"isPublic"`
+	IsCustomer        bool                  `json:"isCustomer"`
 	Employees         int64                 `json:"employees"`
 	Market            string                `json:"market"`
 	LastFundingRound  string                `json:"lastFundingRound"`
@@ -68,6 +69,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 		TargetAudience:    organizationFields.OrganizationDataFields.TargetAudience,
 		ValueProposition:  organizationFields.OrganizationDataFields.ValueProposition,
 		IsPublic:          organizationFields.OrganizationDataFields.IsPublic,
+		IsCustomer:        organizationFields.OrganizationDataFields.IsCustomer,
 		Employees:         organizationFields.OrganizationDataFields.Employees,
 		Market:            organizationFields.OrganizationDataFields.Market,
 		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
@@ -110,6 +112,7 @@ type OrganizationUpdateEvent struct {
 	TargetAudience    string                `json:"targetAudience"`
 	ValueProposition  string                `json:"valueProposition"`
 	IsPublic          bool                  `json:"isPublic"`
+	IsCustomer        bool                  `json:"isCustomer"`
 	Employees         int64                 `json:"employees"`
 	Market            string                `json:"market"`
 	LastFundingRound  string                `json:"lastFundingRound"`
@@ -133,6 +136,7 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		TargetAudience:    organizationFields.OrganizationDataFields.TargetAudience,
 		ValueProposition:  organizationFields.OrganizationDataFields.ValueProposition,
 		IsPublic:          organizationFields.OrganizationDataFields.IsPublic,
+		IsCustomer:        organizationFields.OrganizationDataFields.IsCustomer,
 		Employees:         organizationFields.OrganizationDataFields.Employees,
 		Market:            organizationFields.OrganizationDataFields.Market,
 		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,

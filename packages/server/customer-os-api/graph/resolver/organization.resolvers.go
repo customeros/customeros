@@ -68,12 +68,12 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		SubIndustry:    utils.IfNotNilString(input.SubIndustry),
 		IndustryGroup:  utils.IfNotNilString(input.IndustryGroup),
 		IsPublic:       utils.IfNotNilBool(input.IsPublic),
+		IsCustomer:     utils.IfNotNilBool(input.IsCustomer),
 		Market:         mapper.MapMarketFromModel(input.Market),
 		Employees:      utils.IfNotNilInt64(input.Employees),
 		SourceFields: &commongrpc.SourceFields{
-			Source:        string(entity.DataSourceOpenline),
-			SourceOfTruth: string(entity.DataSourceOpenline),
-			AppSource:     utils.IfNotNilString(input.AppSource),
+			Source:    string(entity.DataSourceOpenline),
+			AppSource: utils.IfNotNilString(input.AppSource),
 		},
 		Note: utils.IfNotNilString(input.Note),
 	})
@@ -185,6 +185,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		SubIndustry:       utils.IfNotNilString(input.SubIndustry),
 		IndustryGroup:     utils.IfNotNilString(input.IndustryGroup),
 		IsPublic:          utils.IfNotNilBool(input.IsPublic),
+		IsCustomer:        utils.IfNotNilBool(input.IsCustomer),
 		Market:            mapper.MapMarketFromModel(input.Market),
 		Employees:         utils.IfNotNilInt64(input.Employees),
 		TargetAudience:    utils.IfNotNilString(input.TargetAudience),
@@ -193,7 +194,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		LastFundingRound:  mapper.MapFundingRoundFromModel(input.LastFundingRound),
 		Note:              utils.IfNotNilString(input.Note),
 		SourceFields: &commongrpc.SourceFields{
-			SourceOfTruth: string(entity.DataSourceOpenline),
+			Source: string(entity.DataSourceOpenline),
 		},
 	})
 	if err != nil {
