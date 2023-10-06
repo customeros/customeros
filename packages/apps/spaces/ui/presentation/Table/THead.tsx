@@ -8,14 +8,14 @@ import { IconButton } from '@ui/form/IconButton';
 interface THeadProps<T extends object> extends HeaderContext<T, unknown> {
   title: string;
   subTitle?: string;
-  columnHasIcon?: boolean;
+  icon?: React.ReactNode;
 }
 
 export const THead = <T extends object>({
+  icon,
   title,
   header,
   subTitle,
-  columnHasIcon,
 }: THeadProps<T>) => {
   const canSort = header.column.getCanSort();
   const isSorted = header.column.getIsSorted();
@@ -27,10 +27,9 @@ export const THead = <T extends object>({
       flexDir='column'
       justify='flex-start'
       alignItems='flex-start'
-      pl={columnHasIcon ? '2' : 'unset'}
-      ml={columnHasIcon ? '6' : 'unset'}
     >
-      <Flex>
+      <Flex align='center'>
+        {icon}
         <Text fontSize='sm' fontWeight='medium' color='gray.700'>
           {title}
         </Text>

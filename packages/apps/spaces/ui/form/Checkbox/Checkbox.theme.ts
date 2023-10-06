@@ -16,16 +16,15 @@ export const Checkbox = helpers.defineMultiStyleConfig({
       transition: 'all 0.3s ease',
       _focus: {
         boxShadow: 'ringPrimary',
-        borderColor: 'primary.500',
-        backgroundColor: 'primary.100',
+        borderColor: 'primary.300',
+        backgroundColor: 'white',
         _invalid: {
           boxShadow: 'inputInvalid',
           backgroundColor: 'red.100',
         },
       },
       _hover: {
-        borderColor: 'primary.300',
-        boxShadow: 'ringPrimary',
+        borderColor: 'primary.600',
         backgroundColor: 'primary.100',
         _invalid: {
           borderColor: 'red.300',
@@ -37,7 +36,8 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         boxShadow: 'inputInvalid',
       },
       _checked: {
-        backgroundColor: 'primary.100',
+        backgroundColor: 'primary.50',
+        borderColor: 'primary.600',
         _invalid: {
           backgroundColor: 'red.100',
           boxShadow: 'inputInvalid',
@@ -61,14 +61,14 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         },
         _hover: {
           backgroundColor: 'primary.100',
-          borderColor: 'primary.500',
+          borderColor: 'primary.600',
           _invalid: {
             backgroundColor: 'red.100',
             borderColor: 'red.500',
           },
         },
         _before: {
-          backgroundColor: 'primary.500',
+          backgroundColor: 'primary.600',
         },
       },
       _indeterminate: {
@@ -97,7 +97,7 @@ export const Checkbox = helpers.defineMultiStyleConfig({
         },
         _hover: {
           backgroundColor: 'primary.100',
-          borderColor: 'primary.500',
+          borderColor: 'primary.600',
           _invalid: {
             backgroundColor: 'red.100',
             borderColor: 'red.500',
@@ -109,7 +109,7 @@ export const Checkbox = helpers.defineMultiStyleConfig({
           },
         },
         _before: {
-          backgroundColor: 'primary.500',
+          backgroundColor: 'primary.600',
         },
       },
       _disabled: {
@@ -154,7 +154,7 @@ export const Checkbox = helpers.defineMultiStyleConfig({
       },
     },
     icon: {
-      color: 'primary.500',
+      color: 'primary.600',
     },
   },
   sizes: {

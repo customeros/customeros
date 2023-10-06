@@ -38,6 +38,8 @@ export const OrganizationCell = ({
       <Tooltip label={fullName} fontWeight='normal'>
         <Avatar
           variant='outline'
+          size='md'
+          borderRadius='lg'
           name={fullName}
           cursor='pointer'
           onClick={() => router.push(href)}
@@ -65,7 +67,7 @@ export const OrganizationCell = ({
             {isHovered && (
               <Flex
                 position='absolute'
-                bottom='16px'
+                bottom='8px'
                 pl='1'
                 ml='-5px'
                 bg='white'
