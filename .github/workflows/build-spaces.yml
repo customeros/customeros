@@ -35,25 +35,9 @@ jobs:
 
       - run: npm install -g yarn
 
-      - name: Deploy test Environment
-        run: |
-          curl http://openline.sh/install.sh | sh
-          openline --help
-          echo "**************** openline dev start -v: ****************"
-          openline dev start -v
-          echo "**************** openline dev ping: ****************"
-          openline dev ping
-          echo "**************** PODS: ****************"
-          kubectl -n openline get pods
-          echo "**************** docker ps -a: ****************"
-          docker ps -a
-          echo "**************** kubectl -n openline describe pod event-store-0: ****************"
-          kubectl -n openline describe pod event-store-0
-
       - name: Run tests
         run: |
-          yarn add -D jest ts-jest @types/jest @jest/globals --silent
-          npx ts-jest config:init
+          yarn add -D jest
           yarn test
 
       - name: Log in to the Container registry
