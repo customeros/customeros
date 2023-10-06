@@ -240,11 +240,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
 	ownerId, orgRelationship, orgRelationshipStage := "", "", ""
+	filterByCustomer, isCustomer := false, false
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
 	if where != nil {
-
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
 		organizationFilter.LogicalOperator = utils.OR
@@ -279,6 +279,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				ownerId = *filter.Filter.Value.Str
 			} else if filter.Filter.Property == "RELATIONSHIP" {
 				orgRelationship = mapper.MapOrgRelationshipFromModelString(*filter.Filter.Value.Str).String()
+			} else if filter.Filter.Property == "IS_CUSTOMER" {
+				filterByCustomer = true
+				isCustomer = *filter.Filter.Value.Bool
 			} else if filter.Filter.Property == "STAGE" {
 				orgRelationshipStage = *filter.Filter.Value.Str
 			}
@@ -305,6 +308,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			"ownerId":              ownerId,
 			"orgRelationship":      orgRelationship,
 			"orgRelationshipStage": orgRelationshipStage,
+			"isCustomer":           isCustomer,
 			"skip":                 skip,
 			"limit":                limit,
 		}
@@ -330,6 +334,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			countQuery += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
 		countQuery += fmt.Sprintf(` WHERE (o.hide = false OR o.hide is null)`)
+		if filterByCustomer == true {
+			countQuery += fmt.Sprintf(` AND o.isCustomer = $isCustomer `)
+		}
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			countQuery += " AND "
 		}
@@ -383,6 +390,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			query += " OPTIONAL MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) WITH * "
 		}
 		query += ` WHERE (o.hide = false OR o.hide is null) `
+		if filterByCustomer == true {
+			query += fmt.Sprintf(` AND o.isCustomer = $isCustomer `)
+		}
 
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			query += " AND "

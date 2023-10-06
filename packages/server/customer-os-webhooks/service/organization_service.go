@@ -210,6 +210,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			Website:           orgInput.Website,
 			Industry:          orgInput.Industry,
 			IsPublic:          orgInput.IsPublic,
+			IsCustomer:        orgInput.IsCustomer,
 			Employees:         orgInput.Employees,
 			Market:            orgInput.Market,
 			CreatedAt:         utils.ConvertTimeToTimestampPtr(orgInput.CreatedAt),
@@ -221,7 +222,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			LastFundingRound:  orgInput.LastFundingRound,
 			LastFundingAmount: orgInput.LastFundingAmount,
 			Hide:              !(orgHasWhitelistedDomain || orgInput.Whitelisted),
-			Note:              "", // TODO decide how to sync note core field from external systems
+			Note:              orgInput.Note,
 			IgnoreEmptyFields: false,
 			SourceFields: &commongrpc.SourceFields{
 				Source:    orgInput.ExternalSystem,
@@ -293,6 +294,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(dbNode dbtype.Node) 
 		LastFundingAmount: utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
 		Note:              utils.GetStringPropOrEmpty(props, "note"),
 		IsPublic:          utils.GetBoolPropOrFalse(props, "isPublic"),
+		IsCustomer:        utils.GetBoolPropOrFalse(props, "isCustomer"),
 		Hide:              utils.GetBoolPropOrFalse(props, "hide"),
 		Employees:         utils.GetInt64PropOrZero(props, "employees"),
 		Market:            utils.GetStringPropOrEmpty(props, "market"),

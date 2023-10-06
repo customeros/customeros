@@ -30,6 +30,7 @@ type OrganizationData struct {
 	Website      string             `json:"website,omitempty"`
 	Industry     string             `json:"industry,omitempty"`
 	IsPublic     bool               `json:"isPublic,omitempty"`
+	IsCustomer   bool               `json:"isCustomer,omitempty"`
 	Employees    int64              `json:"employees,omitempty"`
 	PhoneNumbers []PhoneNumber      `json:"phoneNumbers,omitempty"`
 	Email        string             `json:"email,omitempty"`
@@ -42,8 +43,8 @@ type OrganizationData struct {
 	Address            string              `json:"address,omitempty"`
 	Address2           string              `json:"address2,omitempty"`
 	Zip                string              `json:"zip,omitempty"`
-	RelationshipName   string              `json:"relationshipName,omitempty"`
-	RelationshipStage  string              `json:"relationshipStage,omitempty"`
+	RelationshipName   string              `json:"relationshipName,omitempty"`  // Deprecated
+	RelationshipStage  string              `json:"relationshipStage,omitempty"` // Deprecated
 	ParentOrganization *ParentOrganization `json:"parentOrganization,omitempty"`
 	SubIndustry        string              `json:"subIndustry,omitempty"`
 	IndustryGroup      string              `json:"industryGroup,omitempty"`
