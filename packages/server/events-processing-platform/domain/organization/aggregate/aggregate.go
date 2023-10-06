@@ -88,6 +88,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.ReferenceId = eventData.ReferenceId
 	a.Organization.Note = eventData.Note
 	a.Organization.IsPublic = eventData.IsPublic
+	a.Organization.IsCustomer = eventData.IsCustomer
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
 	a.Organization.Source = common_models.Source{
@@ -156,9 +157,13 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		if a.Organization.Market != "" {
 			a.Organization.Market = eventData.Market
 		}
+		if !a.Organization.IsCustomer {
+			a.Organization.IsCustomer = eventData.IsCustomer
+		}
 	} else {
 		if !eventData.IgnoreEmptyFields {
 			a.Organization.IsPublic = eventData.IsPublic
+			a.Organization.IsCustomer = eventData.IsCustomer
 			a.Organization.Hide = eventData.Hide
 			a.Organization.Name = eventData.Name
 			a.Organization.Description = eventData.Description
@@ -216,6 +221,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 			}
 			if eventData.Market != "" {
 				a.Organization.Market = eventData.Market
+			}
+			if eventData.IsCustomer {
+				a.Organization.IsCustomer = eventData.IsCustomer
 			}
 		}
 	}

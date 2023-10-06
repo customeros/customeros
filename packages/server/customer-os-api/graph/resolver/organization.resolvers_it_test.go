@@ -68,6 +68,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 		LastFundingAmount: "10k",
 		Note:              "Some note",
 		IsPublic:          true,
+		IsCustomer:        true,
 	}
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain1.com")
@@ -92,6 +93,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, []string{"domain1.com", "domain2.com"}, organizationStruct.Organization.Domains)
 	require.Equal(t, inputOrganizationEntity.Website, *organizationStruct.Organization.Website)
 	require.Equal(t, inputOrganizationEntity.IsPublic, *organizationStruct.Organization.IsPublic)
+	require.Equal(t, inputOrganizationEntity.IsCustomer, *organizationStruct.Organization.IsCustomer)
 	require.Equal(t, inputOrganizationEntity.Industry, *organizationStruct.Organization.Industry)
 	require.Equal(t, inputOrganizationEntity.SubIndustry, *organizationStruct.Organization.SubIndustry)
 	require.Equal(t, inputOrganizationEntity.IndustryGroup, *organizationStruct.Organization.IndustryGroup)

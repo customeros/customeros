@@ -16,6 +16,7 @@ type OrganizationDataFields struct {
 	TargetAudience    string
 	ValueProposition  string
 	IsPublic          bool
+	IsCustomer        bool
 	Employees         int64
 	Market            string
 	LastFundingRound  string

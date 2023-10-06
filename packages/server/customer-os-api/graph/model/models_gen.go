@@ -1108,6 +1108,7 @@ type Organization struct {
 	TargetAudience                *string                          `json:"targetAudience,omitempty"`
 	ValueProposition              *string                          `json:"valueProposition,omitempty"`
 	IsPublic                      *bool                            `json:"isPublic,omitempty"`
+	IsCustomer                    *bool                            `json:"isCustomer,omitempty"`
 	Market                        *Market                          `json:"market,omitempty"`
 	Employees                     *int64                           `json:"employees,omitempty"`
 	LastFundingRound              *FundingRound                    `json:"lastFundingRound,omitempty"`
@@ -1160,6 +1161,7 @@ type OrganizationInput struct {
 	SubIndustry   *string             `json:"subIndustry,omitempty"`
 	IndustryGroup *string             `json:"industryGroup,omitempty"`
 	IsPublic      *bool               `json:"isPublic,omitempty"`
+	IsCustomer    *bool               `json:"isCustomer,omitempty"`
 	CustomFields  []*CustomFieldInput `json:"customFields,omitempty"`
 	FieldSets     []*FieldSetInput    `json:"fieldSets,omitempty"`
 	TemplateID    *string             `json:"templateId,omitempty"`
@@ -1212,6 +1214,7 @@ type OrganizationUpdateInput struct {
 	SubIndustry       *string       `json:"subIndustry,omitempty"`
 	IndustryGroup     *string       `json:"industryGroup,omitempty"`
 	IsPublic          *bool         `json:"isPublic,omitempty"`
+	IsCustomer        *bool         `json:"isCustomer,omitempty"`
 	Market            *Market       `json:"market,omitempty"`
 	Employees         *int64        `json:"employees,omitempty"`
 	TargetAudience    *string       `json:"targetAudience,omitempty"`

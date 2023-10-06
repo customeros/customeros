@@ -65,6 +65,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		ReferenceId:       "100/200",
 		Note:              "Some important notes",
 		IsPublic:          false,
+		IsCustomer:        true,
 		SourceFields: &common_grpc_service.SourceFields{
 			AppSource: "unit-test",
 			Source:    "N/A",
@@ -108,6 +109,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "100/200", eventData.ReferenceId)
 	require.Equal(t, "Some important notes", eventData.Note)
 	require.Equal(t, false, eventData.IsPublic)
+	require.Equal(t, true, eventData.IsCustomer)
 
 	require.Equal(t, organizationEvents.OrganizationRequestScrapeByWebsiteV1, eventList[1].GetEventType())
 	var eventDataScrapeRequest organizationEvents.OrganizationRequestScrapeByWebsite
