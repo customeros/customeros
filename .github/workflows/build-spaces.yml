@@ -2,7 +2,7 @@ name: spaces
 
 on:
   push:
-    branches: [ "otter",  "3945-fe-tests"]
+    branches: [ "otter" ]
     paths:
       - 'packages/apps/spaces/**'
       - '.github/workflows/build-spaces.yml'
