@@ -13,7 +13,7 @@ import (
 
 type OrganizationRepository interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
-	GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId string, domains []string) (string, error)
+	GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId, customerOsId string, domains []string) (string, error)
 }
 
 type organizationRepository struct {
@@ -52,20 +52,22 @@ func (r *organizationRepository) GetById(parentCtx context.Context, tenant, orga
 	return dbRecord.(*dbtype.Node), err
 }
 
-func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId string, domains []string) (string, error) {
+func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant, externalSystem, externalId, customerOsId string, domains []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMatchedOrganizationId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId), log.Object("domains", domains))
+	span.LogFields(log.String("externalSystem", externalSystem), log.String("externalId", externalId),
+		log.String("customerOsId", customerOsId), log.Object("domains", domains))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
 				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o1:Organization)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
-				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o2:Organization)-[:HAS_DOMAIN]->(d:Domain)
+				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o2:Organization {customerOsId:$customerOsId})
+				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o3:Organization)-[:HAS_DOMAIN]->(d:Domain)
 					WHERE d.domain in $domains
-				with coalesce(o1, o2) as organization
+				with coalesce(o1, o2, o3) as organization
 				where organization is not null
 				return organization.id limit 1`
 

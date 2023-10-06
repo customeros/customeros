@@ -21,11 +21,14 @@ type ParentOrganization struct {
 
 type OrganizationData struct {
 	BaseData
-	Name         string             `json:"name,omitempty"`
-	Description  string             `json:"description,omitempty"`
+	CustomerOsId string `json:"customerOsId"`
+	Name         string `json:"name,omitempty"`
+	Description  string `json:"description,omitempty"`
+	// For sub-orgs this property is ignored
 	Domains      []string           `json:"domains,omitempty"`
-	Notes        []OrganizationNote `json:"notes,omitempty"`
+	Notes        []OrganizationNote `json:"notes,omitempty"` // Deprecated, decide what to do with multi notes
 	Note         string             `json:"note,omitempty"`
+	ReferenceId  string             `json:"referenceId,omitempty"`
 	Website      string             `json:"website,omitempty"`
 	Industry     string             `json:"industry,omitempty"`
 	IsPublic     bool               `json:"isPublic,omitempty"`
@@ -34,24 +37,25 @@ type OrganizationData struct {
 	PhoneNumbers []PhoneNumber      `json:"phoneNumbers,omitempty"`
 	Email        string             `json:"email,omitempty"`
 	// Currently not used. Sync processes will not set automatically owner user
-	OwnerUser         *ReferencedUser `json:"ownerUser,omitempty"`
-	LocationName      string          `json:"locationName,omitempty"`
-	Country           string          `json:"country,omitempty"`
-	Region            string          `json:"region,omitempty"`
-	Locality          string          `json:"locality,omitempty"`
-	Address           string          `json:"address,omitempty"`
-	Address2          string          `json:"address2,omitempty"`
-	Zip               string          `json:"zip,omitempty"`
-	RelationshipName  string          `json:"relationshipName,omitempty"`
-	SubIndustry       string          `json:"subIndustry,omitempty"`
-	IndustryGroup     string          `json:"industryGroup,omitempty"`
-	TargetAudience    string          `json:"targetAudience,omitempty"`
-	ValueProposition  string          `json:"valueProposition,omitempty"`
-	Market            string          `json:"market,omitempty"`
-	LastFundingRound  string          `json:"lastFundingRound,omitempty"`
-	LastFundingAmount string          `json:"lastFundingAmount,omitempty"`
+	OwnerUser          *ReferencedUser     `json:"ownerUser,omitempty"`
+	LocationName       string              `json:"locationName,omitempty"`
+	Country            string              `json:"country,omitempty"`
+	Region             string              `json:"region,omitempty"`
+	Locality           string              `json:"locality,omitempty"`
+	Address            string              `json:"address,omitempty"`
+	Address2           string              `json:"address2,omitempty"`
+	Zip                string              `json:"zip,omitempty"`
+	ParentOrganization *ParentOrganization `json:"parentOrganization,omitempty"`
+	SubIndustry        string              `json:"subIndustry,omitempty"`
+	IndustryGroup      string              `json:"industryGroup,omitempty"`
+	TargetAudience     string              `json:"targetAudience,omitempty"`
+	ValueProposition   string              `json:"valueProposition,omitempty"`
+	Market             string              `json:"market,omitempty"`
+	LastFundingRound   string              `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  string              `json:"lastFundingAmount,omitempty"`
 	// If true, the organization will be created by domain,
 	// Missing domains, or blacklisted domains will result in no organization being created
+	// Note: for sub-orgs this property is ignored
 	DomainRequired bool `json:"domainRequired"`
 	Whitelisted    bool `json:"whitelisted"`
 	UpdateOnly     bool `json:"updateOnly"`
@@ -69,10 +73,6 @@ func (o *OrganizationData) HasNotes() bool {
 	return len(o.Notes) > 0
 }
 
-func (o *OrganizationData) HasRelationship() bool {
-	return o.RelationshipName != ""
-}
-
 func (o *OrganizationData) HasPhoneNumbers() bool {
 	return len(o.PhoneNumbers) > 0
 }
@@ -85,9 +85,17 @@ func (o *OrganizationData) HasOwner() bool {
 	return o.OwnerUser != nil
 }
 
+func (o *OrganizationData) IsSubOrg() bool {
+	return o.ParentOrganization != nil && o.ParentOrganization.Organization.Available()
+}
+
 func (o *OrganizationData) Normalize() {
 	o.SetTimes()
 	o.BaseData.Normalize()
+
+	if o.IsSubOrg() {
+		o.Domains = []string{}
+	}
 
 	o.Domains = utils.FilterEmpty(o.Domains)
 	utils.LowercaseStrings(o.Domains)

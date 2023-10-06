@@ -142,6 +142,7 @@ func MapUser(inputJSON string) (string, error) {
 
 	// Map the "id" field to "externalOwnerId"
 	output.ExternalOwnerId = input.ID
+	output.BaseData.ExternalIdSecond = input.ID
 
 	// Convert output data to JSON
 	outputJSON, err := json.Marshal(output)

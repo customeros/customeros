@@ -14,7 +14,6 @@ type BaseData struct {
 	ExternalIdSecond     string     `json:"externalIdSecond,omitempty"`
 	ExternalSystem       string     `json:"externalSystem,omitempty"`
 	ExternalUrl          string     `json:"externalUrl,omitempty"`
-	ExternalSourceTable  string     `json:"externalSourceTable,omitempty"` // Deprecated in favor or ExternalSourceEntity, Can be removed after next release of webhooks and sync process
 	ExternalSourceEntity string     `json:"externalSourceEntity,omitempty"`
 	CreatedAtStr         string     `json:"createdAt,omitempty"`
 	UpdatedAtStr         string     `json:"updatedAt,omitempty"`

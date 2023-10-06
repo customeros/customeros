@@ -140,7 +140,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	var reason = ""
 
 	// Populate domain from website
-	if orgInput.Website != "" {
+	if orgInput.Website != "" && !orgInput.IsSubOrg() {
 		domainFromWebsite := utils.ExtractDomainFromUrl(orgInput.Website)
 		if domainFromWebsite != "" {
 			orgInput.Domains = []string{domainFromWebsite}
@@ -170,7 +170,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		}
 	}
 	orgInput.Domains = nonPersonalEmailProviderDomains
-	if orgInput.DomainRequired && !orgInput.HasDomains() {
+	if orgInput.DomainRequired && !orgInput.IsSubOrg() && !orgInput.HasDomains() {
 		span.LogFields(log.Bool("skippedSync", true))
 		return NewSkippedSyncStatus("Missing domain while required")
 	}
@@ -184,7 +184,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	// Lock organization creation
 	syncMutex.Lock()
 	// Check if organization already exists
-	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput.ExternalSystem, orgInput.ExternalId, orgInput.Domains)
+	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput.ExternalSystem, orgInput.ExternalId, orgInput.CustomerOsId, orgInput.Domains)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)
@@ -223,6 +223,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			LastFundingAmount: orgInput.LastFundingAmount,
 			Hide:              !(orgHasWhitelistedDomain || orgInput.Whitelisted),
 			Note:              orgInput.Note,
+			ReferenceId:       orgInput.ReferenceId,
 			IgnoreEmptyFields: false,
 			SourceFields: &commongrpc.SourceFields{
 				Source:    orgInput.ExternalSystem,
@@ -233,7 +234,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				ExternalId:       orgInput.ExternalId,
 				ExternalUrl:      orgInput.ExternalUrl,
 				ExternalIdSecond: orgInput.ExternalIdSecond,
-				ExternalSource:   utils.StringFirstNonEmpty(orgInput.ExternalSourceTable, orgInput.ExternalSourceEntity),
+				ExternalSource:   orgInput.ExternalSourceEntity,
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
 			},
 		})
