@@ -1,0 +1,8 @@
+{
+  "errors": [
+    {
+      "message": "User or Tenant must be specified"
+    }
+  ],
+  "status": 401
+}
