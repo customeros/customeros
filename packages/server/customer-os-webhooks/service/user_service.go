@@ -176,7 +176,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 				ExternalId:       userInput.ExternalId,
 				ExternalUrl:      userInput.ExternalUrl,
 				ExternalIdSecond: utils.StringFirstNonEmpty(userInput.ExternalOwnerId, userInput.ExternalIdSecond),
-				ExternalSource:   utils.StringFirstNonEmpty(userInput.ExternalSourceTable, userInput.ExternalSourceEntity),
+				ExternalSource:   userInput.ExternalSourceEntity,
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
 			},
 		})

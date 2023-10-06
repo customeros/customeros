@@ -10,6 +10,7 @@ type BaseData struct {
 	SkipReason           string     `json:"skipReason,omitempty"`
 	Id                   string     `json:"id,omitempty"`
 	ExternalId           string     `json:"externalId,omitempty"`
+	ExternalIdSecond     string     `json:"externalIdSecond,omitempty"`
 	ExternalSystem       string     `json:"externalSystem,omitempty"`
 	ExternalUrl          string     `json:"externalUrl,omitempty"`
 	ExternalSourceEntity string     `json:"externalSourceEntity,omitempty"`

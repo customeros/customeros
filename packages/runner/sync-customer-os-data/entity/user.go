@@ -9,7 +9,7 @@ type UserData struct {
 	LastName        string        `json:"lastName,omitempty"`
 	Email           string        `json:"email,omitempty"`
 	PhoneNumbers    []PhoneNumber `json:"phoneNumbers,omitempty"`
-	ExternalOwnerId string        `json:"externalOwnerId,omitempty"`
+	ExternalOwnerId string        `json:"externalOwnerId,omitempty"` // Deprecated, remove once release latest webhooks and sync-customer-os-data
 	ProfilePhotoUrl string        `json:"profilePhotoUrl,omitempty"`
 	Timezone        string        `json:"timezone,omitempty"`
 }
