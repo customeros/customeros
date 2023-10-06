@@ -4,7 +4,7 @@ import { useKeymap, useCommands } from '@remirror/react';
 export const KeymapperClose = ({ onClose }: { onClose: () => void }) => {
   const { focus } = useCommands();
 
-  useKeymap('Mod-Escape', ({ next }) => {
+  useKeymap('Escape', ({ next }) => {
     onClose();
 
     return next();
