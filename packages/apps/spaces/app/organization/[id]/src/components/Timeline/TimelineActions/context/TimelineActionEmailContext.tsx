@@ -18,6 +18,10 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useTimelineActionContext } from './TimelineActionContext';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { VirtuosoHandle } from 'react-virtuoso';
 
 export const noop = () => undefined;
 
@@ -53,9 +57,11 @@ export const useTimelineActionEmailContext = () => {
 export const TimelineActionEmailContextContextProvider = ({
   children,
   invalidateQuery,
+  virtuosoRef,
   id = '',
 }: PropsWithChildren<{
   invalidateQuery: () => void;
+  virtuosoRef?: React.RefObject<VirtuosoHandle>;
   id: string;
 }>) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -67,7 +73,12 @@ export const TimelineActionEmailContextContextProvider = ({
     extensions: basicEditorExtensions,
   });
   const { closeEditor } = useTimelineActionContext();
+  const [timelineMeta] = useTimelineMeta();
 
+  const queryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
+  const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
   const formId = 'compose-email-timeline-footer';
 
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
@@ -94,11 +105,13 @@ export const TimelineActionEmailContextContextProvider = ({
     reset();
   };
 
-  const handleEmailSendSuccess = () => {
+  const handleEmailSendSuccess = async (response: any) => {
+    await updateTimelineCache(response, queryKey);
+
+    // no timeout needed is this case as the event id is created when this is called
     invalidateQuery();
     setIsSending(false);
     handleResetEditor();
-    onClose();
   };
   const handleEmailSendError = () => {
     setIsSending(false);
@@ -120,7 +133,7 @@ export const TimelineActionEmailContextContextProvider = ({
       state.values.subject,
       handleEmailSendSuccess,
       handleEmailSendError,
-      session?.user?.email,
+      session?.user,
     );
   };
 

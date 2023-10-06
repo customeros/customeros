@@ -24,6 +24,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
     <TimelineActionEmailContextContextProvider
       id={id}
       invalidateQuery={invalidateQuery}
+      virtuosoRef={virtuosoRef}
     >
       <TimelineActionLogEntryContextContextProvider
         id={id}

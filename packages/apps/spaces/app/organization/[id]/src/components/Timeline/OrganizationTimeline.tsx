@@ -276,7 +276,10 @@ export const OrganizationTimeline: FC = () => {
             },
           }}
         />
-        <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
+        <TimelineEventPreviewModal
+          invalidateQuery={invalidateQuery}
+          virtuosoRef={virtuoso}
+        />
       </TimelineEventPreviewContextContextProvider>
     </>
   );
