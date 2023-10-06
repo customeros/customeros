@@ -89,6 +89,27 @@ export const TimelineEventPreviewContextContextProvider = ({
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    const isEmail =
+      modalContent?.__typename === 'InteractionEvent' &&
+      modalContent?.channel === 'EMAIL';
+
+    const handleCloseOnEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleCloseModal();
+      }
+    };
+    if (isModalOpen && !isEmail) {
+      document.addEventListener('keydown', handleCloseOnEsc);
+    }
+    if (!isModalOpen && !isEmail) {
+      document.removeEventListener('keydown', handleCloseOnEsc);
+    }
+    return () => {
+      document.removeEventListener('keydown', handleCloseOnEsc);
+    };
+  }, [isModalOpen]);
+
   return (
     <TimelineEventPreviewContextContext.Provider
       value={{

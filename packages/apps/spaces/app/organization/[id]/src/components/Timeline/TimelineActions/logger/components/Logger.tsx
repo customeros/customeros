@@ -10,18 +10,21 @@ import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { useGetTagsQuery } from '@organization/src/graphql/getTags.generated';
 import { useTimelineActionLogEntryContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
 
-import { Keymapper } from './Keymapper';
 import { TagsSelect } from './TagSelect';
 import noteIcon from 'public/images/event-ill-log.png';
 import { useGetMentionOptionsQuery } from '@organization/src/graphql/getMentionOptions.generated';
 import { useParams } from 'next/navigation';
 import { getMentionOptionLabel } from '@organization/src/components/Timeline/events/utils';
 import { Contact } from '@graphql/types';
+import { KeymapperCreate } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperCreate';
+import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
+import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
 
 export const Logger = () => {
   const id = useParams()?.id as string;
-  const { onCreateLogEntry, remirrorProps, isSaving } =
+  const { onCreateLogEntry, remirrorProps, isSaving, checkCanExitSafely } =
     useTimelineActionLogEntryContext();
+
   const client = getGraphQLClient();
   const { getInputProps } = useField(
     'content',
@@ -32,6 +35,15 @@ export const Logger = () => {
   const { data: mentionData } = useGetMentionOptionsQuery(client, {
     id,
   });
+  const { showEditor } = useTimelineActionContext();
+
+  const handleClose = () => {
+    const canClose = checkCanExitSafely();
+
+    if (canClose) {
+      showEditor(null);
+    }
+  };
   const isLogEmpty = !value?.length || value === `<p style=""></p>`;
 
   const mentionOptions = (mentionData?.organization?.contacts?.content ?? [])
@@ -62,7 +74,8 @@ export const Logger = () => {
           }))}
           mentionOptions={mentionOptions}
         />
-        <Keymapper />
+        <KeymapperCreate onCreate={onCreateLogEntry} />
+        <KeymapperClose onClose={handleClose} />
       </RichTextEditor>
       <Flex justifyContent='space-between' zIndex={8} fontSize='md'>
         <TagsSelect

@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useKeymap, useCommands } from '@remirror/react';
 
-export const Keymapper = ({ onCreate }: { onCreate: () => void }) => {
+export const KeymapperClose = ({ onClose }: { onClose: () => void }) => {
   const { focus } = useCommands();
 
-  useKeymap('Mod-Enter', ({ next }) => {
-    onCreate();
+  useKeymap('Mod-Escape', ({ next }) => {
+    onClose();
+
     return next();
   });
 

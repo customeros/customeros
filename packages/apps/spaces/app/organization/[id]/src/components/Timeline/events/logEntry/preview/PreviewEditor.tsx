@@ -11,12 +11,14 @@ import { useParams } from 'next/navigation';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { getMentionOptionLabel } from '@organization/src/components/Timeline/events/utils';
 import { Contact } from '@graphql/types';
+import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 
 export const PreviewEditor: React.FC<{
   formId: string;
   initialContent: string;
+  onClose: () => void;
   tags?: Array<{ label: string; value: string }>;
-}> = ({ formId, initialContent, tags }) => {
+}> = ({ formId, initialContent, tags, onClose }) => {
   const id = useParams()?.id as string;
   const client = getGraphQLClient();
   const { data } = useGetMentionOptionsQuery(client, {
@@ -55,6 +57,8 @@ export const PreviewEditor: React.FC<{
                 id: e.value,
               }))}
             />
+            <KeymapperClose onClose={onClose} />
+
             <RichEditorBlurHandler formId={formId} name='content' />
           </>
         </RichTextEditor>
