@@ -29,8 +29,6 @@ export const TableActions = ({
         color='white'
         leftIcon={<Archive />}
         onClick={onArchiveOrganizations}
-        // borderRight='1px solid'
-        // borderRightColor='gray.500'
         _hover={{
           bg: 'gray.800',
         }}

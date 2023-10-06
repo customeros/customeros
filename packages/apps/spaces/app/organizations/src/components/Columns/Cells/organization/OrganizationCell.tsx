@@ -67,7 +67,7 @@ export const OrganizationCell = ({
             {isHovered && (
               <Flex
                 position='absolute'
-                bottom='8px'
+                bottom='2'
                 pl='1'
                 ml='-5px'
                 bg='white'
