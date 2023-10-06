@@ -14,7 +14,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230905051222-d17861b89a13
 	golang.org/x/oauth2 v0.12.0
 	golang.org/x/text v0.13.0
-	google.golang.org/api v0.144.0
+	google.golang.org/api v0.145.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.4
 )
