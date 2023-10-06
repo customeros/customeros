@@ -33,7 +33,6 @@ describe('graphql suite', () => {
   test('should return error for unauthenticated user', async () => {
     try {
       await unauthenticated_client.request(TenantNameDocument);
-      // expect(res).not.toEqual(unauthenticatedUser);
     } catch (e: any) {
       const filteredReceived = Object.fromEntries(
         Object.entries(e.response).filter(([key]) => key !== 'headers'),
