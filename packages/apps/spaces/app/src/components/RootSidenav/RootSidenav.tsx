@@ -10,13 +10,12 @@ import { Icons } from '@ui/media/Icon';
 import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
-
+import logoCustomerOs from './cutsomer-os-logo.png';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
-import logo from './customer-os.png';
 import { SidenavItem } from './components/SidenavItem';
 import { GoogleSidebarNotification } from './components/GoogleSidebarNotification';
 
@@ -106,13 +105,13 @@ export const RootSidenav = () => {
         position='relative'
       >
         <Image
-          width={40}
-          height={40}
-          w='40px'
-          h='40px'
+          width={136}
+          height={30}
+          w='136px'
+          h='30px'
           alt='CustomerOS'
           pointerEvents='none'
-          src={logo}
+          src={logoCustomerOs}
           transition='opacity 0.25s ease-in-out'
         />
       </Flex>
