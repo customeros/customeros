@@ -38,7 +38,11 @@ jobs:
       - name: Deploy test Environment
         run: |
           curl http://openline.sh/install.sh | sh
-          echo "**************** PODS: ****************"
+          echo "[INFO] Starting Openline CLI..."
+          openline dev start
+          echo "[INFO] Checking Openline CLI services..."
+          openline dev ping
+          echo "[INFO] Checking PODs..."
           kubectl -n openline get pods
 
       - name: Run tests
