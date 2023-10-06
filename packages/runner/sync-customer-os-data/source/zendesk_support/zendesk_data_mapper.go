@@ -101,11 +101,11 @@ func mapOrganizationFromOrg(inputJSON string) (string, error) {
 	// Perform mapping
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId:          fmt.Sprintf("%d", input.ID),
-			CreatedAtStr:        input.CreatedAt,
-			UpdatedAtStr:        input.UpdatedAt,
-			ExternalUrl:         input.URL,
-			ExternalSourceTable: utils.StringPtr("organizations"),
+			ExternalId:           fmt.Sprintf("%d", input.ID),
+			CreatedAtStr:         input.CreatedAt,
+			UpdatedAtStr:         input.UpdatedAt,
+			ExternalUrl:          input.URL,
+			ExternalSourceEntity: "organizations",
 		},
 		Name:    input.Name,
 		Domains: input.DomainNames,
@@ -157,11 +157,11 @@ func mapOrganizationFromUser(inputJSON string) (string, error) {
 	// Perform mapping
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId:          fmt.Sprintf("%d", input.ID),
-			CreatedAtStr:        input.CreatedAt,
-			UpdatedAtStr:        input.UpdatedAt,
-			ExternalUrl:         input.URL,
-			ExternalSourceTable: utils.StringPtr("users"),
+			ExternalId:           fmt.Sprintf("%d", input.ID),
+			CreatedAtStr:         input.CreatedAt,
+			UpdatedAtStr:         input.UpdatedAt,
+			ExternalUrl:          input.URL,
+			ExternalSourceEntity: "users",
 		},
 		Name: input.Name,
 	}

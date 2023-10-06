@@ -82,7 +82,7 @@
     },
     {
       "name": "Check source fields",
-      "query": "MATCH (n:User|Email|PhoneNumber) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
+      "query": "MATCH (n:User|Email|PhoneNumber|Organization) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
     }
   ]
 }

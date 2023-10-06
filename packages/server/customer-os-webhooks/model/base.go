@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"strings"
 	"time"
 )
 
@@ -13,7 +14,7 @@ type BaseData struct {
 	ExternalIdSecond     string     `json:"externalIdSecond,omitempty"`
 	ExternalSystem       string     `json:"externalSystem,omitempty"`
 	ExternalUrl          string     `json:"externalUrl,omitempty"`
-	ExternalSourceTable  string     `json:"externalSourceTable,omitempty"` // Deprecated in favor or ExternalSourceEntity
+	ExternalSourceTable  string     `json:"externalSourceTable,omitempty"` // Deprecated in favor or ExternalSourceEntity, Can be removed after next release of webhooks and sync process
 	ExternalSourceEntity string     `json:"externalSourceEntity,omitempty"`
 	CreatedAtStr         string     `json:"createdAt,omitempty"`
 	UpdatedAtStr         string     `json:"updatedAt,omitempty"`
@@ -48,4 +49,8 @@ func (b *BaseData) SetTimes() {
 	} else {
 		b.UpdatedAt = utils.NowAsPtr()
 	}
+}
+
+func (b *BaseData) Normalize() {
+	b.ExternalSystem = strings.ToLower(strings.TrimSpace(b.ExternalSystem))
 }

@@ -26,7 +26,6 @@ const (
 func MapOrganization(inputJSON string) (string, error) {
 	var input struct {
 		ID         string `json:"id"`
-		Archived   bool   `json:"archived"`
 		CreatedAt  string `json:"createdAt"`
 		UpdatedAt  string `json:"updatedAt"`
 		Properties struct {
@@ -79,7 +78,7 @@ func MapOrganization(inputJSON string) (string, error) {
 		Address2:    input.Properties.Address2,
 		Zip:         input.Properties.Zip,
 		OwnerUser: &entity.ReferencedUser{
-			ExternalOwnerId: input.Properties.HubspotOwnerId,
+			ExternalIdSecond: input.Properties.HubspotOwnerId,
 		},
 		Domains: []string{input.Properties.Domain},
 	}
@@ -113,7 +112,6 @@ func MapUser(inputJSON string) (string, error) {
 		ID        string `json:"id"`
 		Email     string `json:"email"`
 		UserID    int    `json:"userId"`
-		Archived  bool   `json:"archived"`
 		LastName  string `json:"lastName"`
 		CreatedAt string `json:"createdAt"`
 		FirstName string `json:"firstName"`

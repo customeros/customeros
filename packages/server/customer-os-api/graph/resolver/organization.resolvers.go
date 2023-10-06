@@ -102,7 +102,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			if domain != "" {
 				_, err = r.Clients.OrganizationClient.LinkDomainToOrganization(ctx, &orggrpc.LinkDomainToOrganizationGrpcRequest{
 					Tenant:         common.GetTenantFromContext(ctx),
-					UserId:         common.GetUserIdFromContext(ctx),
+					LoggedInUserId: common.GetUserIdFromContext(ctx),
 					OrganizationId: response.Id,
 					Domain:         domain,
 				})

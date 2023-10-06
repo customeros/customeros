@@ -176,7 +176,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 				"source":            organization.ExternalSystem,
 				"sourceOfTruth":     organization.ExternalSystem,
 				"appSource":         constants.AppSourceSyncCustomerOsData,
-				"externalSource":    organization.ExternalSourceTable,
+				"externalSource":    organization.ExternalSourceEntity,
 				"now":               utils.Now(),
 				"hide":              !orgWhitelisted,
 			})

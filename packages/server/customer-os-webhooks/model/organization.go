@@ -1,8 +1,6 @@
-package entity
+package model
 
-import (
-	utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-)
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 
 type OrganizationRelation string
 
@@ -55,8 +53,8 @@ type OrganizationData struct {
 	// If true, the organization will be created by domain,
 	// Missing domains, or blacklisted domains will result in no organization being created
 	DomainRequired bool `json:"domainRequired"`
-	Whitelisted    bool `json:"whitelisted,omitempty"`
-	UpdateOnly     bool `json:"updateOnly,omitempty"`
+	Whitelisted    bool `json:"whitelisted"`
+	UpdateOnly     bool `json:"updateOnly"`
 }
 
 func (o *OrganizationData) HasDomains() bool {
@@ -80,15 +78,20 @@ func (o *OrganizationData) HasPhoneNumbers() bool {
 }
 
 func (o *OrganizationData) HasEmail() bool {
-	return len(o.Email) > 0
+	return o.Email != ""
 }
 
 func (o *OrganizationData) IsSubsidiary() bool {
 	return o.ParentOrganization != nil && o.ParentOrganization.OrganizationRelation == Subsidiary
 }
 
+func (o *OrganizationData) HasOwner() bool {
+	return o.OwnerUser != nil
+}
+
 func (o *OrganizationData) Normalize() {
 	o.SetTimes()
+	o.BaseData.Normalize()
 
 	o.Domains = utils.FilterEmpty(o.Domains)
 	utils.LowercaseStrings(o.Domains)
@@ -96,8 +99,4 @@ func (o *OrganizationData) Normalize() {
 
 	o.PhoneNumbers = GetNonEmptyPhoneNumbers(o.PhoneNumbers)
 	o.PhoneNumbers = RemoveDuplicatedPhoneNumbers(o.PhoneNumbers)
-}
-
-func (o *OrganizationData) HasOwner() bool {
-	return o.OwnerUser != nil
 }
