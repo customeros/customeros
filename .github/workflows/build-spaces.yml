@@ -48,7 +48,7 @@ jobs:
       - name: Run tests
         run: |
           cd packages/apps/spaces
-          yarn add -D jest
+          yarn add -D jest --silent
           yarn test
 
       - name: Log in to the Container registry
