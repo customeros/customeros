@@ -53,8 +53,7 @@ jobs:
       - name: Run tests
         run: |
           cd packages/apps/spaces
-          yarn add -D jest ts-jest @types/jest @jest/globals --silent
-          npx ts-jest config:init
+          yarn add -D jest
           yarn test
 
       - name: Log in to the Container registry
