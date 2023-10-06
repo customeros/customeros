@@ -27,14 +27,12 @@ import {
   CreateLogEntryMutationVariables,
   useCreateLogEntryMutation,
 } from '@organization/src/graphql/createLogEntry.generated';
-import {
-  GetTimelineQuery,
-  useInfiniteGetTimelineQuery,
-} from '@organization/src/graphql/getTimeline.generated';
-import { DataSource } from '@graphql/types';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { DataSource, LogEntry } from '@graphql/types';
 
 import { logEntryEditorExtensions } from './extensions';
 import { useTimelineMeta } from '../../shared/state';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 
 export const noop = () => undefined;
 
@@ -91,6 +89,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const queryKey = useInfiniteGetTimelineQuery.getKey(
     timelineMeta.getTimelineVariables,
   );
+  const updateTimelineCache = useUpdateCacheWithNewEvent<LogEntry>(virtuosoRef);
 
   const logEntryValues = new LogEntryFormDto();
   const { state, reset, setDefaultValues } = useForm<LogEntryFormDtoI>({
@@ -116,53 +115,20 @@ export const TimelineActionLogEntryContextContextProvider = ({
 
   const createLogEntryMutation = useCreateLogEntryMutation(client, {
     onMutate: async (payload) => {
-      await queryClient.cancelQueries({ queryKey });
-
-      const previousLogEntries =
-        queryClient.getQueryData<InfiniteData<GetTimelineQuery>>(queryKey);
-
-      const timelineEntries =
-        previousLogEntries?.pages?.[0]?.organization?.timelineEvents;
-
       const newLogEntry = makeEmptyLogEntryWithAliases(
         session.data?.user?.name,
         payload.logEntry as any,
       );
 
-      queryClient.setQueryData<InfiniteData<GetTimelineQuery>>(
+      const prevTimelineEvents = await updateTimelineCache(
+        newLogEntry,
         queryKey,
-        (currentCache): InfiniteData<GetTimelineQuery> => {
-          const nextCache = {
-            ...currentCache,
-            pages: currentCache?.pages?.map((p, idx) => {
-              if (idx !== 0) return p;
-              return {
-                ...p,
-                organization: {
-                  ...p?.organization,
-                  timelineEvents: [
-                    newLogEntry,
-                    ...(p?.organization?.timelineEvents ?? []),
-                  ],
-                  timelineEventsTotalCount:
-                    p?.organization?.timelineEventsTotalCount + 1,
-                },
-              };
-            }),
-          } as InfiniteData<GetTimelineQuery>;
-
-          return nextCache;
-        },
       );
-
-      virtuosoRef?.current?.scrollToIndex({
-        index: (timelineEntries?.length ?? 0) + 1,
-      });
       handleResetEditor();
-      return { previousLogEntries };
+      return { prevTimelineEvents };
     },
     onError: (_, __, context) => {
-      queryClient.setQueryData(queryKey, context?.previousLogEntries);
+      queryClient.setQueryData(queryKey, context?.prevTimelineEvents);
     },
     onSettled: () => {
       if (timeoutRef.current) {

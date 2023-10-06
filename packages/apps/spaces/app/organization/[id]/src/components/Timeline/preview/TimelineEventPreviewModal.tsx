@@ -16,13 +16,16 @@ import { IntercomThreadPreviewModal } from '@organization/src/components/Timelin
 import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { LogEntryUpdateModalContextProvider } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
+import { VirtuosoHandle } from 'react-virtuoso';
 
 interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;
+  virtuosoRef?: React.RefObject<VirtuosoHandle>;
 }
 
 export const TimelineEventPreviewModal = ({
   invalidateQuery,
+  virtuosoRef,
 }: TimelineEventPreviewModalProps) => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
 
@@ -48,7 +51,12 @@ export const TimelineEventPreviewModal = ({
   // Email handles close logic from within and use outside click cannot be used because preview should be closed only on backdrop click
   // user should be able to update panel details while having preview open
   if (isEmail) {
-    return <EmailPreviewModal invalidateQuery={invalidateQuery} />;
+    return (
+      <EmailPreviewModal
+        invalidateQuery={invalidateQuery}
+        virtuosoRef={virtuosoRef}
+      />
+    );
   }
 
   return (

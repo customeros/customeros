@@ -18,8 +18,6 @@ import { LogEntryWithAliases } from '@organization/src/components/Timeline/types
 import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { useSession } from 'next-auth/react';
 
-export const noop = () => undefined;
-
 interface LogEntryUpdateModalContextMethods {
   formId: string;
 }
@@ -45,6 +43,7 @@ export const LogEntryUpdateModalContextProvider = ({
   const logEntryStartedAtValues = new LogEntryUpdateFormDto(event);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { data: session } = useSession();
+
   const isAuthor =
     event?.logEntryCreatedBy?.emails?.findIndex(
       (e) => session?.user?.email === e.email,

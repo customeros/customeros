@@ -25,6 +25,10 @@ import { TimelineEventPreviewHeader } from '@organization/src/components/Timelin
 import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { VirtuosoHandle } from 'react-virtuoso';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -51,10 +55,12 @@ const checkEmpty = (values: Partial<ComposeEmailDtoI>): boolean => {
 
 interface EmailPreviewModalProps {
   invalidateQuery: () => void;
+  virtuosoRef?: React.RefObject<VirtuosoHandle>;
 }
 
 export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   invalidateQuery,
+  virtuosoRef,
 }) => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -66,6 +72,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     stringHandler: htmlToProsemirrorNode,
     content: '',
   });
+  const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [mode, setMode] = useState(REPLY_MODE);
@@ -83,6 +90,11 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     subject: `Re: ${subject}`,
     content: '',
   });
+  const [timelineMeta] = useTimelineMeta();
+
+  const queryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
 
   const { state, setDefaultValues } = useForm<ComposeEmailDtoI>({
     formId,
@@ -100,10 +112,13 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     }
   };
 
-  const handleEmailSendSuccess = () => {
+  const handleEmailSendSuccess = async (response: any) => {
+    await updateTimelineCache(response, queryKey);
+
+    setDefaultValues(defaultValues);
+    // no timeout needed is this case as the event id is created when this is called
     invalidateQuery();
     setIsSending(false);
-    setDefaultValues(defaultValues);
     closeModal();
   };
   const handleEmailSendError = () => {
@@ -201,7 +216,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       state.values.subject,
       handleEmailSendSuccess,
       handleEmailSendError,
-      session?.user?.email,
+      session?.user,
     );
   };
 
