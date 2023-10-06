@@ -30,8 +30,26 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: '16'
+          cache: 'yarn'
+
       - run: npm install -g yarn
+
+      - name: Deploy test Environment
+        run: |
+          curl http://openline.sh/install.sh | sh
+          echo "[INFO] Starting Openline CLI..."
+          openline dev start
+          echo "[INFO] Checking Openline CLI services..."
+          openline dev ping
+          echo "[INFO] Checking PODs..."
+          kubectl -n openline get pods
+
+      - name: Run tests
+        run: |
+          cd packages/apps/spaces
+          yarn add -D jest --silent
+          yarn test
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
