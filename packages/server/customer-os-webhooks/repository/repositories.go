@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres/entity"
 	"gorm.io/gorm"
@@ -9,9 +10,11 @@ import (
 
 type Repositories struct {
 	Drivers                  Drivers
+	CommonRepositories       *commonRepository.Repositories
 	SyncRunWebhookRepository repository.SyncRunWebhookRepository
 	ExternalSystemRepository ExternalSystemRepository
 	UserRepository           UserRepository
+	OrganizationRepository   OrganizationRepository
 	TenantRepository         TenantRepository
 	EmailRepository          EmailRepository
 	PhoneNumberRepository    PhoneNumberRepository
@@ -26,11 +29,12 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
+		CommonRepositories:       commonRepository.InitRepositories(gormDb, driver),
+		SyncRunWebhookRepository: repository.NewSyncRunWebhookRepository(gormDb),
 	}
-	repositories.SyncRunWebhookRepository = repository.NewSyncRunWebhookRepository(gormDb)
-
 	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
 	repositories.UserRepository = NewUserRepository(driver)
+	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.TenantRepository = NewTenantRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)

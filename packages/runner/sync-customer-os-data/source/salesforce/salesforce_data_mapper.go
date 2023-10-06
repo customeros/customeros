@@ -114,9 +114,9 @@ func mapOrganizationFromAccount(inputJson string) (string, error) {
 
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId:          input.ID,
-			CreatedAtStr:        input.CreatedDate,
-			ExternalSourceTable: utils.StringPtr("account"),
+			ExternalId:           input.ID,
+			CreatedAtStr:         input.CreatedDate,
+			ExternalSourceEntity: "account",
 		},
 		Name:        input.Name,
 		Description: input.Description,
@@ -182,11 +182,11 @@ func mapOrganizationFromLead(inputJson string) (string, error) {
 
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId:          input.ID,
-			CreatedAtStr:        input.CreatedDate,
-			ExternalSourceTable: utils.StringPtr("lead"),
+			ExternalId:           input.ID,
+			CreatedAtStr:         input.CreatedDate,
+			ExternalSourceEntity: "lead",
 		},
-		CreateByDomain: true,
+		DomainRequired: true,
 		Domains:        []string{domain},
 		Industry:       input.Industry,
 	}
@@ -308,9 +308,9 @@ func mapContactFromContact(inputJson string) (string, error) {
 
 	output := entity.ContactData{
 		BaseData: entity.BaseData{
-			ExternalId:          input.ID,
-			CreatedAtStr:        input.CreatedDate,
-			ExternalSourceTable: utils.StringPtr("contact"),
+			ExternalId:           input.ID,
+			CreatedAtStr:         input.CreatedDate,
+			ExternalSourceEntity: "contact",
 		},
 		Name:       input.Name,
 		FirstName:  input.FirstName,
@@ -412,9 +412,9 @@ func mapContactFromLead(inputJson string) (string, error) {
 
 	output := entity.ContactData{
 		BaseData: entity.BaseData{
-			ExternalId:          input.ID,
-			CreatedAtStr:        input.CreatedDate,
-			ExternalSourceTable: utils.StringPtr("lead"),
+			ExternalId:           input.ID,
+			CreatedAtStr:         input.CreatedDate,
+			ExternalSourceEntity: "lead",
 		},
 		Name:                 input.Name,
 		FirstName:            input.FirstName,
@@ -519,9 +519,9 @@ func mapLogEntryFromFeedItem(inputJson string) (string, error) {
 
 	output := entity.LogEntryData{
 		BaseData: entity.BaseData{
-			ExternalId:          input.ID,
-			CreatedAtStr:        input.CreatedDate,
-			ExternalSourceTable: utils.StringPtr("feeditem"),
+			ExternalId:           input.ID,
+			CreatedAtStr:         input.CreatedDate,
+			ExternalSourceEntity: "feeditem",
 		},
 		Content:      input.Body,
 		StartedAtStr: input.CreatedDate,
@@ -573,9 +573,9 @@ func mapLogEntryFromContentNote(inputJson string) (string, error) {
 
 	output := entity.LogEntryData{
 		BaseData: entity.BaseData{
-			ExternalId:          input.ID,
-			CreatedAtStr:        input.CreatedDate,
-			ExternalSourceTable: utils.StringPtr("contentnote"),
+			ExternalId:           input.ID,
+			CreatedAtStr:         input.CreatedDate,
+			ExternalSourceEntity: "contentnote",
 		},
 		ContentType:  "text/plain",
 		StartedAtStr: input.CreatedDate,

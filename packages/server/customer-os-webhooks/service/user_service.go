@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-const maxWorkers = 4
+const maxWorkersUserSync = 4
 
 type UserService interface {
 	SyncUsers(ctx context.Context, users []model.UserData) error
@@ -69,7 +69,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	// Create a wait group to wait for all workers to finish
 	var wg sync.WaitGroup
 	// Create a channel to control the number of concurrent workers
-	workerLimit := make(chan struct{}, maxWorkers)
+	workerLimit := make(chan struct{}, maxWorkersUserSync)
 
 	syncMutex := &sync.Mutex{}
 	syncDate := utils.Now()

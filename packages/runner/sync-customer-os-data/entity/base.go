@@ -6,19 +6,19 @@ import (
 )
 
 type BaseData struct {
-	Skip                bool       `json:"skip,omitempty"`
-	SkipReason          string     `json:"skipReason,omitempty"`
-	Id                  string     `json:"id,omitempty"`
-	ExternalId          string     `json:"externalId,omitempty"`
-	ExternalSystem      string     `json:"externalSystem,omitempty"`
-	ExternalUrl         string     `json:"externalUrl,omitempty"`
-	ExternalSourceTable *string    `json:"externalSourceTable,omitempty"`
-	CreatedAtStr        string     `json:"createdAt,omitempty"`
-	UpdatedAtStr        string     `json:"updatedAt,omitempty"`
-	CreatedAt           *time.Time `json:"createdAtTime,omitempty"`
-	UpdatedAt           *time.Time `json:"updatedAtTime,omitempty"`
-	SyncId              string     `json:"syncId,omitempty"`
-	AppSource           string     `json:"appSource,omitempty"`
+	Skip                 bool       `json:"skip,omitempty"`
+	SkipReason           string     `json:"skipReason,omitempty"`
+	Id                   string     `json:"id,omitempty"`
+	ExternalId           string     `json:"externalId,omitempty"`
+	ExternalSystem       string     `json:"externalSystem,omitempty"`
+	ExternalUrl          string     `json:"externalUrl,omitempty"`
+	ExternalSourceEntity string     `json:"externalSourceEntity,omitempty"`
+	CreatedAtStr         string     `json:"createdAt,omitempty"`
+	UpdatedAtStr         string     `json:"updatedAt,omitempty"`
+	CreatedAt            *time.Time `json:"createdAtTime,omitempty"`
+	UpdatedAt            *time.Time `json:"updatedAtTime,omitempty"`
+	SyncId               string     `json:"syncId,omitempty"`
+	AppSource            string     `json:"appSource,omitempty"`
 }
 
 func (b *BaseData) SetCreatedAt() {

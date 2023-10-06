@@ -154,7 +154,7 @@ func (s *logEntrySyncService) syncLogEntry(ctx context.Context, logEntrySyncMute
 			ExternalSystemId: logEntryInput.ExternalSystem,
 			ExternalId:       logEntryInput.ExternalId,
 			SyncDate:         timestamppb.Now(),
-			ExternalSource:   utils.IfNotNilString(logEntryInput.ExternalSourceTable),
+			ExternalSource:   logEntryInput.ExternalSourceEntity,
 			ExternalUrl:      logEntryInput.ExternalUrl,
 		},
 	}

@@ -37,9 +37,9 @@ func MapUser(inputJson string) (string, error) {
 		Email: input.Email,
 	}
 	if input.Type == "admin" {
-		output.ExternalSourceTable = utils.StringPtr("admins")
+		output.ExternalSourceEntity = "admins"
 	} else if input.Type == "team" {
-		output.ExternalSourceTable = utils.StringPtr("teams")
+		output.ExternalSourceEntity = "teams"
 	}
 
 	return utils.ToJson(output)
@@ -81,10 +81,10 @@ func MapOrganization(inputJson string) (string, error) {
 
 	output := entity.OrganizationData{
 		BaseData: entity.BaseData{
-			ExternalId:          domain,
-			ExternalSourceTable: utils.StringPtr("contacts"),
+			ExternalId:           domain,
+			ExternalSourceEntity: "contacts",
 		},
-		CreateByDomain: true,
+		DomainRequired: true,
 	}
 	output.Domains = []string{domain}
 	if input.CreatedAt != 0 {
@@ -245,10 +245,10 @@ func mapInteractionEventFromConversation(inputJson string) (string, error) {
 
 	output := entity.InteractionEventData{
 		BaseData: entity.BaseData{
-			ExternalId:          input.ID,
-			ExternalSourceTable: utils.StringPtr("conversations"),
-			CreatedAtStr:        tsStrToRFC3339(input.CreatedAt),
-			UpdatedAtStr:        tsStrToRFC3339(input.UpdatedAt),
+			ExternalId:           input.ID,
+			ExternalSourceEntity: "conversations",
+			CreatedAtStr:         tsStrToRFC3339(input.CreatedAt),
+			UpdatedAtStr:         tsStrToRFC3339(input.UpdatedAt),
 		},
 		Channel:         "CHAT",
 		ContentType:     "text/html",
@@ -346,10 +346,10 @@ func mapInteractionEventFromConversationPart(inputJson string) (string, error) {
 
 	output := entity.InteractionEventData{
 		BaseData: entity.BaseData{
-			ExternalId:          input.ID,
-			ExternalSourceTable: utils.StringPtr("conversation_parts"),
-			CreatedAtStr:        tsStrToRFC3339(input.CreatedAt),
-			UpdatedAtStr:        tsStrToRFC3339(input.UpdatedAt),
+			ExternalId:           input.ID,
+			ExternalSourceEntity: "conversation_parts",
+			CreatedAtStr:         tsStrToRFC3339(input.CreatedAt),
+			UpdatedAtStr:         tsStrToRFC3339(input.UpdatedAt),
 		},
 		Channel:         "CHAT",
 		Type:            "MESSAGE",

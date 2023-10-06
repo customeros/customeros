@@ -1,4 +1,4 @@
-package entity
+package model
 
 type ReferencedUser struct {
 	ExternalId       string `json:"externalId,omitempty"`

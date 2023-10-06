@@ -30,7 +30,7 @@ func (s *userService) GetIdForReferencedUser(ctx context.Context, tenant, extern
 	} else if user.ReferencedByExternalId() {
 		return s.repositories.UserRepository.GetUserIdByExternalId(ctx, tenant, user.ExternalId, externalSystemId)
 	} else if user.ReferencedByExternalOwnerId() {
-		return s.repositories.UserRepository.GetUserIdByExternalOwnerId(ctx, tenant, user.ExternalOwnerId, externalSystemId)
+		return s.repositories.UserRepository.GetUserIdByExternalOwnerId(ctx, tenant, user.ExternalIdSecond, externalSystemId)
 	}
 	return "", nil
 }

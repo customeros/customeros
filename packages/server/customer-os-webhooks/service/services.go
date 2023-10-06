@@ -17,11 +17,12 @@ type Services struct {
 	CommonServices     *commonService.Services
 	CommonAuthServices *commonAuthService.Services
 
-	TenantService      TenantService
-	EmailService       EmailService
-	PhoneNumberService PhoneNumberService
-	UserService        UserService
-	SyncStatusService  SyncStatusService
+	TenantService       TenantService
+	EmailService        EmailService
+	PhoneNumberService  PhoneNumberService
+	UserService         UserService
+	OrganizationService OrganizationService
+	SyncStatusService   SyncStatusService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, gormDB *gorm.DB, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {

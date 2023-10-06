@@ -156,7 +156,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, organiza
 	}
 	orgInput.Domains = nonPersonalEmailProviderDomains
 
-	if orgInput.CreateByDomain {
+	if orgInput.DomainRequired {
 		if !orgInput.HasDomains() {
 			if err := dataService.MarkProcessed(ctx, orgInput.SyncId, runId, true, true, "Missing non-personal email provider domain"); err != nil {
 				*failed++

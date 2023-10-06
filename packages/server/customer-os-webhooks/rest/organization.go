@@ -16,9 +16,9 @@ import (
 	"time"
 )
 
-func SyncUsersHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func SyncOrganizationsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncUsers", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncOrganizations", c.Request.Header)
 		defer span.Finish()
 
 		// Read the tenant header
@@ -33,45 +33,45 @@ func SyncUsersHandler(services *service.Services, log logger.Logger) gin.Handler
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			log.Errorf("(SyncUsers) error reading request body: %s", err.Error())
+			log.Errorf("(SyncOrganizations) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
 
 		// Parse the JSON request body
-		var users []model.UserData
-		if err = json.Unmarshal(requestBody, &users); err != nil {
-			log.Errorf("(SyncUsers) Failed unmarshalling body request: %s", err.Error())
+		var organizations []model.OrganizationData
+		if err = json.Unmarshal(requestBody, &organizations); err != nil {
+			log.Errorf("(SyncOrganizations) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
 
-		if len(users) == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing users in request"})
+		if len(organizations) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing organizations in request"})
 			return
 		}
 
-		// Context timeout, allocate per user
-		timeout := time.Duration(len(users)) * utils.LongDuration
+		// Context timeout, allocate per organization
+		timeout := time.Duration(len(organizations)) * utils.LongDuration
 		if timeout > constants.RequestMaxTimeout {
 			timeout = constants.RequestMaxTimeout
 		}
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.UserService.SyncUsers(ctx, users)
+		err = services.OrganizationService.SyncOrganizations(ctx, organizations)
 		if err != nil {
-			log.Errorf("(SyncUsers) error in sync users: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing users"})
+			log.Errorf("(SyncOrganizations) error in sync organizations: %s", err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing organizations"})
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}
 	}
 }
 
-func SyncUserHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func SyncOrganizationHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncUser", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncOrganization", c.Request.Header)
 		defer span.Finish()
 
 		// Read the tenant header
@@ -86,28 +86,28 @@ func SyncUserHandler(services *service.Services, log logger.Logger) gin.HandlerF
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			log.Errorf("(SyncUser) error reading request body: %s", err.Error())
+			log.Errorf("(SyncOrganization) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
 
 		// Parse the JSON request body
-		var user model.UserData
-		if err = json.Unmarshal(requestBody, &user); err != nil {
-			log.Errorf("(SyncUsers) Failed unmarshalling body request: %s", err.Error())
+		var organization model.OrganizationData
+		if err = json.Unmarshal(requestBody, &organization); err != nil {
+			log.Errorf("(SyncOrganization) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
 
-		// Context timeout, allocate per user
+		// Context timeout, allocate per organization
 		timeout := utils.LongDuration
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.UserService.SyncUsers(ctx, []model.UserData{user})
+		err = services.OrganizationService.SyncOrganizations(ctx, []model.OrganizationData{organization})
 		if err != nil {
-			log.Errorf("(SyncUser) error in sync user: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing user"})
+			log.Errorf("(SyncOrganization) error in sync organization: %s", err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing organization"})
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}
