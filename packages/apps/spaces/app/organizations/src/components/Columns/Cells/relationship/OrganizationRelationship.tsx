@@ -16,7 +16,7 @@ import {
   GetOrganizationsQuery,
 } from '@organizations/graphql/getOrganizations.generated';
 
-import { useOrganizationsMeta } from '@organizations/shared/state';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';

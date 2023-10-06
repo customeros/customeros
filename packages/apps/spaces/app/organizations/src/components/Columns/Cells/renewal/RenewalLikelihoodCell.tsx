@@ -17,7 +17,7 @@ import {
   useInfiniteGetOrganizationsQuery,
   GetOrganizationsQuery,
 } from '@organizations/graphql/getOrganizations.generated';
-import { useOrganizationsMeta } from '@organizations/shared/state';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 
 import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
 

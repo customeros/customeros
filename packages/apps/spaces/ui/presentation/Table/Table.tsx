@@ -1,26 +1,25 @@
 'use client';
 import { useRef, useState, useEffect, useMemo, forwardRef } from 'react';
 import {
+  createRow,
   flexRender,
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  createRow,
 } from '@tanstack/react-table';
 import type {
-  Table as TableInstance,
   ColumnDef,
+  OnChangeFn,
   SortingState,
   RowSelectionState,
-  OnChangeFn,
+  Table as TableInstance,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { Flex, FlexProps } from '@ui/layout/Flex';
-import { Checkbox } from '@ui/form/Checkbox';
+import { Center } from '@ui/layout/Center';
 import { Fade } from '@ui/transitions/Fade';
-
-const CELL_PADDING_X = 24;
+import { Checkbox } from '@ui/form/Checkbox';
+import { Flex, FlexProps } from '@ui/layout/Flex';
 
 declare module '@tanstack/table-core' {
   // REASON: TData & TValue are not used in this interface but need to be defined
@@ -38,6 +37,7 @@ interface TableProps<T extends object> {
   isLoading?: boolean;
   totalItems?: number;
   sorting?: SortingState;
+  canFetchMore?: boolean;
   selection?: RowSelectionState;
   onFetchMore?: () => void;
   enableRowSelection?: boolean;
@@ -52,6 +52,7 @@ export const Table = <T extends object>({
   columns,
   isLoading,
   onFetchMore,
+  canFetchMore,
   totalItems = 40,
   onSortingChange,
   onSelectionChange,
@@ -61,11 +62,9 @@ export const Table = <T extends object>({
   sorting: _sorting,
   selection: _selection,
 }: TableProps<T>) => {
-  const tableActionsRef = useRef<HTMLDivElement>(null);
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [selection, setSelection] = useState<RowSelectionState>({});
-  const [tableActionsWidth, setTableActionsWidth] = useState<number>(0);
 
   const table = useReactTable<T>({
     data,
@@ -82,14 +81,12 @@ export const Table = <T extends object>({
     onRowSelectionChange: onSelectionChange ?? setSelection,
   });
 
-  const tableActionsCellWidth = tableActionsWidth + 2 * CELL_PADDING_X;
-
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
     count: !data.length && isLoading ? 40 : totalItems,
     overscan: 30,
     getScrollElement: () => scrollElementRef.current,
-    estimateSize: () => 80,
+    estimateSize: () => 64,
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -101,18 +98,17 @@ export const Table = <T extends object>({
       return;
     }
 
-    if (
-      lastItem.index >= data.length - 1 &&
-      data.length < totalItems &&
-      !isLoading
-    ) {
+    if (lastItem.index >= data.length - 1 && canFetchMore && !isLoading) {
       onFetchMore?.();
     }
-  }, [onFetchMore, data.length, isLoading, totalItems, virtualRows]);
-
-  useEffect(() => {
-    setTableActionsWidth(tableActionsRef.current?.clientWidth ?? 0);
-  }, [enableRowSelection, enableTableActions, _selection, data.length]);
+  }, [
+    onFetchMore,
+    data.length,
+    isLoading,
+    totalItems,
+    virtualRows,
+    canFetchMore,
+  ]);
 
   const skeletonRow = useMemo(
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
@@ -120,26 +116,22 @@ export const Table = <T extends object>({
   );
 
   return (
-    <Flex w='100%' flexDir='column'>
+    <Flex w='100%' flexDir='column' position='relative'>
       <TContent ref={scrollElementRef}>
         <THeader
           top='0'
           position='sticky'
-          minW={
-            table.getCenterTotalSize() +
-            tableActionsCellWidth +
-            (enableRowSelection ? 44 : 0)
-          }
+          minW={table.getCenterTotalSize() + (enableRowSelection ? 28 : 0)}
         >
           {table.getHeaderGroups().map((headerGroup) => (
             <THeaderGroup key={headerGroup.id}>
-              {enableRowSelection && <THeaderCell w='44px' p='0' />}
+              {enableRowSelection && <THeaderCell w='28px' p='0' />}
               {headerGroup.headers.map((header, index) => (
                 <THeaderCell
                   key={header.id}
                   flex={header.colSpan ?? '1'}
                   minWidth={`${header.getSize()}`}
-                  pl={index === 0 ? '3' : '6'}
+                  pl={index === 0 ? '2' : '6'}
                 >
                   {header.isPlaceholder
                     ? null
@@ -149,15 +141,6 @@ export const Table = <T extends object>({
                       )}
                 </THeaderCell>
               ))}
-              {enableTableActions && (
-                <THeaderCell
-                  align='center'
-                  ref={tableActionsRef}
-                  justifyContent='flex-end'
-                >
-                  {renderTableActions?.(table)}
-                </THeaderCell>
-              )}
             </THeaderGroup>
           ))}
         </THeader>
@@ -173,22 +156,30 @@ export const Table = <T extends object>({
                 data-index={virtualRow.index}
                 minH={`${virtualRow.size}px`}
                 minW={
-                  table.getCenterTotalSize() +
-                  tableActionsCellWidth +
-                  (enableRowSelection ? 44 : 0)
+                  table.getCenterTotalSize() + (enableRowSelection ? 28 : 0)
                 }
                 top={`${virtualRow.start}px`}
                 ref={rowVirtualizer.measureElement}
                 bg={virtualRow.index % 2 === 0 ? 'gray.25' : 'white'}
+                _hover={{
+                  '& .row-select-checkbox': {
+                    opacity: '1',
+                    visibility: 'visible',
+                  },
+                }}
               >
                 {enableRowSelection && (
-                  <TCell maxW='fit-content' pl='6' pr='0'>
+                  <TCell maxW='fit-content' pl='2' pr='0'>
                     <Flex align='center' flexDir='row' h='full'>
                       <Checkbox
                         size='lg'
+                        className='row-select-checkbox'
                         checked={row?.getIsSelected()}
+                        key={`checkbox-${virtualRow.index}`}
                         disabled={!row || !row?.getCanSelect()}
                         onChange={row?.getToggleSelectedHandler()}
+                        opacity={row?.getIsSelected() ? '1' : '0'}
+                        visibility={row?.getIsSelected() ? 'visible' : 'hidden'}
                       />
                     </Flex>
                   </TCell>
@@ -197,7 +188,7 @@ export const Table = <T extends object>({
                   <TCell
                     key={cell.id}
                     data-index={cell.row.index}
-                    pl={index === 0 ? '3' : '6'}
+                    pl={index === 0 ? '2' : '6'}
                     minW={`${cell.column.getSize()}px`}
                     flex={
                       table
@@ -220,20 +211,13 @@ export const Table = <T extends object>({
                     )}
                   </TCell>
                 ))}
-                {enableTableActions && (
-                  <TCell
-                    data-index={(row ?? skeletonRow).getAllCells().length + 1}
-                    flex='0'
-                    p='0'
-                  >
-                    <Flex flex='0' w={`${tableActionsWidth}px`} />
-                  </TCell>
-                )}
               </TRow>
             );
           })}
         </TBody>
       </TContent>
+
+      {enableTableActions && <TActions>{renderTableActions?.(table)}</TActions>}
     </Flex>
   );
 };
@@ -272,7 +256,7 @@ const TCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   return (
     <Flex
       px='6'
-      py='4'
+      py='2'
       flex='1'
       flexDir='column'
       whiteSpace='nowrap'
@@ -342,11 +326,17 @@ const THeaderCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
     <Flex
       align='center'
       px='6'
-      py='3'
+      py='1'
       whiteSpace='nowrap'
       ref={ref}
       {...props}
     />
+  );
+});
+
+const TActions = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
+  return (
+    <Center left='50%' position='absolute' bottom='32px' ref={ref} {...props} />
   );
 });
 

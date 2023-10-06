@@ -1,7 +1,10 @@
 import { Flex } from '@ui/layout/Flex';
+import { Plus } from '@ui/media/icons/Plus';
+import { Tooltip } from '@ui/overlay/Tooltip';
 import { Organization } from '@graphql/types';
+import { IconButton } from '@ui/form/IconButton';
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { THead, createColumnHelper } from '@ui/presentation/Table';
-import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
 
 import { OwnerCell } from './Cells/owner/OwnerCell';
 import { RelationshipStage } from './Cells/stage/RelationshipStage';
@@ -15,7 +18,13 @@ import { OrganizationRelationship } from './Cells/relationship/OrganizationRelat
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
 
-export const columns = (tabs?: { [key: string]: string } | null) => [
+interface GetColumnsOptions {
+  tabs?: { [key: string]: string } | null;
+  createIsLoading?: boolean;
+  onCreateOrganization?: () => void;
+}
+
+export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor((row) => row, {
     id: 'ORGANIZATION',
     cell: (props) => {
@@ -23,16 +32,41 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
         <OrganizationCell
           key={props.getValue().id}
           organization={props.getValue()}
-          lastPositionParams={tabs?.[props.getValue()?.id]}
+          lastPositionParams={options?.tabs?.[props.getValue()?.id]}
         />
       );
     },
     minSize: 200,
-    header: (props) => <THead<Organization> title='Company' {...props} />,
+    header: (props) => (
+      <THead<Organization>
+        title='Company'
+        icon={
+          <Flex w='10' h='10' align='center' justify='center' mr='3'>
+            <Tooltip label='Create a company'>
+              <IconButton
+                size='sm'
+                variant='ghost'
+                aria-label='create organization'
+                isLoading={options?.createIsLoading}
+                onClick={options?.onCreateOrganization}
+                icon={<Plus color='gray.400' boxSize='5' />}
+              />
+            </Tooltip>
+          </Flex>
+        }
+        {...props}
+      />
+    ),
     skeleton: () => (
       <Flex align='center' h='full'>
-        <SkeletonCircle size='48px' startColor='gray.300' endColor='gray.300' />
-        <Flex ml='2' flexDir='column' h='42px' align='center' gap='1'>
+        <Skeleton
+          borderRadius='lg'
+          w='40px'
+          h='40px'
+          startColor='gray.300'
+          endColor='gray.300'
+        />
+        <Flex ml='3' flexDir='column' h='42px' align='center' gap='1'>
           <Skeleton
             width='100px'
             height='18px'
@@ -212,7 +246,7 @@ export const columns = (tabs?: { [key: string]: string } | null) => [
   }),
   columnHelper.accessor('market', {
     id: 'LAST_TOUCHPOINT',
-    minSize: 200,
+    minSize: 250,
     cell: (props) => (
       <LastTouchpointCell
         lastTouchPointAt={props.row.original.lastTouchPointAt}

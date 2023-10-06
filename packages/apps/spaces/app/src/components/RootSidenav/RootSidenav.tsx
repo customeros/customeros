@@ -1,6 +1,8 @@
 'use client';
 import { useEffect } from 'react';
+import { produce } from 'immer';
 import { signOut } from 'next-auth/react';
+import { useLocalStorage } from 'usehooks-ts';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
@@ -9,20 +11,21 @@ import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 
-import { useLocalStorage } from 'usehooks-ts';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
+import logo from './customer-os.png';
 import { SidenavItem } from './components/SidenavItem';
 import { GoogleSidebarNotification } from './components/GoogleSidebarNotification';
-import logo from './customer-os.png';
 
 export const RootSidenav = () => {
   const client = getGraphQLClient();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { root: 'organization' },
@@ -33,6 +36,11 @@ export const RootSidenav = () => {
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });
+    setOrganizationsMeta((prev) =>
+      produce(prev, (draft) => {
+        draft.getOrganization.pagination.page = 1;
+      }),
+    );
 
     router.push(`/${path}`);
   };

@@ -10,7 +10,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useOrganizationsMeta } from '@organizations/shared/state';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
 import { useSetOrganizationOwnerMutation } from '@organizations/graphql/setOrganizationOwner.generated';
 import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';

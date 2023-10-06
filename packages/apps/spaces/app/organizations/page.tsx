@@ -6,12 +6,6 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useSearchParams } from 'next/navigation';
 
 import {
-  Table,
-  SortingState,
-  TableInstance,
-  RowSelectionState,
-} from '@ui/presentation/Table';
-import {
   Filter,
   SortBy,
   Organization,
@@ -23,15 +17,16 @@ import { GridItem } from '@ui/layout/Grid';
 import { Archive } from '@ui/media/icons/Archive';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { Table, SortingState, RowSelectionState } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
 import { Search } from './src/components/Search';
-import { useOrganizationsMeta } from './src/shared/state';
+import { TableActions } from './src/components/Actions';
 import { useOrganizationsPageMethods } from './src/hooks';
-import { columns } from './src/components/Columns/Columns';
+import { getColumns } from './src/components/Columns/Columns';
 import EmptyState from './src/components/EmptyState/EmptyState';
-import { OrganizationListActions } from './src/components/Actions';
-import { useInfiniteGetOrganizationsQuery } from './src/graphql/getOrganizations.generated';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { useGetOrganizationsInfiniteQuery } from './src/hooks/useGetOrganizationsInfiniteQuery';
 
 export default function OrganizationsPage() {
   const client = getGraphQLClient();
@@ -45,14 +40,13 @@ export default function OrganizationsPage() {
   const searchTerm = searchParams?.get('search');
 
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [enableSelection, setEnableSelection] = useState(false);
   const [selection, setSelection] = useState<RowSelectionState>({});
+  const [targetSelection, setTargetSelection] = useState<
+    [index: number, id: string] | null
+  >(null);
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
   const { createOrganization, hideOrganizations, mergeOrganizations } =
-    useOrganizationsPageMethods({
-      selection,
-      setEnableSelection,
-    });
+    useOrganizationsPageMethods({ selection, setSelection, targetSelection });
 
   const { data: globalCache } = useGlobalCacheQuery(client);
 
@@ -94,12 +88,6 @@ export default function OrganizationsPage() {
   }, [searchParams?.toString()]);
 
   const sortBy: SortBy | undefined = useMemo(() => {
-    setOrganizationsMeta(
-      produce(organizationsMeta, (draft) => {
-        draft.getOrganization.pagination.page = 1;
-      }),
-    );
-
     if (!sorting.length) return;
     return {
       by: sorting[0].id,
@@ -108,56 +96,44 @@ export default function OrganizationsPage() {
     };
   }, [sorting]);
 
-  const { data, fetchNextPage, isInitialLoading, isFetchingNextPage } =
-    useInfiniteGetOrganizationsQuery(
-      'pagination',
-      client,
-      {
-        pagination: {
-          page: 1,
-          limit: 40,
-        },
-        sort: sortBy,
-        where,
-      },
-      {
-        getNextPageParam: () => {
-          return {
-            pagination: {
-              page: organizationsMeta.getOrganization.pagination.page + 1,
-              limit: 40,
-            },
-          };
-        },
-      },
-    );
+  const {
+    data,
+    isFetching,
+    hasNextPage,
+    fetchNextPage,
+    isInitialLoading,
+    isFetchingNextPage,
+  } = useGetOrganizationsInfiniteQuery(client, {
+    pagination: {
+      page: 1,
+      limit: 40,
+    },
+    sort: sortBy,
+    where,
+  });
 
   const flatData =
     (data?.pages?.flatMap(
       (o) => o.dashboardView_Organizations?.content,
     ) as Organization[]) || [];
   const allOrganizationIds = flatData.map((o) => o?.id);
-  const selectedIds = Object.keys(selection)
-    .map((k) => (allOrganizationIds as string[])[Number(k)])
-    .filter(Boolean);
+  const selectedIds = Object.keys(selection).map(
+    (k) => (allOrganizationIds as string[])[Number(k)],
+  );
 
   const handleCreateOrganization = () => {
     createOrganization.mutate({ input: { name: '' } });
   };
 
   const handleFetchMore = useCallback(() => {
-    setOrganizationsMeta(
-      produce(organizationsMeta, (draft) => {
-        draft.getOrganization.pagination.page += 1;
-      }),
-    );
+    !isFetching && fetchNextPage();
+  }, [fetchNextPage, isFetching]);
 
-    fetchNextPage();
-  }, [setOrganizationsMeta, fetchNextPage, organizationsMeta]);
+  const handleMergeOrganizations = () => {
+    const primaryId = targetSelection?.[1];
+    const mergeIds = selectedIds.filter((id) => id !== primaryId);
 
-  const handleMergeOrganizations = (_: TableInstance<Organization>) => {
-    const primaryId = selectedIds[0];
-    const mergeIds = selectedIds.slice(1);
+    if (!primaryId || !mergeIds.length) return;
 
     mergeOrganizations.mutate({
       primaryOrganizationId: primaryId,
@@ -174,13 +150,17 @@ export default function OrganizationsPage() {
       ids: selectedIds,
     });
     onClose();
-    setEnableSelection(false);
   };
 
-  const handleCancelRemoveOrganizations = () => {
-    onClose();
-    setEnableSelection(false);
-  };
+  const columns = useMemo(
+    () =>
+      getColumns({
+        tabs,
+        createIsLoading: createOrganization.isLoading,
+        onCreateOrganization: handleCreateOrganization,
+      }),
+    [tabs, handleCreateOrganization, createOrganization.isLoading],
+  );
 
   useEffect(() => {
     setOrganizationsMeta(
@@ -191,7 +171,7 @@ export default function OrganizationsPage() {
         draft.getOrganization.where = where;
       }),
     );
-  }, [sortBy, where]);
+  }, [sortBy, searchParams?.toString(), data?.pageParams]);
 
   useEffect(() => {
     setLastActivePosition((prev) =>
@@ -201,6 +181,14 @@ export default function OrganizationsPage() {
       }),
     );
   }, [searchParams?.toString()]);
+
+  useEffect(() => {
+    if (selectedIds.length === 1) {
+      const id = selectedIds[0];
+      const index = Number(Object.keys(selection)[0]);
+      setTargetSelection([index, id]);
+    }
+  }, [selectedIds.length]);
 
   if (
     data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
@@ -223,26 +211,24 @@ export default function OrganizationsPage() {
 
       <Table<Organization>
         data={flatData}
-        columns={columns(tabs)}
+        columns={columns}
         sorting={sorting}
         enableTableActions
+        enableRowSelection
         isLoading={isInitialLoading || isFetchingNextPage}
         selection={selection}
+        canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
+        onSelectionChange={setSelection}
         totalItems={
           data?.pages?.[0].dashboardView_Organizations?.totalElements || 0
         }
-        onSelectionChange={setSelection}
-        enableRowSelection={enableSelection}
         renderTableActions={(table) => (
-          <OrganizationListActions
+          <TableActions
             table={table}
             selection={selection}
             onArchiveOrganizations={onOpen}
-            isSelectionEnabled={enableSelection}
-            toggleSelection={setEnableSelection}
-            onCreateOrganization={handleCreateOrganization}
             onMergeOrganizations={handleMergeOrganizations}
           />
         )}
@@ -251,9 +237,9 @@ export default function OrganizationsPage() {
       <ConfirmDeleteDialog
         isOpen={isOpen}
         icon={<Archive />}
+        onClose={onClose}
         confirmButtonLabel={'Archive'}
         onConfirm={handleHideOrganizations}
-        onClose={handleCancelRemoveOrganizations}
         isLoading={hideOrganizations.isLoading}
         label={`Archive selected ${
           selectedIds.length === 1 ? 'organization' : 'organizations'
