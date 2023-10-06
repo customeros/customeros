@@ -32,7 +32,7 @@ export const RenewalForecastUpdatedActionPreview = () => {
     <>
       <TimelineEventPreviewHeader
         date={modalContent?.createdAt}
-        name={'Renewal forecast'}
+        name={'ARR forecast'}
         onClose={closeModal}
         copyLabel='Copy link to this event'
       />

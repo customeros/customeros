@@ -108,7 +108,7 @@ export const RenewalForecastModal = ({
               reason: reason,
             }),
             actionCreatedBy: null,
-            content: `Renewal forecast set to $${amount} by ${session?.user?.name}`,
+            content: `ARR forecast set to $${amount} by ${session?.user?.name}`,
           };
 
           if (!oldData || !oldData.pages?.length) {
@@ -187,11 +187,11 @@ export const RenewalForecastModal = ({
             <Icons.AlertTriangle />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            {`${!renewalForecast.amount ? 'Set' : 'Update'} renewal forecast`}
+            {`${!renewalForecast.amount ? 'Set' : 'Update'} ARR forecast`}
           </Heading>
           <Text mt='1' fontSize='sm' fontWeight='normal'>
-            {!renewalForecast.amount ? 'Setting' : 'Updating'} <b>{name}</b>{' '}
-            renewal forecast will change how expected revenue is reported.
+            {!renewalForecast.amount ? 'Setting' : 'Updating'} <b>{name}</b> ARR
+            forecast will change how expected revenue is reported.
           </Text>
         </ModalHeader>
         <ModalBody as={Flex} flexDir='column' pb='0'>
@@ -221,7 +221,7 @@ export const RenewalForecastModal = ({
             onChange={(e) => setReason(e.target.value)}
             placeholder={`What is the reason for ${
               !renewalForecast.amount ? 'setting' : 'updating'
-            } the renewal forecast?`}
+            } the ARR forecast?`}
           />
         </ModalBody>
         <ModalFooter p='6'>
