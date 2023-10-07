@@ -278,7 +278,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			if err != nil {
 				tracing.TraceErr(span, err)
 				failedSync = true
-				reason = fmt.Sprintf("Failed to create email address %s for organization %s: %s", orgInput.Email, orgInput, err.Error())
+				reason = fmt.Sprintf("Failed to create email address %s for organization %s: %s", orgInput.Email, organizationId, err.Error())
 				s.log.Error(reason)
 			}
 			// Link email to organization
@@ -341,7 +341,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("Failed to create location for organization %s: %s", orgInput, err.Error())
+					reason = fmt.Sprintf("Failed to create location for organization %s: %s", organizationId, err.Error())
 					s.log.Error(reason)
 				}
 			}
