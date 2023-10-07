@@ -23,6 +23,7 @@ func NewContactAggregateWithTenantAndID(tenant, id string) *ContactAggregate {
 	contactAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(ContactAggregateType, tenant, id)
 	contactAggregate.SetWhen(contactAggregate.When)
 	contactAggregate.Contact = &models.Contact{}
+	contactAggregate.Tenant = tenant
 	return &contactAggregate
 }
 

@@ -3,25 +3,51 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	models_common "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
 )
 
-func (a *LocationAggregate) CreateLocation(ctx context.Context, tenant, name, rawAddress string, locationAddress models.LocationAddress, source models_common.Source, createdAt, updatedAt *time.Time) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.CreateLocation")
-	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+func (a *LocationAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	switch c := cmd.(type) {
+	case *command.UpsertLocationCommand:
+		if c.IsCreateCommand {
+			return a.createLocation(ctx, c)
+		} else {
+			return a.updateLocation(ctx, c)
+		}
+	case *command.FailedLocationValidationCommand:
+		return a.failLocationValidation(ctx, c)
+	case *command.SkippedLocationValidationCommand:
+		return a.skipLocationValidation(ctx, c)
+	case *command.LocationValidatedCommand:
+		return a.locationValidated(ctx, c)
+	default:
+		return errors.New("invalid command type")
+	}
+}
 
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(createdAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, createdAtNotNil)
-	event, err := events.NewLocationCreateEvent(a, tenant, name, rawAddress, source.Source, source.SourceOfTruth, source.AppSource, createdAtNotNil, updatedAtNotNil, locationAddress)
+func (a *LocationAggregate) createLocation(ctx context.Context, cmd *command.UpsertLocationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.createLocation")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+	cmd.Source.SetDefaultValues()
+
+	locationAddress := models.LocationAddress{}
+	locationAddress.From(cmd.LocationAddressFields)
+
+	event, err := events.NewLocationCreateEvent(a, cmd.Name, cmd.RawAddress, cmd.Source, createdAtNotNil, updatedAtNotNil, locationAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLocationCreateEvent")
@@ -32,17 +58,21 @@ func (a *LocationAggregate) CreateLocation(ctx context.Context, tenant, name, ra
 	return a.Apply(event)
 }
 
-func (a *LocationAggregate) UpdateLocation(ctx context.Context, tenant, name, rawAddress string, locationAddress models.LocationAddress, sourceOfTruth string, updatedAt *time.Time) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.UpdateLocation")
+func (a *LocationAggregate) updateLocation(ctx context.Context, cmd *command.UpsertLocationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.updateLocation")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, utils.Now())
-	if sourceOfTruth == "" {
-		sourceOfTruth = a.Location.Source.SourceOfTruth
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+	if cmd.Source.Source == "" {
+		cmd.Source.Source = constants.SourceOpenline
 	}
 
-	event, err := events.NewLocationUpdateEvent(a, tenant, name, rawAddress, sourceOfTruth, updatedAtNotNil, locationAddress)
+	locationAddress := models.LocationAddress{}
+	locationAddress.From(cmd.LocationAddressFields)
+
+	event, err := events.NewLocationUpdateEvent(a, cmd.Name, cmd.RawAddress, cmd.Source.Source, updatedAtNotNil, locationAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLocationUpdateEvent")
@@ -53,12 +83,13 @@ func (a *LocationAggregate) UpdateLocation(ctx context.Context, tenant, name, ra
 	return a.Apply(event)
 }
 
-func (a *LocationAggregate) FailLocationValidation(ctx context.Context, tenant, rawAddress, country, validationError string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.FailLocationValidation")
+func (a *LocationAggregate) failLocationValidation(ctx context.Context, cmd *command.FailedLocationValidationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.failLocationValidation")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewLocationFailedValidationEvent(a, tenant, rawAddress, country, validationError)
+	event, err := events.NewLocationFailedValidationEvent(a, cmd.RawAddress, cmd.Country, cmd.ValidationError)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLocationFailedValidationEvent")
@@ -69,12 +100,13 @@ func (a *LocationAggregate) FailLocationValidation(ctx context.Context, tenant, 
 	return a.Apply(event)
 }
 
-func (a *LocationAggregate) SkipLocationValidation(ctx context.Context, tenant, rawAddress, validationSkipReason string) error {
+func (a *LocationAggregate) skipLocationValidation(ctx context.Context, cmd *command.SkippedLocationValidationCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.SkipLocationValidation")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewLocationSkippedValidationEvent(a, tenant, rawAddress, validationSkipReason)
+	event, err := events.NewLocationSkippedValidationEvent(a, cmd.RawAddress, cmd.ValidationSkipReason)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLocationSkippedValidationEvent")
@@ -85,12 +117,16 @@ func (a *LocationAggregate) SkipLocationValidation(ctx context.Context, tenant, 
 	return a.Apply(event)
 }
 
-func (a *LocationAggregate) LocationValidated(ctx context.Context, tenant, rawAddress, countryForValidation string, locationAddress models.LocationAddress) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.LocationValidated")
+func (a *LocationAggregate) locationValidated(ctx context.Context, cmd *command.LocationValidatedCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.locationValidated")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewLocationValidatedEvent(a, tenant, rawAddress, countryForValidation, locationAddress)
+	locationAddress := models.LocationAddress{}
+	locationAddress.From(cmd.LocationAddressFields)
+
+	event, err := events.NewLocationValidatedEvent(a, cmd.RawAddress, cmd.CountryForValidation, locationAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLocationValidatedEvent")

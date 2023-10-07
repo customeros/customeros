@@ -1,7 +1,8 @@
 package aggregate
 
 import (
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -13,36 +14,25 @@ const (
 )
 
 type LocationAggregate struct {
-	*eventstore.AggregateBase
+	*aggregate.CommonTenantIdAggregate
 	Location *models.Location
 }
 
 func NewLocationAggregateWithTenantAndID(tenant, id string) *LocationAggregate {
-	if id == "" {
-		return nil
-	}
-	aggregate := NewLocationAggregate()
-	aggregate.SetID(tenant + "-" + id)
-	return aggregate
-}
+	locationAggregate := LocationAggregate{}
+	locationAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(LocationAggregateType, tenant, id)
+	locationAggregate.SetWhen(locationAggregate.When)
+	locationAggregate.Location = &models.Location{}
+	locationAggregate.Tenant = tenant
 
-func NewLocationAggregate() *LocationAggregate {
-	locationAggregate := &LocationAggregate{Location: models.NewLocation()}
-	base := eventstore.NewAggregateBase(locationAggregate.When)
-	base.SetType(LocationAggregateType)
-	locationAggregate.AggregateBase = base
-	return locationAggregate
+	return &locationAggregate
 }
 
 func (a *LocationAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
-	case
-		events.LocationCreateV1Legacy,
-		events.LocationCreateV1:
+	case events.LocationCreateV1:
 		return a.onLocationCreate(event)
-	case
-		events.LocationUpdateV1Legacy,
-		events.LocationUpdateV1:
+	case events.LocationUpdateV1:
 		return a.onLocationUpdate(event)
 	case events.LocationValidationSkippedV1:
 		return a.OnLocationSkippedValidation(event)
@@ -63,10 +53,12 @@ func (a *LocationAggregate) onLocationCreate(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Location.Source = commonModels.Source{
-		Source:        eventData.Source,
-		SourceOfTruth: eventData.SourceOfTruth,
-		AppSource:     eventData.AppSource,
+	if eventData.SourceFields.Available() {
+		a.Location.Source = eventData.SourceFields
+	} else {
+		a.Location.Source.Source = eventData.Source
+		a.Location.Source.SourceOfTruth = eventData.SourceOfTruth
+		a.Location.Source.AppSource = eventData.AppSource
 	}
 	a.Location.CreatedAt = eventData.CreatedAt
 	a.Location.UpdatedAt = eventData.UpdatedAt
@@ -81,7 +73,9 @@ func (a *LocationAggregate) onLocationUpdate(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Location.Source.SourceOfTruth = eventData.SourceOfTruth
+	if eventData.Source == constants.SourceOpenline {
+		a.Location.Source.SourceOfTruth = eventData.Source
+	}
 	a.Location.UpdatedAt = eventData.UpdatedAt
 	a.Location.Name = eventData.Name
 	a.Location.RawAddress = eventData.RawAddress

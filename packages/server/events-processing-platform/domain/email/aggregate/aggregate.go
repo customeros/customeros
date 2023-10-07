@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -13,25 +14,18 @@ const (
 )
 
 type EmailAggregate struct {
-	*eventstore.AggregateBase
+	*aggregate.CommonTenantIdAggregate
 	Email *models.Email
 }
 
 func NewEmailAggregateWithTenantAndID(tenant, id string) *EmailAggregate {
-	if id == "" {
-		return nil
-	}
-	aggregate := NewEmailAggregate()
-	aggregate.SetID(tenant + "-" + id)
-	return aggregate
-}
+	emailAggregate := EmailAggregate{}
+	emailAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(EmailAggregateType, tenant, id)
+	emailAggregate.SetWhen(emailAggregate.When)
+	emailAggregate.Email = &models.Email{}
+	emailAggregate.Tenant = tenant
 
-func NewEmailAggregate() *EmailAggregate {
-	emailAggregate := &EmailAggregate{Email: models.NewEmail()}
-	base := eventstore.NewAggregateBase(emailAggregate.When)
-	base.SetType(EmailAggregateType)
-	emailAggregate.AggregateBase = base
-	return emailAggregate
+	return &emailAggregate
 }
 
 func (a *EmailAggregate) When(event eventstore.Event) error {

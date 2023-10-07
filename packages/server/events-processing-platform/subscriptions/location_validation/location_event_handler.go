@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	utils_common "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -25,7 +26,7 @@ import (
 
 type LocationEventHandler struct {
 	repositories     *repository.Repositories
-	locationCommands *commands.LocationCommands
+	locationCommands *command_handler.LocationCommands
 	log              logger.Logger
 	cfg              *config.Config
 }
@@ -78,12 +79,12 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	locationId := aggregate.GetLocationObjectID(evt.AggregateID, tenant)
 
 	if eventData.RawAddress == "" && eventData.LocationAddress.Address1 == "" && (eventData.LocationAddress.Street == "" || eventData.LocationAddress.HouseNumber == "") {
-		return h.locationCommands.SkipLocationValidation.Handle(ctx, commands.NewSkippedLocationValidationCommand(locationId, tenant, "", "Missing raw Address"))
+		return h.locationCommands.SkipLocationValidation.Handle(ctx, command.NewSkippedLocationValidationCommand(locationId, tenant, "", "", "Missing raw Address"))
 	}
 	rawAddress := h.prepareRawAddress(eventData)
 	country := h.prepareCountry(ctx, tenant, eventData.LocationAddress.Country)
 	if country == "" {
-		return h.locationCommands.SkipLocationValidation.Handle(ctx, commands.NewSkippedLocationValidationCommand(locationId, tenant, rawAddress, "Missing country"))
+		return h.locationCommands.SkipLocationValidation.Handle(ctx, command.NewSkippedLocationValidationCommand(locationId, tenant, "", rawAddress, "Missing country"))
 	}
 	locationValidateRequest := LocationValidateRequest{
 		Address:       rawAddress,
@@ -154,7 +155,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 		TimeZone:     result.Address.TimeZone,
 		UtcOffset:    result.Address.UtcOffset,
 	}
-	return h.locationCommands.LocationValidated.Handle(ctx, commands.NewLocationValidatedCommand(locationId, tenant, rawAddress, country, locationAddressFields))
+	return h.locationCommands.LocationValidated.Handle(ctx, command.NewLocationValidatedCommand(locationId, tenant, "", rawAddress, country, locationAddressFields))
 }
 
 func (h *LocationEventHandler) prepareRawAddress(eventData events.LocationCreateEvent) string {
@@ -182,7 +183,7 @@ func constructRawAddressForValidationFromLocationAddressFields(eventData events.
 			eventData.LocationAddress.Street + " " +
 			eventData.LocationAddress.Address1 + " " +
 			eventData.LocationAddress.Address2 + " " +
-			utils_common.StringFirstNonEmpty(eventData.LocationAddress.Zip, eventData.LocationAddress.PostalCode) + ", " +
+			utils.StringFirstNonEmpty(eventData.LocationAddress.Zip, eventData.LocationAddress.PostalCode) + ", " +
 			eventData.LocationAddress.Locality
 	if eventData.LocationAddress.Locality != "" {
 		rawAddress += ","
@@ -198,5 +199,5 @@ func isCountryUSA(country string) bool {
 
 func (h *LocationEventHandler) sendLocationFailedValidationEvent(ctx context.Context, tenant, locationId, rawAddress, country, error string) error {
 	h.log.Errorf("Failed validating location %s for tenant %s: %s", locationId, tenant, error)
-	return h.locationCommands.FailedLocationValidation.Handle(ctx, commands.NewFailedLocationValidationCommand(locationId, tenant, rawAddress, country, error))
+	return h.locationCommands.FailedLocationValidation.Handle(ctx, command.NewFailedLocationValidationCommand(locationId, tenant, "", rawAddress, country, error))
 }

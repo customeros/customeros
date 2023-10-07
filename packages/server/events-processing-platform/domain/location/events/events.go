@@ -2,6 +2,7 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -10,9 +11,7 @@ import (
 
 const (
 	LocationCreateV1            = "V1_LOCATION_CREATE"
-	LocationCreateV1Legacy      = "V1_LOCATION_CREATED"
 	LocationUpdateV1            = "V1_LOCATION_UPDATE"
-	LocationUpdateV1Legacy      = "V1_LOCATION_UPDATED"
 	LocationValidationFailedV1  = "V1_LOCATION_VALIDATION_FAILED"
 	LocationValidationSkippedV1 = "V1_LOCATION_VALIDATION_SKIPPED"
 	LocationValidatedV1         = "V1_LOCATION_VALIDATED"
@@ -20,9 +19,10 @@ const (
 
 type LocationCreateEvent struct {
 	Tenant          string                 `json:"tenant" validate:"required"`
-	Source          string                 `json:"source"`
-	SourceOfTruth   string                 `json:"sourceOfTruth"`
-	AppSource       string                 `json:"appSource"`
+	Source          string                 `json:"source"`        //Deprecated
+	SourceOfTruth   string                 `json:"sourceOfTruth"` //Deprecated
+	AppSource       string                 `json:"appSource"`     //Deprecated
+	SourceFields    common_models.Source   `json:"sourceFields"`
 	CreatedAt       time.Time              `json:"createdAt"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
 	Name            string                 `json:"name"`
@@ -30,12 +30,10 @@ type LocationCreateEvent struct {
 	LocationAddress models.LocationAddress `json:"address"`
 }
 
-func NewLocationCreateEvent(aggregate eventstore.Aggregate, tenant, name, rawAddress, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
+func NewLocationCreateEvent(aggregate eventstore.Aggregate, name, rawAddress string, source common_models.Source, createdAt, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
 	eventData := LocationCreateEvent{
-		Tenant:          tenant,
-		Source:          source,
-		SourceOfTruth:   sourceOfTruth,
-		AppSource:       appSource,
+		Tenant:          aggregate.GetTenant(),
+		SourceFields:    source,
 		CreatedAt:       createdAt,
 		UpdatedAt:       updatedAt,
 		Name:            name,
@@ -56,17 +54,17 @@ func NewLocationCreateEvent(aggregate eventstore.Aggregate, tenant, name, rawAdd
 
 type LocationUpdateEvent struct {
 	Tenant          string                 `json:"tenant"`
-	SourceOfTruth   string                 `json:"sourceOfTruth"`
+	Source          string                 `json:"source"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
 	Name            string                 `json:"name"`
 	RawAddress      string                 `json:"rawAddress"`
 	LocationAddress models.LocationAddress `json:"address"`
 }
 
-func NewLocationUpdateEvent(aggregate eventstore.Aggregate, tenant, name, rawAddress, sourceOfTruth string, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
+func NewLocationUpdateEvent(aggregate eventstore.Aggregate, name, rawAddress, source string, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
 	eventData := LocationUpdateEvent{
-		Tenant:          tenant,
-		SourceOfTruth:   sourceOfTruth,
+		Tenant:          aggregate.GetTenant(),
+		Source:          source,
 		UpdatedAt:       updatedAt,
 		Name:            name,
 		RawAddress:      rawAddress,
@@ -92,9 +90,9 @@ type LocationFailedValidationEvent struct {
 	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
 }
 
-func NewLocationFailedValidationEvent(aggregate eventstore.Aggregate, tenant, rawAddress, country, validationError string) (eventstore.Event, error) {
+func NewLocationFailedValidationEvent(aggregate eventstore.Aggregate, rawAddress, country, validationError string) (eventstore.Event, error) {
 	eventData := LocationFailedValidationEvent{
-		Tenant:          tenant,
+		Tenant:          aggregate.GetTenant(),
 		ValidationError: validationError,
 		RawAddress:      rawAddress,
 		Country:         country,
@@ -119,9 +117,9 @@ type LocationSkippedValidationEvent struct {
 	ValidatedAt time.Time `json:"validatedAt" validate:"required"`
 }
 
-func NewLocationSkippedValidationEvent(aggregate eventstore.Aggregate, tenant, rawAddress, validationSkipReason string) (eventstore.Event, error) {
+func NewLocationSkippedValidationEvent(aggregate eventstore.Aggregate, rawAddress, validationSkipReason string) (eventstore.Event, error) {
 	eventData := LocationSkippedValidationEvent{
-		Tenant:      tenant,
+		Tenant:      aggregate.GetTenant(),
 		RawAddress:  rawAddress,
 		Reason:      validationSkipReason,
 		ValidatedAt: utils.Now(),
@@ -146,9 +144,9 @@ type LocationValidatedEvent struct {
 	LocationAddress      models.LocationAddress `json:"address"`
 }
 
-func NewLocationValidatedEvent(aggregate eventstore.Aggregate, tenant, rawAddress, countryForValidation string, locationAddress models.LocationAddress) (eventstore.Event, error) {
+func NewLocationValidatedEvent(aggregate eventstore.Aggregate, rawAddress, countryForValidation string, locationAddress models.LocationAddress) (eventstore.Event, error) {
 	eventData := LocationValidatedEvent{
-		Tenant:               tenant,
+		Tenant:               aggregate.GetTenant(),
 		RawAddress:           rawAddress,
 		CountryForValidation: countryForValidation,
 		LocationAddress:      locationAddress,

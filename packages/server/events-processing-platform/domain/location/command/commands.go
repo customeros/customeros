@@ -1,4 +1,4 @@
-package commands
+package command
 
 import (
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
@@ -9,6 +9,7 @@ import (
 
 type UpsertLocationCommand struct {
 	eventstore.BaseCommand
+	IsCreateCommand       bool
 	Source                common_models.Source
 	CreatedAt             *time.Time
 	UpdatedAt             *time.Time
@@ -37,9 +38,9 @@ type LocationValidatedCommand struct {
 	LocationAddressFields models.LocationAddressFields
 }
 
-func NewUpsertLocationCommand(objectId, tenant, name, rawAddress string, addressFields models.LocationAddressFields, source common_models.Source, createdAt, updatedAt *time.Time) *UpsertLocationCommand {
+func NewUpsertLocationCommand(locationId, tenant, userId, name, rawAddress string, addressFields models.LocationAddressFields, source common_models.Source, createdAt, updatedAt *time.Time) *UpsertLocationCommand {
 	return &UpsertLocationCommand{
-		BaseCommand:           eventstore.NewBaseCommand(objectId, tenant, ""),
+		BaseCommand:           eventstore.NewBaseCommand(locationId, tenant, userId),
 		RawAddress:            rawAddress,
 		Name:                  name,
 		LocationAddressFields: addressFields,
@@ -49,26 +50,26 @@ func NewUpsertLocationCommand(objectId, tenant, name, rawAddress string, address
 	}
 }
 
-func NewFailedLocationValidationCommand(objectId, tenant, rawAddress, country, validationError string) *FailedLocationValidationCommand {
+func NewFailedLocationValidationCommand(locationId, tenant, userId, rawAddress, country, validationError string) *FailedLocationValidationCommand {
 	return &FailedLocationValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant, ""),
+		BaseCommand:     eventstore.NewBaseCommand(locationId, tenant, userId),
 		RawAddress:      rawAddress,
 		Country:         country,
 		ValidationError: validationError,
 	}
 }
 
-func NewSkippedLocationValidationCommand(objectId, tenant, rawAddress, validationSkipReason string) *SkippedLocationValidationCommand {
+func NewSkippedLocationValidationCommand(locationId, tenant, userId, rawAddress, validationSkipReason string) *SkippedLocationValidationCommand {
 	return &SkippedLocationValidationCommand{
-		BaseCommand:          eventstore.NewBaseCommand(objectId, tenant, ""),
+		BaseCommand:          eventstore.NewBaseCommand(locationId, tenant, userId),
 		RawAddress:           rawAddress,
 		ValidationSkipReason: validationSkipReason,
 	}
 }
 
-func NewLocationValidatedCommand(objectId, tenant, rawAddress, countryForValidation string, addressFields models.LocationAddressFields) *LocationValidatedCommand {
+func NewLocationValidatedCommand(locationId, tenant, userId, rawAddress, countryForValidation string, addressFields models.LocationAddressFields) *LocationValidatedCommand {
 	return &LocationValidatedCommand{
-		BaseCommand:           eventstore.NewBaseCommand(objectId, tenant, ""),
+		BaseCommand:           eventstore.NewBaseCommand(locationId, tenant, userId),
 		RawAddress:            rawAddress,
 		CountryForValidation:  countryForValidation,
 		LocationAddressFields: addressFields,

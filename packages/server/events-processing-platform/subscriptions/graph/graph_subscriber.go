@@ -216,13 +216,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case userevents.UserRemoveRoleV1:
 		return s.userEventHandler.OnRemoveRole(ctx, evt)
 
-	case
-		locationevents.LocationCreateV1Legacy,
-		locationevents.LocationCreateV1:
+	case locationevents.LocationCreateV1:
 		return s.locationEventHandler.OnLocationCreate(ctx, evt)
-	case
-		locationevents.LocationUpdateV1Legacy,
-		locationevents.LocationUpdateV1:
+	case locationevents.LocationUpdateV1:
 		return s.locationEventHandler.OnLocationUpdate(ctx, evt)
 	case locationevents.LocationValidationFailedV1:
 		return s.locationEventHandler.OnLocationValidationFailed(ctx, evt)

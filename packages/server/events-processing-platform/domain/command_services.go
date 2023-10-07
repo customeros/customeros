@@ -1,25 +1,25 @@
 package domain
 
 import (
-	contact_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
-	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
-	interaction_event_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
-	job_role_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
-	location_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
-	log_entry_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
-	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
-	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
-	user_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
+	contactcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
+	emailcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
+	iecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
+	jobrolecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
+	locationcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
+	logentrycmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
+	orgcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
+	phonecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
+	usercmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 )
 
 type Commands struct {
-	ContactCommands          *contact_commands.ContactCommands
-	OrganizationCommands     *orgcmdhnd.OrganizationCommands
-	PhoneNumberCommands      *phone_number_commands.PhoneNumberCommands
-	EmailCommands            *email_commands.EmailCommands
-	UserCommands             *user_commands.UserCommands
-	LocationCommands         *location_commands.LocationCommands
-	JobRoleCommands          *job_role_commands.JobRoleCommands
-	InteractionEventCommands *interaction_event_commands.InteractionEventCommands
-	LogEntryCommands         *log_entry_commands.LogEntryCommands
+	ContactCommands          *contactcmd.ContactCommands
+	OrganizationCommands     *orgcmd.OrganizationCommands
+	PhoneNumberCommands      *phonecmd.PhoneNumberCommands
+	EmailCommands            *emailcmd.EmailCommands
+	UserCommands             *usercmd.UserCommands
+	LocationCommands         *locationcmd.LocationCommands
+	JobRoleCommands          *jobrolecmd.JobRoleCommands
+	InteractionEventCommands *iecmd.InteractionEventCommands
+	LogEntryCommands         *logentrycmd.LogEntryCommands
 }
