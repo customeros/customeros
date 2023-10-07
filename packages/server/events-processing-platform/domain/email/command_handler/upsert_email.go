@@ -52,6 +52,6 @@ func (h *upsertEmailCommandHandler) Handle(ctx context.Context, cmd *command.Ups
 		return err
 	}
 
-	span.LogFields(log.String("Email", emailAggregate.Email.String()))
+	span.LogFields(log.String("Email aggregate", emailAggregate.Email.String()))
 	return h.es.Save(ctx, emailAggregate)
 }

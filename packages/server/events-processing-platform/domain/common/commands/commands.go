@@ -7,7 +7,7 @@ import (
 	email_command_handler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	interaction_event_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
 	job_role_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
-	location_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
+	location_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	log_entry_command_handler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
 	org_command_handler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	phone_num_command_handler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"

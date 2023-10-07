@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -74,9 +76,9 @@ func (r *locationRepository) CreateLocation(ctx context.Context, locationId stri
 			map[string]any{
 				"id":            locationId,
 				"tenant":        event.Tenant,
-				"source":        event.Source,
-				"sourceOfTruth": event.SourceOfTruth,
-				"appSource":     event.AppSource,
+				"source":        helper.GetSource(utils.StringFirstNonEmpty(event.SourceFields.Source, event.Source)),
+				"sourceOfTruth": helper.GetSourceOfTruth(utils.StringFirstNonEmpty(event.SourceFields.SourceOfTruth, event.SourceOfTruth)),
+				"appSource":     helper.GetAppSource(utils.StringFirstNonEmpty(event.SourceFields.AppSource, event.AppSource)),
 				"createdAt":     event.CreatedAt,
 				"updatedAt":     event.UpdatedAt,
 				"rawAddress":    event.RawAddress,
@@ -115,7 +117,7 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, locationId stri
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
-		 SET l.sourceOfTruth = $sourceOfTruth,
+		 SET l.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE l.sourceOfTruth END,,
 			l.updatedAt = $updatedAt,
 			l.syncedWithEventStore = true,
 			l.rawAddress = $rawAddress,
@@ -144,7 +146,7 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, locationId stri
 			map[string]any{
 				"id":            locationId,
 				"tenant":        event.Tenant,
-				"sourceOfTruth": event.SourceOfTruth,
+				"sourceOfTruth": event.Source,
 				"updatedAt":     event.UpdatedAt,
 				"rawAddress":    event.RawAddress,
 				"name":          event.Name,
@@ -166,6 +168,7 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, locationId stri
 				"predirection":  event.LocationAddress.Predirection,
 				"timeZone":      event.LocationAddress.TimeZone,
 				"utcOffset":     event.LocationAddress.UtcOffset,
+				"overwrite":     event.Source == constants.SourceOpenline,
 			})
 		return nil, err
 	})

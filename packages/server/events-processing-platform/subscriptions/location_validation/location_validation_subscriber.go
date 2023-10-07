@@ -3,7 +3,7 @@ package location_validation
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -26,7 +26,7 @@ type LocationValidationSubscriber struct {
 	repositories         *repository.Repositories
 }
 
-func NewLocationValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, locationCommands *commands.LocationCommands, repositories *repository.Repositories) *LocationValidationSubscriber {
+func NewLocationValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, locationCommands *command_handler.LocationCommands, repositories *repository.Repositories) *LocationValidationSubscriber {
 	return &LocationValidationSubscriber{
 		log: log,
 		db:  db,
@@ -115,13 +115,9 @@ func (s *LocationValidationSubscriber) When(ctx context.Context, evt eventstore.
 	}
 
 	switch evt.GetEventType() {
-	case
-		events.LocationCreateV1,
-		events.LocationCreateV1Legacy:
+	case events.LocationCreateV1:
 		return s.locationEventHandler.OnLocationCreate(ctx, evt)
-	case
-		events.LocationUpdateV1,
-		events.LocationUpdateV1Legacy,
+	case events.LocationUpdateV1,
 		events.LocationValidationFailedV1,
 		events.LocationValidationSkippedV1,
 		events.LocationValidatedV1:

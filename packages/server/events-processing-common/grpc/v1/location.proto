@@ -3,14 +3,15 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "api/grpc/v1/location;location_grpc_service";
+import "common/source.proto";
 
 message UpsertLocationGrpcRequest {
   string tenant = 1;
   string id = 2;
   string name = 3;
-  string appSource = 4;
-  string source = 5;
-  string sourceOfTruth = 6;
+  string appSource = 4 [deprecated = true];
+  string source = 5 [deprecated = true];
+  string sourceOfTruth = 6 [deprecated = true];
   google.protobuf.Timestamp  createdAt = 7;
   google.protobuf.Timestamp  updatedAt = 8;
   string rawAddress = 9;
@@ -30,6 +31,8 @@ message UpsertLocationGrpcRequest {
   string latitude = 23;
   string longitude = 24;
   string plusFour = 25;
+  string loggedInUserId = 26;
+  SourceFields sourceFields = 27;
 }
 
 message LocationIdGrpcResponse {

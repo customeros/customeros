@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -13,25 +14,18 @@ const (
 )
 
 type PhoneNumberAggregate struct {
-	*eventstore.AggregateBase
+	*aggregate.CommonTenantIdAggregate
 	PhoneNumber *models.PhoneNumber
 }
 
 func NewPhoneNumberAggregateWithTenantAndID(tenant, id string) *PhoneNumberAggregate {
-	if id == "" {
-		return nil
-	}
-	aggregate := NewPhoneNumberAggregate()
-	aggregate.SetID(tenant + "-" + id)
-	return aggregate
-}
+	phoneNumberAggregate := PhoneNumberAggregate{}
+	phoneNumberAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(PhoneNumberAggregateType, tenant, id)
+	phoneNumberAggregate.SetWhen(phoneNumberAggregate.When)
+	phoneNumberAggregate.PhoneNumber = &models.PhoneNumber{}
+	phoneNumberAggregate.Tenant = tenant
 
-func NewPhoneNumberAggregate() *PhoneNumberAggregate {
-	phoneNumberAggregate := &PhoneNumberAggregate{PhoneNumber: models.NewPhoneNumber()}
-	base := eventstore.NewAggregateBase(phoneNumberAggregate.When)
-	base.SetType(PhoneNumberAggregateType)
-	phoneNumberAggregate.AggregateBase = base
-	return phoneNumberAggregate
+	return &phoneNumberAggregate
 }
 
 func (a *PhoneNumberAggregate) When(event eventstore.Event) error {

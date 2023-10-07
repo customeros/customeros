@@ -3,6 +3,7 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -58,6 +59,9 @@ func (a *EmailAggregate) updateEmail(ctx context.Context, cmd *command.UpsertEma
 	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+	if cmd.Source.Source == "" {
+		cmd.Source.Source = constants.SourceOpenline
+	}
 
 	event, err := events.NewEmailUpdateEvent(a, cmd.RawEmail, cmd.Tenant, cmd.Source.Source, updatedAtNotNil)
 	if err != nil {

@@ -22,6 +22,7 @@ func NewInteractionEventAggregateWithTenantAndID(tenant, id string) *Interaction
 	interactionEventAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(InteractionEventAggregateType, tenant, id)
 	interactionEventAggregate.SetWhen(interactionEventAggregate.When)
 	interactionEventAggregate.InteractionEvent = &models.InteractionEvent{}
+	interactionEventAggregate.Tenant = tenant
 	return &interactionEventAggregate
 }
 

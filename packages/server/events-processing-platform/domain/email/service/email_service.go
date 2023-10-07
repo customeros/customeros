@@ -34,31 +34,31 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_serv
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 
-	objectID := strings.TrimSpace(request.Id)
+	emailId := strings.TrimSpace(request.Id)
 	var err error
-	if objectID == "" {
-		objectID, err = s.repositories.EmailRepository.GetIdIfExists(ctx, request.Tenant, request.RawEmail)
+	if emailId == "" {
+		emailId, err = s.repositories.EmailRepository.GetIdIfExists(ctx, request.Tenant, request.RawEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("(UpsertEmail) tenant:{%s}, email: {%s}, err: {%v}", request.Tenant, request.RawEmail, err)
 			return nil, s.errResponse(err)
 		}
-		objectID = utils.NewUUIDIfEmpty(objectID)
+		emailId = utils.NewUUIDIfEmpty(emailId)
 	}
 
 	sourceFields := common_models.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	cmd := command.NewUpsertEmailCommand(objectID, request.Tenant, request.LoggedInUserId, request.RawEmail, sourceFields,
+	cmd := command.NewUpsertEmailCommand(emailId, request.Tenant, request.LoggedInUserId, request.RawEmail, sourceFields,
 		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.emailCommands.UpsertEmail.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(UpsertSyncEmail.Handle) tenant:{%s}, email ID: {%s}, err: {%v}", request.Tenant, objectID, err)
+		s.log.Errorf("(UpsertSyncEmail.Handle) tenant:{%s}, email ID: {%s}, err: {%v}", request.Tenant, emailId, err)
 		return nil, s.errResponse(err)
 	}
 
 	s.log.Infof("(UpsertEmail): {%s}", request.RawEmail)
 
-	return &email_grpc_service.EmailIdGrpcResponse{Id: objectID}, nil
+	return &email_grpc_service.EmailIdGrpcResponse{Id: emailId}, nil
 }
 
 func (s *emailService) errResponse(err error) error {
