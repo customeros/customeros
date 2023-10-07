@@ -86,6 +86,7 @@ func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context,
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkPhoneNumberToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("phoneNumberId", request.PhoneNumberId))
 
 	command := cmd.NewLinkPhoneNumberCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
@@ -103,15 +104,34 @@ func (s *organizationService) LinkEmailToOrganization(ctx context.Context, reque
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("emailId", request.EmailId))
 
 	command := cmd.NewLinkEmailCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
+		s.log.Errorf("(LinkEmailCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
 	}
 
 	s.log.Infof("Linked email {%s} to organization {%s}", request.EmailId, request.OrganizationId)
+
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) LinkLocationToOrganization(ctx context.Context, request *pb.LinkLocationToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkLocationToOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("locationId", request.LocationId))
+
+	command := cmd.NewLinkLocationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.LocationId)
+	if err := s.organizationCommands.LinkLocationCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(LinkLocationCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Linked location {%s} to organization {%s}", request.LocationId, request.OrganizationId)
 
 	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }

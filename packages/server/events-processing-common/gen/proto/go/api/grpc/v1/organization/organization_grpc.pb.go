@@ -25,6 +25,7 @@ type OrganizationGrpcServiceClient interface {
 	UpsertOrganization(ctx context.Context, in *UpsertOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization(ctx context.Context, in *LinkPhoneNumberToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization(ctx context.Context, in *LinkEmailToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkDomainToOrganization(ctx context.Context, in *LinkDomainToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error)
 	UpdateOrganizationRenewalLikelihood(ctx context.Context, in *OrganizationRenewalLikelihoodRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -64,6 +65,15 @@ func (c *organizationGrpcServiceClient) LinkPhoneNumberToOrganization(ctx contex
 func (c *organizationGrpcServiceClient) LinkEmailToOrganization(ctx context.Context, in *LinkEmailToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/LinkEmailToOrganization", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationGrpcServiceClient) LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/LinkLocationToOrganization", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +159,7 @@ type OrganizationGrpcServiceServer interface {
 	UpsertOrganization(context.Context, *UpsertOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization(context.Context, *LinkPhoneNumberToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization(context.Context, *LinkEmailToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkDomainToOrganization(context.Context, *LinkDomainToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error)
 	UpdateOrganizationRenewalLikelihood(context.Context, *OrganizationRenewalLikelihoodRequest) (*OrganizationIdGrpcResponse, error)
@@ -171,6 +182,9 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkPhoneNumberToOrganization(
 }
 func (UnimplementedOrganizationGrpcServiceServer) LinkEmailToOrganization(context.Context, *LinkEmailToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkEmailToOrganization not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LinkLocationToOrganization not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) LinkDomainToOrganization(context.Context, *LinkDomainToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkDomainToOrganization not implemented")
@@ -258,6 +272,24 @@ func _OrganizationGrpcService_LinkEmailToOrganization_Handler(srv interface{}, c
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationGrpcServiceServer).LinkEmailToOrganization(ctx, req.(*LinkEmailToOrganizationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationGrpcService_LinkLocationToOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkLocationToOrganizationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).LinkLocationToOrganization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/LinkLocationToOrganization",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).LinkLocationToOrganization(ctx, req.(*LinkLocationToOrganizationGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -424,6 +456,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkEmailToOrganization",
 			Handler:    _OrganizationGrpcService_LinkEmailToOrganization_Handler,
+		},
+		{
+			MethodName: "LinkLocationToOrganization",
+			Handler:    _OrganizationGrpcService_LinkLocationToOrganization_Handler,
 		},
 		{
 			MethodName: "LinkDomainToOrganization",

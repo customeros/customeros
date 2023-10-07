@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"time"
 )
 
 type LocationRepository interface {
@@ -18,6 +19,7 @@ type LocationRepository interface {
 	UpdateLocation(ctx context.Context, locationId string, event events.LocationUpdateEvent) error
 	FailLocationValidation(ctx context.Context, locationId string, event events.LocationFailedValidationEvent) error
 	LocationValidated(ctx context.Context, locationId string, event events.LocationValidatedEvent) error
+	LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string, updatedAt time.Time) error
 }
 
 type locationRepository struct {
@@ -262,4 +264,23 @@ func (r *locationRepository) LocationValidated(ctx context.Context, locationId s
 		return nil, err
 	})
 	return err
+}
+
+func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.LinkWithOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("locationId", locationId), log.String("organizationId", organizationId))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}),
+				(t)<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$locationId})
+		MERGE (o)-[:ASSOCIATED_WITH]->(l)
+		SET	u.updatedAt = $updatedAt`
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":         tenant,
+		"locationId":     locationId,
+		"organizationId": organizationId,
+		"updatedAt":      updatedAt,
+	})
 }

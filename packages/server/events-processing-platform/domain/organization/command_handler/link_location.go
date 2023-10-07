@@ -13,22 +13,22 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type LinkEmailCommandHandler interface {
-	Handle(ctx context.Context, command *command.LinkEmailCommand) error
+type LinkLocationCommandHandler interface {
+	Handle(ctx context.Context, command *command.LinkLocationCommand) error
 }
 
-type linkEmailCommandHandler struct {
+type linkLocationCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewLinkEmailCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkEmailCommandHandler {
-	return &linkEmailCommandHandler{log: log, cfg: cfg, es: es}
+func NewLinkLocationCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkLocationCommandHandler {
+	return &linkLocationCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkEmailCommandHandler) Handle(ctx context.Context, cmd *command.LinkEmailCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "linkEmailCommandHandler.Handle")
+func (c *linkLocationCommandHandler) Handle(ctx context.Context, cmd *command.LinkLocationCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "linkLocationCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", cmd.Tenant), log.String("ObjectID", cmd.ObjectID))
 

@@ -12,6 +12,7 @@ type OrganizationCommands struct {
 	UpdateOrganization             UpdateOrganizationCommandHandler
 	LinkPhoneNumberCommand         LinkPhoneNumberCommandHandler
 	LinkEmailCommand               LinkEmailCommandHandler
+	LinkLocationCommand            LinkLocationCommandHandler
 	LinkDomainCommand              LinkDomainCommandHandler
 	AddSocialCommand               AddSocialCommandHandler
 	UpdateRenewalLikelihoodCommand UpdateRenewalLikelihoodCommandHandler
@@ -31,6 +32,7 @@ func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstor
 		UpdateOrganization:             NewUpdateOrganizationCommandHandler(log, cfg, es),
 		LinkPhoneNumberCommand:         NewLinkPhoneNumberCommandHandler(log, cfg, es),
 		LinkEmailCommand:               NewLinkEmailCommandHandler(log, cfg, es),
+		LinkLocationCommand:            NewLinkLocationCommandHandler(log, cfg, es),
 		LinkDomainCommand:              NewLinkDomainCommandHandler(log, cfg, es),
 		AddSocialCommand:               NewAddSocialCommandHandler(log, cfg, es),
 		UpdateRenewalLikelihoodCommand: NewUpdateRenewalLikelihoodCommandHandler(log, cfg, es, repositories),

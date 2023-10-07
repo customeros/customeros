@@ -63,6 +63,13 @@ message LinkEmailToOrganizationGrpcRequest {
   string loggedInUserId = 6;
 }
 
+message LinkLocationToOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string locationId = 3;
+  string loggedInUserId = 4;
+}
+
 message LinkDomainToOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -166,6 +173,7 @@ service organizationGrpcService {
   rpc UpsertOrganization(UpsertOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
   rpc UpdateOrganizationRenewalLikelihood(OrganizationRenewalLikelihoodRequest) returns (OrganizationIdGrpcResponse);
