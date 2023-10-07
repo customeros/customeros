@@ -41,6 +41,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case events.OrganizationEmailLinkV1:
 		return a.onEmailLink(event)
+	case events.OrganizationLocationLinkV1:
+		return a.onLocationLink(event)
 	case events.OrganizationLinkDomainV1:
 		return a.onDomainLink(event)
 	case events.OrganizationAddSocialV1:
@@ -291,6 +293,15 @@ func (a *OrganizationAggregate) onDomainLink(event eventstore.Event) error {
 	if !utils.Contains(a.Organization.Domains, eventData.Domain) {
 		a.Organization.Domains = append(a.Organization.Domains, eventData.Domain)
 	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onLocationLink(event eventstore.Event) error {
+	var eventData events.OrganizationLinkLocationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Organization.Locations = utils.AddToListIfNotExists(a.Organization.Locations, eventData.LocationId)
 	return nil
 }
 

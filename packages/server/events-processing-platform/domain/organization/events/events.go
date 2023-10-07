@@ -15,6 +15,7 @@ const (
 	OrganizationUpdateV1                  = "V1_ORGANIZATION_UPDATE"
 	OrganizationPhoneNumberLinkV1         = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
 	OrganizationEmailLinkV1               = "V1_ORGANIZATION_EMAIL_LINK"
+	OrganizationLocationLinkV1            = "V1_ORGANIZATION_LOCATION_LINK"
 	OrganizationLinkDomainV1              = "V1_ORGANIZATION_LINK_DOMAIN"
 	OrganizationAddSocialV1               = "V1_ORGANIZATION_ADD_SOCIAL"
 	OrganizationUpdateRenewalLikelihoodV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_LIKELIHOOD"
@@ -211,6 +212,30 @@ func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, emailId, labe
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationEmailLinkV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationLinkLocationEvent struct {
+	Tenant     string    `json:"tenant" validate:"required"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+	LocationId string    `json:"locationId" validate:"required"`
+}
+
+func NewOrganizationLinkLocationEvent(aggregate eventstore.Aggregate, locationId string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationLinkLocationEvent{
+		Tenant:     aggregate.GetTenant(),
+		UpdatedAt:  updatedAt,
+		LocationId: locationId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

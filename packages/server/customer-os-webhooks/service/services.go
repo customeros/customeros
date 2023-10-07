@@ -19,6 +19,7 @@ type Services struct {
 
 	TenantService       TenantService
 	EmailService        EmailService
+	LocationService     LocationService
 	PhoneNumberService  PhoneNumberService
 	UserService         UserService
 	OrganizationService OrganizationService
@@ -33,6 +34,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, gormDB *go
 		CommonAuthServices: commonAuthServices,
 		TenantService:      NewTenantService(log, repositories),
 		EmailService:       NewEmailService(log, repositories, grpcClients),
+		LocationService:    NewLocationService(log, repositories, grpcClients),
 		PhoneNumberService: NewPhoneNumberService(log, repositories, grpcClients),
 		SyncStatusService:  NewSyncStatusService(log, repositories),
 	}

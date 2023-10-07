@@ -66,7 +66,7 @@ func (o *OrganizationData) HasDomains() bool {
 }
 
 func (o *OrganizationData) HasLocation() bool {
-	return len(o.LocationName) > 0 || len(o.Country) > 0 || len(o.Region) > 0 || len(o.Locality) > 0 || len(o.Address) > 0 || len(o.Address2) > 0 || len(o.Zip) > 0
+	return o.LocationName != "" || o.Country != "" || o.Region != "" || o.Locality != "" || o.Address != "" || o.Address2 != "" || o.Zip != ""
 }
 
 func (o *OrganizationData) HasNotes() bool {

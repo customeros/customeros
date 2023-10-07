@@ -270,6 +270,108 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	syncMutex.Unlock()
 
+	if !failedSync {
+
+		if orgInput.HasEmail() {
+			// Create or update email
+			emailId, err := s.services.EmailService.CreateEmail(ctx, orgInput.Email, orgInput.ExternalSystem, orgInput.AppSource)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				failedSync = true
+				reason = fmt.Sprintf("Failed to create email address %s for organization %s: %s", orgInput.Email, orgInput, err.Error())
+				s.log.Error(reason)
+			}
+			// Link email to organization
+			if emailId != "" {
+				_, err = s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &orggrpc.LinkEmailToOrganizationGrpcRequest{
+					Tenant:         common.GetTenantFromContext(ctx),
+					OrganizationId: organizationId,
+					EmailId:        emailId,
+				})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					failedSync = true
+					reason = fmt.Sprintf("Failed to link email address %s with organization %s: %s", orgInput.Email, organizationId, err.Error())
+					s.log.Error(reason)
+				}
+			}
+		}
+
+		if orgInput.HasPhoneNumbers() {
+			for _, phoneNumberDtls := range orgInput.PhoneNumbers {
+				// Create or update phone number
+				phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumber(ctx, phoneNumberDtls.Number, orgInput.ExternalSystem, orgInput.AppSource)
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("Failed to create phone number %s for user %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
+					s.log.Error(reason)
+				}
+				// Link phone number to organization
+				if phoneNumberId != "" {
+					_, err = s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &orggrpc.LinkPhoneNumberToOrganizationGrpcRequest{
+						Tenant:         common.GetTenantFromContext(ctx),
+						OrganizationId: organizationId,
+						PhoneNumberId:  phoneNumberId,
+						Primary:        phoneNumberDtls.Primary,
+						Label:          phoneNumberDtls.Label,
+					})
+					if err != nil {
+						failedSync = true
+						tracing.TraceErr(span, err)
+						reason = fmt.Sprintf("Failed to link phone number %s for user %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
+						s.log.Error(reason)
+					}
+				}
+			}
+		}
+
+		if orgInput.HasLocation() {
+			// Create or update location
+			locationId, err := s.repositories.LocationRepository.GetMatchedLocationIdForOrganizationBySource(ctx, organizationId, orgInput.ExternalSystem)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to get matched location for organization %s: %s", organizationId, err.Error())
+				failedSync = true
+				s.log.Error(reason)
+			}
+			if !failedSync {
+				locationId, err = s.services.LocationService.CreateLocation(ctx, locationId, orgInput.ExternalSystem, orgInput.AppSource,
+					orgInput.LocationName, orgInput.Country, orgInput.Region, orgInput.Locality, orgInput.Address, orgInput.Address2, orgInput.Zip)
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("Failed to create location for organization %s: %s", orgInput, err.Error())
+					s.log.Error(reason)
+				}
+			}
+
+			// Link location to organization
+			if locationId != "" {
+				_, err = s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &orggrpc.LinkLocationToOrganizationGrpcRequest{
+					Tenant:         common.GetTenantFromContext(ctx),
+					OrganizationId: organizationId,
+					LocationId:     locationId,
+				})
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("Failed to link email address %s with organization %s: %s", orgInput.Email, organizationId, err.Error())
+					s.log.Error(reason)
+				}
+			}
+		}
+	}
+
+	//if orgInput.IsSubsidiary() && !failedSync {
+	//	if err = s.repositories.OrganizationRepository.LinkToParentOrganizationAsSubsidiary(ctx, tenant, organizationId, orgInput.ExternalSystem, orgInput.ParentOrganization); err != nil {
+	//		failedSync = true
+	//		tracing.TraceErr(span, err)
+	//		reason = fmt.Sprintf("failed link current organization as subsidiary %v to parent organization by external id %v, tenant %v :%v", orgInput.Id, orgInput.ParentOrganization.Organization.ExternalId, tenant, err)
+	//		s.log.Errorf(reason)
+	//	}
+	//}
+
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {
 		return NewFailedSyncStatus(reason)

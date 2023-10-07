@@ -48,6 +48,5 @@ func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, cmd *command
 		return err
 	}
 
-	span.LogFields(log.String("User", userAggregate.User.String()))
 	return c.es.Save(ctx, userAggregate)
 }

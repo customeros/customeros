@@ -48,6 +48,5 @@ func (c *linkEmailCommandHandler) Handle(ctx context.Context, cmd *command.LinkE
 		return err
 	}
 
-	span.LogFields(log.String("User", userAggregate.User.String()))
 	return c.es.Save(ctx, userAggregate)
 }

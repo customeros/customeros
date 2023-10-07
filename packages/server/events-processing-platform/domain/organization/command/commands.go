@@ -63,7 +63,7 @@ func NewUpdateOrganizationCommand(organizationId, tenant, source string, dataFie
 
 type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
-	PhoneNumberId string
+	PhoneNumberId string `json:"phoneNumberId" validate:"required"`
 	Primary       bool
 	Label         string
 }
@@ -79,7 +79,7 @@ func NewLinkPhoneNumberCommand(objectID, tenant, userId, phoneNumberId, label st
 
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
-	EmailId string
+	EmailId string `json:"emailId" validate:"required"`
 	Primary bool
 	Label   string
 }
@@ -90,6 +90,18 @@ func NewLinkEmailCommand(objectID, tenant, userId, emailId, label string, primar
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
+	}
+}
+
+type LinkLocationCommand struct {
+	eventstore.BaseCommand
+	LocationId string `json:"locationId" validate:"required"`
+}
+
+func NewLinkLocationCommand(organizationId, tenant, userId, locationId string) *LinkLocationCommand {
+	return &LinkLocationCommand{
+		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
+		LocationId:  locationId,
 	}
 }
 

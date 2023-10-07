@@ -207,7 +207,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			s.log.Error(reason)
 		}
 		// Link email to user
-		if emailId != "" {
+		if !failedSync {
 			_, err = s.grpcClients.UserClient.LinkEmailToUser(ctx, &usergrpc.LinkEmailToUserGrpcRequest{
 				Tenant:  common.GetTenantFromContext(ctx),
 				UserId:  userId,
@@ -235,7 +235,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 				s.log.Error(reason)
 			}
 			// Link phone number to user
-			if phoneNumberId != "" {
+			if !failedSync {
 				_, err = s.grpcClients.UserClient.LinkPhoneNumberToUser(ctx, &usergrpc.LinkPhoneNumberToUserGrpcRequest{
 					Tenant:        common.GetTenantFromContext(ctx),
 					UserId:        userId,

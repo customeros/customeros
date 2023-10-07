@@ -112,17 +112,15 @@ func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *pb.Lin
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("phoneNumberId", request.PhoneNumberId))
 
-	objectId := request.UserId
-
-	cmd := command.NewLinkPhoneNumberCommand(objectId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
+	cmd := command.NewLinkPhoneNumberCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.userCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(LinkPhoneNumberToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, objectId, err)
+		s.log.Errorf("(LinkPhoneNumberToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, request.UserId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked phone number {%s} to user {%s}", request.PhoneNumberId, objectId)
+	s.log.Infof("Linked phone number {%s} to user {%s}", request.PhoneNumberId, request.UserId)
 
-	return &pb.UserIdGrpcResponse{Id: objectId}, nil
+	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
 
 func (s *userService) LinkEmailToUser(ctx context.Context, request *pb.LinkEmailToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
@@ -131,17 +129,15 @@ func (s *userService) LinkEmailToUser(ctx context.Context, request *pb.LinkEmail
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("emailId", request.EmailId))
 
-	aggregateID := request.UserId
-
-	cmd := command.NewLinkEmailCommand(aggregateID, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
+	cmd := command.NewLinkEmailCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
 	if err := s.userCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(LinkEmailToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		s.log.Errorf("(LinkEmailToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, request.UserId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked email {%s} to user {%s}", request.EmailId, aggregateID)
+	s.log.Infof("Linked email {%s} to user {%s}", request.EmailId, request.UserId)
 
-	return &pb.UserIdGrpcResponse{Id: aggregateID}, nil
+	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
 
 func (s *userService) AddRole(ctx context.Context, request *pb.AddRoleGrpcRequest) (*pb.UserIdGrpcResponse, error) {

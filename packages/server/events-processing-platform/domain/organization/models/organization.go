@@ -102,6 +102,7 @@ type Organization struct {
 	UpdatedAt         time.Time                          `json:"updatedAt,omitempty"`
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
 	Emails            map[string]OrganizationEmail       `json:"emails"`
+	Locations         []string                           `json:"locations,omitempty"`
 	Domains           []string                           `json:"domains,omitempty"`
 	Socials           map[string]Social                  `json:"socials,omitempty"`
 	RenewalLikelihood RenewalLikelihood                  `json:"renewalLikelihood,omitempty"`

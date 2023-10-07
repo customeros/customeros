@@ -130,6 +130,7 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 		orgevts.OrganizationRequestScrapeByWebsiteV1,
 		orgevts.OrganizationPhoneNumberLinkV1,
 		orgevts.OrganizationEmailLinkV1,
+		orgevts.OrganizationLocationLinkV1,
 		orgevts.OrganizationAddSocialV1,
 		orgevts.OrganizationUpdateRenewalLikelihoodV1,
 		orgevts.OrganizationUpdateRenewalForecastV1,

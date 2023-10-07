@@ -53,7 +53,7 @@ func (a *LocationAggregate) createLocation(ctx context.Context, cmd *command.Ups
 		return errors.Wrap(err, "NewLocationCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
 	return a.Apply(event)
 }
@@ -78,7 +78,7 @@ func (a *LocationAggregate) updateLocation(ctx context.Context, cmd *command.Ups
 		return errors.Wrap(err, "NewLocationUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
 	return a.Apply(event)
 }
@@ -95,7 +95,7 @@ func (a *LocationAggregate) failLocationValidation(ctx context.Context, cmd *com
 		return errors.Wrap(err, "NewLocationFailedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
 	return a.Apply(event)
 }
@@ -112,7 +112,7 @@ func (a *LocationAggregate) skipLocationValidation(ctx context.Context, cmd *com
 		return errors.Wrap(err, "NewLocationSkippedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
 	return a.Apply(event)
 }
@@ -132,7 +132,7 @@ func (a *LocationAggregate) locationValidated(ctx context.Context, cmd *command.
 		return errors.Wrap(err, "NewLocationValidatedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
 	return a.Apply(event)
 }

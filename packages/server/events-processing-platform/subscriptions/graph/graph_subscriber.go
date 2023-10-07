@@ -176,6 +176,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
 	case orgevents.OrganizationEmailLinkV1:
 		return s.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
+	case orgevents.OrganizationLocationLinkV1:
+		return s.organizationEventHandler.OnLocationLinkedToOrganization(ctx, evt)
 	case orgevents.OrganizationLinkDomainV1:
 		return s.organizationEventHandler.OnDomainLinkedToOrganization(ctx, evt)
 	case orgevents.OrganizationAddSocialV1:
