@@ -63,23 +63,6 @@ export const RootSidenav = () => {
     signOut();
   };
 
-  useEffect(() => {
-    const params = searchParams?.toString();
-
-    if (pathname === '/') {
-      setLastActivePosition({
-        ...lastActivePosition,
-        root: `organizations?${params}`,
-      });
-    }
-    if (pathname && pathname !== '/') {
-      setLastActivePosition({
-        ...lastActivePosition,
-        root: `${pathname.substring(1)}?${params}`,
-      });
-    }
-  }, []);
-
   return (
     <GridItem
       px='2'

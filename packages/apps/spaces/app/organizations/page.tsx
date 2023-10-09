@@ -161,6 +161,7 @@ export default function OrganizationsPage() {
   return (
     <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
       <Search
+        key={preset}
         placeholder={
           preset === 'customer'
             ? 'Search customers'
