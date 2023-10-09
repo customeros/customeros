@@ -385,6 +385,7 @@ export type GetTimelineEventQuery = {
                 }>;
               };
             }
+          | { __typename?: 'EmailParticipant' }
           | {
               __typename: 'OrganizationParticipant';
               organizationParticipant: {
@@ -438,6 +439,7 @@ export type GetTimelineEventQuery = {
                 }>;
               };
             }
+          | { __typename?: 'EmailParticipant' }
           | {
               __typename: 'OrganizationParticipant';
               organizationParticipant: {

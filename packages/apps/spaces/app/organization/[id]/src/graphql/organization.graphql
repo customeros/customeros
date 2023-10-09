@@ -31,5 +31,10 @@ query Organization($id: ID!) {
         name
       }
     }
+    owner {
+      id
+      firstName
+      lastName
+    }
   }
 }

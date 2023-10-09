@@ -58,6 +58,12 @@ export type OrganizationQuery = {
       __typename?: 'LinkedOrganization';
       organization: { __typename?: 'Organization'; id: string; name: string };
     }>;
+    owner?: {
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+    } | null;
   } | null;
 };
 
@@ -94,6 +100,11 @@ export const OrganizationDocument = `
         id
         name
       }
+    }
+    owner {
+      id
+      firstName
+      lastName
     }
   }
 }

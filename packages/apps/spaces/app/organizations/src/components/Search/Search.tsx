@@ -12,7 +12,6 @@ interface SearchProps {
 export const Search = ({ placeholder }: SearchProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultValue = searchParams?.get('search') ?? '';
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -43,7 +42,6 @@ export const Search = ({ placeholder }: SearchProps) => {
       </InputLeftElement>
       <Input
         placeholder={placeholder}
-        defaultValue={defaultValue}
         borderBottom='unset'
         _hover={{
           borderBottom: 'unset',
