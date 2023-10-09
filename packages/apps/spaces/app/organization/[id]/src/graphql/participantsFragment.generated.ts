@@ -109,6 +109,10 @@ export type MeetingParticipantFragmentContactParticipantFragment = {
   };
 };
 
+export type MeetingParticipantFragmentEmailParticipantFragment = {
+  __typename?: 'EmailParticipant';
+};
+
 export type MeetingParticipantFragmentOrganizationParticipantFragment = {
   __typename: 'OrganizationParticipant';
   organizationParticipant: {
@@ -145,6 +149,7 @@ export type MeetingParticipantFragmentUserParticipantFragment = {
 
 export type MeetingParticipantFragmentFragment =
   | MeetingParticipantFragmentContactParticipantFragment
+  | MeetingParticipantFragmentEmailParticipantFragment
   | MeetingParticipantFragmentOrganizationParticipantFragment
   | MeetingParticipantFragmentUserParticipantFragment;
 

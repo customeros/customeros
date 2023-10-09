@@ -3,12 +3,13 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { Flex } from '@ui/layout/Flex';
-import { VStack } from '@ui/layout/Stack';
 import { Icons } from '@ui/media/Icon';
+import { VStack } from '@ui/layout/Stack';
+import { Link } from '@ui/navigation/Link';
 import { GridItem } from '@ui/layout/Grid';
 import { Text } from '@ui/typography/Text';
-import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip';
+import { IconButton } from '@ui/form/IconButton';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
@@ -28,6 +29,7 @@ export const OrganizationSidenav = () => {
   const { data } = useOrganizationQuery(graphqlClient, {
     id: params?.id as string,
   });
+  const parentOrg = data?.organization?.subsidiaryOf?.[0]?.organization;
 
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
@@ -57,29 +59,41 @@ export const OrganizationSidenav = () => {
       borderRadius='2xl'
       borderColor='gray.200'
     >
-      <Tooltip label={data?.organization?.name} placement='bottom'>
-        <Flex gap='2' align='center' mb='4'>
-          <IconButton
-            size='xs'
-            variant='ghost'
-            aria-label='Go back'
-            onClick={() => {
-              router.push(`/${lastActivePosition?.root || 'organization'}`);
-            }}
-            icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
-          />
+      <Flex gap='2' align='center' mb='4'>
+        <IconButton
+          size='xs'
+          variant='ghost'
+          aria-label='Go back'
+          onClick={() => {
+            router.push(`/${lastActivePosition?.root || 'organization'}`);
+          }}
+          icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
+        />
 
-          <Text
-            fontSize='lg'
-            fontWeight='semibold'
-            color='gray.700'
-            noOfLines={1}
-            wordBreak='keep-all'
-          >
-            {data?.organization?.name || 'Organization'}
-          </Text>
+        <Flex flexDir='column'>
+          {parentOrg && (
+            <Link
+              fontSize='xs'
+              noOfLines={1}
+              wordBreak='keep-all'
+              href={`/organization/${parentOrg.id}?tab=about`}
+            >
+              {parentOrg.name}
+            </Link>
+          )}
+          <Tooltip label={data?.organization?.name} placement='bottom'>
+            <Text
+              fontSize='lg'
+              fontWeight='semibold'
+              color='gray.700'
+              noOfLines={1}
+              wordBreak='keep-all'
+            >
+              {data?.organization?.name || 'Organization'}
+            </Text>
+          </Tooltip>
         </Flex>
-      </Tooltip>
+      </Flex>
 
       <VStack spacing='2' w='full'>
         <SidenavItem

@@ -7,6 +7,7 @@ import { Skeleton } from '@ui/presentation/Skeleton';
 import { THead, createColumnHelper } from '@ui/presentation/Table';
 
 import { OwnerCell } from './Cells/owner/OwnerCell';
+import { WebsiteCell } from './Cells/website/WebsiteCell';
 import { RelationshipStage } from './Cells/stage/RelationshipStage';
 import { TimeToRenewalCell } from './Cells/renewal/TimeToRenewalCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
@@ -81,6 +82,20 @@ export const getColumns = (options: GetColumnsOptions) => [
           />
         </Flex>
       </Flex>
+    ),
+  }),
+  columnHelper.accessor('website', {
+    id: 'WEBSITE',
+    minSize: 200,
+    cell: (props) => <WebsiteCell website={props.getValue()} />,
+    header: (props) => <THead<Organization> title='Website' {...props} />,
+    skeleton: () => (
+      <Skeleton
+        width='50%'
+        height='18px'
+        startColor='gray.300'
+        endColor='gray.300'
+      />
     ),
   }),
   columnHelper.accessor('relationshipStages', {

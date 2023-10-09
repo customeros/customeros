@@ -15,6 +15,8 @@ query Organization($id: ID!) {
     isPublic
     market
     employees
+    referenceId
+    customerOsId
     socials {
       id
       url
@@ -22,6 +24,12 @@ query Organization($id: ID!) {
     relationshipStages {
       relationship
       stage
+    }
+    subsidiaryOf {
+      organization {
+        id
+        name
+      }
     }
   }
 }

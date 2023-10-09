@@ -390,6 +390,7 @@ export type GetTimelineQuery = {
                   }>;
                 };
               }
+            | { __typename?: 'EmailParticipant' }
             | {
                 __typename: 'OrganizationParticipant';
                 organizationParticipant: {
@@ -443,6 +444,7 @@ export type GetTimelineQuery = {
                   }>;
                 };
               }
+            | { __typename?: 'EmailParticipant' }
             | {
                 __typename: 'OrganizationParticipant';
                 organizationParticipant: {

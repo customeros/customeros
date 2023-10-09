@@ -108,6 +108,20 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             boxShadow: 'md',
             borderColor: 'gray.200',
             borderRadius: 'lg',
+            '&::-webkit-scrollbar': {
+              width: '4px',
+              height: '4px',
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-track': {
+              width: '4px',
+              height: '4px',
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'gray.500',
+              borderRadius: '8px',
+            },
             ...chakraStyles?.menuList?.(
               {
                 ...props,
@@ -115,6 +129,20 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
                 boxShadow: 'md',
                 borderColor: 'gray.200',
                 borderRadius: 'lg',
+                '&::-webkit-scrollbar': {
+                  width: '4px',
+                  height: '4px',
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-track': {
+                  width: '4px',
+                  height: '4px',
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'gray.500',
+                  borderRadius: '8px',
+                },
               },
               state,
             ),
@@ -122,7 +150,9 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
           option: (props, state) => ({
             ...props,
             my: '2px',
+            borderRadius: 'md',
             color: 'gray.700',
+            noOfLines: 1,
             bg: state.isSelected ? 'primary.50' : 'white',
             boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
             _hover: { bg: state.isSelected ? 'primary.50' : 'gray.100' },

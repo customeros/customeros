@@ -206,6 +206,7 @@ export type GetOrganizationsQuery = {
             name?: string | null;
             attendedBy: Array<
               | { __typename: 'ContactParticipant' }
+              | { __typename: 'EmailParticipant' }
               | { __typename: 'OrganizationParticipant' }
               | { __typename: 'UserParticipant' }
             >;

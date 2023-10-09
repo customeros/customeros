@@ -421,18 +421,11 @@ export type CustomFieldEntityType = {
  * **A `create` object.**
  */
 export type CustomFieldInput = {
-  /**
-   * Datatype of the custom field.
-   * **Required**
-   */
-  datatype: CustomFieldDataType;
-  /** The unique ID associated with the custom field. */
+  /** Datatype of the custom field. */
+  datatype?: InputMaybe<CustomFieldDataType>;
   id?: InputMaybe<Scalars['ID']>;
-  /**
-   * The name of the custom field.
-   * **Required**
-   */
-  name: Scalars['String'];
+  /** The name of the custom field. */
+  name?: InputMaybe<Scalars['String']>;
   templateId?: InputMaybe<Scalars['ID']>;
   /**
    * The value of the custom field.
@@ -457,7 +450,7 @@ export type CustomFieldTemplate = Node & {
 
 export type CustomFieldTemplateInput = {
   length?: InputMaybe<Scalars['Int']>;
-  mandatory: Scalars['Boolean'];
+  mandatory?: InputMaybe<Scalars['Boolean']>;
   max?: InputMaybe<Scalars['Int']>;
   min?: InputMaybe<Scalars['Int']>;
   name: Scalars['String'];
@@ -1161,6 +1154,7 @@ export type MeetingInput = {
 
 export type MeetingParticipant =
   | ContactParticipant
+  | EmailParticipant
   | OrganizationParticipant
   | UserParticipant;
 
@@ -1237,6 +1231,7 @@ export type Mutation = {
   customFieldDeleteFromFieldSetById: Result;
   customFieldMergeToContact: CustomField;
   customFieldMergeToFieldSet: CustomField;
+  customFieldTemplate_Create: CustomFieldTemplate;
   customFieldUpdateInContact: CustomField;
   customFieldUpdateInFieldSet: CustomField;
   customFieldsMergeAndUpdateInContact: Contact;
@@ -1342,7 +1337,6 @@ export type Mutation = {
   user_AddRole: User;
   user_AddRoleInTenant: User;
   user_Create: User;
-  user_CreateInTenant: User;
   user_Delete: Result;
   user_DeleteInTenant: Result;
   user_RemoveRole: User;
@@ -1440,6 +1434,10 @@ export type MutationCustomFieldMergeToFieldSetArgs = {
   contactId: Scalars['ID'];
   fieldSetId: Scalars['ID'];
   input: CustomFieldInput;
+};
+
+export type MutationCustomFieldTemplate_CreateArgs = {
+  input: CustomFieldTemplateInput;
 };
 
 export type MutationCustomFieldUpdateInContactArgs = {
@@ -1921,11 +1919,6 @@ export type MutationUser_CreateArgs = {
   input: UserInput;
 };
 
-export type MutationUser_CreateInTenantArgs = {
-  input: UserInput;
-  tenant: Scalars['String'];
-};
-
 export type MutationUser_DeleteArgs = {
   id: Scalars['ID'];
 };
@@ -2014,6 +2007,7 @@ export type Organization = Node & {
   contacts: ContactsPage;
   createdAt: Scalars['Time'];
   customFields: Array<CustomField>;
+  customerOsId: Scalars['String'];
   description?: Maybe<Scalars['String']>;
   domains: Array<Scalars['String']>;
   emails: Array<Email>;
@@ -2024,6 +2018,7 @@ export type Organization = Node & {
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
   industryGroup?: Maybe<Scalars['String']>;
+  isCustomer?: Maybe<Scalars['Boolean']>;
   isPublic?: Maybe<Scalars['Boolean']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
   jobRoles: Array<JobRole>;
@@ -2039,6 +2034,7 @@ export type Organization = Node & {
   notes: NotePage;
   owner?: Maybe<User>;
   phoneNumbers: Array<PhoneNumber>;
+  referenceId?: Maybe<Scalars['String']>;
   relationshipStages: Array<OrganizationRelationshipStage>;
   relationships: Array<OrganizationRelationship>;
   socials: Array<Social>;
@@ -2086,14 +2082,16 @@ export type OrganizationInput = {
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   industry?: InputMaybe<Scalars['String']>;
   industryGroup?: InputMaybe<Scalars['String']>;
+  isCustomer?: InputMaybe<Scalars['Boolean']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
   market?: InputMaybe<Market>;
+  name: Scalars['String'];
+  note?: InputMaybe<Scalars['String']>;
   /**
    * The name of the organization.
    * **Required.**
    */
-  name: Scalars['String'];
-  note?: InputMaybe<Scalars['String']>;
+  referenceId?: InputMaybe<Scalars['String']>;
   subIndustry?: InputMaybe<Scalars['String']>;
   templateId?: InputMaybe<Scalars['ID']>;
   website?: InputMaybe<Scalars['String']>;
@@ -2167,6 +2165,7 @@ export type OrganizationUpdateInput = {
   id: Scalars['ID'];
   industry?: InputMaybe<Scalars['String']>;
   industryGroup?: InputMaybe<Scalars['String']>;
+  isCustomer?: InputMaybe<Scalars['Boolean']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
   lastFundingAmount?: InputMaybe<Scalars['String']>;
   lastFundingRound?: InputMaybe<FundingRound>;
@@ -2175,6 +2174,7 @@ export type OrganizationUpdateInput = {
   note?: InputMaybe<Scalars['String']>;
   /** Set to true when partial update is needed. Empty or missing fields will not be ignored. */
   patch?: InputMaybe<Scalars['Boolean']>;
+  referenceId?: InputMaybe<Scalars['String']>;
   subIndustry?: InputMaybe<Scalars['String']>;
   targetAudience?: InputMaybe<Scalars['String']>;
   valueProposition?: InputMaybe<Scalars['String']>;
@@ -2790,6 +2790,7 @@ export type User = {
    * **Required**
    */
   lastName: Scalars['String'];
+  name?: Maybe<Scalars['String']>;
   phoneNumbers: Array<PhoneNumber>;
   player: Player;
   profilePhotoUrl?: Maybe<Scalars['String']>;
@@ -2830,11 +2831,13 @@ export type UserInput = {
    * **Required**
    */
   lastName: Scalars['String'];
+  name?: InputMaybe<Scalars['String']>;
   /**
    * Player to associate with the user with. If the person does not exist, it will be created.
    * **Required**
    */
   player: PlayerInput;
+  profilePhotoUrl?: InputMaybe<Scalars['String']>;
   timezone?: InputMaybe<Scalars['String']>;
 };
 
@@ -2879,6 +2882,8 @@ export type UserUpdateInput = {
    * **Required**
    */
   lastName: Scalars['String'];
+  name?: InputMaybe<Scalars['String']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']>;
   timezone?: InputMaybe<Scalars['String']>;
 };
 

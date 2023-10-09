@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { toastSuccess } from '@ui/presentation/Toast';
 
 type CopiedValue = string | null;
-type CopyFn = (text: string) => Promise<boolean>; // Return success
+type CopyFn = (text: string, message?: string) => Promise<boolean>; // Return success
 
 export function useCopyToClipboard(): [CopiedValue, CopyFn] {
   const [copiedText, setCopiedText] = useState<CopiedValue>(null);
 
-  const copy: CopyFn = async (text) => {
+  const copy: CopyFn = async (text, message = 'Link copied') => {
     if (!navigator?.clipboard) {
       return false;
     }
@@ -16,7 +16,7 @@ export function useCopyToClipboard(): [CopiedValue, CopyFn] {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedText(text);
-      toastSuccess('Link copied', `copied-to-clipboard${text}`);
+      toastSuccess(message, `copied-to-clipboard${text}`);
       return true;
     } catch (error) {
       setCopiedText(null);

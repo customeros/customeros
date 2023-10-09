@@ -12,13 +12,10 @@ import {
   SortingDirection,
   ComparisonOperator,
 } from '@graphql/types';
-import { useDisclosure } from '@ui/utils';
 import { GridItem } from '@ui/layout/Grid';
-import { Archive } from '@ui/media/icons/Archive';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { Table, SortingState, RowSelectionState } from '@ui/presentation/Table';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
 import { Search } from './src/components/Search';
 import { TableActions } from './src/components/Actions';
@@ -31,7 +28,6 @@ import { useGetOrganizationsInfiniteQuery } from './src/hooks/useGetOrganization
 export default function OrganizationsPage() {
   const client = getGraphQLClient();
   const searchParams = useSearchParams();
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [tabs, setLastActivePosition] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-player-last-position`, { root: 'organization' });
@@ -40,13 +36,9 @@ export default function OrganizationsPage() {
   const searchTerm = searchParams?.get('search');
 
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [selection, setSelection] = useState<RowSelectionState>({});
-  const [targetSelection, setTargetSelection] = useState<
-    [index: number, id: string] | null
-  >(null);
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
   const { createOrganization, hideOrganizations, mergeOrganizations } =
-    useOrganizationsPageMethods({ selection, setSelection, targetSelection });
+    useOrganizationsPageMethods();
 
   const { data: globalCache } = useGlobalCacheQuery(client);
 
@@ -112,14 +104,15 @@ export default function OrganizationsPage() {
     where,
   });
 
-  const flatData =
-    (data?.pages?.flatMap(
-      (o) => o.dashboardView_Organizations?.content,
-    ) as Organization[]) || [];
-  const allOrganizationIds = flatData.map((o) => o?.id);
-  const selectedIds = Object.keys(selection).map(
-    (k) => (allOrganizationIds as string[])[Number(k)],
+  const flatData = useMemo(
+    () =>
+      (data?.pages?.flatMap(
+        (o) => o.dashboardView_Organizations?.content,
+      ) as Organization[]) || [],
+    [data],
   );
+
+  const allOrganizationIds = flatData.map((o) => o?.id);
 
   const handleCreateOrganization = () => {
     createOrganization.mutate({ input: { name: '' } });
@@ -129,8 +122,14 @@ export default function OrganizationsPage() {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const handleMergeOrganizations = () => {
-    const primaryId = targetSelection?.[1];
+  const handleMergeOrganizations = (
+    targetIndex: string,
+    selection: RowSelectionState,
+  ) => {
+    const primaryId = (allOrganizationIds as string[])[Number(targetIndex)];
+    const selectedIds = Object.keys(selection).map(
+      (k) => (allOrganizationIds as string[])[Number(k)],
+    );
     const mergeIds = selectedIds.filter((id) => id !== primaryId);
 
     if (!primaryId || !mergeIds.length) return;
@@ -141,7 +140,7 @@ export default function OrganizationsPage() {
     });
   };
 
-  const handleHideOrganizations = () => {
+  const handleHideOrganizations = (selection: RowSelectionState) => {
     const selectedIds = Object.keys(selection)
       .map((k) => (allOrganizationIds as string[])[Number(k)])
       .filter(Boolean);
@@ -149,7 +148,6 @@ export default function OrganizationsPage() {
     hideOrganizations.mutate({
       ids: selectedIds,
     });
-    onClose();
   };
 
   const columns = useMemo(
@@ -182,14 +180,6 @@ export default function OrganizationsPage() {
     );
   }, [searchParams?.toString()]);
 
-  useEffect(() => {
-    if (selectedIds.length === 1) {
-      const id = selectedIds[0];
-      const index = Number(Object.keys(selection)[0]);
-      setTargetSelection([index, id]);
-    }
-  }, [selectedIds.length]);
-
   if (
     data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
     !searchTerm
@@ -216,34 +206,20 @@ export default function OrganizationsPage() {
         enableTableActions
         enableRowSelection
         isLoading={isInitialLoading || isFetchingNextPage}
-        selection={selection}
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
-        onSelectionChange={setSelection}
         totalItems={
           data?.pages?.[0].dashboardView_Organizations?.totalElements || 0
         }
         renderTableActions={(table) => (
           <TableActions
             table={table}
-            selection={selection}
-            onArchiveOrganizations={onOpen}
+            isArchiving={hideOrganizations.isLoading}
             onMergeOrganizations={handleMergeOrganizations}
+            onArchiveOrganizations={handleHideOrganizations}
           />
         )}
-      />
-
-      <ConfirmDeleteDialog
-        isOpen={isOpen}
-        icon={<Archive />}
-        onClose={onClose}
-        confirmButtonLabel={'Archive'}
-        onConfirm={handleHideOrganizations}
-        isLoading={hideOrganizations.isLoading}
-        label={`Archive selected ${
-          selectedIds.length === 1 ? 'organization' : 'organizations'
-        }?`}
       />
     </GridItem>
   );
