@@ -19,6 +19,7 @@ type Repositories struct {
 	TenantRepository         TenantRepository
 	EmailRepository          EmailRepository
 	PhoneNumberRepository    PhoneNumberRepository
+	LogEntryRepository       LogEntryRepository
 }
 
 type Drivers struct {
@@ -40,6 +41,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 	repositories.TenantRepository = NewTenantRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
+	repositories.LogEntryRepository = NewLogEntryRepository(driver)
 
 	err := gormDb.AutoMigrate(&postgresentity.SyncRunWebhook{})
 	if err != nil {

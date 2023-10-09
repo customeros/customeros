@@ -18,10 +18,10 @@ func (r *ReferencedUser) ReferencedByExternalId() bool {
 	return r.ExternalId != "" && r.Id == ""
 }
 
-func (r *ReferencedUser) ReferencedByExternalOwnerId() bool {
+func (r *ReferencedUser) ReferencedByExternalIdSecond() bool {
 	return r.ExternalIdSecond != "" && r.Id == "" && r.ExternalId == ""
 }
 
 func (r *ReferencedUser) Available() bool {
-	return r.ReferencedById() || r.ReferencedByExternalId() || r.ReferencedByExternalOwnerId()
+	return r.ReferencedById() || r.ReferencedByExternalId() || r.ReferencedByExternalIdSecond()
 }
