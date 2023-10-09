@@ -33,6 +33,7 @@ type domains struct {
 
 type OrganizationService interface {
 	SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) error
+	GetIdForReferencedOrganization(ctx context.Context, tenant, externalSystem string, org model.ReferencedOrganization) (string, error)
 	mapDbNodeToOrganizationEntity(dbNode dbtype.Node) *entity.OrganizationEntity
 }
 
@@ -146,6 +147,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			orgInput.Domains = []string{domainFromWebsite}
 		}
 	}
+
+	// ignore domains for sub organizations
+	if orgInput.IsSubOrg() {
+		orgInput.Domains = []string{}
+	}
+
 	orgInput.Normalize()
 
 	// TODO: Merge external system, should be cached and moved to external system service
@@ -195,12 +202,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		matchingOrganizationExists := organizationId != ""
 		span.LogFields(log.Bool("found matching organization", matchingOrganizationExists))
 
-		// Create new user id if not found
+		// Create new organization id if not found
 		organizationId = utils.NewUUIDIfEmpty(organizationId)
 		orgInput.Id = organizationId
 		span.LogFields(log.String("organizationId", organizationId))
 
-		// Create or update user
+		// Create or update organization
 		_, err = s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
 			Tenant:            tenant,
 			Id:                organizationId,
@@ -270,8 +277,25 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	syncMutex.Unlock()
 
-	if !failedSync {
+	if !failedSync && orgInput.IsSubOrg() {
+		parentOrganizationId, _ := s.GetIdForReferencedOrganization(ctx, tenant, orgInput.ExternalSystem, orgInput.ParentOrganization.Organization)
+		if parentOrganizationId != "" {
+			_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &orggrpc.AddParentOrganizationGrpcRequest{
+				Tenant:               common.GetTenantFromContext(ctx),
+				OrganizationId:       organizationId,
+				ParentOrganizationId: parentOrganizationId,
+				Type:                 orgInput.ParentOrganization.Type,
+			})
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to link with parent for organization %s: %s", organizationId, err.Error())
+				s.log.Error(reason)
+			}
+		}
+	}
 
+	if !failedSync {
 		if orgInput.HasEmail() {
 			// Create or update email
 			emailId, err := s.services.EmailService.CreateEmail(ctx, orgInput.Email, orgInput.ExternalSystem, orgInput.AppSource)
@@ -363,15 +387,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		}
 	}
 
-	//if orgInput.IsSubsidiary() && !failedSync {
-	//	if err = s.repositories.OrganizationRepository.LinkToParentOrganizationAsSubsidiary(ctx, tenant, organizationId, orgInput.ExternalSystem, orgInput.ParentOrganization); err != nil {
-	//		failedSync = true
-	//		tracing.TraceErr(span, err)
-	//		reason = fmt.Sprintf("failed link current organization as subsidiary %v to parent organization by external id %v, tenant %v :%v", orgInput.Id, orgInput.ParentOrganization.Organization.ExternalId, tenant, err)
-	//		s.log.Errorf(reason)
-	//	}
-	//}
-
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {
 		return NewFailedSyncStatus(reason)
@@ -452,4 +467,19 @@ func (d domains) isWhitelistedDomain(domain string) bool {
 		}
 	}
 	return false
+}
+
+func (s *organizationService) GetIdForReferencedOrganization(ctx context.Context, tenant, externalSystemId string, org model.ReferencedOrganization) (string, error) {
+	if !org.Available() {
+		return "", nil
+	}
+
+	if org.ReferencedById() {
+		return s.repositories.OrganizationRepository.GetOrganizationIdById(ctx, tenant, org.Id)
+	} else if org.ReferencedByExternalId() {
+		return s.repositories.OrganizationRepository.GetOrganizationIdByExternalId(ctx, tenant, org.ExternalId, externalSystemId)
+	} else if org.ReferencedByDomain() {
+		return s.repositories.OrganizationRepository.GetOrganizationIdByDomain(ctx, tenant, org.Domain)
+	}
+	return "", nil
 }

@@ -138,6 +138,8 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 		orgevts.OrganizationRefreshLastTouchpointV1,
 		orgevts.OrganizationHideV1,
 		orgevts.OrganizationShowV1,
+		orgevts.OrganizationAddParentV1,
+		orgevts.OrganizationRemoveParentV1,
 		orgevts.OrganizationUpsertCustomFieldV1:
 		return nil
 

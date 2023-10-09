@@ -28,6 +28,8 @@ const (
 	OrganizationShowV1                    = "V1_ORGANIZATION_SHOW"
 	OrganizationRefreshLastTouchpointV1   = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
 	OrganizationUpsertCustomFieldV1       = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
+	OrganizationAddParentV1               = "V1_ORGANIZATION_ADD_PARENT"
+	OrganizationRemoveParentV1            = "V1_ORGANIZATION_REMOVE_PARENT"
 )
 
 type OrganizationCreateEvent struct {
@@ -564,6 +566,52 @@ func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFiel
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpsertCustomFieldV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationAddParentEvent struct {
+	Tenant               string `json:"tenant" validate:"required"`
+	ParentOrganizationId string `json:"parentOrganizationId" validate:"required"`
+	Type                 string `json:"type"`
+}
+
+func NewOrganizationAddParentEvent(aggregate eventstore.Aggregate, parentOrganizationId, relType string) (eventstore.Event, error) {
+	eventData := OrganizationAddParentEvent{
+		Tenant:               aggregate.GetTenant(),
+		ParentOrganizationId: parentOrganizationId,
+		Type:                 relType,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationAddParentV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationRemoveParentEvent struct {
+	Tenant               string `json:"tenant" validate:"required"`
+	ParentOrganizationId string `json:"parentOrganizationId" validate:"required"`
+}
+
+func NewOrganizationRemoveParentEvent(aggregate eventstore.Aggregate, parentOrganizationId string) (eventstore.Event, error) {
+	eventData := OrganizationRemoveParentEvent{
+		Tenant:               aggregate.GetTenant(),
+		ParentOrganizationId: parentOrganizationId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationRemoveParentV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

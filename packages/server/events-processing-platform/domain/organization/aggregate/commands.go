@@ -46,6 +46,10 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.linkPhoneNumber(ctx, c)
 	case *command.LinkLocationCommand:
 		return a.linkLocation(ctx, c)
+	case *command.AddParentCommand:
+		return a.addParentOrganization(ctx, c)
+	case *command.RemoveParentCommand:
+		return a.removeParentOrganization(ctx, c)
 	default:
 		return errors.New("invalid command type")
 	}
@@ -459,6 +463,38 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 		return errors.Wrap(err, "NewOrganizationUpsertCustomField")
 	}
 	aggregate.EnrichEventWithMetadata(&event, &span, cmd.Tenant, cmd.UserID)
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *command.AddParentCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addParentOrganization")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewOrganizationAddParentEvent(a, cmd.ParentOrganizationId, cmd.Type)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationAddParentEvent")
+	}
+
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cmd *command.RemoveParentCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeParentOrganization")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := events.NewOrganizationRemoveParentEvent(a, cmd.ParentOrganizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationRemoveParentEvent")
+	}
+
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
 	return a.Apply(event)
 }

@@ -13,6 +13,8 @@ import (
 
 var (
 	ErrNoCtxMetaData = errors.New("No ctx metadata")
+	ErrBadRequest    = errors.New("Bad request")
+	ErrMissingFields = errors.New("Missing fields")
 )
 
 // ErrResponse get gRPC error response
@@ -31,6 +33,10 @@ func GetErrStatusCode(err error) codes.Code {
 		return codes.DeadlineExceeded
 	case errors.Is(err, ErrNoCtxMetaData):
 		return codes.Unauthenticated
+	case errors.Is(err, ErrBadRequest):
+		return codes.InvalidArgument
+	case errors.Is(err, ErrMissingFields):
+		return codes.InvalidArgument
 	case CheckErrMessage(err, constants.Validate):
 		return codes.InvalidArgument
 	case CheckErrMessage(err, constants.Redis):

@@ -14,7 +14,7 @@ type ContactData struct {
 	LastName             string                   `json:"LastName,omitempty"`
 	Name                 string                   `json:"name,omitempty"`
 	Label                string                   `json:"label,omitempty"`
-	Notes                []ContactNote            `json:"notes,omitempty"`
+	Notes                []ContactNote            `json:"notes,omitempty"` // TODO deprecated ???
 	Email                string                   `json:"email,omitempty"`
 	AdditionalEmails     []string                 `json:"additionalEmails,omitempty"`
 	PhoneNumbers         []PhoneNumber            `json:"phoneNumbers,omitempty"`

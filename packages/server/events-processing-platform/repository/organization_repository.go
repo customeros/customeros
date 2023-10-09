@@ -31,6 +31,8 @@ type OrganizationRepository interface {
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
+	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
+	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
 }
 
 type organizationRepository struct {
@@ -519,6 +521,44 @@ func (r *organizationRepository) SetCustomerOsIdIfMissing(ctx context.Context, t
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"customerOsId":   customerOsId,
+	})
+}
+
+func (r *organizationRepository) LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.LinkWithParentOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationType", subOrganizationType))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId}),
+		 			(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization {id:$subOrganizationId}) 
+		 	MERGE (sub)-[rel:SUBSIDIARY_OF]->(parent) 
+		 		ON CREATE SET rel.type=$type 
+		 		ON MATCH SET rel.type=$type`
+	span.LogFields(log.String("query", query))
+
+	return r.executeQuery(ctx, query, map[string]any{
+		"tenant":               tenant,
+		"subOrganizationId":    organizationId,
+		"parentOrganizationId": parentOrganizationId,
+		"type":                 subOrganizationType,
+	})
+}
+
+func (r *organizationRepository) UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UnlinkParentOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("parentOrganizationId", parentOrganizationId))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId})<-[rel:SUBSIDIARY_OF]-(sub:Organization {id:$subOrganizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+		 		DELETE rel`
+	span.LogFields(log.String("query", query))
+
+	return r.executeQuery(ctx, query, map[string]any{
+		"tenant":               tenant,
+		"subOrganizationId":    organizationId,
+		"parentOrganizationId": parentOrganizationId,
 	})
 }
 

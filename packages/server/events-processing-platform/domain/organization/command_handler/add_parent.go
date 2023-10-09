@@ -12,21 +12,21 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type LinkLocationCommandHandler interface {
-	Handle(ctx context.Context, command *command.LinkLocationCommand) error
+type AddParentCommandHandler interface {
+	Handle(ctx context.Context, command *command.AddParentCommand) error
 }
 
-type linkLocationCommandHandler struct {
+type addParentCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 }
 
-func NewLinkLocationCommandHandler(log logger.Logger, es eventstore.AggregateStore) LinkLocationCommandHandler {
-	return &linkLocationCommandHandler{log: log, es: es}
+func NewAddParentCommandHandler(log logger.Logger, es eventstore.AggregateStore) AddParentCommandHandler {
+	return &addParentCommandHandler{log: log, es: es}
 }
 
-func (c *linkLocationCommandHandler) Handle(ctx context.Context, cmd *command.LinkLocationCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "linkLocationCommandHandler.Handle")
+func (c *addParentCommandHandler) Handle(ctx context.Context, cmd *command.AddParentCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "addParentCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", cmd.Tenant), log.String("ObjectID", cmd.ObjectID))
 

@@ -24,25 +24,29 @@ type OrganizationCommands struct {
 	ShowOrganizationCommand        ShowOrganizationCommandHandler
 	RefreshLastTouchpointCommand   RefreshLastTouchpointCommandHandler
 	UpsertCustomFieldCommand       UpsertCustomFieldCommandHandler
+	AddParentCommand               AddParentCommandHandler
+	RemoveParentCommand            RemoveParentCommandHandler
 }
 
 func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *OrganizationCommands {
 	return &OrganizationCommands{
-		UpsertOrganization:             NewUpsertOrganizationCommandHandler(log, cfg, es),
-		UpdateOrganization:             NewUpdateOrganizationCommandHandler(log, cfg, es),
-		LinkPhoneNumberCommand:         NewLinkPhoneNumberCommandHandler(log, cfg, es),
-		LinkEmailCommand:               NewLinkEmailCommandHandler(log, cfg, es),
-		LinkLocationCommand:            NewLinkLocationCommandHandler(log, cfg, es),
-		LinkDomainCommand:              NewLinkDomainCommandHandler(log, cfg, es),
-		AddSocialCommand:               NewAddSocialCommandHandler(log, cfg, es),
-		UpdateRenewalLikelihoodCommand: NewUpdateRenewalLikelihoodCommandHandler(log, cfg, es, repositories),
-		UpdateRenewalForecastCommand:   NewUpdateRenewalForecastCommandHandler(log, cfg, es, repositories),
-		UpdateBillingDetailsCommand:    NewUpdateBillingDetailsCommandHandler(log, cfg, es, repositories),
+		UpsertOrganization:             NewUpsertOrganizationCommandHandler(log, es),
+		UpdateOrganization:             NewUpdateOrganizationCommandHandler(log, es),
+		LinkPhoneNumberCommand:         NewLinkPhoneNumberCommandHandler(log, es),
+		LinkEmailCommand:               NewLinkEmailCommandHandler(log, es),
+		LinkLocationCommand:            NewLinkLocationCommandHandler(log, es),
+		LinkDomainCommand:              NewLinkDomainCommandHandler(log, es),
+		AddSocialCommand:               NewAddSocialCommandHandler(log, es),
+		UpdateRenewalLikelihoodCommand: NewUpdateRenewalLikelihoodCommandHandler(log, es, repositories),
+		UpdateRenewalForecastCommand:   NewUpdateRenewalForecastCommandHandler(log, es, repositories),
+		UpdateBillingDetailsCommand:    NewUpdateBillingDetailsCommandHandler(log, es, repositories),
 		RequestRenewalForecastCommand:  NewRequestRenewalForecastCommandHandler(log, es),
 		RequestNextCycleDateCommand:    NewRequestNextCycleDateCommandHandler(log, es),
 		HideOrganizationCommand:        NewHideOrganizationCommandHandler(log, es),
 		ShowOrganizationCommand:        NewShowOrganizationCommandHandler(log, es),
 		RefreshLastTouchpointCommand:   NewRefreshLastTouchpointCommandHandler(log, es),
 		UpsertCustomFieldCommand:       NewUpsertCustomFieldCommandHandler(log, es),
+		AddParentCommand:               NewAddParentCommandHandler(log, es),
+		RemoveParentCommand:            NewRemoveParentCommandHandler(log, es),
 	}
 }

@@ -2,21 +2,14 @@ package model
 
 import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 
-type OrganizationRelation string
-
-const (
-	Subsidiary OrganizationRelation = "subsidiary"
-)
-
 type OrganizationNote struct {
 	FieldSource string `json:"fieldSource"`
 	Note        string `json:"note"`
 }
 
 type ParentOrganization struct {
-	Organization         ReferencedOrganization `json:"organization,omitempty"`
-	OrganizationRelation OrganizationRelation   `json:"organizationRelation,omitempty"`
-	Type                 string                 `json:"type,omitempty"`
+	Organization ReferencedOrganization `json:"organization,omitempty"`
+	Type         string                 `json:"type,omitempty"`
 }
 
 type OrganizationData struct {
@@ -92,10 +85,6 @@ func (o *OrganizationData) IsSubOrg() bool {
 func (o *OrganizationData) Normalize() {
 	o.SetTimes()
 	o.BaseData.Normalize()
-
-	if o.IsSubOrg() {
-		o.Domains = []string{}
-	}
 
 	o.Domains = utils.FilterEmpty(o.Domains)
 	utils.LowercaseStrings(o.Domains)

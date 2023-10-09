@@ -161,6 +161,21 @@ message RequestRenewNextCycleDateRequest {
   string loggedInUserId = 3;
 }
 
+message AddParentOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string parentOrganizationId = 3;
+  string loggedInUserId = 4;
+  string type = 5;
+}
+
+message RemoveParentOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string parentOrganizationId = 3;
+  string loggedInUserId = 4;
+}
+
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -182,4 +197,6 @@ service organizationGrpcService {
   rpc RequestRenewNextCycleDate(RequestRenewNextCycleDateRequest) returns (OrganizationIdGrpcResponse);
   rpc HideOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
 }
