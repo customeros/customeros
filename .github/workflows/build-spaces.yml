@@ -59,7 +59,7 @@ jobs:
       - name: Check test coverage
         run: |
           git clone https://github.com/openline-ai/openline-test-harness.git
-          cd openline-test-harness\spaces-coverage
+          cd openline-test-harness\\spaces-coverage
           go build
           ./spaces-coverage
 
