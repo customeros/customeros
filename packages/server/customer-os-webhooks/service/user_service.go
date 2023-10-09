@@ -27,6 +27,7 @@ const maxWorkersUserSync = 4
 
 type UserService interface {
 	SyncUsers(ctx context.Context, users []model.UserData) error
+	GetIdForReferencedUser(ctx context.Context, tenant, externalSystemId string, user model.ReferencedUser) (string, error)
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
 }
 
@@ -277,4 +278,19 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
 		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
 	}
+}
+
+func (s *userService) GetIdForReferencedUser(ctx context.Context, tenant, externalSystemId string, user model.ReferencedUser) (string, error) {
+	if !user.Available() {
+		return "", nil
+	}
+
+	if user.ReferencedById() {
+		return s.repositories.UserRepository.GetUserIdById(ctx, tenant, user.Id)
+	} else if user.ReferencedByExternalId() {
+		return s.repositories.UserRepository.GetUserIdByExternalId(ctx, tenant, user.ExternalId, externalSystemId)
+	} else if user.ReferencedByExternalIdSecond() {
+		return s.repositories.UserRepository.GetUserIdByExternalIdSecond(ctx, tenant, user.ExternalIdSecond, externalSystemId)
+	}
+	return "", nil
 }

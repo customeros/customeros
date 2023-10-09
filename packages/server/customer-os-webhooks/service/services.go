@@ -22,6 +22,7 @@ type Services struct {
 	LocationService     LocationService
 	PhoneNumberService  PhoneNumberService
 	UserService         UserService
+	LogEntryService     LogEntryService
 	OrganizationService OrganizationService
 	SyncStatusService   SyncStatusService
 }
@@ -40,6 +41,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, gormDB *go
 	}
 
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)
+	services.LogEntryService = NewLogEntryService(log, repositories, grpcClients, &services)
 	services.cfg = cfg
 	return &services
 }
