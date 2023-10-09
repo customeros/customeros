@@ -408,7 +408,7 @@ export const AboutPanel = () => {
               cursor='pointer'
               onClick={() => copyToClipboard('plm2', 'CustomerOS ID copied')}
             >
-              CustomerIS ID: {data?.organization?.customerOsId}
+              CustomerOS ID: {data?.organization?.customerOsId}
             </Text>
           </Tooltip>
         )}
