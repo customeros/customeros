@@ -217,14 +217,13 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 				org.note = CASE WHEN $note <> '' THEN $note ELSE org.note END, 
 				org.market = CASE WHEN $market <> '' THEN $market ELSE org.market END, 
 				org.employees = CASE WHEN $employees <> 0 THEN $employees ELSE org.employees END, 
-				org.isCustomer = CASE WHEN $isCustomer == true THEN $isCustomer ELSE org.isCustomer END, 
+				org.isCustomer = CASE WHEN $isCustomer = true THEN $isCustomer ELSE org.isCustomer END, 
 				org.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE org.sourceOfTruth END,
 				org.updatedAt = $updatedAt,
 				org.syncedWithEventStore = true`, event.Tenant)
 
 	span.LogFields(log.String("query", query))
-
-	return r.executeQuery(ctx, query, map[string]any{
+	params := map[string]any{
 		"id":                organizationId,
 		"tenant":            event.Tenant,
 		"name":              event.Name,
@@ -245,7 +244,10 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 		"sourceOfTruth":     helper.GetSource(event.Source),
 		"updatedAt":         event.UpdatedAt,
 		"overwrite":         helper.GetSource(event.Source) == constants.SourceOpenline,
-	})
+	}
+	span.LogFields(log.Object("params", params))
+
+	return r.executeQuery(ctx, query, params)
 }
 
 func (r *organizationRepository) LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error {
