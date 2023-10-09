@@ -21,7 +21,7 @@ const barlow = localFont({
       style: 'normal',
     },
   ],
-  preload: true,
+  preload: false,
   display: 'swap',
   variable: '--font-barlow',
 });
@@ -32,7 +32,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='en' className={barlow.className} data-theme='light'>
+    <html lang='en' className={barlow.variable} data-theme='light'>
       <Script
         async
         strategy='afterInteractive'

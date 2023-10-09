@@ -1,7 +1,6 @@
 import set from 'lodash/set';
 import { produce } from 'immer';
 import { useRouter } from 'next/navigation';
-import { RowSelectionState } from '@tanstack/react-table';
 import { useQueryClient, InfiniteData } from '@tanstack/react-query';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -15,17 +14,7 @@ import { useCreateOrganizationMutation } from '../graphql/createOrganization.gen
 import { useHideOrganizationsMutation } from '../graphql/hideOrganizations.generated';
 import { useMergeOrganizationsMutation } from '../graphql/mergeOrganizations.generated';
 
-interface UseOrganizationsPageMethodsOptions {
-  selection: RowSelectionState;
-  targetSelection: [index: number, id: string] | null;
-  setSelection: (selection: RowSelectionState) => void;
-}
-
-export const useOrganizationsPageMethods = ({
-  selection,
-  setSelection,
-  targetSelection,
-}: UseOrganizationsPageMethodsOptions) => {
+export const useOrganizationsPageMethods = () => {
   const { push } = useRouter();
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -92,8 +81,7 @@ export const useOrganizationsPageMethods = ({
   });
 
   const hideOrganizations = useHideOrganizationsMutation(client, {
-    onMutate: () => {
-      setSelection({});
+    onMutate: ({ ids }) => {
       const pageIndex = organizationsMeta.getOrganization.pagination.page - 1;
       queryClient.cancelQueries(queryKey);
 
@@ -106,11 +94,10 @@ export const useOrganizationsPageMethods = ({
           return produce(old, (draft) => {
             if (!draft) return;
 
-            const keys = Object.keys(selection);
             const page = draft.pages?.[pageIndex];
             const content = page?.dashboardView_Organizations?.content;
             const filteredContent = content?.filter(
-              (_, idx) => !keys.includes(String(idx)),
+              (o) => !(ids as string[]).includes(o.id),
             );
 
             set(
@@ -136,7 +123,7 @@ export const useOrganizationsPageMethods = ({
   });
 
   const mergeOrganizations = useMergeOrganizationsMutation(client, {
-    onMutate: () => {
+    onMutate: ({ primaryOrganizationId, mergedOrganizationIds }) => {
       queryClient.cancelQueries(queryKey);
 
       const previousEntries =
@@ -148,18 +135,19 @@ export const useOrganizationsPageMethods = ({
           return produce(old, (draft) => {
             if (!draft) return;
 
-            const [targetIndex] = targetSelection ?? [];
-            const allIndexes = Object.keys(selection);
-
-            const page = draft.pages?.[0];
-            const content = page?.dashboardView_Organizations?.content.flatMap(
-              (c) => c,
+            const content =
+              draft.pages?.[0]?.dashboardView_Organizations?.content;
+            const targetOrganization = content?.find(
+              (o) => o.id === primaryOrganizationId,
             );
-            const targetOrganization = content?.[Number(targetIndex)];
             const filteredContent = [
               targetOrganization,
               ...(content ?? []).filter(
-                (_, idx) => !allIndexes?.includes(String(idx)),
+                (o) =>
+                  ![
+                    primaryOrganizationId,
+                    ...(mergedOrganizationIds as string[]),
+                  ].includes(o.id),
               ),
             ];
 
@@ -174,7 +162,6 @@ export const useOrganizationsPageMethods = ({
         },
       );
 
-      setSelection({});
       return { previousEntries };
     },
     onError: (_, __, context) => {

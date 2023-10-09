@@ -38,12 +38,10 @@ interface TableProps<T extends object> {
   totalItems?: number;
   sorting?: SortingState;
   canFetchMore?: boolean;
-  selection?: RowSelectionState;
   onFetchMore?: () => void;
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
   onSortingChange?: OnChangeFn<SortingState>;
-  onSelectionChange?: OnChangeFn<RowSelectionState>;
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
 
@@ -55,30 +53,25 @@ export const Table = <T extends object>({
   canFetchMore,
   totalItems = 40,
   onSortingChange,
-  onSelectionChange,
   renderTableActions,
   enableRowSelection,
   enableTableActions,
   sorting: _sorting,
-  selection: _selection,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [selection, setSelection] = useState<RowSelectionState>({});
 
   const table = useReactTable<T>({
     data,
     columns,
     state: {
       sorting: _sorting ?? sorting,
-      rowSelection: _selection ?? selection,
     },
     manualSorting: true,
     enableRowSelection,
     getCoreRowModel: getCoreRowModel<T>(),
     getSortedRowModel: getSortedRowModel<T>(),
     onSortingChange: onSortingChange ?? setSorting,
-    onRowSelectionChange: onSelectionChange ?? setSelection,
   });
 
   const { rows } = table.getRowModel();

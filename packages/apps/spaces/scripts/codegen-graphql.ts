@@ -3,7 +3,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config({
-  path: path.join(__dirname, '.env.development'),
+  path: path.join(__dirname, '../', '.env.development'),
 });
 
 const config: CodegenConfig = {

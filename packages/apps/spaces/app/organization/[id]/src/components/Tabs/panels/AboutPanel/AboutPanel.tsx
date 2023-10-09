@@ -3,24 +3,30 @@ import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
+import { Tag } from '@ui/presentation/Tag';
+import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
+import { Tooltip } from '@ui/overlay/Tooltip';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { VStack, HStack } from '@ui/layout/Stack';
-import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { OrganizationRelationship } from '@graphql/types';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { FormNumberInputGroup } from '@ui/form/InputGroup';
+import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { useAddRelationshipMutation } from '@organization/src/graphql/addRelationship.generated';
+import { useAddSocialMutation } from '@organization/src/graphql/addOrganizationSocial.generated';
 import { useRemoveRelationshipMutation } from '@organization/src/graphql/removeRelationship.generated';
 import { useUpdateOrganizationMutation } from '@organization/src/graphql/updateOrganization.generated';
 import { useSetRelationshipStageMutation } from '@organization/src/graphql/setRelationshipStage.generated';
 import { useRemoveRelationshipStageMutation } from '@organization/src/graphql/removeRelationshipStage.generated';
 
-import { FormSocialInput } from '../../shared/FormSocialInput';
 import {
   industryOptions,
   employeesOptions,
@@ -35,10 +41,7 @@ import {
   OrganizationAboutFormDto,
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
-import { Box } from '@ui/layout/Box';
-import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
-import React from 'react';
-import { useAddSocialMutation } from '@organization/src/graphql/addOrganizationSocial.generated';
+import { FormSocialInput } from '../../shared/FormSocialInput';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -46,6 +49,7 @@ const placeholders = {
 
 export const AboutPanel = () => {
   const id = useParams()?.id as string;
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -242,16 +246,39 @@ export const AboutPanel = () => {
         overflow='visible'
         w='full'
       >
-        <FormInput
-          name='name'
-          fontSize='lg'
-          autoComplete='off'
-          fontWeight='semibold'
-          variant='unstyled'
-          borderRadius='unset'
-          placeholder='Company name'
-          formId='organization-about'
-        />
+        <Flex align='center'>
+          <FormInput
+            name='name'
+            fontSize='lg'
+            autoComplete='off'
+            fontWeight='semibold'
+            variant='unstyled'
+            borderRadius='unset'
+            placeholder='Company name'
+            formId='organization-about'
+          />
+          {data?.organization?.referenceId && (
+            <Box h='full' ml='4'>
+              <Tooltip label={'Copy ID'}>
+                <Tag
+                  colorScheme='gray'
+                  variant='outline'
+                  color='gray.500'
+                  borderRadius='full'
+                  boxShadow='unset'
+                  border='1px solid'
+                  cursor='pointer'
+                  borderColor='gray.300'
+                  onClick={() => {
+                    copyToClipboard('plm', 'Reference ID copied ');
+                  }}
+                >
+                  <Text>{data?.organization?.referenceId}</Text>
+                </Tag>
+              </Tooltip>
+            </Box>
+          )}
+        </Flex>
         <FormUrlInput
           name='website'
           autoComplete='off'
@@ -370,6 +397,21 @@ export const AboutPanel = () => {
             leftElement={<Icons.Share7 color='gray.500' />}
           />
         </VStack>
+
+        <Flex flex='1' />
+        {data?.organization?.customerOsId && (
+          <Tooltip label='Copy ID'>
+            <Text
+              py='3'
+              w='fit-content'
+              color='gray.400'
+              cursor='pointer'
+              onClick={() => copyToClipboard('plm2', 'CustomerOS ID copied')}
+            >
+              CustomerIS ID: {data?.organization?.customerOsId}
+            </Text>
+          </Tooltip>
+        )}
       </Flex>
     </Flex>
   );

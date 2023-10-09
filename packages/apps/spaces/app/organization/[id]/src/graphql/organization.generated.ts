@@ -46,11 +46,17 @@ export type OrganizationQuery = {
     isPublic?: boolean | null;
     market?: Types.Market | null;
     employees?: any | null;
+    referenceId?: string | null;
+    customerOsId: string;
     socials: Array<{ __typename?: 'Social'; id: string; url: string }>;
     relationshipStages: Array<{
       __typename?: 'OrganizationRelationshipStage';
       relationship: Types.OrganizationRelationship;
       stage?: string | null;
+    }>;
+    subsidiaryOf: Array<{
+      __typename?: 'LinkedOrganization';
+      organization: { __typename?: 'Organization'; id: string; name: string };
     }>;
   } | null;
 };
@@ -73,6 +79,8 @@ export const OrganizationDocument = `
     isPublic
     market
     employees
+    referenceId
+    customerOsId
     socials {
       id
       url
@@ -80,6 +88,12 @@ export const OrganizationDocument = `
     relationshipStages {
       relationship
       stage
+    }
+    subsidiaryOf {
+      organization {
+        id
+        name
+      }
     }
   }
 }
