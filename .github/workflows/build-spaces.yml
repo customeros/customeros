@@ -2,7 +2,7 @@ name: spaces
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter", "4001-fe-test-coverage-announcer" ]
     paths:
       - 'packages/apps/spaces/**'
       - '.github/workflows/build-spaces.yml'
@@ -28,6 +28,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.1
+
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
@@ -50,6 +55,13 @@ jobs:
 #          cd packages/apps/spaces
 #          yarn add -D jest --silent
 #          yarn test
+
+      - name: Check test coverage
+        run: |
+          git clone https://github.com/openline-ai/openline-test-harness.git
+          cd openline-test-harness\spaces-coverage
+          go build
+          ./spaces-coverage
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
