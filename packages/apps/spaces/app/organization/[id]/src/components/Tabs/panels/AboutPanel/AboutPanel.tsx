@@ -27,6 +27,7 @@ import { useUpdateOrganizationMutation } from '@organization/src/graphql/updateO
 import { useSetRelationshipStageMutation } from '@organization/src/graphql/setRelationshipStage.generated';
 import { useRemoveRelationshipStageMutation } from '@organization/src/graphql/removeRelationshipStage.generated';
 
+import { FormSocialInput } from '../../shared/FormSocialInput';
 import {
   industryOptions,
   employeesOptions,
@@ -41,7 +42,8 @@ import {
   OrganizationAboutFormDto,
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
-import { FormSocialInput } from '../../shared/FormSocialInput';
+import React from 'react';
+import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -383,6 +385,12 @@ export const AboutPanel = () => {
             formId='organization-about'
             placeholder='Number of employees'
             leftElement={<Icons.Users2 color='gray.500' mr='3' />}
+          />
+
+          <OwnerInput
+            id={id}
+            owner={data?.organization?.owner}
+            invalidateQuery={invalidateQuery}
           />
 
           <FormSocialInput
