@@ -199,7 +199,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create organization")
+		graphql.AddErrorf(ctx, "Failed to update organization")
 		r.log.Errorf("Error from events processing %s", err.Error())
 		return nil, nil
 	}

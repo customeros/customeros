@@ -31,7 +31,7 @@ func main() {
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
-	//testUpdateOrganization()
+	testUpdateOrganization()
 	//testHideOrganization()
 	//testShowOrganization()
 	//testCreateLogEntry()
@@ -40,7 +40,7 @@ func main() {
 	//testCreateEmail()
 	//testCreatePhoneNumber()
 	//testAddParentOrganization()
-	testRemoveParentOrganization()
+	//testRemoveParentOrganization()
 }
 
 func InitClients() {
@@ -96,13 +96,17 @@ func testCreateOrganization() {
 
 func testUpdateOrganization() {
 	tenant := "openline"
-	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
-	website := ""
+	organizationId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+	website := "xtz.com"
+	lastFoundingAmont := "1Million"
+	partial := true
 
 	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
-		Tenant:  tenant,
-		Id:      organizationId,
-		Website: website,
+		Tenant:            tenant,
+		Id:                organizationId,
+		Website:           website,
+		LastFundingAmount: lastFoundingAmont,
+		IgnoreEmptyFields: partial,
 	})
 	print(result)
 }
