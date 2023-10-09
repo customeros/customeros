@@ -79,37 +79,38 @@ type CustomField struct {
 }
 
 type Organization struct {
-	ID                string                             `json:"id"`
-	Name              string                             `json:"name"`
-	Hide              bool                               `json:"hide"`
-	Description       string                             `json:"description"`
-	Website           string                             `json:"website"`
-	Industry          string                             `json:"industry"`
-	SubIndustry       string                             `json:"subIndustry"`
-	IndustryGroup     string                             `json:"industryGroup"`
-	TargetAudience    string                             `json:"targetAudience"`
-	ValueProposition  string                             `json:"valueProposition"`
-	IsPublic          bool                               `json:"isPublic"`
-	IsCustomer        bool                               `json:"isCustomer"`
-	Employees         int64                              `json:"employees"`
-	Market            string                             `json:"market"`
-	LastFundingRound  string                             `json:"lastFundingRound"`
-	LastFundingAmount string                             `json:"lastFundingAmount"`
-	ReferenceId       string                             `json:"referenceId"`
-	Note              string                             `json:"note"`
-	Source            common_models.Source               `json:"source"`
-	CreatedAt         time.Time                          `json:"createdAt,omitempty"`
-	UpdatedAt         time.Time                          `json:"updatedAt,omitempty"`
-	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
-	Emails            map[string]OrganizationEmail       `json:"emails"`
-	Locations         []string                           `json:"locations,omitempty"`
-	Domains           []string                           `json:"domains,omitempty"`
-	Socials           map[string]Social                  `json:"socials,omitempty"`
-	RenewalLikelihood RenewalLikelihood                  `json:"renewalLikelihood,omitempty"`
-	RenewalForecast   RenewalForecast                    `json:"renewalForecast,omitempty"`
-	BillingDetails    BillingDetails                     `json:"billingDetails,omitempty"`
-	CustomFields      map[string]CustomField             `json:"customFields,omitempty"`
-	ExternalSystems   []common_models.ExternalSystem     `json:"externalSystems"`
+	ID                  string                             `json:"id"`
+	Name                string                             `json:"name"`
+	Hide                bool                               `json:"hide"`
+	Description         string                             `json:"description"`
+	Website             string                             `json:"website"`
+	Industry            string                             `json:"industry"`
+	SubIndustry         string                             `json:"subIndustry"`
+	IndustryGroup       string                             `json:"industryGroup"`
+	TargetAudience      string                             `json:"targetAudience"`
+	ValueProposition    string                             `json:"valueProposition"`
+	IsPublic            bool                               `json:"isPublic"`
+	IsCustomer          bool                               `json:"isCustomer"`
+	Employees           int64                              `json:"employees"`
+	Market              string                             `json:"market"`
+	LastFundingRound    string                             `json:"lastFundingRound"`
+	LastFundingAmount   string                             `json:"lastFundingAmount"`
+	ReferenceId         string                             `json:"referenceId"`
+	Note                string                             `json:"note"`
+	Source              common_models.Source               `json:"source"`
+	CreatedAt           time.Time                          `json:"createdAt,omitempty"`
+	UpdatedAt           time.Time                          `json:"updatedAt,omitempty"`
+	PhoneNumbers        map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
+	Emails              map[string]OrganizationEmail       `json:"emails"`
+	Locations           []string                           `json:"locations,omitempty"`
+	Domains             []string                           `json:"domains,omitempty"`
+	Socials             map[string]Social                  `json:"socials,omitempty"`
+	RenewalLikelihood   RenewalLikelihood                  `json:"renewalLikelihood,omitempty"`
+	RenewalForecast     RenewalForecast                    `json:"renewalForecast,omitempty"`
+	BillingDetails      BillingDetails                     `json:"billingDetails,omitempty"`
+	CustomFields        map[string]CustomField             `json:"customFields,omitempty"`
+	ExternalSystems     []common_models.ExternalSystem     `json:"externalSystems"`
+	ParentOrganizations map[string]ParentOrganization      `json:"parentOrganizations,omitempty"`
 }
 
 type RenewalLikelihood struct {
@@ -143,6 +144,11 @@ type OrganizationPhoneNumber struct {
 type OrganizationEmail struct {
 	Primary bool   `json:"primary"`
 	Label   string `json:"label"`
+}
+
+type ParentOrganization struct {
+	OrganizationId string `json:"organizationId"`
+	Type           string `json:"type"`
 }
 
 func (o *Organization) String() string {

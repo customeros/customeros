@@ -34,6 +34,8 @@ type OrganizationGrpcServiceClient interface {
 	RequestRenewNextCycleDate(ctx context.Context, in *RequestRenewNextCycleDateRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	HideOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	ShowOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -152,6 +154,24 @@ func (c *organizationGrpcServiceClient) ShowOrganization(ctx context.Context, in
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddParentOrganization", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationGrpcServiceClient) RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/RemoveParentOrganization", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -168,6 +188,8 @@ type OrganizationGrpcServiceServer interface {
 	RequestRenewNextCycleDate(context.Context, *RequestRenewNextCycleDateRequest) (*OrganizationIdGrpcResponse, error)
 	HideOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	ShowOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -209,6 +231,12 @@ func (UnimplementedOrganizationGrpcServiceServer) HideOrganization(context.Conte
 }
 func (UnimplementedOrganizationGrpcServiceServer) ShowOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShowOrganization not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddParentOrganization not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveParentOrganization not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -438,6 +466,42 @@ func _OrganizationGrpcService_ShowOrganization_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_AddParentOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddParentOrganizationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).AddParentOrganization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/AddParentOrganization",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).AddParentOrganization(ctx, req.(*AddParentOrganizationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationGrpcService_RemoveParentOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveParentOrganizationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).RemoveParentOrganization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/RemoveParentOrganization",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).RemoveParentOrganization(ctx, req.(*RemoveParentOrganizationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -492,6 +556,14 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ShowOrganization",
 			Handler:    _OrganizationGrpcService_ShowOrganization_Handler,
+		},
+		{
+			MethodName: "AddParentOrganization",
+			Handler:    _OrganizationGrpcService_AddParentOrganization_Handler,
+		},
+		{
+			MethodName: "RemoveParentOrganization",
+			Handler:    _OrganizationGrpcService_RemoveParentOrganization_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

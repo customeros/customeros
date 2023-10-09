@@ -346,6 +346,38 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 	return &pb.CustomFieldIdGrpcResponse{Id: customFieldId}, nil
 }
 
+func (s *organizationService) AddParentOrganization(ctx context.Context, request *pb.AddParentOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.AddParentOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("parentOrganizationId", request.ParentOrganizationId))
+
+	command := cmd.NewAddParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId, request.Type)
+	if err := s.organizationCommands.AddParentCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddParentCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
+		return nil, s.errResponse(err)
+	}
+
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) RemoveParentOrganization(ctx context.Context, request *pb.RemoveParentOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RemoveParentOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("parentOrganizationId", request.ParentOrganizationId))
+
+	command := cmd.NewRemoveParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId)
+	if err := s.organizationCommands.RemoveParentCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RemoveParentCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
+		return nil, s.errResponse(err)
+	}
+
+	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
 func (s *organizationService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }

@@ -2,7 +2,6 @@ package command_handler
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
@@ -22,13 +21,12 @@ type UpdateRenewalForecastCommandHandler interface {
 
 type updateRenewalForecastCommandHandler struct {
 	log          logger.Logger
-	cfg          *config.Config
 	es           eventstore.AggregateStore
 	repositories *repository.Repositories
 }
 
-func NewUpdateRenewalForecastCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) UpdateRenewalForecastCommandHandler {
-	return &updateRenewalForecastCommandHandler{log: log, cfg: cfg, es: es, repositories: repositories}
+func NewUpdateRenewalForecastCommandHandler(log logger.Logger, es eventstore.AggregateStore, repositories *repository.Repositories) UpdateRenewalForecastCommandHandler {
+	return &updateRenewalForecastCommandHandler{log: log, es: es, repositories: repositories}
 }
 
 func (h *updateRenewalForecastCommandHandler) Handle(ctx context.Context, command *cmd.UpdateRenewalForecastCommand) error {

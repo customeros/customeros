@@ -253,3 +253,29 @@ func NewUpsertCustomFieldCommand(organizationId, tenant, source, sourceOfTruth, 
 		CustomFieldData: customField,
 	}
 }
+
+type AddParentCommand struct {
+	eventstore.BaseCommand
+	ParentOrganizationId string `json:"parentOrganizationId" validate:"required,nefield=ObjectID"` // alexb test it
+	Type                 string
+}
+
+func NewAddParentCommand(organizationId, tenant, userId, parentOrganizationId, relType string) *AddParentCommand {
+	return &AddParentCommand{
+		BaseCommand:          eventstore.NewBaseCommand(organizationId, tenant, userId),
+		ParentOrganizationId: parentOrganizationId,
+		Type:                 relType,
+	}
+}
+
+type RemoveParentCommand struct {
+	eventstore.BaseCommand
+	ParentOrganizationId string `json:"parentOrganizationId" validate:"required,nefield=ObjectID"`
+}
+
+func NewRemoveParentCommand(organizationId, tenant, userId, parentOrganizationId string) *RemoveParentCommand {
+	return &RemoveParentCommand{
+		BaseCommand:          eventstore.NewBaseCommand(organizationId, tenant, userId),
+		ParentOrganizationId: parentOrganizationId,
+	}
+}

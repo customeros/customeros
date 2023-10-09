@@ -2,7 +2,6 @@ package command_handler
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
@@ -19,12 +18,11 @@ type LinkDomainCommandHandler interface {
 
 type linkDomainCommandHandler struct {
 	log logger.Logger
-	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewLinkDomainCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkDomainCommandHandler {
-	return &linkDomainCommandHandler{log: log, cfg: cfg, es: es}
+func NewLinkDomainCommandHandler(log logger.Logger, es eventstore.AggregateStore) LinkDomainCommandHandler {
+	return &linkDomainCommandHandler{log: log, es: es}
 }
 
 func (c *linkDomainCommandHandler) Handle(ctx context.Context, command *command.LinkDomainCommand) error {

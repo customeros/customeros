@@ -2,7 +2,6 @@ package command_handler
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -19,12 +18,11 @@ type LinkPhoneNumberCommandHandler interface {
 
 type linkPhoneNumberCommandHandler struct {
 	log logger.Logger
-	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkPhoneNumberCommandHandler {
-	return &linkPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
+func NewLinkPhoneNumberCommandHandler(log logger.Logger, es eventstore.AggregateStore) LinkPhoneNumberCommandHandler {
+	return &linkPhoneNumberCommandHandler{log: log, es: es}
 }
 
 func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {

@@ -39,6 +39,8 @@ func main() {
 	//testAddCustomField()
 	//testCreateEmail()
 	//testCreatePhoneNumber()
+	//testAddParentOrganization()
+	testRemoveParentOrganization()
 }
 
 func InitClients() {
@@ -207,5 +209,37 @@ func testCreatePhoneNumber() {
 		PhoneNumber:    rawPhoneNumber,
 		LoggedInUserId: userId,
 	})
+	print(result)
+}
+
+func testAddParentOrganization() {
+	tenant := "openline"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+	parentOrgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	relType := "store"
+	result, err := clients.OrganizationClient.AddParentOrganization(context.TODO(), &organization_grpc_service.AddParentOrganizationGrpcRequest{
+		Tenant:               tenant,
+		OrganizationId:       orgId,
+		ParentOrganizationId: parentOrgId,
+		Type:                 relType,
+	})
+	if err != nil {
+		print(err)
+	}
+	print(result)
+}
+
+func testRemoveParentOrganization() {
+	tenant := "openline"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+	parentOrgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	result, err := clients.OrganizationClient.RemoveParentOrganization(context.TODO(), &organization_grpc_service.RemoveParentOrganizationGrpcRequest{
+		Tenant:               tenant,
+		OrganizationId:       orgId,
+		ParentOrganizationId: parentOrgId,
+	})
+	if err != nil {
+		print(err)
+	}
 	print(result)
 }

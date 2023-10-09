@@ -59,6 +59,10 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onShow(event)
 	case events.OrganizationUpsertCustomFieldV1:
 		return a.onUpsertCustomField(event)
+	case events.OrganizationAddParentV1:
+		return a.onAddParent(event)
+	case events.OrganizationRemoveParentV1:
+		return a.onRemoveParent(event)
 	case events.OrganizationRequestRenewalForecastV1,
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRefreshLastTouchpointV1,
@@ -408,5 +412,29 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 			CustomFieldValue:    eventData.CustomFieldValue,
 		}
 	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onAddParent(event eventstore.Event) error {
+	var eventData events.OrganizationAddParentEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.ParentOrganizations == nil {
+		a.Organization.ParentOrganizations = make(map[string]models.ParentOrganization)
+	}
+	a.Organization.ParentOrganizations[eventData.ParentOrganizationId] = models.ParentOrganization{
+		OrganizationId: eventData.ParentOrganizationId,
+		Type:           eventData.Type,
+	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onRemoveParent(event eventstore.Event) error {
+	var eventData events.OrganizationRemoveParentEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	delete(a.Organization.ParentOrganizations, eventData.ParentOrganizationId)
 	return nil
 }
