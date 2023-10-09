@@ -13,9 +13,9 @@ import {
   ComparisonOperator,
 } from '@graphql/types';
 import { GridItem } from '@ui/layout/Grid';
+import { Table, SortingState } from '@ui/presentation/Table';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-import { Table, SortingState, RowSelectionState } from '@ui/presentation/Table';
 
 import { Search } from './src/components/Search';
 import { TableActions } from './src/components/Actions';
@@ -37,8 +37,7 @@ export default function OrganizationsPage() {
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
-  const { createOrganization, hideOrganizations, mergeOrganizations } =
-    useOrganizationsPageMethods();
+  const { createOrganization } = useOrganizationsPageMethods();
 
   const { data: globalCache } = useGlobalCacheQuery(client);
 
@@ -122,34 +121,6 @@ export default function OrganizationsPage() {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const handleMergeOrganizations = (
-    targetIndex: string,
-    selection: RowSelectionState,
-  ) => {
-    const primaryId = (allOrganizationIds as string[])[Number(targetIndex)];
-    const selectedIds = Object.keys(selection).map(
-      (k) => (allOrganizationIds as string[])[Number(k)],
-    );
-    const mergeIds = selectedIds.filter((id) => id !== primaryId);
-
-    if (!primaryId || !mergeIds.length) return;
-
-    mergeOrganizations.mutate({
-      primaryOrganizationId: primaryId,
-      mergedOrganizationIds: mergeIds,
-    });
-  };
-
-  const handleHideOrganizations = (selection: RowSelectionState) => {
-    const selectedIds = Object.keys(selection)
-      .map((k) => (allOrganizationIds as string[])[Number(k)])
-      .filter(Boolean);
-
-    hideOrganizations.mutate({
-      ids: selectedIds,
-    });
-  };
-
   const columns = useMemo(
     () =>
       getColumns({
@@ -215,9 +186,7 @@ export default function OrganizationsPage() {
         renderTableActions={(table) => (
           <TableActions
             table={table}
-            isArchiving={hideOrganizations.isLoading}
-            onMergeOrganizations={handleMergeOrganizations}
-            onArchiveOrganizations={handleHideOrganizations}
+            allOrganizationsIds={allOrganizationIds}
           />
         )}
       />
