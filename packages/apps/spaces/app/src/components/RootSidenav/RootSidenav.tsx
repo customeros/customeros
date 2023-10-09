@@ -10,7 +10,7 @@ import { Icons } from '@ui/media/Icon';
 import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
-import logoCustomerOs from './cutsomer-os-logo.png';
+import logoCustomerOs from './assets/logo-customeros.png';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
