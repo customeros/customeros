@@ -127,14 +127,13 @@ export const AuthPanel = () => {
                             <VStack alignItems={'start'}>
                                 <Flex gap='1' align='center'>
                                     <Icons.GMAIL boxSize='6'/>
-                                    <FormLabel htmlFor={'changeEmailSyncSwitchButton'} mb='0'>
+                                    <FormLabel mb='0'>
                                         Sync Google Mail
                                     </FormLabel>
                                 </Flex>
                                 <Flex gap='1' align='center'>
                                     <Icons.GOOGLE_CALENDAR boxSize='6'/>
                                     <FormLabel
-                                        htmlFor={'changeGoogleCalendarSyncSwitchButton'}
                                         mb='0'
                                     >
                                         Sync Google Calendar
