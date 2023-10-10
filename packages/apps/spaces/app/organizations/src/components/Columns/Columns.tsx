@@ -8,7 +8,6 @@ import { THead, createColumnHelper } from '@ui/presentation/Table';
 
 import { OwnerCell } from './Cells/owner/OwnerCell';
 import { WebsiteCell } from './Cells/website/WebsiteCell';
-import { RelationshipStage } from './Cells/stage/RelationshipStage';
 import { TimeToRenewalCell } from './Cells/renewal/TimeToRenewalCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
 import { RenewalForecastCell } from './Cells/renewal/RenewalForecastCell';
@@ -103,37 +102,16 @@ export const getColumns = (options: GetColumnsOptions) => [
     header: (props) => <THead<Organization> title='Relationship' {...props} />,
     minSize: 200,
     cell: (props) => {
-      const isCustomer = props.getValue();
-      const organizationId = props.row.original.id;
       const organization = props.row.original;
-      const organizationName = props.row.original.name;
-
-      return (
-        <>
-          <OrganizationRelationship
-            organizationId={organizationId}
-            isCustomer={isCustomer ?? false}
-            organization={organization}
-            organizationName={organizationName}
-          />
-        </>
-      );
+      return <OrganizationRelationship organization={organization} />;
     },
     skeleton: () => (
-      <Flex gap='1' flexDir='column'>
-        <Skeleton
-          width='100%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='25%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <Skeleton
+        width='100%'
+        height='18px'
+        startColor='gray.300'
+        endColor='gray.300'
+      />
     ),
   }),
   columnHelper.accessor('accountDetails', {
