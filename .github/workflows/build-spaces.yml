@@ -70,7 +70,7 @@ jobs:
       - name: Send Output to Slack
         run: |
           coverage=${{ steps.compute_code_coverage.outputs.coverage }} 
-          echo "Coverage: $coverage"
+          echo "Spaces Test Coverage: $coverage %"
 
 #
 #      - name: Log in to the Container registry
