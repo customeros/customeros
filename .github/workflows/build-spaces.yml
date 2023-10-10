@@ -62,7 +62,7 @@ jobs:
           cd openline-test-harness/spaces-coverage
           go mod tidy
           go build
-          $coverage=$(./spaces-coverage)
+          coverage=$(./spaces-coverage)
           echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
