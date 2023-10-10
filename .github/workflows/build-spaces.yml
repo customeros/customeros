@@ -68,9 +68,8 @@ jobs:
       - name: Send Output to Slack
         run: |
           computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
-          curl -X POST -H 'Content-type: application/json' --data '{
-              "text": computed_coverage
-            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL_FE }}
+          echo "computed_coverage=computed_coverage" >> $GITHUB_OUTPUT
+
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
