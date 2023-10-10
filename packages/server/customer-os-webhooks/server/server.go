@@ -112,11 +112,11 @@ func (server *server) Run(parentCtx context.Context) error {
 		cosHandler.TracingEnhancer(ctx, "/sync/organization"),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
 		rest.SyncOrganizationHandler(serviceContainer, server.log))
-	r.POST("/sync/users",
+	r.POST("/sync/log-entries",
 		cosHandler.TracingEnhancer(ctx, "/sync/log-entries"),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
 		rest.SyncLogEntriesHandler(serviceContainer, server.log))
-	r.POST("/sync/user",
+	r.POST("/sync/log-entry",
 		cosHandler.TracingEnhancer(ctx, "/sync/log-entry"),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
 		rest.SyncLogEntryHandler(serviceContainer, server.log))
