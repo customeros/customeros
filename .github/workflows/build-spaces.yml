@@ -64,32 +64,33 @@ jobs:
           go mod tidy
           go build
           coverage=$(./spaces-coverage)
+          ls
           echo "::set-output name=computed_coverage::$coverage"
 
-      - name: Send Output to Slack
-        run: |
-          computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
-          echo "${{ steps.compute_code_coverage.outputs.computed_coverage }}"
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3.0.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
-          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5.0.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Push Docker image
-        uses: docker/build-push-action@v5.0.0
-        with:
-          context: packages/apps/spaces/
-          push: ${{ github.ref_name == 'otter' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            ENV=cluster
+#      - name: Send Output to Slack
+#        run: |
+#          computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
+#          echo "${{ steps.compute_code_coverage.outputs.computed_coverage }}"
+#
+#      - name: Log in to the Container registry
+#        uses: docker/login-action@v3.0.0
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
+#          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+#
+#      - name: Extract metadata (tags, labels) for Docker
+#        id: meta
+#        uses: docker/metadata-action@v5.0.0
+#        with:
+#          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+#
+#      - name: Push Docker image
+#        uses: docker/build-push-action@v5.0.0
+#        with:
+#          context: packages/apps/spaces/
+#          push: ${{ github.ref_name == 'otter' }}
+#          tags: ${{ steps.meta.outputs.tags }}
+#          labels: ${{ steps.meta.outputs.labels }}
+#          build-args: |
+#            ENV=cluster
