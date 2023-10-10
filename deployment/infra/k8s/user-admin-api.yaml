@@ -59,9 +59,9 @@ spec:
             - name: NEO4J_AUTH_PWD
               value: "StrongLocalPa$$$"
             - name: SLACK_CLIENT_ID
-              value: "N\A"
+              value: "NA"
             - name: SLACK_CLIENT_SECRET
-              value: "N\A"
+              value: "NA"
 
             - name: PORT
               value: "4001"
