@@ -68,25 +68,46 @@ func (s *contactService) UpsertContact(ctx context.Context, request *pb.UpsertCo
 }
 
 func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *pb.LinkPhoneNumberToContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
-	command := command.NewLinkPhoneNumberCommand(request.ContactId, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
-	if err := s.contactCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
-		s.log.Errorf("(LinkPhoneNumberToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err)
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkPhoneNumberToContact")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("phoneNumberId", request.PhoneNumberId), log.String("contactId", request.ContactId))
+
+	cmd := command.NewLinkPhoneNumberCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
+	if err := s.contactCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
+		s.log.Errorf("(LinkPhoneNumberCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
 		return nil, s.errResponse(err)
 	}
-
-	s.log.Infof("Linked phone number {%s} to contact {%s}", request.PhoneNumberId, request.ContactId)
 
 	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
 func (s *contactService) LinkEmailToContact(ctx context.Context, request *pb.LinkEmailToContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
-	command := command.NewLinkEmailCommand(request.ContactId, request.Tenant, request.EmailId, request.Label, request.Primary)
-	if err := s.contactCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
-		s.log.Errorf("(LinkEmailToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err)
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkEmailToContact")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("emailId", request.EmailId), log.String("contactId", request.ContactId))
+
+	cmd := command.NewLinkEmailCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
+	if err := s.contactCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
+		s.log.Errorf("(LinkEmailCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked email {%s} to contact {%s}", request.EmailId, request.ContactId)
+	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+}
+
+func (s *contactService) LinkLocationToContact(ctx context.Context, request *pb.LinkLocationToContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkLocationToContact")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("locationId", request.LocationId), log.String("contactId", request.ContactId))
+
+	cmd := command.NewLinkLocationCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.LocationId)
+	if err := s.contactCommands.LinkLocationCommand.Handle(ctx, cmd); err != nil {
+		s.log.Errorf("(LinkLocationCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
+		return nil, s.errResponse(err)
+	}
 
 	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }

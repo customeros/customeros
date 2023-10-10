@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
-	localErrors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -22,6 +21,12 @@ func (a *ContactAggregate) HandleCommand(ctx context.Context, cmd eventstore.Com
 		} else {
 			return a.updateContact(ctx, c)
 		}
+	case *command.LinkEmailCommand:
+		return a.linkEmail(ctx, c)
+	case *command.LinkPhoneNumberCommand:
+		return a.linkPhoneNumber(ctx, c)
+	case *command.LinkLocationCommand:
+		return a.linkLocation(ctx, c)
 	default:
 		return errors.New("invalid contact command type")
 	}
@@ -67,27 +72,100 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 	return a.Apply(updateEvent)
 }
 
-func (a *ContactAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNumberId, label string, primary bool) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.LinkPhoneNumber")
+func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.linkEmail")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewContactLinkPhoneNumberEvent(a, tenant, phoneNumberId, label, primary, updatedAtNotNil)
+	event, err := events.NewContactLinkEmailEvent(a, cmd.EmailId, cmd.Label, cmd.Primary, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactLinkEmailEvent")
+	}
+
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+
+	err = a.Apply(event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if cmd.Primary {
+		for k, v := range a.Contact.Emails {
+			if k != cmd.EmailId && v.Primary {
+				if err = a.SetEmailNonPrimary(ctx, k, cmd.UserID); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (a *ContactAggregate) SetEmailNonPrimary(ctx context.Context, emailId, userId string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.SetEmailNonPrimary")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	updatedAtNotNil := utils.Now()
+
+	email, ok := a.Contact.Emails[emailId]
+	if !ok {
+		return nil
+	}
+
+	if email.Primary {
+		event, err := events.NewContactLinkEmailEvent(a, emailId, email.Label, false, updatedAtNotNil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return errors.Wrap(err, "NewContactLinkEmailEvent")
+		}
+
+		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
+		return a.Apply(event)
+	}
+	return nil
+}
+
+func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.linkPhoneNumber")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	updatedAtNotNil := utils.Now()
+
+	event, err := events.NewContactLinkPhoneNumberEvent(a, cmd.PhoneNumberId, cmd.Label, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+
+	err = a.Apply(event)
+	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
 
-	return a.Apply(event)
+	if cmd.Primary {
+		for k, v := range a.Contact.PhoneNumbers {
+			if k != cmd.PhoneNumberId && v.Primary {
+				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.UserID); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
 
-func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId string) error {
+func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.SetPhoneNumberNonPrimary")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
@@ -96,67 +174,37 @@ func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant,
 
 	phoneNumber, ok := a.Contact.PhoneNumbers[phoneNumberId]
 	if !ok {
-		return localErrors.ErrPhoneNumberNotFound
+		return nil
 	}
 
 	if phoneNumber.Primary {
-		event, err := events.NewContactLinkPhoneNumberEvent(a, tenant, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
+		event, err := events.NewContactLinkPhoneNumberEvent(a, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
 		}
 
-		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-			tracing.TraceErr(span, err)
-		}
+		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
 		return a.Apply(event)
 	}
 	return nil
 }
 
-func (a *ContactAggregate) LinkEmail(ctx context.Context, tenant, emailId, label string, primary bool) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.LinkEmail")
+func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLocationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.linkLocation")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewContactLinkEmailEvent(a, tenant, emailId, label, primary, updatedAtNotNil)
+	event, err := events.NewContactLinkLocationEvent(a, cmd.LocationId, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContactLinkEmailEvent")
+		return errors.Wrap(err, "NewContactLinkLocationEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
 
 	return a.Apply(event)
-}
-
-func (a *ContactAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.SetEmailNonPrimary")
-	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
-
-	updatedAtNotNil := utils.Now()
-
-	email, ok := a.Contact.Emails[emailId]
-	if !ok {
-		return localErrors.ErrEmailNotFound
-	}
-
-	if email.Primary {
-		event, err := events.NewContactLinkEmailEvent(a, tenant, emailId, email.Label, false, updatedAtNotNil)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewContactLinkEmailEvent")
-		}
-
-		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-			tracing.TraceErr(span, err)
-		}
-		return a.Apply(event)
-	}
-	return nil
 }

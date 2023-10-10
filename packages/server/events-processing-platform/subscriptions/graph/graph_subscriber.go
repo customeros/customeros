@@ -32,7 +32,7 @@ type GraphSubscriber struct {
 	cfg                      *config.Config
 	repositories             *repository.Repositories
 	phoneNumberEventHandler  *GraphPhoneNumberEventHandler
-	contactEventHandler      *GraphContactEventHandler
+	contactEventHandler      *ContactEventHandler
 	organizationEventHandler *OrganizationEventHandler
 	emailEventHandler        *GraphEmailEventHandler
 	userEventHandler         *GraphUserEventHandler
@@ -48,7 +48,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		db:                       db,
 		repositories:             repositories,
 		cfg:                      cfg,
-		contactEventHandler:      &GraphContactEventHandler{repositories: repositories},
+		contactEventHandler:      &ContactEventHandler{repositories: repositories},
 		organizationEventHandler: &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.OrganizationCommands},
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
@@ -167,6 +167,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
 	case contactevents.ContactEmailLinkV1:
 		return s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
+	case contactevents.ContactLocationLinkV1:
+		return s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
 
 	case orgevents.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)

@@ -10,12 +10,14 @@ type ContactCommands struct {
 	UpsertContact          UpsertContactCommandHandler
 	LinkPhoneNumberCommand LinkPhoneNumberCommandHandler
 	LinkEmailCommand       LinkEmailCommandHandler
+	LinkLocationCommand    LinkLocationCommandHandler
 }
 
 func NewContactCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *ContactCommands {
 	return &ContactCommands{
-		UpsertContact:          NewUpsertContactCommandHandler(log, cfg, es),
-		LinkPhoneNumberCommand: NewLinkPhoneNumberCommandHandler(log, cfg, es),
-		LinkEmailCommand:       NewLinkEmailCommandHandler(log, cfg, es),
+		UpsertContact:          NewUpsertContactCommandHandler(log, es),
+		LinkPhoneNumberCommand: NewLinkPhoneNumberCommandHandler(log, es),
+		LinkEmailCommand:       NewLinkEmailCommandHandler(log, es),
+		LinkLocationCommand:    NewLinkLocationCommandHandler(log, es),
 	}
 }

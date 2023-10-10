@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
@@ -69,7 +69,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 	externalSystem := cmnmod.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	command := cmd.NewUpsertOrganizationCommand(organizationId, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
+	command := command.NewUpsertOrganizationCommand(organizationId, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
 		sourceFields, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
@@ -88,8 +88,8 @@ func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context,
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("phoneNumberId", request.PhoneNumberId))
 
-	command := cmd.NewLinkPhoneNumberCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
-	if err := s.organizationCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewLinkPhoneNumberCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
+	if err := s.organizationCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(LinkPhoneNumberToOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
@@ -106,8 +106,8 @@ func (s *organizationService) LinkEmailToOrganization(ctx context.Context, reque
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("emailId", request.EmailId))
 
-	command := cmd.NewLinkEmailCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
-	if err := s.organizationCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewLinkEmailCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
+	if err := s.organizationCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(LinkEmailCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
@@ -124,7 +124,7 @@ func (s *organizationService) LinkLocationToOrganization(ctx context.Context, re
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("locationId", request.LocationId))
 
-	command := cmd.NewLinkLocationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.LocationId)
+	command := command.NewLinkLocationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.LocationId)
 	if err := s.organizationCommands.LinkLocationCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(LinkLocationCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
@@ -141,7 +141,7 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
 
-	command := cmd.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	command := command.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
 	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
@@ -169,7 +169,7 @@ func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Co
 		Comment:           request.Comment,
 		UpdatedBy:         utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
 	}
-	command := cmd.NewUpdateRenewalLikelihoodCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields)
+	command := command.NewUpdateRenewalLikelihoodCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields)
 	if err := s.organizationCommands.UpdateRenewalLikelihoodCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed update renewal likelihood for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
@@ -197,7 +197,7 @@ func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Cont
 		Comment:   request.Comment,
 		UpdatedBy: utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
 	}
-	command := cmd.NewUpdateRenewalForecastCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields, "")
+	command := command.NewUpdateRenewalForecastCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields, "")
 	if err := s.organizationCommands.UpdateRenewalForecastCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed update renewal forecast for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
@@ -227,7 +227,7 @@ func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Conte
 		RenewalCycle:      mapper.MapFrequencyToString(request.RenewalCycle),
 		RenewalCycleStart: utils.TimestampProtoToTime(request.CycleStart),
 	}
-	command := cmd.NewUpdateBillingDetailsCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields)
+	command := command.NewUpdateBillingDetailsCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields)
 	if err := s.organizationCommands.UpdateBillingDetailsCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed update billing details for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
@@ -250,7 +250,7 @@ func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, req
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := cmd.NewRequestNextCycleDateCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
+	command := command.NewRequestNextCycleDateCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
 	if err := s.organizationCommands.RequestNextCycleDateCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed request next cycle date for tenant: %s organizationID: %s, err: %s", request.Tenant, request.OrganizationId, err.Error())
@@ -273,7 +273,7 @@ func (s *organizationService) HideOrganization(ctx context.Context, request *pb.
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := cmd.NewHideOrganizationCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	command := command.NewHideOrganizationCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
 	if err := s.organizationCommands.HideOrganizationCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed hide organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
@@ -296,7 +296,7 @@ func (s *organizationService) ShowOrganization(ctx context.Context, request *pb.
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := cmd.NewShowOrganizationCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	command := command.NewShowOrganizationCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
 	if err := s.organizationCommands.ShowOrganizationCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed show organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
@@ -334,7 +334,7 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 		CustomFieldDataType: mapper.MapCustomFieldDataType(request.CustomFieldDataType),
 	}
 
-	command := cmd.NewUpsertCustomFieldCommand(request.OrganizationId, request.Tenant,
+	command := command.NewUpsertCustomFieldCommand(request.OrganizationId, request.Tenant,
 		sourceFields.Source, sourceFields.SourceOfTruth, sourceFields.AppSource, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
 		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), customField)
 	if err := s.organizationCommands.UpsertCustomFieldCommand.Handle(ctx, command); err != nil {
@@ -352,7 +352,7 @@ func (s *organizationService) AddParentOrganization(ctx context.Context, request
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("parentOrganizationId", request.ParentOrganizationId))
 
-	command := cmd.NewAddParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId, request.Type)
+	command := command.NewAddParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId, request.Type)
 	if err := s.organizationCommands.AddParentCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddParentCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
@@ -368,7 +368,7 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, requ
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("parentOrganizationId", request.ParentOrganizationId))
 
-	command := cmd.NewRemoveParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId)
+	command := command.NewRemoveParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId)
 	if err := s.organizationCommands.RemoveParentCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(RemoveParentCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)

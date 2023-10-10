@@ -32,6 +32,7 @@ message LinkPhoneNumberToContactGrpcRequest {
   string phoneNumberId = 3;
   bool primary = 4;
   string label = 5;
+  string loggedInUserId = 6;
 }
 
 message LinkEmailToContactGrpcRequest {
@@ -40,6 +41,14 @@ message LinkEmailToContactGrpcRequest {
   string emailId = 3;
   bool primary = 4;
   string label = 5;
+  string loggedInUserId = 6;
+}
+
+message LinkLocationToContactGrpcRequest {
+  string tenant = 1;
+  string contactId = 2;
+  string locationId = 3;
+  string loggedInUserId = 4;
 }
 
 message UnlinkLocationFromContactGrpcRequest {
@@ -56,5 +65,6 @@ service contactGrpcService {
   rpc UpsertContact(UpsertContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkEmailToContact(LinkEmailToContactGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc UnlinkLocationFromContact(UnlinkLocationFromContactGrpcRequest) returns (ContactIdGrpcResponse);
 }

@@ -130,9 +130,6 @@ func (r *phoneNumberRepository) LinkWithContact(ctx context.Context, tenant, con
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("contactId", contactId))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
 	query := `
 		MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
 				(t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$phoneNumberId})
@@ -141,23 +138,16 @@ func (r *phoneNumberRepository) LinkWithContact(ctx context.Context, tenant, con
 			rel.label = $label,	
 			c.updatedAt = $updatedAt,
 			rel.syncedWithEventStore = true`
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":        tenant,
-				"contactId":     contactId,
-				"phoneNumberId": phoneNumberId,
-				"label":         label,
-				"primary":       primary,
-				"updatedAt":     updatedAt,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return nil, err
-	})
-	return err
+	params := map[string]any{
+		"tenant":        tenant,
+		"contactId":     contactId,
+		"phoneNumberId": phoneNumberId,
+		"label":         label,
+		"primary":       primary,
+		"updatedAt":     updatedAt,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+	return r.executeQuery(ctx, query, params)
 }
 
 func (r *phoneNumberRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
@@ -165,9 +155,6 @@ func (r *phoneNumberRepository) LinkWithOrganization(ctx context.Context, tenant
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("organizationId", organizationId))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
 
 	query := `
 		MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}),
@@ -177,23 +164,16 @@ func (r *phoneNumberRepository) LinkWithOrganization(ctx context.Context, tenant
 			rel.label = $label,	
 			org.updatedAt = $updatedAt,
 			rel.syncedWithEventStore = true`
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-				"phoneNumberId":  phoneNumberId,
-				"label":          label,
-				"primary":        primary,
-				"updatedAt":      updatedAt,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return nil, err
-	})
-	return err
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"phoneNumberId":  phoneNumberId,
+		"label":          label,
+		"primary":        primary,
+		"updatedAt":      updatedAt,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+	return r.executeQuery(ctx, query, params)
 }
 
 func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
@@ -201,9 +181,6 @@ func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("userId", userId))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
 
 	query := `
 		MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
@@ -213,23 +190,16 @@ func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId
 			rel.label = $label,	
 			u.updatedAt = $updatedAt,
 			rel.syncedWithEventStore = true`
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":        tenant,
-				"userId":        userId,
-				"phoneNumberId": phoneNumberId,
-				"label":         label,
-				"primary":       primary,
-				"updatedAt":     updatedAt,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return nil, err
-	})
-	return err
+	params := map[string]any{
+		"tenant":        tenant,
+		"userId":        userId,
+		"phoneNumberId": phoneNumberId,
+		"label":         label,
+		"primary":       primary,
+		"updatedAt":     updatedAt,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+	return r.executeQuery(ctx, query, params)
 }
 
 func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error {

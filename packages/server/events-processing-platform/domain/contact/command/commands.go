@@ -32,14 +32,14 @@ func NewUpsertContactCommand(contactId, tenant, userId string, source cmnmod.Sou
 
 type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
-	PhoneNumberId string
+	PhoneNumberId string `json:"phoneNumberId" validate:"required"`
 	Primary       bool
 	Label         string
 }
 
-func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
+func NewLinkPhoneNumberCommand(contactId, tenant, userId, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand:   eventstore.NewBaseCommand(contactId, tenant, userId),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -48,16 +48,28 @@ func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, pr
 
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
-	EmailId string
+	EmailId string `json:"emailId" validate:"required"`
 	Primary bool
 	Label   string
 }
 
-func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(contactId, tenant, userId, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, ""),
+		BaseCommand: eventstore.NewBaseCommand(contactId, tenant, userId),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
+	}
+}
+
+type LinkLocationCommand struct {
+	eventstore.BaseCommand
+	LocationId string `json:"locationId" validate:"required"`
+}
+
+func NewLinkLocationCommand(contactId, tenant, userId, locationId string) *LinkLocationCommand {
+	return &LinkLocationCommand{
+		BaseCommand: eventstore.NewBaseCommand(contactId, tenant, userId),
+		LocationId:  locationId,
 	}
 }

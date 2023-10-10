@@ -44,7 +44,13 @@ func main() {
 	//testAddParentOrganization()
 	//testRemoveParentOrganization()
 	//testCreateContact()
-	testUpdateContact()
+	//testUpdateContact()
+	//testContactLinkWithEmail()
+	//testContactLinkWithPhoneNumber()
+	//testContactLinkWithLocation()
+	testOrganizationLinkWithEmail()
+	testOrganizationLinkWithPhoneNumber()
+	testOrganizationLinkWithLocation()
 }
 
 func InitClients() {
@@ -283,6 +289,92 @@ func testUpdateContact() {
 			ExternalSystemId: "hubspot",
 			ExternalId:       "ABC",
 		},
+	})
+	print(result)
+}
+
+func testContactLinkWithLocation() {
+	tenant := "openline"
+	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
+	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
+
+	result, _ := clients.ContactClient.LinkLocationToContact(context.TODO(), &contact_grpc_service.LinkLocationToContactGrpcRequest{
+		Tenant:     tenant,
+		ContactId:  contactId,
+		LocationId: locationId,
+	})
+	print(result)
+}
+
+func testContactLinkWithPhoneNumber() {
+	tenant := "openline"
+	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
+	phoneNumberId := "c21c0352-14d8-474a-afcd-167daa99e321"
+
+	result, _ := clients.ContactClient.LinkPhoneNumberToContact(context.TODO(), &contact_grpc_service.LinkPhoneNumberToContactGrpcRequest{
+		Tenant:        tenant,
+		ContactId:     contactId,
+		PhoneNumberId: phoneNumberId,
+		Primary:       true,
+		Label:         "work",
+	})
+	print(result)
+}
+
+func testContactLinkWithEmail() {
+	tenant := "openline"
+	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
+	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
+
+	result, _ := clients.ContactClient.LinkEmailToContact(context.TODO(), &contact_grpc_service.LinkEmailToContactGrpcRequest{
+		Tenant:    tenant,
+		ContactId: contactId,
+		EmailId:   emailId,
+		Primary:   true,
+		Label:     "work",
+	})
+	print(result)
+}
+
+func testOrganizationLinkWithLocation() {
+	tenant := "openline"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
+
+	result, _ := clients.OrganizationClient.LinkLocationToOrganization(context.TODO(), &organization_grpc_service.LinkLocationToOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: orgId,
+		LocationId:     locationId,
+	})
+	print(result)
+}
+
+func testOrganizationLinkWithPhoneNumber() {
+	tenant := "openline"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+	phoneNumberId := "c21c0352-14d8-474a-afcd-167daa99e321"
+
+	result, _ := clients.OrganizationClient.LinkPhoneNumberToOrganization(context.TODO(), &organization_grpc_service.LinkPhoneNumberToOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: orgId,
+		PhoneNumberId:  phoneNumberId,
+		Primary:        true,
+		Label:          "work",
+	})
+	print(result)
+}
+
+func testOrganizationLinkWithEmail() {
+	tenant := "openline"
+	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
+
+	result, _ := clients.OrganizationClient.LinkEmailToOrganization(context.TODO(), &organization_grpc_service.LinkEmailToOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: orgId,
+		EmailId:        emailId,
+		Primary:        true,
+		Label:          "work",
 	})
 	print(result)
 }

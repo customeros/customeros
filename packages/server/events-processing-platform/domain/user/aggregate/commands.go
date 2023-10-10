@@ -144,7 +144,7 @@ func (a *UserAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPh
 	if cmd.Primary {
 		for k, v := range a.User.PhoneNumbers {
 			if k != cmd.PhoneNumberId && v.Primary {
-				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, cmd.PhoneNumberId, cmd.UserID); err != nil {
+				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.UserID); err != nil {
 					return err
 				}
 			}
@@ -203,7 +203,7 @@ func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCom
 	if cmd.Primary {
 		for k, v := range a.User.Emails {
 			if k != cmd.EmailId && v.Primary {
-				if err = a.SetEmailNonPrimary(ctx, cmd.Tenant, cmd.EmailId, cmd.UserID); err != nil {
+				if err = a.SetEmailNonPrimary(ctx, cmd.Tenant, k, cmd.UserID); err != nil {
 					return err
 				}
 			}
