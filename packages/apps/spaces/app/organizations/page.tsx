@@ -57,7 +57,7 @@ export default function OrganizationsPage() {
       if (preset) {
         const [property, value] = (() => {
           if (preset === 'customer') {
-            return ['RELATIONSHIP', preset.toUpperCase()];
+            return ['IS_CUSTOMER', true];
           }
           if (preset === 'portfolio') {
             const userId = globalCache?.global_Cache.user.id;
