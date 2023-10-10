@@ -8,7 +8,6 @@ import { THead, createColumnHelper } from '@ui/presentation/Table';
 
 import { OwnerCell } from './Cells/owner/OwnerCell';
 import { WebsiteCell } from './Cells/website/WebsiteCell';
-import { RelationshipStage } from './Cells/stage/RelationshipStage';
 import { TimeToRenewalCell } from './Cells/renewal/TimeToRenewalCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
 import { RenewalForecastCell } from './Cells/renewal/RenewalForecastCell';
@@ -98,47 +97,21 @@ export const getColumns = (options: GetColumnsOptions) => [
       />
     ),
   }),
-  columnHelper.accessor('relationshipStages', {
+  columnHelper.accessor('isCustomer', {
     id: 'RELATIONSHIP',
-    header: (props) => (
-      <THead<Organization> title='Relationship | Stage' {...props} />
-    ),
+    header: (props) => <THead<Organization> title='Relationship' {...props} />,
     minSize: 200,
     cell: (props) => {
-      const relationshipStages = props.getValue();
-      const relationship = relationshipStages?.[0]?.relationship;
-      const stage = relationshipStages?.[0]?.stage;
-      const organizationId = props.row.original.id;
-
-      return (
-        <>
-          <OrganizationRelationship
-            defaultValue={relationship}
-            organizationId={organizationId}
-          />
-          <RelationshipStage
-            defaultValue={stage}
-            relationship={relationship}
-            organizationId={organizationId}
-          />
-        </>
-      );
+      const organization = props.row.original;
+      return <OrganizationRelationship organization={organization} />;
     },
     skeleton: () => (
-      <Flex gap='1' flexDir='column'>
-        <Skeleton
-          width='100%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='25%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
+      <Skeleton
+        width='100%'
+        height='18px'
+        startColor='gray.300'
+        endColor='gray.300'
+      />
     ),
   }),
   columnHelper.accessor('accountDetails', {

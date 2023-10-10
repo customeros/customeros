@@ -42,6 +42,7 @@ export type GetOrganizationsQuery = {
       industry?: string | null;
       website?: string | null;
       domains: Array<string>;
+      isCustomer?: boolean | null;
       lastTouchPointTimelineEventId?: string | null;
       lastTouchPointAt?: any | null;
       subsidiaryOf: Array<{
@@ -247,6 +248,7 @@ export const GetOrganizationsDocument = `
       industry
       website
       domains
+      isCustomer
       accountDetails {
         renewalForecast {
           amount

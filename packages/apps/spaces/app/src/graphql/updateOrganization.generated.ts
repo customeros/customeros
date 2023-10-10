@@ -1,5 +1,5 @@
 // @ts-nocheck remove this when typscript-react-query plugin is fixed
-import * as Types from '../../../../src/types/__generated__/graphql.types';
+import * as Types from '../types/__generated__/graphql.types';
 
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
