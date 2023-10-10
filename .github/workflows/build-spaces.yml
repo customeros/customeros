@@ -70,7 +70,7 @@ jobs:
           ls
           curl -X POST -H 'Content-type: application/json' --data '{
               "text": "TEST"
-            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL_FE }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
