@@ -31,7 +31,7 @@ spec:
             - name: FILE_STORE_API_KEY
               value: "9eb87aa2-75e7-45b2-a1e6-53ed297d0ba8"
             - name: POSTGRES_USER
-              value: "openline"
+              value: "postgres"
             - name: POSTGRES_PASSWORD
               value: "password"
             - name: POSTGRES_DB

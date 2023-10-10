@@ -35,7 +35,7 @@ spec:
             timeoutSeconds: 1
           env:
             - name: POSTGRES_USER
-              value: "openline"
+              value: "postgres"
             - name: POSTGRES_PASSWORD
               value: "password"
             - name: POSTGRES_DB

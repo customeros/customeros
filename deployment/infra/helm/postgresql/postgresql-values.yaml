@@ -2,8 +2,6 @@
 auth:
   enablePostgresUser: true
   postgresPassword: "password"
-  username: "openline"
-  password: "password"
   database: "openline"
 
 # The postgresql helm chart deployment will be using PVC postgresql-data-claim

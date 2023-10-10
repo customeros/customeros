@@ -48,7 +48,7 @@ spec:
               value: "INFO"
 
             - name: POSTGRES_USER
-              value: "openline"
+              value: "postgres"
             - name: POSTGRES_PASSWORD
               value: "password"
             - name: POSTGRES_DB
