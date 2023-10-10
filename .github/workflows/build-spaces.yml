@@ -66,9 +66,7 @@ jobs:
           coverage=$(./spaces-coverage)
           echo "ls 1: "
           ls
-          cd ..
-          echo "ls 1: "
-          ls
+          cat coverage.txt
           echo "::set-output name=computed_coverage::$coverage"
 
 #      - name: Send Output to Slack
