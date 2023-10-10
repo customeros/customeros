@@ -2,7 +2,7 @@ name: spaces
 
 on:
   push:
-    branches: [ "otter", "4001-fe-test-coverage-announcer" ]
+    branches: [ "otter" ]
     paths:
       - 'packages/apps/spaces/**'
       - '.github/workflows/build-spaces.yml'
@@ -86,26 +86,26 @@ jobs:
               "text": ":no_entry: ${{ github.workflow }} coverage is lower than the critical threshold of 50%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
             }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL_FE }}
           fi
-#
-#      - name: Log in to the Container registry
-#        uses: docker/login-action@v3.0.0
-#        with:
-#          registry: ${{ env.REGISTRY }}
-#          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
-#          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
-#
-#      - name: Extract metadata (tags, labels) for Docker
-#        id: meta
-#        uses: docker/metadata-action@v5.0.0
-#        with:
-#          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-#
-#      - name: Push Docker image
-#        uses: docker/build-push-action@v5.0.0
-#        with:
-#          context: packages/apps/spaces/
-#          push: ${{ github.ref_name == 'otter' }}
-#          tags: ${{ steps.meta.outputs.tags }}
-#          labels: ${{ steps.meta.outputs.labels }}
-#          build-args: |
-#            ENV=cluster
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
+          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5.0.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v5.0.0
+        with:
+          context: packages/apps/spaces/
+          push: ${{ github.ref_name == 'otter' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ENV=cluster
