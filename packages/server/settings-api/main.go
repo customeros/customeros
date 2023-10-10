@@ -6,7 +6,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/routes"
@@ -39,8 +38,7 @@ func main() {
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
-	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
-	services := service.InitServices(db.GormDB, appLogger)
+	services := service.InitServices(db.GormDB, &neo4jDriver, appLogger)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -49,9 +47,9 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	routes.InitIntegrationRoutes(r, ctx, commonRepositoryContainer, services)
-	routes.InitUserSettingsRoutes(r, ctx, commonRepositoryContainer, services)
-	routes.InitPersonalIntegrationRoutes(r, ctx, commonRepositoryContainer, services)
+	routes.InitIntegrationRoutes(r, ctx, services)
+	routes.InitUserSettingsRoutes(r, ctx, services)
+	routes.InitPersonalIntegrationRoutes(r, ctx, services)
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)

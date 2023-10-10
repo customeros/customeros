@@ -11,7 +11,7 @@ import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import {
-  GetOAuthUserSettings,
+  GetGoogleSettings,
   OAuthUserSettingsInterface,
 } from 'services/settings/settingsService';
 
@@ -24,7 +24,7 @@ export const GoogleSidebarNotification = () => {
 
   const requestAccess = () => {
     // @ts-expect-error look into it
-    GetOAuthUserSettings(session.user.playerIdentityId).then(
+    GetGoogleSettings(session.user.playerIdentityId).then(
       async (res: OAuthUserSettingsInterface) => {
         const scopes = ['openid', 'email', 'profile'];
         if (res.gmailSyncEnabled) {

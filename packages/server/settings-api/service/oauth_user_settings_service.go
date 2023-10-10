@@ -24,7 +24,7 @@ func NewUserSettingsService(repositories *repository.PostgresRepositories, log l
 }
 
 func (u oAuthUserSettingsService) GetOAuthUserSettings(playerIdentityId string) (*model.OAuthUserSettingsResponse, error) {
-	authProvider, err := u.repositories.OAuthTokenRepository.GetByPlayerIdAndProvider(playerIdentityId, entity.ProviderGoogle)
+	authProvider, err := u.repositories.AuthRepositories.OAuthTokenRepository.GetByPlayerIdAndProvider(playerIdentityId, entity.ProviderGoogle)
 	if err != nil {
 		return nil, err
 	}

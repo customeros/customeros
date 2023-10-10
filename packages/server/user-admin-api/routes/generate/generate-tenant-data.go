@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient service.CustomerOsClient) {
+func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
 	rg.GET("/demo-tenant", func(context *gin.Context) {
 
 		apiKey := context.GetHeader("X-Openline-Api-Key")
@@ -84,7 +84,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 
 		//users creation
 		for _, user := range sourceData.Users {
-			userId, err := cosClient.CreateUser(&cosModel.UserInput{
+			userId, err := services.CustomerOsClient.CreateUser(&cosModel.UserInput{
 				FirstName: user.FirstName,
 				LastName:  user.LastName,
 				Email: cosModel.EmailInput{
@@ -107,7 +107,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 
 		//contacts creation
 		for _, contact := range sourceData.Contacts {
-			contactId, err := cosClient.CreateContact(tenant, username, contact.FirstName, contact.LastName, contact.Email)
+			contactId, err := services.CustomerOsClient.CreateContact(tenant, username, contact.FirstName, contact.LastName, contact.Email)
 			if err != nil {
 				context.JSON(500, gin.H{
 					"error": err.Error(),
@@ -123,7 +123,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 
 		//create orgs
 		for _, organization := range sourceData.Organizations {
-			organizationId, err := cosClient.CreateOrganization(tenant, username, organization.Name, organization.Domain)
+			organizationId, err := services.CustomerOsClient.CreateOrganization(tenant, username, organization.Name, organization.Domain)
 			if err != nil {
 				context.JSON(500, gin.H{
 					"error": err.Error(),
@@ -148,7 +148,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 					return
 				}
 
-				err = cosClient.AddOrganizationToContact(tenant, username, contactId, organizationId)
+				err = services.CustomerOsClient.AddOrganizationToContact(tenant, username, contactId, organizationId)
 				if err != nil {
 					context.JSON(500, gin.H{
 						"error": err.Error(),
@@ -181,7 +181,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 					service.WithSessionType(&sessionType),
 				}
 
-				sessionId, err := cosClient.CreateInteractionSession(tenant, username, sessionOpts...)
+				sessionId, err := services.CustomerOsClient.CreateInteractionSession(tenant, username, sessionOpts...)
 				if sessionId == nil {
 					context.JSON(500, gin.H{
 						"error": "sessionId is nil",
@@ -225,7 +225,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 					service.WithAppSource(&appSource),
 				}
 
-				interactionEventId, err := cosClient.CreateInteractionEvent(tenant, username, eventOpts...)
+				interactionEventId, err := services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
 				if err != nil {
 					context.JSON(500, gin.H{
 						"error": err.Error(),
@@ -263,7 +263,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 					Note:       &noteInput,
 					AppSource:  &appSource,
 				}
-				meetingId, err := cosClient.CreateMeeting(tenant, username, input)
+				meetingId, err := services.CustomerOsClient.CreateMeeting(tenant, username, input)
 				if err != nil {
 					context.JSON(500, gin.H{
 						"error": err.Error(),
@@ -288,7 +288,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, cosClient s
 					service.WithAppSource(&appSource),
 				}
 
-				interactionEventId, err := cosClient.CreateInteractionEvent(tenant, username, eventOpts...)
+				interactionEventId, err := services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
 				if err != nil {
 					context.JSON(500, gin.H{
 						"error": err.Error(),

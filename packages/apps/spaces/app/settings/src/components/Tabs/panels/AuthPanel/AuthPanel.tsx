@@ -10,40 +10,80 @@ import {Switch} from '@ui/form/Switch';
 import {Flex, FormLabel, HStack, Spinner, VStack} from '@chakra-ui/react';
 import {Icons} from '@ui/media/Icon';
 import {
-    GetOAuthUserSettings,
-    OAuthUserSettingsInterface,
+    GetGoogleSettings, GetSlackSettings,
+    OAuthUserSettingsInterface, SlackSettingsInterface,
 } from '../../../../../../../services/settings/settingsService';
 import {GetServerSidePropsContext} from 'next';
 import {getServerSession} from 'next-auth/next';
 import {authOptions} from '../../../../../../../pages/api/auth/[...nextauth]';
 import {RevokeAccess} from '../../../../../../../services/admin/userAdminService';
 import {toastError, toastSuccess} from '@ui/presentation/Toast';
+import {useRouter, useSearchParams} from "next/navigation";
+import axios from "axios";
 
 export const AuthPanel = () => {
+    const router = useRouter();
     const {data: session} = useSession();
 
-    const [googleToggleLoading, setGoogleToggleLoading] = useState(true);
-    const [oAuthSettings, setOAuthSettings] =
+    const queryParams = useSearchParams();
+
+    useEffect(() => {
+        if (queryParams && queryParams.has('redirect_slack') && queryParams.has('code')) {
+            setSlackSettingsLoading(true);
+
+            axios
+                .post(`/ua/slack/oauth/callback?code=${queryParams.get('code')}`)
+                .then(({ data, error }: any) => {
+                    GetSlackSettings().then(
+                        (res: SlackSettingsInterface) => {
+                            setSlackSettings(res);
+                            setSlackSettingsLoading(false);
+                        },
+                    );
+                    router.push('/settings?tab=auth', { shallow: true });
+                })
+                .catch((reason) => {
+                    router.push('/settings?tab=auth', { shallow: true });
+                });
+        } else {
+            setSlackSettingsLoading(true);
+            GetSlackSettings().then(
+                (res: SlackSettingsInterface) => {
+                    setSlackSettings(res);
+                    setSlackSettingsLoading(false);
+                },
+            );
+        }
+    }, [queryParams]);
+
+    const [googleSettingsLoading, setGoogleSettingsLoading] = useState(true);
+    const [googleSettings, setGoogleSettings] =
         useState<OAuthUserSettingsInterface>({
             gmailSyncEnabled: false,
             googleCalendarSyncEnabled: false,
         });
 
+    const [slackSettingsLoading, setSlackSettingsLoading] = useState(true);
+    const [slackSettings, setSlackSettings] =
+        useState<SlackSettingsInterface>({
+            slackEnabled: false,
+        });
+
     useEffect(() => {
         if (session) {
-            setGoogleToggleLoading(true);
+            setGoogleSettingsLoading(true);
             // @ts-expect-error look into it
-            GetOAuthUserSettings(session.user.playerIdentityId).then(
+            GetGoogleSettings(session.user.playerIdentityId).then(
                 (res: OAuthUserSettingsInterface) => {
-                    setOAuthSettings(res);
-                    setGoogleToggleLoading(false);
+                    setGoogleSettings(res);
+                    setGoogleSettingsLoading(false);
                 },
             );
         }
     }, [session]);
 
     const handleSyncGoogleToggle = async (event: ChangeEvent) => {
-        setGoogleToggleLoading(true);
+        setGoogleSettingsLoading(true);
         const scopes = [
             'openid',
             'email',
@@ -63,35 +103,80 @@ export const AuthPanel = () => {
                 },
             );
         } else {
-            RevokeAccess({
+            RevokeAccess('google', {
                 // @ts-expect-error look into it
                 providerAccountId: session.user.playerIdentityId,
-                provider: 'google',
             })
                 .then((data: any) => {
                     // @ts-expect-error look into it
-                    GetOAuthUserSettings(session.user.playerIdentityId).then(
+                    GetGoogleSettings(session.user.playerIdentityId).then(
                         (res: OAuthUserSettingsInterface) => {
-                            setOAuthSettings(res);
-                            setGoogleToggleLoading(false);
+                            setGoogleSettings(res);
+                            setGoogleSettingsLoading(false);
                         },
                     ).catch(() => {
-                        setGoogleToggleLoading(false);
+                        setGoogleSettingsLoading(false);
                         toastError(
                             'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
                             'revoke-google-access',
                         );
                     });
                     toastSuccess(
-                        'We have successfully revoked access to your google account!',
+                        'We have successfully revoked the access to your google account!',
                         'revoke-google-access',
                     );
                 })
                 .catch(() => {
-                    setGoogleToggleLoading(false);
+                    setGoogleSettingsLoading(false);
                     toastError(
                         'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
                         'revoke-google-access',
+                    );
+                });
+        }
+    };
+
+    const handleSlackToggle = async (event: ChangeEvent) => {
+        setSlackSettingsLoading(true);
+
+        if ((event.target as HTMLInputElement).checked) {
+            axios
+                .get(`/ua/slack/requestAccess`)
+                .then(({ data, error }: any) => {
+                    location.href = data.url;
+                })
+                .catch((reason) => {
+                    toastError(
+                        'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
+                        'request-access-slack-access',
+                    );
+                    setSlackSettingsLoading(false);
+                });
+        } else {
+            RevokeAccess('slack')
+                .then((data: any) => {
+                    GetSlackSettings().then(
+                        (res: SlackSettingsInterface) => {
+                            setSlackSettings(res);
+                            setSlackSettingsLoading(false);
+                        },
+                    ).catch(() => {
+                        setSlackSettingsLoading(false);
+                        toastError(
+                            'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
+                            'revoke-slack-access',
+                        );
+                    });
+                    toastSuccess(
+                        'We have successfully revoked access to your slack workspace!',
+                        'revoke-slack-access',
+                    );
+                })
+                .catch(() => {
+                    setSlackSettingsLoading(false);
+                    toastError(
+                        'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
+                        'revoke-slack-access',
                     );
                 });
         }
@@ -142,13 +227,12 @@ export const AuthPanel = () => {
                             </VStack>
 
                             {
-                                googleToggleLoading &&
+                                googleSettingsLoading &&
                                 <Spinner size='sm' color='green.500' />
                             }
-                            {!googleToggleLoading && (
+                            {!googleSettingsLoading && (
                                 <Switch
-                                    id={'changeGmailSyncSwitchButton'}
-                                    isChecked={oAuthSettings.gmailSyncEnabled}
+                                    isChecked={googleSettings.gmailSyncEnabled}
                                     colorScheme='green'
                                     onChange={(event) => handleSyncGoogleToggle(event)}
                                 />
@@ -157,7 +241,6 @@ export const AuthPanel = () => {
                     </Flex>
                 </CardBody>
             </Card>
-            <Divider/>
 
             <Card
                 bg='#FCFCFC'
@@ -166,15 +249,46 @@ export const AuthPanel = () => {
                 boxShadow='none'
                 position='relative'
                 background='gray.25'
-                w='full'
+                mt={4}
             >
                 <CardHeader px={6} pb={2}>
-                    <Heading as='h1' fontSize='lg' color='gray.700'>
-                        <b>Other Auth</b>
-                    </Heading>
+                    <Flex gap='1' align='center' mb='2'>
+                        <Icons.Slack boxSize='6'/>
+                        <Heading as='h1' fontSize='lg' color='gray.700'>
+                            Slack
+                        </Heading>
+                    </Flex>
+                    <Divider></Divider>
                 </CardHeader>
-                <CardBody>
-                    <Text>Other Authentication methods coming soon</Text>
+
+                <CardBody padding={6} pr={0} pt={0} position='unset'>
+                    <Text noOfLines={2} mt={2} mb={3}>
+                        Enable Slack Integration to get access to your Slack workspace
+                    </Text>
+                    <Flex direction={'column'} gap={2} width={'250px'}>
+                        <HStack>
+                            <VStack alignItems={'start'}>
+                                <Flex gap='1' align='center'>
+                                    <Icons.Slack boxSize='6'/>
+                                    <FormLabel mb='0'>
+                                        Sync Slack
+                                    </FormLabel>
+                                </Flex>
+                            </VStack>
+
+                            {
+                                slackSettingsLoading &&
+                                <Spinner size='sm' color='green.500' />
+                            }
+                            {!slackSettingsLoading && (
+                                <Switch
+                                    isChecked={slackSettings.slackEnabled}
+                                    colorScheme='green'
+                                    onChange={(event) => handleSlackToggle(event)}
+                                />
+                            )}
+                        </HStack>
+                    </Flex>
                 </CardBody>
             </Card>
         </>
