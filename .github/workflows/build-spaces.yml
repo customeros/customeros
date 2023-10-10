@@ -62,7 +62,7 @@ jobs:
           cd openline-test-harness
           ls
           go build
-          ./spaces-coverage
+          ./spaces-coverage/spaces-coverage
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
