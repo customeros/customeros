@@ -59,10 +59,10 @@ jobs:
       - name: Check test coverage
         run: |
           git clone https://github.com/openline-ai/openline-test-harness.git
-          cd openline-test-harness
+          cd openline-test-harness/spaces-coverage
           ls
           go build
-          ./spaces-coverage/spaces-coverage
+          ./spaces-coverage
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
