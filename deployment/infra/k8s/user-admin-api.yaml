@@ -52,6 +52,14 @@ spec:
               value: "0"
             - name: POSTGRES_LOG_LEVEL
               value: "INFO"
+            - name: NEO4J_TARGET
+              value: "neo4j://127.0.0.1:7687"
+            - name: NEO4J_AUTH_USER
+              value: "neo4j"
+            - name: NEO4J_AUTH_PWD
+              value: "StrongLocalPa$$$"
+            - name: SLACK_CLIENT_ID
+            - name: SLACK_CLIENT_SECRET
 
             - name: PORT
               value: "4001"
