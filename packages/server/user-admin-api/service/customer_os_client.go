@@ -44,10 +44,10 @@ const (
 	ROLE_USER  Role = "USER"
 )
 
-func NewCustomerOsClient(cfg *config.Config, graphqlClient *graphql.Client) CustomerOsClient {
+func NewCustomerOsClient(cfg *config.Config) CustomerOsClient {
 	return &customerOsClient{
 		cfg:           cfg,
-		graphqlClient: graphqlClient,
+		graphqlClient: graphql.NewClient(cfg.CustomerOS.CustomerOsAPI),
 	}
 }
 

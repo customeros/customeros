@@ -6,10 +6,31 @@ export interface OAuthUserSettingsInterface {
     googleCalendarSyncEnabled: boolean;
 }
 
-export function GetOAuthUserSettings(identifier:string): Promise<OAuthUserSettingsInterface> {
+export interface SlackSettingsInterface {
+    slackEnabled: boolean;
+}
+
+export function GetGoogleSettings(identifier:string): Promise<OAuthUserSettingsInterface> {
     return new Promise((resolve, reject) =>
         axios
-            .get(`/sa/user/settings/oauth/${identifier}`)
+            .get(`/sa/user/settings/google/${identifier}`)
+            .then(({ data, error }: any) => {
+                if (data) {
+                    resolve(data);
+                } else {
+                    reject(error);
+                }
+            })
+            .catch((reason) => {
+                reject(reason);
+            }),
+    );
+}
+
+export function GetSlackSettings(): Promise<SlackSettingsInterface> {
+    return new Promise((resolve, reject) =>
+        axios
+            .get(`/sa/user/settings/slack`)
             .then(({ data, error }: any) => {
                 if (data) {
                     resolve(data);

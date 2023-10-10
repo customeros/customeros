@@ -3,7 +3,6 @@ package routes
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	autoCommonServices "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes/generate"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
@@ -12,14 +11,14 @@ import (
 )
 
 // Run will start the server
-func Run(config *config.Config, cosClient service.CustomerOsClient, authServices *autoCommonServices.Services) {
-	router := getRouter(config, cosClient, authServices)
+func Run(config *config.Config, services *service.Services) {
+	router := getRouter(config, services)
 	if err := router.Run(config.Service.ServerAddress); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }
 
-func getRouter(config *config.Config, cosClient service.CustomerOsClient, authServices *autoCommonServices.Services) *gin.Engine {
+func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 	router := gin.New()
 	corsConfig := cors.DefaultConfig()
 
@@ -34,8 +33,9 @@ func getRouter(config *config.Config, cosClient service.CustomerOsClient, authSe
 	router.Use(cors.New(corsConfig))
 	route := router.Group("/")
 
-	addRegistrationRoutes(route, config, cosClient, authServices)
-	generate.AddDemoTenantRoutes(route, config, cosClient)
+	addRegistrationRoutes(route, config, services)
+	addSlackRoutes(route, config, services)
+	generate.AddDemoTenantRoutes(route, config, services)
 
 	route2 := router.Group("/")
 

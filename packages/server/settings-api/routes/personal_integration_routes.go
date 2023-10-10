@@ -3,17 +3,16 @@ package routes
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonPgEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 )
 
-func InitPersonalIntegrationRoutes(r *gin.Engine, ctx context.Context, commonRepositoryContainer *commonRepository.Repositories, services *service.Services) {
+func InitPersonalIntegrationRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
 	r.GET("/personal_integrations/:integrationName",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.ApiKeyCheckerHTTP(services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 			userMail := c.Keys["UserEmail"].(string)
@@ -33,8 +32,8 @@ func InitPersonalIntegrationRoutes(r *gin.Engine, ctx context.Context, commonRep
 		})
 
 	r.GET("/personal_integrations/",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.ApiKeyCheckerHTTP(services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 			userMail := c.Keys["UserEmail"].(string)
@@ -57,8 +56,8 @@ func InitPersonalIntegrationRoutes(r *gin.Engine, ctx context.Context, commonRep
 		})
 
 	r.POST("/personal_integrations",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, services.Repositories.CommonRepositories),
+		commonService.ApiKeyCheckerHTTP(services.Repositories.CommonRepositories.AppKeyRepository, commonService.SETTINGS_API),
 		func(c *gin.Context) {
 			var request map[string]interface{}
 

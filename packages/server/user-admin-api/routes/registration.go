@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
-	authCommonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
@@ -19,7 +18,7 @@ import (
 
 const APP_SOURCE = "user-admin-api"
 
-func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient service.CustomerOsClient, authServices *authCommonService.Services) {
+func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
 	rg.POST("/signin", func(ginContext *gin.Context) {
 		log.Printf("Sign in User")
 		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
@@ -86,7 +85,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 
 		var tenantName *string
 		if userInfo.Hd != "" {
-			tenant, err := cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
+			tenant, err := services.CustomerOsClient.GetTenantByWorkspace(&model.WorkspaceInput{
 				Name:     userInfo.Hd,
 				Provider: signInRequest.Provider,
 			})
@@ -100,11 +99,11 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 			if tenant != nil {
 				log.Printf("tenant found %s", *tenant)
 				var appSource = APP_SOURCE
-				playerId, errorIsPlayer := cosClient.IsPlayer(signInRequest.Email, signInRequest.Provider)
+				playerId, errorIsPlayer := services.CustomerOsClient.IsPlayer(signInRequest.Email, signInRequest.Provider)
 				//user exists if i don't have player
 				//if user exists but not player -> send event to create player
 				if errorIsPlayer != nil {
-					playerId, err = cosClient.CreateUser(&model.UserInput{
+					playerId, err = services.CustomerOsClient.CreateUser(&model.UserInput{
 						FirstName: userInfo.GivenName,
 						LastName:  userInfo.FamilyName,
 						Email: model.EmailInput{
@@ -135,7 +134,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 				tenantStr := utils.Sanitize(userInfo.Hd)
 				log.Printf("tenant not found for workspace, creating new tenant %s", tenantStr)
 				// Workspace is not mapped to a tenant create a new tenant and map it to the workspace
-				id, failed := makeTenantAndUser(ginContext, cosClient, tenantStr, appSource, signInRequest, userInfo)
+				id, failed := makeTenantAndUser(ginContext, services.CustomerOsClient, tenantStr, appSource, signInRequest, userInfo)
 				if failed {
 					return
 				}
@@ -147,7 +146,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 			// check tenant exists for this e-mail
 			if userInfo.Email != "" {
 				var err error
-				tenantName, err = cosClient.GetTenantByUserEmail(userInfo.Email)
+				tenantName, err = services.CustomerOsClient.GetTenantByUserEmail(userInfo.Email)
 				if err != nil {
 					log.Printf("unable to get tenant: %v", err.Error())
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -162,7 +161,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 				tenantStr := utils.GenerateName()
 				log.Printf("user has no workspace, inventing tenant %s", tenantStr)
 
-				id, failed := makeTenantAndUser(ginContext, cosClient, tenantStr, appSource, signInRequest, userInfo)
+				id, failed := makeTenantAndUser(ginContext, services.CustomerOsClient, tenantStr, appSource, signInRequest, userInfo)
 				if failed {
 					return
 				}
@@ -173,7 +172,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 
 		if isRequestEnablingOAuthSync(signInRequest) {
 			//TODO Move this logic to a service
-			var oauthToken, _ = authServices.OAuthTokenService.GetByPlayerIdAndProvider(signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
 			if oauthToken == nil {
 				oauthToken = &entity.OAuthTokenEntity{}
 			}
@@ -193,11 +192,11 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 			if isRequestEnablingGoogleCalendarSync(signInRequest) {
 				oauthToken.GoogleCalendarSyncEnabled = true
 			}
-			authServices.OAuthTokenService.Save(*oauthToken)
+			services.AuthServices.OAuthTokenService.Save(*oauthToken)
 		}
 		ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	rg.POST("/revoke", func(ginContext *gin.Context) {
+	rg.POST("/google/revoke", func(ginContext *gin.Context) {
 		log.Printf("revoke oauth token")
 
 		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
@@ -218,7 +217,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 		}
 		log.Printf("parsed json: %v", revokeRequest)
 
-		var oauthToken, _ = authServices.OAuthTokenService.GetByPlayerIdAndProvider(revokeRequest.ProviderAccountId, revokeRequest.Provider)
+		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(revokeRequest.ProviderAccountId, "google")
 
 		var resp *http.Response
 		var err error
@@ -230,18 +229,10 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 				ginContext.JSON(http.StatusInternalServerError, gin.H{})
 				return
 			}
-		} else if oauthToken.AccessToken != "" {
-			url := fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.AccessToken)
-			resp, err = http.Get(url)
-			if err != nil {
-				ginContext.JSON(http.StatusInternalServerError, gin.H{})
-				return
-			}
 		}
 
 		if resp == nil || resp.StatusCode == 200 {
-			//toro remove from db
-			err := authServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, revokeRequest.Provider)
+			err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(revokeRequest.ProviderAccountId, "google")
 			if err != nil {
 				ginContext.JSON(http.StatusInternalServerError, gin.H{})
 				return

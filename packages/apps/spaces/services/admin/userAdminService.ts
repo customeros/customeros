@@ -15,11 +15,6 @@ export interface SignInRequest {
   oAuthToken: OAuthToken;
 }
 
-export interface RevokeGoogleAccessRequest {
-    providerAccountId: string;
-    provider: string;
-}
-
 export function UserSignIn(data: SignInRequest): Promise<any> {
   return new Promise((resolve, reject) =>
     axios
@@ -41,10 +36,10 @@ export function UserSignIn(data: SignInRequest): Promise<any> {
   );
 }
 
-export function RevokeAccess(data: RevokeGoogleAccessRequest): Promise<any> {
+export function RevokeAccess(provider: string, data?: any): Promise<any> {
     return new Promise((resolve, reject) =>
         axios
-            .post('/ua/revoke', data)
+            .post(`/ua/${provider}/revoke`, data)
             .then((response: any) => {
                 if (response.data) {
                     resolve(response.data);

@@ -28,21 +28,21 @@ func NewPersonalIntegrationsService(repositories *repository.PostgresRepositorie
 }
 
 func (s *personalIntegrationsService) GetPersonalIntegrations(tenantName, email string) ([]*entity.PersonalIntegration, error) {
-	res := s.repositories.PersonalIntegrationRepository.FindIntegrations(tenantName, email)
+	res := s.repositories.CommonRepositories.PersonalIntegrationRepository.FindIntegrations(tenantName, email)
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	return res.Result.([]*entity.PersonalIntegration), nil
 }
 func (s *personalIntegrationsService) GetPersonalIntegration(tenantName, email, integration string) (*entity.PersonalIntegration, error) {
-	res := s.repositories.PersonalIntegrationRepository.FindIntegration(tenantName, email, integration)
+	res := s.repositories.CommonRepositories.PersonalIntegrationRepository.FindIntegration(tenantName, email, integration)
 	if res.Error != nil {
 		return nil, res.Error
 	}
 	return res.Result.(*entity.PersonalIntegration), nil
 }
 func (s *personalIntegrationsService) SavePersonalIntegration(integration entity.PersonalIntegration) (*entity.PersonalIntegration, error) {
-	res := s.repositories.PersonalIntegrationRepository.SaveIntegration(integration)
+	res := s.repositories.CommonRepositories.PersonalIntegrationRepository.SaveIntegration(integration)
 	if res.Error != nil {
 		return nil, res.Error
 	}
