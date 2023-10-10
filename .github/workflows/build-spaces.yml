@@ -63,13 +63,11 @@ jobs:
           go mod tidy
           go build
           coverage=$(./spaces-coverage)
-          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "::set-output name=computed_coverage::$coverage"
 
       - name: Send Output to Slack
         run: |
+          ls
           curl -X POST -H 'Content-type: application/json' --data '{
               "text": "TEST"
             }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL_FE }}
