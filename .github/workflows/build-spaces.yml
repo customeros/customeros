@@ -64,7 +64,8 @@ jobs:
           go mod tidy
           go build
           ./spaces-coverage
-          coverage = $(cat coverage.txt)
+          COVERAGE=$(cat coverage.txt)
+          echo "::set-output name=coverage::$COVERAGE"
 
 #      - name: Send Output to Slack
 #        run: |
