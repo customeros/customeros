@@ -68,7 +68,7 @@ jobs:
       - name: Send Output to Slack
         run: |
           computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
-          echo "computed_coverage=computed_coverage" >> $GITHUB_OUTPUT
+          echo "computed_coverage=computed_coverage" >> $GITHUB_STEP_SUMMARY
 
 
       - name: Log in to the Container registry
