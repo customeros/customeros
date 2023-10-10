@@ -72,7 +72,7 @@ jobs:
           coverage=${{ steps.compute_code_coverage.outputs.coverage }} 
           echo "Spaces Test Coverage: $coverage%"
           curl -X POST -H 'Content-type: application/json' --data '{
-              "text": "Spaces Test Coverage: ${{ steps.compute_code_coverage.outputs.coverage }} "
+              "text": "Spaces Test Coverage: ${{ steps.compute_code_coverage.outputs.coverage }}%"
             }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL_FE }}
 
 #
