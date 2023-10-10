@@ -26,6 +26,7 @@ query getOrganizations(
       industry
       website
       domains
+      isCustomer
       accountDetails {
         renewalForecast {
           amount

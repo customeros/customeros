@@ -2,173 +2,108 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { produce } from 'immer';
 
-import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
+import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
-
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { OrganizationRelationship as Relationship } from '@graphql/types';
-import { useAddRelationshipMutation } from '@organization/src/graphql/addRelationship.generated';
-import { useRemoveRelationshipMutation } from '@organization/src/graphql/removeRelationship.generated';
-import {
-  useInfiniteGetOrganizationsQuery,
-  GetOrganizationsQuery,
-} from '@organizations/graphql/getOrganizations.generated';
-
-import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
-
 import { Select } from '@ui/form/SyncSelect/Select';
+
+import {
+  OrganizationRowDTO,
+  GetOrganizationRowResult,
+} from '@organizations/util/Organization.dto';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import {
+  GetOrganizationsQuery,
+  useInfiniteGetOrganizationsQuery,
+} from '@organizations/graphql/getOrganizations.generated';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 
 import { relationshipOptions } from './util';
 
 interface OrganizationRelationshipProps {
-  defaultValue: Relationship;
-  organizationId: string;
+  organization: GetOrganizationRowResult;
 }
 
 export const OrganizationRelationship = ({
-  defaultValue,
-  organizationId,
+  organization,
 }: OrganizationRelationshipProps) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const [organizationsMeta] = useOrganizationsMeta();
-  const addTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const removeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   const [isEditing, setIsEditing] = useState(false);
-  const [prevSelection, setPrevSelection] =
-    useState<Relationship>(defaultValue);
+  const [organizationsMeta] = useOrganizationsMeta();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const updateOrganization = useUpdateOrganizationMutation(client, {
+    onMutate: (payload) => {
+      queryClient.cancelQueries(queryKey);
+
+      const previousOrganizations =
+        queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
+
+      queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
+        queryKey,
+        (old) => {
+          const pageIndex = organizationsMeta.getOrganization.pagination.page;
+          return produce(old, (draft) => {
+            const content =
+              draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
+            const index = content?.findIndex(
+              (item) => item.id === payload.input.id,
+            );
+
+            if (content && index) {
+              content[index].isCustomer = payload.input.isCustomer;
+            }
+          });
+        },
+      );
+
+      return { previousOrganizations };
+    },
+    onError: (_, __, context) => {
+      if (context?.previousOrganizations) {
+        queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
+          queryKey,
+          context.previousOrganizations,
+        );
+      }
+    },
+    onSettled: () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      setTimeout(() => {
+        queryClient.invalidateQueries(queryKey);
+        queryClient.invalidateQueries(
+          useOrganizationQuery.getKey({ id: organization.id }),
+        );
+      }, 500);
+    },
+  });
 
   const { getOrganization } = organizationsMeta;
   const queryKey = useInfiniteGetOrganizationsQuery.getKey(getOrganization);
 
-  const addRelationship = useAddRelationshipMutation(client, {
-    onMutate: (payload) => {
-      const previousEntries =
-        queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
-
-      queryClient.cancelQueries(queryKey);
-      queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-        queryKey,
-        (old) => {
-          return produce(old, (draft) => {
-            const pageIndex = getOrganization.pagination.page - 1;
-            const relationships = draft?.pages[
-              pageIndex
-            ]?.dashboardView_Organizations?.content.find(
-              (c) => c.id === organizationId,
-            )?.relationshipStages;
-
-            relationships?.splice(0, 1, {
-              __typename: 'OrganizationRelationshipStage',
-              relationship: payload.relationship,
-              stage: null,
-            });
-          });
-        },
-      );
-
-      return { previousEntries };
-    },
-    onError: (_, __, context) => {
-      queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-        queryKey,
-        context?.previousEntries,
-      );
-    },
-    onSettled: () => {
-      if (addTimeoutRef.current) {
-        clearTimeout(addTimeoutRef.current);
-      }
-      addTimeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
-      }, 1000);
-      setIsEditing(false);
-    },
-  });
-  const removeRelationship = useRemoveRelationshipMutation(client, {
-    onMutate: () => {
-      const previousEntries =
-        queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
-
-      queryClient.cancelQueries(queryKey);
-      queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-        queryKey,
-        (old) => {
-          return produce(old, (draft) => {
-            const pageIndex = getOrganization.pagination.page - 1;
-            draft?.pages[pageIndex]?.dashboardView_Organizations?.content
-              .find((c) => c.id === organizationId)
-              ?.relationshipStages?.splice(0, 1);
-          });
-        },
-      );
-
-      return { previousEntries };
-    },
-    onError: (_, __, context) => {
-      queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-        queryKey,
-        context?.previousEntries,
-      );
-    },
-    onSettled: () => {
-      if (removeTimeoutRef.current) {
-        clearTimeout(removeTimeoutRef.current);
-      }
-      removeTimeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
-      }, 1000);
-
-      setIsEditing(false);
-    },
-  });
-
-  const value = defaultValue
-    ? relationshipOptions.find((o) => o.value === defaultValue)
-    : null;
-
-  const add = useCallback(
-    (relationship: Relationship) => {
-      if (relationship && relationship !== prevSelection) {
-        if (prevSelection) {
-          removeRelationship.mutate({
-            organizationId,
-            relationship: prevSelection,
-          });
-        }
-
-        addRelationship.mutate({
-          organizationId,
-          relationship,
-        });
-      }
-    },
-    [addRelationship, organizationId, prevSelection],
+  const value = relationshipOptions.find(
+    (option) => option.value === organization.isCustomer,
   );
 
-  const handleSelect = useCallback(
-    (option: SelectOption<Relationship>) => {
-      if (!option && prevSelection) {
-        removeRelationship.mutate({
-          organizationId,
-          relationship: prevSelection,
-        });
-      } else {
-        add(option.value);
-        setPrevSelection(option.value);
-      }
-    },
-    [prevSelection, add, removeRelationship],
-  );
+  const handleSelect = useCallback((option: SelectOption<boolean>) => {
+    updateOrganization.mutate(
+      OrganizationRowDTO.toUpdatePayload({
+        ...organization,
+        isCustomer: option.value,
+      }),
+    );
+  }, []);
 
   useEffect(() => {
     return () => {
-      addTimeoutRef.current && clearTimeout(addTimeoutRef.current);
-      removeTimeoutRef.current && clearTimeout(removeTimeoutRef.current);
+      timeoutRef.current && clearTimeout(timeoutRef.current);
     };
   }, []);
 
@@ -186,10 +121,10 @@ export const OrganizationRelationship = ({
       >
         <Text
           cursor='default'
-          color={value ? 'gray.700' : 'gray.400'}
+          color='gray.700'
           onDoubleClick={() => setIsEditing(true)}
         >
-          {value?.label ?? 'Relationship'}
+          {value?.value ? 'Customer' : 'Prospect'}
         </Text>
         <IconButton
           aria-label='erc'
@@ -213,7 +148,7 @@ export const OrganizationRelationship = ({
     <Select
       size='sm'
       isClearable
-      value={value}
+      defaultValue={value}
       autoFocus
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
@@ -223,7 +158,7 @@ export const OrganizationRelationship = ({
       defaultMenuIsOpen
       onBlur={() => setIsEditing(false)}
       variant='unstyled'
-      isLoading={addRelationship.isLoading}
+      isLoading={updateOrganization.isLoading}
       backspaceRemovesValue
       onChange={handleSelect}
       openMenuOnClick={false}

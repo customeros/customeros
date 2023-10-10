@@ -48,6 +48,7 @@ export type OrganizationQuery = {
     employees?: any | null;
     referenceId?: string | null;
     customerOsId: string;
+    isCustomer?: boolean | null;
     socials: Array<{ __typename?: 'Social'; id: string; url: string }>;
     relationshipStages: Array<{
       __typename?: 'OrganizationRelationshipStage';
@@ -87,6 +88,7 @@ export const OrganizationDocument = `
     employees
     referenceId
     customerOsId
+    isCustomer
     socials {
       id
       url

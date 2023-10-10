@@ -98,28 +98,23 @@ export const getColumns = (options: GetColumnsOptions) => [
       />
     ),
   }),
-  columnHelper.accessor('relationshipStages', {
+  columnHelper.accessor('isCustomer', {
     id: 'RELATIONSHIP',
-    header: (props) => (
-      <THead<Organization> title='Relationship | Stage' {...props} />
-    ),
+    header: (props) => <THead<Organization> title='Relationship' {...props} />,
     minSize: 200,
     cell: (props) => {
-      const relationshipStages = props.getValue();
-      const relationship = relationshipStages?.[0]?.relationship;
-      const stage = relationshipStages?.[0]?.stage;
+      const isCustomer = props.getValue();
       const organizationId = props.row.original.id;
+      const organization = props.row.original;
+      const organizationName = props.row.original.name;
 
       return (
         <>
           <OrganizationRelationship
-            defaultValue={relationship}
             organizationId={organizationId}
-          />
-          <RelationshipStage
-            defaultValue={stage}
-            relationship={relationship}
-            organizationId={organizationId}
+            isCustomer={isCustomer ?? false}
+            organization={organization}
+            organizationName={organizationName}
           />
         </>
       );

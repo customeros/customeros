@@ -12,29 +12,22 @@ import { FormInput } from '@ui/form/Input';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { VStack, HStack } from '@ui/layout/Stack';
-import { OrganizationRelationship } from '@graphql/types';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
-import { useAddRelationshipMutation } from '@organization/src/graphql/addRelationship.generated';
+import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { useAddSocialMutation } from '@organization/src/graphql/addOrganizationSocial.generated';
-import { useRemoveRelationshipMutation } from '@organization/src/graphql/removeRelationship.generated';
-import { useUpdateOrganizationMutation } from '@organization/src/graphql/updateOrganization.generated';
-import { useSetRelationshipStageMutation } from '@organization/src/graphql/setRelationshipStage.generated';
-import { useRemoveRelationshipStageMutation } from '@organization/src/graphql/removeRelationshipStage.generated';
+import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 
 import { FormSocialInput } from '../../shared/FormSocialInput';
 import {
   industryOptions,
   employeesOptions,
-  otherStageOptions,
   relationshipOptions,
   businessTypeOptions,
-  customerStageOptions,
   lastFundingRoundOptions,
 } from './util';
 import {
@@ -42,8 +35,6 @@ import {
   OrganizationAboutFormDto,
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
-import React from 'react';
-import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -60,18 +51,6 @@ export const AboutPanel = () => {
   const invalidateQuery = () =>
     queryClient.invalidateQueries(useOrganizationQuery.getKey({ id }));
 
-  const addRelationship = useAddRelationshipMutation(client, {
-    onSuccess: invalidateQuery,
-  });
-  const removeRelationship = useRemoveRelationshipMutation(client, {
-    onSuccess: invalidateQuery,
-  });
-  const setRelationshipStage = useSetRelationshipStageMutation(client, {
-    onSuccess: invalidateQuery,
-  });
-  const removeRelationshipStage = useRemoveRelationshipStageMutation(client, {
-    onSuccess: invalidateQuery,
-  });
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onSuccess: invalidateQuery,
   });
@@ -84,8 +63,6 @@ export const AboutPanel = () => {
     data?.organization,
   );
 
-  const prevRelationship =
-    data?.organization?.relationshipStages?.[0]?.relationship;
   const mutateOrganization = (variables: Partial<OrganizationAboutForm>) => {
     updateOrganization.mutate({
       input: OrganizationAboutFormDto.toPayload({
@@ -108,62 +85,7 @@ export const AboutPanel = () => {
           return next;
         }
         switch (action.payload.name) {
-          case 'relationship': {
-            const relationship = action.payload?.value?.value;
-            const add = () => {
-              addRelationship.mutate({
-                organizationId: id,
-                relationship,
-              });
-            };
-            const remove = (onSuccess?: () => void) => {
-              removeRelationship.mutate(
-                {
-                  organizationId: id,
-                  relationship: prevRelationship as OrganizationRelationship,
-                },
-                { onSuccess },
-              );
-            };
-
-            if (!relationship && !prevRelationship) break;
-            if (!relationship && prevRelationship) remove();
-            if (!prevRelationship && relationship) add();
-            if (prevRelationship && relationship)
-              remove(() => {
-                if (!relationship) return;
-                add();
-              });
-
-            return {
-              ...next,
-              values: {
-                ...next.values,
-                stage: null,
-              },
-            };
-          }
-          case 'stage': {
-            const relationship = state?.values?.relationship
-              ?.value as OrganizationRelationship;
-            const stage = action?.payload?.value?.value;
-
-            if (!relationship) break;
-            if (!stage) {
-              removeRelationshipStage.mutate({
-                organizationId: id,
-                relationship,
-              });
-              break;
-            }
-
-            setRelationshipStage.mutate({
-              organizationId: id,
-              relationship,
-              stage,
-            });
-            break;
-          }
+          case 'isCustomer':
           case 'industry':
           case 'employees':
           case 'businessType':
@@ -207,11 +129,6 @@ export const AboutPanel = () => {
       return next;
     },
   });
-
-  const stageOptions =
-    defaultValues.relationship?.value === 'CUSTOMER'
-      ? customerStageOptions
-      : otherStageOptions;
 
   const handleAddSocial = ({
     newValue,
@@ -272,7 +189,10 @@ export const AboutPanel = () => {
                   cursor='pointer'
                   borderColor='gray.300'
                   onClick={() => {
-                    copyToClipboard('plm', 'Reference ID copied ');
+                    copyToClipboard(
+                      data?.organization?.referenceId ?? '',
+                      'Reference ID copied ',
+                    );
                   }}
                 >
                   <Text>{data?.organization?.referenceId}</Text>
@@ -308,23 +228,12 @@ export const AboutPanel = () => {
           <HStack w='full'>
             <FormSelect
               isClearable
-              name='relationship'
+              name='isCustomer'
               formId='organization-about'
               placeholder='Relationship'
               options={relationshipOptions}
               leftElement={<Icons.HeartHand color='gray.500' mr='3' />}
             />
-            {!!state.values.relationship && (
-              <FormSelect
-                isClearable
-                name='stage'
-                placeholder='Stage'
-                options={stageOptions}
-                formId='organization-about'
-                isDisabled={!state.values.relationship}
-                leftElement={<Icons.ClockRefresh color='gray.500' mr='3' />}
-              />
-            )}
           </HStack>
 
           <FormSelect

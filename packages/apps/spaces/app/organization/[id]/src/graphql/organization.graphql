@@ -17,6 +17,7 @@ query Organization($id: ID!) {
     employees
     referenceId
     customerOsId
+    isCustomer
     socials {
       id
       url

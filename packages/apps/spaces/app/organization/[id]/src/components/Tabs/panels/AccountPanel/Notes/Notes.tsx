@@ -9,7 +9,7 @@ import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { Card, CardBody, CardFooter } from '@ui/layout/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useUpdateOrganizationMutation } from '@organization/src/graphql/updateOrganization.generated';
+import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { OrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
 import { invalidateAccountDetailsQuery } from '../utils';
