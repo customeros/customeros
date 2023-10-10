@@ -69,7 +69,8 @@ jobs:
 
       - name: Send Output to Slack
         run: |
-          echo "Coverage: ${{ steps.compute_code_coverage.outputs.coverage }}"
+          COVERAGE=${{ steps.coverage.outputs.coverage }}
+          echo "Coverage: $COVERAGE"
 
 #
 #      - name: Log in to the Container registry
