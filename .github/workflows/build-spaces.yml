@@ -63,16 +63,14 @@ jobs:
           cd openline-test-harness/spaces-coverage
           go mod tidy
           go build
-          coverage=$(./spaces-coverage)
-          echo "ls 1: "
-          ls
-          cat coverage.txt
+          ./spaces-coverage
+          coverage = $(cat coverage.txt)
           echo "::set-output name=computed_coverage::$coverage"
 
-#      - name: Send Output to Slack
-#        run: |
-#          computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
-#          echo "${{ steps.compute_code_coverage.outputs.computed_coverage }}"
+      - name: Send Output to Slack
+        run: |
+          computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
+          echo "$computed_coverage"
 #
 #      - name: Log in to the Container registry
 #        uses: docker/login-action@v3.0.0
