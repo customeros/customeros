@@ -41,7 +41,8 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comman
 func (a *UserAggregate) createUser(ctx context.Context, cmd *command.UpsertUserCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.createUser")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", cmd.Tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)

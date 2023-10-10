@@ -44,7 +44,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	}
 	contactClient := contact_grpc_service.NewContactGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
-	response, err := contactClient.CreateContact(ctx, &contact_grpc_service.CreateContactGrpcRequest{
+	response, err := contactClient.UpsertContact(ctx, &contact_grpc_service.UpsertContactGrpcRequest{
 		Tenant:          "ziggy",
 		FirstName:       "Bob",
 		LastName:        "Smith",
@@ -97,7 +97,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	emailClient := email_grpc_service.NewEmailGrpcServiceClient(grpcConnection)
 
 	timeNow := time.Now().UTC()
-	responseContact, err := contactClient.CreateContact(ctx, &contact_grpc_service.CreateContactGrpcRequest{
+	responseContact, err := contactClient.UpsertContact(ctx, &contact_grpc_service.UpsertContactGrpcRequest{
 		Tenant:          "ziggy",
 		FirstName:       "Bob",
 		LastName:        "Smith",

@@ -1,6 +1,7 @@
 package events
 
 import (
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -15,36 +16,41 @@ const (
 )
 
 type ContactCreateEvent struct {
-	Tenant          string    `json:"tenant" validate:"required"`
-	FirstName       string    `json:"firstName"`
-	LastName        string    `json:"lastName"`
-	Name            string    `json:"name"`
-	Prefix          string    `json:"prefix"`
-	Description     string    `json:"description"`
-	Timezone        string    `json:"timezone"`
-	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
-	Source          string    `json:"source"`
-	SourceOfTruth   string    `json:"sourceOfTruth"`
-	AppSource       string    `json:"appSource"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	Tenant          string                `json:"tenant" validate:"required"`
+	FirstName       string                `json:"firstName"`
+	LastName        string                `json:"lastName"`
+	Name            string                `json:"name"`
+	Prefix          string                `json:"prefix"`
+	Description     string                `json:"description"`
+	Timezone        string                `json:"timezone"`
+	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
+	Source          string                `json:"source"`
+	SourceOfTruth   string                `json:"sourceOfTruth"`
+	AppSource       string                `json:"appSource"`
+	CreatedAt       time.Time             `json:"createdAt"`
+	UpdatedAt       time.Time             `json:"updatedAt"`
+	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
-func NewContactCreateEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewContactCreateEvent(aggregate eventstore.Aggregate, dataFields models.ContactDataFields, sourceFields cmnmod.Source,
+	externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactCreateEvent{
-		Tenant:          contactDto.Tenant,
-		FirstName:       contactDto.FirstName,
-		LastName:        contactDto.LastName,
-		Name:            contactDto.Name,
-		Prefix:          contactDto.Prefix,
-		Description:     contactDto.Description,
-		Timezone:        contactDto.Timezone,
-		ProfilePhotoUrl: contactDto.ProfilePhotoUrl,
-		Source:          contactDto.Source.Source,
-		SourceOfTruth:   contactDto.Source.SourceOfTruth,
-		AppSource:       contactDto.Source.AppSource,
+		Tenant:          aggregate.GetTenant(),
+		FirstName:       dataFields.FirstName,
+		LastName:        dataFields.LastName,
+		Name:            dataFields.Name,
+		Prefix:          dataFields.Prefix,
+		Description:     dataFields.Description,
+		Timezone:        dataFields.Timezone,
+		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
+		Source:          sourceFields.Source,
+		SourceOfTruth:   sourceFields.SourceOfTruth,
+		AppSource:       sourceFields.AppSource,
 		CreatedAt:       createdAt,
 		UpdatedAt:       updatedAt,
+	}
+	if externalSystem.Available() {
+		eventData.ExternalSystem = externalSystem
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -59,30 +65,34 @@ func NewContactCreateEvent(aggregate eventstore.Aggregate, contactDto *models.Co
 }
 
 type ContactUpdateEvent struct {
-	Tenant          string    `json:"tenant" validate:"required"`
-	SourceOfTruth   string    `json:"sourceOfTruth"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	FirstName       string    `json:"firstName"`
-	LastName        string    `json:"lastName"`
-	Name            string    `json:"name"`
-	Prefix          string    `json:"prefix"`
-	Description     string    `json:"description"`
-	Timezone        string    `json:"timezone"`
-	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
+	Tenant          string                `json:"tenant" validate:"required"`
+	Source          string                `json:"source"`
+	UpdatedAt       time.Time             `json:"updatedAt"`
+	FirstName       string                `json:"firstName"`
+	LastName        string                `json:"lastName"`
+	Name            string                `json:"name"`
+	Prefix          string                `json:"prefix"`
+	Description     string                `json:"description"`
+	Timezone        string                `json:"timezone"`
+	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
+	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
-func NewContactUpdateEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, updatedAt time.Time) (eventstore.Event, error) {
+func NewContactUpdateEvent(aggregate eventstore.Aggregate, source string, dataFields models.ContactDataFields, externalSystem cmnmod.ExternalSystem, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactUpdateEvent{
-		FirstName:       contactDto.FirstName,
-		LastName:        contactDto.LastName,
-		Prefix:          contactDto.Prefix,
-		Description:     contactDto.Description,
-		Timezone:        contactDto.Timezone,
-		ProfilePhotoUrl: contactDto.ProfilePhotoUrl,
-		Name:            contactDto.Name,
-		Tenant:          contactDto.Tenant,
+		Tenant:          aggregate.GetTenant(),
+		FirstName:       dataFields.FirstName,
+		LastName:        dataFields.LastName,
+		Prefix:          dataFields.Prefix,
+		Description:     dataFields.Description,
+		Timezone:        dataFields.Timezone,
+		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
+		Name:            dataFields.Name,
 		UpdatedAt:       updatedAt,
-		SourceOfTruth:   contactDto.Source.SourceOfTruth,
+		Source:          source,
+	}
+	if externalSystem.Available() {
+		eventData.ExternalSystem = externalSystem
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

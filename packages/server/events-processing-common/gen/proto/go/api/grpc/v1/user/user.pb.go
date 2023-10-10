@@ -22,7 +22,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Request to upsert a user
 type UpsertUserGrpcRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

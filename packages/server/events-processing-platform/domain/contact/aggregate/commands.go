@@ -3,56 +3,68 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
 	localErrors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
-func (a *ContactAggregate) CreateContact(ctx context.Context, contactDto *models.ContactDto) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.CreateContact")
-	defer span.Finish()
-	span.LogFields(log.String("Tenant", contactDto.Tenant), log.String("AggregateID", a.GetID()))
+func (a *ContactAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	switch c := cmd.(type) {
+	case *command.UpsertContactCommand:
+		if c.IsCreateCommand {
+			return a.createContact(ctx, c)
+		} else {
+			return a.updateContact(ctx, c)
+		}
+	default:
+		return errors.New("invalid contact command type")
+	}
+}
 
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(contactDto.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(contactDto.UpdatedAt, createdAtNotNil)
-	event, err := events.NewContactCreateEvent(a, contactDto, createdAtNotNil, updatedAtNotNil)
+func (a *ContactAggregate) createContact(ctx context.Context, cmd *command.UpsertContactCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.createContact")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+	cmd.Source.SetDefaultValues()
+
+	createEvent, err := events.NewContactCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactCreateEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, cmd.UserID)
 
-	return a.Apply(event)
+	return a.Apply(createEvent)
 }
 
-func (a *ContactAggregate) UpdateContact(ctx context.Context, contactDto *models.ContactDto) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.UpdateContact")
+func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.UpsertContactCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.createContact")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", contactDto.Tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(contactDto.UpdatedAt, utils.Now())
-	if contactDto.Source.SourceOfTruth == "" {
-		contactDto.Source.SourceOfTruth = a.Contact.Source.SourceOfTruth
-	}
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	event, err := events.NewContactUpdateEvent(a, contactDto, updatedAtNotNil)
+	updateEvent, err := events.NewContactUpdateEvent(a, cmd.Source.Source, cmd.DataFields, cmd.ExternalSystem, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactUpdateEvent")
 	}
 
-	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
-		tracing.TraceErr(span, err)
-	}
+	aggregate.EnrichEventWithMetadata(&updateEvent, &span, a.Tenant, cmd.UserID)
 
-	return a.Apply(event)
+	return a.Apply(updateEvent)
 }
 
 func (a *ContactAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNumberId, label string, primary bool) error {

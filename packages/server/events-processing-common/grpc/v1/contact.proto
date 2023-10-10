@@ -1,15 +1,10 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+import "common/external_system.proto";
 
 option go_package = "api/grpc/v1/contact;contact_grpc_service";
-
-message Contact {
-  string tenant = 1;
-  string UUID = 2;
-  string firstName = 3;
-  string lastName = 4;
-}
 
 message UpsertContactGrpcRequest {
   string id = 1;
@@ -18,14 +13,17 @@ message UpsertContactGrpcRequest {
   string lastName = 4;
   string name = 5;
   string prefix = 6;
-  string appSource = 7;
-  string source = 8;
-  string sourceOfTruth = 9;
+  string appSource = 7 [deprecated = true];
+  string source = 8 [deprecated = true];
+  string sourceOfTruth = 9 [deprecated = true];
   google.protobuf.Timestamp  createdAt = 10;
   google.protobuf.Timestamp  updatedAt = 11;
   string description = 12;
   string timezone = 13;
   string profilePhotoUrl = 14;
+  SourceFields sourceFields = 15;
+  ExternalSystemFields externalSystemFields = 16;
+  string loggedInUserId = 17;
 }
 
 message LinkPhoneNumberToContactGrpcRequest {
@@ -50,30 +48,11 @@ message UnlinkLocationFromContactGrpcRequest {
   string locationId = 3;
 }
 
-message CreateContactGrpcRequest {
-  string tenant = 1;
-  string firstName = 2;
-  string lastName = 3;
-  string prefix = 4;
-  string description = 5;
-  string appSource = 6;
-  string source = 7;
-  string sourceOfTruth = 8;
-  optional google.protobuf.Timestamp  createdAt = 9;
-  string timezone = 10;
-  string profilePhotoUrl = 11;
-}
-
-message CreateContactGrpcResponse {
-  string id = 1;
-}
-
 message ContactIdGrpcResponse {
   string id = 1;
 }
 
 service contactGrpcService {
-  rpc CreateContact(CreateContactGrpcRequest) returns (CreateContactGrpcResponse);
   rpc UpsertContact(UpsertContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkEmailToContact(LinkEmailToContactGrpcRequest) returns (ContactIdGrpcResponse);

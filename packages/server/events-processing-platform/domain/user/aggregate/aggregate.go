@@ -26,7 +26,6 @@ func NewUserAggregateWithTenantAndID(tenant, id string) *UserAggregate {
 	userAggregate.SetWhen(userAggregate.When)
 	userAggregate.User = &models.User{}
 	userAggregate.Tenant = tenant
-
 	return &userAggregate
 }
 
