@@ -28,6 +28,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21.1
+
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
@@ -50,6 +55,37 @@ jobs:
 #          cd packages/apps/spaces
 #          yarn add -D jest --silent
 #          yarn test
+
+      - name: Compute test coverage
+        id: compute_code_coverage
+        run: |
+          git clone https://github.com/openline-ai/openline-test-harness.git
+          cd openline-test-harness/spaces-coverage
+          go mod tidy
+          go build
+          ./spaces-coverage
+          COVERAGE=$(cat coverage.txt)
+          echo "::set-output name=coverage::$COVERAGE"
+
+      - name: Send Output to Slack
+        run: |
+          computed_coverage=${{ steps.compute_code_coverage.outputs.coverage }} 
+          warning_threshold=80.0
+          critical_threshold=50.0
+          echo "Spaces Test Coverage: $coverage%"
+          if (( $(echo "$computed_coverage > $warning_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": "${{ github.workflow }} coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}: ${{ steps.compute_code_coverage.outputs.coverage }}% "
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          elif (( $(echo "$computed_coverage < $warning_threshold && $computed_coverage > $critical_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": ":warning: ${{ github.workflow }} coverage is lower than the warning threshold of 80%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          elif (( $(echo "$computed_coverage < $critical_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": ":no_entry: ${{ github.workflow }} coverage is lower than the critical threshold of 50%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          fi
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
