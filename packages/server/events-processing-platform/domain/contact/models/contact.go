@@ -20,6 +20,7 @@ type Contact struct {
 	UpdatedAt       time.Time                     `json:"updatedAt"`
 	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
 	Emails          map[string]ContactEmail       `json:"emails"`
+	Locations       []string                      `json:"locations,omitempty"`
 	ExternalSystems []cmnmod.ExternalSystem       `json:"externalSystems"`
 }
 

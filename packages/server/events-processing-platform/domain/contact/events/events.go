@@ -13,6 +13,7 @@ const (
 	ContactUpdateV1          = "V1_CONTACT_UPDATE"
 	ContactPhoneNumberLinkV1 = "V1_CONTACT_PHONE_NUMBER_LINK"
 	ContactEmailLinkV1       = "V1_CONTACT_EMAIL_LINK"
+	ContactLocationLinkV1    = "V1_CONTACT_LOCATION_LINK"
 )
 
 type ContactCreateEvent struct {
@@ -114,9 +115,9 @@ type ContactLinkPhoneNumberEvent struct {
 	Primary       bool      `json:"primary"`
 }
 
-func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phoneNumberId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, phoneNumberId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactLinkPhoneNumberEvent{
-		Tenant:        tenant,
+		Tenant:        aggregate.GetTenant(),
 		UpdatedAt:     updatedAt,
 		PhoneNumberId: phoneNumberId,
 		Label:         label,
@@ -142,9 +143,9 @@ type ContactLinkEmailEvent struct {
 	Primary   bool      `json:"primary"`
 }
 
-func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, emailId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactLinkEmailEvent{
-		Tenant:    tenant,
+		Tenant:    aggregate.GetTenant(),
 		UpdatedAt: updatedAt,
 		EmailId:   emailId,
 		Label:     label,
@@ -156,6 +157,30 @@ func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, l
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinkV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type ContactLinkLocationEvent struct {
+	Tenant     string    `json:"tenant" validate:"required"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+	LocationId string    `json:"locationId" validate:"required"`
+}
+
+func NewContactLinkLocationEvent(aggregate eventstore.Aggregate, locationId string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := ContactLinkLocationEvent{
+		Tenant:     aggregate.GetTenant(),
+		UpdatedAt:  updatedAt,
+		LocationId: locationId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, ContactLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

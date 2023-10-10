@@ -218,39 +218,24 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("emailId", emailId), log.String("contactId", contactId))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `
-		MATCH (t:Tenant {name:$tenant})
-		MERGE (c:Contact:Contact_%s {id:$contactId})
-		ON CREATE SET c.syncedWithEventStore = true
-		MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c)
-		MERGE (e:Email:Email_%s {id:$emailId})
-		ON CREATE SET e.syncedWithEventStore = true
-		MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+	query := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
+				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
 			c.updatedAt = $updatedAt,
 			rel.syncedWithEventStore = true`
+	params := map[string]any{
+		"tenant":    tenant,
+		"contactId": contactId,
+		"emailId":   emailId,
+		"label":     label,
+		"primary":   primary,
+		"updatedAt": updatedAt,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"emailId":   emailId,
-				"label":     label,
-				"primary":   primary,
-				"updatedAt": updatedAt,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return nil, err
-	})
-	return err
+	return r.executeQuery(ctx, query, params)
 }
 
 func (r *emailRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error {
@@ -258,9 +243,6 @@ func (r *emailRepository) LinkWithOrganization(ctx context.Context, tenant, orga
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("emailId", emailId), log.String("organizationId", organizationId))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
 
 	query := `
 		MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}),
@@ -270,23 +252,17 @@ func (r *emailRepository) LinkWithOrganization(ctx context.Context, tenant, orga
 			rel.label = $label,	
 			org.updatedAt = $updatedAt,
 			rel.syncedWithEventStore = true`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"emailId":        emailId,
+		"label":          label,
+		"primary":        primary,
+		"updatedAt":      updatedAt,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-				"emailId":        emailId,
-				"label":          label,
-				"primary":        primary,
-				"updatedAt":      updatedAt,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return nil, err
-	})
-	return err
+	return r.executeQuery(ctx, query, params)
 }
 
 func (r *emailRepository) LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error {
@@ -294,9 +270,6 @@ func (r *emailRepository) LinkWithUser(ctx context.Context, tenant, userId, emai
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("emailId", emailId), log.String("userId", userId))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
 
 	query := `
 		MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
@@ -306,23 +279,16 @@ func (r *emailRepository) LinkWithUser(ctx context.Context, tenant, userId, emai
 			rel.label = $label,	
 			u.updatedAt = $updatedAt,
 			rel.syncedWithEventStore = true`
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":    tenant,
-				"userId":    userId,
-				"emailId":   emailId,
-				"label":     label,
-				"primary":   primary,
-				"updatedAt": updatedAt,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return nil, err
-	})
-	return err
+	params := map[string]any{
+		"tenant":    tenant,
+		"userId":    userId,
+		"emailId":   emailId,
+		"label":     label,
+		"primary":   primary,
+		"updatedAt": updatedAt,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+	return r.executeQuery(ctx, query, params)
 }
 
 func (r *emailRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {

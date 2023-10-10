@@ -16,13 +16,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type GraphContactEventHandler struct {
+type ContactEventHandler struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 }
 
-func (h *GraphContactEventHandler) OnContactCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnContactCreate")
+func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactCreate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -61,8 +61,8 @@ func (h *GraphContactEventHandler) OnContactCreate(ctx context.Context, evt even
 	return nil
 }
 
-func (h *GraphContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnContactUpdate")
+func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactUpdate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -104,8 +104,8 @@ func (h *GraphContactEventHandler) OnContactUpdate(ctx context.Context, evt even
 	return err
 }
 
-func (e *GraphContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnPhoneNumberLinkToContact")
+func (e *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnPhoneNumberLinkToContact")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -121,8 +121,8 @@ func (e *GraphContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Contex
 	return err
 }
 
-func (h *GraphContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnEmailLinkToContact")
+func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnEmailLinkToContact")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -134,6 +134,23 @@ func (h *GraphContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.repositories.EmailRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+
+	return err
+}
+
+func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnLocationLinkToContact")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.ContactLinkLocationEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.repositories.LocationRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId, eventData.UpdatedAt)
 
 	return err
 }

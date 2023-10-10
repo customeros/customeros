@@ -19,7 +19,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contactEventHandler := &GraphContactEventHandler{
+	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
 	myContactId, _ := uuid.NewUUID()

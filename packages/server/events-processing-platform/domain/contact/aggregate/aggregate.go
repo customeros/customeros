@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
@@ -40,6 +41,8 @@ func (a *ContactAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case events.ContactEmailLinkV1:
 		return a.onEmailLink(event)
+	case events.ContactLocationLinkV1:
+		return a.onLocationLink(event)
 
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -163,5 +166,14 @@ func (a *ContactAggregate) onEmailLink(event eventstore.Event) error {
 		Primary: eventData.Primary,
 	}
 	a.Contact.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *ContactAggregate) onLocationLink(event eventstore.Event) error {
+	var eventData events.ContactLinkLocationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Contact.Locations = utils.AddToListIfNotExists(a.Contact.Locations, eventData.LocationId)
 	return nil
 }
