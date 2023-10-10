@@ -64,14 +64,12 @@ jobs:
           go mod tidy
           go build
           ./spaces-coverage
-          echo "::set-env name=COVERAGE::$(cat coverage.txt)"
-        shell: bash
-
+          COVERAGE=$(cat coverage.txt)
+          echo "::set-output name=coverage::$COVERAGE"
 
       - name: Send Output to Slack
         run: |
-          echo "Coverage: $COVERAGE"
-
+          echo "Coverage: ${{ steps.compute_code_coverage.outputs.coverage }}"
 
 #
 #      - name: Log in to the Container registry
