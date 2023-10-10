@@ -56,7 +56,8 @@ jobs:
 #          yarn add -D jest --silent
 #          yarn test
 
-      - name: Check test coverage
+      - name: Compute test coverage
+        id: compute_code_coverage
         run: |
           git clone https://github.com/openline-ai/openline-test-harness.git
           cd openline-test-harness/spaces-coverage
@@ -69,9 +70,6 @@ jobs:
         run: |
           computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
           echo "${{ steps.compute_code_coverage.outputs.computed_coverage }}"
-          curl -X POST -H 'Content-type: application/json' --data '{
-              "text": computed_coverage
-            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL_FE }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
