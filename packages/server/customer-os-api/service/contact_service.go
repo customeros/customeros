@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
@@ -653,23 +654,25 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	result := &model.CustomerContact{}
 
-	contactCreate := &contact_grpc_service.CreateContactGrpcRequest{
-		Tenant:        common.GetTenantFromContext(ctx),
-		FirstName:     data.ContactEntity.FirstName,
-		LastName:      data.ContactEntity.LastName,
-		Prefix:        data.ContactEntity.Prefix,
-		Description:   data.ContactEntity.Description,
-		Source:        string(data.ContactEntity.Source),
-		SourceOfTruth: string(data.ContactEntity.SourceOfTruth),
-		AppSource:     data.ContactEntity.AppSource,
+	contactCreateRequest := &contact_grpc_service.UpsertContactGrpcRequest{
+		Tenant:      common.GetTenantFromContext(ctx),
+		FirstName:   data.ContactEntity.FirstName,
+		LastName:    data.ContactEntity.LastName,
+		Prefix:      data.ContactEntity.Prefix,
+		Description: data.ContactEntity.Description,
+		SourceFields: &common_grpc_service.SourceFields{
+			Source:    string(data.ContactEntity.Source),
+			AppSource: data.ContactEntity.AppSource,
+		},
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
 	}
 	if data.ContactEntity.CreatedAt != nil {
-		contactCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
+		contactCreateRequest.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
 	}
 
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
-	contactId, err := s.grpcClients.ContactClient.CreateContact(contextWithTimeout, contactCreate)
+	contactId, err := s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 		return nil, err
@@ -678,12 +681,13 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	if data.EmailEntity != nil {
 		emailCreate := &email_grpc_service.UpsertEmailGrpcRequest{
-			Tenant:        common.GetTenantFromContext(ctx),
-			RawEmail:      data.EmailEntity.RawEmail,
-			AppSource:     data.EmailEntity.AppSource,
-			Source:        string(data.EmailEntity.Source),
-			SourceOfTruth: string(data.EmailEntity.SourceOfTruth),
-			Id:            "",
+			Tenant:   common.GetTenantFromContext(ctx),
+			RawEmail: data.EmailEntity.RawEmail,
+			SourceFields: &common_grpc_service.SourceFields{
+				Source:    string(data.EmailEntity.Source),
+				AppSource: data.EmailEntity.AppSource,
+			},
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
 		}
 		if data.ContactEntity.CreatedAt != nil {
 			emailCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)

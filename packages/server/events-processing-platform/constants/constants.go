@@ -23,6 +23,7 @@ const (
 	NodeLabel_Organization     = "Organization"
 	NodeLabel_InteractionEvent = "InteractionEvent"
 	NodeLabel_User             = "User"
+	NodeLabel_Contact          = "Contact"
 	NodeLabel_LogEntry         = "LogEntry"
 
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"

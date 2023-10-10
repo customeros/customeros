@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
@@ -19,6 +20,7 @@ const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 type Clients struct {
 	InteractionEventClient interaction_event_grpc_service.InteractionEventGrpcServiceClient
 	OrganizationClient     organization_grpc_service.OrganizationGrpcServiceClient
+	ContactClient          contact_grpc_service.ContactGrpcServiceClient
 	EmailClient            email_grpc_service.EmailGrpcServiceClient
 	PhoneNumberClient      phone_number_grpc_service.PhoneNumberGrpcServiceClient
 	LogEntryClient         log_entry_grpc_service.LogEntryGrpcServiceClient
@@ -31,7 +33,7 @@ func main() {
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
-	testUpdateOrganization()
+	//testUpdateOrganization()
 	//testHideOrganization()
 	//testShowOrganization()
 	//testCreateLogEntry()
@@ -41,6 +43,8 @@ func main() {
 	//testCreatePhoneNumber()
 	//testAddParentOrganization()
 	//testRemoveParentOrganization()
+	//testCreateContact()
+	testUpdateContact()
 }
 
 func InitClients() {
@@ -51,6 +55,7 @@ func InitClients() {
 	clients = &Clients{
 		InteractionEventClient: interaction_event_grpc_service.NewInteractionEventGrpcServiceClient(conn),
 		OrganizationClient:     organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
+		ContactClient:          contact_grpc_service.NewContactGrpcServiceClient(conn),
 		LogEntryClient:         log_entry_grpc_service.NewLogEntryGrpcServiceClient(conn),
 		EmailClient:            email_grpc_service.NewEmailGrpcServiceClient(conn),
 		PhoneNumberClient:      phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
@@ -245,5 +250,39 @@ func testRemoveParentOrganization() {
 	if err != nil {
 		print(err)
 	}
+	print(result)
+}
+
+func testCreateContact() {
+	tenant := "openline"
+	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
+	name := "hubspot contact 3"
+
+	result, _ := clients.ContactClient.UpsertContact(context.TODO(), &contact_grpc_service.UpsertContactGrpcRequest{
+		Tenant:         tenant,
+		LoggedInUserId: userId,
+		Name:           name,
+		ExternalSystemFields: &common_grpc_service.ExternalSystemFields{
+			ExternalSystemId: "hubspot",
+			ExternalId:       "123",
+		},
+	})
+	print(result)
+}
+
+func testUpdateContact() {
+	tenant := "openline"
+	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
+	name := "hubspot contact 4"
+
+	result, _ := clients.ContactClient.UpsertContact(context.TODO(), &contact_grpc_service.UpsertContactGrpcRequest{
+		Tenant: tenant,
+		Name:   name,
+		Id:     contactId,
+		ExternalSystemFields: &common_grpc_service.ExternalSystemFields{
+			ExternalSystemId: "hubspot",
+			ExternalId:       "ABC",
+		},
+	})
 	print(result)
 }

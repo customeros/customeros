@@ -2,25 +2,27 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
+	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type contactService struct {
-	contact_grpc_service.UnimplementedContactGrpcServiceServer
+	pb.UnimplementedContactGrpcServiceServer
 	log             logger.Logger
 	repositories    *repository.Repositories
-	contactCommands *commands.ContactCommands
+	contactCommands *command_handler.ContactCommands
 }
 
-func NewContactService(log logger.Logger, repositories *repository.Repositories, contactCommands *commands.ContactCommands) *contactService {
+func NewContactService(log logger.Logger, repositories *repository.Repositories, contactCommands *command_handler.ContactCommands) *contactService {
 	return &contactService{
 		log:             log,
 		repositories:    repositories,
@@ -28,36 +30,45 @@ func NewContactService(log logger.Logger, repositories *repository.Repositories,
 	}
 }
 
-func (s *contactService) UpsertContact(ctx context.Context, request *contact_grpc_service.UpsertContactGrpcRequest) (*contact_grpc_service.ContactIdGrpcResponse, error) {
+func (s *contactService) UpsertContact(ctx context.Context, request *pb.UpsertContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.UpsertContact")
 	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("request.contactId", request.Id))
 
-	objectID := request.Id
+	contactId := utils.NewUUIDIfEmpty(request.Id)
 
-	coreFields := commands.ContactDataFields{
+	dataFields := models.ContactDataFields{
 		FirstName:       request.FirstName,
 		LastName:        request.LastName,
-		Prefix:          request.Prefix,
+		Name:            request.Name,
 		Description:     request.Description,
+		Prefix:          request.Prefix,
 		Timezone:        request.Timezone,
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
-		Name:            request.Name,
 	}
-	command := commands.NewUpsertContactCommand(objectID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
-		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
-	if err := s.contactCommands.UpsertContact.Handle(ctx, command); err != nil {
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
+	sourceFields.SourceOfTruth = utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
+	sourceFields.AppSource = utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
+
+	externalSystem := cmnmod.ExternalSystem{}
+	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	cmd := command.NewUpsertContactCommand(contactId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem,
+		dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.Id == "")
+	if err := s.contactCommands.UpsertContact.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpsertContact.Handle) tenant:%s, contactID: %s, err: {%v}", request.Tenant, objectID, err)
+		s.log.Errorf("(UpsertContact.Handle) tenant:%s, contactID: %s, err: {%v}", request.Tenant, contactId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Upserted contact: %s", objectID)
-
-	return &contact_grpc_service.ContactIdGrpcResponse{Id: objectID}, nil
+	return &pb.ContactIdGrpcResponse{Id: contactId}, nil
 }
 
-func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *contact_grpc_service.LinkPhoneNumberToContactGrpcRequest) (*contact_grpc_service.ContactIdGrpcResponse, error) {
-	command := commands.NewLinkPhoneNumberCommand(request.ContactId, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
+func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *pb.LinkPhoneNumberToContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+	command := command.NewLinkPhoneNumberCommand(request.ContactId, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.contactCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
 		s.log.Errorf("(LinkPhoneNumberToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err)
 		return nil, s.errResponse(err)
@@ -65,11 +76,11 @@ func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *
 
 	s.log.Infof("Linked phone number {%s} to contact {%s}", request.PhoneNumberId, request.ContactId)
 
-	return &contact_grpc_service.ContactIdGrpcResponse{Id: request.ContactId}, nil
+	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) LinkEmailToContact(ctx context.Context, request *contact_grpc_service.LinkEmailToContactGrpcRequest) (*contact_grpc_service.ContactIdGrpcResponse, error) {
-	command := commands.NewLinkEmailCommand(request.ContactId, request.Tenant, request.EmailId, request.Label, request.Primary)
+func (s *contactService) LinkEmailToContact(ctx context.Context, request *pb.LinkEmailToContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+	command := command.NewLinkEmailCommand(request.ContactId, request.Tenant, request.EmailId, request.Label, request.Primary)
 	if err := s.contactCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
 		s.log.Errorf("(LinkEmailToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err)
 		return nil, s.errResponse(err)
@@ -77,30 +88,7 @@ func (s *contactService) LinkEmailToContact(ctx context.Context, request *contac
 
 	s.log.Infof("Linked email {%s} to contact {%s}", request.EmailId, request.ContactId)
 
-	return &contact_grpc_service.ContactIdGrpcResponse{Id: request.ContactId}, nil
-}
-
-func (s *contactService) CreateContact(ctx context.Context, request *contact_grpc_service.CreateContactGrpcRequest) (*contact_grpc_service.CreateContactGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.CreateContact")
-	defer span.Finish()
-
-	newObjectId, err := uuid.NewUUID()
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to generate new object ID: %w", err)
-	}
-	objectID := newObjectId.String()
-
-	command := commands.NewContactCreateCommand(objectID, request.Tenant, request.FirstName, request.LastName, request.Prefix, request.Description, request.Timezone, request.ProfilePhotoUrl, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt))
-	if err := s.contactCommands.CreateContactCommand.Handle(ctx, command); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(ContactCreateCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, objectID, err)
-		return nil, s.errResponse(err)
-	}
-
-	s.log.Infof("(created new Contact): {%s}", objectID)
-
-	return &contact_grpc_service.CreateContactGrpcResponse{Id: objectID}, nil
+	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
 func (s *contactService) errResponse(err error) error {

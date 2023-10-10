@@ -1,4 +1,4 @@
-package commands
+package command_handler
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
@@ -10,7 +10,6 @@ type ContactCommands struct {
 	UpsertContact          UpsertContactCommandHandler
 	LinkPhoneNumberCommand LinkPhoneNumberCommandHandler
 	LinkEmailCommand       LinkEmailCommandHandler
-	CreateContactCommand   CreateContactCommandHandler
 }
 
 func NewContactCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *ContactCommands {
@@ -18,6 +17,5 @@ func NewContactCommands(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		UpsertContact:          NewUpsertContactCommandHandler(log, cfg, es),
 		LinkPhoneNumberCommand: NewLinkPhoneNumberCommandHandler(log, cfg, es),
 		LinkEmailCommand:       NewLinkEmailCommandHandler(log, cfg, es),
-		CreateContactCommand:   NewCreateContactCommandHandler(log, cfg, es),
 	}
 }

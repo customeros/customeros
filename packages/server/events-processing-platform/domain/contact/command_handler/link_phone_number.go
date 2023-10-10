@@ -1,9 +1,10 @@
-package commands
+package command_handler
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -13,7 +14,7 @@ import (
 )
 
 type LinkPhoneNumberCommandHandler interface {
-	Handle(ctx context.Context, command *LinkPhoneNumberCommand) error
+	Handle(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error
 }
 
 type linkPhoneNumberCommandHandler struct {
@@ -26,31 +27,31 @@ func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es 
 	return &linkPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (h *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *LinkPhoneNumberCommand) error {
+func (h *linkPhoneNumberCommandHandler) Handle(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	span.LogFields(log.String("Tenant", cmd.Tenant), log.String("ObjectID", cmd.ObjectID))
 
-	if command.Tenant == "" {
+	if cmd.Tenant == "" {
 		return eventstore.ErrMissingTenant
 	}
-	if command.PhoneNumberId == "" {
+	if cmd.PhoneNumberId == "" {
 		return errors.ErrMissingPhoneNumberId
 	}
 
-	contactAggregate, err := aggregate.LoadContactAggregate(ctx, h.es, command.Tenant, command.ObjectID)
+	contactAggregate, err := aggregate.LoadContactAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if err = contactAggregate.LinkPhoneNumber(ctx, command.Tenant, command.PhoneNumberId, command.Label, command.Primary); err != nil {
+	if err = contactAggregate.LinkPhoneNumber(ctx, cmd.Tenant, cmd.PhoneNumberId, cmd.Label, cmd.Primary); err != nil {
 		return err
 	}
-	if command.Primary {
+	if cmd.Primary {
 		for k, v := range contactAggregate.Contact.PhoneNumbers {
-			if k != command.PhoneNumberId && v.Primary {
-				if err = contactAggregate.SetPhoneNumberNonPrimary(ctx, command.Tenant, command.PhoneNumberId); err != nil {
+			if k != cmd.PhoneNumberId && v.Primary {
+				if err = contactAggregate.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, cmd.PhoneNumberId); err != nil {
 					return err
 				}
 			}

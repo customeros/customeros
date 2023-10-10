@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"time"
 )
 
@@ -15,11 +15,12 @@ type Contact struct {
 	Description     string                        `json:"description"`
 	Timezone        string                        `json:"timezone"`
 	ProfilePhotoUrl string                        `json:"profilePhotoUrl"`
-	Source          commonModels.Source           `json:"source"`
+	Source          cmnmod.Source                 `json:"source"`
 	CreatedAt       time.Time                     `json:"createdAt"`
 	UpdatedAt       time.Time                     `json:"updatedAt"`
 	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
 	Emails          map[string]ContactEmail       `json:"emails"`
+	ExternalSystems []cmnmod.ExternalSystem       `json:"externalSystems"`
 }
 
 type ContactPhoneNumber struct {

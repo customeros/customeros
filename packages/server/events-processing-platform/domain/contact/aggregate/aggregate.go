@@ -1,8 +1,9 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -59,13 +60,16 @@ func (a *ContactAggregate) onContactCreate(event eventstore.Event) error {
 	a.Contact.Description = eventData.Description
 	a.Contact.Timezone = eventData.Timezone
 	a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.Contact.Source = commonModels.Source{
+	a.Contact.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,
 	}
 	a.Contact.CreatedAt = eventData.CreatedAt
 	a.Contact.UpdatedAt = eventData.UpdatedAt
+	if eventData.ExternalSystem.Available() {
+		a.Contact.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
+	}
 	return nil
 }
 
@@ -74,15 +78,59 @@ func (a *ContactAggregate) onContactUpdate(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Contact.Source.SourceOfTruth = eventData.SourceOfTruth
+
+	if eventData.Source != a.Contact.Source.SourceOfTruth && a.Contact.Source.SourceOfTruth == constants.SourceOpenline {
+		if a.Contact.Name == "" {
+			a.Contact.Name = eventData.Name
+		}
+		if a.Contact.FirstName == "" {
+			a.Contact.FirstName = eventData.FirstName
+		}
+		if a.Contact.LastName == "" {
+			a.Contact.LastName = eventData.LastName
+		}
+		if a.Contact.Timezone == "" {
+			a.Contact.Timezone = eventData.Timezone
+		}
+		if a.Contact.ProfilePhotoUrl == "" {
+			a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+		}
+		if a.Contact.Prefix == "" {
+			a.Contact.Prefix = eventData.Prefix
+		}
+	} else {
+		a.Contact.Name = eventData.Name
+		a.Contact.FirstName = eventData.FirstName
+		a.Contact.LastName = eventData.LastName
+		a.Contact.Prefix = eventData.Prefix
+		a.Contact.Description = eventData.Description
+		a.Contact.Timezone = eventData.Timezone
+		a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+	}
 	a.Contact.UpdatedAt = eventData.UpdatedAt
-	a.Contact.FirstName = eventData.FirstName
-	a.Contact.LastName = eventData.LastName
-	a.Contact.Prefix = eventData.Prefix
-	a.Contact.Description = eventData.Description
-	a.Contact.Timezone = eventData.Timezone
-	a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.Contact.Name = eventData.Name
+	if eventData.Source == constants.SourceOpenline {
+		a.Contact.Source.SourceOfTruth = eventData.Source
+	}
+
+	if eventData.ExternalSystem.Available() {
+		found := false
+		for _, externalSystem := range a.Contact.ExternalSystems {
+			if externalSystem.ExternalSystemId == eventData.ExternalSystem.ExternalSystemId &&
+				externalSystem.ExternalId == eventData.ExternalSystem.ExternalId {
+				found = true
+				externalSystem.ExternalUrl = eventData.ExternalSystem.ExternalUrl
+				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
+				externalSystem.ExternalSource = eventData.ExternalSystem.ExternalSource
+				if eventData.ExternalSystem.ExternalIdSecond != "" {
+					externalSystem.ExternalIdSecond = eventData.ExternalSystem.ExternalIdSecond
+				}
+			}
+		}
+		if !found {
+			a.Contact.ExternalSystems = append(a.Contact.ExternalSystems, eventData.ExternalSystem)
+		}
+	}
+
 	return nil
 }
 

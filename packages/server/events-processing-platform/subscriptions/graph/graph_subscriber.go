@@ -48,7 +48,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		db:                       db,
 		repositories:             repositories,
 		cfg:                      cfg,
-		contactEventHandler:      &GraphContactEventHandler{Repositories: repositories},
+		contactEventHandler:      &GraphContactEventHandler{repositories: repositories},
 		organizationEventHandler: &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.OrganizationCommands},
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},

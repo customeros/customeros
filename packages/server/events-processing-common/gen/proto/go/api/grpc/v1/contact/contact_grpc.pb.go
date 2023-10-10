@@ -22,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ContactGrpcServiceClient interface {
-	CreateContact(ctx context.Context, in *CreateContactGrpcRequest, opts ...grpc.CallOption) (*CreateContactGrpcResponse, error)
 	UpsertContact(ctx context.Context, in *UpsertContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkEmailToContact(ctx context.Context, in *LinkEmailToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
@@ -35,15 +34,6 @@ type contactGrpcServiceClient struct {
 
 func NewContactGrpcServiceClient(cc grpc.ClientConnInterface) ContactGrpcServiceClient {
 	return &contactGrpcServiceClient{cc}
-}
-
-func (c *contactGrpcServiceClient) CreateContact(ctx context.Context, in *CreateContactGrpcRequest, opts ...grpc.CallOption) (*CreateContactGrpcResponse, error) {
-	out := new(CreateContactGrpcResponse)
-	err := c.cc.Invoke(ctx, "/contactGrpcService/CreateContact", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *contactGrpcServiceClient) UpsertContact(ctx context.Context, in *UpsertContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
@@ -86,7 +76,6 @@ func (c *contactGrpcServiceClient) UnlinkLocationFromContact(ctx context.Context
 // All implementations should embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
 type ContactGrpcServiceServer interface {
-	CreateContact(context.Context, *CreateContactGrpcRequest) (*CreateContactGrpcResponse, error)
 	UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkEmailToContact(context.Context, *LinkEmailToContactGrpcRequest) (*ContactIdGrpcResponse, error)
@@ -97,9 +86,6 @@ type ContactGrpcServiceServer interface {
 type UnimplementedContactGrpcServiceServer struct {
 }
 
-func (UnimplementedContactGrpcServiceServer) CreateContact(context.Context, *CreateContactGrpcRequest) (*CreateContactGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateContact not implemented")
-}
 func (UnimplementedContactGrpcServiceServer) UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertContact not implemented")
 }
@@ -122,24 +108,6 @@ type UnsafeContactGrpcServiceServer interface {
 
 func RegisterContactGrpcServiceServer(s grpc.ServiceRegistrar, srv ContactGrpcServiceServer) {
 	s.RegisterService(&ContactGrpcService_ServiceDesc, srv)
-}
-
-func _ContactGrpcService_CreateContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateContactGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContactGrpcServiceServer).CreateContact(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/contactGrpcService/CreateContact",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContactGrpcServiceServer).CreateContact(ctx, req.(*CreateContactGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _ContactGrpcService_UpsertContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -221,10 +189,6 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "contactGrpcService",
 	HandlerType: (*ContactGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateContact",
-			Handler:    _ContactGrpcService_CreateContact_Handler,
-		},
 		{
 			MethodName: "UpsertContact",
 			Handler:    _ContactGrpcService_UpsertContact_Handler,

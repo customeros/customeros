@@ -14,7 +14,7 @@ import (
 )
 
 type UpsertUserCommandHandler interface {
-	Handle(ctx context.Context, command *command.UpsertUserCommand) error
+	Handle(ctx context.Context, cmd *command.UpsertUserCommand) error
 }
 
 type upsertUserCommandHandler struct {

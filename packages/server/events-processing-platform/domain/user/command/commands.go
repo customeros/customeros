@@ -1,7 +1,7 @@
 package command
 
 import (
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
@@ -11,13 +11,13 @@ type UpsertUserCommand struct {
 	eventstore.BaseCommand
 	IsCreateCommand bool
 	DataFields      models.UserDataFields
-	Source          common_models.Source
-	ExternalSystem  common_models.ExternalSystem
+	Source          cmnmod.Source
+	ExternalSystem  cmnmod.ExternalSystem
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
 }
 
-func NewUpsertUserCommand(objectID, tenant, userId string, source common_models.Source, externalSystem common_models.ExternalSystem, dataFields models.UserDataFields, createdAt, updatedAt *time.Time) *UpsertUserCommand {
+func NewUpsertUserCommand(objectID, tenant, userId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, dataFields models.UserDataFields, createdAt, updatedAt *time.Time) *UpsertUserCommand {
 	return &UpsertUserCommand{
 		BaseCommand:    eventstore.NewBaseCommand(objectID, tenant, userId),
 		DataFields:     dataFields,
@@ -33,11 +33,11 @@ type AddPlayerInfoCommand struct {
 	Provider   string `json:"provider" validate:"required"`
 	AuthId     string `json:"authId" validate:"required"`
 	IdentityId string
-	Source     common_models.Source
+	Source     cmnmod.Source
 	Timestamp  *time.Time
 }
 
-func NewAddPlayerInfoCommand(objectID, tenant, userId string, source common_models.Source, provider, authId, identityId string, timestamp *time.Time) *AddPlayerInfoCommand {
+func NewAddPlayerInfoCommand(objectID, tenant, userId string, source cmnmod.Source, provider, authId, identityId string, timestamp *time.Time) *AddPlayerInfoCommand {
 	return &AddPlayerInfoCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
 		Source:      source,

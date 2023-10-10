@@ -211,16 +211,16 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 	calledCreateContact, calledCreateEmail, calledLinkEmailToContact := false, false, false
 
 	contactServiceCallbacks := event_store.MockContactServiceCallbacks{
-		CreateContact: func(context context.Context, contact *contactProto.CreateContactGrpcRequest) (*contactProto.CreateContactGrpcResponse, error) {
+		CreateContact: func(context context.Context, contact *contactProto.UpsertContactGrpcRequest) (*contactProto.ContactIdGrpcResponse, error) {
 			require.Equal(t, "Bob", contact.FirstName)
 			require.Equal(t, "Smith", contact.LastName)
 			require.Equal(t, "Mr.", contact.Prefix)
 			require.Equal(t, "This is a person", contact.Description)
-			require.Equal(t, "unit-test", contact.AppSource)
+			require.Equal(t, "unit-test", contact.SourceFields.AppSource)
 			require.Equal(t, timeNow.Unix(), contact.CreatedAt.Seconds)
 			require.Equal(t, "openline", contact.Tenant)
 			calledCreateContact = true
-			return &contactProto.CreateContactGrpcResponse{
+			return &contactProto.ContactIdGrpcResponse{
 				Id: createdContactId.String(),
 			}, nil
 		},
