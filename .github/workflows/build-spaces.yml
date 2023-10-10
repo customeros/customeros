@@ -70,9 +70,8 @@ jobs:
 
       - name: Send Output to Slack
         run: |
-          computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
           curl -X POST -H 'Content-type: application/json' --data '{
-              "text": "$computed_coverage"
+              "text": "TEST"
             }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL_FE }}
 
       - name: Log in to the Container registry
