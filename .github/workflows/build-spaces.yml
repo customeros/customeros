@@ -71,6 +71,9 @@ jobs:
         run: |
           coverage=${{ steps.compute_code_coverage.outputs.coverage }} 
           echo "Spaces Test Coverage: $coverage%"
+          curl -X POST -H 'Content-type: application/json' --data '{
+              "text": "Spaces Test Coverage: $coverage%"
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL_FE }}
 
 #
 #      - name: Log in to the Container registry
