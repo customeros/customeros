@@ -44,7 +44,7 @@ jobs:
         run: |
           curl http://openline.sh/install.sh | sh
           echo "[INFO] Starting Openline CLI..."
-          openline dev start
+          openline dev start test-env
           echo "[INFO] Checking Openline CLI services..."
           openline dev ping
           echo "[INFO] Checking PODs..."
