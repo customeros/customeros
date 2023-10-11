@@ -113,9 +113,9 @@ export default function OrganizationsPage() {
 
   const allOrganizationIds = flatData.map((o) => o?.id);
 
-  const handleCreateOrganization = () => {
+  const handleCreateOrganization = useCallback(() => {
     createOrganization.mutate({ input: { name: '' } });
-  };
+  }, [createOrganization]);
 
   const handleFetchMore = useCallback(() => {
     !isFetching && fetchNextPage();
@@ -140,16 +140,13 @@ export default function OrganizationsPage() {
         draft.getOrganization.where = where;
       }),
     );
-  }, [sortBy, searchParams?.toString(), data?.pageParams]);
-
-  useEffect(() => {
     setLastActivePosition((prev) =>
       produce(prev, (draft) => {
         if (!draft?.root) return;
         draft.root = `organizations?${searchParams?.toString()}`;
       }),
     );
-  }, [searchParams?.toString()]);
+  }, [sortBy, searchParams?.toString(), data?.pageParams]);
 
   if (
     data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
