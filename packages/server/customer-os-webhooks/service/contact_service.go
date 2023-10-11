@@ -1,0 +1,382 @@
+package service
+
+import (
+	"context"
+	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
+	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"strings"
+	"sync"
+	"time"
+)
+
+const maxWorkersContactSync = 5
+
+type ContactService interface {
+	SyncContacts(ctx context.Context, contacts []model.ContactData) error
+	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
+}
+
+type contactService struct {
+	log          logger.Logger
+	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
+	services     *Services
+}
+
+func NewContactService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) ContactService {
+	return &contactService{
+		log:          log,
+		repositories: repositories,
+		grpcClients:  grpcClients,
+		services:     services,
+	}
+}
+
+func (s *contactService) SyncContacts(ctx context.Context, contacts []model.ContactData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.SyncContacts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("num of contacts", len(contacts)))
+
+	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
+		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
+		return errors.ErrTenantNotValid
+	}
+
+	// pre-validate contact input before syncing
+	for _, contact := range contacts {
+		if contact.ExternalSystem == "" {
+			return errors.ErrMissingExternalSystem
+		}
+		if !entity.IsValidDataSource(strings.ToLower(contact.ExternalSystem)) {
+			return errors.ErrExternalSystemNotAccepted
+		}
+	}
+
+	// Create a wait group to wait for all workers to finish
+	var wg sync.WaitGroup
+	// Create a channel to control the number of concurrent workers
+	workerLimit := make(chan struct{}, maxWorkersContactSync)
+
+	syncMutex := &sync.Mutex{}
+	syncDate := utils.Now()
+	var statuses []SyncStatus
+
+	// Sync all contacts concurrently
+	for _, contactData := range contacts {
+		// Check if context is cancelled
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			// Continue with Slack sync
+		}
+
+		// Acquire a worker slot
+		workerLimit <- struct{}{}
+		wg.Add(1)
+
+		go func(contactData model.ContactData) {
+			defer wg.Done()
+			defer func() {
+				// Release the worker slot when done
+				<-workerLimit
+			}()
+
+			result := s.syncContact(ctx, syncMutex, contactData, syncDate)
+			statuses = append(statuses, result)
+		}(contactData)
+	}
+	// Wait for all workers to finish
+	wg.Wait()
+
+	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), contacts[0].ExternalSystem,
+		contacts[0].AppSource, "contact", syncDate, statuses)
+
+	return nil
+}
+
+func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex, contactInput model.ContactData, syncDate time.Time) SyncStatus {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.syncContact")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("externalSystem", contactInput.ExternalSystem), log.Object("contactInput", contactInput))
+
+	tenant := common.GetTenantFromContext(ctx)
+	var failedSync = false
+	var reason = ""
+
+	contactInput.Normalize()
+
+	// TODO: Merge external system, should be cached and moved to external system service
+	err := s.repositories.ExternalSystemRepository.MergeExternalSystem(ctx, tenant, contactInput.ExternalSystem, contactInput.ExternalSystem)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", contactInput.ExternalSystem, tenant, err.Error())
+		s.log.Error(reason)
+		return NewFailedSyncStatus(reason)
+	}
+
+	// Check if contact sync should be skipped
+	if contactInput.Skip {
+		span.LogFields(log.Bool("skippedSync", true))
+		return NewSkippedSyncStatus(contactInput.SkipReason)
+	}
+
+	// Filter out un-existing organizations
+	var identifiedOrganizations = make(map[string]model.ReferencedOrganization)
+	for _, org := range contactInput.Organizations {
+		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, contactInput.ExternalSystem, org)
+		if orgId != "" {
+			identifiedOrganizations[orgId] = org
+		}
+	}
+
+	if contactInput.OrganizationRequired && len(identifiedOrganizations) == 0 {
+		reason = fmt.Sprintf("organization(s) not found for contact %s for tenant %s", contactInput.ExternalId, tenant)
+		s.log.Warn(reason)
+		return NewSkippedSyncStatus(reason)
+	}
+
+	if contactInput.Name == "" {
+		contactInput.Name = strings.TrimSpace(fmt.Sprintf("%s %s", contactInput.FirstName, contactInput.LastName))
+	}
+
+	// Lock contact creation
+	syncMutex.Lock()
+	// Check if contact already exists
+	contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, contactInput.ExternalSystem, contactInput.ExternalId, contactInput.EmailsForUnicity())
+	if err != nil {
+		failedSync = true
+		tracing.TraceErr(span, err)
+		reason = fmt.Sprintf("failed finding existing matched contact with external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err.Error())
+		s.log.Error(reason)
+	}
+	if !failedSync {
+		matchingContactExists := contactId != ""
+		span.LogFields(log.Bool("found matching contact", matchingContactExists))
+
+		// Create new contact id if not found
+		contactId = utils.NewUUIDIfEmpty(contactId)
+		contactInput.Id = contactId
+		span.LogFields(log.String("contactId", contactId))
+
+		// Create or update contact
+		_, err = s.grpcClients.ContactClient.UpsertContact(ctx, &contactgrpc.UpsertContactGrpcRequest{
+			Tenant:          tenant,
+			Id:              contactId,
+			Name:            contactInput.Name,
+			FirstName:       contactInput.FirstName,
+			LastName:        contactInput.LastName,
+			Description:     contactInput.Description,
+			Timezone:        contactInput.Timezone,
+			ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
+			CreatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.CreatedAt),
+			UpdatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.UpdatedAt),
+			SourceFields: &commongrpc.SourceFields{
+				Source:    contactInput.ExternalSystem,
+				AppSource: utils.StringFirstNonEmpty(contactInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+			},
+			ExternalSystemFields: &commongrpc.ExternalSystemFields{
+				ExternalSystemId: contactInput.ExternalSystem,
+				ExternalId:       contactInput.ExternalId,
+				ExternalUrl:      contactInput.ExternalUrl,
+				ExternalIdSecond: contactInput.ExternalIdSecond,
+				ExternalSource:   contactInput.ExternalSourceEntity,
+				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+			},
+		})
+		if err != nil {
+			failedSync = true
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("failed sending event to upsert contact  with external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err)
+			s.log.Error(reason)
+		}
+		// Wait for contact to be created in neo4j
+		if !failedSync && !matchingContactExists {
+			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+				contact, findErr := s.repositories.ContactRepository.GetById(ctx, tenant, contactId)
+				if contact != nil && findErr == nil {
+					break
+				}
+				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+			}
+		}
+	}
+	if !failedSync && contactInput.HasPrimaryEmail() {
+		// Create or update email
+		emailId, err := s.services.EmailService.CreateEmail(ctx, contactInput.Email, contactInput.ExternalSystem, contactInput.AppSource)
+		if err != nil {
+			failedSync = true
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("Failed to create email address for contact %s: %s", contactId, err.Error())
+			s.log.Error(reason)
+		}
+		// Link email to contact
+		if !failedSync {
+			_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactgrpc.LinkEmailToContactGrpcRequest{
+				Tenant:    common.GetTenantFromContext(ctx),
+				ContactId: contactId,
+				EmailId:   emailId,
+				Primary:   true,
+			})
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to link email address %s with contact %s: %s", contactInput.Email, contactId, err.Error())
+				s.log.Error(reason)
+			}
+		}
+	}
+	if !failedSync && contactInput.HasAdditionalEmails() {
+		for _, email := range contactInput.AdditionalEmails {
+			// Create or update email
+			emailId, err := s.services.EmailService.CreateEmail(ctx, email, contactInput.ExternalSystem, contactInput.AppSource)
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to create email address for contact %s: %s", contactId, err.Error())
+				s.log.Error(reason)
+			}
+			// Link email to contact
+			if !failedSync {
+				_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactgrpc.LinkEmailToContactGrpcRequest{
+					Tenant:    common.GetTenantFromContext(ctx),
+					ContactId: contactId,
+					EmailId:   emailId,
+					Primary:   false,
+				})
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("Failed to link email address %s with contact %s: %s", email, contactId, err.Error())
+					s.log.Error(reason)
+				}
+			}
+		}
+	}
+	syncMutex.Unlock()
+
+	if !failedSync {
+		for orgId, referencedOrganization := range identifiedOrganizations {
+			// Link contact to organization
+			_, err = s.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactgrpc.LinkWithOrganizationGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				ContactId:      contactId,
+				OrganizationId: orgId,
+				JobTitle:       referencedOrganization.JobTitle,
+			})
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to link contact %s with organization %s: %s", contactId, orgId, err.Error())
+				s.log.Error(reason)
+			}
+		}
+	}
+
+	if !failedSync {
+		if contactInput.HasPhoneNumbers() {
+			for _, phoneNumberDtls := range contactInput.PhoneNumbers {
+				// Create or update phone number
+				phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumber(ctx, phoneNumberDtls.Number, contactInput.ExternalSystem, contactInput.AppSource)
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("Failed to create phone number %s for contact %s: %s", phoneNumberDtls.Number, contactId, err.Error())
+					s.log.Error(reason)
+				}
+				// Link phone number to contact
+				if phoneNumberId != "" {
+					_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactgrpc.LinkPhoneNumberToContactGrpcRequest{
+						Tenant:        common.GetTenantFromContext(ctx),
+						ContactId:     contactId,
+						PhoneNumberId: phoneNumberId,
+						Primary:       phoneNumberDtls.Primary,
+						Label:         phoneNumberDtls.Label,
+					})
+					if err != nil {
+						failedSync = true
+						tracing.TraceErr(span, err)
+						reason = fmt.Sprintf("Failed to link phone number %s with contact %s: %s", phoneNumberDtls.Number, contactId, err.Error())
+						s.log.Error(reason)
+					}
+				}
+			}
+		}
+		if contactInput.HasLocation() {
+			// Create or update location
+			locationId, err := s.repositories.LocationRepository.GetMatchedLocationIdForContactBySource(ctx, contactId, contactInput.ExternalSystem)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to get matched location for contact %s: %s", contactId, err.Error())
+				failedSync = true
+				s.log.Error(reason)
+			}
+			if !failedSync {
+				locationId, err = s.services.LocationService.CreateLocation(ctx, locationId, contactInput.ExternalSystem, contactInput.AppSource,
+					contactInput.LocationName, contactInput.Country, contactInput.Region, contactInput.Locality, contactInput.Street, contactInput.Address, "", contactInput.Zip, contactInput.PostalCode)
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("Failed to create location for contact %s: %s", contactId, err.Error())
+					s.log.Error(reason)
+				}
+			}
+
+			// Link location to contact
+			if locationId != "" {
+				_, err = s.grpcClients.ContactClient.LinkLocationToContact(ctx, &contactgrpc.LinkLocationToContactGrpcRequest{
+					Tenant:     common.GetTenantFromContext(ctx),
+					ContactId:  contactId,
+					LocationId: locationId,
+				})
+				if err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("Failed to link location %s with contact %s: %s", locationId, contactId, err.Error())
+					s.log.Error(reason)
+				}
+			}
+		}
+	}
+
+	span.LogFields(log.Bool("failedSync", failedSync))
+	if failedSync {
+		return NewFailedSyncStatus(reason)
+	}
+	return NewSuccessfulSyncStatus()
+}
+
+func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {
+	props := utils.GetPropsFromNode(dbNode)
+	output := entity.ContactEntity{
+		Id:              utils.GetStringPropOrEmpty(props, "id"),
+		Name:            utils.GetStringPropOrEmpty(props, "name"),
+		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
+		Description:     utils.GetStringPropOrEmpty(props, "description"),
+		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
+		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
+		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &output
+}

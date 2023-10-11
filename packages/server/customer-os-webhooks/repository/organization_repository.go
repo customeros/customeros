@@ -35,7 +35,7 @@ func (r *organizationRepository) GetById(parentCtx context.Context, tenant, orga
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}) RETURN u`
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}) RETURN o`
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)

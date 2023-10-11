@@ -175,9 +175,9 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 			ExternalSystemFields: &commongrpc.ExternalSystemFields{
 				ExternalSystemId: logEntryInput.ExternalSystem,
 				ExternalId:       logEntryInput.ExternalId,
-				SyncDate:         timestamppb.Now(),
 				ExternalSource:   logEntryInput.ExternalSourceEntity,
 				ExternalUrl:      logEntryInput.ExternalUrl,
+				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
 			},
 		}
 		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.LoggedOrganization)

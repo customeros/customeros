@@ -16,6 +16,7 @@ type Repositories struct {
 	UserRepository           UserRepository
 	LocationRepository       LocationRepository
 	OrganizationRepository   OrganizationRepository
+	ContactRepository        ContactRepository
 	TenantRepository         TenantRepository
 	EmailRepository          EmailRepository
 	PhoneNumberRepository    PhoneNumberRepository
@@ -38,6 +39,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 	repositories.UserRepository = NewUserRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)
+	repositories.ContactRepository = NewContactRepository(driver)
 	repositories.TenantRepository = NewTenantRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
