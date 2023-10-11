@@ -73,10 +73,8 @@ jobs:
         run: |
           df -h
           docker ps -a
-          kubectl -n openline get pods
-          docker system prune -f
+          openline dev remove
           df -h
-          kubectl -n openline get pods
 
       - name: Send Output to Slack
         run: |
