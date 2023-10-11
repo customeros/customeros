@@ -44,7 +44,6 @@ jobs:
         run: |
           df -h
           curl http://openline.sh/install.sh | sh
-          echo "[INFO] Starting Openline CLI..."
           openline dev start test-env
           echo "[INFO] Checking Openline CLI services..."
           openline dev ping
@@ -74,10 +73,13 @@ jobs:
           df -h
           docker ps -a
           openline dev remove
+          echo "BEFORE test harness removal"
           df -h
           ls
           cd ../..
+          echo "*********************"
           ls
+          echo "AFTER test harness removal"
           rm -rf openline-test-harness
           df -h
 
