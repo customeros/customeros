@@ -1,15 +1,14 @@
 'use client';
 import React, { FC } from 'react';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { Flex } from '@ui/layout/Flex';
-import { Box, Card, CardFooter, CardHeader, Text } from '@chakra-ui/react';
-import { CardBody } from '@chakra-ui/card';
+import { Text } from '@ui/typography/Text';
+import { CardBody, CardHeader, CardFooter, Card } from '@ui/layout/Card';
 import { IssueBgPattern } from '@ui/media/logos/IssueBgPattern';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
-import { DataSource } from '@graphql/types';
 import { CustomTicketTearStyle } from './styles';
+import { IssueWithAliases } from '@organization/src/components/Timeline/types';
 function getStatusColor(
-  status: 'New' | 'Open' | 'Pending' | 'On hold' | 'Solved',
+  status: string | 'New' | 'Open' | 'Pending' | 'On hold' | 'Solved',
 ) {
   if (status === 'Solved') {
     return 'gray';
@@ -17,13 +16,9 @@ function getStatusColor(
   return 'blue';
 }
 
-// TODO generate issue types and use then instead of any
-export const IssueStub: FC<{ issueEvent: any }> = ({ issueEvent }) => {
-  const { openModal } = useTimelineEventPreviewContext();
-  const statusColorScheme = (() =>
-    issueEvent.appSource === DataSource.ZendeskSupport
-      ? getStatusColor(issueEvent.status)
-      : 'gray')();
+export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
+  // const { openModal } = useTimelineEventPreviewContext(); // todo uncomment when modal is ready
+  const statusColorScheme = (() => getStatusColor(data.issueStatus))();
   return (
     <Card
       variant='outline'
@@ -33,27 +28,28 @@ export const IssueStub: FC<{ issueEvent: any }> = ({ issueEvent }) => {
       flexDirection='row'
       position='unset'
       maxW={476}
-      cursor='pointer'
+      cursor='default' // todo change to pointer when modal is ready
       boxShadow='none'
       border='1px solid'
       borderColor='gray.200'
-      onClick={() => openModal(issueEvent)}
-      _hover={{
-        '&:hover .slack-stub-date': {
-          color: 'gray.500',
-        },
-      }}
+      // onClick={() => openModal(data)}
+      // TODO uncomment when modal is ready
+      // _hover={{
+      //   '&:hover .slack-stub-date': {
+      //     color: 'gray.500',
+      //   },
+      // }}
     >
-      <Box boxShadow='xs' pr={2}>
+      <Flex boxShadow='xs' pr={2} direction='column' flex={1}>
         <CardHeader fontWeight='semibold' p={2} pb={0} pr={0} noOfLines={1}>
-          {issueEvent?.subject ?? '[No subject]'}
+          {data?.subject ?? '[No subject]'}
         </CardHeader>
         <CardBody p={2} pt={0} pr={0}>
           <Text color='gray.500' noOfLines={3}>
-            {issueEvent?.description ?? '[No description]'}
+            {data?.description ?? '[No description]'}
           </Text>
         </CardBody>
-      </Box>
+      </Flex>
       <CardFooter
         p={0}
         position='relative'
@@ -77,9 +73,12 @@ export const IssueStub: FC<{ issueEvent: any }> = ({ issueEvent }) => {
           position='relative'
           borderRadius='md'
         >
-          <Text mb={2} zIndex={1} fontWeight='semibold' color='gray.500'>
-            {issueEvent?.issueNumber}
-          </Text>
+          {!!data?.externalLinks?.length && (
+            <Text mb={2} zIndex={1} fontWeight='semibold' color='gray.500'>
+              {data?.externalLinks[0]?.externalId}
+            </Text>
+          )}
+
           <Tag
             zIndex={1}
             size='sm'
@@ -95,9 +94,7 @@ export const IssueStub: FC<{ issueEvent: any }> = ({ issueEvent }) => {
             minHeight={6}
             width='min-content'
           >
-            <TagLabel>
-              {issueEvent.status === 'Solved' ? 'Closed' : 'Open'}
-            </TagLabel>
+            <TagLabel>{data.status === 'Solved' ? 'Closed' : 'Open'}</TagLabel>
           </Tag>
           <IssueBgPattern position='absolute' width='120%' height='100%' />
         </Flex>

@@ -14,6 +14,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { Ticket02 } from '@ui/media/icons/Ticket02';
 
 export const OrganizationSidenav = () => {
   const router = useRouter();
@@ -125,6 +126,17 @@ export const OrganizationSidenav = () => {
           icon={
             <Icons.ActivityHeart
               color={checkIsActive('account') ? 'gray.700' : 'gray.500'}
+              boxSize='6'
+            />
+          }
+        />
+        <SidenavItem
+          label='Issues'
+          isActive={checkIsActive('issues')}
+          onClick={handleItemClick('issues')}
+          icon={
+            <Ticket02
+              color={checkIsActive('issues') ? 'gray.700' : 'gray.500'}
               boxSize='6'
             />
           }

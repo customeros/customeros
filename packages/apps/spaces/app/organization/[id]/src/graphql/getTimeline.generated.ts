@@ -331,7 +331,18 @@ export type GetTimelineQuery = {
           } | null;
         }
       | { __typename: 'InteractionSession' }
-      | { __typename: 'Issue' }
+      | {
+          __typename: 'Issue';
+          id: string;
+          subject?: string | null;
+          appSource: string;
+          createdAt: any;
+          issueStatus: string;
+          externalLinks: Array<{
+            __typename?: 'ExternalSystem';
+            externalId?: string | null;
+          }>;
+        }
       | {
           __typename: 'LogEntry';
           id: string;
@@ -494,12 +505,12 @@ export const GetTimelineDocument = `
     query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
     timelineEventsTotalCount(
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE]
     )
     timelineEvents(
       from: $from
       size: $size
-      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY]
+      timelineEventTypes: [INTERACTION_EVENT, MEETING, ACTION, LOG_ENTRY, ISSUE]
     ) {
       __typename
       ... on Action {
@@ -626,6 +637,17 @@ export const GetTimelineDocument = `
           type
           externalUrl
           externalSource
+        }
+      }
+      ... on Issue {
+        __typename
+        id
+        subject
+        issueStatus: status
+        appSource
+        createdAt
+        externalLinks {
+          externalId
         }
       }
     }
