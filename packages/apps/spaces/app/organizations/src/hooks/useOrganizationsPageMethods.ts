@@ -3,15 +3,16 @@ import { produce } from 'immer';
 import { useRouter } from 'next/navigation';
 import { useQueryClient, InfiniteData } from '@tanstack/react-query';
 
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-
 import {
   GetOrganizationsQuery,
   useInfiniteGetOrganizationsQuery,
 } from '../graphql/getOrganizations.generated';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { toastSuccess, toastError } from '@ui/presentation/Toast';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
-import { useCreateOrganizationMutation } from '../graphql/createOrganization.generated';
+
 import { useHideOrganizationsMutation } from '../graphql/hideOrganizations.generated';
+import { useCreateOrganizationMutation } from '../graphql/createOrganization.generated';
 import { useMergeOrganizationsMutation } from '../graphql/mergeOrganizations.generated';
 
 export const useOrganizationsPageMethods = () => {
@@ -71,9 +72,11 @@ export const useOrganizationsPageMethods = () => {
         queryKey,
         context?.previousEntries,
       );
+      toastError('Failed to create organization', 'create-organization-error');
     },
     onSuccess: ({ organization_Create: { id } }) => {
       push(`/organization/${id}`);
+      toastSuccess('Organization created', 'create-organization-success');
     },
     onSettled: () => {
       queryClient.invalidateQueries(queryKey);
@@ -111,10 +114,23 @@ export const useOrganizationsPageMethods = () => {
 
       return { previousEntries };
     },
-    onError: (_, __, context) => {
+    onError: (_, { ids }, context) => {
       queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
         queryKey,
         context?.previousEntries,
+      );
+      toastError(
+        `We couldn't archive ${
+          ids.length > 1 ? 'these organizations' : 'this organization'
+        }`,
+        'hide-organizations-error',
+      );
+    },
+    onSuccess: (_, { ids }) => {
+      const count = ids.length;
+      toastSuccess(
+        `${count > 1 ? `${count} Organizations` : '1 Organization'} archived`,
+        'hide-organizations-success',
       );
     },
     onSettled: () => {
@@ -168,6 +184,17 @@ export const useOrganizationsPageMethods = () => {
       queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
         queryKey,
         context?.previousEntries,
+      );
+      toastError(
+        `We couldn't merge these organizations`,
+        'merge-organizations-error',
+      );
+    },
+    onSuccess: (_, { mergedOrganizationIds }) => {
+      const count = mergedOrganizationIds.length + 1;
+      toastSuccess(
+        `${count} organizations merged`,
+        'merge-organizations-success',
       );
     },
     onSettled: () => {
