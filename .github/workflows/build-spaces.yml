@@ -74,7 +74,7 @@ jobs:
           df -h
           docker ps -a
           kubectl -n openline get pods
-          openline dev remove
+          docker system prune -f
           df -h
           kubectl -n openline get pods
 
