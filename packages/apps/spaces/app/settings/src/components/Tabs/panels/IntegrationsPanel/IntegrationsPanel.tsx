@@ -119,7 +119,6 @@ export const IntegrationsPanel = () => {
             onChange={(event) => handleFilterResults(event.target.value)}
             placeholder={'Search...'}
           />
-          <Button onClick={() => iApp.open()}>Choose Integrations</Button>
         </CardHeader>
         <CardBody overflow='auto' pt={1}>
           <Heading as='h3' fontSize='lg' fontWeight='medium'>
@@ -186,7 +185,6 @@ export const IntegrationsPanel = () => {
                 .map((integration: IntegrationItem) => {
                   const option = integration.key;
                   const isFromIApp = availableIntegrations.includes(option);
-                  console.log(option, isFromIApp);
 
                   return (
                     <SettingsIntegrationItem
