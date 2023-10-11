@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	ContactCreateV1          = "V1_CONTACT_CREATE"
-	ContactUpdateV1          = "V1_CONTACT_UPDATE"
-	ContactPhoneNumberLinkV1 = "V1_CONTACT_PHONE_NUMBER_LINK"
-	ContactEmailLinkV1       = "V1_CONTACT_EMAIL_LINK"
-	ContactLocationLinkV1    = "V1_CONTACT_LOCATION_LINK"
+	ContactCreateV1           = "V1_CONTACT_CREATE"
+	ContactUpdateV1           = "V1_CONTACT_UPDATE"
+	ContactPhoneNumberLinkV1  = "V1_CONTACT_PHONE_NUMBER_LINK"
+	ContactEmailLinkV1        = "V1_CONTACT_EMAIL_LINK"
+	ContactLocationLinkV1     = "V1_CONTACT_LOCATION_LINK"
+	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"
 )
 
 type ContactCreateEvent struct {
@@ -181,6 +182,45 @@ func NewContactLinkLocationEvent(aggregate eventstore.Aggregate, locationId stri
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactLocationLinkV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type ContactLinkWithOrganizationEvent struct {
+	Tenant         string        `json:"tenant" validate:"required"`
+	OrganizationId string        `json:"organizationId" validate:"required"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	UpdatedAt      time.Time     `json:"updatedAt"`
+	StartedAt      *time.Time    `json:"startedAt"`
+	EndedAt        *time.Time    `json:"endedAt,omitempty"`
+	JobTitle       string        `json:"jobTitle"`
+	Description    string        `json:"description"`
+	Primary        bool          `json:"primary"`
+	SourceFields   cmnmod.Source `json:"sourceFields"`
+}
+
+func NewContactLinkWithOrganizationEvent(aggregate eventstore.Aggregate, organizationId, jobTile, description string, primary bool,
+	sourceFields cmnmod.Source, createdAt, updatedAt time.Time, startedAt, endedAt *time.Time) (eventstore.Event, error) {
+	eventData := ContactLinkWithOrganizationEvent{
+		Tenant:         aggregate.GetTenant(),
+		OrganizationId: organizationId,
+		SourceFields:   sourceFields,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
+		StartedAt:      startedAt,
+		EndedAt:        endedAt,
+		JobTitle:       jobTile,
+		Description:    description,
+		Primary:        primary,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, ContactOrganizationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

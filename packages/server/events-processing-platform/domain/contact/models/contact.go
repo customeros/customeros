@@ -7,21 +7,32 @@ import (
 )
 
 type Contact struct {
-	ID              string                        `json:"id"`
-	FirstName       string                        `json:"firstName"`
-	LastName        string                        `json:"lastName"`
-	Name            string                        `json:"name"`
-	Prefix          string                        `json:"prefix"`
-	Description     string                        `json:"description"`
-	Timezone        string                        `json:"timezone"`
-	ProfilePhotoUrl string                        `json:"profilePhotoUrl"`
-	Source          cmnmod.Source                 `json:"source"`
-	CreatedAt       time.Time                     `json:"createdAt"`
-	UpdatedAt       time.Time                     `json:"updatedAt"`
-	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
-	Emails          map[string]ContactEmail       `json:"emails"`
-	Locations       []string                      `json:"locations,omitempty"`
-	ExternalSystems []cmnmod.ExternalSystem       `json:"externalSystems"`
+	ID                     string                        `json:"id"`
+	FirstName              string                        `json:"firstName"`
+	LastName               string                        `json:"lastName"`
+	Name                   string                        `json:"name"`
+	Prefix                 string                        `json:"prefix"`
+	Description            string                        `json:"description"`
+	Timezone               string                        `json:"timezone"`
+	ProfilePhotoUrl        string                        `json:"profilePhotoUrl"`
+	Source                 cmnmod.Source                 `json:"source"`
+	CreatedAt              time.Time                     `json:"createdAt"`
+	UpdatedAt              time.Time                     `json:"updatedAt"`
+	PhoneNumbers           map[string]ContactPhoneNumber `json:"phoneNumbers"`
+	Emails                 map[string]ContactEmail       `json:"emails"`
+	Locations              []string                      `json:"locations,omitempty"`
+	ExternalSystems        []cmnmod.ExternalSystem       `json:"externalSystems"`
+	JobRolesByOrganization map[string]JobRole            `json:"jobRoles,omitempty"`
+}
+
+type JobRole struct {
+	JobTitle    string        `json:"jobTitle"`
+	Description string        `json:"description"`
+	Primary     bool          `json:"primary"`
+	StartedAt   *time.Time    `json:"startedAt"`
+	EndedAt     *time.Time    `json:"endedAt"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	Source      cmnmod.Source `json:"source"`
 }
 
 type ContactPhoneNumber struct {

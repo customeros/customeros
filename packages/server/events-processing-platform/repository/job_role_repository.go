@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -15,6 +18,7 @@ import (
 type JobRoleRepository interface {
 	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string, updatedAt time.Time) error
 	CreateJobRole(ctx context.Context, tenant, jobRoleId string, event events.JobRoleCreateEvent) error
+	LinkContactWithOrganization(ctx context.Context, tenant, contactId string, data contactEvents.ContactLinkWithOrganizationEvent) error
 }
 
 type jobRoleRepository struct {
@@ -104,4 +108,55 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tenant, jobRoleId
 		return err
 	}
 	return nil
+}
+
+func (r *jobRoleRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId string, eventData contactEvents.ContactLinkWithOrganizationEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByInternalId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contactId", contactId))
+
+	query := fmt.Sprintf(`MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), 
+		  								(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) 
+		 MERGE (c)-[:WORKS_AS]->(jr:JobRole)-[:ROLE_IN]->(org) 
+		 ON CREATE SET 	jr.id=randomUUID(), 
+						jr.source=$source, 
+						jr.sourceOfTruth=$sourceOfTruth, 
+						jr.appSource=$appSource, 
+						jr.jobTitle=$jobTitle, 
+						jr.description=$description,
+						jr.startedAt=$startedAt,	
+						jr.endedAt=$endedAt,
+						jr.primary=$primary,
+						jr.createdAt=$createdAt, 
+						jr.updatedAt=$updatedAt, 
+						jr:JobRole_%s,
+						c.updatedAt = $updatedAt
+		 ON MATCH SET 	jr.jobTitle = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true  OR jr.jobTitle is null OR jr.jobTitle = '' THEN $jobTitle ELSE jr.jobTitle END,
+						jr.description = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true  OR jr.description is null OR jr.description = '' THEN $description ELSE jr.description END,
+						jr.primary = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $primary ELSE jr.primary END,
+						jr.startedAt = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $startedAt ELSE jr.startedAt END,
+						jr.endedAt = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $endedAt ELSE jr.endedAt END,
+						jr.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE jr.sourceOfTruth END,
+						jr.updatedAt = $updatedAt,
+						c.updatedAt = $updatedAt`, tenant)
+	params := map[string]interface{}{
+		"tenant":         tenant,
+		"contactId":      contactId,
+		"organizationId": eventData.OrganizationId,
+		"source":         helper.GetSource(eventData.SourceFields.Source),
+		"sourceOfTruth":  helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
+		"appSource":      helper.GetAppSource(eventData.SourceFields.AppSource),
+		"jobTitle":       eventData.JobTitle,
+		"description":    eventData.Description,
+		"createdAt":      eventData.CreatedAt,
+		"updatedAt":      eventData.UpdatedAt,
+		"startedAt":      utils.TimePtrFirstNonNilNillableAsAny(eventData.StartedAt),
+		"endedAt":        utils.TimePtrFirstNonNilNillableAsAny(eventData.EndedAt),
+		"primary":        eventData.Primary,
+		"overwrite":      helper.GetSourceOfTruth(eventData.SourceFields.Source) == constants.SourceOpenline,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, params)
 }
