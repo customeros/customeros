@@ -54,6 +54,7 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
+		tracing.TraceErr(span, errors.ErrTenantNotValid)
 		return errors.ErrTenantNotValid
 	}
 

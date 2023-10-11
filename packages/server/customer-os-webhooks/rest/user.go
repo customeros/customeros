@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
@@ -62,7 +63,11 @@ func SyncUsersHandler(services *service.Services, log logger.Logger) gin.Handler
 		err = services.UserService.SyncUsers(ctx, users)
 		if err != nil {
 			log.Errorf("(SyncUsers) error in sync users: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing users"})
+			if errors.IsBadRequest(err) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing users"})
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}
@@ -107,7 +112,11 @@ func SyncUserHandler(services *service.Services, log logger.Logger) gin.HandlerF
 		err = services.UserService.SyncUsers(ctx, []model.UserData{user})
 		if err != nil {
 			log.Errorf("(SyncUser) error in sync user: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing user"})
+			if errors.IsBadRequest(err) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing user"})
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}

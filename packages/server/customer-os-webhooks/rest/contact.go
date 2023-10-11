@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
@@ -62,7 +63,11 @@ func SyncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		err = services.ContactService.SyncContacts(ctx, contacts)
 		if err != nil {
 			log.Errorf("(SyncContacts) error in sync contacts: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing contacts"})
+			if errors.IsBadRequest(err) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing contacts"})
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}
@@ -107,7 +112,11 @@ func SyncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 		err = services.ContactService.SyncContacts(ctx, []model.ContactData{contact})
 		if err != nil {
 			log.Errorf("(SyncContact) error in sync contact: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing contact"})
+			if errors.IsBadRequest(err) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing contact"})
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}
