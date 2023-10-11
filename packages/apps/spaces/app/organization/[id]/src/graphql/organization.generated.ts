@@ -50,11 +50,6 @@ export type OrganizationQuery = {
     customerOsId: string;
     isCustomer?: boolean | null;
     socials: Array<{ __typename?: 'Social'; id: string; url: string }>;
-    relationshipStages: Array<{
-      __typename?: 'OrganizationRelationshipStage';
-      relationship: Types.OrganizationRelationship;
-      stage?: string | null;
-    }>;
     subsidiaryOf: Array<{
       __typename?: 'LinkedOrganization';
       organization: { __typename?: 'Organization'; id: string; name: string };
@@ -92,10 +87,6 @@ export const OrganizationDocument = `
     socials {
       id
       url
-    }
-    relationshipStages {
-      relationship
-      stage
     }
     subsidiaryOf {
       organization {

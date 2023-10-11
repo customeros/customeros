@@ -77,10 +77,6 @@ query getOrganizations(
         houseNumber
         rawAddress
       }
-      relationshipStages {
-        relationship
-        stage
-      }
       lastTouchPointTimelineEventId
       lastTouchPointAt
       lastTouchPointTimelineEvent {

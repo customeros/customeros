@@ -28,6 +28,7 @@ interface Props {
   state: string;
   fields?: FieldDefinition[];
   onCancel?: () => void;
+  onEnable?: () => void;
   settingsChanged?: () => void;
 }
 
@@ -38,6 +39,7 @@ export const SettingsIntegrationItem = ({
   state,
   fields,
   onCancel,
+  onEnable,
   settingsChanged,
 }: Props) => {
   const [collapsed, setCollapsed] = React.useState(true);
@@ -115,7 +117,12 @@ export const SettingsIntegrationItem = ({
                   size='sm'
                   variant='outline'
                   onClick={() => {
-                    setCollapsed(false);
+                    // If onEnable is present -> we're using the integration.app flows
+                    if (onEnable) {
+                      onEnable();
+                    } else {
+                      setCollapsed(false);
+                    }
                   }}
                 >
                   Enable

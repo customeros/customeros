@@ -22,10 +22,6 @@ query Organization($id: ID!) {
       id
       url
     }
-    relationshipStages {
-      relationship
-      stage
-    }
     subsidiaryOf {
       organization {
         id
