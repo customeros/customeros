@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
@@ -62,7 +63,11 @@ func SyncLogEntriesHandler(services *service.Services, log logger.Logger) gin.Ha
 		err = services.LogEntryService.SyncLogEntries(ctx, logEntries)
 		if err != nil {
 			log.Errorf("(SyncLogEntries) error in sync logEntries: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing logEntries"})
+			if errors.IsBadRequest(err) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entries"})
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}
@@ -107,7 +112,11 @@ func SyncLogEntryHandler(services *service.Services, log logger.Logger) gin.Hand
 		err = services.LogEntryService.SyncLogEntries(ctx, []model.LogEntryData{logEntry})
 		if err != nil {
 			log.Errorf("(SyncLogEntry) error in sync logEntry: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing logEntry"})
+			if errors.IsBadRequest(err) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entry"})
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}

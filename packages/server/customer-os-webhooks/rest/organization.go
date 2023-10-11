@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
@@ -62,7 +63,11 @@ func SyncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 		err = services.OrganizationService.SyncOrganizations(ctx, organizations)
 		if err != nil {
 			log.Errorf("(SyncOrganizations) error in sync organizations: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing organizations"})
+			if errors.IsBadRequest(err) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing organizations"})
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}
@@ -107,7 +112,11 @@ func SyncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 		err = services.OrganizationService.SyncOrganizations(ctx, []model.OrganizationData{organization})
 		if err != nil {
 			log.Errorf("(SyncOrganization) error in sync organization: %s", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing organization"})
+			if errors.IsBadRequest(err) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing organization"})
+			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
 		}
