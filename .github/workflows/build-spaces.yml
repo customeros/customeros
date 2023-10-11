@@ -76,9 +76,6 @@ jobs:
           echo "BEFORE test harness removal"
           df -h
           ls
-          cd ../..
-          echo "*********************"
-          ls
           echo "AFTER test harness removal"
           rm -rf openline-test-harness
           df -h
