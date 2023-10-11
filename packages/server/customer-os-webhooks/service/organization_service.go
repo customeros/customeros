@@ -54,7 +54,7 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 }
 
 func (s *organizationService) SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.SyncUsers")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.SyncOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -118,7 +118,7 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 				<-workerLimit
 			}()
 
-			result := s.syncOrganization(ctx, syncMutex, organizationData, syncDate, common.GetTenantFromContext(ctx), controlDomains)
+			result := s.syncOrganization(ctx, syncMutex, organizationData, syncDate, controlDomains)
 			statuses = append(statuses, result)
 		}(organizationData)
 	}
@@ -131,12 +131,13 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	return nil
 }
 
-func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *sync.Mutex, orgInput model.OrganizationData, syncDate time.Time, tenant string, controlDomains *domains) SyncStatus {
+func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *sync.Mutex, orgInput model.OrganizationData, syncDate time.Time, controlDomains *domains) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.syncOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", orgInput.ExternalSystem), log.Object("orgInput", orgInput), log.String("tenant", tenant))
+	span.LogFields(log.String("externalSystem", orgInput.ExternalSystem), log.Object("orgInput", orgInput))
 
+	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false
 	var reason = ""
 
@@ -251,11 +252,11 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			reason = fmt.Sprintf("failed sending event to upsert organization  with external reference %s for tenant %s :%s", orgInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
-		// Wait for user to be created in neo4j
+		// Wait for organization to be created in neo4j
 		if !failedSync && !matchingOrganizationExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				user, findErr := s.repositories.OrganizationRepository.GetById(ctx, tenant, organizationId)
-				if user != nil && findErr == nil {
+				organization, findErr := s.repositories.OrganizationRepository.GetById(ctx, tenant, organizationId)
+				if organization != nil && findErr == nil {
 					break
 				}
 				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
@@ -328,7 +329,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("Failed to create phone number %s for user %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
+					reason = fmt.Sprintf("Failed to create phone number %s for organization %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
 					s.log.Error(reason)
 				}
 				// Link phone number to organization
@@ -343,7 +344,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 					if err != nil {
 						failedSync = true
 						tracing.TraceErr(span, err)
-						reason = fmt.Sprintf("Failed to link phone number %s for user %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
+						reason = fmt.Sprintf("Failed to link phone number %s for organization %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
 						s.log.Error(reason)
 					}
 				}
@@ -361,7 +362,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			}
 			if !failedSync {
 				locationId, err = s.services.LocationService.CreateLocation(ctx, locationId, orgInput.ExternalSystem, orgInput.AppSource,
-					orgInput.LocationName, orgInput.Country, orgInput.Region, orgInput.Locality, orgInput.Address, orgInput.Address2, orgInput.Zip)
+					orgInput.LocationName, orgInput.Country, orgInput.Region, orgInput.Locality, "", orgInput.Address, orgInput.Address2, orgInput.Zip, "")
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
@@ -380,7 +381,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("Failed to link email address %s with organization %s: %s", orgInput.Email, organizationId, err.Error())
+					reason = fmt.Sprintf("Failed to link location %s with organization %s: %s", locationId, organizationId, err.Error())
 					s.log.Error(reason)
 				}
 			}

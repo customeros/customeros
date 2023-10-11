@@ -20,7 +20,7 @@ import (
 
 type LocationService interface {
 	GetById(ctx context.Context, locationId string) (*entity.LocationEntity, error)
-	CreateLocation(ctx context.Context, locationId, externalSystem, appSource, locationName, country, region, locality, address, address2, zip string) (string, error)
+	CreateLocation(ctx context.Context, locationId, externalSystem, appSource, locationName, country, region, locality, street, address, address2, zip, postalCode string) (string, error)
 }
 
 type locationService struct {
@@ -38,7 +38,7 @@ func NewLocationService(log logger.Logger, repositories *repository.Repositories
 }
 
 func (s *locationService) CreateLocation(ctx context.Context, locationId, externalSystem, appSource string,
-	locationName, country, region, locality, address, address2, zip string) (string, error) {
+	locationName, country, region, locality, street, address, address2, zip, postalCode string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationService.CreateLocation")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -57,9 +57,11 @@ func (s *locationService) CreateLocation(ctx context.Context, locationId, extern
 		Country:      country,
 		Region:       region,
 		Locality:     locality,
+		Street:       street,
 		AddressLine1: address,
 		AddressLine2: address2,
 		ZipCode:      zip,
+		PostalCode:   postalCode,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

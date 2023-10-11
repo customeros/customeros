@@ -120,6 +120,14 @@ func (server *server) Run(parentCtx context.Context) error {
 		cosHandler.TracingEnhancer(ctx, "/sync/log-entry"),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
 		rest.SyncLogEntryHandler(serviceContainer, server.log))
+	r.POST("/sync/contacts",
+		cosHandler.TracingEnhancer(ctx, "/sync/contacts"),
+		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		rest.SyncContactsHandler(serviceContainer, server.log))
+	r.POST("/sync/contact",
+		cosHandler.TracingEnhancer(ctx, "/sync/contact"),
+		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		rest.SyncContactHandler(serviceContainer, server.log))
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)

@@ -14,6 +14,7 @@ import (
 
 type LocationRepository interface {
 	GetMatchedLocationIdForOrganizationBySource(ctx context.Context, organizationId, externalSystem string) (string, error)
+	GetMatchedLocationIdForContactBySource(ctx context.Context, contactId, externalSystem string) (string, error)
 	GetById(ctx context.Context, locationId string) (*dbtype.Node, error)
 }
 
@@ -33,21 +34,55 @@ func (r *locationRepository) GetMatchedLocationIdForOrganizationBySource(ctx con
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId), log.String("externalSystem", externalSystem))
 
-	query := `MATCH (:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})-[:ASSOCIATED_WITH]->(l:Location {source:$source}),
-				(l)-[:LOCATION_BELONGS_TO_TENANT]->(t)
+	query := `MATCH (:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Organization {id:$organizationId})-[:ASSOCIATED_WITH]->(l:Location {source:$source})-[:LOCATION_BELONGS_TO_TENANT]->(t)
 				RETURN l.id limit 1`
-	span.LogFields(log.String("query", query))
+	params := map[string]interface{}{
+		"tenant":         common.GetTenantFromContext(ctx),
+		"source":         externalSystem,
+		"organizationId": organizationId,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]interface{}{
-				"tenant":         common.GetTenantFromContext(ctx),
-				"source":         externalSystem,
-				"organizationId": organizationId,
-			})
+		queryResult, err := tx.Run(ctx, query, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return "", err
+	}
+	locationIds := dbRecords.([]*db.Record)
+	if len(locationIds) > 0 {
+		return locationIds[0].Values[0].(string), nil
+	}
+	return "", nil
+}
+
+func (r *locationRepository) GetMatchedLocationIdForContactBySource(ctx context.Context, contactId, externalSystem string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetMatchedLocationIdForContactBySource")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId), log.String("externalSystem", externalSystem))
+
+	query := `MATCH (:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Contact {id:$contactId})-[:ASSOCIATED_WITH]->(l:Location {source:$source})-[:LOCATION_BELONGS_TO_TENANT]->(t),
+				RETURN l.id limit 1`
+	params := map[string]interface{}{
+		"tenant":    common.GetTenantFromContext(ctx),
+		"source":    externalSystem,
+		"contactId": contactId,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
 			return nil, err
 		}
