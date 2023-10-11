@@ -73,3 +73,23 @@ func NewLinkLocationCommand(contactId, tenant, userId, locationId string) *LinkL
 		LocationId:  locationId,
 	}
 }
+
+type LinkOrganizationCommand struct {
+	eventstore.BaseCommand
+	OrganizationId string `json:"organizationId" validate:"required"`
+	JobRoleFields  models.JobRole
+	Source         cmnmod.Source
+	CreatedAt      *time.Time
+	UpdatedAt      *time.Time
+}
+
+func NewLinkOrganizationCommand(contactId, tenant, userId, organizationId string, source cmnmod.Source, jobRoleFields models.JobRole, createdAt, updatedAt *time.Time) *LinkOrganizationCommand {
+	return &LinkOrganizationCommand{
+		BaseCommand:    eventstore.NewBaseCommand(contactId, tenant, userId),
+		OrganizationId: organizationId,
+		JobRoleFields:  jobRoleFields,
+		Source:         source,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
+	}
+}

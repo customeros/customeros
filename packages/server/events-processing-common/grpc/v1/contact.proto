@@ -51,10 +51,19 @@ message LinkLocationToContactGrpcRequest {
   string loggedInUserId = 4;
 }
 
-message UnlinkLocationFromContactGrpcRequest {
+message LinkWithOrganizationGrpcRequest {
   string tenant = 1;
   string contactId = 2;
-  string locationId = 3;
+  string organizationId = 3;
+  string loggedInUserId = 4;
+  SourceFields sourceFields = 5;
+  google.protobuf.Timestamp  startedAt = 6;
+  google.protobuf.Timestamp  endedAt = 7;
+  string jobTitle = 8;
+  bool primary = 9;
+  string description = 10;
+  google.protobuf.Timestamp  createdAt = 11;
+  google.protobuf.Timestamp  updatedAt = 12;
 }
 
 message ContactIdGrpcResponse {
@@ -66,5 +75,5 @@ service contactGrpcService {
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkEmailToContact(LinkEmailToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc UnlinkLocationFromContact(UnlinkLocationFromContactGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc LinkWithOrganization(LinkWithOrganizationGrpcRequest) returns (ContactIdGrpcResponse);
 }

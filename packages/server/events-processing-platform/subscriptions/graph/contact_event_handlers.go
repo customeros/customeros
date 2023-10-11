@@ -154,3 +154,20 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 
 	return err
 }
+
+func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactLinkToOrganization")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.ContactLinkWithOrganizationEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.repositories.JobRoleRepository.LinkContactWithOrganization(ctx, eventData.Tenant, contactId, eventData)
+
+	return err
+}

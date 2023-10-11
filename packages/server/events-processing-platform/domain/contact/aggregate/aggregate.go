@@ -43,7 +43,8 @@ func (a *ContactAggregate) When(event eventstore.Event) error {
 		return a.onEmailLink(event)
 	case events.ContactLocationLinkV1:
 		return a.onLocationLink(event)
-
+	case events.ContactOrganizationLinkV1:
+		return a.onOrganizationLink(event)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
@@ -175,5 +176,55 @@ func (a *ContactAggregate) onLocationLink(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Contact.Locations = utils.AddToListIfNotExists(a.Contact.Locations, eventData.LocationId)
+	return nil
+}
+
+func (a *ContactAggregate) onOrganizationLink(event eventstore.Event) error {
+	var eventData events.ContactLinkWithOrganizationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Contact.JobRolesByOrganization == nil {
+		a.Contact.JobRolesByOrganization = make(map[string]models.JobRole)
+	}
+	jobRole, found := a.Contact.JobRolesByOrganization[eventData.OrganizationId]
+	if !found {
+		a.Contact.JobRolesByOrganization[eventData.OrganizationId] = models.JobRole{
+			JobTitle:    eventData.JobTitle,
+			Primary:     eventData.Primary,
+			Description: eventData.Description,
+			StartedAt:   eventData.StartedAt,
+			EndedAt:     eventData.EndedAt,
+			Source: cmnmod.Source{
+				Source:        eventData.SourceFields.Source,
+				SourceOfTruth: eventData.SourceFields.SourceOfTruth,
+				AppSource:     eventData.SourceFields.AppSource,
+			},
+			CreatedAt: eventData.CreatedAt,
+		}
+	} else {
+		if eventData.SourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
+			if jobRole.JobTitle == "" {
+				jobRole.JobTitle = eventData.JobTitle
+			}
+			if jobRole.Description == "" {
+				jobRole.Description = eventData.Description
+			}
+			if jobRole.StartedAt == nil {
+				jobRole.StartedAt = eventData.StartedAt
+			}
+			if jobRole.EndedAt == nil {
+				jobRole.EndedAt = eventData.EndedAt
+			}
+		} else {
+			jobRole.JobTitle = eventData.JobTitle
+			jobRole.Primary = eventData.Primary
+			jobRole.Description = eventData.Description
+			jobRole.StartedAt = eventData.StartedAt
+			jobRole.EndedAt = eventData.EndedAt
+		}
+	}
+
+	a.Contact.UpdatedAt = eventData.UpdatedAt
 	return nil
 }

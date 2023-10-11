@@ -27,6 +27,8 @@ func (a *ContactAggregate) HandleCommand(ctx context.Context, cmd eventstore.Com
 		return a.linkPhoneNumber(ctx, c)
 	case *command.LinkLocationCommand:
 		return a.linkLocation(ctx, c)
+	case *command.LinkOrganizationCommand:
+		return a.linkOrganization(ctx, c)
 	default:
 		return errors.New("invalid contact command type")
 	}
@@ -202,6 +204,27 @@ func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLo
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactLinkLocationEvent")
+	}
+
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+
+	return a.Apply(event)
+}
+
+func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.LinkOrganizationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.linkOrganization")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+
+	event, err := events.NewContactLinkWithOrganizationEvent(a, cmd.OrganizationId, cmd.JobRoleFields.JobTitle, cmd.JobRoleFields.Description,
+		cmd.JobRoleFields.Primary, cmd.Source, createdAtNotNil, updatedAtNotNil, cmd.JobRoleFields.StartedAt, cmd.JobRoleFields.EndedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactLinkWithOrganizationEvent")
 	}
 
 	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)

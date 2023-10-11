@@ -723,13 +723,13 @@ func (s *contactService) RemoveLocation(ctx context.Context, contactId string, l
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.String("locationId", locationId))
 
-	_, err := s.grpcClients.ContactClient.UnlinkLocationFromContact(context.Background(), &contact_grpc_service.UnlinkLocationFromContactGrpcRequest{
-		Tenant:     common.GetTenantFromContext(ctx),
-		ContactId:  contactId,
-		LocationId: locationId,
-	})
-
-	return err
+	//TODO implement
+	panic("implement me")
+	//_, err := s.grpcClients.ContactClient.UnlinkLocationFromContact(context.Background(), &contact_grpc_service.UnlinkLocationFromContactGrpcRequest{
+	//	Tenant:     common.GetTenantFromContext(ctx),
+	//	ContactId:  contactId,
+	//	LocationId: locationId,
+	//})
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {

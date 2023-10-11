@@ -19,7 +19,7 @@ import (
 
 func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore eventstore.AggregateStore, repositories *repository.Repositories) *domain.Commands {
 	return &domain.Commands{
-		ContactCommands:          contactcmd.NewContactCommands(log, cfg, aggregateStore),
+		ContactCommands:          contactcmd.NewContactCommands(log, aggregateStore),
 		OrganizationCommands:     orgcmd.NewOrganizationCommands(log, cfg, aggregateStore, repositories),
 		InteractionEventCommands: iecmd.NewInteractionEventCommands(log, cfg, aggregateStore),
 		PhoneNumberCommands:      phonecmd.NewPhoneNumberCommands(log, cfg, aggregateStore),

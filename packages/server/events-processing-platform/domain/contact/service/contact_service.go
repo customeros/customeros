@@ -112,6 +112,33 @@ func (s *contactService) LinkLocationToContact(ctx context.Context, request *pb.
 	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
+func (s *contactService) LinkWithOrganization(ctx context.Context, request *pb.LinkWithOrganizationGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkWithOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("contactId", request.ContactId), log.String("organizationId", request.OrganizationId))
+
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	jobRoleFields := models.JobRole{
+		JobTitle:    request.JobTitle,
+		Description: request.Description,
+		Primary:     request.Primary,
+		StartedAt:   utils.TimestampProtoToTime(request.StartedAt),
+		EndedAt:     utils.TimestampProtoToTime(request.EndedAt),
+	}
+
+	cmd := command.NewLinkOrganizationCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.OrganizationId, sourceFields, jobRoleFields,
+		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	if err := s.contactCommands.LinkOrganizationCommand.Handle(ctx, cmd); err != nil {
+		s.log.Errorf("(LinkOrganizationCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+}
+
 func (s *contactService) errResponse(err error) error {
 	return grpc_errors.ErrResponse(err)
 }
