@@ -46,7 +46,6 @@ export const useOrganizationsPageMethods = () => {
               if (!draft) return;
               draft.id = Math.random().toString();
               draft.name = '';
-              draft.relationshipStages = [];
               draft.website = '';
               draft.owner = null;
               draft.lastTouchPointTimelineEvent = null;

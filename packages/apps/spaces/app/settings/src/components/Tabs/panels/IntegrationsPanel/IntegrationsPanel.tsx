@@ -1,18 +1,22 @@
 'use client';
+import React, { useEffect, useRef, useState } from 'react';
+import { useIntegrationApp, useIntegrations } from '@integration-app/react';
+import Fuse from 'fuse.js';
 
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
-import React, { useEffect, useRef, useState } from 'react';
 import { Heading } from '@ui/typography/Heading';
 import { SettingsIntegrationItem } from './SettingsIntegrationItem';
 import { GetIntegrationsSettings } from 'services';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { Text, VStack } from '@chakra-ui/react';
 import { Input } from '@ui/form/Input';
-import Fuse from 'fuse.js';
+import { Button } from '@ui/form/Button';
 import { IntegrationItem, integrationsData } from './data';
 import { toastError } from '@ui/presentation/Toast';
 
 export const IntegrationsPanel = () => {
+  const iApp = useIntegrationApp();
+  const { items } = useIntegrations();
   const [reload, setReload] = useState<boolean>(true);
   const reloadRef = useRef<boolean>(reload);
 
@@ -27,7 +31,7 @@ export const IntegrationsPanel = () => {
 
   useEffect(() => {
     GetIntegrationsSettings()
-      .then((data: any) => {
+      .then((data) => {
         const map = integrations.map((integration) => {
           return {
             ...integration,
@@ -77,6 +81,21 @@ export const IntegrationsPanel = () => {
 
     // Update the display
     setIntegrationsDisplayed(finalResult);
+  };
+
+  // integration.app related logic (temporary)
+  const availableIntegrations = items.map((item) => item.key);
+  const handleConnect = (integrationKey: string) => async () => {
+    const option = items.find((item) => item.key === integrationKey);
+
+    if (!option) {
+      return;
+    }
+    try {
+      await iApp.integration(option.key).openNewConnection();
+    } catch (err) {
+      toastError('Integration failed', 'get-intergration-data');
+    }
   };
 
   return (
@@ -164,6 +183,9 @@ export const IntegrationsPanel = () => {
                     integration.state === 'INACTIVE',
                 )
                 .map((integration: IntegrationItem) => {
+                  const option = integration.key;
+                  const isFromIApp = availableIntegrations.includes(option);
+
                   return (
                     <SettingsIntegrationItem
                       key={integration.key}
@@ -171,6 +193,7 @@ export const IntegrationsPanel = () => {
                       identifier={integration.identifier}
                       name={integration.name}
                       state={integration.state}
+                      onEnable={isFromIApp ? handleConnect(option) : undefined}
                       settingsChanged={() => {
                         reloadRef.current = !reloadRef.current;
                         setReload(reloadRef.current);

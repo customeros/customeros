@@ -97,13 +97,13 @@ function getRedirectUrl(
     );
   } else if (request.nextUrl.pathname.startsWith('/validation-api/')) {
     newURL =
-        process.env.VALIDATION_API_PATH +
-        '/' +
-        request.nextUrl.pathname.substring('/validation-api/'.length);
+      process.env.VALIDATION_API_PATH +
+      '/' +
+      request.nextUrl.pathname.substring('/validation-api/'.length);
 
     requestHeaders.set(
-        'X-Openline-API-KEY',
-        process.env.VALIDATION_API_KEY as string,
+      'X-Openline-API-KEY',
+      process.env.VALIDATION_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/ua/')) {
     newURL =

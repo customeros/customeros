@@ -114,11 +114,6 @@ export type GetOrganizationsQuery = {
         houseNumber?: string | null;
         rawAddress?: string | null;
       }>;
-      relationshipStages: Array<{
-        __typename?: 'OrganizationRelationshipStage';
-        relationship: Types.OrganizationRelationship;
-        stage?: string | null;
-      }>;
       lastTouchPointTimelineEvent?:
         | {
             __typename: 'Action';
@@ -298,10 +293,6 @@ export const GetOrganizationsDocument = `
         postalCode
         houseNumber
         rawAddress
-      }
-      relationshipStages {
-        relationship
-        stage
       }
       lastTouchPointTimelineEventId
       lastTouchPointAt

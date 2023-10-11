@@ -67,7 +67,6 @@ const defaults: GetOrganizationRowResult = {
     },
   },
   locations: [],
-  relationshipStages: [],
   lastTouchPointTimelineEvent: null,
 };
 

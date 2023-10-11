@@ -1355,7 +1355,7 @@ export const integrationsData: IntegrationItem[] = [
     ],
   },
   {
-    key: 'zendesksupport',
+    key: 'zendesk',
     state: 'INACTIVE',
     identifier: 'zendesksupport',
     name: 'Zendesk Support',
