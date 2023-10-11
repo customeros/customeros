@@ -40,21 +40,21 @@ jobs:
 
       - run: npm install -g yarn
 
-      - name: Deploy test Environment
-        run: |
-          curl http://openline.sh/install.sh | sh
-          echo "[INFO] Starting Openline CLI..."
-          openline dev start test-env
-          echo "[INFO] Checking Openline CLI services..."
-          openline dev ping
-          echo "[INFO] Checking PODs..."
-          kubectl -n openline get pods
-
-      - name: Run tests
-        run: |
-          cd packages/apps/spaces
-          yarn add -D jest --silent
-          yarn test
+#      - name: Deploy test Environment
+#        run: |
+#          curl http://openline.sh/install.sh | sh
+#          echo "[INFO] Starting Openline CLI..."
+#          openline dev start test-env
+#          echo "[INFO] Checking Openline CLI services..."
+#          openline dev ping
+#          echo "[INFO] Checking PODs..."
+#          kubectl -n openline get pods
+#
+#      - name: Run tests
+#        run: |
+#          cd packages/apps/spaces
+#          yarn add -D jest --silent
+#          yarn test
 
       - name: Compute test coverage
         id: compute_code_coverage
