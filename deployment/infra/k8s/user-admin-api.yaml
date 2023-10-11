@@ -35,7 +35,7 @@ spec:
             timeoutSeconds: 1
           env:
             - name: POSTGRES_USER
-              value: "openline"
+              value: "postgres"
             - name: POSTGRES_PASSWORD
               value: "password"
             - name: POSTGRES_DB
@@ -52,6 +52,16 @@ spec:
               value: "0"
             - name: POSTGRES_LOG_LEVEL
               value: "INFO"
+            - name: NEO4J_TARGET
+              value: "neo4j://127.0.0.1:7687"
+            - name: NEO4J_AUTH_USER
+              value: "neo4j"
+            - name: NEO4J_AUTH_PWD
+              value: "StrongLocalPa$$$"
+            - name: SLACK_CLIENT_ID
+              value: ""
+            - name: SLACK_CLIENT_SECRET
+              value: ""
 
             - name: PORT
               value: "4001"
