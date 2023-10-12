@@ -81,6 +81,7 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 				"externalSystem": externalSystem,
 				"externalId":     externalId,
 				"domains":        domains,
+				"customerOsId":   customerOsId,
 			})
 		if err != nil {
 			return nil, err
