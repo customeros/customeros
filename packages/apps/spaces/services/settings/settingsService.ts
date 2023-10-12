@@ -1,47 +1,48 @@
 import axios from 'axios';
-import {env} from "string-env-interpolation";
 
 export interface OAuthUserSettingsInterface {
-    gmailSyncEnabled: boolean;
-    googleCalendarSyncEnabled: boolean;
+  gmailSyncEnabled: boolean;
+  googleCalendarSyncEnabled: boolean;
 }
 
 export interface SlackSettingsInterface {
-    slackEnabled: boolean;
+  slackEnabled: boolean;
 }
 
-export function GetGoogleSettings(identifier:string): Promise<OAuthUserSettingsInterface> {
-    return new Promise((resolve, reject) =>
-        axios
-            .get(`/sa/user/settings/google/${identifier}`)
-            .then(({ data, error }: any) => {
-                if (data) {
-                    resolve(data);
-                } else {
-                    reject(error);
-                }
-            })
-            .catch((reason) => {
-                reject(reason);
-            }),
-    );
+export function GetGoogleSettings(
+  identifier: string,
+): Promise<OAuthUserSettingsInterface> {
+  return new Promise((resolve, reject) =>
+    axios
+      .get(`/sa/user/settings/google/${identifier}`)
+      .then(({ data, error }: any) => {
+        if (data) {
+          resolve(data);
+        } else {
+          reject(error);
+        }
+      })
+      .catch((reason) => {
+        reject(reason);
+      }),
+  );
 }
 
 export function GetSlackSettings(): Promise<SlackSettingsInterface> {
-    return new Promise((resolve, reject) =>
-        axios
-            .get(`/sa/user/settings/slack`)
-            .then(({ data, error }: any) => {
-                if (data) {
-                    resolve(data);
-                } else {
-                    reject(error);
-                }
-            })
-            .catch((reason) => {
-                reject(reason);
-            }),
-    );
+  return new Promise((resolve, reject) =>
+    axios
+      .get(`/sa/user/settings/slack`)
+      .then(({ data, error }: any) => {
+        if (data) {
+          resolve(data);
+        } else {
+          reject(error);
+        }
+      })
+      .catch((reason) => {
+        reject(reason);
+      }),
+  );
 }
 
 export function GetIntegrationsSettings(): Promise<any> {
