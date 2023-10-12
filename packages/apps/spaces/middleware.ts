@@ -40,21 +40,19 @@ function getRedirectUrl(
 
   const requestHeaders = new Headers(request.headers);
 
+  requestHeaders.set('X-Openline-USERNAME', userName);
+  requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
+
   if (request.nextUrl.pathname.startsWith('/customer-os-api/')) {
-    requestHeaders.set('X-Openline-USERNAME', userName);
-    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.CUSTOMER_OS_API_PATH +
       '/' +
       request.nextUrl.pathname.substring('/customer-os-api/'.length);
-
     requestHeaders.set(
       'X-Openline-API-KEY',
       process.env.CUSTOMER_OS_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/fs/')) {
-    requestHeaders.set('X-Openline-USERNAME', userName);
-    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.FILE_STORAGE_API_PATH +
       '/' +
@@ -64,8 +62,6 @@ function getRedirectUrl(
       process.env.FILE_STORAGE_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/sa/')) {
-    requestHeaders.set('X-Openline-USERNAME', userName);
-    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.SETTINGS_API_PATH +
       '/' +
@@ -75,7 +71,6 @@ function getRedirectUrl(
       process.env.SETTINGS_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/comms-api/')) {
-    requestHeaders.set('X-Openline-USERNAME', userName);
     newURL =
       process.env.COMMS_API_PATH +
       '/' +
@@ -85,8 +80,6 @@ function getRedirectUrl(
       process.env.COMMS_MAIL_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/transcription-api/')) {
-    requestHeaders.set('X-Openline-USERNAME', userName);
-    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.TRANSCRIPTION_API_PATH +
       '/' +
@@ -110,8 +103,6 @@ function getRedirectUrl(
       process.env.USER_ADMIN_API_URL +
       '/' +
       request.nextUrl.pathname.substring('/ua/'.length);
-
-    requestHeaders.set('X-Openline-USERNAME', userName);
     requestHeaders.set(
       'X-Openline-API-KEY',
       process.env.USER_ADMIN_API_KEY as string,
