@@ -48,10 +48,10 @@ export const AuthPanel = () => {
             setSlackSettings(res);
             setSlackSettingsLoading(false);
           });
-          router.push('/settings?tab=auth', { shallow: true });
+          router.push('/settings?tab=auth');
         })
         .catch((reason) => {
-          router.push('/settings?tab=auth', { shallow: true });
+          router.push('/settings?tab=auth');
         });
     } else {
       setSlackSettingsLoading(true);
