@@ -323,7 +323,12 @@ export const AboutPanel = () => {
               w='fit-content'
               color='gray.400'
               cursor='pointer'
-              onClick={() => copyToClipboard('plm2', 'CustomerOS ID copied')}
+              onClick={() =>
+                copyToClipboard(
+                  data?.organization?.customerOsId ?? '',
+                  'CustomerOS ID copied',
+                )
+              }
             >
               CustomerOS ID: {data?.organization?.customerOsId}
             </Text>
