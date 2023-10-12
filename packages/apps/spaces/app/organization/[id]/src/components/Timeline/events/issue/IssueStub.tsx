@@ -7,6 +7,8 @@ import { IssueBgPattern } from '@ui/media/logos/IssueBgPattern';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { CustomTicketTearStyle } from './styles';
 import { IssueWithAliases } from '@organization/src/components/Timeline/types';
+import { getExternalUrl } from '@spaces/utils/getExternalLink';
+import { toastError } from '@ui/presentation/Toast';
 function getStatusColor(
   status: string | 'New' | 'Open' | 'Pending' | 'On hold' | 'Solved',
 ) {
@@ -19,6 +21,21 @@ function getStatusColor(
 export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
   // const { openModal } = useTimelineEventPreviewContext(); // todo uncomment when modal is ready
   const statusColorScheme = (() => getStatusColor(data.issueStatus))();
+  const handleOpenInExternalApp = () => {
+    if (data?.externalLinks?.[0]?.externalUrl) {
+      window.open(
+        getExternalUrl(data.externalLinks[0].externalUrl),
+        '_blank',
+        'noreferrer noopener',
+      );
+      return;
+    }
+    toastError(
+      'This issue is not connected to external source',
+      `${data.id}-stub-open-in-external-app-error`,
+    );
+  };
+
   return (
     <Card
       variant='outline'
@@ -32,6 +49,7 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
       boxShadow='none'
       border='1px solid'
       borderColor='gray.200'
+      onClick={handleOpenInExternalApp} // todo remove when COS-464 is merged
       // onClick={() => openModal(data)}
       // TODO uncomment when modal is ready
       // _hover={{

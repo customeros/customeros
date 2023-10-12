@@ -341,6 +341,7 @@ export type GetTimelineQuery = {
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
             externalId?: string | null;
+            externalUrl?: string | null;
           }>;
         }
       | {
@@ -648,6 +649,7 @@ export const GetTimelineDocument = `
         createdAt
         externalLinks {
           externalId
+          externalUrl
         }
       }
     }

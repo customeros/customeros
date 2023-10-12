@@ -50,6 +50,7 @@ export type GetIssuesQuery = {
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
             externalId?: string | null;
+            externalUrl?: string | null;
           }>;
         }
       | { __typename?: 'LogEntry' }
@@ -73,6 +74,7 @@ export const GetIssuesDocument = `
         appSource
         externalLinks {
           externalId
+          externalUrl
         }
         createdAt
       }
