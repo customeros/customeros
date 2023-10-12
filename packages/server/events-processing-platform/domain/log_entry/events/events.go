@@ -61,22 +61,24 @@ func NewLogEntryCreateEvent(aggregate eventstore.Aggregate, dataFields models.Lo
 }
 
 type LogEntryUpdateEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
-	Content       string    `json:"content"`
-	ContentType   string    `json:"contentType"`
-	StartedAt     time.Time `json:"startedAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
+	Tenant               string    `json:"tenant" validate:"required"`
+	Content              string    `json:"content"`
+	ContentType          string    `json:"contentType"`
+	StartedAt            time.Time `json:"startedAt"`
+	UpdatedAt            time.Time `json:"updatedAt"`
+	SourceOfTruth        string    `json:"sourceOfTruth"`
+	LoggedOrganizationId string    `json:"loggedOrganizationId"`
 }
 
-func NewLogEntryUpdateEvent(aggregate eventstore.Aggregate, content, contentType, sourceOfTruth string, updatedAt, startedAt time.Time) (eventstore.Event, error) {
+func NewLogEntryUpdateEvent(aggregate eventstore.Aggregate, content, contentType, sourceOfTruth string, updatedAt, startedAt time.Time, loggedOrganizationId *string) (eventstore.Event, error) {
 	eventData := LogEntryUpdateEvent{
-		Tenant:        aggregate.GetTenant(),
-		Content:       content,
-		ContentType:   contentType,
-		UpdatedAt:     updatedAt,
-		StartedAt:     startedAt,
-		SourceOfTruth: sourceOfTruth,
+		Tenant:               aggregate.GetTenant(),
+		Content:              content,
+		ContentType:          contentType,
+		UpdatedAt:            updatedAt,
+		StartedAt:            startedAt,
+		SourceOfTruth:        sourceOfTruth,
+		LoggedOrganizationId: utils.IfNotNilString(loggedOrganizationId),
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

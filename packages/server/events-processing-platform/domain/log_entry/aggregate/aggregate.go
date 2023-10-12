@@ -56,7 +56,9 @@ func (a *LogEntryAggregate) onLogEntryCreate(event eventstore.Event) error {
 	a.LogEntry.Content = eventData.Content
 	a.LogEntry.ContentType = eventData.ContentType
 	a.LogEntry.AuthorUserId = eventData.AuthorUserId
-	a.LogEntry.LoggedOrganizationId = eventData.LoggedOrganizationId
+	if eventData.LoggedOrganizationId != "" {
+		a.LogEntry.LoggedOrganizationIds = utils.AddToListIfNotExists(a.LogEntry.LoggedOrganizationIds, eventData.LoggedOrganizationId)
+	}
 	a.LogEntry.StartedAt = eventData.StartedAt
 	a.LogEntry.Source = cmnmod.Source{
 		Source:        eventData.Source,
@@ -80,6 +82,9 @@ func (a *LogEntryAggregate) onLogEntryUpdate(event eventstore.Event) error {
 	a.LogEntry.ContentType = eventData.ContentType
 	a.LogEntry.StartedAt = eventData.StartedAt
 	a.LogEntry.UpdatedAt = eventData.UpdatedAt
+	if eventData.LoggedOrganizationId != "" {
+		a.LogEntry.LoggedOrganizationIds = utils.AddToListIfNotExists(a.LogEntry.LoggedOrganizationIds, eventData.LoggedOrganizationId)
+	}
 	if eventData.SourceOfTruth != "" {
 		a.LogEntry.Source.SourceOfTruth = eventData.SourceOfTruth
 	}

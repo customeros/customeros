@@ -136,14 +136,28 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 		return NewSkippedSyncStatus(logEntryInput.SkipReason)
 	}
 
+	loggedOrgIds := make([]string, 0)
 	if logEntryInput.LoggedEntityRequired {
+		found := false
 		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.LoggedOrganization)
-		if orgId == "" {
+		if orgId != "" {
+			loggedOrgIds = append(loggedOrgIds, orgId)
+			found = true
+		}
+		for _, loggedOrganization := range logEntryInput.LoggedOrganizations {
+			orgId, _ = s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, logEntryInput.ExternalSystem, loggedOrganization)
+			if orgId != "" {
+				loggedOrgIds = append(loggedOrgIds, orgId)
+				found = true
+			}
+		}
+		if !found {
 			failedSync = true
 			reason = fmt.Sprintf("organization not found for log entry %s for tenant %s", logEntryInput.ExternalId, tenant)
 			s.log.Error(reason)
 			return NewFailedSyncStatus(reason)
 		}
+		loggedOrgIds = utils.RemoveDuplicates(loggedOrgIds)
 	}
 
 	// Lock log entry creation
@@ -160,6 +174,7 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	if !failedSync {
 		matchingLogEntryExists := logEntryId != ""
 		span.LogFields(log.Bool("found matching log entry", matchingLogEntryExists))
+		span.LogFields(log.String("logEntryId", logEntryId))
 
 		request := logentrygrpc.UpsertLogEntryGrpcRequest{
 			Id:          logEntryId,
@@ -181,32 +196,18 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
 			},
 		}
-		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.LoggedOrganization)
-		if orgId != "" {
-			request.LoggedOrganizationId = utils.StringPtr(orgId)
-		}
 		userAuthorId, _ := s.services.UserService.GetIdForReferencedUser(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.AuthorUser)
 		if userAuthorId != "" {
 			request.AuthorUserId = utils.StringPtr(userAuthorId)
 		}
-		response, err := s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, &request)
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed sending event to upsert log entry with external reference %s for tenant %s :%s", logEntryInput.ExternalId, tenant, err.Error())
-			s.log.Error(reason)
+		if len(loggedOrgIds) == 0 {
+			failedSync, reason = s.sendLogEntryToEventStoreForLoggedOrganization(ctx, logEntryId, logEntryInput.ExternalId, "", &request, span, matchingLogEntryExists)
 		} else {
-			logEntryId = response.GetId()
-		}
-		span.LogFields(log.String("logEntryId", logEntryId))
-		// Wait for log entry to be created in neo4j
-		if !failedSync && !matchingLogEntryExists {
-			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				logEntry, findErr := s.repositories.LogEntryRepository.GetById(ctx, tenant, logEntryId)
-				if logEntry != nil && findErr == nil {
+			for _, orgId := range loggedOrgIds {
+				failedSync, reason = s.sendLogEntryToEventStoreForLoggedOrganization(ctx, logEntryId, logEntryInput.ExternalId, orgId, &request, span, matchingLogEntryExists)
+				if failedSync {
 					break
 				}
-				time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
 			}
 		}
 	}
@@ -217,6 +218,34 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 		return NewFailedSyncStatus(reason)
 	}
 	return NewSuccessfulSyncStatus()
+}
+
+func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx context.Context, logEntryId, externalId, organizationId string, request *logentrygrpc.UpsertLogEntryGrpcRequest, span opentracing.Span, matchingLogEntryExists bool) (bool, string) {
+	if organizationId != "" {
+		request.LoggedOrganizationId = utils.StringPtr(organizationId)
+	}
+	failedSync := false
+	reason := ""
+	response, err := s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, request)
+	if err != nil {
+		failedSync = true
+		tracing.TraceErr(span, err)
+		reason = fmt.Sprintf("failed sending event to upsert log entry with external reference %s for tenant %s :%s", externalId, common.GetTenantFromContext(ctx), err.Error())
+		s.log.Error(reason)
+	} else {
+		logEntryId = response.GetId()
+	}
+	// Wait for log entry to be created in neo4j
+	if !failedSync && !matchingLogEntryExists {
+		for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+			logEntry, findErr := s.repositories.LogEntryRepository.GetById(ctx, common.GetTenantFromContext(ctx), logEntryId)
+			if logEntry != nil && findErr == nil {
+				break
+			}
+			time.Sleep(time.Duration(i*constants.TimeoutIntervalMs) * time.Millisecond)
+		}
+	}
+	return failedSync, reason
 }
 
 func (s *logEntryService) mapDbNodeToLogEntryEntity(dbNode dbtype.Node) *entity.LogEntryEntity {

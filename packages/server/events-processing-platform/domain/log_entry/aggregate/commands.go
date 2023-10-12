@@ -77,7 +77,7 @@ func (a *LogEntryAggregate) updateLogEntry(ctx context.Context, command *cmd.Ups
 	}
 
 	event, err := events.NewLogEntryUpdateEvent(a, command.DataFields.Content, command.DataFields.ContentType,
-		sourceOfTruth, updatedAtNotNil, startedAtNotNil)
+		sourceOfTruth, updatedAtNotNil, startedAtNotNil, command.DataFields.LoggedOrganizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryUpdateEvent")

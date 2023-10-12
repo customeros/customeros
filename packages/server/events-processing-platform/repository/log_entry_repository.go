@@ -83,15 +83,23 @@ func (r *logEntryRepository) Update(ctx context.Context, tenant, logEntryId stri
 								l.startedAt=$startedAt,
 								l.sourceOfTruth=$sourceOfTruth,
 								l.content=$content,
-								l.contentType=$contentType`, tenant)
-	span.LogFields(log.String("query", query))
-
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+								l.contentType=$contentType
+								WITH l
+							OPTIONAL MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId}) 
+							WHERE $orgId <> ""
+							FOREACH (ignore IN CASE WHEN org IS NOT NULL THEN [1] ELSE [] END |
+    							MERGE (l)<-[:LOGGED]-(org))`, tenant)
+	params := map[string]any{
+		"tenant":        tenant,
 		"logEntryId":    logEntryId,
 		"updatedAt":     event.UpdatedAt,
 		"startedAt":     event.StartedAt,
 		"sourceOfTruth": helper.GetSourceOfTruth(event.SourceOfTruth),
 		"content":       event.Content,
 		"contentType":   event.ContentType,
-	})
+		"orgId":         event.LoggedOrganizationId,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, params)
 }
