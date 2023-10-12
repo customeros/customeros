@@ -23,7 +23,6 @@
     "react",
     "prettier",
     "@typescript-eslint",
-    "eslint-plugin-storybook",
     "eslint-plugin-react",
     "eslint-plugin-react-hooks"
   ],
