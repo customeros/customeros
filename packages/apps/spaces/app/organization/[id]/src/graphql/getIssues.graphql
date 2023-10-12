@@ -16,6 +16,7 @@ query GetIssues($organizationId: ID!, $from: Time!, $size: Int!) {
                 appSource
                 externalLinks {
                     externalId
+                    externalUrl
                 }
                 createdAt
             }

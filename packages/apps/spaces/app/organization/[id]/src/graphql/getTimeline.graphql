@@ -147,6 +147,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         createdAt
         externalLinks {
           externalId
+          externalUrl
         }
       }
     }

@@ -8,6 +8,8 @@ import { User01 } from '@ui/media/icons/User01';
 import { Heading } from '@ui/typography/Heading';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { getExternalUrl } from '@spaces/utils/getExternalLink';
+import { toastError } from '@ui/presentation/Toast';
 // import { getContactDisplayName } from '@spaces/utils/getContactName';
 // import { useContactOrUserDisplayName } from '@shared/hooks/useContactOrUserDisplayData';
 
@@ -26,7 +28,6 @@ function getStatusColor(
 export const IssueCard = ({ issue }: IssueCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   // const getDisplayName = useContactOrUserDisplayName();
-
   // const requestorName = getDisplayName(issue.requestedBy);
   const statusColorScheme = (() => getStatusColor(issue.status))();
 
@@ -34,6 +35,21 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
   //   const sortedNotes = notes.sort((a, b) => b.createdAt - a.createdAt);
   //   return sortedNotes[0].createdAt;
   // };
+
+  const handleOpenInExternalApp = () => {
+    if (issue?.externalLinks?.[0]?.externalUrl) {
+      window.open(
+        getExternalUrl(issue.externalLinks[0].externalUrl),
+        '_blank',
+        'noreferrer noopener',
+      );
+      return;
+    }
+    toastError(
+      'This issue is not connected to external source',
+      `${issue.id}-open-in-external-app-error`,
+    );
+  };
 
   return (
     <Card
@@ -46,6 +62,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
       borderRadius='lg'
       border='1px solid'
       borderColor='gray.200'
+      onClick={handleOpenInExternalApp}
       _hover={{
         boxShadow: 'md',
         '& > div > #confirm-button': {
