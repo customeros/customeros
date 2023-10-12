@@ -10,10 +10,10 @@ type ContactData struct {
 	BaseData
 	Prefix              string                   `json:"prefix,omitempty"`
 	FirstName           string                   `json:"firstName,omitempty"`
-	LastName            string                   `json:"LastName,omitempty"`
+	LastName            string                   `json:"lastName,omitempty"`
 	Name                string                   `json:"name,omitempty"`
 	Description         string                   `json:"description,omitempty"`
-	Label               string                   `json:"label,omitempty"`
+	Label               string                   `json:"label,omitempty"` // TODO not used, remove?
 	Notes               []ContactNote            `json:"notes,omitempty"` // TODO deprecated ???
 	Email               string                   `json:"email,omitempty"`
 	AdditionalEmails    []string                 `json:"additionalEmails,omitempty"`
