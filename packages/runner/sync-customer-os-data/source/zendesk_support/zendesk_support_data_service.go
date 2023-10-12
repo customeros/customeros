@@ -61,11 +61,11 @@ func NewZendeskSupportDataService(airbyteStoreDb *config.RawDataStoreDB, tenant 
 		log:            log,
 	}
 	dataService.dataFuncs = map[common.SyncedEntityType]func(context.Context, int, string) []any{}
-	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
-	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
+	//dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
+	//dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
 	dataService.dataFuncs[common.ISSUES] = dataService.GetIssuesForSync
-	dataService.dataFuncs[common.NOTES] = dataService.GetNotesForSync
-	dataService.dataFuncs[common.INTERACTION_EVENTS] = dataService.GetInteractionEventsForSync
+	//dataService.dataFuncs[common.NOTES] = dataService.GetNotesForSync
+	//dataService.dataFuncs[common.INTERACTION_EVENTS] = dataService.GetInteractionEventsForSync
 	return &dataService
 }
 

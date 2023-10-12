@@ -115,6 +115,13 @@ func (s *issueSyncService) syncIssue(ctx context.Context, issueSyncMutex *sync.M
 		return
 	}
 
+	orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, issueInput.ExternalSystem, entity.ReferencedOrganization{ExternalId: issueInput.ReporterOrganizationExternalId})
+	if orgId == "" {
+		_ = dataService.MarkProcessed(ctx, issueInput.SyncId, runId, false, false, "Logged organization not found.")
+		*failed++
+		return
+	}
+
 	issueSyncMutex.Lock()
 	dbNode, err := s.repositories.IssueRepository.GetMatchedIssue(ctx, tenant, issueInput.ExternalSystem, issueInput.ExternalId)
 	var issueId string
@@ -194,19 +201,19 @@ func (s *issueSyncService) syncIssue(ctx context.Context, issueSyncMutex *sync.M
 		}
 	}
 
-	issueInput.Tags = append(issueInput.Tags, issueInput.Subject+" - "+issueInput.ExternalId)
-	if issueInput.HasTags() && !failedSync {
-		for _, tag := range issueInput.Tags {
-			err = s.repositories.IssueRepository.MergeTagForIssue(ctx, tenant, issueId, tag, issueInput.ExternalSystem)
-			if err != nil {
-				failedSync = true
-				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("failed to merge tag %v for issue %v, tenant %v :%v", tag, issueId, tenant, err)
-				s.log.Errorf(reason)
-				break
-			}
-		}
-	}
+	//issueInput.Tags = append(issueInput.Tags, issueInput.Subject+" - "+issueInput.ExternalId)
+	//if issueInput.HasTags() && !failedSync {
+	//	for _, tag := range issueInput.Tags {
+	//		err = s.repositories.IssueRepository.MergeTagForIssue(ctx, tenant, issueId, tag, issueInput.ExternalSystem)
+	//		if err != nil {
+	//			failedSync = true
+	//			tracing.TraceErr(span, err)
+	//			reason = fmt.Sprintf("failed to merge tag %v for issue %v, tenant %v :%v", tag, issueId, tenant, err)
+	//			s.log.Errorf(reason)
+	//			break
+	//		}
+	//	}
+	//}
 
 	s.log.Debugf("successfully merged issue with id %v for tenant %v from %v", issueId, tenant, dataService.SourceId())
 	if err := dataService.MarkProcessed(ctx, issueInput.SyncId, runId, failedSync == false, false, reason); err != nil {
