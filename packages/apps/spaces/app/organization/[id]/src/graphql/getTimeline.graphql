@@ -145,6 +145,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         issueStatus:status
         appSource
         createdAt
+        description
         externalLinks {
           externalId
           externalUrl

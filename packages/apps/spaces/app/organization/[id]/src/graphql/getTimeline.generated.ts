@@ -337,6 +337,7 @@ export type GetTimelineQuery = {
           subject?: string | null;
           appSource: string;
           createdAt: any;
+          description?: string | null;
           issueStatus: string;
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
@@ -647,6 +648,7 @@ export const GetTimelineDocument = `
         issueStatus: status
         appSource
         createdAt
+        description
         externalLinks {
           externalId
           externalUrl

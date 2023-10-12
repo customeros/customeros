@@ -46,6 +46,7 @@ export type GetIssuesQuery = {
           subject?: string | null;
           status: string;
           appSource: string;
+          description?: string | null;
           createdAt: any;
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
@@ -72,6 +73,7 @@ export const GetIssuesDocument = `
         subject
         status
         appSource
+        description
         externalLinks {
           externalId
           externalUrl
