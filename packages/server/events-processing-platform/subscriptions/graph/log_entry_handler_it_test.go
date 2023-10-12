@@ -123,7 +123,7 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 	}
 	now := utils.Now()
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
-	event, err := events.NewLogEntryUpdateEvent(logEntryAggregate, "test content", "test content type", "openline", now, now)
+	event, err := events.NewLogEntryUpdateEvent(logEntryAggregate, "test content", "test content type", "openline", now, now, nil)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
