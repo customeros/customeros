@@ -27,6 +27,7 @@ import { ExternalSystemType } from '@graphql/types';
 import { LogEntryStub } from '@organization/src/components/Timeline/events/logEntry/LogEntryStub';
 
 import { useTimelineMeta } from './shared/state';
+import { IssueStub } from '@organization/src/components/Timeline/events/issue/IssueStub';
 
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
@@ -76,8 +77,9 @@ export const OrganizationTimeline: FC = () => {
           const lastEvent = lastPage?.organization?.timelineEvents?.slice(
             -1,
           )?.[0] as InteractionEventWithDate;
+          const lastEventDate = getEventDate(lastEvent as TimelineEvent);
           return {
-            from: lastEvent ? lastEvent.date : new Date(),
+            from: lastEvent ? lastEventDate : new Date(),
           };
         },
       },
@@ -126,6 +128,7 @@ export const OrganizationTimeline: FC = () => {
         case 'Meeting':
         case 'LogEntry':
         case 'Action':
+        case 'Issue':
           return !!d.id;
         default:
           return false;
@@ -139,6 +142,7 @@ export const OrganizationTimeline: FC = () => {
             return a.date;
           case 'Meeting':
           case 'Action':
+          case 'Issue':
             return a.createdAt;
           case 'LogEntry':
             return a.logEntryStartedAt;
@@ -152,7 +156,6 @@ export const OrganizationTimeline: FC = () => {
 
       return Date.parse(aDate) - Date.parse(bDate);
     });
-
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
@@ -244,6 +247,16 @@ export const OrganizationTimeline: FC = () => {
                     showDate={showDate}
                   >
                     <LogEntryStub data={timelineEvent} />
+                  </TimelineItem>
+                );
+              }
+              case 'Issue': {
+                return (
+                  <TimelineItem
+                    date={timelineEvent?.createdAt}
+                    showDate={showDate}
+                  >
+                    <IssueStub data={timelineEvent} />
                   </TimelineItem>
                 );
               }
