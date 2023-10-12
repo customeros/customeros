@@ -29,6 +29,7 @@ interface Props {
   fields?: FieldDefinition[];
   onCancel?: () => void;
   onEnable?: () => void;
+  onDisable?: () => void;
   settingsChanged?: () => void;
 }
 
@@ -40,6 +41,7 @@ export const SettingsIntegrationItem = ({
   fields,
   onCancel,
   onEnable,
+  onDisable,
   settingsChanged,
 }: Props) => {
   const [collapsed, setCollapsed] = React.useState(true);
@@ -105,10 +107,14 @@ export const SettingsIntegrationItem = ({
                   size='sm'
                   variant='outline'
                   onClick={() => {
-                    setCollapsed(false);
+                    if (onDisable) {
+                      onDisable();
+                    } else {
+                      setCollapsed(false);
+                    }
                   }}
                 >
-                  Edit
+                  {onDisable ? 'Revoke' : 'Edit'}
                 </Button>
               )}
 
