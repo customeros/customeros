@@ -35,8 +35,6 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
   //   return sortedNotes[0].createdAt;
   // };
 
-  console.log('🏷️ ----- issue.status: ', issue.status);
-
   return (
     <Card
       key={issue.id}

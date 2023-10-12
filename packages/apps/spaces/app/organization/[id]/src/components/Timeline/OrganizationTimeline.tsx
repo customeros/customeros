@@ -77,8 +77,9 @@ export const OrganizationTimeline: FC = () => {
           const lastEvent = lastPage?.organization?.timelineEvents?.slice(
             -1,
           )?.[0] as InteractionEventWithDate;
+          const lastEventDate = getEventDate(lastEvent as TimelineEvent);
           return {
-            from: lastEvent ? lastEvent.date : new Date(),
+            from: lastEvent ? lastEventDate : new Date(),
           };
         },
       },
