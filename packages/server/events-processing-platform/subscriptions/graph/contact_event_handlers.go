@@ -101,7 +101,7 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 		}
 	}
 
-	return err
+	return nil
 }
 
 func (e *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, evt eventstore.Event) error {

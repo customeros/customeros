@@ -161,18 +161,47 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	var err error
 	if eventData.IgnoreEmptyFields {
-		return h.repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
+		err = h.repositories.OrganizationRepository.UpdateOrganizationIgnoreEmptyInputParams(ctx, organizationId, eventData)
 	} else {
-		err := h.repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
+		err = h.repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
 		// set customer os id
 		customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
 		if customerOsErr != nil {
 			tracing.TraceErr(span, customerOsErr)
 			h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
 		}
+	}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while saving organization %s: %s", organizationId, err.Error())
 		return err
 	}
+
+	if eventData.ExternalSystem.Available() {
+		session := utils.NewNeo4jWriteSession(ctx, *h.repositories.Drivers.Neo4jDriver)
+		defer session.Close(ctx)
+
+		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			//var err error
+			if eventData.ExternalSystem.Available() {
+				innerErr := h.repositories.ExternalSystemRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, constants.NodeLabel_Organization, eventData.ExternalSystem)
+				if innerErr != nil {
+					h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
+					return nil, innerErr
+				}
+			}
+			return nil, nil
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
