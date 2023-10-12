@@ -114,7 +114,7 @@ export const SettingsIntegrationItem = ({
                     }
                   }}
                 >
-                  {onDisable ? 'Revoke' : 'Edit'}
+                  Edit
                 </Button>
               )}
 
