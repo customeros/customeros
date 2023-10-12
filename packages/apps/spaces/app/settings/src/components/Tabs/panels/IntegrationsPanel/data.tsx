@@ -11,6 +11,7 @@ export interface IntegrationItem {
   name: string;
   icon: string;
   fields: Field[];
+  isFromIntegrationApp?: boolean;
 }
 
 export const integrationsData: IntegrationItem[] = [
@@ -45,6 +46,7 @@ export const integrationsData: IntegrationItem[] = [
         label: 'API key',
       },
     ],
+    isFromIntegrationApp: true,
   },
   {
     key: 'smartsheet',
@@ -1374,6 +1376,7 @@ export const integrationsData: IntegrationItem[] = [
         label: 'Admin email',
       },
     ],
+    isFromIntegrationApp: true,
   },
   {
     key: 'zendeskchat',

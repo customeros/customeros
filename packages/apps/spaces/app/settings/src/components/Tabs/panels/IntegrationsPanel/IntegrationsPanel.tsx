@@ -1,6 +1,10 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import { useIntegrationApp, useIntegrations } from '@integration-app/react';
+import {
+  useConnections,
+  useIntegrations,
+  useIntegrationApp,
+} from '@integration-app/react';
 import Fuse from 'fuse.js';
 
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
@@ -10,13 +14,13 @@ import { GetIntegrationsSettings } from 'services';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { Text, VStack } from '@chakra-ui/react';
 import { Input } from '@ui/form/Input';
-import { Button } from '@ui/form/Button';
 import { IntegrationItem, integrationsData } from './data';
 import { toastError } from '@ui/presentation/Toast';
 
 export const IntegrationsPanel = () => {
   const iApp = useIntegrationApp();
-  const { items } = useIntegrations();
+  const { items: iIntegrations } = useIntegrations();
+  const { items: iConnections, refresh } = useConnections();
   const [reload, setReload] = useState<boolean>(true);
   const reloadRef = useRef<boolean>(reload);
 
@@ -84,15 +88,18 @@ export const IntegrationsPanel = () => {
   };
 
   // integration.app related logic (temporary)
-  const availableIntegrations = items.map((item) => item.key);
-  const handleConnect = (integrationKey: string) => async () => {
-    const option = items.find((item) => item.key === integrationKey);
+  const activeIntegrations = iConnections.map((item) => item.integration?.key);
+  const availableIntegrations = iIntegrations.map((item) => item.key);
+
+  const handleIntegration = (integrationKey: string) => async () => {
+    const option = iIntegrations.find((item) => item.key === integrationKey);
 
     if (!option) {
       return;
     }
     try {
-      await iApp.integration(option.key).openNewConnection();
+      await iApp.integration(option.key).open();
+      await refresh();
     } catch (err) {
       toastError('Integration failed', 'get-intergration-data');
     }
@@ -133,18 +140,27 @@ export const IntegrationsPanel = () => {
           {!loading && (
             <>
               {integrationsDisplayed
-                .filter(
-                  (integration: IntegrationItem) =>
-                    integration.state === 'ACTIVE',
-                )
+                .filter((integration: IntegrationItem) => {
+                  if (integration.isFromIntegrationApp) {
+                    return activeIntegrations.includes(integration.key);
+                  } else {
+                    return integration.state === 'ACTIVE';
+                  }
+                })
                 .map((integration: IntegrationItem) => {
+                  const option = integration.key;
+                  const isFromIApp = activeIntegrations.includes(option);
+
                   return (
                     <SettingsIntegrationItem
                       key={integration.key}
                       icon={integration.icon}
                       identifier={integration.identifier}
                       name={integration.name}
-                      state={integration.state}
+                      onDisable={
+                        isFromIApp ? handleIntegration(option) : undefined
+                      }
+                      state={isFromIApp ? 'ACTIVE' : integration.state}
                       settingsChanged={() => {
                         reloadRef.current = !reloadRef.current;
                         setReload(reloadRef.current);
@@ -178,13 +194,22 @@ export const IntegrationsPanel = () => {
           {!loading && (
             <>
               {integrationsDisplayed
-                .filter(
-                  (integration: IntegrationItem) =>
-                    integration.state === 'INACTIVE',
-                )
+                .filter((integration: IntegrationItem) => {
+                  if (integration.isFromIntegrationApp) {
+                    return !activeIntegrations.includes(integration.key);
+                  } else {
+                    return integration.state === 'INACTIVE';
+                  }
+                })
                 .map((integration: IntegrationItem) => {
                   const option = integration.key;
                   const isFromIApp = availableIntegrations.includes(option);
+
+                  console.log(
+                    option,
+                    isFromIApp,
+                    integration.isFromIntegrationApp,
+                  );
 
                   return (
                     <SettingsIntegrationItem
@@ -193,7 +218,9 @@ export const IntegrationsPanel = () => {
                       identifier={integration.identifier}
                       name={integration.name}
                       state={integration.state}
-                      onEnable={isFromIApp ? handleConnect(option) : undefined}
+                      onEnable={
+                        isFromIApp ? handleIntegration(option) : undefined
+                      }
                       settingsChanged={() => {
                         reloadRef.current = !reloadRef.current;
                         setReload(reloadRef.current);
