@@ -31,7 +31,7 @@ func SyncLogEntriesHandler(services *service.Services, log logger.Logger) gin.Ha
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
 
 		// Limit the size of the request body
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			log.Errorf("(SyncLogEntries) error reading request body: %s", err.Error())
@@ -88,7 +88,7 @@ func SyncLogEntryHandler(services *service.Services, log logger.Logger) gin.Hand
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
 
 		// Limit the size of the request body
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			log.Errorf("(SyncLogEntry) error reading request body: %s", err.Error())
