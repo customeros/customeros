@@ -61,7 +61,7 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
         <CardHeader fontWeight='semibold' p={2} pb={0} pr={0} noOfLines={1}>
           {data?.subject ?? '[No subject]'}
         </CardHeader>
-        <CardBody p={2} pt={0} pr={0}>
+        <CardBody p={2} pt={0} pr={0} maxW='calc(476px - 77px)'>
           <Text color='gray.500' noOfLines={3}>
             {data?.description ?? '[No description]'}
           </Text>
