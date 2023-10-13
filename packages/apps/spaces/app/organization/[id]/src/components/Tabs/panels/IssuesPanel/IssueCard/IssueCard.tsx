@@ -10,16 +10,15 @@ import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import { toastError } from '@ui/presentation/Toast';
+import { Issue } from '@graphql/types';
 // import { getContactDisplayName } from '@spaces/utils/getContactName';
 // import { useContactOrUserDisplayName } from '@shared/hooks/useContactOrUserDisplayData';
 
 // TODO uncomment commented out code as soon as COS-464 is merged
 interface IssueCardProps {
-  issue: any;
+  issue: Issue;
 }
-function getStatusColor(
-  status: 'New' | 'Open' | 'Pending' | 'On hold' | 'Solved',
-) {
+function getStatusColor(status: string) {
   if (['closed', 'solved'].includes(status.toLowerCase())) {
     return 'gray';
   }
@@ -38,16 +37,17 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
 
   const handleOpenInExternalApp = () => {
     if (issue?.externalLinks?.[0]?.externalUrl) {
-      window.open(
-        getExternalUrl(issue.externalLinks[0].externalUrl),
-        '_blank',
-        'noreferrer noopener',
-      );
+      // replacing this https://gasposhelp.zendesk.com/api/v2/tickets/24.json -> https://gasposhelp.zendesk.com/agent/tickets/24
+      const replacedUrl = issue?.externalLinks?.[0]?.externalUrl
+        .replace('api/v2', 'agent')
+        .replace('.json', '');
+
+      window.open(getExternalUrl(replacedUrl), '_blank', 'noreferrer noopener');
       return;
     }
     toastError(
       'This issue is not connected to external source',
-      `${issue.id}-open-in-external-app-error`,
+      `${issue.id}-tab-panel-open-in-external-app-error`,
     );
   };
 
@@ -76,18 +76,10 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
         <Flex flex='1' gap='4' alignItems='flex-start' flexWrap='wrap'>
           <Avatar
             size='md'
-            name={issue?.requestedBy?.firstName ?? ''}
+            name={''}
             variant='outlined'
-            src={
-              issue?.requestedBy?.profilePhotoUrl
-                ? issue?.requestedBy?.profilePhotoUrl
-                : undefined
-            } // todo
-            border={
-              issue?.requestedBy?.profilePhotoUrl
-                ? 'none'
-                : '1px solid var(--chakra-colors-primary-200)'
-            }
+            src={undefined} // todo
+            border={'1px solid var(--chakra-colors-primary-200)'}
             icon={<User01 color='primary.700' height='1.8rem' />}
           />
 
@@ -114,7 +106,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
             {/*)}*/}
           </Flex>
 
-          {issue.status !== 'Solved' && (
+          {['closed', 'solved'].includes(issue.status.toLowerCase()) && (
             <Tag
               size='sm'
               variant='outline'

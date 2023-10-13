@@ -1,6 +1,5 @@
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { match } from 'ts-pattern';
 import { Card, CardBody } from '@ui/presentation/Card';
 
 import { User, Contact } from '@graphql/types';
