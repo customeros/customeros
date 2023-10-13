@@ -87,21 +87,15 @@ export default function OrganizationsPage() {
     };
   }, [sorting]);
 
-  const {
-    data,
-    isFetching,
-    hasNextPage,
-    fetchNextPage,
-    isInitialLoading,
-    isFetchingNextPage,
-  } = useGetOrganizationsInfiniteQuery(client, {
-    pagination: {
-      page: 1,
-      limit: 40,
-    },
-    sort: sortBy,
-    where,
-  });
+  const { data, isLoading, isFetching, hasNextPage, fetchNextPage } =
+    useGetOrganizationsInfiniteQuery(client, {
+      pagination: {
+        page: 1,
+        limit: 40,
+      },
+      sort: sortBy,
+      where,
+    });
 
   const flatData = useMemo(
     () =>
@@ -128,7 +122,7 @@ export default function OrganizationsPage() {
         createIsLoading: createOrganization.isLoading,
         onCreateOrganization: handleCreateOrganization,
       }),
-    [tabs, handleCreateOrganization, createOrganization.isLoading],
+    [tabs, handleCreateOrganization, createOrganization, getColumns],
   );
 
   useEffect(() => {
@@ -174,7 +168,7 @@ export default function OrganizationsPage() {
         sorting={sorting}
         enableTableActions
         enableRowSelection
-        isLoading={isInitialLoading || isFetchingNextPage}
+        isLoading={isLoading}
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
