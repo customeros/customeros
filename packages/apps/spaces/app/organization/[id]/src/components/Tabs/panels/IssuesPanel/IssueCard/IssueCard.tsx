@@ -84,13 +84,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
           />
 
           <Flex direction='column' flex={1}>
-            <Heading
-              size='sm'
-              fontSize='sm'
-              noOfLines={1}
-              maxW={260}
-              whiteSpace='nowrap'
-            >
+            <Heading size='sm' fontSize='sm' noOfLines={1} maxW={260}>
               {issue?.subject ?? '[No subject]'}
             </Heading>
 
