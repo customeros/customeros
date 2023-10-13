@@ -106,7 +106,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
             {/*)}*/}
           </Flex>
 
-          {['closed', 'solved'].includes(issue.status.toLowerCase()) && (
+          {!['closed', 'solved'].includes(issue.status.toLowerCase()) && (
             <Tag
               size='sm'
               variant='outline'
