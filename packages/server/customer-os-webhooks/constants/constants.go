@@ -11,6 +11,7 @@ const (
 	ComponentRepository      = "repository"
 
 	RequestMaxBodySizeCommon                      = 1 * 1024 * 1024  // 1 MB
+	RequestMaxBodySizeMessages                    = 10 * 1024 * 1024 // 10 MB
 	RequestMaxTimeout                             = 30 * time.Second // 60 seconds
 	MaxRetryCheckDataInNeo4jAfterEventRequest int = 10
 	TimeoutIntervalMs                             = 100
