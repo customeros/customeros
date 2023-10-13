@@ -20,6 +20,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           ... on User {
             __typename
             id
+            name
             firstName
             lastName
             profilePhotoUrl
@@ -117,6 +118,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           ... on User {
             __typename
             id
+            name
             firstName
             lastName
             profilePhotoUrl
@@ -142,7 +144,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         __typename
         id
         subject
-        issueStatus:status
+        issueStatus: status
         appSource
         createdAt
         description

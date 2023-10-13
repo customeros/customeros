@@ -9,10 +9,8 @@ import { CustomTicketTearStyle } from './styles';
 import { IssueWithAliases } from '@organization/src/components/Timeline/types';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import { toastError } from '@ui/presentation/Toast';
-function getStatusColor(
-  status: string | 'New' | 'Open' | 'Pending' | 'On hold' | 'Solved',
-) {
-  if (status === 'Solved') {
+function getStatusColor(status: string) {
+  if (status === 'solved' || status === 'closed') {
     return 'gray';
   }
   return 'blue';
@@ -20,14 +18,15 @@ function getStatusColor(
 
 export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
   // const { openModal } = useTimelineEventPreviewContext(); // todo uncomment when modal is ready
-  const statusColorScheme = (() => getStatusColor(data.issueStatus))();
+  const statusColorScheme = getStatusColor(data.issueStatus);
   const handleOpenInExternalApp = () => {
     if (data?.externalLinks?.[0]?.externalUrl) {
-      window.open(
-        getExternalUrl(data.externalLinks[0].externalUrl),
-        '_blank',
-        'noreferrer noopener',
-      );
+      // replacing this https://gasposhelp.zendesk.com/api/v2/tickets/24.json -> https://gasposhelp.zendesk.com/agent/tickets/24
+      const replacedUrl = data?.externalLinks?.[0]?.externalUrl
+        .replace('api/v2', 'agent')
+        .replace('.json', '');
+
+      window.open(getExternalUrl(replacedUrl), '_blank', 'noreferrer noopener');
       return;
     }
     toastError(
@@ -111,8 +110,13 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
             fontWeight='normal'
             minHeight={6}
             width='min-content'
+            cursor='pointer'
           >
-            <TagLabel>{data.status === 'Solved' ? 'Closed' : 'Open'}</TagLabel>
+            <TagLabel>
+              {['solved', 'closed'].includes(data.issueStatus)
+                ? 'Closed'
+                : 'Open'}
+            </TagLabel>
           </Tag>
           <IssueBgPattern position='absolute' width='120%' height='100%' />
         </Flex>

@@ -1,7 +1,9 @@
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { match } from 'ts-pattern';
 import { Card, CardBody } from '@ui/presentation/Card';
 
+import { User, Contact } from '@graphql/types';
 import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import React, { useCallback, useMemo } from 'react';
 import { Image } from '@ui/media/Image';
@@ -18,10 +20,23 @@ interface LogEntryStubProps {
   data: LogEntryWithAliases;
 }
 
+function getAuthor(user: User | Contact) {
+  if (!user) return 'Unknown';
+
+  if (user.name) {
+    return user.name;
+  }
+
+  if (!user.firstName || !user.lastName) {
+    return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+  }
+
+  return 'Unknown';
+}
+
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
   const { openModal } = useTimelineEventPreviewContext();
-  const fullName =
-    `${data.logEntryCreatedBy?.firstName} ${data.logEntryCreatedBy?.lastName}`.trim();
+  const fullName = getAuthor(data.logEntryCreatedBy);
   const getLogEntryIcon = useCallback((type: string | null) => {
     switch (type) {
       case 'email':
