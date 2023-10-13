@@ -27,7 +27,7 @@ function getAuthor(user: User | Contact) {
     return user.name;
   }
 
-  if (!user.firstName || !user.lastName) {
+  if (user.firstName || user.lastName) {
     return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
   }
 
@@ -36,7 +36,7 @@ function getAuthor(user: User | Contact) {
 
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
   const { openModal } = useTimelineEventPreviewContext();
-  const fullName = getAuthor(data.logEntryCreatedBy);
+  const fullName = getAuthor(data?.logEntryCreatedBy);
   const getLogEntryIcon = useCallback((type: string | null) => {
     switch (type) {
       case 'email':
