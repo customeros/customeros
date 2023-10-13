@@ -52,7 +52,7 @@ func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDat
 			}
 		}
 		if len(usersForWebhooks) > 0 {
-			err := s.postUsers(ctx, tenant, usersForWebhooks)
+			err := s.postUsers(tenant, usersForWebhooks)
 			if err != nil {
 				s.log.Errorf("error while posting users to webhooks: %v", err.Error())
 				for _, userForWebhooks := range usersForWebhooks {
@@ -75,7 +75,7 @@ func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDat
 	return completed, failed, skipped
 }
 
-func (s *userSyncService) postUsers(ctx context.Context, tenant string, users []entity.UserData) error {
+func (s *userSyncService) postUsers(tenant string, users []entity.UserData) error {
 	// Convert the users slice to JSON
 	jsonData, err := json.Marshal(users)
 	if err != nil {

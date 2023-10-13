@@ -140,8 +140,6 @@ func MapUser(inputJSON string) (string, error) {
 		output.ExternalId = fmt.Sprintf("%d", input.UserID)
 	}
 
-	// Map the "id" field to "externalOwnerId"
-	output.ExternalOwnerId = input.ID
 	output.BaseData.ExternalIdSecond = input.ID
 
 	// Convert output data to JSON
