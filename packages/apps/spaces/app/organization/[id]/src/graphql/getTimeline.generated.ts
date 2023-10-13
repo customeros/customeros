@@ -50,6 +50,7 @@ export type GetTimelineQuery = {
           actionCreatedBy?: {
             __typename: 'User';
             id: string;
+            name?: string | null;
             firstName: string;
             lastName: string;
             profilePhotoUrl?: string | null;
@@ -357,6 +358,7 @@ export type GetTimelineQuery = {
           logEntryCreatedBy?: {
             __typename: 'User';
             id: string;
+            name?: string | null;
             firstName: string;
             lastName: string;
             profilePhotoUrl?: string | null;
@@ -526,6 +528,7 @@ export const GetTimelineDocument = `
           ... on User {
             __typename
             id
+            name
             firstName
             lastName
             profilePhotoUrl
@@ -620,6 +623,7 @@ export const GetTimelineDocument = `
           ... on User {
             __typename
             id
+            name
             firstName
             lastName
             profilePhotoUrl

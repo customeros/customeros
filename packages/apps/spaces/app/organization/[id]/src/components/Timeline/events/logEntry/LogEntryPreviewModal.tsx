@@ -26,7 +26,7 @@ import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlCo
 import React from 'react';
 
 const getAuthor = (user: User) => {
-  if (!user?.firstName && !user.lastName) {
+  if (!user?.firstName && !user?.lastName) {
     return 'Unknown';
   }
 
