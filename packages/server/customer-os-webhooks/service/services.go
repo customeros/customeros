@@ -5,6 +5,7 @@ import (
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
@@ -17,28 +18,37 @@ type Services struct {
 	CommonServices     *commonService.Services
 	CommonAuthServices *commonAuthService.Services
 
-	TenantService       TenantService
-	EmailService        EmailService
-	LocationService     LocationService
-	PhoneNumberService  PhoneNumberService
-	UserService         UserService
-	LogEntryService     LogEntryService
-	OrganizationService OrganizationService
-	ContactService      ContactService
-	SyncStatusService   SyncStatusService
+	TenantService         TenantService
+	EmailService          EmailService
+	LocationService       LocationService
+	PhoneNumberService    PhoneNumberService
+	UserService           UserService
+	LogEntryService       LogEntryService
+	OrganizationService   OrganizationService
+	ContactService        ContactService
+	SyncStatusService     SyncStatusService
+	ExternalSystemService ExternalSystemService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, gormDB *gorm.DB, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
+func InitServices(log logger.Logger,
+	driver *neo4j.DriverWithContext,
+	gormDB *gorm.DB,
+	cfg *config.Config,
+	commonServices *commonService.Services,
+	commonAuthServices *commonAuthService.Services,
+	grpcClients *grpc_client.Clients,
+	caches *caches.Cache) *Services {
 	repositories := repository.InitRepos(driver, gormDB)
 
 	services := Services{
-		CommonServices:     commonServices,
-		CommonAuthServices: commonAuthServices,
-		TenantService:      NewTenantService(log, repositories),
-		EmailService:       NewEmailService(log, repositories, grpcClients),
-		LocationService:    NewLocationService(log, repositories, grpcClients),
-		PhoneNumberService: NewPhoneNumberService(log, repositories, grpcClients),
-		SyncStatusService:  NewSyncStatusService(log, repositories),
+		CommonServices:        commonServices,
+		CommonAuthServices:    commonAuthServices,
+		TenantService:         NewTenantService(log, repositories),
+		EmailService:          NewEmailService(log, repositories, grpcClients),
+		LocationService:       NewLocationService(log, repositories, grpcClients),
+		PhoneNumberService:    NewPhoneNumberService(log, repositories, grpcClients),
+		SyncStatusService:     NewSyncStatusService(log, repositories),
+		ExternalSystemService: NewExternalSystemService(log, repositories, caches),
 	}
 
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)

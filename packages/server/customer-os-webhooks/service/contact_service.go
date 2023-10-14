@@ -123,8 +123,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 
 	contactInput.Normalize()
 
-	// TODO: Merge external system, should be cached and moved to external system service
-	err := s.repositories.ExternalSystemRepository.MergeExternalSystem(ctx, tenant, contactInput.ExternalSystem, contactInput.ExternalSystem)
+	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, contactInput.ExternalSystem)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", contactInput.ExternalSystem, tenant, err.Error())

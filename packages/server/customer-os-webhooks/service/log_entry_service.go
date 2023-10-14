@@ -121,8 +121,7 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	var reason = ""
 	logEntryInput.Normalize()
 
-	// TODO: Merge external system, should be cached and moved to external system service
-	err := s.repositories.ExternalSystemRepository.MergeExternalSystem(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.ExternalSystem)
+	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, logEntryInput.ExternalSystem)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", logEntryInput.ExternalSystem, tenant, err.Error())
