@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
@@ -82,10 +83,10 @@ func (server *server) Run(parentCtx context.Context) error {
 	// Setting up Gin
 	r := gin.Default()
 
+	// Setting up CORS
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
 
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb.GormDB, server.cfg, commonServices, commonAuthServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,
@@ -95,6 +96,12 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)
+
+	// Setting up caches
+	appCache := caches.NewCache()
+
+	// Setting up services
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb.GormDB, server.cfg, commonServices, commonAuthServices, grpcContainer, appCache)
 
 	r.POST("/sync/users",
 		cosHandler.TracingEnhancer(ctx, "/sync/users"),

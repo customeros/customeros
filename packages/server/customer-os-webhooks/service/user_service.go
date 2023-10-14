@@ -121,8 +121,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	var reason = ""
 	userInput.Normalize()
 
-	// TODO: Merge external system, should be cached and moved to external system service
-	err := s.repositories.ExternalSystemRepository.MergeExternalSystem(ctx, tenant, userInput.ExternalSystem, userInput.ExternalSystem)
+	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, userInput.ExternalSystem)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", userInput.ExternalSystem, tenant, err.Error())

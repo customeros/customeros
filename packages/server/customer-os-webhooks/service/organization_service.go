@@ -157,8 +157,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 	orgInput.Normalize()
 
-	// TODO: Merge external system, should be cached and moved to external system service
-	err := s.repositories.ExternalSystemRepository.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem, orgInput.ExternalSystem)
+	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", orgInput.ExternalSystem, tenant, err.Error())
