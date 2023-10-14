@@ -152,6 +152,10 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           externalId
           externalUrl
         }
+        tags {
+          id
+          name
+        }
       }
     }
   }

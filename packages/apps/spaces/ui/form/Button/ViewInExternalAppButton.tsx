@@ -1,12 +1,13 @@
-'use client';
-import React, { FC, useState } from 'react';
-import { IconButton } from '@ui/form/IconButton';
-import { Link03 } from '@ui/media/icons/Link03';
-import Slack from '@spaces/atoms/icons/Slack';
+import React, { FC, ReactElement, useState } from 'react';
 import { Tooltip } from '@ui/overlay/Tooltip';
+import { IconButton } from '@ui/form/IconButton';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
+import { Link03 } from '@ui/media/icons/Link03';
 
-export const ViewInSlackButton: FC<{ url?: string | null }> = ({ url }) => {
+export const ViewInExternalAppButton: FC<{
+  url?: string | null;
+  icon: ReactElement;
+}> = ({ url, icon }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -27,13 +28,7 @@ export const ViewInSlackButton: FC<{ url?: string | null }> = ({ url }) => {
             window.open(getExternalUrl(url), '_blank', 'noopener');
           }
         }}
-        icon={
-          hovered ? (
-            <Link03 height={16} color='gray.500' />
-          ) : (
-            <Slack height={16} />
-          )
-        }
+        icon={hovered ? <Link03 height={16} color='gray.500' /> : icon}
       />
     </Tooltip>
   );

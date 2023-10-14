@@ -5,8 +5,9 @@ import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
 
-import { ViewInIntercomButton } from './ViewInIntercomButton';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import { ViewInExternalAppButton } from '@ui/form/Button';
+import Intercom from '@ui/media/icons/Intercom';
 
 interface IntercomMessageCardProps extends PropsWithChildren {
   name: string;
@@ -83,7 +84,14 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
                   </Text>
                 </Flex>
 
-                <ViewInIntercomButton url={sourceUrl} />
+                <ViewInExternalAppButton
+                  url={sourceUrl}
+                  icon={
+                    <Flex alignItems='center' justifyContent='center'>
+                      <Intercom height={10} />
+                    </Flex>
+                  }
+                />
               </Flex>
 
               <HtmlContentRenderer
