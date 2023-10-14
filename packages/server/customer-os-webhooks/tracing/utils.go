@@ -44,8 +44,9 @@ func TraceErr(span opentracing.Span, err error) {
 }
 
 func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
-	if common.GetTenantFromContext(ctx) != "" {
-		span.SetTag(SpanTagTenant, common.GetTenantFromContext(ctx))
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant != "" {
+		span.SetTag(SpanTagTenant, tenant)
 	}
 }
 

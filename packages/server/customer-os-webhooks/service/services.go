@@ -43,7 +43,7 @@ func InitServices(log logger.Logger,
 	services := Services{
 		CommonServices:        commonServices,
 		CommonAuthServices:    commonAuthServices,
-		TenantService:         NewTenantService(log, repositories),
+		TenantService:         NewTenantService(log, repositories, caches),
 		EmailService:          NewEmailService(log, repositories, grpcClients),
 		LocationService:       NewLocationService(log, repositories, grpcClients),
 		PhoneNumberService:    NewPhoneNumberService(log, repositories, grpcClients),
