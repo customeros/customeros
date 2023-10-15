@@ -66,7 +66,6 @@ jobs:
 
       - name: Deploy test Environment
         run: |
-          docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" 'ghcr.io/openline-ai/openline-customer-os')
           echo ${{ steps.meta.outputs.tags }} | awk -F':' '{print $2}'
           curl http://openline.sh/install.sh | sh
           echo "[INFO] Starting Openline-CLI..."
