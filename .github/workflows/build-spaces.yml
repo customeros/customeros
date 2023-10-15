@@ -54,6 +54,7 @@ jobs:
 #          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 #
 #      - name: Push Docker image
+#        id: push_docker_image
 #        uses: docker/build-push-action@v5.0.0
 #        with:
 #          context: packages/apps/spaces/
@@ -62,7 +63,7 @@ jobs:
 #          labels: ${{ steps.meta.outputs.labels }}
 #          build-args: |
 #            ENV=cluster
-#
+
 #      - name: Deploy test Environment
 #        run: |
 #           curl http://openline.sh/install.sh | sh
@@ -117,3 +118,5 @@ jobs:
       - name: Test
         run: |
            echo "[INFO] Checking Openline CLI services..."
+           echo "abc", "def"
+           echo "ghi" + "jkl"
