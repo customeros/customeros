@@ -1,0 +1,16 @@
+{
+  "name": "updateOrganizationName",
+  "description": "updateOrganizationDescription",
+  "domains": [],
+  "employees": 3,
+  "id": "",
+  "industry": "updateOrganizationIndustry",
+  "isPublic": false,
+  "lastFundingAmount": "updateOrganizationLastFundingAmount",
+  "lastFundingRound": "SERIES_A",
+  "market": "B2B",
+  "note": "updateOrganizationNote",
+  "targetAudience": "updateOrganizationTargetAudience",
+  "valueProposition": "updateOrganizationValueProposition",
+  "website": "www.updateOrganization.com"
+}
