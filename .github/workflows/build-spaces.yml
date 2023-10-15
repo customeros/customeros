@@ -67,7 +67,7 @@ jobs:
 #      - name: Deploy test Environment
 #        run: |
 #           curl http://openline.sh/install.sh | sh
-#           openline dev start test-env
+#           openline dev start test-env -v
 #           echo "[INFO] Checking Openline CLI services..."
 #           openline dev ping
 #           echo "[INFO] Checking PODs..."
@@ -117,5 +117,5 @@ jobs:
 
       - name: Test
         run: |
-           echo "FIVE:"${{ steps.meta.outputs.tags }}
+           echo ${{ steps.meta.outputs.tags }} | awk -F':' '{print $2}'
            docker images
