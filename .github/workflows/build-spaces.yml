@@ -40,34 +40,32 @@ jobs:
 
       - run: npm install -g yarn
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3.0.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
-          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5.0.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Push Docker image
-        id: push_docker_image
-        uses: docker/build-push-action@v5.0.0
-        with:
-          context: packages/apps/spaces/
-          push: ${{ github.ref_name == 'otter' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            ENV=cluster
+#      - name: Log in to the Container registry
+#        uses: docker/login-action@v3.0.0
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
+#          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+#
+#      - name: Extract metadata (tags, labels) for Docker
+#        id: meta
+#        uses: docker/metadata-action@v5.0.0
+#        with:
+#          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+#
+#      - name: Push Docker image
+#        id: push_docker_image
+#        uses: docker/build-push-action@v5.0.0
+#        with:
+#          context: packages/apps/spaces/
+#          push: ${{ github.ref_name == 'otter' }}
+#          tags: ${{ steps.meta.outputs.tags }}
+#          labels: ${{ steps.meta.outputs.labels }}
+#          build-args: |
+#            ENV=cluster
 
       - name: Deploy test Environment
         run: |
-          docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" 'ghcr.io/openline-ai/openline-customer-os')
-          imageVersion=$(echo "${{ steps.meta.outputs.tags }}" | awk -F':' '{print $2}')
           curl http://openline.sh/install.sh | sh
           echo "[INFO] Starting Openline-CLI..."
           echo $imageVersion
