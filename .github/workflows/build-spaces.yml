@@ -119,5 +119,3 @@ jobs:
         run: |
            echo ${{ steps.meta.outputs.tags }} | awk -F':' '{print $2}'
            docker images
-           docker rmi $(docker images 'ghcr.io/openline-ai/openline-customer-os')
-           docker images
