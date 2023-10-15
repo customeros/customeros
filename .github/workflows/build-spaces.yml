@@ -67,14 +67,6 @@ jobs:
       - name: Deploy test Environment
         run: |
           echo ${{ steps.meta.outputs.tags }} | awk -F':' '{print $2}'
-          curl http://openline.sh/install.sh | sh
-          echo "[INFO] Starting Openline-CLI..."
-          echo $imageVersion
-          openline dev start test-env -v
-          echo "[INFO] Checking Openline CLI services..."
-          openline dev ping
-          echo "[INFO] Checking PODs..."
-          kubectl -n openline get pods
 
 #      - name: Run tests
 #        run: |
