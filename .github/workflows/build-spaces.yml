@@ -71,7 +71,7 @@ jobs:
           curl http://openline.sh/install.sh | sh
           echo "[INFO] Starting Openline-CLI..."
           echo $imageVersion
-          openline dev start test-env -t $imageVersion -v
+          openline dev start test-env -v
           echo "[INFO] Checking Openline CLI services..."
           openline dev ping
           echo "[INFO] Checking PODs..."
