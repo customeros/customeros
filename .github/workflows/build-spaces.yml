@@ -118,3 +118,4 @@ jobs:
       - name: Test
         run: |
            echo "FIVE:"${{ steps.meta.outputs.tags }}
+          docker images
