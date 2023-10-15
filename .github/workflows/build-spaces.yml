@@ -117,4 +117,4 @@ jobs:
 
       - name: Test
         run: |
-           echo "FIVE:"${{ steps.meta.outputs.labels }}
+           echo "FIVE:"${{ steps.meta.outputs.tags }}
