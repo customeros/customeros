@@ -69,6 +69,8 @@ jobs:
           docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" 'ghcr.io/openline-ai/openline-customer-os')
           imageVersion = ${{ steps.meta.outputs.tags }} | awk -F':' '{print $2}'
           curl http://openline.sh/install.sh | sh
+          echo "[INFO] Starting Openline-CLI..."
+          echo $imageVersion
           openline dev start test-env -t $imageVersion -v
           echo "[INFO] Checking Openline CLI services..."
           openline dev ping
