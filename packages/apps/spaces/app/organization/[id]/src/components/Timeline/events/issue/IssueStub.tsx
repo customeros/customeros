@@ -9,6 +9,7 @@ import { CustomTicketTearStyle } from './styles';
 import { IssueWithAliases } from '@organization/src/components/Timeline/types';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import { toastError } from '@ui/presentation/Toast';
+import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 function getStatusColor(status: string) {
   if (status === 'solved' || status === 'closed') {
     return 'gray';
@@ -16,8 +17,50 @@ function getStatusColor(status: string) {
   return 'blue';
 }
 
+const mock = {
+  __typename: 'Issue',
+  id: '1',
+  subject: 'Test Subject',
+  issueStatus: 'open',
+  appSource: 'Web',
+  createdAt: '2023-02-20',
+  priority: 'High',
+  updatedAt: '2023-02-21',
+  description: 'Issue description goes here.',
+  externalLinks: [
+    {
+      externalId: '10',
+      externalUrl: 'http://externalurl.com',
+    },
+  ],
+  mentionedByNotes: [
+    {
+      id: '100',
+      content: 'Note content goes here.',
+      createdAt: '2023-02-20',
+      contentType: 'text',
+      createdBy: {
+        id: '3',
+        name: 'John Doe',
+        firstName: 'John',
+        lastName: 'Doe',
+      },
+    },
+  ],
+  tags: [
+    {
+      id: '1',
+      name: 'Tag1',
+    },
+    {
+      id: '2',
+      name: 'Tag2',
+    },
+  ],
+};
+
 export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
-  // const { openModal } = useTimelineEventPreviewContext(); // todo uncomment when modal is ready
+  const { openModal } = useTimelineEventPreviewContext(); // todo uncomment when modal is ready
   const statusColorScheme = getStatusColor(data.issueStatus);
   const handleOpenInExternalApp = () => {
     if (data?.externalLinks?.[0]?.externalUrl) {
@@ -48,8 +91,8 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
       boxShadow='none'
       border='1px solid'
       borderColor='gray.200'
-      onClick={handleOpenInExternalApp} // todo remove when COS-464 is merged
-      // onClick={() => openModal(data)}
+      // onClick={handleOpenInExternalApp} // todo remove when COS-464 is merged
+      onClick={() => openModal(mock)}
       // TODO uncomment when modal is ready
       // _hover={{
       //   '&:hover .slack-stub-date': {

@@ -8,21 +8,12 @@ import { useTimelineEventPreviewContext } from '@organization/src/components/Tim
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import copy from 'copy-to-clipboard';
-import { User } from '@graphql/types';
-import { Box } from '@ui/layout/Box';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useSession } from 'next-auth/react';
-import { useGetTagsQuery } from '@organization/src/graphql/getTags.generated';
 import React from 'react';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
-
-const getAuthor = (user: User) => {
-  if (!user?.firstName && !user?.lastName) {
-    return 'Unknown';
-  }
-
-  return `${user.firstName} ${user.lastName}`.trim();
-};
+import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { PriorityBadge } from '@organization/src/components/Timeline/events/issue/PriorityBadge';
+import { Divider, HStack, VStack } from '@chakra-ui/react';
 
 function getStatusColor(status: string) {
   if (['closed', 'solved'].includes(status.toLowerCase())) {
@@ -30,15 +21,62 @@ function getStatusColor(status: string) {
   }
   return 'blue';
 }
+const mentionedByNotes = [
+  {
+    id: '1',
+    content: 'Note 1',
+    createdAt: '2023-05-01T00:00:00Z',
+    contentType: 'text',
+    createdBy: {
+      id: 'user1',
+      name: 'User One',
+      firstName: 'User',
+      lastName: 'One',
+    },
+  },
+  {
+    id: '2',
+    content: 'Note 2',
+    createdAt: '2023-05-01T02:00:00Z',
+    contentType: 'text',
+    createdBy: {
+      id: 'user2',
+      name: 'User Two',
+      firstName: 'User',
+      lastName: 'Two',
+    },
+  },
+  {
+    id: '3',
+    content: 'Note 3',
+    createdAt: '2023-05-02T00:00:00Z',
+    contentType: 'text',
+    createdBy: {
+      id: 'user3',
+      name: 'User Three',
+      firstName: 'User',
+      lastName: 'Three',
+    },
+  },
+];
 
+function restructureData(data) {
+  return data.reduce((acc, note) => {
+    const date = new Date(note.createdAt).toDateString();
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(note);
+    return acc;
+  }, {});
+}
+
+const xyz = restructureData(mentionedByNotes);
 export const IssuePreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
-  const { data: session } = useSession();
   const issue = modalContent as any;
-  const client = getGraphQLClient();
-  const { data } = useGetTagsQuery(client);
   const statusColorScheme = getStatusColor(issue.issueStatus);
-
+  console.log('🏷️ -----  issue: ', issue);
   return (
     <>
       <CardHeader
@@ -93,8 +131,9 @@ export const IssuePreviewModal: React.FC = () => {
         pt={0}
         overflow='auto'
       >
-        <Flex>
-          <Box>todo priority</Box>
+        <HStack gap={2} mb={2}>
+          <PriorityBadge priority={issue?.priority?.toLowerCase()} />
+
           <Tag
             size='sm'
             variant='outline'
@@ -108,7 +147,7 @@ export const IssuePreviewModal: React.FC = () => {
             fontWeight='normal'
             minHeight={6}
           >
-            <TagLabel>{issue.status}</TagLabel>
+            <TagLabel>{issue.issueStatus}</TagLabel>
           </Tag>
           <Tag
             size='sm'
@@ -125,24 +164,69 @@ export const IssuePreviewModal: React.FC = () => {
           >
             <TagLabel>{issue?.externalLinks?.[0]?.externalId}</TagLabel>
           </Tag>
-        </Flex>
-        <Text fontSize='sm'>{issue?.description}</Text>
+        </HStack>
+
+        <Text fontSize='sm' mb={2}>
+          {issue?.description}
+        </Text>
 
         {issue?.tags?.length && (
-          <Flex>
-            {issue.tags.map((tag: { id: string; name: string }) => (
-              <Text key={`issue-tag-list-${tag.id}`} as='span' color='gray.500'>
-                {tag.name}
-              </Text>
-            ))}
-          </Flex>
+          <Text color='gray.500' fontSize='sm' mb={6}>
+            {issue.tags.map((e: any) => e.name).join(' • ')}
+          </Text>
         )}
 
-        <Text>Issue requested by (todo user data) // todo date</Text>
-        {/* todo */}
+        <Flex mb={2} alignItems='center'>
+          <Text fontSize='sm' whiteSpace='nowrap'>
+            Issue requested by
+          </Text>
+          <Text mx={1} fontSize='sm' whiteSpace='nowrap'>
+            {issue?.requestedBy}
+          </Text>
+          <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+            {DateTimeUtils.format(issue?.createdAt, DateTimeUtils.dateWithHour)}
+          </Text>
+          <Divider orientation='horizontal' />
+        </Flex>
+
+        <VStack
+          gap={2}
+          w='full'
+          justifyContent='flex-start'
+          alignItems='flex-start'
+        >
+          {Object.entries(xyz)?.map((values) => (
+            <React.Fragment key={values[0]}>
+              <Flex mb={2} alignItems='center' w='full'>
+                <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+                  {DateTimeUtils.format(values[0], DateTimeUtils.dateWithHour)}
+                </Text>
+                <Divider orientation='horizontal' />
+              </Flex>
+
+              {values[1]?.map((e) => (
+                <IssueCommentCard
+                  key={e.id}
+                  name={e.createdBy?.name}
+                  content={e.content}
+                  date={e.createdAt}
+                />
+              ))}
+            </React.Fragment>
+          ))}
+        </VStack>
 
         {['solved', 'closed'].includes(issue.issueStatus?.toLowerCase) && (
-          <Text>Issue closed by (todo user data) // todo date</Text>
+          <Text>
+            Issue closed
+            {/*by(todo user data)*/}
+            <Text color='gray.400' as='span'>
+              {DateTimeUtils.format(
+                issue.updatedAt,
+                DateTimeUtils.dateWithHour,
+              )}
+            </Text>
+          </Text>
         )}
       </CardBody>
     </>

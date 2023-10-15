@@ -6,6 +6,7 @@ import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
 import { Card, CardBody } from '@ui/presentation/Card';
 import { ViewInExternalAppButton } from '@ui/form/Button';
+import { DateTimeUtils } from '@spaces/utils/date';
 
 interface IssueCommentCardProps extends PropsWithChildren {
   name: string;
@@ -35,7 +36,7 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
         fontSize='14px'
         background='white'
         flexDirection='row'
-        width='full'
+        width='calc(100% - 24px)'
         position='unset'
         cursor='unset'
         boxShadow='xs'
@@ -61,7 +62,7 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
                     {name}
                   </Text>
                   <Text color='gray.500' ml={2} fontSize='xs'>
-                    {date}
+                    {DateTimeUtils.formatTime(date)}
                   </Text>
                 </Flex>
 
