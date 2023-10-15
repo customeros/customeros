@@ -117,6 +117,4 @@ jobs:
 
       - name: Test
         run: |
-           jq -r '.containerimage.buildinfo.attrs."label:org.opencontainers.image.version"' ${{ steps.push_docker_image.outputs.metadata }}
-           echo "THREE:"${{ steps.push_docker_image.outputs.Metadata }}
-           echo "FOUR:"${{ steps.push_docker_image.Metadata }}
+           echo "FIVE:"${{ steps.meta.outputs.labels }}
