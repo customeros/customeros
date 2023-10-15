@@ -53,68 +53,76 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-#      - name: Push Docker image
-#        id: push_docker_image
-#        uses: docker/build-push-action@v5.0.0
-#        with:
-#          context: packages/apps/spaces/
-#          push: ${{ github.ref_name == 'otter' }}
-#          tags: ${{ steps.meta.outputs.tags }}
-#          labels: ${{ steps.meta.outputs.labels }}
-#          build-args: |
-#            ENV=cluster
+      - name: Push Docker image
+        id: push_docker_image
+        uses: docker/build-push-action@v5.0.0
+        with:
+          context: packages/apps/spaces/
+          push: ${{ github.ref_name == 'otter' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ENV=cluster
 
       - name: Deploy test Environment
         run: |
+          docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" 'ghcr.io/openline-ai/openline-customer-os')
           imageVersion=$(echo "${{ steps.meta.outputs.tags }}" | awk -F':' '{print $2}')
+          curl http://openline.sh/install.sh | sh
+          echo "[INFO] Starting Openline-CLI..."
           echo $imageVersion
+          openline dev start test-env -t imageVersion -v
+          echo "[INFO] Checking Openline CLI services..."
+          openline dev ping
+          echo "[INFO] Checking PODs..."
+          kubectl -n openline get pods
 
-#      - name: Run tests
-#        run: |
-#          cd packages/apps/spaces
-#          yarn add -D jest --silent
-#          yarn test
-#
-#      - name: Compute test coverage
-#        id: compute_code_coverage
-#        run: |
-#          git clone https://github.com/openline-ai/openline-test-harness.git
-#          cd openline-test-harness/spaces-coverage
-#          go mod tidy
-#          go build
-#          ./spaces-coverage
-#          COVERAGE=$(cat coverage.txt)
-#          echo "::set-output name=coverage::$COVERAGE"
-#
-#      - name: Test Cleanup
-#        run: |
-#          openline dev remove
-#          rm -rf openline-test-harness
-#
-#      - name: Send Output to Slack
-#        run: |
-#          computed_coverage=${{ steps.compute_code_coverage.outputs.coverage }}
-#          warning_threshold=80.0
-#          critical_threshold=50.0
-#          echo "Spaces Test Coverage: $coverage%"
-#          if (( $(echo "$computed_coverage > $warning_threshold" | bc -l) )); then
-#           curl -X POST -H 'Content-type: application/json' --data '{
-#             "text": "${{ github.workflow }} coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}: ${{ steps.compute_code_coverage.outputs.coverage }}% "
-#            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-#          elif (( $(echo "$computed_coverage < $warning_threshold && $computed_coverage > $critical_threshold" | bc -l) )); then
-#           curl -X POST -H 'Content-type: application/json' --data '{
-#             "text": ":warning: ${{ github.workflow }} coverage is lower than the warning threshold of 80%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
-#           }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-#          elif (( $(echo "$computed_coverage < $critical_threshold" | bc -l) )); then
-#           curl -X POST -H 'Content-type: application/json' --data '{
-#             "text": ":no_entry: ${{ github.workflow }} coverage is lower than the critical threshold of 50%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
-#            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-#          fi
-#
-#      - name: Test
-#        run: |
-#          echo ${{ steps.meta.outputs.tags }} | awk -F':' '{print $2}'
-#          docker images
-#          docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" 'ghcr.io/openline-ai/openline-customer-os')
-#          docker images
+      - name: Run tests
+        run: |
+          cd packages/apps/spaces
+          yarn add -D jest --silent
+          yarn test
+
+      - name: Compute test coverage
+        id: compute_code_coverage
+        run: |
+          git clone https://github.com/openline-ai/openline-test-harness.git
+          cd openline-test-harness/spaces-coverage
+          go mod tidy
+          go build
+          ./spaces-coverage
+          COVERAGE=$(cat coverage.txt)
+          echo "::set-output name=coverage::$COVERAGE"
+
+      - name: Test Cleanup
+        run: |
+          openline dev remove
+          rm -rf openline-test-harness
+
+      - name: Send Output to Slack
+        run: |
+          computed_coverage=${{ steps.compute_code_coverage.outputs.coverage }}
+          warning_threshold=80.0
+          critical_threshold=50.0
+          echo "Spaces Test Coverage: $coverage%"
+          if (( $(echo "$computed_coverage > $warning_threshold" | bc -l) )); then
+           curl -X POST -H 'Content-type: application/json' --data '{
+             "text": "${{ github.workflow }} coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}: ${{ steps.compute_code_coverage.outputs.coverage }}% "
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          elif (( $(echo "$computed_coverage < $warning_threshold && $computed_coverage > $critical_threshold" | bc -l) )); then
+           curl -X POST -H 'Content-type: application/json' --data '{
+             "text": ":warning: ${{ github.workflow }} coverage is lower than the warning threshold of 80%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
+           }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          elif (( $(echo "$computed_coverage < $critical_threshold" | bc -l) )); then
+           curl -X POST -H 'Content-type: application/json' --data '{
+             "text": ":no_entry: ${{ github.workflow }} coverage is lower than the critical threshold of 50%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          fi
+
+      - name: Test
+        run: |
+          echo ${{ steps.meta.outputs.tags }} | awk -F':' '{print $2}'
+          docker images
+          docker rmi $(docker images --format "{{.Repository}}:{{.Tag}}" 'ghcr.io/openline-ai/openline-customer-os')
+          docker images
 
