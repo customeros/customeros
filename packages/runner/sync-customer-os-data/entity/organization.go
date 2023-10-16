@@ -43,8 +43,6 @@ type OrganizationData struct {
 	Address            string              `json:"address,omitempty"`
 	Address2           string              `json:"address2,omitempty"`
 	Zip                string              `json:"zip,omitempty"`
-	RelationshipName   string              `json:"relationshipName,omitempty"`  // Deprecated
-	RelationshipStage  string              `json:"relationshipStage,omitempty"` // Deprecated
 	ParentOrganization *ParentOrganization `json:"parentOrganization,omitempty"`
 	SubIndustry        string              `json:"subIndustry,omitempty"`
 	IndustryGroup      string              `json:"industryGroup,omitempty"`
@@ -70,10 +68,6 @@ func (o *OrganizationData) HasLocation() bool {
 
 func (o *OrganizationData) HasNotes() bool {
 	return len(o.Notes) > 0
-}
-
-func (o *OrganizationData) HasRelationship() bool {
-	return o.RelationshipName != ""
 }
 
 func (o *OrganizationData) HasPhoneNumbers() bool {
