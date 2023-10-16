@@ -52,7 +52,7 @@ jobs:
 
       - name: Test graphQL contracts
         run: |
-          CUSTOMER_OS_API_PATH=${{ secrets.DEV_CUSTOMER_OS_API_PATH }}
+          CUSTOMER_OS_API_PATH=localhost:10000
           CUSTOMER_OS_API_KEY=${{ secrets.DEV_CUSTOMER_OS_API_KEY }}
           cd packages/apps/spaces
           yarn install --frozen-lockfile
