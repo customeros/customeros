@@ -51,7 +51,7 @@ jobs:
           echo "[INFO] wait for 3 seconds to make sure all services are up and running..."
 
       - name: Test graphQL contracts
-        run: yarn test:graphql
+        run: cd packages/apps/spaces && yarn test:graphql
 
       - name: Cleanup test environment
         run: openline dev remove
