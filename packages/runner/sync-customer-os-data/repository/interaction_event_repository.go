@@ -422,7 +422,7 @@ func (r *interactionEventRepository) LinkInteractionEventWithSenderById(ctx cont
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
-		MATCH (:Tenant {name:$tenant})--(sender:Contact|User|Organization|JobRole|Email|PhoneNumber {id:$id}) 
+		MATCH (:Tenant {name:$tenant})-[*1..2]-(sender:Contact|User|Organization|JobRole|Email|PhoneNumber {id:$id}) 
 		WHERE $label IN labels(sender)
 		MERGE (ie)-[:SENT_BY]->(sender)`, tenant)
 	span.LogFields(log.String("query", query))
