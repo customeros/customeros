@@ -27,7 +27,7 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
       background='white'
       flexDirection='row'
       position='unset'
-      maxW={476}
+      maxW={502}
       cursor='pointer'
       boxShadow='none'
       border='1px solid'
