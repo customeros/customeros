@@ -52,11 +52,12 @@ jobs:
 
       - name: Test graphQL contracts
         run: |
-          CUSTOMER_OS_API_PATH=localhost:10000
-          CUSTOMER_OS_API_KEY=${{ secrets.DEV_CUSTOMER_OS_API_KEY }}
           cd packages/apps/spaces
           yarn install --frozen-lockfile
           yarn test:graphql
+        env:
+          CUSTOMER_OS_API_PATH: localhost:10000
+          CUSTOMER_OS_API_KEY: ${{ secrets.CUSTOMER_OS_API_KEY }}
 
       - name: Cleanup test environment
         run: openline dev remove
