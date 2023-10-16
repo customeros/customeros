@@ -65,8 +65,8 @@ export const OrganizationRelationship = ({
 
       return { previousOrganizations };
     },
-    onError: (_, __, context) => {
-      console.log('onError');
+    onError: (err, __, context) => {
+      console.log('onError', err);
       if (context?.previousOrganizations) {
         queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
           queryKey,
@@ -95,18 +95,15 @@ export const OrganizationRelationship = ({
     (option) => option.value === organization.isCustomer,
   );
 
-  const handleSelect = useCallback(
-    (option: SelectOption<boolean>) => {
-      console.log('handleSelect');
-      updateOrganization.mutate(
-        OrganizationRowDTO.toUpdatePayload({
-          ...organization,
-          isCustomer: option.value,
-        }),
-      );
-    },
-    [updateOrganization, organization],
-  );
+  const handleSelect = (option: SelectOption<boolean>) => {
+    console.log('handleSelect');
+    updateOrganization.mutate(
+      OrganizationRowDTO.toUpdatePayload({
+        ...organization,
+        isCustomer: option.value,
+      }),
+    );
+  };
 
   useEffect(() => {
     return () => {
