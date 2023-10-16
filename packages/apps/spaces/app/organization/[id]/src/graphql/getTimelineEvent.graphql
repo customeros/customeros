@@ -131,5 +131,34 @@ query GetTimelineEvent($ids: [ID!]!) {
           externalSource
         }
       }
+     ... on Issue {
+       __typename
+       id
+       subject
+       priority
+
+       issueStatus: status
+       appSource
+       createdAt
+       description
+       externalLinks {
+         externalId
+         externalUrl
+       }
+       interactionEvents {
+         id
+         sentBy {
+           ...InteractionEventParticipantFragment
+         }
+         content
+
+       }
+
+       issueTags: tags {
+         id
+         name
+       }
+     }
+
     }
   }

@@ -1,64 +1,51 @@
-import React, { PropsWithChildren } from 'react';
-import { Card, CardBody, CardProps } from '@ui/presentation/Card';
+import { FC, PropsWithChildren } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
-
-import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import { Card, CardBody } from '@ui/presentation/Card';
 import { ViewInExternalAppButton } from '@ui/form/Button';
-import Intercom from '@ui/media/icons/Intercom';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { Zendesk } from '@ui/media/logos/Zendesk';
 
-interface IntercomMessageCardProps extends PropsWithChildren {
+interface IssueCommentCardProps extends PropsWithChildren {
   name: string;
   sourceUrl?: string | null;
   profilePhotoUrl?: null | string;
   content: string;
-  onClick?: () => void;
   date: string;
-  w?: CardProps['w'];
-  ml?: CardProps['ml'];
+  isCustomer?: boolean;
+
   showDateOnHover?: boolean;
 }
 
-export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
+export const IssueCommentCard: FC<IssueCommentCardProps> = ({
   name,
   sourceUrl,
   profilePhotoUrl,
   content,
-  onClick,
-  children,
   date,
-  w,
-  ml,
-  showDateOnHover,
+  isCustomer,
 }) => {
   return (
     <>
       <Card
+        ml={isCustomer ? 0 : 6}
         variant='outline'
         size='md'
-        ml={ml}
         fontSize='14px'
         background='white'
         flexDirection='row'
-        maxWidth={w || 549}
+        width='calc(100% - 24px)'
         position='unset'
-        cursor={onClick ? 'pointer' : 'unset'}
+        cursor='unset'
         boxShadow='xs'
         borderColor='gray.200'
-        onClick={() => onClick?.()}
-        _hover={{
-          '&:hover .intercom-stub-date': {
-            color: 'gray.500',
-          },
-        }}
       >
         <CardBody p={3} overflow={'hidden'}>
           <Flex gap={3} flex={1}>
             <Avatar
               name={name}
-              variant='roundedSquare'
               size='md'
               icon={<User01 color='gray.500' height='1.8rem' />}
               border={
@@ -70,36 +57,21 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
             />
             <Flex direction='column' flex={1} position='relative'>
               <Flex justifyContent='space-between' flex={1}>
-                <Flex align='baseline'>
+                <Flex>
                   <Text color='gray.700' fontWeight={600}>
                     {name}
                   </Text>
-                  <Text
-                    color={showDateOnHover ? 'transparent' : 'gray.500'}
-                    ml='2'
-                    fontSize='xs'
-                    className='intercom-stub-date'
-                  >
-                    {date}
+                  <Text color='gray.500' ml={2} fontSize='xs'>
+                    {DateTimeUtils.formatTime(date)}
                   </Text>
                 </Flex>
 
                 <ViewInExternalAppButton
+                  icon={<Zendesk boxSize={4} />}
                   url={sourceUrl}
-                  icon={
-                    <Flex alignItems='center' justifyContent='center'>
-                      <Intercom height={10} />
-                    </Flex>
-                  }
                 />
               </Flex>
-
-              <HtmlContentRenderer
-                pointerEvents={showDateOnHover ? 'none' : 'initial'}
-                noOfLines={showDateOnHover ? 4 : undefined}
-                htmlContent={content}
-              />
-              {children}
+              <Text fontSize='sm'>{content}</Text>
             </Flex>
           </Flex>
         </CardBody>

@@ -3,6 +3,7 @@ import {
   InteractionEvent,
   Meeting,
   ExternalSystemType,
+  Issue,
 } from '@graphql/types';
 
 import { EmailPreviewModal } from '../events/email/EmailPreviewModal';
@@ -17,6 +18,7 @@ import { LogEntryPreviewModal } from '@organization/src/components/Timeline/even
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { LogEntryUpdateModalContextProvider } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
 import { VirtuosoHandle } from 'react-virtuoso';
+import { IssuePreviewModal } from '@organization/src/components/Timeline/events/issue/IssuePreviewModal';
 
 interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;
@@ -33,11 +35,13 @@ export const TimelineEventPreviewModal = ({
     | InteractionEvent
     | Meeting
     | Action
+    | Issue
     | LogEntryWithAliases;
   const isMeeting = event?.__typename === 'Meeting';
   const isAction = event?.__typename === 'Action';
   const isLogEntry = event?.__typename === 'LogEntry';
   const isInteraction = event?.__typename === 'InteractionEvent';
+  const isIssue = event?.__typename === 'Issue';
   const isSlack =
     isInteraction &&
     event?.channel === 'CHAT' &&
@@ -67,6 +71,7 @@ export const TimelineEventPreviewModal = ({
         {isIntercom && <IntercomThreadPreviewModal />}
         {isAction && <ActionPreviewModal type={event.actionType} />}
         {isLogEntry && <LogEntryPreviewModal />}
+        {isIssue && <IssuePreviewModal />}
       </TimelinePreviewBackdrop>
     </LogEntryUpdateModalContextProvider>
   );

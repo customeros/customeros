@@ -144,6 +144,8 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         __typename
         id
         subject
+        priority
+
         issueStatus: status
         appSource
         createdAt
@@ -151,6 +153,19 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         externalLinks {
           externalId
           externalUrl
+        }
+        interactionEvents {
+          id
+          sentBy {
+            ...InteractionEventParticipantFragment
+          }
+          content
+
+        }
+
+        issueTags: tags {
+          id
+          name
         }
       }
     }

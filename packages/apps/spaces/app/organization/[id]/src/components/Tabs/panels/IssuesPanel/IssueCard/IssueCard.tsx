@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Avatar } from '@ui/media/Avatar';
 import { Text } from '@ui/typography/Text';
@@ -8,9 +8,8 @@ import { User01 } from '@ui/media/icons/User01';
 import { Heading } from '@ui/typography/Heading';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { getExternalUrl } from '@spaces/utils/getExternalLink';
-import { toastError } from '@ui/presentation/Toast';
 import { Issue } from '@graphql/types';
+import { useRouter, useSearchParams } from 'next/navigation';
 // import { getContactDisplayName } from '@spaces/utils/getContactName';
 // import { useContactOrUserDisplayName } from '@shared/hooks/useContactOrUserDisplayData';
 
@@ -26,30 +25,27 @@ function getStatusColor(status: string) {
 }
 export const IssueCard = ({ issue }: IssueCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const statusColorScheme = (() => getStatusColor(issue.status))();
+
   // const getDisplayName = useContactOrUserDisplayName();
   // const requestorName = getDisplayName(issue.requestedBy);
-  const statusColorScheme = (() => getStatusColor(issue.status))();
 
   // const getLastCreatedNote = (notes: Array<Note>) => {
   //   const sortedNotes = notes.sort((a, b) => b.createdAt - a.createdAt);
   //   return sortedNotes[0].createdAt;
   // };
+  const isStatusClosed = useMemo(
+    () => ['closed', 'solved'].includes(issue.status.toLowerCase()),
+    [issue.status],
+  );
+  const handleOpenModal = useCallback(() => {
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
 
-  const handleOpenInExternalApp = () => {
-    if (issue?.externalLinks?.[0]?.externalUrl) {
-      // replacing this https://gasposhelp.zendesk.com/api/v2/tickets/24.json -> https://gasposhelp.zendesk.com/agent/tickets/24
-      const replacedUrl = issue?.externalLinks?.[0]?.externalUrl
-        .replace('api/v2', 'agent')
-        .replace('.json', '');
-
-      window.open(getExternalUrl(replacedUrl), '_blank', 'noreferrer noopener');
-      return;
-    }
-    toastError(
-      'This issue is not connected to external source',
-      `${issue.id}-tab-panel-open-in-external-app-error`,
-    );
-  };
+    params.set('events', issue.id);
+    router.push(`?${params}`);
+  }, [issue.id, router, searchParams]);
 
   return (
     <Card
@@ -62,7 +58,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
       borderRadius='lg'
       border='1px solid'
       borderColor='gray.200'
-      onClick={handleOpenInExternalApp}
+      onClick={handleOpenModal}
       _hover={{
         boxShadow: 'md',
         '& > div > #confirm-button': {
@@ -84,7 +80,12 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
           />
 
           <Flex direction='column' flex={1}>
-            <Heading size='sm' fontSize='sm' noOfLines={1} maxW={260}>
+            <Heading
+              size='sm'
+              fontSize='sm'
+              noOfLines={1}
+              maxW={isStatusClosed ? 'auto' : 260}
+            >
               {issue?.subject ?? '[No subject]'}
             </Heading>
 
@@ -106,7 +107,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
             {/*)}*/}
           </Flex>
 
-          {!['closed', 'solved'].includes(issue.status.toLowerCase()) && (
+          {!isStatusClosed && (
             <Tag
               size='sm'
               variant='outline'
@@ -122,7 +123,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
               position='absolute'
               right={2}
             >
-              <TagLabel>{issue.status}</TagLabel>
+              <TagLabel textTransform='capitalize'>{issue.status}</TagLabel>
             </Tag>
           )}
         </Flex>

@@ -5,9 +5,10 @@ import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
 import { Card, CardBody, CardProps } from '@ui/presentation/Card';
-import { ViewInSlackButton } from '@organization/src/components/Timeline/events/slack/ViewInSlackButton';
 // @ts-expect-error types not available
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
+import { ViewInExternalAppButton } from '@ui/form/Button';
+import { Slack } from '@ui/media/logos/Slack';
 
 interface SlackMessageCardProps extends PropsWithChildren {
   name: string;
@@ -94,8 +95,10 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
                     {date}
                   </Text>
                 </Flex>
-
-                <ViewInSlackButton url={sourceUrl} />
+                <ViewInExternalAppButton
+                  icon={<Slack height={16} />}
+                  url={sourceUrl}
+                />
               </Flex>
               <Text
                 className='slack-container'
