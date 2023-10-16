@@ -148,6 +148,7 @@ func (c *ContactData) Normalize() {
 	c.AdditionalEmails = utils.RemoveDuplicates(c.AdditionalEmails)
 	utils.LowercaseStrings(c.AdditionalEmails)
 	c.Email = strings.ToLower(c.Email)
+	utils.RemoveFromList(c.AdditionalEmails, c.Email)
 
 	for _, phoneNumber := range c.PhoneNumbers {
 		phoneNumber.Normalize()
