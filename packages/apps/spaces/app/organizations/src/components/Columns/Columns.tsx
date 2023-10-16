@@ -86,6 +86,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('website', {
     id: 'WEBSITE',
     minSize: 200,
+    enableSorting: false,
     cell: (props) => <WebsiteCell website={props.getValue()} />,
     header: (props) => <THead<Organization> title='Website' {...props} />,
     skeleton: () => (

@@ -39,7 +39,6 @@ export const OrganizationRelationship = ({
 
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onMutate: (payload) => {
-      console.log('onMutate');
       queryClient.cancelQueries(queryKey);
 
       const previousOrganizations =
@@ -48,7 +47,8 @@ export const OrganizationRelationship = ({
       queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
         queryKey,
         (old) => {
-          const pageIndex = organizationsMeta.getOrganization.pagination.page;
+          const pageIndex =
+            organizationsMeta.getOrganization.pagination.page - 1;
           return produce(old, (draft) => {
             const content =
               draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
@@ -56,7 +56,7 @@ export const OrganizationRelationship = ({
               (item) => item.id === payload.input.id,
             );
 
-            if (content && index) {
+            if (content && !!index) {
               content[index].isCustomer = payload.input.isCustomer;
             }
           });
@@ -66,7 +66,6 @@ export const OrganizationRelationship = ({
       return { previousOrganizations };
     },
     onError: (err, __, context) => {
-      console.log('onError', err);
       if (context?.previousOrganizations) {
         queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
           queryKey,
@@ -75,7 +74,6 @@ export const OrganizationRelationship = ({
       }
     },
     onSettled: () => {
-      console.log('onSettled');
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -95,15 +93,17 @@ export const OrganizationRelationship = ({
     (option) => option.value === organization.isCustomer,
   );
 
-  const handleSelect = (option: SelectOption<boolean>) => {
-    console.log('handleSelect');
-    updateOrganization.mutate(
-      OrganizationRowDTO.toUpdatePayload({
-        ...organization,
-        isCustomer: option.value,
-      }),
-    );
-  };
+  const handleSelect = useCallback(
+    (option: SelectOption<boolean>) => {
+      updateOrganization.mutate(
+        OrganizationRowDTO.toUpdatePayload({
+          ...organization,
+          isCustomer: option.value,
+        }),
+      );
+    },
+    [updateOrganization, organization],
+  );
 
   useEffect(() => {
     return () => {
