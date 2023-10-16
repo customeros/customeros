@@ -32,12 +32,10 @@ func NewDefaultContactSyncService(repositories *repository.Repositories, service
 }
 
 func (s *contactSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-
 	completed, failed, skipped := 0, 0, 0
 	contactSyncMutex := &sync.Mutex{}
 
 	for {
-
 		contacts := dataService.GetDataForSync(ctx, common.CONTACTS, batchSize, runId)
 
 		if len(contacts) == 0 {

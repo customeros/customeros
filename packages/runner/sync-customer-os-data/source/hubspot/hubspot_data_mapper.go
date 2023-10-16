@@ -89,20 +89,6 @@ func MapOrganization(inputJSON string) (string, error) {
 				Primary: true,
 			}}
 	}
-	switch input.Properties.Type {
-	case "PROSPECT":
-		output.RelationshipName = Customer
-		output.RelationshipStage = Prospect
-	case "PARTNER":
-		output.RelationshipName = Partner
-		output.RelationshipStage = Live
-	case "RESELLER":
-		output.RelationshipName = Reseller
-		output.RelationshipStage = Live
-	case "VENDOR":
-		output.RelationshipName = Vendor
-		output.RelationshipStage = Live
-	}
 
 	return utils.ToJson(output)
 }
