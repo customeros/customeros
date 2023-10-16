@@ -54,8 +54,8 @@ jobs:
         run: |
           CUSTOMER_OS_API_PATH=${{ secrets.DEV_CUSTOMER_OS_API_PATH }}
           CUSTOMER_OS_API_KEY=${{ secrets.DEV_CUSTOMER_OS_API_KEY }}
-          yarn install --frozen-lockfile
           cd packages/apps/spaces
+          yarn install --frozen-lockfile
           yarn test:graphql
 
       - name: Cleanup test environment
