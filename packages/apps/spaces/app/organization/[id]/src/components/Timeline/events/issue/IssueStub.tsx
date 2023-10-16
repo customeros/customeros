@@ -7,8 +7,6 @@ import { IssueBgPattern } from '@ui/media/logos/IssueBgPattern';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { CustomTicketTearStyle } from './styles';
 import { IssueWithAliases } from '@organization/src/components/Timeline/types';
-import { getExternalUrl } from '@spaces/utils/getExternalLink';
-import { toastError } from '@ui/presentation/Toast';
 import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 function getStatusColor(status: string) {
   if (status === 'solved' || status === 'closed') {
@@ -17,66 +15,9 @@ function getStatusColor(status: string) {
   return 'blue';
 }
 
-const mock = {
-  __typename: 'Issue',
-  id: '1',
-  subject: 'Test Subject',
-  issueStatus: 'open',
-  appSource: 'Web',
-  createdAt: '2023-02-20',
-  priority: 'High',
-  updatedAt: '2023-02-21',
-  description: 'Issue description goes here.',
-  externalLinks: [
-    {
-      externalId: '10',
-      externalUrl: 'http://externalurl.com',
-    },
-  ],
-  mentionedByNotes: [
-    {
-      id: '100',
-      content: 'Note content goes here.',
-      createdAt: '2023-02-20',
-      contentType: 'text',
-      createdBy: {
-        id: '3',
-        name: 'John Doe',
-        firstName: 'John',
-        lastName: 'Doe',
-      },
-    },
-  ],
-  tags: [
-    {
-      id: '1',
-      name: 'Tag1',
-    },
-    {
-      id: '2',
-      name: 'Tag2',
-    },
-  ],
-};
-
 export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
   const { openModal } = useTimelineEventPreviewContext(); // todo uncomment when modal is ready
   const statusColorScheme = getStatusColor(data.issueStatus);
-  const handleOpenInExternalApp = () => {
-    if (data?.externalLinks?.[0]?.externalUrl) {
-      // replacing this https://gasposhelp.zendesk.com/api/v2/tickets/24.json -> https://gasposhelp.zendesk.com/agent/tickets/24
-      const replacedUrl = data?.externalLinks?.[0]?.externalUrl
-        .replace('api/v2', 'agent')
-        .replace('.json', '');
-
-      window.open(getExternalUrl(replacedUrl), '_blank', 'noreferrer noopener');
-      return;
-    }
-    toastError(
-      'This issue is not connected to external source',
-      `${data.id}-stub-open-in-external-app-error`,
-    );
-  };
 
   return (
     <Card
@@ -87,24 +28,17 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
       flexDirection='row'
       position='unset'
       maxW={476}
-      cursor='default' // todo change to pointer when modal is ready
+      cursor='cursor'
       boxShadow='none'
       border='1px solid'
       borderColor='gray.200'
-      // onClick={handleOpenInExternalApp} // todo remove when COS-464 is merged
-      onClick={() => openModal(mock)}
-      // TODO uncomment when modal is ready
-      // _hover={{
-      //   '&:hover .slack-stub-date': {
-      //     color: 'gray.500',
-      //   },
-      // }}
+      onClick={() => openModal(data)}
     >
-      <Flex boxShadow='xs' pr={2} direction='column' flex={1}>
-        <CardHeader fontWeight='semibold' p={2} pb={0} pr={0} noOfLines={1}>
+      <Flex boxShadow='xs' pr={2} p={3} direction='column' flex={1}>
+        <CardHeader fontWeight='semibold' p={0} noOfLines={1}>
           {data?.subject ?? '[No subject]'}
         </CardHeader>
-        <CardBody p={2} pt={0} pr={0} maxW='calc(476px - 77px)'>
+        <CardBody p={0} maxW='calc(476px - 77px)'>
           <Text color='gray.500' noOfLines={3}>
             {data?.description ?? '[No description]'}
           </Text>
@@ -113,11 +47,11 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
       <CardFooter
         p={0}
         position='relative'
-        h='100px'
+        h='108px'
         display='flex'
         flexDirection='column'
         justifyContent='center'
-        minW='66px'
+        minW='72px'
         borderLeft='1px dashed'
         borderColor='gray.200'
         boxShadow='xs'
@@ -128,13 +62,13 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
           alignItems='center'
           justifyContent='center'
           overflow='hidden'
-          h='100px'
+          h='103px'
           minW='66px'
           position='relative'
           borderRadius='md'
         >
           {!!data?.externalLinks?.length && (
-            <Text mb={2} zIndex={1} fontWeight='semibold' color='gray.500'>
+            <Text mb={1} zIndex={1} fontWeight='semibold' color='gray.500'>
               {data?.externalLinks[0]?.externalId}
             </Text>
           )}

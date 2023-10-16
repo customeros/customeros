@@ -10,73 +10,41 @@ import { XClose } from '@ui/media/icons/XClose';
 import copy from 'copy-to-clipboard';
 import React from 'react';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
-import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
+// import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { PriorityBadge } from '@organization/src/components/Timeline/events/issue/PriorityBadge';
-import { Divider, HStack, VStack } from '@chakra-ui/react';
+import { Divider, HStack } from '@chakra-ui/react';
+import { getExternalUrl } from '@spaces/utils/getExternalLink';
+import { toastError } from '@ui/presentation/Toast';
 
 function getStatusColor(status: string) {
-  if (['closed', 'solved'].includes(status.toLowerCase())) {
+  if (['closed', 'solved'].includes(status?.toLowerCase())) {
     return 'gray';
   }
   return 'blue';
 }
-const mentionedByNotes = [
-  {
-    id: '1',
-    content: 'Note 1',
-    createdAt: '2023-05-01T00:00:00Z',
-    contentType: 'text',
-    createdBy: {
-      id: 'user1',
-      name: 'User One',
-      firstName: 'User',
-      lastName: 'One',
-    },
-  },
-  {
-    id: '2',
-    content: 'Note 2',
-    createdAt: '2023-05-01T02:00:00Z',
-    contentType: 'text',
-    createdBy: {
-      id: 'user2',
-      name: 'User Two',
-      firstName: 'User',
-      lastName: 'Two',
-    },
-  },
-  {
-    id: '3',
-    content: 'Note 3',
-    createdAt: '2023-05-02T00:00:00Z',
-    contentType: 'text',
-    createdBy: {
-      id: 'user3',
-      name: 'User Three',
-      firstName: 'User',
-      lastName: 'Three',
-    },
-  },
-];
 
-function restructureData(data) {
-  return data.reduce((acc, note) => {
-    const date = new Date(note.createdAt).toDateString();
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(note);
-    return acc;
-  }, {});
-}
-
-const xyz = restructureData(mentionedByNotes);
 export const IssuePreviewModal: React.FC = () => {
   const { closeModal, modalContent } = useTimelineEventPreviewContext();
   const issue = modalContent as any;
   const statusColorScheme = getStatusColor(issue.issueStatus);
-  console.log('🏷️ -----  issue: ', issue);
+
+  const handleOpenInExternalApp = () => {
+    if (issue?.externalLinks?.[0]?.externalUrl) {
+      // replacing this https://gasposhelp.zendesk.com/api/v2/tickets/24.json -> https://gasposhelp.zendesk.com/agent/tickets/24
+      const replacedUrl = issue?.externalLinks?.[0]?.externalUrl
+        .replace('api/v2', 'agent')
+        .replace('.json', '');
+
+      window.open(getExternalUrl(replacedUrl), '_blank', 'noreferrer noopener');
+      return;
+    }
+    toastError(
+      'This issue is not connected to external source',
+      `${issue.id}-stub-open-in-external-app-error`,
+    );
+  };
+
   return (
     <>
       <CardHeader
@@ -131,9 +99,8 @@ export const IssuePreviewModal: React.FC = () => {
         pt={0}
         overflow='auto'
       >
-        <HStack gap={2} mb={2}>
-          <PriorityBadge priority={issue?.priority?.toLowerCase()} />
-
+        <HStack gap={2} mb={2} position='relative'>
+          <PriorityBadge priority={issue?.priority} />
           <Tag
             size='sm'
             variant='outline'
@@ -147,7 +114,7 @@ export const IssuePreviewModal: React.FC = () => {
             fontWeight='normal'
             minHeight={6}
           >
-            <TagLabel>{issue.issueStatus}</TagLabel>
+            <TagLabel textTransform='capitalize'>{issue.issueStatus}</TagLabel>
           </Tag>
           <Tag
             size='sm'
@@ -161,8 +128,10 @@ export const IssuePreviewModal: React.FC = () => {
             boxShadow='none'
             fontWeight='normal'
             minHeight={6}
+            cursor='pointer'
+            onClick={handleOpenInExternalApp}
           >
-            <TagLabel>{issue?.externalLinks?.[0]?.externalId}</TagLabel>
+            <TagLabel>#{issue?.externalLinks?.[0]?.externalId}</TagLabel>
           </Tag>
         </HStack>
 
@@ -178,49 +147,47 @@ export const IssuePreviewModal: React.FC = () => {
 
         <Flex mb={2} alignItems='center'>
           <Text fontSize='sm' whiteSpace='nowrap'>
-            Issue requested by
+            Issue requested at
           </Text>
-          <Text mx={1} fontSize='sm' whiteSpace='nowrap'>
-            {issue?.requestedBy}
-          </Text>
-          <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+          {/*<Text mx={1} fontSize='sm' whiteSpace='nowrap'>*/}
+          {/*  {issue?.requestedBy}*/}
+          {/*</Text>*/}
+          <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' ml={1}>
             {DateTimeUtils.format(issue?.createdAt, DateTimeUtils.dateWithHour)}
           </Text>
           <Divider orientation='horizontal' />
         </Flex>
-
-        <VStack
-          gap={2}
-          w='full'
-          justifyContent='flex-start'
-          alignItems='flex-start'
-        >
-          {Object.entries(xyz)?.map((values) => (
-            <React.Fragment key={values[0]}>
-              <Flex mb={2} alignItems='center' w='full'>
-                <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
-                  {DateTimeUtils.format(values[0], DateTimeUtils.dateWithHour)}
-                </Text>
-                <Divider orientation='horizontal' />
-              </Flex>
-
-              {values[1]?.map((e) => (
-                <IssueCommentCard
-                  key={e.id}
-                  name={e.createdBy?.name}
-                  content={e.content}
-                  date={e.createdAt}
-                />
-              ))}
-            </React.Fragment>
-          ))}
-        </VStack>
+        {/* todo uncomment when data is available to query*/}
+        {/*<VStack*/}
+        {/*  gap={2}*/}
+        {/*  w='full'*/}
+        {/*  justifyContent='flex-start'*/}
+        {/*  alignItems='flex-start'*/}
+        {/*>*/}
+        {/*  {Object.entries(xyz)?.map((values) => (*/}
+        {/*    <React.Fragment key={values[0]}>*/}
+        {/*      <Flex mb={2} alignItems='center' w='full'>*/}
+        {/*        <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>*/}
+        {/*          {DateTimeUtils.format(values[0], DateTimeUtils.dateWithHour)}*/}
+        {/*        </Text>*/}
+        {/*        <Divider orientation='horizontal' />*/}
+        {/*      </Flex>*/}
+        {/*      {values[1]?.map((e) => (*/}
+        {/*        <IssueCommentCard*/}
+        {/*          key={e.id}*/}
+        {/*          name={e.createdBy?.name}*/}
+        {/*          content={e.content}*/}
+        {/*          date={e.createdAt}*/}
+        {/*        />*/}
+        {/*      ))}*/}
+        {/*    </React.Fragment>*/}
+        {/*  ))}*/}
+        {/*</VStack>*/}
 
         {['solved', 'closed'].includes(issue.issueStatus?.toLowerCase) && (
           <Text>
             Issue closed
-            {/*by(todo user data)*/}
-            <Text color='gray.400' as='span'>
+            <Text color='gray.400' as='span' ml={1}>
               {DateTimeUtils.format(
                 issue.updatedAt,
                 DateTimeUtils.dateWithHour,
