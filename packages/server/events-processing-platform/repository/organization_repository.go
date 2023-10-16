@@ -109,9 +109,7 @@ func (r *organizationRepository) CreateOrganizationInTx(ctx context.Context, tx 
 						org.market = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,
 						org.updatedAt=$updatedAt,
 						org.syncedWithEventStore = true`, event.Tenant)
-	span.LogFields(log.String("query", query))
-
-	return utils.ExecuteQueryInTx(ctx, tx, query, map[string]any{
+	params := map[string]any{
 		"id":                organizationId,
 		"name":              event.Name,
 		"hide":              event.Hide,
@@ -137,7 +135,10 @@ func (r *organizationRepository) CreateOrganizationInTx(ctx context.Context, tx 
 		"createdAt":         event.CreatedAt,
 		"updatedAt":         event.UpdatedAt,
 		"overwrite":         helper.GetSource(event.Source) == constants.SourceOpenline,
-	})
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	return utils.ExecuteQueryInTx(ctx, tx, query, params)
 }
 
 func (r *organizationRepository) UpdateOrganization(ctx context.Context, organizationId string, event events.OrganizationUpdateEvent) error {
@@ -221,8 +222,6 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 				org.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE org.sourceOfTruth END,
 				org.updatedAt = $updatedAt,
 				org.syncedWithEventStore = true`, event.Tenant)
-
-	span.LogFields(log.String("query", query))
 	params := map[string]any{
 		"id":                organizationId,
 		"tenant":            event.Tenant,
@@ -245,7 +244,8 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 		"updatedAt":         event.UpdatedAt,
 		"overwrite":         helper.GetSource(event.Source) == constants.SourceOpenline,
 	}
-	span.LogFields(log.Object("params", params))
+
+	span.LogFields(log.String("query", query), log.Object("params", params))
 
 	return r.executeQuery(ctx, query, params)
 }
