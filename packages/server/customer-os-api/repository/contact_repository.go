@@ -991,23 +991,24 @@ func (r *contactRepository) GetBillableContactStats(ctx context.Context) (*neo4j
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := `match (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
-			optional match (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact) 
-with o.hide as hide, count(distinct(o)) as orgs, count(DISTINCT(c)) as contacts
-with
-  CASE WHEN hide = true THEN orgs ELSE 0 END as grey_orgs,
-  CASE WHEN hide = true THEN 0 ELSE orgs  END as white_orgs,
-  CASE WHEN hide = true THEN contacts ELSE 0 END as grey_contacts,
-  CASE WHEN hide = true THEN 0 ELSE contacts  END as white_contacts
-RETURN sum(white_orgs) as whiteOrgs, sum(white_contacts) as whiteContacts, sum(grey_orgs) as greyOrgs, sum(grey_contacts) as greyContacts;`
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+			OPTIONAL MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact) 
+WITH o.hide as hide, count(distinct(o)) as orgs, count(DISTINCT(c)) as contacts
+WITH
+  CASE WHEN hide = true THEN orgs ELSE 0 END AS grey_orgs,
+  CASE WHEN hide = true THEN 0 ELSE orgs END AS white_orgs,
+  CASE WHEN hide = true THEN contacts ELSE 0 END AS grey_contacts,
+  CASE WHEN hide = true THEN 0 ELSE contacts END AS white_contacts
+RETURN sum(white_orgs) AS whiteOrgs, sum(white_contacts) AS whiteContacts, sum(grey_orgs) AS greyOrgs, sum(grey_contacts) AS greyContacts`
+	params := map[string]any{
+		"tenant": common.GetTenantFromContext(ctx),
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant": common.GetTenantFromContext(ctx),
-			})
+		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
 			return nil, err
 		}
