@@ -63,22 +63,25 @@ func (s *syncService) BuildEmailsListExcludingPersonalEmails(personalEmailProvid
 func (s *syncService) ConvertToUTC(datetimeStr string) (time.Time, error) {
 	var err error
 
-	t1, err := time.Parse(time.RFC3339, datetimeStr)
-	if err == nil {
-		return t1.UTC(), nil
-	}
-
-	t2, err := time.Parse(time.RFC1123Z, datetimeStr)
-	if err == nil {
-		return t2.UTC(), nil
-	}
-
 	layouts := []string{
+		"2006-01-02T15:04:05Z07:00",
 		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
+		"Mon, 02 Jan 2006 15:04:05 -0700 (MST)",
+
 		"Mon, 2 Jan 2006 15:04:05 -0700",
+		"Mon, 02 Jan 2006 15:04:05 -0700",
+
+		"Mon, 2 Jan 2006 15:04:05 +0000 (GMT)",
 		"Mon, 02 Jan 2006 15:04:05 +0000 (GMT)",
-		"Thu, 29 Jun 2023 03:53:38 -0700 (PDT)",
-		"Wed, 29 Sep 2021 13:02:25 GMT",
+
+		"Thu, 2 Jun 2023 03:53:38 -0700 (PDT)",
+		"Thu, 02 Jun 2023 03:53:38 -0700 (PDT)",
+
+		"Wed, 2 Sep 2021 13:02:25 GMT",
+		"Wed, 02 Sep 2021 13:02:25 GMT",
+
+		"2 Jan 2006 15:04:05 -0700",
+		"02 Jan 2006 15:04:05 -0700",
 	}
 	var parsedTime time.Time
 
@@ -91,7 +94,7 @@ func (s *syncService) ConvertToUTC(datetimeStr string) (time.Time, error) {
 	}
 
 	if err != nil {
-		return time.Time{}, fmt.Errorf("unable to parse datetime string: %v", err)
+		return time.Time{}, fmt.Errorf("unable to parse datetime string: %s", datetimeStr)
 	}
 
 	return parsedTime.UTC(), nil
