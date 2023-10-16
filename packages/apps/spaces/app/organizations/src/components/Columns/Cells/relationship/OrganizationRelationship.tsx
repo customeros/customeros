@@ -39,6 +39,7 @@ export const OrganizationRelationship = ({
 
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onMutate: (payload) => {
+      console.log('onMutate');
       queryClient.cancelQueries(queryKey);
 
       const previousOrganizations =
@@ -65,6 +66,7 @@ export const OrganizationRelationship = ({
       return { previousOrganizations };
     },
     onError: (_, __, context) => {
+      console.log('onError');
       if (context?.previousOrganizations) {
         queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
           queryKey,
@@ -73,10 +75,11 @@ export const OrganizationRelationship = ({
       }
     },
     onSettled: () => {
+      console.log('onSettled');
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries(queryKey);
         queryClient.invalidateQueries(
           useOrganizationQuery.getKey({ id: organization.id }),
@@ -92,14 +95,18 @@ export const OrganizationRelationship = ({
     (option) => option.value === organization.isCustomer,
   );
 
-  const handleSelect = useCallback((option: SelectOption<boolean>) => {
-    updateOrganization.mutate(
-      OrganizationRowDTO.toUpdatePayload({
-        ...organization,
-        isCustomer: option.value,
-      }),
-    );
-  }, []);
+  const handleSelect = useCallback(
+    (option: SelectOption<boolean>) => {
+      console.log('handleSelect');
+      updateOrganization.mutate(
+        OrganizationRowDTO.toUpdatePayload({
+          ...organization,
+          isCustomer: option.value,
+        }),
+      );
+    },
+    [updateOrganization, organization],
+  );
 
   useEffect(() => {
     return () => {
