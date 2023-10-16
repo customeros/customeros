@@ -8,7 +8,6 @@ import {
 } from '@organization/src/graphql/getCanAccessOrganization.generated';
 import { getServerGraphQLClient } from '@shared/util/getServerGraphQLClient';
 import NotFound from './src/components/NotFound/NotFound';
-import { GraphQLClient } from 'graphql-request';
 
 interface OrganizationPageProps {
   params: { id: string };
@@ -20,9 +19,15 @@ export default async function OrganizationPage({
   params,
 }: OrganizationPageProps) {
   const client = getServerGraphQLClient();
-  const result = await fetchOrganizationAccess({ client, id: params.id });
 
-  if (!result) {
+  try {
+    await client.request<GetCanAccessOrganizationQuery>(
+      GetCanAccessOrganizationDocument,
+      {
+        id: params.id,
+      },
+    );
+  } catch (error) {
     return <NotFound />;
   }
 
@@ -39,25 +44,4 @@ export default async function OrganizationPage({
       </MainSection>
     </>
   );
-}
-
-interface FetchOrganizationAccessArgs {
-  client: GraphQLClient;
-  id: string;
-}
-
-async function fetchOrganizationAccess({
-  client,
-  id,
-}: FetchOrganizationAccessArgs): Promise<GetCanAccessOrganizationQuery | null> {
-  try {
-    return await client.request<GetCanAccessOrganizationQuery>(
-      GetCanAccessOrganizationDocument,
-      {
-        id,
-      },
-    );
-  } catch (error) {
-    return null;
-  }
 }
