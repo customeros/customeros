@@ -1,5 +1,4 @@
 import { FC, PropsWithChildren } from 'react';
-
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Avatar } from '@ui/media/Avatar';
@@ -7,6 +6,7 @@ import { User01 } from '@ui/media/icons/User01';
 import { Card, CardBody } from '@ui/presentation/Card';
 import { ViewInExternalAppButton } from '@ui/form/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Zendesk } from '@ui/media/logos/Zendesk';
 
 interface IssueCommentCardProps extends PropsWithChildren {
   name: string;
@@ -66,7 +66,10 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
                   </Text>
                 </Flex>
 
-                <ViewInExternalAppButton icon={<User01 />} url={sourceUrl} />
+                <ViewInExternalAppButton
+                  icon={<Zendesk boxSize={4} />}
+                  url={sourceUrl}
+                />
               </Flex>
               <Text fontSize='sm'>{content}</Text>
             </Flex>

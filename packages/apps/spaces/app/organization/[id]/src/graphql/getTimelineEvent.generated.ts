@@ -326,7 +326,105 @@ export type GetTimelineEventQuery = {
         } | null;
       }
     | { __typename: 'InteractionSession' }
-    | { __typename: 'Issue' }
+    | {
+        __typename: 'Issue';
+        id: string;
+        subject?: string | null;
+        priority?: string | null;
+        appSource: string;
+        createdAt: any;
+        description?: string | null;
+        issueStatus: string;
+        externalLinks: Array<{
+          __typename?: 'ExternalSystem';
+          externalId?: string | null;
+          externalUrl?: string | null;
+        }>;
+        interactionEvents: Array<{
+          __typename?: 'InteractionEvent';
+          id: string;
+          content?: string | null;
+          sentBy: Array<
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | {
+                __typename: 'EmailParticipant';
+                type?: string | null;
+                emailParticipant: {
+                  __typename?: 'Email';
+                  email?: string | null;
+                  id: string;
+                  contacts: Array<{
+                    __typename?: 'Contact';
+                    id: string;
+                    name?: string | null;
+                    firstName?: string | null;
+                    lastName?: string | null;
+                  }>;
+                  users: Array<{
+                    __typename?: 'User';
+                    id: string;
+                    firstName: string;
+                    lastName: string;
+                  }>;
+                  organizations: Array<{
+                    __typename?: 'Organization';
+                    id: string;
+                    name: string;
+                  }>;
+                };
+              }
+            | {
+                __typename: 'JobRoleParticipant';
+                jobRoleParticipant: {
+                  __typename?: 'JobRole';
+                  id: string;
+                  contact?: {
+                    __typename?: 'Contact';
+                    id: string;
+                    name?: string | null;
+                    firstName?: string | null;
+                    lastName?: string | null;
+                    profilePhotoUrl?: string | null;
+                  } | null;
+                };
+              }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | { __typename?: 'PhoneNumberParticipant' }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+          >;
+        }>;
+        issueTags?: Array<{
+          __typename?: 'Tag';
+          id: string;
+          name: string;
+        } | null> | null;
+      }
     | {
         __typename: 'LogEntry';
         id: string;
@@ -612,6 +710,31 @@ export const GetTimelineEventDocument = `
         type
         externalUrl
         externalSource
+      }
+    }
+    ... on Issue {
+      __typename
+      id
+      subject
+      priority
+      issueStatus: status
+      appSource
+      createdAt
+      description
+      externalLinks {
+        externalId
+        externalUrl
+      }
+      interactionEvents {
+        id
+        sentBy {
+          ...InteractionEventParticipantFragment
+        }
+        content
+      }
+      issueTags: tags {
+        id
+        name
       }
     }
   }

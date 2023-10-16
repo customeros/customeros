@@ -12,6 +12,7 @@ export const CustomTicketTearStyle = {
     borderTop: 'none',
     borderBottomLeftRadius: '10px',
     borderBottomRightRadius: '10px',
+    zIndex: 1,
   },
   '&:after': {
     content: "''",
@@ -23,9 +24,10 @@ export const CustomTicketTearStyle = {
     bottom: '-1px',
     position: 'absolute',
     background: 'gray.25',
-    borderBottom: 'none',
+    borderBottomColor: 'gray.25',
     borderTopLeftRadius: '10px',
     borderTopRightRadius: '10px',
+    zIndex: 1,
     boxShadow: 'inset 0px 1px 2px 0px rgba(16, 24, 40, 0.05)',
   },
 };
