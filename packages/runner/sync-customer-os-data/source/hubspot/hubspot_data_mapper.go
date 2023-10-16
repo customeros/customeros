@@ -392,7 +392,7 @@ func MapContact(inputJSON string) (string, error) {
 		})
 	}
 	output.Country = input.Properties.Country
-	output.UserExternalOwnerId = fmt.Sprint(input.Properties.OwnerId)
+	output.UserExternalIdSecond = fmt.Sprint(input.Properties.OwnerId)
 	output.Region = input.Properties.State
 	output.Locality = input.Properties.City
 	output.Zip = input.Properties.Zipcode
@@ -405,11 +405,6 @@ func MapContact(inputJSON string) (string, error) {
 			Value:        input.Properties.LifecycleStage,
 			CreatedAtStr: input.CreatedAt,
 		})
-		if isCustomerTag(input.Properties.LifecycleStage) {
-			output.Tags = append(output.Tags, "CUSTOMER")
-		} else if isProspectTag(input.Properties.LifecycleStage) {
-			output.Tags = append(output.Tags, "PROSPECT")
-		}
 	}
 
 	// Map contacts
@@ -438,12 +433,6 @@ func MapContact(inputJSON string) (string, error) {
 func isCustomerTag(hubspotLifecycleStage string) bool {
 	customerLifecycleStages := map[string]bool{"customer": true}
 	return customerLifecycleStages[hubspotLifecycleStage]
-}
-
-func isProspectTag(hubspotLifecycleStage string) bool {
-	prospectLifecycleStages := map[string]bool{
-		"lead": true, "subscriber": true, "marketingqualifiedlead": true, "salesqualifiedlead": true, "opportunity": true}
-	return prospectLifecycleStages[hubspotLifecycleStage]
 }
 
 func convertToStandardTimezoneFormat(input string) string {
