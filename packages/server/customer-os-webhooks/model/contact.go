@@ -8,31 +8,29 @@ import (
 
 type ContactData struct {
 	BaseData
-	Prefix              string                   `json:"prefix,omitempty"`
-	FirstName           string                   `json:"firstName,omitempty"`
-	LastName            string                   `json:"lastName,omitempty"`
-	Name                string                   `json:"name,omitempty"`
-	Description         string                   `json:"description,omitempty"`
-	Label               string                   `json:"label,omitempty"` // TODO not used, remove?
-	Notes               []ContactNote            `json:"notes,omitempty"` // TODO deprecated ???
-	Email               string                   `json:"email,omitempty"`
-	AdditionalEmails    []string                 `json:"additionalEmails,omitempty"`
-	PhoneNumbers        []PhoneNumber            `json:"phoneNumbers,omitempty"`
-	UserExternalOwnerId string                   `json:"externalOwnerId,omitempty"`  // TODO not used in webhooks yet to be changed with referenced user
-	UserExternalUserId  string                   `json:"externalUserId,omitempty"`   // TODO not used in webhooks yet
-	TextCustomFields    []TextCustomField        `json:"textCustomFields,omitempty"` // TODO not used in webhooks yet
-	Tags                []string                 `json:"tags,omitempty"`             // TODO not used in webhooks yet
-	LocationName        string                   `json:"locationName,omitempty"`
-	Country             string                   `json:"country,omitempty"`
-	Region              string                   `json:"region,omitempty"`
-	Locality            string                   `json:"locality,omitempty"`
-	Street              string                   `json:"street,omitempty"`
-	Address             string                   `json:"address,omitempty"`
-	Zip                 string                   `json:"zip,omitempty"`
-	PostalCode          string                   `json:"postalCode,omitempty"`
-	Timezone            string                   `json:"timezone,omitempty"`
-	ProfilePhotoUrl     string                   `json:"profilePhotoUrl,omitempty"`
-	Organizations       []ReferencedOrganization `json:"organizations,omitempty"`
+	Prefix               string                   `json:"prefix,omitempty"`
+	FirstName            string                   `json:"firstName,omitempty"`
+	LastName             string                   `json:"lastName,omitempty"`
+	Name                 string                   `json:"name,omitempty"`
+	Description          string                   `json:"description,omitempty"`
+	Email                string                   `json:"email,omitempty"`
+	AdditionalEmails     []string                 `json:"additionalEmails,omitempty"`
+	PhoneNumbers         []PhoneNumber            `json:"phoneNumbers,omitempty"`
+	UserExternalId       string                   `json:"externalUserId,omitempty"`       // TODO not used in webhooks yet
+	UserExternalIdSecond string                   `json:"externalUserIdSecond,omitempty"` // TODO not used in webhooks yet to be changed with referenced user
+	TextCustomFields     []TextCustomField        `json:"textCustomFields,omitempty"`     // TODO not used in webhooks yet
+	Tags                 []string                 `json:"tags,omitempty"`                 // TODO not used in webhooks yet
+	LocationName         string                   `json:"locationName,omitempty"`
+	Country              string                   `json:"country,omitempty"`
+	Region               string                   `json:"region,omitempty"`
+	Locality             string                   `json:"locality,omitempty"`
+	Street               string                   `json:"street,omitempty"`
+	Address              string                   `json:"address,omitempty"`
+	Zip                  string                   `json:"zip,omitempty"`
+	PostalCode           string                   `json:"postalCode,omitempty"`
+	Timezone             string                   `json:"timezone,omitempty"`
+	ProfilePhotoUrl      string                   `json:"profilePhotoUrl,omitempty"`
+	Organizations        []ReferencedOrganization `json:"organizations,omitempty"`
 	// if no valid organization provided sync is skipped
 	OrganizationRequired bool `json:"organizationRequired,omitempty"`
 }
@@ -103,10 +101,6 @@ func (c *ContactData) HasAdditionalEmails() bool {
 	return len(c.AdditionalEmails) > 0
 }
 
-func (c *ContactData) HasNotes() bool {
-	return len(c.Notes) > 0
-}
-
 func (c *ContactData) HasLocation() bool {
 	return c.LocationName != "" || c.Country != "" || c.Region != "" || c.Locality != "" || c.Address != "" || c.Zip != "" || c.PostalCode != "" || c.Street != ""
 }
@@ -117,14 +111,6 @@ func (c *ContactData) HasTextCustomFields() bool {
 
 func (c *ContactData) HasTags() bool {
 	return len(c.Tags) > 0
-}
-
-func (c *ContactData) HasOwnerByOwnerId() bool {
-	return c.UserExternalOwnerId != ""
-}
-
-func (c *ContactData) HasOwnerByUserId() bool {
-	return c.UserExternalUserId != ""
 }
 
 func (c *ContactData) SetTextCustomFieldsTimes() {

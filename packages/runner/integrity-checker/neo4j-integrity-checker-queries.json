@@ -78,7 +78,7 @@
     },
     {
       "name": "Check synced with event store",
-      "query": "MATCH (n:User) where n.syncedWithEventStore is null or n.syncedWithEventStore = false return count(n)"
+      "query": "MATCH (n:User|Organization) where n.syncedWithEventStore is null or n.syncedWithEventStore = false return count(n)"
     },
     {
       "name": "Check source fields",

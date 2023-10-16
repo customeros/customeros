@@ -50,7 +50,11 @@ func (a *ContactAggregate) createContact(ctx context.Context, cmd *command.Upser
 		return errors.Wrap(err, "NewContactCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, &span, aggregate.Metadata{
+		Tenant: a.Tenant,
+		UserId: cmd.UserID,
+		App:    cmd.Source.AppSource,
+	})
 
 	return a.Apply(createEvent)
 }

@@ -144,7 +144,7 @@ func MapContact(inputJSON string) (string, error) {
 		})
 	}
 	if input.OwnerId != 0 {
-		output.UserExternalUserId = fmt.Sprintf("%d", input.OwnerId)
+		output.UserExternalId = fmt.Sprintf("%d", input.OwnerId)
 	}
 
 	var primaryEmailFound = false

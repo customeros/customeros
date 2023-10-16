@@ -279,6 +279,10 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				ContactId:      contactId,
 				OrganizationId: orgId,
 				JobTitle:       referencedOrganization.JobTitle,
+				SourceFields: &commongrpc.SourceFields{
+					Source:    contactInput.ExternalSystem,
+					AppSource: contactInput.AppSource,
+				},
 			})
 			if err != nil {
 				failedSync = true
