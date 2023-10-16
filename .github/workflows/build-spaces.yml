@@ -51,7 +51,12 @@ jobs:
           echo "[INFO] wait for 3 seconds to make sure all services are up and running..."
 
       - name: Test graphQL contracts
-        run: cd packages/apps/spaces && yarn test:graphql
+        run: |
+          CUSTOMER_OS_API_PATH=${{ secrets.DEV_CUSTOMER_OS_API_PATH }}
+          CUSTOMER_OS_API_KEY=${{ secrets.DEV_CUSTOMER_OS_API_KEY }}
+          yarn install --frozen-lockfile
+          cd packages/apps/spaces
+          yarn test:graphql
 
       - name: Cleanup test environment
         run: openline dev remove
