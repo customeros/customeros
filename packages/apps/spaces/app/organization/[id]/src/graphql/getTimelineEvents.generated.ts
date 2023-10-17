@@ -34,7 +34,22 @@ export type GetTimelineEventsQueryVariables = Types.Exact<{
 export type GetTimelineEventsQuery = {
   __typename?: 'Query';
   timelineEvents: Array<
-    | { __typename: 'Action' }
+    | {
+        __typename: 'Action';
+        id: string;
+        actionType: Types.ActionType;
+        appSource: string;
+        createdAt: any;
+        metadata?: string | null;
+        content?: string | null;
+        actionCreatedBy?: {
+          __typename: 'User';
+          id: string;
+          firstName: string;
+          lastName: string;
+          profilePhotoUrl?: string | null;
+        } | null;
+      }
     | { __typename: 'Analysis' }
     | {
         __typename: 'InteractionEvent';
@@ -169,8 +184,158 @@ export type GetTimelineEventsQuery = {
           name: string;
         } | null> | null;
       }
-    | { __typename: 'LogEntry' }
-    | { __typename: 'Meeting' }
+    | {
+        __typename: 'LogEntry';
+        id: string;
+        createdAt: any;
+        updatedAt: any;
+        source: Types.DataSource;
+        content?: string | null;
+        contentType?: string | null;
+        logEntryStartedAt: any;
+        logEntryCreatedBy?: {
+          __typename: 'User';
+          id: string;
+          firstName: string;
+          lastName: string;
+          profilePhotoUrl?: string | null;
+          emails?: Array<{
+            __typename?: 'Email';
+            email?: string | null;
+          }> | null;
+        } | null;
+        tags: Array<{ __typename?: 'Tag'; id: string; name: string }>;
+        externalLinks: Array<{
+          __typename?: 'ExternalSystem';
+          type: Types.ExternalSystemType;
+          externalUrl?: string | null;
+          externalSource?: string | null;
+        }>;
+      }
+    | {
+        __typename: 'Meeting';
+        id: string;
+        name?: string | null;
+        createdAt: any;
+        updatedAt: any;
+        startedAt?: any | null;
+        endedAt?: any | null;
+        agenda?: string | null;
+        status: Types.MeetingStatus;
+        attendedBy: Array<
+          | {
+              __typename: 'ContactParticipant';
+              contactParticipant: {
+                __typename?: 'Contact';
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                profilePhotoUrl?: string | null;
+                timezone?: string | null;
+                emails: Array<{
+                  __typename?: 'Email';
+                  id: string;
+                  email?: string | null;
+                  rawEmail?: string | null;
+                  primary: boolean;
+                }>;
+              };
+            }
+          | { __typename?: 'EmailParticipant' }
+          | {
+              __typename: 'OrganizationParticipant';
+              organizationParticipant: {
+                __typename?: 'Organization';
+                id: string;
+                name: string;
+                emails: Array<{
+                  __typename?: 'Email';
+                  id: string;
+                  email?: string | null;
+                  rawEmail?: string | null;
+                  primary: boolean;
+                }>;
+              };
+            }
+          | {
+              __typename: 'UserParticipant';
+              userParticipant: {
+                __typename?: 'User';
+                id: string;
+                firstName: string;
+                lastName: string;
+                profilePhotoUrl?: string | null;
+                emails?: Array<{
+                  __typename?: 'Email';
+                  id: string;
+                  email?: string | null;
+                  rawEmail?: string | null;
+                  primary: boolean;
+                }> | null;
+              };
+            }
+        >;
+        createdBy: Array<
+          | {
+              __typename: 'ContactParticipant';
+              contactParticipant: {
+                __typename?: 'Contact';
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                profilePhotoUrl?: string | null;
+                timezone?: string | null;
+                emails: Array<{
+                  __typename?: 'Email';
+                  id: string;
+                  email?: string | null;
+                  rawEmail?: string | null;
+                  primary: boolean;
+                }>;
+              };
+            }
+          | { __typename?: 'EmailParticipant' }
+          | {
+              __typename: 'OrganizationParticipant';
+              organizationParticipant: {
+                __typename?: 'Organization';
+                id: string;
+                name: string;
+                emails: Array<{
+                  __typename?: 'Email';
+                  id: string;
+                  email?: string | null;
+                  rawEmail?: string | null;
+                  primary: boolean;
+                }>;
+              };
+            }
+          | {
+              __typename: 'UserParticipant';
+              userParticipant: {
+                __typename?: 'User';
+                id: string;
+                firstName: string;
+                lastName: string;
+                profilePhotoUrl?: string | null;
+                emails?: Array<{
+                  __typename?: 'Email';
+                  id: string;
+                  email?: string | null;
+                  rawEmail?: string | null;
+                  primary: boolean;
+                }> | null;
+              };
+            }
+        >;
+        note: Array<{
+          __typename?: 'Note';
+          id: string;
+          content?: string | null;
+        }>;
+      }
     | { __typename: 'Note' }
     | { __typename: 'PageView' }
   >;
@@ -234,9 +399,78 @@ export const GetTimelineEventsDocument = `
         name
       }
     }
+    ... on Action {
+      __typename
+      id
+      actionType
+      appSource
+      createdAt
+      metadata
+      actionCreatedBy: createdBy {
+        ... on User {
+          __typename
+          id
+          firstName
+          lastName
+          profilePhotoUrl
+        }
+      }
+      content
+    }
+    ... on Meeting {
+      id
+      name
+      createdAt
+      updatedAt
+      startedAt
+      endedAt
+      attendedBy {
+        ...MeetingParticipantFragment
+      }
+      createdBy {
+        ...MeetingParticipantFragment
+      }
+      note {
+        id
+        content
+      }
+      agenda
+      status
+    }
+    ... on LogEntry {
+      id
+      createdAt
+      updatedAt
+      logEntryStartedAt: startedAt
+      logEntryCreatedBy: createdBy {
+        ... on User {
+          __typename
+          id
+          firstName
+          lastName
+          profilePhotoUrl
+          emails {
+            email
+          }
+        }
+      }
+      tags {
+        id
+        name
+      }
+      source
+      content
+      contentType
+      externalLinks {
+        type
+        externalUrl
+        externalSource
+      }
+    }
   }
 }
-    ${InteractionEventParticipantFragmentFragmentDoc}`;
+    ${InteractionEventParticipantFragmentFragmentDoc}
+${MeetingParticipantFragmentFragmentDoc}`;
 export const useGetTimelineEventsQuery = <
   TData = GetTimelineEventsQuery,
   TError = unknown,
