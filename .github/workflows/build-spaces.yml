@@ -2,16 +2,16 @@ name: spaces
 
 on:
   push:
-    branches: [ "otter", "4059-enable-fe-tests" ]
+    branches: ["otter"]
     paths:
-      - 'packages/apps/spaces/**'
-      - '.github/workflows/build-spaces.yml'
+      - "packages/apps/spaces/**"
+      - ".github/workflows/build-spaces.yml"
   pull_request:
     paths:
-      - 'packages/apps/spaces/**'
-      - '.github/workflows/build-spaces.yml'
+      - "packages/apps/spaces/**"
+      - ".github/workflows/build-spaces.yml"
   release:
-    types: [ created, edited ]
+    types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
@@ -35,22 +35,24 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
-          cache: 'yarn'
+          node-version: "16"
+          cache: "yarn"
 
       - run: npm install -g yarn
 
       - name: Deploy test Environment
         run: |
+          set -e
           curl http://openline.sh/install.sh | sh
           openline dev start test-env
           echo "[INFO] Checking Openline CLI services..."
-          openline dev ping
+          openline dev ping || { echo 'Openline CLI services check failed' ; exit 1; }
           echo "[INFO] Checking PODs..."
-          kubectl -n openline get pods
+          kubectl -n openline get pods || { echo 'PODs check failed' ; exit 1; }
           echo "[INFO] wait for 3 seconds to make sure all services are up and running..."
+          sleep 3
 
-      - name: Test graphQL contracts
+      - name: Test GraphQL contracts
         run: |
           cd packages/apps/spaces
           yarn install --frozen-lockfile
@@ -60,6 +62,7 @@ jobs:
           CUSTOMER_OS_API_KEY: ${{ secrets.CLI_CUSTOMER_OS_API_KEY }}
 
       - name: Cleanup test environment
+        if: ${{ always() }}
         run: openline dev remove
 
       - name: Log in to the Container registry
