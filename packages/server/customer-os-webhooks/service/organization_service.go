@@ -141,21 +141,21 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false
 	var reason = ""
+	orgInput.Normalize()
 
-	// Populate domain from website
-	if orgInput.Website != "" && !orgInput.IsSubOrg() {
-		domainFromWebsite := utils.ExtractDomainFromUrl(orgInput.Website)
-		if domainFromWebsite != "" {
-			orgInput.Domains = []string{domainFromWebsite}
-		}
-	}
-
-	// ignore domains for sub organizations
+	// clear domains for sub organizations
 	if orgInput.IsSubOrg() {
 		orgInput.Domains = []string{}
+	} else {
+		// prepare domains for organization
+		orgDomains := make([]string, 0)
+		for _, domainInput := range orgInput.Domains {
+			orgDomains = append(orgDomains, utils.ExtractDomain(domainInput))
+		}
+		orgDomains = append(orgDomains, utils.ExtractDomain(orgInput.Website))
+		orgInput.Domains = orgDomains
+		orgInput.NormalizeDomains()
 	}
-
-	orgInput.Normalize()
 
 	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, orgInput.ExternalSystem)
 	if err != nil {

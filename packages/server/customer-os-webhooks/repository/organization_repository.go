@@ -68,6 +68,7 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
 				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o1:Organization)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
 				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o2:Organization {customerOsId:$customerOsId})
+					WHERE $customerOsId <> ''
 				OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o3:Organization)-[:HAS_DOMAIN]->(d:Domain)
 					WHERE d.domain in $domains
 				with coalesce(o1, o2, o3) as organization

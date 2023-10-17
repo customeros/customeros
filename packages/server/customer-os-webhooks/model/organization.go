@@ -86,10 +86,14 @@ func (o *OrganizationData) Normalize() {
 	o.SetTimes()
 	o.BaseData.Normalize()
 
-	o.Domains = utils.FilterEmpty(o.Domains)
-	utils.LowercaseStrings(o.Domains)
-	o.Domains = utils.RemoveDuplicates(o.Domains)
+	o.NormalizeDomains()
 
 	o.PhoneNumbers = GetNonEmptyPhoneNumbers(o.PhoneNumbers)
 	o.PhoneNumbers = RemoveDuplicatedPhoneNumbers(o.PhoneNumbers)
+}
+
+func (o *OrganizationData) NormalizeDomains() {
+	o.Domains = utils.FilterEmpty(o.Domains)
+	utils.LowercaseStrings(o.Domains)
+	o.Domains = utils.RemoveDuplicates(o.Domains)
 }

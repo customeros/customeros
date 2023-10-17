@@ -271,6 +271,15 @@ func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Cont
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	if !utils.IsValidTLD(eventData.Domain) {
+		err := errors.New(fmt.Sprintf("Invalid domain: %s", eventData.Domain))
+		err = errors.Wrap(err, "IsValidTLD")
+		tracing.TraceErr(span, err)
+		h.log.Error("Not linked domain to organization %s : %s", organizationId, err.Error())
+		return nil
+	}
+
 	err := h.repositories.OrganizationRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
 
 	return err
