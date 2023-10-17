@@ -1,7 +1,6 @@
-import { Icons } from '@ui/media/Icon';
 import { isKnownUrl } from './util';
-import Image from 'next/image';
-import React from 'react';
+import { X } from '@ui/media/logos/X';
+import { Linkedin } from '@ui/media/logos/Linkedin';
 
 export const SocialIcon = ({
   children,
@@ -9,16 +8,7 @@ export const SocialIcon = ({
 }: React.PropsWithChildren<{ url: string }>) => {
   const knownUrl = isKnownUrl(url);
 
-  if (knownUrl === 'twitter')
-    return (
-      <Image
-        src={'/logos/twitterX.webp'}
-        alt='Twitter'
-        width={32}
-        height={32}
-      />
-    );
-  if (knownUrl === 'linkedin')
-    return <Icons.Linkedin viewBox='0 0 32 32' strokeWidth='0' />;
+  if (knownUrl === 'twitter') return <X />;
+  if (knownUrl === 'linkedin') return <Linkedin />;
   return <>{children}</>;
 };
