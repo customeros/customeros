@@ -13,12 +13,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTimelineEventCachedData } from '@organization/src/components/Timeline/preview/context/useTimelineEventCachedData';
 import { TimelineEvent } from '../../types';
 
-export const useDeepLinkToOpenModal = (
-  modalContent: TimelineEvent | null,
-  setModalContent: Dispatch<SetStateAction<TimelineEvent | null>>,
-  setIsModalOpen: Dispatch<SetStateAction<boolean>>,
-  handleDeleteParams: () => void,
-) => {
+export const useDeepLinkToOpenModal = ({
+  modalContent,
+  setModalContent,
+  setIsModalOpen,
+  handleDeleteParams,
+}: {
+  modalContent: TimelineEvent | null;
+  setModalContent: Dispatch<SetStateAction<TimelineEvent | null>>;
+  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+  handleDeleteParams: () => void;
+}) => {
   const abortController = new AbortController();
 
   const searchParams = useSearchParams();
@@ -74,12 +79,12 @@ export const useDeepLinkToOpenModal = (
         });
         return;
       }
-      setModalContent(selectedEvent);
+      setModalContent(selectedEvent as TimelineEvent);
       setIsModalOpen(true);
     }
 
     return () => {
-      abortController.abort('Page unmounted');
+      abortController.abort();
     };
   }, [searchParams]);
 };

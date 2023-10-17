@@ -67,12 +67,12 @@ export const TimelineEventPreviewContextContextProvider = ({
     router.push(`?${params}`);
   };
 
-  useDeepLinkToOpenModal(
+  useDeepLinkToOpenModal({
     modalContent,
     setModalContent,
     setIsModalOpen,
     handleDeleteParams,
-  );
+  });
   const updateUrlAndPosition = (timelineEventId: string, id: string) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
     params.set('events', timelineEventId);
@@ -84,7 +84,9 @@ export const TimelineEventPreviewContextContextProvider = ({
   const handleOpenModal = (timelineEventId: string) => {
     setIsModalOpen(true);
 
-    const event = handleFindTimelineEventInCache(timelineEventId);
+    const event = handleFindTimelineEventInCache(
+      timelineEventId,
+    ) as TimelineEvent;
     if (event) {
       setModalContent(event);
       updateUrlAndPosition(timelineEventId, id);

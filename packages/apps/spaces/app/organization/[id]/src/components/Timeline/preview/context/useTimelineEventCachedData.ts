@@ -27,9 +27,9 @@ export const useTimelineEventCachedData = () => {
     singleEventQueryKey: QueryKey,
     timelineQueryKey: QueryKey,
   ) => {
-    const timelineEventsQueryCachedData = (
-      queryClient.getQueryData(singleEventQueryKey) as GetTimelineEventsQuery
-    )?.timelineEvents?.[0];
+    const timelineEventsQueryCachedData =
+      (queryClient.getQueryData(singleEventQueryKey) as GetTimelineEventsQuery)
+        ?.timelineEvents?.[0] ?? null;
 
     const timelineInfiniteQueryCachedData =
       queryClient.getQueryData(timelineQueryKey);
@@ -40,7 +40,7 @@ export const useTimelineEventCachedData = () => {
   const findTimelineEventByIdInPages = (
     pages: Array<{ organization: { timelineEvents: Array<TimelineEvent> } }>,
     eventId: string,
-  ) => {
+  ): TimelineEvent | null => {
     if (!pages?.length || !eventId) {
       return null;
     }
@@ -54,17 +54,19 @@ export const useTimelineEventCachedData = () => {
       );
     });
 
-    return eventMap.get(eventId) || null;
+    return (eventMap.get(eventId) as TimelineEvent) || null;
   };
 
-  const handleFindTimelineEventInCache = (timelineEventId: string) => {
+  const handleFindTimelineEventInCache = (
+    timelineEventId: string,
+  ): TimelineEvent | undefined | null => {
     const [singleEventQueryKey, timelineQueryKey] = getKeys(timelineEventId);
 
     const [timelineEventsQueryCachedData, timelineInfiniteQueryCachedData] =
       getQueryData(singleEventQueryKey, timelineQueryKey);
 
     return (
-      timelineEventsQueryCachedData ||
+      (timelineEventsQueryCachedData as TimelineEvent) ||
       findTimelineEventByIdInPages(
         (timelineInfiniteQueryCachedData as unknown as any)?.pages,
         timelineEventId,
