@@ -46,7 +46,7 @@ export const COMMUNITY_INVITE_URL = `https://join.slack.com/t/openline-ai/shared
 
 // See "Algolia" section of the README for more information.
 export const ALGOLIA = {
-  indexName: "customeros",
+  indexName: "openline",
   appId: "ZP9RKP00LB",
   apiKey: "6e9726a151f778e76c05baa495c27895",
 };

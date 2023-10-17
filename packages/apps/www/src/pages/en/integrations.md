@@ -59,7 +59,7 @@ Find the integration you need below, and click on the link to see the guide for 
 - Asana
 - Github
 - Gitlab
-- Google Sheets
+- [Google Workspace][google-workspace]
 - [Jira][jira]
 - Microsoft Teams
 - [Notion][notion]
