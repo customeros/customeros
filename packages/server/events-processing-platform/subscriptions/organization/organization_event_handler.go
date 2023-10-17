@@ -438,12 +438,13 @@ func (h *organizationEventHandler) OnRenewalForecastRequested(ctx context.Contex
 func (h *organizationEventHandler) calculateForecastAmount(ctx context.Context, billingDtls entity.BillingDetails, likelihood string) (*float64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.calculateForecastAmount")
 	defer span.Finish()
+	span.LogFields(log.String("likelihood", likelihood), log.String("billingDtls", fmt.Sprintf("%+v", billingDtls)))
 
 	if billingDtls.Amount == nil || billingDtls.Frequency == "" || billingDtls.RenewalCycle == "" || likelihood == "" {
 		return nil, nil
 	}
 
-	billingPeriods := h.getBillingPeriods(billingDtls.Frequency, billingDtls.RenewalCycle)
+	billingPeriods := h.getBillingPeriodsInOneYear(billingDtls.Frequency)
 
 	var likelihoodFactor float64
 	switch entity.RenewalLikelihoodProbability(likelihood) {
@@ -464,11 +465,11 @@ func (h *organizationEventHandler) calculateForecastAmount(ctx context.Context, 
 	// trim decimal places
 	forecastAmount = math.Trunc(forecastAmount*100) / 100
 
-	span.LogFields(log.Float64("return - forecastAmount", forecastAmount))
+	span.LogFields(log.Float64("output - forecastAmount", forecastAmount))
 	return &forecastAmount, nil
 }
 
-func (h *organizationEventHandler) getBillingPeriods(billingFreq string, renewalFreq string) float64 {
+func (h *organizationEventHandler) getBillingPeriodsInRenewalCycle(billingFreq string, renewalFreq string) float64 {
 	switch billingFreq {
 
 	case "WEEKLY":
@@ -542,6 +543,26 @@ func (h *organizationEventHandler) getBillingPeriods(billingFreq string, renewal
 	}
 
 	return 1
+}
+
+func (h *organizationEventHandler) getBillingPeriodsInOneYear(billingFreq string) float64 {
+	switch billingFreq {
+
+	case "WEEKLY":
+		return 52
+	case "BIWEEKLY":
+		return 24
+	case "MONTHLY":
+		return 12
+	case "QUARTERLY":
+		return 4
+	case "BIANNUALLY":
+		return 2
+	case "ANNUALLY":
+		return 1
+	default:
+		return 1
+	}
 }
 
 func (h *organizationEventHandler) OnNextCycleDateRequested(ctx context.Context, evt eventstore.Event) error {
