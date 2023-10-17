@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { SlideFade } from '@ui/transitions/SlideFade';
+import React, { useEffect, useRef } from 'react';
 import { Box } from '@ui/layout/Box';
 import { ComposeEmail } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
 import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';

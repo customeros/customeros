@@ -1,13 +1,11 @@
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
-import {
-  GetTimelineQuery,
-  useInfiniteGetTimelineQuery,
-} from '@organization/src/graphql/getTimeline.generated';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import {
   GetTimelineEventsQuery,
   useGetTimelineEventsQuery,
 } from '@organization/src/graphql/getTimelineEvents.generated';
-import { InfiniteData, QueryKey, useQueryClient } from '@tanstack/react-query';
+import { QueryKey, useQueryClient } from '@tanstack/react-query';
+import { TimelineEvent } from '@graphql/types';
 
 export const useTimelineEventCachedData = () => {
   const [timelineMeta, _] = useTimelineMeta();
@@ -39,20 +37,24 @@ export const useTimelineEventCachedData = () => {
     return [timelineEventsQueryCachedData, timelineInfiniteQueryCachedData];
   };
 
-  const findTimelineEventByIdInPages = (pages: Array<any>, eventId: string) => {
+  const findTimelineEventByIdInPages = (
+    pages: Array<{ organization: { timelineEvents: Array<TimelineEvent> } }>,
+    eventId: string,
+  ) => {
     if (!pages?.length || !eventId) {
       return null;
     }
-    // Providing correct type to pages and renaming function
-    for (let i = 0; i < pages.length; i++) {
-      const timelineEvents = pages?.[i]?.organization.timelineEvents;
-      for (let j = 0; j < timelineEvents.length; j++) {
-        if (timelineEvents[j]?.id === eventId) {
-          return timelineEvents[j];
-        }
-      }
-    }
-    return null;
+
+    const eventMap = new Map<string, TimelineEvent>();
+
+    pages.forEach((page) => {
+      const timelineEvents = page?.organization?.timelineEvents;
+      timelineEvents.forEach((event: TimelineEvent) =>
+        eventMap.set(event.id, event),
+      );
+    });
+
+    return eventMap.get(eventId) || null;
   };
 
   const handleFindTimelineEventInCache = (timelineEventId: string) => {
@@ -64,8 +66,7 @@ export const useTimelineEventCachedData = () => {
     return (
       timelineEventsQueryCachedData ||
       findTimelineEventByIdInPages(
-        (timelineInfiniteQueryCachedData as InfiniteData<GetTimelineQuery>)
-          ?.pages,
+        (timelineInfiniteQueryCachedData as unknown as any)?.pages,
         timelineEventId,
       )
     );

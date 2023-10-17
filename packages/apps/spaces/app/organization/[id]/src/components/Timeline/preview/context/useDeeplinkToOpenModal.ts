@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { useSearchParams } from 'next/navigation';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 import {
@@ -18,8 +19,10 @@ export const useDeepLinkToOpenModal = (
   setIsModalOpen: Dispatch<SetStateAction<boolean>>,
   handleDeleteParams: () => void,
 ) => {
+  const abortController = new AbortController();
+
   const searchParams = useSearchParams();
-  const client = getGraphQLClient();
+  const client = getGraphQLClient({ signal: abortController.signal });
   const queryClient = useQueryClient();
   const { handleFindTimelineEventInCache } = useTimelineEventCachedData();
 
@@ -35,25 +38,23 @@ export const useDeepLinkToOpenModal = (
         },
       );
 
-      queryClient.setQueryData<OrganizationQuery>(
-        singleEventQueryKey,
-        (oldData) => {
-          return result;
-        },
-      );
+      queryClient.setQueryData<OrganizationQuery>(singleEventQueryKey, () => {
+        return result;
+      });
 
       if (!result.timelineEvents.length) {
         handleDeleteParams();
         toastError(
-          "Sorry, we couldn't find this event",
+          "We couldn't find this event",
           `timeline-event-not-found-${id}`,
         );
       }
       return result.timelineEvents[0] as TimelineEvent;
     } catch (error) {
+      Sentry.captureException(`Event not found: ${error}`);
       handleDeleteParams();
       toastError(
-        "Sorry, we couldn't find this event",
+        "We couldn't find this event",
         `timeline-event-not-found-${id}`,
       );
     }
@@ -62,8 +63,6 @@ export const useDeepLinkToOpenModal = (
   useEffect(() => {
     const eventId = searchParams?.get('events');
     if (eventId && !modalContent) {
-      // Assuming that handleFindEventInCache and getModalContentFromServer functions are available in this scope
-
       const selectedEvent = handleFindTimelineEventInCache(eventId);
 
       if (!selectedEvent) {
@@ -78,5 +77,9 @@ export const useDeepLinkToOpenModal = (
       setModalContent(selectedEvent);
       setIsModalOpen(true);
     }
+
+    return () => {
+      abortController.abort('Page unmounted');
+    };
   }, [searchParams]);
 };
