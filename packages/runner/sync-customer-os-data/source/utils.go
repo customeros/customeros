@@ -56,18 +56,6 @@ func MapJsonToLogEntry(jsonData, syncId, source string) (entity.LogEntryData, er
 	return logEntry, nil
 }
 
-func MapJsonToNote(jsonData, syncId, source string) (entity.NoteData, error) {
-	note := entity.NoteData{}
-	err := json.Unmarshal([]byte(jsonData), &note)
-	if err != nil {
-		return entity.NoteData{}, err
-	}
-	note.SyncId = syncId
-	note.ExternalSystem = source
-	note.Id = ""
-	return note, nil
-}
-
 func MapJsonToEmailMessage(jsonData, syncId, source string) (entity.EmailMessageData, error) {
 	note := entity.EmailMessageData{}
 	err := json.Unmarshal([]byte(jsonData), &note)

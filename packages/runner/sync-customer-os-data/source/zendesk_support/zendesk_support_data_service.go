@@ -26,7 +26,6 @@ var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):              {UsersTableSuffix},
 	string(common.ORGANIZATIONS):      {OrganizationsTableSuffix, UsersTableSuffix},
 	string(common.ISSUES):             {TicketsTableSuffix},
-	string(common.NOTES):              {TicketCommentsTableSuffix},
 	string(common.INTERACTION_EVENTS): {TicketCommentsTableSuffix},
 }
 
@@ -206,41 +205,6 @@ func (s *zendeskSupportDataService) GetIssuesForSync(ctx context.Context, batchS
 		}
 	}
 	return issues
-}
-
-func (s *zendeskSupportDataService) GetNotesForSync(ctx context.Context, batchSize int, runId string) []any {
-	s.processingIds = make(map[string]source.ProcessingEntity)
-	currentEntity := string(common.NOTES)
-
-	var notes []any
-	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
-		if err != nil {
-			s.log.Error(err)
-			return nil
-		}
-		for _, v := range airbyteRecords {
-			if len(notes) >= batchSize {
-				break
-			}
-			outputJSON, err := MapNote(v.AirbyteData)
-			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
-			if err != nil {
-				note = entity.NoteData{
-					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
-					},
-				}
-			}
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-				ExternalId:  note.ExternalId,
-				Entity:      currentEntity,
-				TableSuffix: sourceTableSuffix,
-			}
-			notes = append(notes, note)
-		}
-	}
-	return notes
 }
 
 func (s *zendeskSupportDataService) GetInteractionEventsForSync(ctx context.Context, batchSize int, runId string) []any {
