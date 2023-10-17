@@ -1,9 +1,7 @@
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Card, CardBody } from '@ui/presentation/Card';
-
 import { User, Contact } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import React, { useCallback, useMemo } from 'react';
 import { Image } from '@ui/media/Image';
 import noteIcon from 'public/images/event-ill-log-stub.png';
@@ -14,6 +12,7 @@ import { Phone } from '@ui/media/icons/Phone';
 import { MessageTextSquare01 } from '@ui/media/icons/MessageTextSquare01';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface LogEntryStubProps {
   data: LogEntryWithAliases;
@@ -35,6 +34,9 @@ function getAuthor(user: User | Contact) {
 
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
   const { openModal } = useTimelineEventPreviewContext();
+
+  const isTemporary = !data?.updatedAt;
+
   const fullName = getAuthor(data?.logEntryCreatedBy);
   const getLogEntryIcon = useCallback((type: string | null) => {
     switch (type) {
@@ -85,19 +87,21 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
       </Flex>
     );
   }, [getInlineTags]);
+
   return (
     <Card
       variant='outline'
       size='md'
       maxWidth={549}
       ml={6}
-      cursor='pointer'
       boxShadow='xs'
       borderColor='gray.200'
       borderRadius='lg'
-      onClick={() => openModal(data)}
+      opacity={isTemporary ? 0.5 : 1}
+      onClick={() => !isTemporary && openModal(data)}
       _hover={{ boxShadow: 'md' }}
       transition='all 0.2s ease-out'
+      cursor={isTemporary ? 'progress' : 'pointer'}
     >
       <CardBody px='3' py='2'>
         <Flex
