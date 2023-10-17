@@ -431,6 +431,9 @@ func extractLines(input string) []string {
 }
 
 func (s *emailService) extractEmailAddresses(input string) []string {
+	if input == "" {
+		return []string{""}
+	}
 	// Regular expression pattern to match email addresses between <>
 	emailPattern := `<(.*?)>`
 
@@ -480,11 +483,7 @@ func (s *emailService) extractEmailAddresses(input string) []string {
 		return emailAddresses
 	}
 
-	if input != "" {
-		return []string{input}
-	}
-
-	return nil
+	return []string{input}
 }
 
 type EmailRawData struct {
