@@ -1,45 +1,42 @@
-import React, { useEffect, useRef } from 'react';
-import { SlideFade } from '@ui/transitions/SlideFade';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Box } from '@ui/layout/Box';
 import { Logger } from './components/Logger';
 import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
+import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
 
-interface LogEntryTimelineActionProps {
-  onScrollBottom: () => void;
-}
+export const LogEntryTimelineAction: React.FC = () => {
+  const { virtuosoRef } = useTimelineRefContext();
 
-export const LogEntryTimelineAction: React.FC<LogEntryTimelineActionProps> = ({
-  onScrollBottom,
-}) => {
   const { openedEditor } = useTimelineActionContext();
-  const isLogEntryEditorOpen = openedEditor === 'log-entry';
-  const virtuoso = useRef(null);
+  const isLogEntryEditorOpen = useMemo(
+    () => openedEditor === 'log-entry',
+    [openedEditor],
+  );
+  const logEntryWrapperRef = useRef(null);
 
   useEffect(() => {
     if (isLogEntryEditorOpen) {
-      onScrollBottom();
+      virtuosoRef?.current?.scrollBy({ top: 300 });
     }
-  }, [isLogEntryEditorOpen]);
+  }, [isLogEntryEditorOpen, virtuosoRef]);
 
   return (
     <>
       {isLogEntryEditorOpen && (
-        <SlideFade in={true}>
-          <Box
-            ref={virtuoso}
-            borderRadius={'md'}
-            boxShadow={'lg'}
-            m={6}
-            mt={2}
-            p={6}
-            pt={4}
-            bg={'white'}
-            border='1px solid'
-            borderColor='gray.100'
-          >
-            <Logger />
-          </Box>
-        </SlideFade>
+        <Box
+          ref={logEntryWrapperRef}
+          borderRadius={'md'}
+          boxShadow={'lg'}
+          m={6}
+          mt={2}
+          p={6}
+          pt={4}
+          bg={'white'}
+          border='1px solid'
+          borderColor='gray.100'
+        >
+          <Logger />
+        </Box>
       )}
     </>
   );

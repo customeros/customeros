@@ -6,7 +6,7 @@ import { EmailStub, TimelineItem } from './events';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
-import { TimelineEventPreviewContextContextProvider } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
 import { EmptyTimeline } from '@organization/src/components/Timeline/EmptyTimeline';
@@ -58,8 +58,8 @@ function getEventDate(event?: TimelineEvent) {
 
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
-  const virtuoso = useRef<VirtuosoHandle>(null);
   const queryClient = useQueryClient();
+  const { virtuosoRef } = useTimelineRefContext();
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
 
   const client = getGraphQLClient();
@@ -168,132 +168,116 @@ export const OrganizationTimeline: FC = () => {
           <TimelineItemSkeleton />
         </Flex>
       )}
-      <TimelineEventPreviewContextContextProvider
-        data={timelineEmailEvents || []}
-        id={id}
-      >
-        <Virtuoso<TimelineEvent>
-          ref={virtuoso}
-          style={{ height: '100%', width: '100%', background: '#F9F9FB' }}
-          initialItemCount={timelineEmailEvents?.length}
-          initialTopMostItemIndex={timelineEmailEvents.length - 1}
-          data={timelineEmailEvents}
-          increaseViewportBy={300}
-          atTopThreshold={100}
-          context={{
-            loadMore: () => fetchNextPage(),
-            loading: isFetchingNextPage,
-          }}
-          itemContent={(index, timelineEvent) => {
-            if (!timelineEvent) return null;
-            const showDate =
-              index === 0
-                ? true
-                : !DateTimeUtils.isSameDay(
-                    getEventDate(
-                      timelineEmailEvents?.[
-                        index - 1
-                      ] as InteractionEventWithDate,
-                    ),
-                    getEventDate(timelineEvent as TimelineEvent),
-                  );
 
-            switch (timelineEvent.__typename) {
-              case 'InteractionEvent': {
-                return (
-                  <TimelineItem date={timelineEvent?.date} showDate={showDate}>
-                    {timelineEvent.channel === 'EMAIL' && (
-                      <EmailStub email={timelineEvent} />
-                    )}
-                    {timelineEvent.channel === 'CHAT' && (
-                      <>
-                        {timelineEvent.externalLinks?.[0]?.type ===
-                          ExternalSystemType.Slack && (
-                          <SlackStub slackEvent={timelineEvent} />
-                        )}
-                        {timelineEvent.externalLinks?.[0]?.type ===
-                          ExternalSystemType.Intercom && (
-                          <IntercomStub intercomEvent={timelineEvent} />
-                        )}
-                      </>
-                    )}
-                  </TimelineItem>
+      <Virtuoso<TimelineEvent>
+        ref={virtuosoRef}
+        style={{ height: '100%', width: '100%', background: '#F9F9FB' }}
+        initialItemCount={timelineEmailEvents?.length}
+        initialTopMostItemIndex={timelineEmailEvents.length - 1}
+        data={timelineEmailEvents}
+        increaseViewportBy={300}
+        atTopThreshold={100}
+        context={{
+          loadMore: () => fetchNextPage(),
+          loading: isFetchingNextPage,
+        }}
+        itemContent={(index, timelineEvent) => {
+          if (!timelineEvent) return null;
+          const showDate =
+            index === 0
+              ? true
+              : !DateTimeUtils.isSameDay(
+                  getEventDate(
+                    timelineEmailEvents?.[
+                      index - 1
+                    ] as InteractionEventWithDate,
+                  ),
+                  getEventDate(timelineEvent as TimelineEvent),
                 );
-              }
-              case 'Meeting': {
-                return (
-                  <TimelineItem
-                    date={timelineEvent?.createdAt}
-                    showDate={showDate}
-                  >
-                    <MeetingStub data={timelineEvent} />
-                  </TimelineItem>
-                );
-              }
-              case 'Action': {
-                return (
-                  <TimelineItem
-                    date={timelineEvent?.createdAt}
-                    showDate={showDate}
-                  >
-                    <UserActionStub data={timelineEvent} />
-                  </TimelineItem>
-                );
-              }
-              case 'LogEntry': {
-                return (
-                  <TimelineItem
-                    date={timelineEvent?.logEntryStartedAt}
-                    showDate={showDate}
-                  >
-                    <LogEntryStub data={timelineEvent} />
-                  </TimelineItem>
-                );
-              }
-              case 'Issue': {
-                return (
-                  <TimelineItem
-                    date={timelineEvent?.createdAt}
-                    showDate={showDate}
-                  >
-                    <IssueStub data={timelineEvent} />
-                  </TimelineItem>
-                );
-              }
-              default:
-                return null;
-            }
-          }}
-          components={{
-            Header: (rest) => (
-              <Flex bg='gray.25' p={5}>
-                {loadedDataCount &&
-                !isFetchingNextPage &&
-                data?.pages?.[0]?.organization?.timelineEventsTotalCount >
-                  loadedDataCount ? (
-                  <Header {...rest} />
-                ) : null}
-              </Flex>
-            ),
-            Footer: () => {
-              const memoizedScrollBy = useCallback(() => {
-                virtuoso?.current?.scrollBy({ top: 300 });
-              }, [virtuoso]);
+
+          switch (timelineEvent.__typename) {
+            case 'InteractionEvent': {
               return (
-                <TimelineActions
-                  virtuosoRef={virtuoso}
-                  invalidateQuery={invalidateQuery}
-                  onScrollBottom={memoizedScrollBy}
-                />
+                <TimelineItem date={timelineEvent?.date} showDate={showDate}>
+                  {timelineEvent.channel === 'EMAIL' && (
+                    <EmailStub email={timelineEvent} />
+                  )}
+                  {timelineEvent.channel === 'CHAT' && (
+                    <>
+                      {timelineEvent.externalLinks?.[0]?.type ===
+                        ExternalSystemType.Slack && (
+                        <SlackStub slackEvent={timelineEvent} />
+                      )}
+                      {timelineEvent.externalLinks?.[0]?.type ===
+                        ExternalSystemType.Intercom && (
+                        <IntercomStub intercomEvent={timelineEvent} />
+                      )}
+                    </>
+                  )}
+                </TimelineItem>
               );
-            },
-          }}
-        />
-        <TimelineEventPreviewModal
-          invalidateQuery={invalidateQuery}
-          virtuosoRef={virtuoso}
-        />
-      </TimelineEventPreviewContextContextProvider>
+            }
+            case 'Meeting': {
+              return (
+                <TimelineItem
+                  date={timelineEvent?.createdAt}
+                  showDate={showDate}
+                >
+                  <MeetingStub data={timelineEvent} />
+                </TimelineItem>
+              );
+            }
+            case 'Action': {
+              return (
+                <TimelineItem
+                  date={timelineEvent?.createdAt}
+                  showDate={showDate}
+                >
+                  <UserActionStub data={timelineEvent} />
+                </TimelineItem>
+              );
+            }
+            case 'LogEntry': {
+              return (
+                <TimelineItem
+                  date={timelineEvent?.logEntryStartedAt}
+                  showDate={showDate}
+                >
+                  <LogEntryStub data={timelineEvent} />
+                </TimelineItem>
+              );
+            }
+            case 'Issue': {
+              return (
+                <TimelineItem
+                  date={timelineEvent?.createdAt}
+                  showDate={showDate}
+                >
+                  <IssueStub data={timelineEvent} />
+                </TimelineItem>
+              );
+            }
+            default:
+              return null;
+          }
+        }}
+        components={{
+          Header: (rest) => (
+            <Flex bg='gray.25' p={5}>
+              {loadedDataCount &&
+              !isFetchingNextPage &&
+              data?.pages?.[0]?.organization?.timelineEventsTotalCount >
+                loadedDataCount ? (
+                <Header {...rest} />
+              ) : null}
+            </Flex>
+          ),
+          Footer: () => {
+            return <TimelineActions invalidateQuery={invalidateQuery} />;
+          },
+        }}
+      />
+      <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
     </>
   );
 };

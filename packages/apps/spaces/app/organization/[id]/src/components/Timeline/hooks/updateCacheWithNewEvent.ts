@@ -3,7 +3,7 @@ import { GetTimelineQuery } from '@organization/src/graphql/getTimeline.generate
 import { VirtuosoHandle } from 'react-virtuoso';
 
 export function useUpdateCacheWithNewEvent<T>(
-  virtuosoRef?: React.RefObject<VirtuosoHandle>,
+  virtuosoRef?: React.RefObject<VirtuosoHandle> | null,
 ) {
   const queryClient = useQueryClient();
 

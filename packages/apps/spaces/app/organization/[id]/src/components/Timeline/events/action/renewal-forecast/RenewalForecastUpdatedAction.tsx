@@ -4,11 +4,11 @@ import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { Text } from '@ui/typography/Text';
 import { Action } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import {
   getCurrencyString,
   getMetadata,
 } from '@organization/src/components/Timeline/events/action/utils';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 const DEFAULT_COLOR_SCHEME = 'gray';
 
 interface RenewalForecastUpdatedActionProps {
@@ -18,7 +18,7 @@ interface RenewalForecastUpdatedActionProps {
 export const RenewalForecastUpdatedAction: React.FC<
   RenewalForecastUpdatedActionProps
 > = ({ data }) => {
-  const { openModal } = useTimelineEventPreviewContext();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
   const forecastedAmount = data.content && getCurrencyString(data.content);
   const [preText, postText] = data.content?.split('by ') ?? [];
   const isCreatedBySystem = data.content?.includes('default');
@@ -31,7 +31,11 @@ export const RenewalForecastUpdatedAction: React.FC<
   const authorText = isCreatedBySystem ? data.content : `${preText} by`;
 
   return (
-    <Flex alignItems='center' onClick={() => openModal(data)} cursor='pointer'>
+    <Flex
+      alignItems='center'
+      onClick={() => openModal(data.id)}
+      cursor='pointer'
+    >
       <FeaturedIcon size='md' minW='10' colorScheme={colorScheme}>
         <Icons.Calculator />
       </FeaturedIcon>

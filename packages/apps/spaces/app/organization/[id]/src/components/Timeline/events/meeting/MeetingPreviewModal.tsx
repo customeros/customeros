@@ -20,7 +20,10 @@ import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea
 import { useUpdateMeetingMutation } from '@organization/src/graphql/updateMeeting.generated';
 import { useAddMeetingNoteMutation } from '@organization/src/graphql/addMeetingNote.generated';
 
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import {
+  useTimelineEventPreviewMethodsContext,
+  useTimelineEventPreviewStateContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getParticipantEmail } from '../utils';
 import { MeetingIcon, HubspotIcon, CalcomIcon } from './icons';
 
@@ -31,7 +34,8 @@ interface MeetingPreviewModalProps {
 export const MeetingPreviewModal = ({
   invalidateQuery,
 }: MeetingPreviewModalProps) => {
-  const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const { modalContent } = useTimelineEventPreviewStateContext();
+  const { closeModal } = useTimelineEventPreviewMethodsContext();
   const [_, copy] = useCopyToClipboard();
   const client = getGraphQLClient();
   const updateMeeting = useUpdateMeetingMutation(client, {

@@ -8,6 +8,7 @@ import {
 } from '@organization/src/graphql/getCanAccessOrganization.generated';
 import { getServerGraphQLClient } from '@shared/util/getServerGraphQLClient';
 import NotFound from './src/components/NotFound/NotFound';
+import { TimelineContextsProvider } from '@organization/src/components/TimelineContextsProvider';
 
 interface OrganizationPageProps {
   params: { id: string };
@@ -32,7 +33,7 @@ export default async function OrganizationPage({
   }
 
   return (
-    <>
+    <TimelineContextsProvider id={params.id}>
       <SideSection>
         <TabsContainer>
           <Panels tab={searchParams.tab ?? 'about'} />
@@ -42,6 +43,6 @@ export default async function OrganizationPage({
       <MainSection>
         <OrganizationTimelineWithActionsContext />
       </MainSection>
-    </>
+    </TimelineContextsProvider>
   );
 }

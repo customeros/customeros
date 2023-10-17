@@ -1,11 +1,12 @@
 import React from 'react';
 import { Card, CardFooter } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import {
+  useTimelineEventPreviewMethodsContext,
+  useTimelineEventPreviewStateContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { CardBody } from '@chakra-ui/card';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
@@ -14,7 +15,8 @@ import { Action, Maybe, RenewalLikelihoodProbability } from '@graphql/types';
 import { getLikelihoodDisplayData, getMetadata } from '../utils';
 
 export const RenewalLikelihoodUpdatedActionPreview = () => {
-  const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const { modalContent } = useTimelineEventPreviewStateContext();
+  const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as Action;
 
   const { preText, likelihood, author } = getLikelihoodDisplayData(

@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { CardBody } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import {
+  useTimelineEventPreviewMethodsContext,
+  useTimelineEventPreviewStateContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
 import { ComposeEmail } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
@@ -62,7 +65,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   invalidateQuery,
   virtuosoRef,
 }) => {
-  const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const { modalContent } = useTimelineEventPreviewStateContext();
+  const { closeModal } = useTimelineEventPreviewMethodsContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const event = modalContent as InteractionEvent;

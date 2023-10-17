@@ -4,8 +4,8 @@ import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { Text } from '@ui/typography/Text';
 import { Action, RenewalLikelihoodProbability } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getLikelihoodDisplayData } from '../utils';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface RenewalForecastUpdatedActionProps {
   data: Action;
@@ -14,13 +14,17 @@ interface RenewalForecastUpdatedActionProps {
 export const RenewalLikelihoodUpdatedAction: React.FC<
   RenewalForecastUpdatedActionProps
 > = ({ data }) => {
-  const { openModal } = useTimelineEventPreviewContext();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
   if (!data.content) return null;
   const { preText, likelihood, author } = getLikelihoodDisplayData(
     data.content,
   );
   return (
-    <Flex alignItems='center' onClick={() => openModal(data)} cursor='pointer'>
+    <Flex
+      alignItems='center'
+      onClick={() => openModal(data.id)}
+      cursor='pointer'
+    >
       <FeaturedIcon
         size='md'
         minW='10'

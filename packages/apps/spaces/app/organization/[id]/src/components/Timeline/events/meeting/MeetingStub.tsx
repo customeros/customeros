@@ -9,8 +9,8 @@ import { Icons } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
 
 import { getParticipants, getParticipantName } from '../utils';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { MeetingIcon } from './icons';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface MeetingStubProps {
   data: Meeting;
@@ -22,7 +22,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
     data.createdBy[0]?.__typename === 'UserParticipant';
   const firstParticipant = getParticipantName(data.attendedBy?.[0]);
   const [participants, remaining] = getParticipants(data);
-  const { openModal } = useTimelineEventPreviewContext();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
 
   const note = convert(data?.note?.[0]?.content ?? '', {
     preserveNewlines: true,
@@ -39,7 +39,7 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
       boxShadow='xs'
       borderColor='gray.200'
       borderRadius='lg'
-      onClick={() => openModal(data)}
+      onClick={() => openModal(data.id)}
       _hover={{ boxShadow: 'md' }}
       transition='all 0.2s ease-out'
       ml={isSentByTenantUser ? 6 : 0}

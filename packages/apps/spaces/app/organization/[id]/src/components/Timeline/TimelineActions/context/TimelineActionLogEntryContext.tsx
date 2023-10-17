@@ -33,6 +33,7 @@ import { DataSource, LogEntry } from '@graphql/types';
 import { logEntryEditorExtensions } from './extensions';
 import { useTimelineMeta } from '../../shared/state';
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
+import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
 
 export const noop = () => undefined;
 
@@ -72,11 +73,9 @@ export const TimelineActionLogEntryContextContextProvider = ({
   children,
   invalidateQuery,
   id = '',
-  virtuosoRef,
 }: PropsWithChildren<{
   invalidateQuery: () => void;
   id: string;
-  virtuosoRef?: React.RefObject<VirtuosoHandle>;
 }>) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [timelineMeta] = useTimelineMeta();
@@ -89,6 +88,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const queryKey = useInfiniteGetTimelineQuery.getKey(
     timelineMeta.getTimelineVariables,
   );
+  const { virtuosoRef } = useTimelineRefContext();
   const updateTimelineCache = useUpdateCacheWithNewEvent<LogEntry>(virtuosoRef);
 
   const logEntryValues = new LogEntryFormDto();

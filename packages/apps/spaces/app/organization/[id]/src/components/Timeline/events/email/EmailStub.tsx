@@ -6,15 +6,15 @@ import { VStack } from '@ui/layout/Stack';
 import { convert } from 'html-to-text';
 import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
 import { EmailParticipant } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
 import Image from 'next/image';
 import { InteractionEventWithDate } from '../../types';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
   email,
 }) => {
-  const { openModal } = useTimelineEventPreviewContext();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
   const text = convert(email?.content || '', {
     preserveNewlines: true,
     selectors: [
@@ -44,7 +44,7 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
         position='unset'
         cursor='pointer'
         borderRadius='lg'
-        onClick={() => openModal(email)}
+        onClick={() => openModal(email.id)}
         _hover={{ boxShadow: 'md' }}
         transition='all 0.2s ease-out'
         ml={isSendByTenant ? 6 : 0}

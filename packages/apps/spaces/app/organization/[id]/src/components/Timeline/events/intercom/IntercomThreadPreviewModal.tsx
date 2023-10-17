@@ -22,11 +22,14 @@ import {
 } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider';
 import { useGetTimelineEventsQuery } from '@organization/src/graphql/getTimelineEvents.generated';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { MessageCardSkeleton } from '../../shared';
 import { IntercomMessageCard } from './IntercomMessageCard';
+import {
+  useTimelineEventPreviewMethodsContext,
+  useTimelineEventPreviewStateContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
   const sender =
@@ -37,7 +40,9 @@ const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
 };
 export const IntercomThreadPreviewModal: React.FC = () => {
   const client = getGraphQLClient();
-  const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const { modalContent } = useTimelineEventPreviewStateContext();
+  const { closeModal } = useTimelineEventPreviewMethodsContext();
+
   const event = modalContent as InteractionEvent;
 
   const timelineEventsIds =
