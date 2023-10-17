@@ -62,6 +62,7 @@ export const useDeepLinkToOpenModal = ({
         "We couldn't find this event",
         `timeline-event-not-found-${id}`,
       );
+      return null;
     }
   };
 
