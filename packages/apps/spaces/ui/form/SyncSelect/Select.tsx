@@ -153,6 +153,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             borderRadius: 'md',
             color: 'gray.700',
             noOfLines: 1,
+            '-webkit-box-align': 'start',
             bg: state.isSelected ? 'primary.50' : 'white',
             boxShadow: state.isFocused ? 'menuOptionsFocus' : 'none',
             _hover: { bg: state.isSelected ? 'primary.50' : 'gray.100' },
