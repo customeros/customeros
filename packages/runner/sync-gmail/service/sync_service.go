@@ -49,7 +49,6 @@ func (s *syncService) BuildEmailsListExcludingPersonalEmails(personalEmailProvid
 	if from != "" && from != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(from)) {
 		allEmails = append(allEmails, from)
 	}
-	allEmails = append(allEmails, from)
 	for _, email := range [][]string{to, cc, bcc} {
 		for _, email := range email {
 			if email != "" && email != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(email)) {
