@@ -497,9 +497,9 @@ func (h *organizationEventHandler) getBillingPeriodsInRenewalCycle(billingFreq s
 		case "QUARTERLY":
 			return 6
 		case "BIANNUALLY":
-			return 12
+			return 13
 		case "ANNUALLY":
-			return 24
+			return 26
 		}
 
 	case "MONTHLY":
@@ -551,7 +551,7 @@ func (h *organizationEventHandler) getBillingPeriodsInOneYear(billingFreq string
 	case "WEEKLY":
 		return 52
 	case "BIWEEKLY":
-		return 24
+		return 26
 	case "MONTHLY":
 		return 12
 	case "QUARTERLY":
