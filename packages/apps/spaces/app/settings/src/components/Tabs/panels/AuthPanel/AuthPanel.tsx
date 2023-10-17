@@ -173,7 +173,7 @@ export const AuthPanel = () => {
               );
             });
           toastSuccess(
-            'We have successfully revoked access to your slack workspace!',
+            `We can't access your Slack workspace anymore`,
             'revoke-slack-access',
           );
         })

@@ -98,7 +98,7 @@ export const TimelineEventPreviewContextContextProvider = ({
       if (!result.timelineEvents.length) {
         handleDeleteParams();
         toastError(
-          "Sorry, we couldn't find this event",
+          "We couldn't find this event",
           `timeline-event-not-found-${id}`,
         );
       }
@@ -106,7 +106,7 @@ export const TimelineEventPreviewContextContextProvider = ({
     } catch (error) {
       handleDeleteParams();
       toastError(
-        "Sorry, we couldn't find this event",
+        "We couldn't find this event",
         `timeline-event-not-found-${id}`,
       );
     }

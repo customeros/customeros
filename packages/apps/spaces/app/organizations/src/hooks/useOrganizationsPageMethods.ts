@@ -128,7 +128,7 @@ export const useOrganizationsPageMethods = () => {
     onSuccess: (_, { ids }) => {
       const count = ids.length;
       toastSuccess(
-        `${count > 1 ? `${count} Organizations` : '1 Organization'} archived`,
+        `${count > 1 ? `${count} organizations` : '1 organization'} archived`,
         'hide-organizations-success',
       );
     },
