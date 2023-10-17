@@ -46,13 +46,13 @@ func (s *syncService) GetWhitelistedDomain(domain string, whitelistedDomains []c
 func (s *syncService) BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
 	var allEmails []string
 
-	if from != "" && from != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, extractDomain(from)) {
+	if from != "" && from != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(from)) {
 		allEmails = append(allEmails, from)
 	}
 	allEmails = append(allEmails, from)
 	for _, email := range [][]string{to, cc, bcc} {
 		for _, email := range email {
-			if email != "" && email != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, extractDomain(email)) {
+			if email != "" && email != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(email)) {
 				allEmails = append(allEmails, email)
 			}
 		}
@@ -105,18 +105,6 @@ func (s *syncService) IsValidEmailSyntax(email string) bool {
 	return err == nil
 }
 
-func extractDomain(email string) string {
-	parts := strings.Split(email, "@")
-	if len(parts) != 2 {
-		return "" // Invalid email format
-	}
-	split := strings.Split(parts[1], ".")
-	if len(split) < 2 {
-		return parts[1]
-	}
-	return strings.ToLower(split[len(split)-2] + "." + split[len(split)-1])
-}
-
 func hasPersonalEmailProvider(providers []commonEntity.PersonalEmailProvider, domain string) bool {
 	for _, provider := range providers {
 		if provider.ProviderDomain == domain {
@@ -141,7 +129,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	}
 
 	//if it's a personal email, we create just the email node in tenant
-	domain := extractDomain(email)
+	domain := utils.ExtractDomain(email)
 	for _, personalEmailProvider := range personalEmailProviderList {
 		if strings.Contains(domain, personalEmailProvider.ProviderDomain) {
 			emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, email, source, AppSource)
