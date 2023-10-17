@@ -11,6 +11,7 @@
     "codegen:icons": "node scripts/codegen-icons.js",
     "codegen:logos": "node scripts/codegen-logos.js",
     "preatify": "yarn prettier --write .",
+    "test:graphql": "graphql-codegen --require dotenv/config --config scripts/test-graphql-contract.ts && rm -rf scripts/temp",
     "test": "jest"
   },
   "dependencies": {

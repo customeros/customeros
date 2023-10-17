@@ -2,16 +2,16 @@ name: spaces
 
 on:
   push:
-    branches: [ "otter", "4059-enable-fe-tests" ]
+    branches: ["otter"]
     paths:
-      - 'packages/apps/spaces/**'
-      - '.github/workflows/build-spaces.yml'
+      - "packages/apps/spaces/**"
+      - ".github/workflows/build-spaces.yml"
   pull_request:
     paths:
-      - 'packages/apps/spaces/**'
-      - '.github/workflows/build-spaces.yml'
+      - "packages/apps/spaces/**"
+      - ".github/workflows/build-spaces.yml"
   release:
-    types: [ created, edited ]
+    types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
@@ -35,61 +35,35 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
-          cache: 'yarn'
+          node-version: "16"
+          cache: "yarn"
 
       - run: npm install -g yarn
 
-      # - name: Deploy test Environment
-      #   run: |
-      #     curl http://openline.sh/install.sh | sh
-      #     openline dev start test-env
-      #     echo "[INFO] Checking Openline CLI services..."
-      #     openline dev ping
-      #     echo "[INFO] Checking PODs..."
-      #     kubectl -n openline get pods
+      - name: Deploy test Environment
+        run: |
+          set -e
+          curl http://openline.sh/install.sh | sh
+          openline dev start test-env
+          echo "[INFO] Checking Openline CLI services..."
+          openline dev ping || { echo 'Openline CLI services check failed' ; exit 1; }
+          echo "[INFO] Checking PODs..."
+          kubectl -n openline get pods || { echo 'PODs check failed' ; exit 1; }
+          echo "[INFO] wait for 3 seconds to make sure all services are up and running..."
+          sleep 3
 
-      # - name: Run tests
-      #   run: |
-      #     cd packages/apps/spaces
-      #     yarn add -D jest --silent
-      #     yarn test
+      - name: Test GraphQL contracts
+        run: |
+          cd packages/apps/spaces
+          yarn install --frozen-lockfile
+          yarn test:graphql
+        env:
+          CUSTOMER_OS_API_PATH: http://127.0.0.1:10000
+          CUSTOMER_OS_API_KEY: ${{ secrets.CLI_CUSTOMER_OS_API_KEY }}
 
-      # - name: Compute test coverage
-      #   id: compute_code_coverage
-      #   run: |
-      #     git clone https://github.com/openline-ai/openline-test-harness.git
-      #     cd openline-test-harness/spaces-coverage
-      #     go mod tidy
-      #     go build
-      #     ./spaces-coverage
-      #     COVERAGE=$(cat coverage.txt)
-      #     echo "::set-output name=coverage::$COVERAGE"
-
-      # - name: Test Cleanup
-      #   run: |
-      #     openline dev remove
-      #     rm -rf openline-test-harness
-
-      # - name: Send Output to Slack
-      #   run: |
-      #     computed_coverage=${{ steps.compute_code_coverage.outputs.coverage }}
-      #     warning_threshold=80.0
-      #     critical_threshold=50.0
-      #     echo "Spaces Test Coverage: $coverage%"
-      #     if (( $(echo "$computed_coverage > $warning_threshold" | bc -l) )); then
-      #       curl -X POST -H 'Content-type: application/json' --data '{
-      #         "text": "${{ github.workflow }} coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}: ${{ steps.compute_code_coverage.outputs.coverage }}% "
-      #       }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-      #     elif (( $(echo "$computed_coverage < $warning_threshold && $computed_coverage > $critical_threshold" | bc -l) )); then
-      #       curl -X POST -H 'Content-type: application/json' --data '{
-      #         "text": ":warning: ${{ github.workflow }} coverage is lower than the warning threshold of 80%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
-      #       }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-      #     elif (( $(echo "$computed_coverage < $critical_threshold" | bc -l) )); then
-      #       curl -X POST -H 'Content-type: application/json' --data '{
-      #         "text": ":no_entry: ${{ github.workflow }} coverage is lower than the critical threshold of 50%: ${{ steps.compute_code_coverage.outputs.coverage }}% "
-      #       }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
-      #     fi
+      - name: Cleanup test environment
+        if: ${{ always() }}
+        run: openline dev remove
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0

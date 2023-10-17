@@ -65,7 +65,7 @@ export const OrganizationRelationship = ({
 
       return { previousOrganizations };
     },
-    onError: (err, __, context) => {
+    onError: (_, __, context) => {
       if (context?.previousOrganizations) {
         queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
           queryKey,
