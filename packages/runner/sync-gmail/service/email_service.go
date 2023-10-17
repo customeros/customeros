@@ -181,6 +181,22 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			return entity.SKIPPED, &reason, nil
 		}
 
+		// Create a map to store the domain counts
+		domainCount := make(map[string]int)
+
+		// Iterate through the email addresses
+		for _, email := range allEmailsString {
+			domain := utils.ExtractDomain(email)
+			if domain != "" {
+				domainCount[domain]++
+			}
+		}
+
+		if len(domainCount) > 5 {
+			reason := "more than 5 domains belongs to a workspace domain"
+			return entity.SKIPPED, &reason, nil
+		}
+
 		channelData, err := buildEmailChannelData(rawEmailData.Subject, references, inReplyTo)
 		if err != nil {
 			logrus.Errorf("failed to build email channel data for email with id %v: %v", emailIdString, err)
@@ -237,7 +253,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//from
 		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
-		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, s.services.SyncService.GetWhitelistedDomain(extractDomain(from), whitelistDomainList), personalEmailProviderList, now, GmailSource)
+		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(from), whitelistDomainList), personalEmailProviderList, now, GmailSource)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 			return entity.ERROR, nil, err
@@ -256,7 +272,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//to
 		for _, toEmail := range to {
-			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, s.services.SyncService.GetWhitelistedDomain(extractDomain(toEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
+			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(toEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -276,7 +292,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//cc
 		for _, ccEmail := range cc {
-			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, s.services.SyncService.GetWhitelistedDomain(extractDomain(ccEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
+			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(ccEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -297,7 +313,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		//bcc
 		for _, bccEmail := range bcc {
 
-			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, s.services.SyncService.GetWhitelistedDomain(extractDomain(bccEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
+			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(bccEmail), whitelistDomainList), personalEmailProviderList, now, GmailSource)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err

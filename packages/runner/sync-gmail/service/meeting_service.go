@@ -210,7 +210,7 @@ func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, 
 		return nil, err
 	}
 	if fromEmailId == "" {
-		fromEmailId, err = s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, meetingId, emailAddress, s.services.SyncService.GetWhitelistedDomain(extractDomain(emailAddress), whitelistDomainList), personalEmailProviderList, now, GCalSource)
+		fromEmailId, err = s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, meetingId, emailAddress, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(emailAddress), whitelistDomainList), personalEmailProviderList, now, GCalSource)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 			return nil, err
