@@ -185,7 +185,7 @@ Create an individual in customerOS.
 input ContactInput {
 
     "The unique ID associated with the template of the contact in customerOS."
-    templateId: ID
+    templateId: ID  @deprecated(reason: "Not supported")
 
     "The prefix of the contact."
     prefix: String
@@ -203,8 +203,6 @@ input ContactInput {
     description: String
     timezone: String
 
-    label: String @deprecated(reason: "Use `tags` instead")
-
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """
@@ -214,18 +212,18 @@ input ContactInput {
     User defined metadata appended to contact.
     **Required.**
     """
-    customFields: [CustomFieldInput!]
+    customFields: [CustomFieldInput!] @deprecated(reason: "Not supported in create flow yet")
 
-    fieldSets: [FieldSetInput!]
+    fieldSets: [FieldSetInput!] @deprecated(reason: "Not supported in create flow yet")
 
-    "An email addresses associted with the contact."
+    "An email addresses associated with the contact."
     email: EmailInput
 
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput
 
     "Id of the contact owner (user)"
-    ownerId: ID
+    ownerId: ID @deprecated(reason: "Not supported in create flow yet")
 
     externalReference: ExternalSystemReferenceInput
 

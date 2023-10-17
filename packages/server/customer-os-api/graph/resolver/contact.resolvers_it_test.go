@@ -9,12 +9,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/event_store"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	contactProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	emailProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	phonenumbergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -73,127 +74,190 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	createdContactId := uuid.New().String()
 
-	rawResponse, err := c.RawPost(getQuery("contact/create_contact_min"))
-	assertRawResponseSuccess(t, rawResponse, err)
+	calledCreateContact, calledCreateEmail, calledCreatePhoneNumber := false, false, false
 
-	var contact struct {
+	contactServiceCallbacks := events_paltform.MockContactServiceCallbacks{
+		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+			require.Equal(t, "", contact.FirstName)
+			require.Equal(t, "", contact.LastName)
+			require.Equal(t, "", contact.Prefix)
+			require.Equal(t, "", contact.Name)
+			require.Equal(t, "", contact.Description)
+			require.Equal(t, "", contact.Timezone)
+			require.Equal(t, "", contact.ProfilePhotoUrl)
+			require.Equal(t, "openline", contact.Tenant)
+			require.Equal(t, string(entity.DataSourceOpenline), contact.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
+			require.Equal(t, testUserId, contact.LoggedInUserId)
+			calledCreateContact = true
+			neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+				Id: createdContactId,
+			})
+			return &contactgrpc.ContactIdGrpcResponse{
+				Id: createdContactId,
+			}, nil
+		},
+	}
+	emailServiceCallbacks := events_paltform.MockEmailServiceCallbacks{
+		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
+			calledCreateEmail = true
+			return &emailgrpc.EmailIdGrpcResponse{
+				Id: uuid.New().String(),
+			}, nil
+		},
+	}
+	phoneNumberServiceCallbacks := events_paltform.MockPhoneNumberServiceCallbacks{
+		UpsertPhoneNumber: func(ctx context.Context, data *phonenumbergrpc.UpsertPhoneNumberGrpcRequest) (*phonenumbergrpc.PhoneNumberIdGrpcResponse, error) {
+			calledCreatePhoneNumber = true
+			return &phonenumbergrpc.PhoneNumberIdGrpcResponse{
+				Id: uuid.New().String(),
+			}, nil
+		},
+	}
+	events_paltform.SetContactCallbacks(&contactServiceCallbacks)
+	events_paltform.SetEmailCallbacks(&emailServiceCallbacks)
+	events_paltform.SetPhoneNumberCallbacks(&phoneNumberServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "contact/create_contact_min", map[string]interface{}{})
+
+	var contactStruct struct {
 		Contact_Create model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
-	require.NotNil(t, contact)
-	require.Equal(t, "", *contact.Contact_Create.Prefix)
-	require.Equal(t, "", *contact.Contact_Create.Name)
-	require.Equal(t, "", *contact.Contact_Create.FirstName)
-	require.Equal(t, "", *contact.Contact_Create.LastName)
-	require.Equal(t, "", *contact.Contact_Create.Description)
-	require.Equal(t, "", *contact.Contact_Create.Timezone)
-	require.Equal(t, "", *contact.Contact_Create.ProfilePhotoURL)
-	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver))
-
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName})
+	require.Equal(t, createdContactId, contactStruct.Contact_Create.ID)
+	require.True(t, calledCreateContact)
+	require.False(t, calledCreateEmail)
+	require.False(t, calledCreatePhoneNumber)
 }
 
 func TestMutationResolver_ContactCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateTenant(ctx, driver, "otherTenant")
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	rawResponse, err := c.RawPost(getQuery("contact/create_contact"))
-	assertRawResponseSuccess(t, rawResponse, err)
+	createdContactId := uuid.New().String()
+	createdEmailId := uuid.New().String()
+	createdPhoneNumberId := uuid.New().String()
 
-	var contact struct {
+	calledCreateContact, calledCreateEmail, calledCreatePhoneNumber, calledLinkEmail, calledLinkPhoneNumber := false, false, false, false, false
+
+	contactServiceCallbacks := events_paltform.MockContactServiceCallbacks{
+		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+			require.Equal(t, "MR", contact.Prefix)
+			require.Equal(t, "first", contact.FirstName)
+			require.Equal(t, "last", contact.LastName)
+			require.Equal(t, "full name", contact.Name)
+			require.Equal(t, "Some description", contact.Description)
+			require.Equal(t, "America/Los_Angeles", contact.Timezone)
+			require.Equal(t, "", contact.ProfilePhotoUrl)
+			require.Equal(t, tenantName, contact.Tenant)
+			require.Equal(t, string(entity.DataSourceOpenline), contact.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
+			require.Equal(t, testUserId, contact.LoggedInUserId)
+			calledCreateContact = true
+			neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+				Id: createdContactId,
+			})
+			return &contactgrpc.ContactIdGrpcResponse{
+				Id: createdContactId,
+			}, nil
+		},
+		LinkEmailToContact: func(context context.Context, link *contactgrpc.LinkEmailToContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+			require.Equal(t, createdContactId, link.ContactId)
+			require.Equal(t, createdEmailId, link.EmailId)
+			require.Equal(t, true, link.Primary)
+			require.Equal(t, "WORK", link.Label)
+			require.Equal(t, tenantName, link.Tenant)
+			require.Equal(t, testUserId, link.LoggedInUserId)
+			calledLinkEmail = true
+			neo4jt.LinkEmail(ctx, driver, createdContactId, createdEmailId, link.Primary, link.Label)
+			return &contactgrpc.ContactIdGrpcResponse{
+				Id: createdContactId,
+			}, nil
+		},
+		LinkPhoneNumberToContact: func(context context.Context, link *contactgrpc.LinkPhoneNumberToContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+			require.Equal(t, createdContactId, link.ContactId)
+			require.Equal(t, createdPhoneNumberId, link.PhoneNumberId)
+			require.Equal(t, true, link.Primary)
+			require.Equal(t, "MOBILE", link.Label)
+			require.Equal(t, tenantName, link.Tenant)
+			require.Equal(t, testUserId, link.LoggedInUserId)
+			calledLinkPhoneNumber = true
+			neo4jt.LinkPhoneNumber(ctx, driver, createdContactId, createdPhoneNumberId, link.Primary, link.Label)
+			return &contactgrpc.ContactIdGrpcResponse{
+				Id: createdContactId,
+			}, nil
+		},
+	}
+	emailServiceCallbacks := events_paltform.MockEmailServiceCallbacks{
+		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
+			require.Equal(t, "contact@abc.com", data.RawEmail)
+			require.Equal(t, tenantName, data.Tenant)
+			require.Equal(t, testUserId, data.LoggedInUserId)
+			require.Equal(t, string(entity.DataSourceOpenline), data.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, data.SourceFields.AppSource)
+			calledCreateEmail = true
+			neo4jt.CreateEmail(ctx, driver, tenantName, entity.EmailEntity{
+				Id:    createdEmailId,
+				Email: "contact@abc.com",
+			})
+			return &emailgrpc.EmailIdGrpcResponse{
+				Id: createdEmailId,
+			}, nil
+		},
+	}
+	phoneNumberServiceCallbacks := events_paltform.MockPhoneNumberServiceCallbacks{
+		UpsertPhoneNumber: func(ctx context.Context, data *phonenumbergrpc.UpsertPhoneNumberGrpcRequest) (*phonenumbergrpc.PhoneNumberIdGrpcResponse, error) {
+			require.Equal(t, "+1234567890", data.PhoneNumber)
+			require.Equal(t, tenantName, data.Tenant)
+			require.Equal(t, testUserId, data.LoggedInUserId)
+			require.Equal(t, string(entity.DataSourceOpenline), data.SourceFields.Source)
+			require.Equal(t, constants.AppSourceCustomerOsApi, data.SourceFields.AppSource)
+			calledCreatePhoneNumber = true
+			neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
+				Id: createdPhoneNumberId,
+			})
+			return &phonenumbergrpc.PhoneNumberIdGrpcResponse{
+				Id: createdPhoneNumberId,
+			}, nil
+		},
+	}
+	events_paltform.SetContactCallbacks(&contactServiceCallbacks)
+	events_paltform.SetEmailCallbacks(&emailServiceCallbacks)
+	events_paltform.SetPhoneNumberCallbacks(&phoneNumberServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "contact/create_contact", map[string]interface{}{})
+
+	var contactStruct struct {
 		Contact_Create model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
-	require.NotNil(t, contact)
-	require.Equal(t, "MR", *contact.Contact_Create.Prefix)
-	require.Equal(t, "first", *contact.Contact_Create.FirstName)
-	require.Equal(t, "last", *contact.Contact_Create.LastName)
-	require.Equal(t, "full name", *contact.Contact_Create.Name)
-	require.Equal(t, "Some description", *contact.Contact_Create.Description)
-	require.Equal(t, "America/Los_Angeles", *contact.Contact_Create.Timezone)
-	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
+	contact := contactStruct.Contact_Create
+	require.Equal(t, createdContactId, contact.ID)
+	require.Equal(t, 1, len(contact.Emails))
+	require.Equal(t, createdEmailId, contact.Emails[0].ID)
+	require.Equal(t, 1, len(contact.PhoneNumbers))
+	require.Equal(t, createdPhoneNumberId, contact.PhoneNumbers[0].ID)
+	require.True(t, calledCreateContact)
+	require.True(t, calledCreateEmail)
+	require.True(t, calledCreatePhoneNumber)
+	require.True(t, calledLinkEmail)
+	require.True(t, calledLinkPhoneNumber)
 
-	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
-
-	boolField := contact.Contact_Create.CustomFields[0]
-	require.NotNil(t, boolField.GetID())
-	require.Equal(t, "boolField", boolField.Name)
-	require.Equal(t, model.CustomFieldDataTypeBool, boolField.Datatype)
-	require.Equal(t, true, boolField.Value.RealValue())
-
-	decimalField := contact.Contact_Create.CustomFields[1]
-	require.NotNil(t, decimalField.GetID())
-	require.Equal(t, "decimalField", decimalField.Name)
-	require.Equal(t, model.CustomFieldDataTypeDecimal, decimalField.Datatype)
-	require.Equal(t, 0.001, decimalField.Value.RealValue())
-
-	integerField := contact.Contact_Create.CustomFields[2]
-	require.NotNil(t, integerField.GetID())
-	require.Equal(t, "integerField", integerField.Name)
-	require.Equal(t, model.CustomFieldDataTypeInteger, integerField.Datatype)
-	// issue in decoding, int converted to float 64
-	require.Equal(t, float64(123), integerField.Value.RealValue())
-
-	textField := contact.Contact_Create.CustomFields[3]
-	require.NotNil(t, textField.GetID())
-	require.Equal(t, "textField", textField.Name)
-	require.Equal(t, model.CustomFieldDataTypeText, textField.Datatype)
-	require.Equal(t, "value1", textField.Value.RealValue())
-
-	timeField := contact.Contact_Create.CustomFields[4]
-	require.NotNil(t, timeField.GetID())
-	require.Equal(t, "timeField", timeField.Name)
-	require.Equal(t, model.CustomFieldDataTypeDatetime, timeField.Datatype)
-	require.Equal(t, "2022-11-13T20:21:56.732Z", timeField.Value.RealValue())
-
-	require.Equal(t, 1, len(contact.Contact_Create.Emails))
-	require.NotNil(t, contact.Contact_Create.Emails[0].ID)
-	require.Equal(t, "contact@abc.com", *contact.Contact_Create.Emails[0].RawEmail)
-	require.Equal(t, "contact@abc.com", *contact.Contact_Create.Emails[0].Email)
-	require.Equal(t, "WORK", contact.Contact_Create.Emails[0].Label.String())
-	require.Equal(t, false, contact.Contact_Create.Emails[0].Primary)
-	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Emails[0].Source)
-
-	require.Equal(t, 1, len(contact.Contact_Create.PhoneNumbers))
-	require.NotNil(t, contact.Contact_Create.PhoneNumbers[0].ID)
-	require.Equal(t, "+1234567890", *contact.Contact_Create.PhoneNumbers[0].RawPhoneNumber)
-	require.Nil(t, contact.Contact_Create.PhoneNumbers[0].E164)
-	require.Equal(t, "MOBILE", contact.Contact_Create.PhoneNumbers[0].Label.String())
-	require.Equal(t, true, contact.Contact_Create.PhoneNumbers[0].Primary)
-	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.PhoneNumbers[0].Source)
-
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
-	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "CustomField_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "TextField"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "IntField"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FloatField"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "BoolField"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "TimeField"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber_"+tenantName))
-	require.Equal(t, 11, neo4jt.GetTotalCountOfNodes(ctx, driver))
-
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName,
-		"Email", "Email_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName,
-		"CustomField", "BoolField", "TextField", "FloatField", "TimeField", "IntField", "CustomField_" + tenantName})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Contact":     1,
+		"Email":       1,
+		"PhoneNumber": 1,
+	})
 }
 
 func TestMutationResolver_CustomerContactCreate(t *testing.T) {
@@ -210,8 +274,8 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 
 	calledCreateContact, calledCreateEmail, calledLinkEmailToContact := false, false, false
 
-	contactServiceCallbacks := event_store.MockContactServiceCallbacks{
-		CreateContact: func(context context.Context, contact *contactProto.UpsertContactGrpcRequest) (*contactProto.ContactIdGrpcResponse, error) {
+	contactServiceCallbacks := events_paltform.MockContactServiceCallbacks{
+		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
 			require.Equal(t, "Bob", contact.FirstName)
 			require.Equal(t, "Smith", contact.LastName)
 			require.Equal(t, "Mr.", contact.Prefix)
@@ -220,35 +284,35 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 			require.Equal(t, timeNow.Unix(), contact.CreatedAt.Seconds)
 			require.Equal(t, "openline", contact.Tenant)
 			calledCreateContact = true
-			return &contactProto.ContactIdGrpcResponse{
+			return &contactgrpc.ContactIdGrpcResponse{
 				Id: createdContactId.String(),
 			}, nil
 		},
-		LinkEmailToContact: func(context context.Context, link *contactProto.LinkEmailToContactGrpcRequest) (*contactProto.ContactIdGrpcResponse, error) {
+		LinkEmailToContact: func(context context.Context, link *contactgrpc.LinkEmailToContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
 			require.Equal(t, createdContactId.String(), link.ContactId)
 			require.Equal(t, createdEmailId.String(), link.EmailId)
 			require.Equal(t, true, link.Primary)
 			require.Equal(t, "WORK", link.Label)
 			require.Equal(t, "openline", link.Tenant)
 			calledLinkEmailToContact = true
-			return &contactProto.ContactIdGrpcResponse{
+			return &contactgrpc.ContactIdGrpcResponse{
 				Id: createdContactId.String(),
 			}, nil
 		},
 	}
-	event_store.SetContactCallbacks(&contactServiceCallbacks)
+	events_paltform.SetContactCallbacks(&contactServiceCallbacks)
 
-	emailServiceCallbacks := event_store.MockEmailServiceCallbacks{
-		UpsertEmail: func(ctx context.Context, data *emailProto.UpsertEmailGrpcRequest) (*emailProto.EmailIdGrpcResponse, error) {
+	emailServiceCallbacks := events_paltform.MockEmailServiceCallbacks{
+		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
 			require.Equal(t, "contact@abc.com", data.RawEmail)
 			require.Equal(t, "openline", data.Tenant)
 			calledCreateEmail = true
-			return &emailProto.EmailIdGrpcResponse{
+			return &emailgrpc.EmailIdGrpcResponse{
 				Id: createdEmailId.String(),
 			}, nil
 		},
 	}
-	event_store.SetEmailCallbacks(&emailServiceCallbacks)
+	events_paltform.SetEmailCallbacks(&emailServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("contact/customer_create_contact"),
 		client.Var("firstName", "Bob"),
@@ -271,170 +335,6 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 	require.True(t, calledCreateContact)
 	require.True(t, calledCreateEmail)
 	require.True(t, calledLinkEmailToContact)
-}
-
-func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	entityTemplateId := neo4jt.CreateEntityTemplate(ctx, driver, tenantName, model.EntityTemplateExtensionContact.String())
-	fieldTemplateId := neo4jt.AddFieldTemplateToEntity(ctx, driver, entityTemplateId)
-	setTemplateId := neo4jt.AddSetTemplateToEntity(ctx, driver, entityTemplateId)
-	fieldInSetTemplateId := neo4jt.AddFieldTemplateToSet(ctx, driver, setTemplateId)
-
-	rawResponse, err := c.RawPost(getQuery("contact/create_contact_with_custom_fields"),
-		client.Var("entityTemplateId", entityTemplateId),
-		client.Var("fieldTemplateId", fieldTemplateId),
-		client.Var("setTemplateId", setTemplateId),
-		client.Var("fieldInSetTemplateId", fieldInSetTemplateId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomField_"+tenantName))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "TextField"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "EntityTemplate"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "CustomFieldTemplate"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSetTemplate"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet_"+tenantName))
-	require.Equal(t, 13, neo4jt.GetTotalCountOfNodes(ctx, driver))
-
-	var contact struct {
-		Contact_Create model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-
-	createdContact := contact.Contact_Create
-	require.Equal(t, model.DataSourceOpenline, createdContact.Source)
-	require.Equal(t, entityTemplateId, createdContact.Template.ID)
-	require.Equal(t, 2, len(createdContact.CustomFields))
-	require.Equal(t, "field1", createdContact.CustomFields[0].Name)
-	require.Equal(t, "TEXT", createdContact.CustomFields[0].Datatype.String())
-	require.Equal(t, "value1", createdContact.CustomFields[0].Value.RealValue())
-	require.Equal(t, model.DataSourceOpenline, createdContact.CustomFields[0].Source)
-	require.Equal(t, fieldTemplateId, createdContact.CustomFields[0].Template.ID)
-	require.NotNil(t, createdContact.CustomFields[0].ID)
-	require.NotNil(t, createdContact.CustomFields[0].CreatedAt)
-	require.Equal(t, "field2", createdContact.CustomFields[1].Name)
-	require.Equal(t, "TEXT", createdContact.CustomFields[1].Datatype.String())
-	require.Equal(t, "value2", createdContact.CustomFields[1].Value.RealValue())
-	require.Equal(t, model.DataSourceOpenline, createdContact.CustomFields[1].Source)
-	require.NotNil(t, createdContact.CustomFields[1].ID)
-	require.NotNil(t, createdContact.CustomFields[1].CreatedAt)
-	require.Equal(t, 2, len(createdContact.FieldSets))
-	var set1, set2 *model.FieldSet
-	if createdContact.FieldSets[0].Name == "set1" {
-		set1 = createdContact.FieldSets[0]
-		set2 = createdContact.FieldSets[1]
-	} else {
-		set1 = createdContact.FieldSets[1]
-		set2 = createdContact.FieldSets[0]
-	}
-	require.NotNil(t, set1.ID)
-	require.NotNil(t, set1.CreatedAt)
-	require.Equal(t, "set1", set1.Name)
-	require.Equal(t, 2, len(set1.CustomFields))
-	require.NotNil(t, set1.CustomFields[0].CreatedAt)
-	require.Equal(t, "field3InSet", set1.CustomFields[0].Name)
-	require.Equal(t, "value3", set1.CustomFields[0].Value.RealValue())
-	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[0].Source)
-	require.Equal(t, "TEXT", set1.CustomFields[0].Datatype.String())
-	require.Equal(t, fieldInSetTemplateId, set1.CustomFields[0].Template.ID)
-	require.NotNil(t, set1.CustomFields[1].CreatedAt)
-	require.Equal(t, "field4InSet", set1.CustomFields[1].Name)
-	require.Equal(t, "value4", set1.CustomFields[1].Value.RealValue())
-	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[1].Source)
-	require.Equal(t, "TEXT", set1.CustomFields[1].Datatype.String())
-	require.Nil(t, set1.CustomFields[1].Template)
-	require.Equal(t, model.DataSourceOpenline, set1.Source)
-	require.NotNil(t, set2.ID)
-	require.NotNil(t, set2.CreatedAt)
-	require.Equal(t, "set2", set2.Name)
-	require.Equal(t, model.DataSourceOpenline, set2.Source)
-
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName,
-		"CustomFieldTemplate", "EntityTemplate", "FieldSet", "FieldSet_" + tenantName, "FieldSetTemplate",
-		"CustomField", "TextField", "CustomField_" + tenantName})
-}
-
-func TestMutationResolver_ContactCreate_WithOwner(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
-		FirstName: "Agent",
-		LastName:  "Smith",
-	})
-
-	rawResponse, err := c.RawPost(getQuery("contact/create_contact_with_owner"),
-		client.Var("ownerId", userId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contact struct {
-		Contact_Create model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-	require.NotNil(t, contact)
-	createdContact := contact.Contact_Create
-	require.Equal(t, "", *createdContact.Prefix)
-	require.Equal(t, "first", *createdContact.FirstName)
-	require.Equal(t, "last", *createdContact.LastName)
-	require.Equal(t, userId, createdContact.Owner.ID)
-	require.Equal(t, "Agent", createdContact.Owner.FirstName)
-	require.Equal(t, "Smith", createdContact.Owner.LastName)
-	require.Equal(t, model.DataSourceOpenline, createdContact.Source)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
-
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName})
-}
-
-func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
-
-	rawResponse, err := c.RawPost(getQuery("contact/create_contact_with_external_reference"))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contact struct {
-		Contact_Create model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-	require.NotNil(t, contact)
-	require.NotNil(t, contact.Contact_Create.ID)
-	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ExternalSystem"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ExternalSystem_"+tenantName))
-	require.Equal(t, 4, neo4jt.GetTotalCountOfNodes(ctx, driver))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS_LINKED_WITH"))
-
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName})
 }
 
 func TestMutationResolver_ContactUpdate(t *testing.T) {

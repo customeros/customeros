@@ -253,14 +253,13 @@ type ContactInput struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Timezone    *string `json:"timezone,omitempty"`
-	Label       *string `json:"label,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// User defined metadata appended to contact.
 	// **Required.**
 	CustomFields []*CustomFieldInput `json:"customFields,omitempty"`
 	FieldSets    []*FieldSetInput    `json:"fieldSets,omitempty"`
-	// An email addresses associted with the contact.
+	// An email addresses associated with the contact.
 	Email *EmailInput `json:"email,omitempty"`
 	// A phone number associated with the contact.
 	PhoneNumber *PhoneNumberInput `json:"phoneNumber,omitempty"`
