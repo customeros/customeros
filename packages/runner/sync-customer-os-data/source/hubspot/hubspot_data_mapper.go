@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"strconv"
 	"strings"
 )
 
@@ -132,60 +131,6 @@ func MapUser(inputJSON string) (string, error) {
 	outputJSON, err := json.Marshal(output)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
-	}
-
-	return string(outputJSON), nil
-}
-
-func MapNote(inputJSON string) (string, error) {
-	// Unmarshal into input struct
-	var input struct {
-		ID         string `json:"id"`
-		CreatedAt  string `json:"createdAt"`
-		UpdatedAt  string `json:"updatedAt"`
-		Properties struct {
-			Body      string `json:"hs_note_body"`
-			OwnerId   string `json:"hubspot_owner_id"`
-			CreatedBy int    `json:"hs_created_by"`
-		} `json:"properties"`
-		Contacts  []interface{} `json:"contacts"`
-		Companies []interface{} `json:"companies"`
-	}
-	if err := json.Unmarshal([]byte(inputJSON), &input); err != nil {
-		return "", err
-	}
-
-	// Create output struct
-	var output = entity.NoteData{
-		BaseData: entity.BaseData{
-			ExternalId:   input.ID,
-			CreatedAtStr: input.CreatedAt,
-			UpdatedAtStr: input.UpdatedAt,
-		},
-	}
-
-	// Map fields
-	output.Content = input.Properties.Body
-	output.ContentType = "text/html"
-	output.CreatorUserExternalOwnerId = input.Properties.OwnerId
-	output.CreatorUserExternalId = strconv.Itoa(input.Properties.CreatedBy)
-
-	// Map contacts
-	for _, contact := range input.Contacts {
-		id := fmt.Sprint(contact)
-		output.NotedContactsExternalIds = append(output.NotedContactsExternalIds, id)
-	}
-
-	// Map companies
-	for _, company := range input.Companies {
-		id := fmt.Sprint(company)
-		output.NotedOrganizationsExternalIds = append(output.NotedOrganizationsExternalIds, id)
-	}
-
-	// Marshal output to JSON
-	outputJSON, err := json.Marshal(output)
-	if err != nil {
-		return "", err
 	}
 
 	return string(outputJSON), nil

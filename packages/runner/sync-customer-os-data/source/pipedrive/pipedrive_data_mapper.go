@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"strings"
 )
 
 func MapUser(inputJson string) (string, error) {
@@ -165,58 +164,6 @@ func MapContact(inputJSON string) (string, error) {
 				Primary: phone.Primary,
 			})
 		}
-	}
-
-	outputJSON, err := json.Marshal(output)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
-	}
-
-	return string(outputJSON), nil
-}
-
-func MapNote(inputJSON string) (string, error) {
-	var input struct {
-		ID         int64  `json:"id,omitempty"`
-		Content    string `json:"content,omitempty"`
-		UserId     int64  `json:"user_id,omitempty"`
-		AddTime    string `json:"add_time,omitempty"`
-		UpdateTime string `json:"update_time,omitempty"`
-		PersonId   int64  `json:"person_id,omitempty"`
-		OrgId      int64  `json:"org_id,omitempty"`
-	}
-
-	err := json.Unmarshal([]byte(inputJSON), &input)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse input JSON: %v", err)
-	}
-
-	output := entity.NoteData{
-		BaseData: entity.BaseData{
-			ExternalId:   fmt.Sprintf("%d", input.ID),
-			CreatedAtStr: input.AddTime,
-			UpdatedAtStr: input.UpdateTime,
-		},
-	}
-	if input.ID == 0 {
-		output.Skip = true
-		output.SkipReason = "Missing external id"
-	}
-	if input.UserId != 0 {
-		output.CreatorUserExternalId = fmt.Sprintf("%d", input.UserId)
-	}
-	if input.PersonId != 0 {
-		output.NotedContactsExternalIds = append(output.NotedContactsExternalIds, fmt.Sprintf("%d", input.PersonId))
-	}
-	if input.OrgId != 0 {
-		output.NotedOrganizationsExternalIds = append(output.NotedOrganizationsExternalIds, fmt.Sprintf("%d", input.OrgId))
-	}
-	if strings.Contains(input.Content, "<") {
-		output.Content = input.Content
-		output.ContentType = "text/html"
-	} else {
-		output.Content = input.Content
-		output.ContentType = "text/plain"
 	}
 
 	outputJSON, err := json.Marshal(output)

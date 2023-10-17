@@ -19,14 +19,12 @@ const (
 	UsersTableSuffix         = "users"
 	OrganizationsTableSuffix = "organizations"
 	PersonsTableSuffix       = "persons"
-	NotesTableSuffix         = "notes"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):         {UsersTableSuffix},
 	string(common.ORGANIZATIONS): {OrganizationsTableSuffix},
 	string(common.CONTACTS):      {PersonsTableSuffix},
-	string(common.NOTES):         {NotesTableSuffix},
 }
 
 type pipedriveDataService struct {
@@ -49,7 +47,6 @@ func NewPipedriveDataService(airbyteStoreDb *config.RawDataStoreDB, tenant strin
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
 	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
 	dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
-	dataService.dataFuncs[common.NOTES] = dataService.GetNotesForSync
 	return &dataService
 }
 
@@ -198,41 +195,6 @@ func (s *pipedriveDataService) GetContactsForSync(ctx context.Context, batchSize
 		}
 	}
 	return contacts
-}
-
-func (s *pipedriveDataService) GetNotesForSync(ctx context.Context, batchSize int, runId string) []any {
-	s.processingIds = make(map[string]source.ProcessingEntity)
-	currentEntity := string(common.NOTES)
-	var notes []any
-	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
-		if err != nil {
-			s.log.Error(err)
-			return nil
-		}
-		for _, v := range airbyteRecords {
-			if len(notes) >= batchSize {
-				break
-			}
-			outputJSON, err := MapNote(v.AirbyteData)
-			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
-			if err != nil {
-				note = entity.NoteData{
-					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
-					},
-				}
-			}
-
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-				ExternalId:  note.ExternalId,
-				Entity:      currentEntity,
-				TableSuffix: sourceTableSuffix,
-			}
-			notes = append(notes, note)
-		}
-	}
-	return notes
 }
 
 func (s *pipedriveDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {

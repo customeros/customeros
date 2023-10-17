@@ -19,7 +19,6 @@ const (
 	ContactsTableSuffix      = "contacts"
 	CompaniesTableSuffix     = "companies"
 	OwnersTableSuffix        = "owners"
-	NotesTableSuffix         = "engagements_notes"
 	MeetingsTableSuffix      = "engagements_meetings"
 	EmailMessagesTableSuffix = "engagements_emails"
 )
@@ -28,7 +27,6 @@ var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):          {OwnersTableSuffix},
 	string(common.CONTACTS):       {ContactsTableSuffix},
 	string(common.ORGANIZATIONS):  {CompaniesTableSuffix},
-	string(common.NOTES):          {NotesTableSuffix},
 	string(common.MEETINGS):       {MeetingsTableSuffix},
 	string(common.EMAIL_MESSAGES): {EmailMessagesTableSuffix},
 }
@@ -53,7 +51,6 @@ func NewHubspotDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string,
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
 	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
 	dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
-	dataService.dataFuncs[common.NOTES] = dataService.GetNotesForSync
 	dataService.dataFuncs[common.MEETINGS] = dataService.GetMeetingsForSync
 	dataService.dataFuncs[common.EMAIL_MESSAGES] = dataService.GetEmailMessagesForSync
 	return &dataService
@@ -204,41 +201,6 @@ func (s *hubspotDataService) GetContactsForSync(ctx context.Context, batchSize i
 		}
 	}
 	return contacts
-}
-
-func (s *hubspotDataService) GetNotesForSync(ctx context.Context, batchSize int, runId string) []any {
-	s.processingIds = make(map[string]source.ProcessingEntity)
-	currentEntity := string(common.NOTES)
-	var notes []any
-	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
-		if err != nil {
-			s.log.Error(err)
-			return nil
-		}
-		for _, v := range airbyteRecords {
-			if len(notes) >= batchSize {
-				break
-			}
-			outputJSON, err := MapNote(v.AirbyteData)
-			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
-			if err != nil {
-				note = entity.NoteData{
-					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
-					},
-				}
-			}
-
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-				ExternalId:  note.ExternalId,
-				Entity:      currentEntity,
-				TableSuffix: sourceTableSuffix,
-			}
-			notes = append(notes, note)
-		}
-	}
-	return notes
 }
 
 func (s *hubspotDataService) GetEmailMessagesForSync(ctx context.Context, batchSize int, runId string) []any {

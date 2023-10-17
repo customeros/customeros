@@ -273,55 +273,6 @@ func MapIssue(inputJSON string) (string, error) {
 	return string(outputJSON), nil
 }
 
-func MapNote(inputJSON string) (string, error) {
-	// Unmarshal into input struct
-	var input struct {
-		ID        int64  `json:"id"`
-		CreatedAt string `json:"created_at,omitempty"`
-		Public    bool   `json:"public,omitempty"`
-		HtmlBody  string `json:"html_body,omitempty"`
-		PlainBody string `json:"plain_body,omitempty"`
-		Body      string `json:"body,omitempty"`
-		AuthorId  int64  `json:"author_id,omitempty"`
-		TicketId  int64  `json:"ticket_id,omitempty"`
-	}
-	if err := json.Unmarshal([]byte(inputJSON), &input); err != nil {
-		return "", err
-	}
-
-	// Create output struct
-	var output entity.NoteData
-
-	if input.ID == 0 {
-		output.Skip = true
-		output.SkipReason = "Missing ticket comment ID"
-	}
-	if input.Public == true {
-		output.Skip = true
-		output.SkipReason = "Ticket comment is public, it will be synced as interaction event"
-	}
-	// Map fields
-	output.ExternalId = fmt.Sprintf("%d", input.ID)
-	output.CreatedAtStr = input.CreatedAt
-	output.Content = input.HtmlBody
-	output.ContentType = "text/html"
-	output.Text = input.Body
-	if input.AuthorId > 0 {
-		output.CreatorExternalId = fmt.Sprintf("%d", input.AuthorId)
-	}
-	if input.TicketId > 0 {
-		output.MentionedIssueExternalId = fmt.Sprintf("%d", input.TicketId)
-	}
-
-	// Marshal output to JSON
-	outputJSON, err := json.Marshal(output)
-	if err != nil {
-		return "", err
-	}
-
-	return string(outputJSON), nil
-}
-
 func MapInteractionEvent(inputJSON string) (string, error) {
 	// Unmarshal into input struct
 	var input struct {
