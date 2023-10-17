@@ -49,7 +49,7 @@ export default function NotFound() {
           <SearchSm boxSize='5' />
         </FeaturedIcon>
         <Heading fontWeight={600} fontSize='5xl' color='gray.900' py={6}>
-          This organization does not exist
+          This organization cannot be found
         </Heading>
         <Text color='gray.600' fontSize='2xl' pb={12} px={8} textAlign='center'>
           It appears the organization does not exist or you do not have
