@@ -248,3 +248,109 @@ func TestIfNotNilTimeDefault(t *testing.T) {
 	result = IfNotNilTimeWithDefault(nil, def)
 	require.Equal(t, def, result)
 }
+
+func TestExtractDomain(t *testing.T) {
+	// Positive test case: URL with http:// scheme
+	inputURL := "http://www.example.com"
+	expectedDomain := "example.com"
+	actualDomain := ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Positive test case: URL with https:// scheme
+	inputURL = "https://www.example.com"
+	expectedDomain = "example.com"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Negative test case: Invalid URL
+	inputURL = "invalidurl"
+	expectedDomain = ""
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL without scheme
+	inputURL = "example.com"
+	expectedDomain = "example.com"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL without scheme and with subdomains
+	inputURL = "hu.example.com"
+	expectedDomain = "example.com"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL without scheme and with subdomains
+	inputURL = "ro.example.co.uk"
+	expectedDomain = "example.co.uk"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL without scheme and with subdomains
+	inputURL = "home.iasi.ro.example.co.uk"
+	expectedDomain = "example.co.uk"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL without scheme and with subdomains
+	inputURL = "example.cop.ro"
+	expectedDomain = "cop.ro"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL without scheme and with subdomains
+	inputURL = "example.co.ro"
+	expectedDomain = "example.co.ro"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL without scheme
+	inputURL = "example.co.uk"
+	expectedDomain = "example.co.uk"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL with www. prefix
+	inputURL = "http://www.example.com"
+	expectedDomain = "example.com"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Edge case: URL with wrong TLD
+	inputURL = "http://www.example.stupidme"
+	expectedDomain = ""
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+
+	// Positive test case: URL with path
+	inputURL = "http://www.example.com/main/final?param1=true&param2=1"
+	expectedDomain = "example.com"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
+}
