@@ -25,7 +25,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60 * 2, // 2 minutes
+            staleTime: 1000 * 60 * 1, // 1 minutes
             cacheTime: 1000 * 60 * 60 * 24, // 24 hours
           },
         },

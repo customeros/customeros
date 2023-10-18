@@ -89,7 +89,7 @@ export default function OrganizationsPage() {
     };
   }, [sorting]);
 
-  const { data, isLoading, isFetching, hasNextPage, fetchNextPage } =
+  const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
     useGetOrganizationsInfiniteQuery(client, {
       pagination: {
         page: 1,
@@ -170,14 +170,12 @@ export default function OrganizationsPage() {
         sorting={sorting}
         enableTableActions
         enableRowSelection
-        isLoading={isRestoring ? false : isLoading}
+        isLoading={isRestoring || isLoading}
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
         totalItems={
-          isRestoring
-            ? 40
-            : data?.pages?.[0].dashboardView_Organizations?.totalElements || 0
+          data?.pages?.[0].dashboardView_Organizations?.totalElements || 0
         }
         renderTableActions={(table) => (
           <TableActions
