@@ -1,7 +1,9 @@
 'use client';
-import React, { FC, useCallback, useRef, useEffect } from 'react';
+import React, { FC, useCallback, useEffect } from 'react';
+import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
+import { useIsRestoring } from '@tanstack/react-query';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
+import { Virtuoso } from 'react-virtuoso';
 import { EmailStub, TimelineItem } from './events';
 import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -46,7 +48,19 @@ const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   );
 };
 
-export const NEW_DATE = new Date(new Date().setDate(new Date().getDate() + 1));
+export const NEW_DATE = setSeconds(
+  setMilliseconds(
+    setMinutes(
+      setHours(
+        new Date(new Date(new Date().setDate(new Date().getDate() + 1))),
+        0,
+      ),
+      0,
+    ),
+    0,
+  ),
+  0,
+);
 
 function getEventDate(event?: TimelineEvent) {
   return (
@@ -61,6 +75,7 @@ export const OrganizationTimeline: FC = () => {
   const queryClient = useQueryClient();
   const { virtuosoRef } = useTimelineRefContext();
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
+  const isRestoring = useIsRestoring();
 
   const client = getGraphQLClient();
   const { data, isInitialLoading, isFetchingNextPage, fetchNextPage } =
@@ -156,7 +171,8 @@ export const OrganizationTimeline: FC = () => {
 
       return Date.parse(aDate) - Date.parse(bDate);
     });
-  if (!timelineEmailEvents?.length) {
+
+  if (!isRestoring && !timelineEmailEvents?.length) {
     return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
 
@@ -173,7 +189,7 @@ export const OrganizationTimeline: FC = () => {
         ref={virtuosoRef}
         style={{ height: '100%', width: '100%', background: '#F9F9FB' }}
         initialItemCount={timelineEmailEvents?.length}
-        initialTopMostItemIndex={timelineEmailEvents.length - 1}
+        initialTopMostItemIndex={timelineEmailEvents?.length - 1}
         data={timelineEmailEvents}
         increaseViewportBy={300}
         atTopThreshold={100}
