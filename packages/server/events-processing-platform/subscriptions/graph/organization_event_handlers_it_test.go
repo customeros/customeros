@@ -605,3 +605,93 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	require.NotEqual(t, "", organization.CustomerOsId)
 	require.True(t, regexp.MustCompile(customerOsIdPattern).MatchString(organization.CustomerOsId), "Valid CustomerOsId should match the format")
 }
+
+func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	socialId := uuid.New().String()
+	socialUrl := "https://www.facebook.com/organization"
+	platformName := "facebook"
+	now := utils.Now()
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+		Name: "test org",
+	})
+	neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, entity.SocialEntity{
+		Url: socialUrl,
+	})
+	orgEventHandler := &OrganizationEventHandler{
+		repositories:         testDatabase.Repositories,
+		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, platformName, socialUrl, constants.SourceOpenline, constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, now, now)
+	require.Nil(t, err)
+	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1, "Social": 2, "Social_" + tenantName: 2})
+	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant", "Social", "Social_" + tenantName})
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, socialId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+
+	social := graph_db.MapDbNodeToSocialEntity(*dbNode)
+	require.Equal(t, socialId, social.Id)
+	require.Equal(t, socialUrl, social.Url)
+	require.Equal(t, platformName, social.PlatformName)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), social.SourceFields.Source)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), social.SourceFields.SourceOfTruth)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, social.SourceFields.AppSource)
+	require.Equal(t, now, social.CreatedAt)
+	require.Equal(t, now, social.UpdatedAt)
+}
+
+func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlreadyExistsForOrg_NoChanges(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	socialId := uuid.New().String()
+	socialUrl := "https://www.facebook.com/organization"
+	platformName := "facebook"
+	now := utils.Now()
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+		Name: "test org",
+	})
+	existingSocialId := neo4jt.CreateSocial(ctx, testDatabase.Driver, tenantName, entity.SocialEntity{
+		Url:          socialUrl,
+		PlatformName: platformName,
+	})
+	neo4jt.LinkSocial(ctx, testDatabase.Driver, existingSocialId, orgId)
+
+	orgEventHandler := &OrganizationEventHandler{
+		repositories:         testDatabase.Repositories,
+		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, "other platform name", socialUrl, constants.SourceOpenline, constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, now, now)
+	require.Nil(t, err)
+	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1, "Social": 1, "Social_" + tenantName: 1})
+	neo4jt.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant", "Social", "Social_" + tenantName})
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, existingSocialId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+
+	social := graph_db.MapDbNodeToSocialEntity(*dbNode)
+	require.Equal(t, existingSocialId, social.Id)
+	require.Equal(t, socialUrl, social.Url)
+	require.Equal(t, platformName, social.PlatformName)
+}

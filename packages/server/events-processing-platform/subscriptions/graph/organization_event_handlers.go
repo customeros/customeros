@@ -297,7 +297,7 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.SocialRepository.CreateSocialFor(ctx, eventData.Tenant, organizationId, "Organization", eventData)
+	err := h.repositories.SocialRepository.MergeSocialFor(ctx, eventData.Tenant, organizationId, "Organization", eventData)
 
 	return err
 }

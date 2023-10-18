@@ -6,13 +6,14 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type SocialRepository interface {
-	CreateSocialFor(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, event events.OrganizationAddSocialEvent) error
+	MergeSocialFor(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, event events.OrganizationAddSocialEvent) error
 }
 
 type socialRepository struct {
@@ -25,13 +26,16 @@ func NewSocialRepository(driver *neo4j.DriverWithContext) SocialRepository {
 	}
 }
 
-func (r *socialRepository) CreateSocialFor(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, event events.OrganizationAddSocialEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialRepository.CreateSocialForEntity")
+func (r *socialRepository) MergeSocialFor(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, event events.OrganizationAddSocialEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialRepository.MergeSocialFor")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
 
 	query := fmt.Sprintf(`
 		MATCH (e:%s {id:$entityId})
+		OPTIONAL MATCH (e)-[r:HAS]->(checkSoc:Social {url:$url})
+		FOREACH (ignore IN CASE WHEN checkSoc IS NULL OR checkSoc.id = $id THEN [1] ELSE [] END |
 		MERGE (e)-[:HAS]->(soc:Social {id:$id})
 		ON CREATE SET 
 			soc.createdAt=$createdAt, 
@@ -44,7 +48,7 @@ func (r *socialRepository) CreateSocialFor(ctx context.Context, tenant, linkedEn
 		  	soc.syncedWithEventStore=true,
 		  	soc:Social_%s
 		ON MATCH SET
-			soc.syncedWithEventStore=true`, linkedEntityNodeLabel+"_"+tenant, tenant)
+			soc.syncedWithEventStore=true)`, linkedEntityNodeLabel+"_"+tenant, tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
@@ -57,9 +61,9 @@ func (r *socialRepository) CreateSocialFor(ctx context.Context, tenant, linkedEn
 		"updatedAt":     event.UpdatedAt,
 		"platformName":  event.PlatformName,
 		"url":           event.Url,
-		"source":        event.Source,
-		"sourceOfTruth": event.SourceOfTruth,
-		"appSource":     event.AppSource,
+		"source":        helper.GetSource(event.Source),
+		"sourceOfTruth": helper.GetSourceOfTruth(event.SourceOfTruth),
+		"appSource":     helper.GetAppSource(event.AppSource),
 	})
 }
 
