@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { produce } from 'immer';
 import { useLocalStorage } from 'usehooks-ts';
 import { useSearchParams } from 'next/navigation';
+import { useIsRestoring } from '@tanstack/react-query';
 
 import {
   Filter,
@@ -38,6 +39,7 @@ export default function OrganizationsPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
   const { createOrganization } = useOrganizationsPageMethods();
+  const isRestoring = useIsRestoring();
 
   const { data: globalCache } = useGlobalCacheQuery(client);
 
@@ -97,6 +99,8 @@ export default function OrganizationsPage() {
       where,
     });
 
+  console.log('HERE', data);
+
   const flatData = useMemo(
     () =>
       (data?.pages?.flatMap(
@@ -142,6 +146,8 @@ export default function OrganizationsPage() {
     );
   }, [sortBy, searchParams?.toString(), data?.pageParams]);
 
+  console.log(flatData);
+
   if (
     data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
     !searchTerm
@@ -168,7 +174,7 @@ export default function OrganizationsPage() {
         sorting={sorting}
         enableTableActions
         enableRowSelection
-        isLoading={isLoading}
+        isLoading={isRestoring ? false : isLoading}
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
