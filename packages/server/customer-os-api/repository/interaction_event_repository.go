@@ -34,6 +34,7 @@ type InteractionEventRepository interface {
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetReplyToInteractionEventsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 
+	LinkWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, externalId, externalSystemId string) error
 	LinkWithPartOfXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId string, partOfId string, partOfType PartOfType) error
 	LinkWithRepliesToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, repliesToEventId string) error
 
@@ -175,6 +176,29 @@ func (r *interactionEventRepository) LinkWithRepliesToInTx(ctx context.Context, 
 		map[string]any{
 			"eventId":          interactionEventId,
 			"repliesToEventId": repliesToEventId,
+		})
+	if err != nil {
+		return err
+	}
+	_, err = queryResult.Single(ctx)
+	return err
+}
+
+func (r *interactionEventRepository) LinkWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, externalId, externalSystemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkWithExternalSystemInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(""+
+		"MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId}) "+
+		"MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) "+
+		"MERGE (ie)-[rel:IS_LINKED_WITH {externalId:$externalId}]->(ext) "+
+		"return rel", tenant),
+		map[string]any{
+			"tenant":             tenant,
+			"externalId":         externalId,
+			"externalSystemId":   externalSystemId,
+			"interactionEventId": interactionEventId,
 		})
 	if err != nil {
 		return err

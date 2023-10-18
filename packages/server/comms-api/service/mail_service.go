@@ -83,6 +83,8 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 		WithUsername(user),
 		WithSessionId(sessionId),
 		WithEventIdentifier(utils.EnsureEmailRfcId(email.MessageID)),
+		WithExternalId(utils.EnsureEmailRfcId(email.MessageID)),
+		WithExternalSystemId("gmail"),
 		WithChannel(&channelValue),
 		WithChannelData(emailChannelData),
 		WithContent(utils.FirstNotEmpty(email.HTMLBody, email.TextBody)),

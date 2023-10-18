@@ -685,6 +685,8 @@ func (InteractionEvent) IsTimelineEvent() {}
 
 type InteractionEventInput struct {
 	EventIdentifier    *string                             `json:"eventIdentifier,omitempty"`
+	ExternalID         *string                             `json:"externalId,omitempty"`
+	ExternalSystemID   *string                             `json:"externalSystemId,omitempty"`
 	Content            *string                             `json:"content,omitempty"`
 	ContentType        *string                             `json:"contentType,omitempty"`
 	Channel            *string                             `json:"channel,omitempty"`

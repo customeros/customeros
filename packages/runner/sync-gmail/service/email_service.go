@@ -362,6 +362,8 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 	} else {
 		logrus.Infof("interaction event already exists for raw email id %v", emailIdString)
+		reason := "interaction event already exists"
+		return entity.SKIPPED, &reason, nil
 	}
 
 	//TODO HERE PUSH COMMANDS TO EVENT STORE TO GENERATE SUMMARY AND ACTION ITEMS

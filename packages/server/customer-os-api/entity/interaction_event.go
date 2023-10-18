@@ -6,18 +6,20 @@ import (
 )
 
 type InteractionEventEntity struct {
-	Id              string
-	CreatedAt       *time.Time
-	Channel         *string
-	ChannelData     *string
-	EventIdentifier string
-	Content         string
-	ContentType     string
-	Hide            bool
-	Source          DataSource
-	SourceOfTruth   DataSource
-	EventType       *string
-	AppSource       string
+	Id               string
+	CreatedAt        *time.Time
+	Channel          *string
+	ChannelData      *string
+	ExternalId       *string
+	ExternalSystemId *string
+	EventIdentifier  string
+	Content          string
+	ContentType      string
+	Hide             bool
+	Source           DataSource
+	SourceOfTruth    DataSource
+	EventType        *string
+	AppSource        string
 
 	DataloaderKey string
 }

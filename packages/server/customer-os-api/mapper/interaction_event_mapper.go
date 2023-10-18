@@ -31,13 +31,15 @@ func MapEntitiesToInteractionEvents(entities *entity.InteractionEventEntities) [
 }
 func MapInteractionEventInputToEntity(input *model.InteractionEventInput) *entity.InteractionEventEntity {
 	return &entity.InteractionEventEntity{
-		EventIdentifier: utils.IfNotNilString(input.EventIdentifier),
-		Content:         utils.IfNotNilString(input.Content),
-		ContentType:     utils.IfNotNilString(input.ContentType),
-		Channel:         input.Channel,
-		ChannelData:     input.ChannelData,
-		EventType:       input.EventType,
-		AppSource:       input.AppSource,
-		CreatedAt:       input.CreatedAt,
+		EventIdentifier:  utils.IfNotNilString(input.EventIdentifier),
+		ExternalId:       input.ExternalID,
+		ExternalSystemId: input.ExternalSystemID,
+		Content:          utils.IfNotNilString(input.Content),
+		ContentType:      utils.IfNotNilString(input.ContentType),
+		Channel:          input.Channel,
+		ChannelData:      input.ChannelData,
+		EventType:        input.EventType,
+		AppSource:        input.AppSource,
+		CreatedAt:        input.CreatedAt,
 	}
 }

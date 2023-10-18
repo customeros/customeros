@@ -183,6 +183,8 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 				$sessionId: ID, 
 				$meetingId: ID,
 				$eventIdentifier: String,
+				$externalId: String,
+				$externalSystemId: String,
 				$channel: String,
 				$channelData: String,
 				$sentBy: [InteractionEventParticipantInput!]!, 
@@ -196,6 +198,8 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
   					interactionEvent_Create(
     					event: {interactionSession: $sessionId, 
 								meetingId: $meetingId,
+								externalId: $externalId,
+								externalSystemId: $externalSystemId,
 								eventIdentifier: $eventIdentifier,
 								channel: $channel, 
 								channelData: $channelData,
@@ -209,88 +213,6 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 								createdAt: $createdAt}
   					) {
 						id
-						content
-						contentType
-						createdAt
-						channel
-						eventType
-						interactionSession {
-							name
-						}
-						sentBy {
-						  __typename
-						  ... on EmailParticipant {
-							emailParticipant {
-							  id
-							  email
-							  contacts {
-								id
-	                          }
-							}
-							type
-						  }
-						  ... on UserParticipant {
-							userParticipant {
-							  id
-							  firstName
-							}
-							type
-						  }
-						  ... on PhoneNumberParticipant {
-							phoneNumberParticipant {
-							  id
-							  rawPhoneNumber
-							  contacts {
-								id
-	                          }
-							}
-							type
-						  }
-						  ... on ContactParticipant {
-							contactParticipant {
-							  id
-							  firstName
-							}
-							type
-						  }
-						}
-						sentTo {
-						  __typename
-						  ... on EmailParticipant {
-							emailParticipant {
-							  id
-							  email
-							  contacts {
-								id
-	                          }
-							}
-							type
-						  }
-						  ... on UserParticipant {
-							userParticipant {
-							  id
-							  firstName
-							}
-							type
-						  }
-						  ... on PhoneNumberParticipant {
-							phoneNumberParticipant {
-							  id
-							  rawPhoneNumber
-							  contacts {
-								id
-	                          }
-							}
-							type
-						  }
-						  ... on ContactParticipant {
-							contactParticipant {
-							  id
-							  firstName
-							}
-							type
-						  }
-						}
 					  }
 					}`)
 
@@ -304,6 +226,8 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 
 	graphqlRequest.Var("sessionId", params.sessionId)
 	graphqlRequest.Var("eventIdentifier", params.eventIdentifier)
+	graphqlRequest.Var("externalId", params.externalId)
+	graphqlRequest.Var("externalSystemId", params.externalSystemId)
 	graphqlRequest.Var("content", params.content)
 	graphqlRequest.Var("contentType", params.contentType)
 	graphqlRequest.Var("channelData", params.channelData)
