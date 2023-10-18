@@ -4,7 +4,6 @@ import { Card, CardFooter } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { TimelineEventPreviewHeader } from '../../../preview/header/TimelineEventPreviewHeader';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { CardBody } from '@chakra-ui/card';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
@@ -13,9 +12,14 @@ import {
   getCurrencyString,
   getMetadata,
 } from '@organization/src/components/Timeline/events/action/utils';
+import {
+  useTimelineEventPreviewMethodsContext,
+  useTimelineEventPreviewStateContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 export const RenewalForecastUpdatedActionPreview = () => {
-  const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const { modalContent } = useTimelineEventPreviewStateContext();
+  const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as Action;
   const metadata = getMetadata(event?.metadata);
   const forecastedAmount = event.content && getCurrencyString(event.content);

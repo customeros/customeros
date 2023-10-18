@@ -11,7 +11,6 @@ import { MeetingPreviewModal } from '../events/meeting/MeetingPreviewModal';
 import { SlackThreadPreviewModal } from '../events/slack/SlackThreadPreviewModal';
 import { ActionPreviewModal } from '../events/action/ActionPreviewModal';
 
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
 import { IntercomThreadPreviewModal } from '@organization/src/components/Timeline/events/intercom/IntercomThreadPreviewModal';
 import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
@@ -19,6 +18,7 @@ import { LogEntryWithAliases } from '@organization/src/components/Timeline/types
 import { LogEntryUpdateModalContextProvider } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
 import { VirtuosoHandle } from 'react-virtuoso';
 import { IssuePreviewModal } from '@organization/src/components/Timeline/events/issue/IssuePreviewModal';
+import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;
@@ -29,7 +29,7 @@ export const TimelineEventPreviewModal = ({
   invalidateQuery,
   virtuosoRef,
 }: TimelineEventPreviewModalProps) => {
-  const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const { modalContent } = useTimelineEventPreviewStateContext();
 
   const event = modalContent as
     | InteractionEvent
@@ -65,7 +65,7 @@ export const TimelineEventPreviewModal = ({
 
   return (
     <LogEntryUpdateModalContextProvider>
-      <TimelinePreviewBackdrop onCloseModal={closeModal}>
+      <TimelinePreviewBackdrop>
         {isMeeting && <MeetingPreviewModal invalidateQuery={invalidateQuery} />}
         {isSlack && <SlackThreadPreviewModal />}
         {isIntercom && <IntercomThreadPreviewModal />}

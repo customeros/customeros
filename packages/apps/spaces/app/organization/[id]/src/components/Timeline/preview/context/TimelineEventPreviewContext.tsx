@@ -8,66 +8,54 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocalStorage } from 'usehooks-ts';
 import { TimelineEvent } from '../../types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import {
-  GetTimelineEventDocument,
-  GetTimelineEventQuery,
-} from '@organization/src/graphql/getTimelineEvent.generated';
-import { toastError } from '@ui/presentation/Toast';
+import { useDeepLinkToOpenModal } from './useDeeplinkToOpenModal';
+import { useTimelineEventCachedData } from './useTimelineEventCachedData';
 
 export const noop = () => undefined;
 
-interface TimelineEventPreviewContextContextMethods {
-  openModal: (content: TimelineEvent) => void;
+interface TimelineEventPreviewContextMethods {
+  openModal: (id: string) => void;
   closeModal: () => void;
-  modalContent: TimelineEvent | null;
+}
+interface TimelineEventPreviewState {
   isModalOpen: boolean;
-  events: TimelineEvent[];
+  modalContent: TimelineEvent | null;
 }
 
-const TimelineEventPreviewContextContext =
-  createContext<TimelineEventPreviewContextContextMethods>({
+const TimelineEventPreviewContext =
+  createContext<TimelineEventPreviewContextMethods>({
     openModal: noop,
     closeModal: noop,
-    modalContent: null,
-    isModalOpen: false,
-    events: [],
   });
 
-export const useTimelineEventPreviewContext = () => {
-  return useContext(TimelineEventPreviewContextContext);
+const TimelineEventPreviewStateContext =
+  createContext<TimelineEventPreviewState>({
+    isModalOpen: false,
+    modalContent: null,
+  });
+
+export const useTimelineEventPreviewMethodsContext = () => {
+  return useContext(TimelineEventPreviewContext);
+};
+export const useTimelineEventPreviewStateContext = () => {
+  return useContext(TimelineEventPreviewStateContext);
 };
 
 export const TimelineEventPreviewContextContextProvider = ({
   children,
-  data = [],
   id = '',
 }: PropsWithChildren<{
-  data: TimelineEvent[];
   id: string;
 }>) => {
-  const client = getGraphQLClient();
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { [id]: 'tab=about' },
   );
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<TimelineEvent | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const handleOpenModal = (content: TimelineEvent) => {
-    setIsModalOpen(true);
-    const params = new URLSearchParams(searchParams?.toString() ?? '');
-    params.set('events', content.id);
-    router.push(`?${params}`);
-    setLastActivePosition({
-      ...lastActivePosition,
-      [id]: params.toString(),
-    });
-    setModalContent(content);
-  };
+  const { handleFindTimelineEventInCache } = useTimelineEventCachedData();
 
   const handleDeleteParams = () => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
@@ -79,57 +67,37 @@ export const TimelineEventPreviewContextContextProvider = ({
     router.push(`?${params}`);
   };
 
+  useDeepLinkToOpenModal({
+    modalContent,
+    setModalContent,
+    setIsModalOpen,
+    handleDeleteParams,
+  });
+  const updateUrlAndPosition = (timelineEventId: string, id: string) => {
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    params.set('events', timelineEventId);
+    router.push(`?${params}`);
+
+    setLastActivePosition({ ...lastActivePosition, [id]: params.toString() });
+  };
+
+  const handleOpenModal = (timelineEventId: string) => {
+    setIsModalOpen(true);
+
+    const event = handleFindTimelineEventInCache(
+      timelineEventId,
+    ) as TimelineEvent;
+    if (event) {
+      setModalContent(event);
+      updateUrlAndPosition(timelineEventId, id);
+    }
+  };
   const handleCloseModal = () => {
     if (!isModalOpen) return;
     setIsModalOpen(false);
     setModalContent(null);
     handleDeleteParams();
   };
-
-  const getModalContentFromServer = async (id: string) => {
-    try {
-      const result = await client.request<GetTimelineEventQuery>(
-        GetTimelineEventDocument,
-        {
-          ids: [id],
-        },
-      );
-
-      if (!result.timelineEvents.length) {
-        handleDeleteParams();
-        toastError(
-          "We couldn't find this event",
-          `timeline-event-not-found-${id}`,
-        );
-      }
-      return result.timelineEvents[0] as TimelineEvent;
-    } catch (error) {
-      handleDeleteParams();
-      toastError(
-        "We couldn't find this event",
-        `timeline-event-not-found-${id}`,
-      );
-    }
-  };
-
-  useEffect(() => {
-    const eventId = searchParams?.get('events');
-    if (eventId && !modalContent) {
-      const selectedEvent = data.find((d) => d.id === eventId);
-      if (!selectedEvent) {
-        getModalContentFromServer(eventId).then((content) => {
-          if (content) {
-            setModalContent(content);
-            setIsModalOpen(true);
-          }
-        });
-        return;
-      }
-      setModalContent(selectedEvent);
-      setIsModalOpen(true);
-      // TODO: Load timeline event by ID and open modal
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const isEmail =
@@ -153,16 +121,20 @@ export const TimelineEventPreviewContextContextProvider = ({
   }, [isModalOpen]);
 
   return (
-    <TimelineEventPreviewContextContext.Provider
+    <TimelineEventPreviewContext.Provider
       value={{
         openModal: handleOpenModal,
         closeModal: handleCloseModal,
-        isModalOpen,
-        modalContent,
-        events: data,
       }}
     >
-      {children}
-    </TimelineEventPreviewContextContext.Provider>
+      <TimelineEventPreviewStateContext.Provider
+        value={{
+          isModalOpen,
+          modalContent,
+        }}
+      >
+        {children}
+      </TimelineEventPreviewStateContext.Provider>
+    </TimelineEventPreviewContext.Provider>
   );
 };

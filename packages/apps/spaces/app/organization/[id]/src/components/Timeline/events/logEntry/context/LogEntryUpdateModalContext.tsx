@@ -15,7 +15,7 @@ import {
   LogEntryUpdateFormDtoI,
 } from './LogEntryUpdateFormDto';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { useSession } from 'next-auth/react';
 
 interface LogEntryUpdateModalContextMethods {
@@ -34,7 +34,7 @@ export const useLogEntryUpdateContext = () => {
 export const LogEntryUpdateModalContextProvider = ({
   children,
 }: PropsWithChildren) => {
-  const { modalContent, isModalOpen } = useTimelineEventPreviewContext();
+  const { modalContent, isModalOpen } = useTimelineEventPreviewStateContext();
   const [openedLogEntryId, setOpenedLogEntryId] = useState<null | string>(null);
   const event = modalContent as LogEntryWithAliases;
   const client = getGraphQLClient();

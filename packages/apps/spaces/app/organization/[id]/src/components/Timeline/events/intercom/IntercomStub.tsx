@@ -5,7 +5,7 @@ import {
   JobRoleParticipant,
   UserParticipant,
 } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { Avatar } from '@ui/media/Avatar';
 import { Flex } from '@ui/layout/Flex';
 import { getName } from '@spaces/utils/getParticipantsName';
@@ -19,7 +19,7 @@ import { User02 } from '@ui/media/icons/User02';
 export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
   intercomEvent,
 }) => {
-  const { openModal } = useTimelineEventPreviewContext();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
 
   const intercomSender =
     (intercomEvent?.sentBy?.[0] as ContactParticipant)?.contactParticipant ||
@@ -52,7 +52,7 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
       profilePhotoUrl={intercomSender?.profilePhotoUrl}
       sourceUrl={intercomEvent?.externalLinks?.[0]?.externalUrl}
       content={intercomEvent?.content || ''}
-      onClick={() => openModal(intercomEvent)}
+      onClick={() => openModal(intercomEvent.id)}
       date={DateTimeUtils.formatTime(intercomEvent?.date)}
       showDateOnHover
       ml={isSentByTenantUser ? 6 : 0}

@@ -3,18 +3,22 @@ import { useState, useEffect, PropsWithChildren } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Card } from '@ui/presentation/Card';
 import { ScaleFade } from '@ui/transitions/ScaleFade';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import {
+  useTimelineEventPreviewMethodsContext,
+  useTimelineEventPreviewStateContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface TimelinePreviewBackdropProps extends PropsWithChildren {
-  onCloseModal: () => void;
+  onCloseModal?: () => void;
 }
 
 export const TimelinePreviewBackdrop = ({
-  onCloseModal,
   children,
+  onCloseModal,
 }: TimelinePreviewBackdropProps) => {
   const [isMounted, setIsMounted] = useState(false); // needed for delaying the backdrop filter
-  const { isModalOpen, modalContent } = useTimelineEventPreviewContext();
+  const { isModalOpen, modalContent } = useTimelineEventPreviewStateContext();
+  const { closeModal } = useTimelineEventPreviewMethodsContext();
 
   useEffect(() => {
     setIsMounted(isModalOpen);
@@ -38,7 +42,7 @@ export const TimelinePreviewBackdrop = ({
       background={isMounted ? 'rgba(16, 24, 40, 0.45)' : 'rgba(16, 24, 40, 0)'}
       align='center'
       transition='all 0.1s linear'
-      onClick={onCloseModal}
+      onClick={onCloseModal ?? closeModal}
     >
       <ScaleFade
         in={isModalOpen}

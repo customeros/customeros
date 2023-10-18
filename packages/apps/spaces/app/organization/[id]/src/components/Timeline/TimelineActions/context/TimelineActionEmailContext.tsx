@@ -22,6 +22,7 @@ import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeli
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { VirtuosoHandle } from 'react-virtuoso';
+import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
 
 export const noop = () => undefined;
 
@@ -57,11 +58,9 @@ export const useTimelineActionEmailContext = () => {
 export const TimelineActionEmailContextContextProvider = ({
   children,
   invalidateQuery,
-  virtuosoRef,
   id = '',
 }: PropsWithChildren<{
   invalidateQuery: () => void;
-  virtuosoRef?: React.RefObject<VirtuosoHandle>;
   id: string;
 }>) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -78,6 +77,7 @@ export const TimelineActionEmailContextContextProvider = ({
   const queryKey = useInfiniteGetTimelineQuery.getKey(
     timelineMeta.getTimelineVariables,
   );
+  const { virtuosoRef } = useTimelineRefContext();
   const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
   const formId = 'compose-email-timeline-footer';
 

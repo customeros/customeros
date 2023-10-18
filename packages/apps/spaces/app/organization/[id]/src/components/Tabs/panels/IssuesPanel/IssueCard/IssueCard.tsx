@@ -1,5 +1,5 @@
 'use client';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Avatar } from '@ui/media/Avatar';
 import { Text } from '@ui/typography/Text';
@@ -9,7 +9,7 @@ import { Heading } from '@ui/typography/Heading';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Issue } from '@graphql/types';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 // import { getContactDisplayName } from '@spaces/utils/getContactName';
 // import { useContactOrUserDisplayName } from '@shared/hooks/useContactOrUserDisplayData';
 
@@ -25,8 +25,7 @@ function getStatusColor(status: string) {
 }
 export const IssueCard = ({ issue }: IssueCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
   const statusColorScheme = (() => getStatusColor(issue.status))();
 
   // const getDisplayName = useContactOrUserDisplayName();
@@ -40,12 +39,6 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
     () => ['closed', 'solved'].includes(issue.status.toLowerCase()),
     [issue.status],
   );
-  const handleOpenModal = useCallback(() => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '');
-
-    params.set('events', issue.id);
-    router.push(`?${params}`);
-  }, [issue.id, router, searchParams]);
 
   return (
     <Card
@@ -58,7 +51,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
       borderRadius='lg'
       border='1px solid'
       borderColor='gray.200'
-      onClick={handleOpenModal}
+      onClick={() => openModal(issue.id)}
       _hover={{
         boxShadow: 'md',
         '& > div > #confirm-button': {

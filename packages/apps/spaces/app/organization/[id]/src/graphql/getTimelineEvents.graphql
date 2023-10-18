@@ -58,5 +58,74 @@ query getTimelineEvents($ids: [ID!]!) {
         name
       }
     }
+    ... on Action {
+      __typename
+      id
+      actionType
+      appSource
+      createdAt
+      metadata
+      actionCreatedBy: createdBy {
+        ... on User {
+          __typename
+          id
+          firstName
+          lastName
+          profilePhotoUrl
+        }
+      }
+      content
+    }
+    ... on Meeting {
+      id
+      name
+      createdAt
+      updatedAt
+      startedAt
+      endedAt
+      attendedBy {
+        ...MeetingParticipantFragment
+      }
+      createdBy {
+        ...MeetingParticipantFragment
+      }
+      note {
+        id
+        content
+      }
+      agenda
+      status
+    }
+    ... on LogEntry {
+      id
+      createdAt
+      updatedAt
+      logEntryStartedAt: startedAt
+      logEntryCreatedBy: createdBy {
+        ... on User {
+          __typename
+          id
+          firstName
+          lastName
+          profilePhotoUrl
+          emails {
+            email
+          }
+        }
+      }
+      tags {
+        id
+        name
+      }
+      source
+      content
+      contentType
+      externalLinks {
+        type
+        externalUrl
+        externalSource
+      }
+    }
+
   }
 }

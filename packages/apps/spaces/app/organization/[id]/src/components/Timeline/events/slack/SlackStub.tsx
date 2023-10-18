@@ -5,7 +5,7 @@ import {
   JobRoleParticipant,
   UserParticipant,
 } from '@graphql/types';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { Avatar } from '@ui/media/Avatar';
 import { Flex } from '@ui/layout/Flex';
 import { getName } from '@spaces/utils/getParticipantsName';
@@ -18,7 +18,7 @@ import { User02 } from '@ui/media/icons/User02';
 export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
   slackEvent,
 }) => {
-  const { openModal } = useTimelineEventPreviewContext();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
 
   const slackSender =
     (slackEvent?.sentBy?.[0] as ContactParticipant)?.contactParticipant ||
@@ -46,7 +46,7 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
       profilePhotoUrl={slackSender?.profilePhotoUrl}
       sourceUrl={slackEvent?.externalLinks?.[0]?.externalUrl}
       content={slackEvent?.content || ''}
-      onClick={() => openModal(slackEvent)}
+      onClick={() => openModal(slackEvent.id)}
       date={DateTimeUtils.formatTime(slackEvent?.date)}
       showDateOnHover
       ml={isSentByTenantUser ? 6 : 0}

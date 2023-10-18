@@ -1,6 +1,5 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
-import { VirtuosoHandle } from 'react-virtuoso';
 
 import { Box } from '@ui/layout/Box';
 import { TimelineActionLogEntryContextContextProvider } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
@@ -9,14 +8,10 @@ import { TimelineActionEmailContextContextProvider } from '@organization/src/com
 import { TimelineActionsArea } from './TimelineActionsArea';
 
 interface TimelineActionsProps {
-  onScrollBottom: () => void;
   invalidateQuery: () => void;
-  virtuosoRef?: React.RefObject<VirtuosoHandle>;
 }
 
 export const TimelineActions: React.FC<TimelineActionsProps> = ({
-  virtuosoRef,
-  onScrollBottom,
   invalidateQuery,
 }) => {
   const id = useParams()?.id as string;
@@ -24,16 +19,14 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
     <TimelineActionEmailContextContextProvider
       id={id}
       invalidateQuery={invalidateQuery}
-      virtuosoRef={virtuosoRef}
     >
       <TimelineActionLogEntryContextContextProvider
         id={id}
-        virtuosoRef={virtuosoRef}
         invalidateQuery={invalidateQuery}
       >
         <Box bg='gray.25'>
           <TimelineActionButtons invalidateQuery={invalidateQuery} />
-          <TimelineActionsArea onScrollBottom={onScrollBottom} />
+          <TimelineActionsArea />
         </Box>
       </TimelineActionLogEntryContextContextProvider>
     </TimelineActionEmailContextContextProvider>

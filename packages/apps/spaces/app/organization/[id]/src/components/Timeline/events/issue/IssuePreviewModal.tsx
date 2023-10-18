@@ -4,7 +4,10 @@ import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import {
+  useTimelineEventPreviewMethodsContext,
+  useTimelineEventPreviewStateContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import copy from 'copy-to-clipboard';
@@ -25,7 +28,8 @@ function getStatusColor(status: string) {
 }
 
 export const IssuePreviewModal: React.FC = () => {
-  const { closeModal, modalContent } = useTimelineEventPreviewContext();
+  const { modalContent } = useTimelineEventPreviewStateContext();
+  const { closeModal } = useTimelineEventPreviewMethodsContext();
   const issue = modalContent as any;
   const statusColorScheme = getStatusColor(issue.issueStatus);
 

@@ -7,7 +7,7 @@ import { IssueBgPattern } from '@ui/media/logos/IssueBgPattern';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { CustomTicketTearStyle } from './styles';
 import { IssueWithAliases } from '@organization/src/components/Timeline/types';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 function getStatusColor(status: string) {
   if (status === 'solved' || status === 'closed') {
     return 'gray';
@@ -16,7 +16,7 @@ function getStatusColor(status: string) {
 }
 
 export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
-  const { openModal } = useTimelineEventPreviewContext(); // todo uncomment when modal is ready
+  const { openModal } = useTimelineEventPreviewMethodsContext();
   const statusColorScheme = getStatusColor(data.issueStatus);
 
   return (
@@ -32,7 +32,7 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
       boxShadow='none'
       border='1px solid'
       borderColor='gray.200'
-      onClick={() => openModal(data)}
+      onClick={() => openModal(data.id)}
     >
       <Flex boxShadow='xs' pr={2} p={3} direction='column' flex={1}>
         <CardHeader fontWeight='semibold' p={0} noOfLines={1}>

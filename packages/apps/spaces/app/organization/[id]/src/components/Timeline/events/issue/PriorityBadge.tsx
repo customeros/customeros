@@ -22,7 +22,7 @@ const colorMap: Record<Priority, string[]> = {
 export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
   if (priority === 'urgent') {
     return (
-      <Tooltip label={priority} textTransform='capitalize'>
+      <Tooltip label={`${priority} priority`} textTransform='capitalize'>
         <Box>
           <AlertSquare
             display='block'
@@ -36,7 +36,7 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
   }
 
   return (
-    <Tooltip label={priority} textTransform='capitalize'>
+    <Tooltip label={`${priority} priority`} textTransform='capitalize'>
       <Flex alignItems='flex-end' role='presentation' aria-label={priority}>
         {colorMap[`${priority}`]?.map((color, i) => (
           <Box

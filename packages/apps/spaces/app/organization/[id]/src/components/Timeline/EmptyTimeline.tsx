@@ -56,10 +56,7 @@ export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
       </Flex>
       <Flex bg='#F9F9FB' direction='column' flex={1}>
         <div>
-          <TimelineActions
-            onScrollBottom={() => null}
-            invalidateQuery={invalidateQuery}
-          />
+          <TimelineActions invalidateQuery={invalidateQuery} />
         </div>
         <Flex flex={1} height='100%' bg='#F9F9FB' />
       </Flex>

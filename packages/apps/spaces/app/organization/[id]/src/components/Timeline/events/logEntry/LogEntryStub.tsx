@@ -12,7 +12,7 @@ import { Phone } from '@ui/media/icons/Phone';
 import { MessageTextSquare01 } from '@ui/media/icons/MessageTextSquare01';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
-import { useTimelineEventPreviewContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface LogEntryStubProps {
   data: LogEntryWithAliases;
@@ -33,9 +33,9 @@ function getAuthor(user: User | Contact) {
 }
 
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
-  const { openModal } = useTimelineEventPreviewContext();
-
+    const { openModal } = useTimelineEventPreviewMethodsContext();
   const isTemporary = !data?.updatedAt;
+
 
   const fullName = getAuthor(data?.logEntryCreatedBy);
   const getLogEntryIcon = useCallback((type: string | null) => {
@@ -98,7 +98,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
       borderColor='gray.200'
       borderRadius='lg'
       opacity={isTemporary ? 0.5 : 1}
-      onClick={() => !isTemporary && openModal(data)}
+      onClick={() => !isTemporary && openModal(data.id)}
       _hover={{ boxShadow: 'md' }}
       transition='all 0.2s ease-out'
       cursor={isTemporary ? 'progress' : 'pointer'}

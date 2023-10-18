@@ -4,13 +4,7 @@ import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
 import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
 import { EmailTimelineAction } from './email/EmailTimelineAction';
 
-interface TimelineActionsAreaProps {
-  onScrollBottom: () => void;
-}
-
-export const TimelineActionsArea: React.FC<TimelineActionsAreaProps> = ({
-  onScrollBottom,
-}) => {
+export const TimelineActionsArea: React.FC = () => {
   const { openedEditor } = useTimelineActionContext();
 
   return (
@@ -21,8 +15,8 @@ export const TimelineActionsArea: React.FC<TimelineActionsAreaProps> = ({
       pb={openedEditor !== null ? 2 : 8}
       mt={-4}
     >
-      <EmailTimelineAction onScrollBottom={onScrollBottom} />
-      <LogEntryTimelineAction onScrollBottom={onScrollBottom} />
+      <EmailTimelineAction />
+      <LogEntryTimelineAction />
     </Box>
   );
 };
