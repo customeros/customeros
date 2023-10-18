@@ -99,8 +99,6 @@ export default function OrganizationsPage() {
       where,
     });
 
-  console.log('HERE', data);
-
   const flatData = useMemo(
     () =>
       (data?.pages?.flatMap(
@@ -146,8 +144,6 @@ export default function OrganizationsPage() {
     );
   }, [sortBy, searchParams?.toString(), data?.pageParams]);
 
-  console.log(flatData);
-
   if (
     data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
     !searchTerm
@@ -179,7 +175,9 @@ export default function OrganizationsPage() {
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
         totalItems={
-          data?.pages?.[0].dashboardView_Organizations?.totalElements || 0
+          isRestoring
+            ? 40
+            : data?.pages?.[0].dashboardView_Organizations?.totalElements || 0
         }
         renderTableActions={(table) => (
           <TableActions
