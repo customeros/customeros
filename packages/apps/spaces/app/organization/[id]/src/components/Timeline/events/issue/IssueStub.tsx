@@ -8,6 +8,7 @@ import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { CustomTicketTearStyle } from './styles';
 import { IssueWithAliases } from '@organization/src/components/Timeline/types';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';
 function getStatusColor(status: string) {
   if (status === 'solved' || status === 'closed') {
     return 'gray';
@@ -32,6 +33,13 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
       boxShadow='none'
       border='1px solid'
       borderColor='gray.200'
+      _hover={{
+        boxShadow: 'md',
+        '& .footer:after': {
+          borderBottomColor: '#e5e3e3',
+          background: 'linear-gradient(182deg, #dcd9d9, #ececec)',
+        },
+      }}
       onClick={() => openModal(data.id)}
     >
       <Flex boxShadow='xs' pr={2} p={3} direction='column' flex={1}>
@@ -39,13 +47,21 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
           {data?.subject ?? '[No subject]'}
         </CardHeader>
         <CardBody p={0} maxW='calc(476px - 77px)'>
-          <Text color='gray.500' noOfLines={3}>
-            {data?.description ?? '[No description]'}
+          <Text color='gray.500' noOfLines={3} fontSize='sm'>
+            {data?.description ? (
+              <MarkdownContentRenderer
+                markdownContent={data?.description}
+                showAsInlineText
+              />
+            ) : (
+              '[No description]'
+            )}
           </Text>
         </CardBody>
       </Flex>
       <CardFooter
         p={0}
+        className='footer'
         position='relative'
         h='108px'
         display='flex'

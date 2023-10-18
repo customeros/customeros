@@ -61,29 +61,31 @@ export const IssuesPanel = () => {
   if (isInitialLoading) {
     return <IssuesPanelSkeleton />;
   }
-  return (
-    <OrganizationPanel
-      title='Issues'
-      withFade
-      bgImage={
-        !issues?.length
-          ? '/backgrounds/organization/half-circle-pattern.svg'
-          : ''
-      }
-    >
-      {!issues.length && (
-        <EmptyIssueMessage
-          organizationName={data?.organization?.name ?? '[Unknown]'}
-        />
-      )}
 
-      {!!openIssues.length && (
-        <Flex as='article' w='full' direction='column'>
-          <Heading fontWeight='semibold' fontSize='md' mb={2}>
-            Open
-          </Heading>
-          <VStack>
-            {openIssues.map((issue, index) => (
+  if (!issues.length) {
+    return (
+      <OrganizationPanel title='Issues' withFade>
+        <EmptyIssueMessage
+          title='No issues detected'
+          description={`It looks like ${
+            data?.organization?.name ?? '[Unknown]'
+          } has had a smooth journey thus far. Or
+      perhaps they’ve been shy about reporting issues. Stay proactive and keep
+      monitoring for optimal support.`}
+        />
+      </OrganizationPanel>
+    );
+  }
+
+  return (
+    <OrganizationPanel title='Issues' withFade>
+      <Flex as='article' w='full' direction='column'>
+        <Heading fontWeight='semibold' fontSize='md' mb={2}>
+          Open
+        </Heading>
+        <VStack>
+          {!!openIssues?.length &&
+            openIssues.map((issue, index) => (
               <Fade
                 key={`issue-panel-${issue.id}`}
                 in
@@ -92,12 +94,17 @@ export const IssuesPanel = () => {
                 <IssueCard issue={issue as any} />
               </Fade>
             ))}
-          </VStack>
-        </Flex>
+        </VStack>
+      </Flex>
+      {!openIssues.length && (
+        <EmptyIssueMessage
+          description={`It looks like ${
+            data?.organization?.name ?? '[Unknown]'
+          } has no open issues at the moment`}
+        />
       )}
-
       {!!closedIssues.length && (
-        <Flex as='article' w='full' direction='column'>
+        <Flex as='article' w='full' direction='column' mt={2}>
           <Flex
             justifyContent='space-between'
             alignItems='center'
@@ -125,14 +132,23 @@ export const IssuesPanel = () => {
                 enter: 0.2,
               }}
             >
-              <VStack>
-                {closedIssues.map((issue, index) => (
-                  <IssueCard
-                    issue={issue as any}
-                    key={`issue-panel-${issue.id}`}
-                  />
-                ))}
-              </VStack>
+              {!closedIssues.length && (
+                <EmptyIssueMessage
+                  description={`It looks like ${
+                    data?.organization?.name ?? '[Unknown]'
+                  } has no closed issues at the moment`}
+                />
+              )}
+              {!!closedIssues?.length && (
+                <VStack>
+                  {closedIssues.map((issue, index) => (
+                    <IssueCard
+                      issue={issue as any}
+                      key={`issue-panel-${issue.id}`}
+                    />
+                  ))}
+                </VStack>
+              )}
             </Fade>
           </Collapse>
         </Flex>

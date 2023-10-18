@@ -35,6 +35,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
   //   const sortedNotes = notes.sort((a, b) => b.createdAt - a.createdAt);
   //   return sortedNotes[0].createdAt;
   // };
+
   const isStatusClosed = useMemo(
     () => ['closed', 'solved'].includes(issue.status.toLowerCase()),
     [issue.status],
@@ -114,7 +115,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
               fontWeight='normal'
               minHeight={6}
               position='absolute'
-              right={2}
+              right={3}
             >
               <TagLabel textTransform='capitalize'>{issue.status}</TagLabel>
             </Tag>

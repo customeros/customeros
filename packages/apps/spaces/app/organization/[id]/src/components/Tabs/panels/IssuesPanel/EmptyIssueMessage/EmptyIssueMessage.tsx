@@ -1,28 +1,24 @@
-import { Flex } from '@ui/layout/Flex';
-import { Box } from '@ui/layout/Box';
-import { Text } from '@ui/typography/Text';
-import { Ticket02 } from '@ui/media/icons/Ticket02';
 import { FC } from 'react';
-export const EmptyIssueMessage: FC<{ organizationName: string }> = ({
-  organizationName,
-}) => (
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { Inbox01 } from '@ui/media/icons/Inbox01';
+import { FeaturedIcon } from '@ui/media/Icon';
+export const EmptyIssueMessage: FC<{
+  title?: string;
+  description: string;
+}> = ({ title, description }) => (
   <Flex direction='column' alignItems='center' mt='4'>
-    <Box
-      border='1px solid'
-      borderColor='gray.200'
-      padding={3}
-      borderRadius='md'
-      mb={6}
-    >
-      <Ticket02 color='gray.700' boxSize='6' />
-    </Box>
-    <Text color='gray.700' fontWeight={600}>
-      No issues detected
-    </Text>
+    <FeaturedIcon size='md' minW='10' colorScheme='gray' mb={2}>
+      <Inbox01 color='gray.700' boxSize='6' />
+    </FeaturedIcon>
+    {title && (
+      <Text color='gray.700' fontWeight={600} mb={1}>
+        {title}
+      </Text>
+    )}
+
     <Text color='gray.500' mt={1} mb={6} textAlign='center'>
-      It looks like {organizationName} has had a smooth journey thus far. Or
-      perhaps they’ve been shy about reporting issues. Stay proactive and keep
-      monitoring for optimal support.
+      {description}
     </Text>
   </Flex>
 );
