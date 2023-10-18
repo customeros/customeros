@@ -51,6 +51,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "7.44.3",
     "react-inverted-form": "^1.2.11",
+    "react-markdown": "^9.0.0",
     "react-textarea-autosize": "^8.5.2",
     "react-toastify": "^9.1.1",
     "react-virtuoso": "4.4.2",

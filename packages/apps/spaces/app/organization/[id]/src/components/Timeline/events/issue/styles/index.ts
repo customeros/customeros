@@ -2,7 +2,7 @@ export const CustomTicketTearStyle = {
   '&:before': {
     content: "''",
     width: '11px',
-    height: '5px',
+    height: '6px',
     border: '1px solid',
     borderColor: 'gray.200',
     left: '-7px',
@@ -17,11 +17,11 @@ export const CustomTicketTearStyle = {
   '&:after': {
     content: "''",
     width: '11px',
-    height: '5px',
+    height: '6px',
     border: '1px solid',
     borderColor: 'gray.200',
     left: '-7px',
-    bottom: '-1px',
+    bottom: '-2px',
     position: 'absolute',
     background: 'gray.25',
     borderBottomColor: 'gray.25',

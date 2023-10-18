@@ -15,10 +15,14 @@ import React from 'react';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 // import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { PriorityBadge } from '@organization/src/components/Timeline/events/issue/PriorityBadge';
+import {
+  Priority,
+  PriorityBadge,
+} from '@organization/src/components/Timeline/events/issue/PriorityBadge';
 import { Divider, HStack } from '@chakra-ui/react';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import { toastError } from '@ui/presentation/Toast';
+import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';
 
 function getStatusColor(status: string) {
   if (['closed', 'solved'].includes(status?.toLowerCase())) {
@@ -104,7 +108,11 @@ export const IssuePreviewModal: React.FC = () => {
         overflow='auto'
       >
         <HStack gap={2} mb={2} position='relative'>
-          <PriorityBadge priority={issue?.priority} />
+          {issue?.priority && (
+            <PriorityBadge
+              priority={issue.priority.toLowerCase() as Priority}
+            />
+          )}
           <Tag
             size='sm'
             variant='outline'
@@ -138,28 +146,33 @@ export const IssuePreviewModal: React.FC = () => {
             <TagLabel>#{issue?.externalLinks?.[0]?.externalId}</TagLabel>
           </Tag>
         </HStack>
-
         <Text fontSize='sm' mb={2}>
-          {issue?.description}
+          <MarkdownContentRenderer markdownContent={issue?.description ?? ''} />
         </Text>
 
         {issue?.tags?.length && (
           <Text color='gray.500' fontSize='sm' mb={6}>
-            {issue.tags.map((e: any) => e.name).join(' • ')}
+            {issue.tags.map((e: { name: string }) => e.name).join(' • ')}
           </Text>
         )}
 
         <Flex mb={2} alignItems='center'>
           <Text fontSize='sm' whiteSpace='nowrap'>
-            Issue requested at
+            Issue requested on
           </Text>
           {/*<Text mx={1} fontSize='sm' whiteSpace='nowrap'>*/}
           {/*  {issue?.requestedBy}*/}
           {/*</Text>*/}
-          <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' ml={1}>
+          <Text
+            color='gray.400'
+            fontSize='sm'
+            whiteSpace='nowrap'
+            ml={1}
+            mr={2}
+          >
             {DateTimeUtils.format(issue?.createdAt, DateTimeUtils.dateWithHour)}
           </Text>
-          <Divider orientation='horizontal' />
+          <Divider orientation='horizontal' borderBottomColor='gray.200' />
         </Flex>
         {/* todo uncomment when data is available to query*/}
         {/*<VStack*/}
