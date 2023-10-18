@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
@@ -281,6 +282,12 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, cmd *command.AddS
 	localSource := utils.StringFirstNonEmpty(cmd.Source.Source, constants.SourceOpenline)
 	localSourceOfTruth := utils.StringFirstNonEmpty(cmd.Source.SourceOfTruth, constants.SourceOpenline)
 	localAppSource := utils.StringFirstNonEmpty(cmd.Source.AppSource, constants.AppSourceEventProcessingPlatform)
+
+	if existingSocialId := a.Organization.GetSocialIdForUrl(cmd.SocialUrl); existingSocialId != "" {
+		cmd.SocialId = existingSocialId
+	} else if cmd.SocialId == "" {
+		cmd.SocialId = uuid.New().String()
+	}
 
 	event, err := events.NewOrganizationAddSocialEvent(a, cmd.SocialId, cmd.SocialPlatform, cmd.SocialUrl, localSource, localSourceOfTruth, localAppSource, createdAtNotNil, updatedAtNotNil)
 	if err != nil {

@@ -108,6 +108,21 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 	return userId
 }
 
+func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
+	socialId := utils.NewUUIDIfEmpty(social.Id)
+	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
+				SET s.url=$url,
+					s.platformName=$platformName
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":           socialId,
+		"url":          social.Url,
+		"platformName": social.PlatformName,
+	})
+	return socialId
+}
+
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
 	contactId := contact.Id
 	if contactId == "" {
@@ -185,6 +200,17 @@ func LinkTag(ctx context.Context, driver *neo4j.DriverWithContext, tagId, entity
 		"tagId":    tagId,
 		"entityId": entityId,
 		"now":      utils.Now(),
+	})
+}
+
+func LinkSocial(ctx context.Context, driver *neo4j.DriverWithContext, socialId, entityId string) {
+	query := `MATCH (e {id:$entityId})
+				MATCH (s:Social {id:$socialId})
+				MERGE (e)-[:HAS]->(s)`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"socialId": socialId,
+		"entityId": entityId,
 	})
 }
 

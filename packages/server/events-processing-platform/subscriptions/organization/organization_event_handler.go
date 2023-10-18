@@ -3,7 +3,6 @@ package organization
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -192,7 +191,7 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("platform", platform), log.String("url", url))
 
 	err := h.organizationCommands.AddSocialCommand.Handle(ctx,
-		cmd.NewAddSocialCommand(organizationId, tenant, uuid.New().String(),
+		cmd.NewAddSocialCommand(organizationId, tenant, "",
 			platform, url, constants.SourceWebscrape, constants.SourceWebscrape, constants.AppSourceEventProcessingPlatform, nil, nil))
 	if err != nil {
 		tracing.TraceErr(span, err)

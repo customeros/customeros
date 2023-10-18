@@ -179,7 +179,7 @@ type AddSocialCommand struct {
 	eventstore.BaseCommand
 	SocialId       string
 	SocialPlatform string
-	SocialUrl      string
+	SocialUrl      string `json:"socialUrl" validate:"required"`
 	Source         common_models.Source
 	CreatedAt      *time.Time
 	UpdatedAt      *time.Time
