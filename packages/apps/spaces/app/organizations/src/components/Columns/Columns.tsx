@@ -197,9 +197,7 @@ export const getColumns = (options: GetColumnsOptions) => [
         />
       );
     },
-    header: (props) => (
-      <THead<Organization> title='Renewal Forecast' {...props} />
-    ),
+    header: (props) => <THead<Organization> title='ARR Forecast' {...props} />,
     skeleton: () => (
       <Flex flexDir='column' gap='1'>
         <Skeleton

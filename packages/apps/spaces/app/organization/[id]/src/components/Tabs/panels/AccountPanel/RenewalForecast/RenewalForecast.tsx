@@ -96,7 +96,7 @@ export const RenewalForecast = ({
                   color='gray.700'
                   mr={2}
                 >
-                  Renewal forecast
+                  ARR forecast
                 </Heading>
                 <IconButton
                   size='xs'
@@ -158,10 +158,10 @@ export const RenewalForecast = ({
         onClose={info.onClose}
         onConfirm={info.onClose}
         confirmButtonLabel='Got it'
-        label='Renewal forecast'
+        label='ARR forecast'
       >
         <Text fontSize='sm' fontWeight='normal'>
-          The renewal forecast gives you a way to roughly project revenue per
+          The ARR forecast gives you a way to roughly project revenue per
           customer and across your entire portfolio.
         </Text>
         <br />

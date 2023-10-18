@@ -130,7 +130,7 @@ export const RenewalLikelihood = ({ data, name }: RenewalLikelihoodProps) => {
         </Text>
         <br />
         <Text fontSize='sm' fontWeight='normal'>
-          It is used to prioritise actions and calculate Renewal forecasts.
+          It is used to prioritise actions and calculate ARR forecasts.
         </Text>
       </InfoDialog>
     </>
