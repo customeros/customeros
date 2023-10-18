@@ -245,11 +245,7 @@ func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, ten
 }
 
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
-	var contactId = contact.Id
-	if contactId == "" {
-		contactUuid, _ := uuid.NewRandom()
-		contactId = contactUuid.String()
-	}
+	contactId := utils.NewUUIDIfEmpty(contact.Id)
 	query := `MATCH (t:Tenant {name: $tenant}) 
 		 		MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) 
 			 	ON CREATE SET c.prefix=$prefix, 
@@ -383,11 +379,11 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	if entity.Email == "" && entity.RawEmail == "" {
 		log.Fatalf("Missing email address")
 	}
-
-	var emailId, _ = uuid.NewRandom()
+	emailId := utils.NewUUIDIfEmpty(entity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-								MERGE (e:Email {id:$emailId})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
-								SET e:Email_%s,
+								MERGE (e:Email {id:$emailId})
+								MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+								ON CREATE SET e:Email_%s,
 									e.email=$email,
 									e.rawEmail=$rawEmail,
 									e.isReachable=$isReachable,
@@ -396,14 +392,14 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":      tenant,
-		"emailId":     emailId.String(),
+		"emailId":     emailId,
 		"email":       entity.Email,
 		"rawEmail":    entity.RawEmail,
 		"isReachable": entity.IsReachable,
 		"createdAt":   entity.CreatedAt,
 		"updatedAt":   entity.UpdatedAt,
 	})
-	return emailId.String()
+	return emailId
 }
 
 func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType entity.EntityType, tenant, entityId, email string, primary bool, label string) string {
@@ -439,6 +435,21 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 	return emailId.String()
 }
 
+func LinkEmail(ctx context.Context, driver *neo4j.DriverWithContext, entityId, emailId string, primary bool, label string) {
+	query :=
+		`	MATCH (n {id:$entityId})--(t:Tenant) 
+			MATCH (e:Email {id: $emailId})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+		 	MERGE (e)<-[rel:HAS]-(n) 
+		 	ON CREATE SET rel.label=$label, rel.primary=$primary `
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"entityId": entityId,
+		"primary":  primary,
+		"emailId":  emailId,
+		"label":    label,
+	})
+}
+
 func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tenant, id, phoneNumber string, primary bool, label string) string {
 	var phoneNumberId, _ = uuid.NewRandom()
 	query :=
@@ -461,8 +472,22 @@ func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tena
 	return phoneNumberId.String()
 }
 
+func LinkPhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, id, phoneNumberId string, primary bool, label string) {
+	query :=
+		` 	MATCH (n {id:$entityId})--(t:Tenant) 
+			MERGE (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) 
+			MERGE (p)<-[rel:HAS]-(n) 
+			ON CREATE SET rel.label=$label, rel.primary=$primary `
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"entityId":      id,
+		"primary":       primary,
+		"phoneNumberId": phoneNumberId,
+		"label":         label,
+	})
+}
+
 func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
-	var phoneNumberId, _ = uuid.NewRandom()
+	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 								MERGE (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t)
 								SET p:PhoneNumber_%s,
@@ -472,13 +497,13 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 									p.updatedAt=$updatedAt`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":         tenant,
-		"phoneNumberId":  phoneNumberId.String(),
+		"phoneNumberId":  phoneNumberId,
 		"rawPhoneNumber": phoneNumber.RawPhoneNumber,
 		"e164":           phoneNumber.E164,
 		"createdAt":      phoneNumber.CreatedAt,
 		"updatedAt":      phoneNumber.UpdatedAt,
 	})
-	return phoneNumberId.String()
+	return phoneNumberId
 }
 
 func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, tenant, extends string) string {

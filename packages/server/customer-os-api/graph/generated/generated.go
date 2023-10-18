@@ -24,6 +24,7 @@ import (
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 	return &executableSchema{
+		schema:     cfg.Schema,
 		resolvers:  cfg.Resolvers,
 		directives: cfg.Directives,
 		complexity: cfg.Complexity,
@@ -31,6 +32,7 @@ func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 }
 
 type Config struct {
+	Schema     *ast.Schema
 	Resolvers  ResolverRoot
 	Directives DirectiveRoot
 	Complexity ComplexityRoot
@@ -1230,12 +1232,16 @@ type UserResolver interface {
 }
 
 type executableSchema struct {
+	schema     *ast.Schema
 	resolvers  ResolverRoot
 	directives DirectiveRoot
 	complexity ComplexityRoot
 }
 
 func (e *executableSchema) Schema() *ast.Schema {
+	if e.schema != nil {
+		return e.schema
+	}
 	return parsedSchema
 }
 
@@ -6841,14 +6847,14 @@ func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
 	if ec.DisableIntrospection {
 		return nil, errors.New("introspection disabled")
 	}
-	return introspection.WrapSchema(parsedSchema), nil
+	return introspection.WrapSchema(ec.Schema()), nil
 }
 
 func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
 	if ec.DisableIntrospection {
 		return nil, errors.New("introspection disabled")
 	}
-	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
+	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 var sources = []*ast.Source{
@@ -7163,7 +7169,7 @@ Create an individual in customerOS.
 input ContactInput {
 
     "The unique ID associated with the template of the contact in customerOS."
-    templateId: ID
+    templateId: ID  @deprecated(reason: "Not supported")
 
     "The prefix of the contact."
     prefix: String
@@ -7181,8 +7187,6 @@ input ContactInput {
     description: String
     timezone: String
 
-    label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
-
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """
@@ -7192,18 +7196,18 @@ input ContactInput {
     User defined metadata appended to contact.
     **Required.**
     """
-    customFields: [CustomFieldInput!]
+    customFields: [CustomFieldInput!] @deprecated(reason: "Not supported in create flow yet")
 
-    fieldSets: [FieldSetInput!]
+    fieldSets: [FieldSetInput!] @deprecated(reason: "Not supported in create flow yet")
 
-    "An email addresses associted with the contact."
+    "An email addresses associated with the contact."
     email: EmailInput
 
     "A phone number associated with the contact."
     phoneNumber: PhoneNumberInput
 
     "Id of the contact owner (user)"
-    ownerId: ID
+    ownerId: ID @deprecated(reason: "Not supported in create flow yet")
 
     externalReference: ExternalSystemReferenceInput
 
@@ -7507,7 +7511,7 @@ enum CustomFieldTemplateType {
     """
     dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
     """
-    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT
+    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 }`, BuiltIn: false},
@@ -55676,7 +55680,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "name", "description", "timezone", "label", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
+	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "name", "description", "timezone", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -55746,15 +55750,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.Timezone = data
-		case "label":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Label = data
 		case "createdAt":
 			var err error
 

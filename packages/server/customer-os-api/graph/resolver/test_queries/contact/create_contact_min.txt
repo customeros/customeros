@@ -1,17 +1,7 @@
 mutation CreateContactMin() {
 contact_Create(
-    input: {
-    }
+    input: {}
   ) {
     id
-    prefix
-    name
-    firstName
-    lastName
-    description
-    timezone
-    profilePhotoUrl
-    source
-    createdAt
   }
 }

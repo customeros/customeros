@@ -161,7 +161,6 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentTo.Email}),
 						Source:        entity.DataSourceOpenline,
-						SourceOfTruth: entity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXEmailInTx(ctx, tx, tenant, interactionEventId, *sentTo.Email, sentTo.Type, repository.SENT_TO)
@@ -181,7 +180,6 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentTo.PhoneNumber}),
 						Source:            entity.DataSourceOpenline,
-						SourceOfTruth:     entity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXPhoneNumberInTx(ctx, tx, tenant, interactionEventId, *sentTo.PhoneNumber, sentTo.Type, repository.SENT_TO)
@@ -216,7 +214,6 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentBy.Email}),
 						Source:        entity.DataSourceOpenline,
-						SourceOfTruth: entity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXEmailInTx(ctx, tx, tenant, interactionEventId, *sentBy.Email, sentBy.Type, repository.SENT_BY)
@@ -236,7 +233,6 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentBy.PhoneNumber}),
 						Source:            entity.DataSourceOpenline,
-						SourceOfTruth:     entity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionEventRepository.LinkWithSentXXPhoneNumberInTx(ctx, tx, tenant, interactionEventId, *sentBy.PhoneNumber, sentBy.Type, repository.SENT_BY)

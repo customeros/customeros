@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -13,19 +14,20 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
+	"time"
 )
 
 type ContactService interface {
-	Create(ctx context.Context, contact *ContactCreateData) (*entity.ContactEntity, error)
+	Create(ctx context.Context, contact *ContactCreateData) (string, error)
 	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error)
-	GetContactById(ctx context.Context, id string) (*entity.ContactEntity, error)
+	GetById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
@@ -42,27 +44,18 @@ type ContactService interface {
 	AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*entity.ContactEntity, error)
 	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
 	RemoveLocation(ctx context.Context, contactId string, locationId string) error
+	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 
 	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
-
-	// Deprecated
-	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
-	// Deprecated
-	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
-	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 }
 
 type ContactCreateData struct {
 	ContactEntity     *entity.ContactEntity
-	CustomFields      *entity.CustomFieldEntities
-	FieldSets         *entity.FieldSetEntities
 	EmailEntity       *entity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
-	TemplateId        *string
-	OwnerUserId       *string
 	ExternalReference *entity.ExternalSystemEntity
 	Source            entity.DataSource
-	SourceOfTruth     entity.DataSource
+	AppSource         string
 }
 
 type CustomerContactCreateData struct {
@@ -95,120 +88,125 @@ func (s *contactService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *contactService) Create(ctx context.Context, newContact *ContactCreateData) (*entity.ContactEntity, error) {
+func (s *contactService) Create(ctx context.Context, contactDetails *ContactCreateData) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Create")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("newContact", newContact))
+	span.LogFields(log.Object("contactDetails", contactDetails))
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	contactDbNode, err := session.ExecuteWrite(ctx, s.createContactInDBTxWork(ctx, newContact))
-	if err != nil {
-		return nil, err
+	if contactDetails.ContactEntity == nil {
+		err := fmt.Errorf("contact entity is nil")
+		tracing.TraceErr(span, err)
+		return "", err
 	}
-	return s.mapDbNodeToContactEntity(*contactDbNode.(*dbtype.Node)), nil
+
+	contactId, err := s.createContactWithEvents(ctx, contactDetails)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return "", err
+	}
+
+	if contactDetails.EmailEntity != nil {
+		s.linkEmailByEvents(ctx, contactId, utils.StringFirstNonEmpty(contactDetails.EmailEntity.AppSource, contactDetails.AppSource), *contactDetails.EmailEntity)
+	}
+
+	if contactDetails.PhoneNumberEntity != nil {
+		s.linkPhoneNumberByEvents(ctx, contactId, utils.StringFirstNonEmpty(contactDetails.PhoneNumberEntity.AppSource, contactDetails.AppSource), *contactDetails.PhoneNumberEntity)
+	}
+
+	span.LogFields(log.String("output - createdContactId", contactId))
+	return contactId, nil
 }
 
-func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.ManagedTransaction) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.createContactInDBTxWork")
+func (s *contactService) createContactWithEvents(ctx context.Context, contactDetails *ContactCreateData) (string, error) {
+	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
+		Tenant: common.GetTenantFromContext(ctx),
+		SourceFields: &commongrpc.SourceFields{
+			Source:    string(contactDetails.Source),
+			AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
+		},
+		LoggedInUserId:  common.GetUserIdFromContext(ctx),
+		FirstName:       contactDetails.ContactEntity.FirstName,
+		LastName:        contactDetails.ContactEntity.LastName,
+		Prefix:          contactDetails.ContactEntity.Prefix,
+		Description:     contactDetails.ContactEntity.Description,
+		ProfilePhotoUrl: contactDetails.ContactEntity.ProfilePhotoUrl,
+		Name:            contactDetails.ContactEntity.Name,
+		Timezone:        contactDetails.ContactEntity.Timezone,
+	}
+	if contactDetails.ContactEntity.CreatedAt != nil {
+		upsertContactRequest.CreatedAt = timestamppb.New(*contactDetails.ContactEntity.CreatedAt)
+	}
+	if contactDetails.ExternalReference != nil && contactDetails.ExternalReference.ExternalSystemId != "" {
+		upsertContactRequest.ExternalSystemFields = &commongrpc.ExternalSystemFields{
+			ExternalSystemId: string(contactDetails.ExternalReference.ExternalSystemId),
+			ExternalId:       contactDetails.ExternalReference.Relationship.ExternalId,
+			ExternalUrl:      utils.IfNotNilString(contactDetails.ExternalReference.Relationship.ExternalUrl),
+			ExternalSource:   utils.IfNotNilString(contactDetails.ExternalReference.Relationship.ExternalSource),
+		}
+		if contactDetails.ExternalReference.Relationship.SyncDate != nil {
+			upsertContactRequest.ExternalSystemFields.SyncDate = timestamppb.New(*contactDetails.ExternalReference.Relationship.SyncDate)
+		}
+	}
+	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+		user, findErr := s.GetById(ctx, response.Id)
+		if user != nil && findErr == nil {
+			break
+		}
+		time.Sleep(time.Duration(i*100) * time.Millisecond)
+	}
+	return response.Id, err
+}
+
+func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSource string, emailEntity entity.EmailEntity) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.linkEmailByEvents")
 	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("newContact", newContact))
 
-	return func(tx neo4j.ManagedTransaction) (any, error) {
-		tenant := common.GetContext(ctx).Tenant
-		contactDbNode, err := s.repositories.ContactRepository.Create(ctx, tx, tenant, *newContact.ContactEntity)
+	emailId, err := s.services.EmailService.CreateEmailAddressByEvents(ctx, utils.StringFirstNonEmpty(emailEntity.RawEmail, emailEntity.Email), appSource)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed to create email address for contact %s: %s", contactId, err.Error())
+	}
+	if emailId != "" {
+		_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactgrpc.LinkEmailToContactGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			ContactId:      contactId,
+			EmailId:        emailId,
+			Primary:        emailEntity.Primary,
+			Label:          emailEntity.Label,
+		})
 		if err != nil {
-			return nil, err
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to link email address %s with contact %s: %s", emailId, contactId, err.Error())
 		}
-		var contactId = utils.GetPropsFromNode(*contactDbNode)["id"].(string)
-		entityType := &model.CustomFieldEntityType{
-			ID:         contactId,
-			EntityType: model.EntityTypeContact,
-		}
-		if newContact.TemplateId != nil {
-			err := s.repositories.ContactRepository.LinkWithEntityTemplateInTx(ctx, tx, tenant, entityType, *newContact.TemplateId)
-			if err != nil {
-				return nil, err
-			}
-		}
-		if newContact.ExternalReference != nil {
-			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, contactId, entity.ExternalNodeContact, *newContact.ExternalReference)
-			if err != nil {
-				return nil, err
-			}
-		}
-		if newContact.CustomFields != nil {
-			for _, customField := range *newContact.CustomFields {
-				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToContactInTx(ctx, tx, tenant, contactId, customField)
-				if err != nil {
-					return nil, err
-				}
-				if customField.TemplateId != nil {
-					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateInTx(ctx, tx, fieldId, entityType, *customField.TemplateId)
-					if err != nil {
-						return nil, err
-					}
-				}
-			}
-		}
-		if newContact.FieldSets != nil {
-			for _, fieldSet := range *newContact.FieldSets {
-				setDbNode, err := s.repositories.FieldSetRepository.MergeFieldSetInTx(ctx, tx, tenant, entityType, fieldSet)
-				if err != nil {
-					return nil, err
-				}
-				var fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
-				if fieldSet.TemplateId != nil {
-					err := s.repositories.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, tenant, fieldSetId, *fieldSet.TemplateId, entityType.EntityType)
-					if err != nil {
-						return nil, err
-					}
-				}
-				if fieldSet.CustomFields != nil {
-					for _, customField := range *fieldSet.CustomFields {
-						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, tenant, entityType, fieldSetId, customField)
-						if err != nil {
-							return nil, err
-						}
-						if customField.TemplateId != nil {
-							var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
-							err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(ctx, tx, fieldId, fieldSetId, *customField.TemplateId)
-							if err != nil {
-								return nil, err
-							}
-						}
-					}
-				}
-			}
-		}
-		if newContact.EmailEntity != nil {
-			_, _, err := s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, tenant, entity.CONTACT, contactId, *newContact.EmailEntity)
-			if err != nil {
-				return nil, err
-			}
-		}
-		if newContact.PhoneNumberEntity != nil {
-			_, _, err := s.repositories.PhoneNumberRepository.MergePhoneNumberToInTx(ctx, tx, tenant, entity.CONTACT, contactId, *newContact.PhoneNumberEntity)
-			if err != nil {
-				return nil, err
-			}
-		}
+	}
+}
 
-		var ownerUserId = common.GetUserIdFromContext(ctx)
-		if newContact.OwnerUserId != nil && *newContact.OwnerUserId != "" {
-			ownerUserId = *newContact.OwnerUserId
+func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId, appSource string, phoneNumberEntity entity.PhoneNumberEntity) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.linkPhoneNumberByEvents")
+	defer span.Finish()
+
+	phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumberByEvents(ctx, utils.StringFirstNonEmpty(phoneNumberEntity.RawPhoneNumber, phoneNumberEntity.E164), appSource)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed to create phone number for contact %s: %s", contactId, err.Error())
+	}
+	if phoneNumberId != "" {
+		_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactgrpc.LinkPhoneNumberToContactGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			ContactId:      contactId,
+			PhoneNumberId:  phoneNumberId,
+			Primary:        phoneNumberEntity.Primary,
+			Label:          phoneNumberEntity.Label,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to link phone number %s with contact %s: %s", phoneNumberId, contactId, err.Error())
 		}
-		if len(ownerUserId) > 0 {
-			err := s.repositories.ContactRepository.SetOwner(ctx, tx, tenant, contactId, ownerUserId)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return contactDbNode, nil
 	}
 }
 
@@ -282,28 +280,17 @@ func (s *contactService) RestoreFromArchive(ctx context.Context, contactId strin
 	return true, nil
 }
 
-func (s *contactService) GetContactById(ctx context.Context, id string) (*entity.ContactEntity, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
+func (s *contactService) GetById(ctx context.Context, contactId string) (*entity.ContactEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId))
 
-	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		result, err := tx.Run(ctx, `
-			MATCH (c:Contact {id:$id})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN c`,
-			map[string]interface{}{
-				"id":     id,
-				"tenant": common.GetContext(ctx).Tenant,
-			})
-		record, err := result.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return record.Values[0], nil
-	})
-	if err != nil {
+	if contactDbNode, err := s.repositories.ContactRepository.GetById(ctx, common.GetContext(ctx).Tenant, contactId); err != nil {
 		return nil, err
+	} else {
+		return s.mapDbNodeToContactEntity(*contactDbNode), nil
 	}
-
-	return s.mapDbNodeToContactEntity(queryResult.(dbtype.Node)), nil
 }
 
 func (s *contactService) GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
@@ -437,12 +424,12 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
-	_, err := s.GetContactById(ctx, primaryContactId)
+	_, err := s.GetById(ctx, primaryContactId)
 	if err != nil {
 		s.log.Errorf("(%s) Primary contact with id {%s} not found: {%v}", utils.GetFunctionName(), primaryContactId, err.Error())
 		return err
 	}
-	_, err = s.GetContactById(ctx, mergedContactId)
+	_, err = s.GetById(ctx, mergedContactId)
 	if err != nil {
 		s.log.Errorf("(%s) Contact to merge with id {%s} not found: {%v}", utils.GetFunctionName(), mergedContactId, err.Error())
 		return err
@@ -567,86 +554,6 @@ func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNu
 	return &contactEntities, nil
 }
 
-func (s *contactService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.ContactRepository.GetAllContactPhoneNumberRelationships(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.ContactClient.LinkPhoneNumberToContact(context.Background(), &contact_grpc_service.LinkPhoneNumberToContactGrpcRequest{
-				Primary:       utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
-				Label:         utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
-				ContactId:     v.Values[1].(string),
-				PhoneNumberId: v.Values[2].(string),
-				Tenant:        v.Values[3].(string),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, outputErr
-}
-
-func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.UpsertEmailRelationInEventStore")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.ContactRepository.GetAllContactEmailRelationships(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.ContactClient.LinkEmailToContact(context.Background(), &contact_grpc_service.LinkEmailToContactGrpcRequest{
-				Primary:   utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
-				Label:     utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
-				ContactId: v.Values[1].(string),
-				EmailId:   v.Values[2].(string),
-				Tenant:    v.Values[3].(string),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, outputErr
-}
-
 func (s *contactService) CustomerContactCreate(ctx context.Context, data *CustomerContactCreateData) (*model.CustomerContact, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CustomerContactCreate")
 	defer span.Finish()
@@ -654,13 +561,13 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	result := &model.CustomerContact{}
 
-	contactCreateRequest := &contact_grpc_service.UpsertContactGrpcRequest{
+	contactCreateRequest := &contactgrpc.UpsertContactGrpcRequest{
 		Tenant:      common.GetTenantFromContext(ctx),
 		FirstName:   data.ContactEntity.FirstName,
 		LastName:    data.ContactEntity.LastName,
 		Prefix:      data.ContactEntity.Prefix,
 		Description: data.ContactEntity.Description,
-		SourceFields: &common_grpc_service.SourceFields{
+		SourceFields: &commongrpc.SourceFields{
 			Source:    string(data.ContactEntity.Source),
 			AppSource: data.ContactEntity.AppSource,
 		},
@@ -680,10 +587,10 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	result.ID = contactId.Id
 
 	if data.EmailEntity != nil {
-		emailCreate := &email_grpc_service.UpsertEmailGrpcRequest{
+		emailCreate := &emailgrpc.UpsertEmailGrpcRequest{
 			Tenant:   common.GetTenantFromContext(ctx),
 			RawEmail: data.EmailEntity.RawEmail,
-			SourceFields: &common_grpc_service.SourceFields{
+			SourceFields: &commongrpc.SourceFields{
 				Source:    string(data.EmailEntity.Source),
 				AppSource: data.EmailEntity.AppSource,
 			},
@@ -701,7 +608,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		result.Email = &model.CustomerEmail{
 			ID: emailId.Id,
 		}
-		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contact_grpc_service.LinkEmailToContactGrpcRequest{
+		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactgrpc.LinkEmailToContactGrpcRequest{
 			Primary:   data.EmailEntity.Primary,
 			Label:     data.EmailEntity.Label,
 			ContactId: contactId.Id,

@@ -5,23 +5,30 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	phonenumgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"strings"
+	"time"
 )
 
 type PhoneNumberService interface {
+	CreatePhoneNumberByEvents(ctx context.Context, email, appSource string) (string, error)
 	MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity, countryCodeA2 *string) (*entity.PhoneNumberEntity, error)
 	UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity, countryCodeA2 *string) (*entity.PhoneNumberEntity, error)
 	DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
 	GetById(ctx context.Context, phoneNumberId string) (*entity.PhoneNumberEntity, error)
+	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.PhoneNumberEntity, error)
 
 	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
 }
@@ -46,6 +53,46 @@ func (s *phoneNumberService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
+func (s *phoneNumberService) CreatePhoneNumberByEvents(ctx context.Context, phoneNumber, appSource string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.CreatePhoneNumberByEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumber", phoneNumber), log.String("appSource", appSource))
+
+	phoneNumber = strings.TrimSpace(phoneNumber)
+
+	var phoneNumberEntity *entity.PhoneNumberEntity
+	phoneNumberEntity, _ = s.GetByPhoneNumber(ctx, strings.TrimSpace(phoneNumber))
+	if phoneNumberEntity == nil {
+		// phone number not exist, create new one
+		response, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumgrpc.UpsertPhoneNumberGrpcRequest{
+			Tenant:      common.GetTenantFromContext(ctx),
+			PhoneNumber: phoneNumber,
+			SourceFields: &commongrpc.SourceFields{
+				Source:    string(entity.DataSourceOpenline),
+				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
+			},
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing %s", err.Error())
+			return "", err
+		}
+		for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+			phoneNumberEntity, findPhoneNumberErr := s.GetById(ctx, response.Id)
+			if phoneNumberEntity != nil && findPhoneNumberErr == nil {
+				break
+			}
+			time.Sleep(time.Duration(i*100) * time.Millisecond)
+		}
+		span.LogFields(log.String("output - createdPhoneNumberId", response.Id))
+		return response.Id, nil
+	} else {
+		return phoneNumberEntity.Id, nil
+	}
+}
+
 func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetAllForEntityTypeByIds")
 	defer span.Finish()
@@ -59,10 +106,10 @@ func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entit
 
 	phoneNumberEntities := make(entity.PhoneNumberEntities, 0, len(phoneNumbers))
 	for _, v := range phoneNumbers {
-		emailEntity := s.mapDbNodeToPhoneNumberEntity(*v.Node)
-		s.addDbRelationshipToPhoneNumberEntity(*v.Relationship, emailEntity)
-		emailEntity.DataloaderKey = v.LinkedNodeId
-		phoneNumberEntities = append(phoneNumberEntities, *emailEntity)
+		phoneNumberEntity := s.mapDbNodeToPhoneNumberEntity(*v.Node)
+		s.addDbRelationshipToPhoneNumberEntity(*v.Relationship, phoneNumberEntity)
+		phoneNumberEntity.DataloaderKey = v.LinkedNodeId
+		phoneNumberEntities = append(phoneNumberEntities, *phoneNumberEntity)
 	}
 	return &phoneNumberEntities, nil
 }
@@ -241,6 +288,20 @@ func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) 
 		return nil, err
 	}
 	return s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode), nil
+}
+
+func (s *phoneNumberService) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.PhoneNumberEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetByPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumber", phoneNumber))
+
+	phoneNumberNode, err := s.repositories.PhoneNumberRepository.GetByPhoneNumber(ctx, common.GetTenantFromContext(ctx), phoneNumber)
+	if err != nil {
+		return nil, err
+	}
+	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
+	return phoneNumberEntity, nil
 }
 
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {

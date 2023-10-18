@@ -22,7 +22,7 @@ import (
 )
 
 type EmailService interface {
-	CreateEmailAddressByEvents(ctx context.Context, email string, appSource *string) (string, error)
+	CreateEmailAddressByEvents(ctx context.Context, email, appSource string) (string, error)
 	GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*entity.EmailEntities, error)
 	MergeEmailTo(ctx context.Context, entityType entity.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
@@ -294,16 +294,16 @@ func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*en
 	return emailEntity, nil
 }
 
-func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email string, appSource *string) (string, error) {
+func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email, appSource string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.CreateEmailAddressByEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("email", email))
+	span.LogFields(log.String("email", email), log.String("appSource", appSource))
 
 	email = strings.TrimSpace(email)
 
 	var emailEntity *entity.EmailEntity
-	emailEntity, _ = s.GetByEmailAddress(ctx, strings.TrimSpace(email))
+	emailEntity, _ = s.GetByEmailAddress(ctx, email)
 	if emailEntity == nil {
 		// email address not exist, create new one
 		response, err := s.grpcClients.EmailClient.UpsertEmail(ctx, &emailgrpc.UpsertEmailGrpcRequest{
@@ -311,7 +311,7 @@ func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email str
 			RawEmail: email,
 			SourceFields: &commongrpc.SourceFields{
 				Source:    string(entity.DataSourceOpenline),
-				AppSource: *utils.FirstNotEmpty(utils.IfNotNilString(appSource), constants.AppSourceCustomerOsApi),
+				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
 			},
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 		})

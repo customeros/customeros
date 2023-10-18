@@ -8,16 +8,10 @@ contact_Create(
       description: "Some description",
       timezone: "America/Los_Angeles",
       createdAt: "2023-01-02T03:04:05.000Z"
-      customFields: [ {name: "textField", value: "value1", datatype: TEXT},
-                      {name: "integerField", value: 123, datatype: INTEGER},
-                      {name: "decimalField", value: 0.001, datatype: DECIMAL},
-                      {name: "boolField", value: true, datatype: BOOL},
-                      {name: "timeField", value: "2022-11-13T20:21:56.732Z", datatype: DATETIME},
-                    ],
       email: {
             email: "contact@abc.com",
             label: WORK,
-            primary: false
+            primary: true
       },
       phoneNumber: {
             phoneNumber: "+1234567890",
@@ -34,16 +28,7 @@ contact_Create(
     description
     timezone
     source
-    owner {
-        id
-    }
     createdAt
-    customFields {
-      id
-      name
-      datatype
-      value
-    }
     emails {
       id
       email
@@ -51,6 +36,7 @@ contact_Create(
       label
       primary
       source
+      appSource
     }
     phoneNumbers {
       id
@@ -59,6 +45,7 @@ contact_Create(
       e164
       label
       source
+      appSource
     }
   }
 }

@@ -3,12 +3,17 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	phonenumbergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -88,6 +93,8 @@ func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	mockContactCreation(ctx)
 
 	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "Agent",
@@ -230,6 +237,8 @@ func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
+	mockContactCreation(ctx)
+
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_min"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -284,6 +293,8 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	mockContactCreation(ctx)
 
 	now := time.Now().UTC()
 
@@ -484,6 +495,8 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	mockContactCreation(ctx)
 
 	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "Agent",
@@ -1242,4 +1255,65 @@ func TestQueryResolver_InteractionEvent_WithExternalLinks(t *testing.T) {
 	require.Nil(t, interactionEvent.ExternalLinks[1].ExternalSource)
 	require.Equal(t, syncDate1, *interactionEvent.ExternalLinks[0].SyncDate)
 	require.Equal(t, syncDate2, *interactionEvent.ExternalLinks[1].SyncDate)
+}
+
+func mockContactCreation(ctx context.Context) {
+	createdContactIds := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+	createdEmailIds := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+	createdPhoneNumberIds := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+
+	contactPosition := -1
+	emailPosition := -1
+	phoneNumberPosition := -1
+
+	contactServiceCallbacks := events_paltform.MockContactServiceCallbacks{
+		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+			contactPosition++
+			neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+				Id: createdContactIds[contactPosition],
+			})
+			return &contactgrpc.ContactIdGrpcResponse{
+				Id: createdContactIds[contactPosition],
+			}, nil
+		},
+		LinkEmailToContact: func(context context.Context, link *contactgrpc.LinkEmailToContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+			neo4jt.LinkEmail(ctx, driver, createdContactIds[contactPosition], createdEmailIds[emailPosition], link.Primary, link.Label)
+			return &contactgrpc.ContactIdGrpcResponse{
+				Id: createdContactIds[contactPosition],
+			}, nil
+		},
+		LinkPhoneNumberToContact: func(context context.Context, link *contactgrpc.LinkPhoneNumberToContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+			neo4jt.LinkPhoneNumber(ctx, driver, createdContactIds[contactPosition], createdPhoneNumberIds[phoneNumberPosition], link.Primary, link.Label)
+			return &contactgrpc.ContactIdGrpcResponse{
+				Id: createdContactIds[contactPosition],
+			}, nil
+		},
+	}
+	emailServiceCallbacks := events_paltform.MockEmailServiceCallbacks{
+		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
+			emailPosition++
+			neo4jt.CreateEmail(ctx, driver, tenantName, entity.EmailEntity{
+				Id:       createdEmailIds[emailPosition],
+				RawEmail: data.RawEmail,
+			})
+			return &emailgrpc.EmailIdGrpcResponse{
+				Id: createdEmailIds[emailPosition],
+			}, nil
+		},
+	}
+	phoneNumberServiceCallbacks := events_paltform.MockPhoneNumberServiceCallbacks{
+		UpsertPhoneNumber: func(ctx context.Context, data *phonenumbergrpc.UpsertPhoneNumberGrpcRequest) (*phonenumbergrpc.PhoneNumberIdGrpcResponse, error) {
+			phoneNumberPosition++
+			neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
+				Id:             createdPhoneNumberIds[phoneNumberPosition],
+				RawPhoneNumber: data.PhoneNumber,
+			})
+			return &phonenumbergrpc.PhoneNumberIdGrpcResponse{
+				Id: createdPhoneNumberIds[phoneNumberPosition],
+			}, nil
+		},
+	}
+	events_paltform.SetContactCallbacks(&contactServiceCallbacks)
+	events_paltform.SetEmailCallbacks(&emailServiceCallbacks)
+	events_paltform.SetPhoneNumberCallbacks(&phoneNumberServiceCallbacks)
 }

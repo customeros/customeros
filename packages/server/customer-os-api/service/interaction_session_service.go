@@ -121,7 +121,6 @@ func (s *interactionSessionService) createInteractionSessionInDBTxWork(ctx conte
 						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *attendedBy.Email}),
 						Source:        entity.DataSourceOpenline,
-						SourceOfTruth: entity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionSessionRepository.LinkWithAttendedByEmailInTx(ctx, tx, tenant, interactionSessionId, *attendedBy.Email, attendedBy.Type)
@@ -141,7 +140,6 @@ func (s *interactionSessionService) createInteractionSessionInDBTxWork(ctx conte
 						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *attendedBy.PhoneNumber}),
 						Source:            entity.DataSourceOpenline,
-						SourceOfTruth:     entity.DataSourceOpenline,
 					})
 				}
 				err = s.repositories.InteractionSessionRepository.LinkWithAttendedByPhoneNumberInTx(ctx, tx, tenant, interactionSessionId, *attendedBy.PhoneNumber, attendedBy.Type)
