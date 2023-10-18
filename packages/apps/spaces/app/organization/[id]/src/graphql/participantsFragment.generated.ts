@@ -110,7 +110,20 @@ export type MeetingParticipantFragmentContactParticipantFragment = {
 };
 
 export type MeetingParticipantFragmentEmailParticipantFragment = {
-  __typename?: 'EmailParticipant';
+  __typename: 'EmailParticipant';
+  emailParticipant: {
+    __typename?: 'Email';
+    rawEmail?: string | null;
+    email?: string | null;
+    contacts: Array<{
+      __typename?: 'Contact';
+      firstName?: string | null;
+      lastName?: string | null;
+      name?: string | null;
+      timezone?: string | null;
+    }>;
+    users: Array<{ __typename?: 'User'; firstName: string; lastName: string }>;
+  };
 };
 
 export type MeetingParticipantFragmentOrganizationParticipantFragment = {
@@ -263,6 +276,23 @@ export const MeetingParticipantFragmentFragmentDoc = `
         email
         rawEmail
         primary
+      }
+    }
+  }
+  ... on EmailParticipant {
+    __typename
+    emailParticipant {
+      rawEmail
+      email
+      contacts {
+        firstName
+        lastName
+        name
+        timezone
+      }
+      users {
+        firstName
+        lastName
       }
     }
   }
