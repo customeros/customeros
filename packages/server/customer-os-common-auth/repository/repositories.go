@@ -22,6 +22,11 @@ func InitRepositories(db *gorm.DB) *Repositories {
 
 	var err error
 
+	err = db.AutoMigrate(&entity.TenantAPIKey{})
+	if err != nil {
+		log.Print(err)
+		panic(err)
+	}
 	err = db.AutoMigrate(&entity.OAuthTokenEntity{})
 	if err != nil {
 		log.Print(err)
