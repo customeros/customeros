@@ -19,6 +19,7 @@ import (
 	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"time"
@@ -26,7 +27,7 @@ import (
 
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (string, error)
-	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error)
+	Update(ctx context.Context, contactUpdateData *ContactUpdateData) (string, error)
 	GetById(ctx context.Context, id string) (*entity.ContactEntity, error)
 	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error)
@@ -65,7 +66,6 @@ type CustomerContactCreateData struct {
 
 type ContactUpdateData struct {
 	ContactEntity *entity.ContactEntity
-	OwnerUserId   *string
 }
 
 type contactService struct {
@@ -210,45 +210,56 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 	}
 }
 
-func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactUpdateData) (*entity.ContactEntity, error) {
+func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactUpdateData) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contactUpdateData", contactUpdateData))
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	contactDbNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		tenant := common.GetContext(ctx).Tenant
-		contactId := contactUpdateData.ContactEntity.Id
-
-		dbNode, err := s.repositories.ContactRepository.Update(ctx, tx, tenant, contactId, contactUpdateData.ContactEntity)
-		if err != nil {
-			return nil, err
-		}
-
-		if contactUpdateData.OwnerUserId != nil {
-			err = s.repositories.ContactRepository.RemoveOwner(ctx, tx, tenant, contactId)
-			if err != nil {
-				return nil, err
-			}
-
-			if len(*contactUpdateData.OwnerUserId) > 0 {
-				err := s.repositories.ContactRepository.SetOwner(ctx, tx, tenant, contactId, *contactUpdateData.OwnerUserId)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		return dbNode, nil
-	})
-	if err != nil {
-		return nil, err
+	if contactUpdateData.ContactEntity == nil {
+		err := fmt.Errorf("(ContactService.Update) contact entity is nil")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return "", err
+	} else if contactUpdateData.ContactEntity.Id == "" {
+		err := fmt.Errorf("(ContactService.Update) contact id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
-	return s.mapDbNodeToContactEntity(*contactDbNode.(*dbtype.Node)), nil
+	currentContactEntity, err := s.GetById(ctx, contactUpdateData.ContactEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return "", err
+	}
+
+	contactDetails := *contactUpdateData.ContactEntity
+
+	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
+		Tenant: common.GetTenantFromContext(ctx),
+		SourceFields: &commongrpc.SourceFields{
+			Source:    string(entity.DataSourceOpenline),
+			AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
+		},
+		LoggedInUserId:  common.GetUserIdFromContext(ctx),
+		Id:              contactDetails.Id,
+		Prefix:          contactDetails.Prefix,
+		Name:            contactDetails.Name,
+		FirstName:       contactDetails.FirstName,
+		LastName:        contactDetails.LastName,
+		Description:     contactDetails.Description,
+		Timezone:        contactDetails.Timezone,
+		ProfilePhotoUrl: currentContactEntity.ProfilePhotoUrl,
+	}
+	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Error("Error from events processing: %s", err.Error())
+		return "", err
+	}
+	return response.Id, nil
 }
 
 func (s *contactService) PermanentDelete(ctx context.Context, contactId string) (bool, error) {
@@ -287,7 +298,8 @@ func (s *contactService) GetById(ctx context.Context, contactId string) (*entity
 	span.LogFields(log.String("contactId", contactId))
 
 	if contactDbNode, err := s.repositories.ContactRepository.GetById(ctx, common.GetContext(ctx).Tenant, contactId); err != nil {
-		return nil, err
+		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contact with id {%s} not found", contactId))
+		return nil, wrappedErr
 	} else {
 		return s.mapDbNodeToContactEntity(*contactDbNode), nil
 	}
