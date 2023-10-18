@@ -84,10 +84,10 @@ export const LogEntryDatePicker: React.FC<{
             </Text>
           }
         />
-        <Text as='span' mx={1}>
+        <Text as='span' alignSelf='baseline' mx={1} fontSize='sm'>
           •
         </Text>
-        <Box lineHeight={1}>
+        <Box lineHeight={0}>
           <FormInput
             p={0}
             h='min-content'

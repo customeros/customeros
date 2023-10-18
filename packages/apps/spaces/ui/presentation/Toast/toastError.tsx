@@ -1,15 +1,21 @@
 import { toast } from 'react-toastify';
 import { XClose } from '@ui/media/icons/XClose';
-import ExclamationWaves from '@spaces/atoms/icons/ExclamationWaves';
+import { IconButton } from '@ui/form/IconButton';
+
+import ExclamationWaves from './assets/ExclamationWaves';
 
 export const toastError = (text: string, id: string) => {
   return toast.error(text, {
     toastId: id,
     icon: ExclamationWaves,
     closeButton: ({ closeToast }) => (
-      <div onClick={closeToast}>
-        <XClose height='30px' width='30px' color='#F04438' />
-      </div>
+      <IconButton
+        variant='ghost'
+        aria-label='Close'
+        colorScheme='error'
+        onClick={closeToast}
+        icon={<XClose boxSize='5' />}
+      />
     ),
   });
 };

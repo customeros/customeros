@@ -1,15 +1,21 @@
 import { toast } from 'react-toastify';
-import CheckWaves from '@spaces/atoms/icons/CheckWaves';
 import { XClose } from '@ui/media/icons/XClose';
+import { IconButton } from '@ui/form/IconButton';
+
+import CheckWaves from './assets/CheckWaves';
 
 export const toastSuccess = (text: string, id: string) => {
   return toast.success(text, {
     toastId: id,
     icon: CheckWaves,
     closeButton: ({ closeToast }) => (
-      <div onClick={closeToast}>
-        <XClose height='30px' width='30px' color='#17B26A' />
-      </div>
+      <IconButton
+        variant='ghost'
+        aria-label='Close'
+        colorScheme='success'
+        onClick={closeToast}
+        icon={<XClose boxSize='5' />}
+      />
     ),
   });
 };
