@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHealthCheckHandler_test(t *testing.T) {
+func TestHealthHealthCheckHandler(t *testing.T) {
 	// Define a response recorder to capture the HTTP response.
 	w := httptest.NewRecorder()
 
@@ -28,12 +28,6 @@ func TestHealthCheckHandler_test(t *testing.T) {
 	// Call the healthCheckHandler function from the server package.
 	HealthCheckHandler(c)
 
-	// Check if the status code is 200 (OK).
 	assert.Equal(t, http.StatusOK, w.Code)
-
-	// Check the response body, if needed.
-	// You can assert specific JSON responses if applicable.
-
-	// Example: Assert that the response body is {"status": "OK"}.
 	assert.JSONEq(t, `{"status": "OK"}`, w.Body.String())
 }
