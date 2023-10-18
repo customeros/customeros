@@ -125,6 +125,12 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 				return nil, err
 			}
 		}
+		if newInteractionEvent.InteractionEventEntity.ExternalId != nil && newInteractionEvent.InteractionEventEntity.ExternalSystemId != nil {
+			err := s.repositories.InteractionEventRepository.LinkWithExternalSystemInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.InteractionEventEntity.ExternalId, *newInteractionEvent.InteractionEventEntity.ExternalSystemId)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if newInteractionEvent.MeetingIdentifier != nil {
 			err := s.repositories.InteractionEventRepository.LinkWithPartOfXXInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.MeetingIdentifier, repository.PART_OF_MEETING)
 			if err != nil {

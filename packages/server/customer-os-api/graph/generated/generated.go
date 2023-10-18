@@ -7864,6 +7864,8 @@ input InteractionSessionInput {
 
 input InteractionEventInput {
     eventIdentifier: String
+    externalId: String
+    externalSystemId: String
     content: String
     contentType: String
     channel: String
@@ -56848,7 +56850,7 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "channelData", "interactionSession", "meetingId", "sentBy", "sentTo", "repliesTo", "eventType", "appSource", "createdAt"}
+	fieldsInOrder := [...]string{"eventIdentifier", "externalId", "externalSystemId", "content", "contentType", "channel", "channelData", "interactionSession", "meetingId", "sentBy", "sentTo", "repliesTo", "eventType", "appSource", "createdAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -56864,6 +56866,24 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 				return it, err
 			}
 			it.EventIdentifier = data
+		case "externalId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalID = data
+		case "externalSystemId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystemId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalSystemID = data
 		case "content":
 			var err error
 

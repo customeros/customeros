@@ -51,6 +51,8 @@ input InteractionSessionInput {
 
 input InteractionEventInput {
     eventIdentifier: String
+    externalId: String
+    externalSystemId: String
     content: String
     contentType: String
     channel: String

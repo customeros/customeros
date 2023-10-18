@@ -35,7 +35,7 @@ func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx conte
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (ie:InteractionEvent_%s {externalId:$externalId})-[IS_LINKED_WITH]-(e:ExternalSystem{id:$externalSystemId})" +
+	query := "MATCH (ie:InteractionEvent_%s)-[IS_LINKED_WITH{externalId:$externalId}]-(e:ExternalSystem{id:$externalSystemId})" +
 		" RETURN ie.id"
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
