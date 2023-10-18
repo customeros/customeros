@@ -490,7 +490,26 @@ export type GetTimelineQuery = {
                   }>;
                 };
               }
-            | { __typename?: 'EmailParticipant' }
+            | {
+                __typename: 'EmailParticipant';
+                emailParticipant: {
+                  __typename?: 'Email';
+                  rawEmail?: string | null;
+                  email?: string | null;
+                  contacts: Array<{
+                    __typename?: 'Contact';
+                    firstName?: string | null;
+                    lastName?: string | null;
+                    name?: string | null;
+                    timezone?: string | null;
+                  }>;
+                  users: Array<{
+                    __typename?: 'User';
+                    firstName: string;
+                    lastName: string;
+                  }>;
+                };
+              }
             | {
                 __typename: 'OrganizationParticipant';
                 organizationParticipant: {
@@ -544,7 +563,26 @@ export type GetTimelineQuery = {
                   }>;
                 };
               }
-            | { __typename?: 'EmailParticipant' }
+            | {
+                __typename: 'EmailParticipant';
+                emailParticipant: {
+                  __typename?: 'Email';
+                  rawEmail?: string | null;
+                  email?: string | null;
+                  contacts: Array<{
+                    __typename?: 'Contact';
+                    firstName?: string | null;
+                    lastName?: string | null;
+                    name?: string | null;
+                    timezone?: string | null;
+                  }>;
+                  users: Array<{
+                    __typename?: 'User';
+                    firstName: string;
+                    lastName: string;
+                  }>;
+                };
+              }
             | {
                 __typename: 'OrganizationParticipant';
                 organizationParticipant: {
