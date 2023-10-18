@@ -317,16 +317,22 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ID))
 
-	updatedContact, err := r.Services.ContactService.Update(ctx, &service.ContactUpdateData{
+	contactId, err := r.Services.ContactService.Update(ctx, &service.ContactUpdateData{
 		ContactEntity: mapper.MapContactUpdateInputToEntity(input),
-		OwnerUserId:   input.OwnerID,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)
-		return nil, err
+		return &model.Contact{ID: contactId}, nil
 	}
-	return mapper.MapEntityToContact(updatedContact), nil
+	updatedContactEntity, err := r.Services.ContactService.GetById(ctx, contactId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Contact details not yet available. Contact id: %s", contactId)
+		return &model.Contact{ID: contactId}, nil
+	}
+	span.LogFields(log.String("response.contactID", contactId))
+	return mapper.MapEntityToContact(updatedContactEntity), nil
 }
 
 // ContactHardDelete is the resolver for the contact_HardDelete field.

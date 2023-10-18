@@ -13,12 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
 type ContactRepository interface {
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error)
-	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) error
 	SetOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, userId string) error
 	RemoveOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) error
@@ -83,89 +80,6 @@ func (r *contactRepository) RemoveOwner(ctx context.Context, tx neo4j.ManagedTra
 			"contactId": contactId,
 		})
 	return err
-}
-
-// TODO alexbalexb remove
-func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.Create")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	var createdAt time.Time
-	createdAt = utils.Now()
-	if newContact.CreatedAt != nil {
-		createdAt = *newContact.CreatedAt
-	}
-
-	query := `MATCH (t:Tenant {name:$tenant}) 
-			MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) 
-			ON CREATE SET 
-		 		c.prefix=$prefix, 
-				c.name=$name,
-		 		c.firstName=$firstName, 
-		 		c.lastName=$lastName, 
-				c.description=$description, 
-				c.timezone=$timezone, 
-		 		c.createdAt=$createdAt, 
-		 		c.updatedAt=$createdAt, 
-		 		c.source=$source, 
-		 		c.appSource=$appSource, 
-		 		c.sourceOfTruth=$sourceOfTruth, 
-		 		c:Contact_%s 
-			RETURN c`
-
-	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-		map[string]interface{}{
-			"tenant":        tenant,
-			"prefix":        newContact.Prefix,
-			"name":          newContact.Name,
-			"firstName":     newContact.FirstName,
-			"lastName":      newContact.LastName,
-			"source":        newContact.Source,
-			"sourceOfTruth": newContact.SourceOfTruth,
-			"appSource":     newContact.AppSource,
-			"description":   newContact.Description,
-			"timezone":      newContact.Timezone,
-			"createdAt":     createdAt,
-		}); err != nil {
-		return nil, err
-	} else {
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}
-}
-
-func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	if queryResult, err := tx.Run(ctx, `
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			SET c.firstName=$firstName,
-				c.lastName=$lastName,
-				c.name=$name,
-				c.description=$description,
-				c.timezone=$timezone,
-				c.prefix=$prefix,
-				c.updatedAt=$now,
-				c.sourceOfTruth=$sourceOfTruth
-			RETURN c`,
-		map[string]interface{}{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"name":          contactDtls.Name,
-			"firstName":     contactDtls.FirstName,
-			"lastName":      contactDtls.LastName,
-			"description":   contactDtls.Description,
-			"timezone":      contactDtls.Timezone,
-			"prefix":        contactDtls.Prefix,
-			"sourceOfTruth": string(contactDtls.SourceOfTruth),
-			"now":           utils.Now(),
-		}); err != nil {
-		return nil, err
-	} else {
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}
 }
 
 func (r *contactRepository) LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entityTemplateId string) error {

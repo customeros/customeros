@@ -341,22 +341,39 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	origOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
-	newOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Prefix:        "MR",
-		FirstName:     "first",
-		LastName:      "last",
-		Description:   "description",
-		Source:        entity.DataSourceHubspot,
-		SourceOfTruth: entity.DataSourceHubspot,
+		Prefix:          "MR",
+		FirstName:       "first",
+		LastName:        "last",
+		Description:     "description",
+		ProfilePhotoUrl: "original url",
+		Source:          entity.DataSourceHubspot,
+		SourceOfTruth:   entity.DataSourceHubspot,
 	})
 
-	neo4jt.UserOwnsContact(ctx, driver, origOwnerId, contactId)
+	contactServiceCallbacks := events_paltform.MockContactServiceCallbacks{
+		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+			require.Equal(t, contactId, contact.Id)
+			require.Equal(t, "updated first", contact.FirstName)
+			require.Equal(t, "updated last", contact.LastName)
+			require.Equal(t, "DR", contact.Prefix)
+			require.Equal(t, "updated name", contact.Name)
+			require.Equal(t, "updated description", contact.Description)
+			require.Equal(t, "updated timezone", contact.Timezone)
+			require.Equal(t, "original url", contact.ProfilePhotoUrl)
+			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
+			require.Equal(t, string(entity.DataSourceOpenline), contact.SourceFields.Source)
+			require.Equal(t, tenantName, contact.Tenant)
+			require.Equal(t, testUserId, contact.LoggedInUserId)
+			return &contactgrpc.ContactIdGrpcResponse{
+				Id: contactId,
+			}, nil
+		},
+	}
+	events_paltform.SetContactCallbacks(&contactServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("contact/update_contact"),
-		client.Var("contactId", contactId),
-		client.Var("ownerId", newOwnerId))
+		client.Var("contactId", contactId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contactStruct struct {
@@ -364,52 +381,6 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 	}
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
-
-	updatedContact := contactStruct.Contact_Update
-
-	require.Equal(t, "DR", *updatedContact.Prefix)
-	require.Equal(t, "updated name", *updatedContact.Name)
-	require.Equal(t, "updated first", *updatedContact.FirstName)
-	require.Equal(t, "updated last", *updatedContact.LastName)
-	require.Equal(t, "updated description", *updatedContact.Description)
-	require.Equal(t, "updated timezone", *updatedContact.Timezone)
-	require.Equal(t, "test", *updatedContact.AppSource)
-	require.Equal(t, model.DataSourceOpenline, updatedContact.SourceOfTruth)
-	require.Equal(t, newOwnerId, updatedContact.Owner.ID)
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
-
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName})
-}
-
-func TestMutationResolver_ContactUpdate_ClearTitle(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		Prefix:    "MR",
-		FirstName: "first",
-		LastName:  "last",
-	})
-
-	rawResponse, err := c.RawPost(getQuery("contact/update_contact_clear_title"),
-		client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contact struct {
-		Contact_Update model.Contact
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
-	require.Nil(t, err)
-	require.NotNil(t, contact)
-	updatedContact := contact.Contact_Update
-	require.Equal(t, "", *updatedContact.Prefix)
-	require.Equal(t, "updated first", *updatedContact.FirstName)
-	require.Equal(t, "updated last", *updatedContact.LastName)
 }
 
 func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {

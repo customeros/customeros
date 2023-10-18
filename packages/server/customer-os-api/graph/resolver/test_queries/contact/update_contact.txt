@@ -1,4 +1,4 @@
-mutation UpdateContact($contactId: ID!, $ownerId: ID){
+mutation UpdateContact($contactId: ID!){
     contact_Update(
         input: {
             id: $contactId
@@ -8,7 +8,6 @@ mutation UpdateContact($contactId: ID!, $ownerId: ID){
             lastName: "updated last"
             description: "updated description"
             timezone: "updated timezone"
-            ownerId: $ownerId
         }
     ) {
         id
@@ -18,9 +17,6 @@ mutation UpdateContact($contactId: ID!, $ownerId: ID){
         lastName
         description
         timezone
-        owner {
-            id
-        }
         source
         sourceOfTruth
         appSource

@@ -253,6 +253,7 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 						c.lastName=$lastName, 
 						c.name=$name, 
 						c.description=$description,
+						c.profilePhotoUrl=$profilePhotoUrl,
 						c.appSource=$appSource, 
 						c.source=$source, 
 						c.sourceOfTruth=$sourceOfTruth, 
@@ -260,17 +261,18 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		 				c:Contact_%s`
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":        tenant,
-		"contactId":     contactId,
-		"prefix":        contact.Prefix,
-		"firstName":     contact.FirstName,
-		"lastName":      contact.LastName,
-		"name":          contact.Name,
-		"description":   contact.Description,
-		"now":           utils.Now(),
-		"source":        contact.Source,
-		"sourceOfTruth": contact.SourceOfTruth,
-		"appSource":     utils.StringFirstNonEmpty(contact.AppSource, "test"),
+		"tenant":          tenant,
+		"contactId":       contactId,
+		"prefix":          contact.Prefix,
+		"firstName":       contact.FirstName,
+		"lastName":        contact.LastName,
+		"name":            contact.Name,
+		"description":     contact.Description,
+		"profilePhotoUrl": contact.ProfilePhotoUrl,
+		"now":             utils.Now(),
+		"source":          contact.Source,
+		"sourceOfTruth":   contact.SourceOfTruth,
+		"appSource":       utils.StringFirstNonEmpty(contact.AppSource, "test"),
 	})
 	return contactId
 }

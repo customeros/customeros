@@ -290,7 +290,7 @@ input ContactUpdateInput {
     label: String @deprecated(reason: "Use `tags` instead")
 
     "Id of the contact owner (user)"
-    ownerId: ID
+    ownerId: ID @deprecated(reason: "Not supported in update flow yet")
 }
 
 input ContactTagInput {
