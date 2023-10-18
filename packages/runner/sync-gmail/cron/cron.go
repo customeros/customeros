@@ -65,6 +65,12 @@ func syncEmails(services *service.Services) {
 		return
 	}
 
+	personalEmailProviderList, err := services.Repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	if err != nil {
+		logrus.Errorf("failed to get personal email provider list: %v", err)
+		return
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(len(tenants))
 
@@ -84,12 +90,6 @@ func syncEmails(services *service.Services) {
 			usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
 			if err != nil {
 				logrus.Errorf("failed to get users for tenant: %v", err)
-				return
-			}
-
-			personalEmailProviderList, err := services.Repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-			if err != nil {
-				logrus.Errorf("failed to get personal email provider list: %v", err)
 				return
 			}
 

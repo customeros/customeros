@@ -366,44 +366,6 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		return entity.SKIPPED, &reason, nil
 	}
 
-	//TODO HERE PUSH COMMANDS TO EVENT STORE TO GENERATE SUMMARY AND ACTION ITEMS
-
-	//get summary for email using claude-2 model
-	//summaryExists, err := s.repositories.AnalysisRepository.SummaryExistsForInteractionEvent(ctx, tenant, interactionEventId)
-	//if err != nil {
-	//	logrus.Errorf("unable to check if summary exists for interaction event: %v", err)
-	//	return err
-	//}
-	//if !summaryExists {
-	//	logrus.Println("fetching anthropic summary for email")
-	//	summary := s.services.AnthropicService.FetchSummary(utils.StringFirstNonEmpty(rawEmailData.Html, rawEmailData.Text))
-	//	_, err = s.repositories.AnalysisRepository.CreateSummaryForEmail(ctx, tenant, interactionEventId, summary, externalSystemId, "sync-gmail", time.Now().UTC())
-	//	if err != nil {
-	//		logrus.Errorf("unable to create summary for email: %v", err)
-	//		return err
-	//	}
-	//}
-	//
-	////get the action items for the email using claude-2 model
-	//actionItemsExists, err := s.repositories.ActionItemRepository.ActionsItemsExistsForInteractionEvent(ctx, tenant, interactionEventId)
-	//if err != nil {
-	//	logrus.Errorf("unable to check if action items exists for interaction event: %v", err)
-	//	return err
-	//}
-	//if !actionItemsExists {
-	//	logrus.Println("fetching anthropic action items for email")
-	//	actionItems := s.services.AnthropicService.FetchActionItems(utils.StringFirstNonEmpty(rawEmailData.Html, rawEmailData.Text))
-	//
-	//	//TODO insert should be done in a single transaction to follow ActionsItemsExistsForInteractionEvent logic
-	//	for _, actionItem := range actionItems {
-	//		_, err = s.repositories.ActionItemRepository.CreateActionItemForEmail(ctx, tenant, interactionEventId, actionItem, externalSystemId, AppSource, time.Now().UTC())
-	//		if err != nil {
-	//			logrus.Errorf("unable to create action item for email: %v", err)
-	//			return err
-	//		}
-	//	}
-	//}
-
 	return entity.SENT, nil, err
 }
 
