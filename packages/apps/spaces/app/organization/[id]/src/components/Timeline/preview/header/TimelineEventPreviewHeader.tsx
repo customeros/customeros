@@ -10,7 +10,7 @@ import { XClose } from '@ui/media/icons/XClose';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
 interface TimelineEventPreviewHeaderProps {
-  date: string;
+  date?: string;
   name: string;
   onClose: () => void;
   copyLabel: string;
@@ -40,9 +40,11 @@ export const TimelineEventPreviewHeader: React.FC<
           <Text fontSize='lg' fontWeight='semibold'>
             {name}
           </Text>
-          <Text size='2xs' color='gray.500' fontSize='12px'>
-            {DateTimeUtils.format(date, DateTimeUtils.dateWithHour)}
-          </Text>
+          {date && (
+            <Text size='2xs' color='gray.500' fontSize='12px'>
+              {DateTimeUtils.format(date, DateTimeUtils.dateWithHour)}
+            </Text>
+          )}
         </div>
         <Flex direction='row' justifyContent='flex-end' alignItems='center'>
           <Tooltip label={copyLabel} placement='bottom'>
