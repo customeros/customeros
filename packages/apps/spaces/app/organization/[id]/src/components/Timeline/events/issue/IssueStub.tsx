@@ -33,10 +33,12 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
       boxShadow='none'
       border='1px solid'
       borderColor='gray.200'
+      transition='all 0.2s ease-out'
       _hover={{
         boxShadow: 'md',
         '& .footer:after': {
           borderBottomColor: '#e5e3e3',
+          transition: 'all 3s ease-out',
           background: 'linear-gradient(182deg, #dcd9d9, #ececec)',
         },
       }}

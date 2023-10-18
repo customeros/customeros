@@ -1,16 +1,10 @@
-import { CardHeader, CardBody } from '@ui/presentation/Card';
-import { Heading } from '@ui/typography/Heading';
+import { CardBody } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { IconButton } from '@ui/form/IconButton';
 import {
   useTimelineEventPreviewMethodsContext,
   useTimelineEventPreviewStateContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import { Link03 } from '@ui/media/icons/Link03';
-import { XClose } from '@ui/media/icons/XClose';
-import copy from 'copy-to-clipboard';
 import React from 'react';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 // import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
@@ -23,6 +17,7 @@ import { Divider, HStack } from '@chakra-ui/react';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import { toastError } from '@ui/presentation/Toast';
 import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';
+import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 
 function getStatusColor(status: string) {
   if (['closed', 'solved'].includes(status?.toLowerCase())) {
@@ -55,51 +50,12 @@ export const IssuePreviewModal: React.FC = () => {
 
   return (
     <>
-      <CardHeader
-        py='4'
-        px='6'
-        pb='1'
-        position='sticky'
-        top={0}
-        borderRadius='xl'
-      >
-        <Flex
-          direction='row'
-          justifyContent='space-between'
-          alignItems='center'
-        >
-          <Flex alignItems='center'>
-            <Heading size='sm' fontSize='lg'>
-              {issue?.subject ?? 'Issue'}
-            </Heading>
-          </Flex>
-          <Flex direction='row' justifyContent='flex-end' alignItems='center'>
-            <Tooltip label='Copy link' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Copy link to this issue'
-                color='gray.500'
-                fontSize='sm'
-                size='sm'
-                mr={1}
-                icon={<Link03 color='gray.500' boxSize='4' />}
-                onClick={() => copy(window.location.href)}
-              />
-            </Tooltip>
-            <Tooltip label='Close' aria-label='close' placement='bottom'>
-              <IconButton
-                variant='ghost'
-                aria-label='Close preview'
-                color='gray.500'
-                fontSize='sm'
-                size='sm'
-                icon={<XClose color='gray.500' boxSize='5' />}
-                onClick={closeModal}
-              />
-            </Tooltip>
-          </Flex>
-        </Flex>
-      </CardHeader>
+      <TimelineEventPreviewHeader
+        name={issue.subject ?? ''}
+        onClose={closeModal}
+        copyLabel='Copy link to this issue'
+      />
+
       <CardBody
         mt={0}
         maxHeight='calc(100vh - 9rem)'

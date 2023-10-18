@@ -17,6 +17,9 @@ export const getTextRendererStyles = (showAsInlineText?: boolean) => ({
     py: '1',
     my: '2',
   },
+  '& hr': {
+    paddingY: 2,
+  },
   '& blockquote': {
     position: 'relative',
     pl: showAsInlineText ? 0 : '3',
