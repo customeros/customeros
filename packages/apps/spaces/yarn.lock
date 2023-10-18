@@ -4889,14 +4889,6 @@
   dependencies:
     "@tanstack/query-core" "5.0.0"
 
-"@tanstack/query-sync-storage-persister@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/query-sync-storage-persister/-/query-sync-storage-persister-5.0.0.tgz#75739390461f306a251a13a52deb845203f41958"
-  integrity sha512-5BgMqggDSJiOAPFuy6ZYL3Oursls1ZIecv0uY0xL6IQQk5PGdbcexd1n6j3sH0+nWtvhEiBCYsV5QnXMZ0QZbQ==
-  dependencies:
-    "@tanstack/query-core" "5.0.0"
-    "@tanstack/query-persist-client-core" "5.0.0"
-
 "@tanstack/react-query-devtools@^4.29.19":
   version "4.32.6"
   resolved "https://registry.yarnpkg.com/@tanstack/react-query-devtools/-/react-query-devtools-4.32.6.tgz#651002855459f65304802595cce55b205831a250"

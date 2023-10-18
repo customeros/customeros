@@ -24,7 +24,6 @@
     "@remirror/pm": "^2.0.4",
     "@remirror/react": "^2.0.27",
     "@sentry/nextjs": "^7.37.0",
-    "@tanstack/query-sync-storage-persister": "^5.0.0",
     "@tanstack/react-query": "^4.29.19",
     "@tanstack/react-query-persist-client": "^5.0.0",
     "@tanstack/react-table": "^8.9.2",
