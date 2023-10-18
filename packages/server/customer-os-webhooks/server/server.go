@@ -136,8 +136,8 @@ func (server *server) Run(parentCtx context.Context) error {
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
 		rest.SyncContactHandler(serviceContainer, server.log))
 
-	r.GET("/health", healthCheckHandler)
-	r.GET("/readiness", healthCheckHandler)
+	r.GET("/health", HealthCheckHandler)
+	r.GET("/readiness", HealthCheckHandler)
 
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
 		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
@@ -165,7 +165,7 @@ func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, 
 	return
 }
 
-func healthCheckHandler(c *gin.Context) {
+func HealthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
