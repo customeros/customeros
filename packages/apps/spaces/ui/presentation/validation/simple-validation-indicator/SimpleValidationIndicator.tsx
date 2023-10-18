@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from './simple-validation-indicator.module.scss';
 import { InlineLoader } from '@ui/presentation/inline-loader';
-import CheckCircle from '@spaces/atoms/icons/CheckCircle';
 import {
   Popover,
   PopoverArrow,
@@ -13,6 +12,7 @@ import {
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 
+import CheckCircle from './assets/CheckCircle';
 interface Props {
   showValidationMessage: boolean;
   isLoading: boolean;
