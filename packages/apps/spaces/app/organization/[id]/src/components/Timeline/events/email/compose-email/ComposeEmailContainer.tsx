@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import {
   GetGoogleSettings,
   OAuthUserSettingsInterface,
-} from '../../../../../../../../../services/settings/settingsService';
+} from 'services/settings/settingsService';
 import { useSession } from 'next-auth/react';
 import {
   ComposeEmail,
   ComposeEmailProps,
 } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
-import { EmptyIssueMessage } from '@organization/src/components/Timeline/events/email/compose-email/MissingPermissionsMessage';
+import { MissingPermissionsPrompt } from '@organization/src/components/Timeline/shared/EmailPermissionsPrompt/EmailPermissionsPrompt';
 
 interface ComposeEmailContainerProps extends ComposeEmailProps {
   onClose: () => void;
@@ -22,18 +22,18 @@ export const ComposeEmailContainer: React.FC<ComposeEmailContainerProps> = ({
   const { data: session } = useSession();
   const [allowSendingEmail, setAllowSendingEmail] = useState<
     boolean | undefined
-  >(undefined);
+  >(true);
 
   useEffect(() => {
-    if (session) {
-      // @ts-expect-error look into it
-      GetGoogleSettings(session.user.playerIdentityId)
-        .then((res: OAuthUserSettingsInterface) => {
-          setAllowSendingEmail(res.gmailSyncEnabled);
-        })
-        .catch((e) => console.log(e));
-    }
-  }, [session]);
+    if (!session?.user?.playerIdentityId) return;
+    GetGoogleSettings(session.user.playerIdentityId)
+      .then((res: OAuthUserSettingsInterface) => {
+        setAllowSendingEmail(res.gmailSyncEnabled);
+      })
+      .catch((e) => {
+        // throw toast
+      });
+  }, [session?.user?.playerIdentityId]);
 
   if (allowSendingEmail) {
     return (
@@ -45,7 +45,7 @@ export const ComposeEmailContainer: React.FC<ComposeEmailContainerProps> = ({
 
   if (!allowSendingEmail) {
     return (
-      <EmptyIssueMessage
+      <MissingPermissionsPrompt
         modal={composeEmailProps.modal}
         onAllowSendingEmail={() => setAllowSendingEmail(true)}
       />

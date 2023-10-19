@@ -16,11 +16,12 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
+const hostname =
+  typeof window !== 'undefined' ? window?.location?.hostname : 'platform';
+
 export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
   const [persister] = useState(() =>
-    createIDBPersister(
-      `${sessionEmail ?? 'cos'}-${window?.location?.hostname}`,
-    ),
+    createIDBPersister(`${sessionEmail ?? 'cos'}-${hostname}`),
   );
   const [queryClient] = useState(
     () =>

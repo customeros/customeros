@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { Inbox01 } from '@ui/media/icons/Inbox01';
+import { Mail01 } from '@ui/media/icons/Mail01';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button';
 import { signIn } from 'next-auth/react';
@@ -10,7 +10,7 @@ import { toastError } from '@ui/presentation/Toast';
 import { Box } from '@chakra-ui/react';
 import { Google } from '@ui/media/logos/Google';
 
-export const EmptyIssueMessage: FC<{
+export const MissingPermissionsPrompt: FC<{
   onAllowSendingEmail: () => void;
   modal: boolean;
 }> = ({ onAllowSendingEmail, modal }) => {
@@ -27,7 +27,7 @@ export const EmptyIssueMessage: FC<{
     try {
       await signIn(
         'google',
-        { callbackUrl: '/settings?tab=oauth' },
+        { callbackUrl: window.location.href },
         {
           prompt: 'login',
           scope: scopes.join(' '),
@@ -53,9 +53,14 @@ export const EmptyIssueMessage: FC<{
       overflow='visible'
       maxHeight={modal ? '50vh' : 'auto'}
     >
-      <Flex direction='column' alignItems='center' bg='white' p={6}>
+      <Flex
+        direction='column'
+        alignItems='center'
+        bg={modal ? '#F8F9FC' : 'white'}
+        p={6}
+      >
         <FeaturedIcon size='md' minW='10' colorScheme='gray' mb={2}>
-          <Inbox01 color='gray.700' boxSize='6' />
+          <Mail01 color='gray.700' boxSize='6' />
         </FeaturedIcon>
         <Text color='gray.700' fontWeight={600} mb={1}>
           Allow CustomerOS to send emails
@@ -65,11 +70,7 @@ export const EmptyIssueMessage: FC<{
           To send emails, you need to allow CustomerOS to connect to your gmail
           account
         </Text>
-        <Button
-          onClick={signInWithScopes}
-          variant='outlined'
-          colorScheme='gray'
-        >
+        <Button variant='outline' colorScheme='gray' onClick={signInWithScopes}>
           <Google />
           Allow with google
         </Button>

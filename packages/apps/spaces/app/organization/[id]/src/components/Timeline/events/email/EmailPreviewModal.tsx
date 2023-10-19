@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { CardBody } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
@@ -7,7 +7,6 @@ import {
   useTimelineEventPreviewStateContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
-import { ComposeEmail } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import Image from 'next/image';
 import { useForm } from 'react-inverted-form';
@@ -27,16 +26,10 @@ import { InteractionEvent } from '@graphql/types';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
-import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { VirtuosoHandle } from 'react-virtuoso';
-import { EmptyIssueMessage } from '@organization/src/components/Timeline/events/email/compose-email/MissingPermissionsMessage';
-import {
-  GetGoogleSettings,
-  OAuthUserSettingsInterface,
-} from '../../../../../../../../services/settings/settingsService';
 import { ComposeEmailContainer } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmailContainer';
 
 const REPLY_MODE = 'reply';
