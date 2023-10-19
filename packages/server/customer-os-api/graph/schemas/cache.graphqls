@@ -5,6 +5,7 @@ extend type Query {
 type GlobalCache {
     user: User!
     isOwner: Boolean!
-    gmailOauthTokenNeedsManualRefresh: Boolean!
+    isGoogleActive: Boolean!
+    isGoogleTokenExpired: Boolean!
     gCliCache: [GCliItem!]!
 }

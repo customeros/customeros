@@ -43,14 +43,15 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	response.IsOwner = *isOwner
 
 	if userEmail != "" {
-		gmailTokenNeedsManualRefresh, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetForEmail("google", tenantName, userEmail)
+		userGoogleOauthToken, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetForEmail("google", tenantName, userEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
 			return nil, err
 		}
-		if gmailTokenNeedsManualRefresh != nil {
-			response.GmailOauthTokenNeedsManualRefresh = gmailTokenNeedsManualRefresh.NeedsManualRefresh
+		if userGoogleOauthToken != nil {
+			response.IsGoogleActive = userGoogleOauthToken.GmailSyncEnabled
+			response.IsGoogleTokenExpired = userGoogleOauthToken.NeedsManualRefresh
 		}
 	}
 
