@@ -170,12 +170,14 @@ export default function OrganizationsPage() {
         sorting={sorting}
         enableTableActions
         enableRowSelection
-        isLoading={isRestoring || isLoading}
+        isLoading={isRestoring ? false : isLoading}
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
         totalItems={
-          data?.pages?.[0].dashboardView_Organizations?.totalElements || 0
+          isRestoring
+            ? 40
+            : data?.pages?.[0].dashboardView_Organizations?.totalElements || 0
         }
         renderTableActions={(table) => (
           <TableActions
