@@ -28,7 +28,6 @@ export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60 * 1, // 1 minutes
             cacheTime: 1000 * 60 * 60 * 24, // 24 hours
           },
         },

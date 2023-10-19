@@ -3,6 +3,7 @@ import React, { ChangeEvent, useEffect, useState } from 'react';
 import axios from 'axios';
 import { GetServerSidePropsContext } from 'next';
 import { getServerSession } from 'next-auth/next';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Card, CardBody, CardHeader } from '@ui/layout/Card';
@@ -14,6 +15,7 @@ import { Switch } from '@ui/form/Switch';
 import { Flex } from '@ui/layout/Flex';
 import { HStack, VStack } from '@ui/layout/Stack';
 import { Spinner } from '@ui/feedback/Spinner';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { FormLabel } from '@ui/form/FormElement';
 import { Icons } from '@ui/media/Icon';
@@ -30,6 +32,7 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 export const AuthPanel = () => {
   const router = useRouter();
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
 
   const queryParams = useSearchParams();
 
@@ -118,6 +121,7 @@ export const AuthPanel = () => {
             .then((res: OAuthUserSettingsInterface) => {
               setGoogleSettings(res);
               setGoogleSettingsLoading(false);
+              queryClient.invalidateQueries(useGlobalCacheQuery.getKey());
             })
             .catch(() => {
               setGoogleSettingsLoading(false);

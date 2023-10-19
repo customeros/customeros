@@ -11,9 +11,8 @@ import { Box } from '@chakra-ui/react';
 import { Google } from '@ui/media/logos/Google';
 
 export const MissingPermissionsPrompt: FC<{
-  onAllowSendingEmail: () => void;
   modal: boolean;
-}> = ({ onAllowSendingEmail, modal }) => {
+}> = ({ modal }) => {
   const signInWithScopes = async () => {
     const scopes = [
       'openid',
@@ -33,7 +32,6 @@ export const MissingPermissionsPrompt: FC<{
           scope: scopes.join(' '),
         },
       );
-      onAllowSendingEmail();
     } catch (error) {
       Sentry.captureException(`Unable to sign in with scopes: ${error}`);
       toastError('Something went wrong!', `unable-to-sign-in-with-scopes`);

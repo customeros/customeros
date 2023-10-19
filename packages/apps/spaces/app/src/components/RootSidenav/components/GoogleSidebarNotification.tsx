@@ -23,7 +23,7 @@ export const GoogleSidebarNotification = () => {
   const infoModal = useDisclosure();
 
   const requestAccess = () => {
-    // @ts-expect-error look into it
+    if (!session) return;
     GetGoogleSettings(session.user.playerIdentityId).then(
       async (res: OAuthUserSettingsInterface) => {
         const scopes = ['openid', 'email', 'profile'];
@@ -51,7 +51,7 @@ export const GoogleSidebarNotification = () => {
 
   return (
     <>
-      {globalCacheQuery?.global_Cache?.gmailOauthTokenNeedsManualRefresh && (
+      {globalCacheQuery?.global_Cache?.isGoogleTokenExpired && (
         <>
           <ConfirmDeleteDialog
             colorScheme={'purple'}

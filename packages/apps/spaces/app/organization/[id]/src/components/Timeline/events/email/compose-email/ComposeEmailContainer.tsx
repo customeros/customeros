@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import {
-  GetGoogleSettings,
-  OAuthUserSettingsInterface,
-} from 'services/settings/settingsService';
-import { useSession } from 'next-auth/react';
+import React from 'react';
+
 import {
   ComposeEmail,
   ComposeEmailProps,
 } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { MissingPermissionsPrompt } from '@organization/src/components/Timeline/shared/EmailPermissionsPrompt/EmailPermissionsPrompt';
 
@@ -19,21 +17,9 @@ export const ComposeEmailContainer: React.FC<ComposeEmailContainerProps> = ({
   onClose,
   ...composeEmailProps
 }) => {
-  const { data: session } = useSession();
-  const [allowSendingEmail, setAllowSendingEmail] = useState<
-    boolean | undefined
-  >(true);
-
-  useEffect(() => {
-    if (!session?.user?.playerIdentityId) return;
-    GetGoogleSettings(session.user.playerIdentityId)
-      .then((res: OAuthUserSettingsInterface) => {
-        setAllowSendingEmail(res.gmailSyncEnabled);
-      })
-      .catch((e) => {
-        // throw toast
-      });
-  }, [session?.user?.playerIdentityId]);
+  const client = getGraphQLClient();
+  const { data: globalCache } = useGlobalCacheQuery(client);
+  const allowSendingEmail = globalCache?.global_Cache?.isGoogleActive;
 
   if (allowSendingEmail) {
     return (
@@ -44,12 +30,7 @@ export const ComposeEmailContainer: React.FC<ComposeEmailContainerProps> = ({
   }
 
   if (!allowSendingEmail) {
-    return (
-      <MissingPermissionsPrompt
-        modal={composeEmailProps.modal}
-        onAllowSendingEmail={() => setAllowSendingEmail(true)}
-      />
-    );
+    return <MissingPermissionsPrompt modal={composeEmailProps.modal} />;
   }
 
   return null;
