@@ -98,7 +98,7 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 		if i >= maxRetries-1 {
 			zap.L().With(
 				zap.String("accessMode", accessModeStr),
-			).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
+			).Sugar().Errorf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
 		}
 	}
 	zap.L().With(
