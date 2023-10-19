@@ -10,6 +10,7 @@ export const TimelineActionsArea: React.FC = () => {
   return (
     <Box
       bg={'#F9F9FB'}
+      borderTop='1px dashed'
       borderTopColor='gray.200'
       pt={openedEditor !== null ? 6 : 0}
       pb={openedEditor !== null ? 2 : 8}

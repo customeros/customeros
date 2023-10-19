@@ -205,12 +205,6 @@ export const IntegrationsPanel = () => {
                   const option = integration.key;
                   const isFromIApp = availableIntegrations.includes(option);
 
-                  console.log(
-                    option,
-                    isFromIApp,
-                    integration.isFromIntegrationApp,
-                  );
-
                   return (
                     <SettingsIntegrationItem
                       key={integration.key}

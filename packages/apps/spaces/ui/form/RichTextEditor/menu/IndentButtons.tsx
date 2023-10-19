@@ -14,14 +14,14 @@ export const IndentButtons = () => {
         onClick={() => {
           commands.decreaseIndent();
         }}
-        icon={<RightIndent color='inherit' />}
+        icon={<RightIndent color='gray.400' />}
       />
       <ToolbarButton
         label='Outdent'
         onClick={() => {
           commands.increaseIndent();
         }}
-        icon={<LeftIndent color='inherit' />}
+        icon={<LeftIndent color='gray.400' />}
       />
     </Flex>
   );

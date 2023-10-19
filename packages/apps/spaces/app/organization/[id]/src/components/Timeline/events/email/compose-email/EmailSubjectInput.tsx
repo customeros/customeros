@@ -25,6 +25,7 @@ export const EmailSubjectInput: FC<EmailSubjectInput> = ({
         formId={formId}
         color='gray.500'
         height={5}
+        fontSize='inherit'
         border='none'
         _hover={{ border: 'none !important' }}
         _active={{ border: 'none !important' }}

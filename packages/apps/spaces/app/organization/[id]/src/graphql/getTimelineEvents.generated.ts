@@ -62,6 +62,13 @@ export type GetTimelineEventsQuery = {
           __typename?: 'InteractionSession';
           name: string;
         } | null;
+        includes: Array<{
+          __typename?: 'Attachment';
+          id: string;
+          mimeType: string;
+          name: string;
+          extension: string;
+        }>;
         issue?: {
           __typename?: 'Issue';
           externalLinks: Array<{
@@ -72,6 +79,12 @@ export type GetTimelineEventsQuery = {
           }>;
         } | null;
         repliesTo?: { __typename?: 'InteractionEvent'; id: string } | null;
+        externalLinks: Array<{
+          __typename?: 'ExternalSystem';
+          type: Types.ExternalSystemType;
+          externalUrl?: string | null;
+          externalSource?: string | null;
+        }>;
         summary?: {
           __typename?: 'Analysis';
           id: string;
@@ -83,6 +96,154 @@ export type GetTimelineEventsQuery = {
           id: string;
           content: string;
         }> | null;
+        sentBy: Array<
+          | {
+              __typename: 'ContactParticipant';
+              contactParticipant: {
+                __typename?: 'Contact';
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                profilePhotoUrl?: string | null;
+              };
+            }
+          | {
+              __typename: 'EmailParticipant';
+              type?: string | null;
+              emailParticipant: {
+                __typename?: 'Email';
+                email?: string | null;
+                id: string;
+                contacts: Array<{
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                }>;
+                users: Array<{
+                  __typename?: 'User';
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                }>;
+                organizations: Array<{
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                }>;
+              };
+            }
+          | {
+              __typename: 'JobRoleParticipant';
+              jobRoleParticipant: {
+                __typename?: 'JobRole';
+                id: string;
+                contact?: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                } | null;
+              };
+            }
+          | {
+              __typename: 'OrganizationParticipant';
+              organizationParticipant: {
+                __typename?: 'Organization';
+                id: string;
+                name: string;
+              };
+            }
+          | { __typename?: 'PhoneNumberParticipant' }
+          | {
+              __typename: 'UserParticipant';
+              userParticipant: {
+                __typename?: 'User';
+                id: string;
+                firstName: string;
+                lastName: string;
+                profilePhotoUrl?: string | null;
+              };
+            }
+        >;
+        sentTo: Array<
+          | {
+              __typename: 'ContactParticipant';
+              contactParticipant: {
+                __typename?: 'Contact';
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                profilePhotoUrl?: string | null;
+              };
+            }
+          | {
+              __typename: 'EmailParticipant';
+              type?: string | null;
+              emailParticipant: {
+                __typename?: 'Email';
+                email?: string | null;
+                id: string;
+                contacts: Array<{
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                }>;
+                users: Array<{
+                  __typename?: 'User';
+                  id: string;
+                  firstName: string;
+                  lastName: string;
+                }>;
+                organizations: Array<{
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                }>;
+              };
+            }
+          | {
+              __typename: 'JobRoleParticipant';
+              jobRoleParticipant: {
+                __typename?: 'JobRole';
+                id: string;
+                contact?: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                } | null;
+              };
+            }
+          | {
+              __typename: 'OrganizationParticipant';
+              organizationParticipant: {
+                __typename?: 'Organization';
+                id: string;
+                name: string;
+              };
+            }
+          | { __typename: 'PhoneNumberParticipant' }
+          | {
+              __typename: 'UserParticipant';
+              userParticipant: {
+                __typename?: 'User';
+                id: string;
+                firstName: string;
+                lastName: string;
+                profilePhotoUrl?: string | null;
+              };
+            }
+        >;
       }
     | { __typename: 'InteractionSession' }
     | {
@@ -392,6 +553,12 @@ export const GetTimelineEventsDocument = `
       }
       content
       contentType
+      includes {
+        id
+        mimeType
+        name
+        extension
+      }
       issue {
         externalLinks {
           type
@@ -402,6 +569,11 @@ export const GetTimelineEventsDocument = `
       repliesTo {
         id
       }
+      externalLinks {
+        type
+        externalUrl
+        externalSource
+      }
       summary {
         id
         content
@@ -410,6 +582,13 @@ export const GetTimelineEventsDocument = `
       actionItems {
         id
         content
+      }
+      sentBy {
+        ...InteractionEventParticipantFragment
+      }
+      sentTo {
+        __typename
+        ...InteractionEventParticipantFragment
       }
     }
     ... on Issue {
