@@ -42,7 +42,6 @@ func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.S
 	AddQueryRoutes(route, services.CustomerOsService, services.RedisService)
 
 	addWebSocketRoutes(route, config.WebChat.PingInterval, hub)
-	addCallCredentialRoutes(route, config)
 	route2 := router.Group("/")
 
 	addHealthRoutes(route2)
