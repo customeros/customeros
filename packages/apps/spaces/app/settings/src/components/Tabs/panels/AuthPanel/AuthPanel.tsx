@@ -46,7 +46,7 @@ export const AuthPanel = () => {
 
       axios
         .post(`/ua/slack/oauth/callback?code=${queryParams.get('code')}`)
-        .then(({ data, error }: any) => {
+        .then(({ data }) => {
           GetSlackSettings().then((res: SlackSettingsInterface) => {
             setSlackSettings(res);
             setSlackSettingsLoading(false);
@@ -80,7 +80,6 @@ export const AuthPanel = () => {
   useEffect(() => {
     if (session) {
       setGoogleSettingsLoading(true);
-      // @ts-expect-error look into it
       GetGoogleSettings(session.user.playerIdentityId).then(
         (res: OAuthUserSettingsInterface) => {
           setGoogleSettings(res);
@@ -102,7 +101,7 @@ export const AuthPanel = () => {
     ];
 
     if ((event.target as HTMLInputElement).checked) {
-      const res = await signIn(
+      const _ = await signIn(
         'google',
         { callbackUrl: '/settings?tab=oauth' },
         {
@@ -115,7 +114,7 @@ export const AuthPanel = () => {
         // @ts-expect-error look into it
         providerAccountId: session.user.playerIdentityId,
       })
-        .then((data: any) => {
+        .then((data) => {
           // @ts-expect-error look into it
           GetGoogleSettings(session.user.playerIdentityId)
             .then((res: OAuthUserSettingsInterface) => {
@@ -151,7 +150,7 @@ export const AuthPanel = () => {
     if ((event.target as HTMLInputElement).checked) {
       axios
         .get(`/ua/slack/requestAccess`)
-        .then(({ data, error }: any) => {
+        .then(({ data }) => {
           location.href = data.url;
         })
         .catch((reason) => {
@@ -163,7 +162,7 @@ export const AuthPanel = () => {
         });
     } else {
       RevokeAccess('slack')
-        .then((data: any) => {
+        .then((data) => {
           GetSlackSettings()
             .then((res: SlackSettingsInterface) => {
               setSlackSettings(res);
