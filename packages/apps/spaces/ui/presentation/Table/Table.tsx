@@ -17,7 +17,6 @@ import type {
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { Center } from '@ui/layout/Center';
-import { Fade } from '@ui/transitions/Fade';
 import { Checkbox } from '@ui/form/Checkbox';
 import { Flex, FlexProps } from '@ui/layout/Flex';
 
@@ -190,18 +189,12 @@ export const Table = <T extends object>({
                         ?.colSpan ?? '1'
                     }
                   >
-                    {row ? (
-                      <Fade in={!!row}>
-                        {flexRender(
+                    {row
+                      ? flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
-                        )}
-                      </Fade>
-                    ) : (
-                      <Fade in={!row}>
-                        {cell.column.columnDef?.skeleton?.()}
-                      </Fade>
-                    )}
+                        )
+                      : cell.column.columnDef?.skeleton?.()}
                   </TCell>
                 ))}
               </TRow>
@@ -263,36 +256,34 @@ const TCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
 
 const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   return (
-    <Fade in>
-      <Flex
-        ref={ref}
-        bg='gray.25'
-        overflow='auto'
-        flexDir='column'
-        borderRadius='2xl'
-        borderStyle='hidden'
-        border='1px solid'
-        borderColor='gray.200'
-        height='calc(100vh - 74px)'
-        sx={{
-          '&::-webkit-scrollbar': {
-            width: '4px',
-            height: '4px',
-            background: 'transparent',
-          },
-          '&::-webkit-scrollbar-track': {
-            width: '4px',
-            height: '4px',
-            background: 'transparent',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'gray.500',
-            borderRadius: '8px',
-          },
-        }}
-        {...props}
-      />
-    </Fade>
+    <Flex
+      ref={ref}
+      bg='gray.25'
+      overflow='auto'
+      flexDir='column'
+      borderRadius='2xl'
+      borderStyle='hidden'
+      border='1px solid'
+      borderColor='gray.200'
+      height='calc(100vh - 74px)'
+      sx={{
+        '&::-webkit-scrollbar': {
+          width: '4px',
+          height: '4px',
+          background: 'transparent',
+        },
+        '&::-webkit-scrollbar-track': {
+          width: '4px',
+          height: '4px',
+          background: 'transparent',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'gray.500',
+          borderRadius: '8px',
+        },
+      }}
+      {...props}
+    />
   );
 });
 

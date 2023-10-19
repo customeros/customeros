@@ -4,22 +4,24 @@ import { useState } from 'react';
 import { RecoilRoot } from 'recoil';
 import { QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import {
-  PersistQueryClientProvider,
-  Persister,
-} from '@tanstack/react-query-persist-client';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 
-import { createIDBPersister } from '@shared/util/createIDBPersister';
+import { createIDBPersister } from '@shared/util/indexedDBPersister';
 import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvider';
 
 import { NextAuthProvider } from './SessionProvider';
 
-let persister: Persister;
-if (typeof window !== 'undefined') {
-  persister = createIDBPersister(`cos-${window?.location?.hostname}`);
+interface ProvidersProps {
+  sessionEmail?: string | null;
+  children: React.ReactNode;
 }
 
-export const Providers = ({ children }: { children: React.ReactNode }) => {
+export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
+  const [persister] = useState(() =>
+    createIDBPersister(
+      `${sessionEmail ?? 'cos'}-${window?.location?.hostname}`,
+    ),
+  );
   const [queryClient] = useState(
     () =>
       new QueryClient({

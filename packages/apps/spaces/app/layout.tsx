@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Script from 'next/script';
 import localFont from 'next/font/local';
+import { getServerSession } from 'next-auth';
 import { ToastContainer } from 'react-toastify';
 
 import { Providers } from './src/components/Providers/Providers';
@@ -31,6 +32,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession();
+
   return (
     <html lang='en' className={barlow.variable} data-theme='light'>
       <Script
@@ -75,7 +78,7 @@ export default async function RootLayout({
 
       <body className='scrollbar'>
         <ThemeProvider>
-          <Providers>
+          <Providers sessionEmail={session?.user?.email}>
             {children}
             <ToastContainer
               position='bottom-right'
