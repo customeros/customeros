@@ -65,5 +65,8 @@
     "remark-code-titles": "^0.1.2",
     "tailwindcss": "^3.3.2",
     "typescript": "^5.0.4"
+  },
+  "resolutions": {
+    "postcss": "8.4.31"
   }
 }
