@@ -33,10 +33,10 @@ func main() {
 	go func() {
 		select {
 		case <-sigChan:
-			appLogger.Info("Interrupt signal received. Shutting down...")
+			appLogger.Warn("Interrupt signal received. Shutting down...")
 			cancel()
 		case <-ctx.Done():
-			// Do nothing
+			appLogger.Warn("Context canceled. Shutting down...")
 		}
 	}()
 
