@@ -10,6 +10,12 @@ query getTimelineEvents($ids: [ID!]!) {
       }
       content
       contentType
+      includes {
+        id
+        mimeType
+        name
+        extension
+      }
       issue {
         externalLinks {
           type
@@ -20,6 +26,11 @@ query getTimelineEvents($ids: [ID!]!) {
       repliesTo {
         id
       }
+      externalLinks {
+        type
+        externalUrl
+        externalSource
+      }
       summary {
         id
         content
@@ -29,6 +40,14 @@ query getTimelineEvents($ids: [ID!]!) {
         id
         content
       }
+      sentBy {
+        ...InteractionEventParticipantFragment
+      }
+      sentTo {
+        __typename
+        ...InteractionEventParticipantFragment
+      }
+
     }
     ... on Issue {
       __typename
