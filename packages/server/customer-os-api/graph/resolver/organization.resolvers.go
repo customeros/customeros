@@ -172,6 +172,15 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
+	_, err := r.Services.OrganizationService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Organization not found")
+		return &model.Organization{
+			ID: input.ID,
+		}, nil
+	}
+
 	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
 		Tenant:            common.GetTenantFromContext(ctx),
 		LoggedInUserId:    common.GetUserIdFromContext(ctx),
@@ -211,7 +220,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		graphql.AddErrorf(ctx, "Failed to fetch organization details")
 		return &model.Organization{
 			ID: response.Id,
-		}, err
+		}, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }

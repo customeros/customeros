@@ -67,6 +67,27 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 	if accessMode == neo4j.AccessModeWrite {
 		accessModeStr = "write"
 	}
+
+	if err := ctx.Err(); errors.Is(err, context.Canceled) {
+		zap.L().With(
+			zap.String("accessMode", accessModeStr),
+			zap.String("ctxErr", err.Error()),
+		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by calling the cancel function")
+		return nil
+	} else if errors.Is(err, context.DeadlineExceeded) {
+		zap.L().With(
+			zap.String("accessMode", accessModeStr),
+			zap.String("ctxErr", err.Error()),
+		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by deadline exceeded")
+		return nil
+	} else if err != nil {
+		zap.L().With(
+			zap.String("accessMode", accessModeStr),
+			zap.String("ctxErr", err.Error()),
+		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by another error")
+		return nil
+	}
+
 	maxRetries := 5
 	for i := 0; i < maxRetries; i++ {
 		err := driver.VerifyConnectivity(ctx)
@@ -74,7 +95,7 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 			break
 		}
 		time.Sleep(100 * time.Millisecond)
-		if i == maxRetries-1 {
+		if i >= maxRetries-1 {
 			zap.L().With(
 				zap.String("accessMode", accessModeStr),
 			).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
