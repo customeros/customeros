@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Box } from '@ui/layout/Box';
-import { ComposeEmail } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
+import { ComposeEmailContainer } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmailContainer';
 import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
 import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
@@ -48,9 +48,10 @@ export const EmailTimelineAction: React.FC = () => {
           border='1px solid'
           borderColor='gray.100'
         >
-          <ComposeEmail
+          <ComposeEmailContainer
             formId={formId}
             modal={false}
+            onClose={handleClose}
             to={state.values.to}
             cc={state.values.cc}
             bcc={state.values.bcc}
@@ -59,7 +60,7 @@ export const EmailTimelineAction: React.FC = () => {
             remirrorProps={remirrorProps}
           >
             <KeymapperClose onClose={handleClose} />
-          </ComposeEmail>
+          </ComposeEmailContainer>
         </Box>
       )}
     </>

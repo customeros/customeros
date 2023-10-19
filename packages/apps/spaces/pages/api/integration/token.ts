@@ -36,7 +36,9 @@ export default async function handler(
       .json({ message: 'Missing integration app credentials' });
   }
 
-  const token = jwt.sign(tokenData, WORKSPACE_SECRET, options);
+  const token = jwt.sign(tokenData, WORKSPACE_SECRET, {
+    ...options,
+  });
 
   res.status(200).json({ token });
 }

@@ -16,18 +16,18 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
+const hostname =
+  typeof window !== 'undefined' ? window?.location?.hostname : 'platform';
+
 export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
   const [persister] = useState(() =>
-    createIDBPersister(
-      `${sessionEmail ?? 'cos'}-${window?.location?.hostname}`,
-    ),
+    createIDBPersister(`${sessionEmail ?? 'cos'}-${hostname}`),
   );
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60 * 1, // 1 minutes
             cacheTime: 1000 * 60 * 60 * 24, // 24 hours
           },
         },

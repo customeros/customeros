@@ -7,7 +7,6 @@ import {
   useTimelineEventPreviewStateContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
-import { ComposeEmail } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import Image from 'next/image';
 import { useForm } from 'react-inverted-form';
@@ -27,11 +26,11 @@ import { InteractionEvent } from '@graphql/types';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
-import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { VirtuosoHandle } from 'react-virtuoso';
+import { ComposeEmailContainer } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmailContainer';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -269,7 +268,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             <HtmlContentRenderer htmlContent={event.content} />
           )}
         </CardBody>
-        <ComposeEmail
+
+        <ComposeEmailContainer
           formId={formId}
           onModeChange={handleModeChange}
           modal
@@ -279,9 +279,9 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onSubmit={handleSubmit}
           isSending={isSending}
           remirrorProps={remirrorProps}
-        >
-          <KeymapperClose onClose={handleClosePreview} />
-        </ComposeEmail>
+          onClose={handleClosePreview}
+        />
+
         <ConfirmDeleteDialog
           label='Discard this email?'
           description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'

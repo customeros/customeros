@@ -10,7 +10,8 @@ query global_Cache {
       firstName
       lastName
     }
-    gmailOauthTokenNeedsManualRefresh
+    isGoogleActive
+    isGoogleTokenExpired
     isOwner
     gCliCache {
       id

@@ -277,13 +277,12 @@ export type ContactInput = {
    */
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   description?: InputMaybe<Scalars['String']>;
-  /** An email addresses associted with the contact. */
+  /** An email addresses associated with the contact. */
   email?: InputMaybe<EmailInput>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   /** The first name of the contact. */
   firstName?: InputMaybe<Scalars['String']>;
-  label?: InputMaybe<Scalars['String']>;
   /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
@@ -807,7 +806,8 @@ export enum GCliSearchResultType {
 export type GlobalCache = {
   __typename?: 'GlobalCache';
   gCliCache: Array<GCliItem>;
-  gmailOauthTokenNeedsManualRefresh: Scalars['Boolean'];
+  isGoogleActive: Scalars['Boolean'];
+  isGoogleTokenExpired: Scalars['Boolean'];
   isOwner: Scalars['Boolean'];
   user: User;
 };
@@ -846,6 +846,8 @@ export type InteractionEventInput = {
   createdAt?: InputMaybe<Scalars['Time']>;
   eventIdentifier?: InputMaybe<Scalars['String']>;
   eventType?: InputMaybe<Scalars['String']>;
+  externalId?: InputMaybe<Scalars['String']>;
+  externalSystemId?: InputMaybe<Scalars['String']>;
   interactionSession?: InputMaybe<Scalars['ID']>;
   meetingId?: InputMaybe<Scalars['ID']>;
   repliesTo?: InputMaybe<Scalars['ID']>;
@@ -2392,7 +2394,7 @@ export type Query = {
   contacts: ContactsPage;
   /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE */
   dashboardView_Contacts?: Maybe<ContactsPage>;
-  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
