@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import jwt from 'jsonwebtoken';
+import jwt, {SignOptions} from 'jsonwebtoken';
 
 const WORKSPACE_KEY = process.env.INTEGRATION_APP_WORKSPACE_KEY;
 const WORKSPACE_SECRET = process.env.INTEGRATION_APP_WORKSPACE_SECRET;
@@ -18,7 +18,8 @@ export default async function handler(
   const options = {
     issuer: WORKSPACE_KEY,
     expiresIn: 7200,
-  };
+    algorithm: 'HS256'
+  } as SignOptions;
 
   if (!tenant) {
     return res.status(500).json({ message: 'Missing tenant query param' });

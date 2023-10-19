@@ -314,10 +314,11 @@ type ComplexityRoot struct {
 	}
 
 	GlobalCache struct {
-		GCliCache                         func(childComplexity int) int
-		GmailOauthTokenNeedsManualRefresh func(childComplexity int) int
-		IsOwner                           func(childComplexity int) int
-		User                              func(childComplexity int) int
+		GCliCache            func(childComplexity int) int
+		IsGoogleActive       func(childComplexity int) int
+		IsGoogleTokenExpired func(childComplexity int) int
+		IsOwner              func(childComplexity int) int
+		User                 func(childComplexity int) int
 	}
 
 	InteractionEvent struct {
@@ -2458,12 +2459,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalCache.GCliCache(childComplexity), true
 
-	case "GlobalCache.gmailOauthTokenNeedsManualRefresh":
-		if e.complexity.GlobalCache.GmailOauthTokenNeedsManualRefresh == nil {
+	case "GlobalCache.isGoogleActive":
+		if e.complexity.GlobalCache.IsGoogleActive == nil {
 			break
 		}
 
-		return e.complexity.GlobalCache.GmailOauthTokenNeedsManualRefresh(childComplexity), true
+		return e.complexity.GlobalCache.IsGoogleActive(childComplexity), true
+
+	case "GlobalCache.isGoogleTokenExpired":
+		if e.complexity.GlobalCache.IsGoogleTokenExpired == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.IsGoogleTokenExpired(childComplexity), true
 
 	case "GlobalCache.isOwner":
 		if e.complexity.GlobalCache.IsOwner == nil {
@@ -6957,7 +6965,8 @@ input AttachmentInput {
 type GlobalCache {
     user: User!
     isOwner: Boolean!
-    gmailOauthTokenNeedsManualRefresh: Boolean!
+    isGoogleActive: Boolean!
+    isGoogleTokenExpired: Boolean!
     gCliCache: [GCliItem!]!
 }`, BuiltIn: false},
 	{Name: "../schemas/calendar.graphqls", Input: `"""
@@ -7274,7 +7283,7 @@ input ContactUpdateInput {
     label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
 
     "Id of the contact owner (user)"
-    ownerId: ID
+    ownerId: ID @deprecated(reason: "Not supported in update flow yet")
 }
 
 input ContactTagInput {
@@ -21046,8 +21055,8 @@ func (ec *executionContext) fieldContext_GlobalCache_isOwner(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _GlobalCache_gmailOauthTokenNeedsManualRefresh(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GlobalCache_gmailOauthTokenNeedsManualRefresh(ctx, field)
+func (ec *executionContext) _GlobalCache_isGoogleActive(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_isGoogleActive(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -21060,7 +21069,7 @@ func (ec *executionContext) _GlobalCache_gmailOauthTokenNeedsManualRefresh(ctx c
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.GmailOauthTokenNeedsManualRefresh, nil
+		return obj.IsGoogleActive, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -21077,7 +21086,51 @@ func (ec *executionContext) _GlobalCache_gmailOauthTokenNeedsManualRefresh(ctx c
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GlobalCache_gmailOauthTokenNeedsManualRefresh(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GlobalCache_isGoogleActive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_isGoogleTokenExpired(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_isGoogleTokenExpired(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsGoogleTokenExpired, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_isGoogleTokenExpired(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GlobalCache",
 		Field:      field,
@@ -47277,8 +47330,10 @@ func (ec *executionContext) fieldContext_Query_global_Cache(ctx context.Context,
 				return ec.fieldContext_GlobalCache_user(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_GlobalCache_isOwner(ctx, field)
-			case "gmailOauthTokenNeedsManualRefresh":
-				return ec.fieldContext_GlobalCache_gmailOauthTokenNeedsManualRefresh(ctx, field)
+			case "isGoogleActive":
+				return ec.fieldContext_GlobalCache_isGoogleActive(ctx, field)
+			case "isGoogleTokenExpired":
+				return ec.fieldContext_GlobalCache_isGoogleTokenExpired(ctx, field)
 			case "gCliCache":
 				return ec.fieldContext_GlobalCache_gCliCache(ctx, field)
 			}
@@ -62274,8 +62329,13 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "gmailOauthTokenNeedsManualRefresh":
-			out.Values[i] = ec._GlobalCache_gmailOauthTokenNeedsManualRefresh(ctx, field, obj)
+		case "isGoogleActive":
+			out.Values[i] = ec._GlobalCache_isGoogleActive(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isGoogleTokenExpired":
+			out.Values[i] = ec._GlobalCache_isGoogleTokenExpired(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
