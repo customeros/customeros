@@ -3636,6 +3636,7 @@ span.slack_code {
   /* The following makes it easier to measure components within the editor. */
   box-sizing: border-box;
   z-index: 5;
+  color: var(--chakra-colors-gray-700);
 }
 
 .remirror-theme *,
@@ -3645,7 +3646,6 @@ span.slack_code {
    * https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/
    * */
   box-sizing: inherit;
-  color: var(--chakra-colors-gray-700);
 }
 
 .remirror-theme {

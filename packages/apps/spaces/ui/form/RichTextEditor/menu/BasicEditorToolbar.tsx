@@ -38,7 +38,7 @@ export const BasicEditorToolbar: FC<{
             focus();
           }}
           isActive={active.blockquote()}
-          icon={<Quote color='inherit' />}
+          icon={<Quote color='gray.400' />}
         />
       </HStack>
       <Button
