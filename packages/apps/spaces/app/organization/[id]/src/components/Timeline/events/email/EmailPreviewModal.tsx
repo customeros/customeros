@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CardBody } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
@@ -32,6 +32,12 @@ import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timelin
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { VirtuosoHandle } from 'react-virtuoso';
+import { EmptyIssueMessage } from '@organization/src/components/Timeline/events/email/compose-email/MissingPermissionsMessage';
+import {
+  GetGoogleSettings,
+  OAuthUserSettingsInterface,
+} from '../../../../../../../../services/settings/settingsService';
+import { ComposeEmailContainer } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmailContainer';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -269,7 +275,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
             <HtmlContentRenderer htmlContent={event.content} />
           )}
         </CardBody>
-        <ComposeEmail
+
+        <ComposeEmailContainer
           formId={formId}
           onModeChange={handleModeChange}
           modal
@@ -279,9 +286,9 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           onSubmit={handleSubmit}
           isSending={isSending}
           remirrorProps={remirrorProps}
-        >
-          <KeymapperClose onClose={handleClosePreview} />
-        </ComposeEmail>
+          onClose={handleClosePreview}
+        />
+
         <ConfirmDeleteDialog
           label='Discard this email?'
           description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'

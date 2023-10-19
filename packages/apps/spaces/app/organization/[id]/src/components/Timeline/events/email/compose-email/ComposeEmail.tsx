@@ -12,7 +12,7 @@ import {
 } from '@ui/form/RichTextEditor/types';
 import { KeymapperCreate } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperCreate';
 
-interface ComposeEmail extends PropsWithChildren {
+export interface ComposeEmailProps extends PropsWithChildren {
   onModeChange?: (status: 'reply' | 'reply-all' | 'forward') => void;
   onSubmit: () => void;
   formId: string;
@@ -24,7 +24,7 @@ interface ComposeEmail extends PropsWithChildren {
   remirrorProps: RemirrorProps<BasicEditorExtentions>;
 }
 
-export const ComposeEmail: FC<ComposeEmail> = ({
+export const ComposeEmail: FC<ComposeEmailProps> = ({
   onModeChange,
   formId,
   modal,
