@@ -41,7 +41,9 @@ export const LastTouchpointCell = ({
     .with({ __typename: 'LogEntry' }, (event) => [
       `Log entry${
         !!event.createdBy?.firstName || !!event.createdBy?.lastName
-          ? ` by ${event.createdBy?.firstName} ${event.createdBy?.lastName}`.trim()
+          ? ` by ${[event.createdBy?.firstName, event.createdBy?.lastName]
+              .join(' ')
+              .trim()}`
           : ''
       }`,
       MessageChatSquare,
