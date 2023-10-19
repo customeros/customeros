@@ -457,86 +457,6 @@ func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
 		[]string{organizationsPageStruct.DashboardView_Organizations.Content[0].ID, organizationsPageStruct.DashboardView_Organizations.Content[1].ID})
 }
 
-func TestQueryResolver_DashboardViewRelationshipOrganizations(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-
-	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Customer.String())
-	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Investor.String())
-
-	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "customer org")
-	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "second customer org")
-	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "investor org")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "org without relationship")
-	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, entity.Customer.String(), []string{"A", "B"})
-	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId1, entity.Customer.String(), "A")
-	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId2, entity.Customer.String(), "B")
-	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId3, entity.Investor.String())
-
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
-	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
-
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_by_relationship",
-		map[string]interface{}{"relationship": model.OrganizationRelationshipCustomer.String(), "page": 1, "limit": 10})
-
-	var organizationsPageStruct struct {
-		DashboardView_Organizations model.OrganizationPage
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
-	require.Nil(t, err)
-
-	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_Organizations.TotalElements)
-	require.Equal(t, 2, len(organizationsPageStruct.DashboardView_Organizations.Content))
-	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
-	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
-}
-
-func TestQueryResolver_DashboardViewFilterByRelationshipAndStage(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-
-	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Customer.String())
-	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Investor.String())
-
-	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "customer live org")
-	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "customer target org")
-	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "investor live org")
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "org without relationship")
-
-	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, entity.Customer.String(), []string{"Live", "Target"})
-	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, entity.Investor.String(), []string{"Live"})
-
-	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId1, entity.Customer.String(), "Live")
-	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId2, entity.Customer.String(), "Target")
-	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId3, entity.Investor.String(), "Live")
-
-	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 4, "OrganizationRelationship": 2, "OrganizationRelationshipStage": 3})
-	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"IS": 3, "HAS_STAGE": 6})
-
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_relationship_and_stage",
-		map[string]interface{}{
-			"relationship": model.OrganizationRelationshipCustomer.String(),
-			"stage":        "Live",
-			"page":         1,
-			"limit":        10})
-
-	var organizationsPageStruct struct {
-		DashboardView_Organizations model.OrganizationPage
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
-	require.Nil(t, err)
-
-	require.Equal(t, int64(1), organizationsPageStruct.DashboardView_Organizations.TotalElements)
-	require.Equal(t, 1, len(organizationsPageStruct.DashboardView_Organizations.Content))
-	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
-}
-
 func TestQueryResolver_DashboardView_SortByForecastAmount(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -692,4 +612,68 @@ func TestQueryResolver_DashboardView_SortByRenewalCycleNext(t *testing.T) {
 	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
 	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
+}
+
+func TestQueryResolver_DashboardView_SortByOrganizationName_WithOrganizationHierarchy(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	independentOrgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "C-Org",
+	})
+	parent1OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "B-Parent",
+	})
+	sub1_2OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "X-Sub",
+	})
+	sub1_1OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "A-Sub",
+	})
+	parent2OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "O-Parent",
+	})
+	sub2_1OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "K-Sub",
+	})
+	sub2_2OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name: "Y-Sub",
+	})
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parent1OrgId, sub1_1OrgId, "")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parent1OrgId, sub1_2OrgId, "")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parent2OrgId, sub2_1OrgId, "")
+	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parent2OrgId, sub2_2OrgId, "")
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 7})
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort_by_organization_name_in_hierarchy",
+		map[string]interface{}{
+			"page":  1,
+			"limit": 10})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(7), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+
+	require.Equal(t, "B-Parent", organizationsPageStruct.DashboardView_Organizations.Content[0].Name)
+	require.Equal(t, "A-Sub", organizationsPageStruct.DashboardView_Organizations.Content[1].Name)
+	require.Equal(t, "X-Sub", organizationsPageStruct.DashboardView_Organizations.Content[2].Name)
+	require.Equal(t, "C-Org", organizationsPageStruct.DashboardView_Organizations.Content[3].Name)
+	require.Equal(t, "O-Parent", organizationsPageStruct.DashboardView_Organizations.Content[4].Name)
+	require.Equal(t, "K-Sub", organizationsPageStruct.DashboardView_Organizations.Content[5].Name)
+	require.Equal(t, "Y-Sub", organizationsPageStruct.DashboardView_Organizations.Content[6].Name)
+
+	require.Equal(t, parent1OrgId, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Equal(t, sub1_1OrgId, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
+	require.Equal(t, sub1_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
+	require.Equal(t, independentOrgId, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
+	require.Equal(t, parent2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[4].ID)
+	require.Equal(t, sub2_1OrgId, organizationsPageStruct.DashboardView_Organizations.Content[5].ID)
+	require.Equal(t, sub2_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[6].ID)
 }

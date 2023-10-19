@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -239,7 +238,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
-	ownerId, orgRelationship, orgRelationshipStage := "", "", ""
+	ownerId := ""
 	filterByCustomer, isCustomer := false, false
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
@@ -277,13 +276,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "OWNER_ID" {
 				ownerId = *filter.Filter.Value.Str
-			} else if filter.Filter.Property == "RELATIONSHIP" {
-				orgRelationship = mapper.MapOrgRelationshipFromModelString(*filter.Filter.Value.Str).String()
 			} else if filter.Filter.Property == "IS_CUSTOMER" {
 				filterByCustomer = true
 				isCustomer = *filter.Filter.Value.Bool
-			} else if filter.Filter.Property == "STAGE" {
-				orgRelationshipStage = *filter.Filter.Value.Str
 			}
 		}
 
@@ -304,13 +299,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
-			"tenant":               tenant,
-			"ownerId":              ownerId,
-			"orgRelationship":      orgRelationship,
-			"orgRelationshipStage": orgRelationshipStage,
-			"isCustomer":           isCustomer,
-			"skip":                 skip,
-			"limit":                limit,
+			"tenant":     tenant,
+			"ownerId":    ownerId,
+			"isCustomer": isCustomer,
+			"skip":       skip,
+			"limit":      limit,
 		}
 		utils.MergeMapToMap(organizationFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
@@ -320,12 +313,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
 		if ownerId != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)<-[:OWNS]-(owner:User {id:$ownerId}) WITH * `)
-		}
-		if orgRelationship != "" {
-			countQuery += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship {name:$orgRelationship}) WITH * `)
-		}
-		if orgRelationshipStage != "" {
-			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) where toUpper(ors.name) = toUpper($orgRelationshipStage) WITH * `)
 		}
 		if emailFilterCypher != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
@@ -371,23 +358,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		if ownerId != "" {
 			query += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(owner:User {id:$ownerId}) WITH * `)
 		}
-		if orgRelationship != "" {
-			query += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship {name:$orgRelationship}) WITH * `)
-		}
-		if orgRelationshipStage != "" {
-			query += fmt.Sprintf(` MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) where toUpper(ors.name) = toUpper($orgRelationshipStage) WITH * `)
-		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		if sort != nil && sort.By == "OWNER" {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
-		}
-		if orgRelationship == "" && sort != nil && sort.By == "RELATIONSHIP" {
-			query += " OPTIONAL MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * "
-		}
-		if sort != nil && sort.By == "RELATIONSHIP" {
-			query += " OPTIONAL MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) WITH * "
 		}
 		query += ` WHERE (o.hide = false OR o.hide is null) `
 		if filterByCustomer == true {
@@ -413,16 +388,22 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		query = query + strings.Join(queryParts, " AND ")
 
 		// sort region
+		aliases := " o, d, l"
 		query += " WITH o, d, l "
 		if sort != nil && sort.By == "OWNER" {
-			query += ", owner "
+			query += ", owner"
+			aliases += ", owner "
 		}
-		if sort != nil && sort.By == "RELATIONSHIP" {
-			query += ", or,ors "
+		if sort != nil && sort.By == "ORGANIZATION" {
+			query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
+			query += aliases + ", parent "
 		}
 		cypherSort := utils.CypherSort{}
 		if sort != nil {
 			if sort.By == "ORGANIZATION" {
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "FORECAST_AMOUNT" {
@@ -449,10 +430,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				cypherSort.NewSortRule("FIRST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.UserEntity{}))
 				cypherSort.NewSortRule("LAST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.UserEntity{}))
 				query += string(cypherSort.SortingCypherFragment("owner"))
-			} else if sort.By == "RELATIONSHIP" {
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationRelationshipEntity{}))
-				query += string(cypherSort.SortingCypherFragment("or"))
-				query += ", ors.order "
 			}
 		} else {
 			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
