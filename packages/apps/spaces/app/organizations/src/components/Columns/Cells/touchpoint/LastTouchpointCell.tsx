@@ -39,7 +39,13 @@ export const LastTouchpointCell = ({
       File02,
     ])
     .with({ __typename: 'LogEntry' }, (event) => [
-      `Log entry by ${event.createdBy?.firstName} ${event.createdBy?.lastName}`,
+      `Log entry${
+        !!event.createdBy?.firstName || !!event.createdBy?.lastName
+          ? ` by ${[event.createdBy?.firstName, event.createdBy?.lastName]
+              .join(' ')
+              .trim()}`
+          : ''
+      }`,
       MessageChatSquare,
     ])
     .with({ __typename: 'InteractionEvent', channel: 'EMAIL' }, () => [
