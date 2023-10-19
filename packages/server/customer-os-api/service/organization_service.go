@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -16,6 +17,7 @@ import (
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"reflect"
 )
 
@@ -177,7 +179,8 @@ func (s *organizationService) GetById(ctx context.Context, organizationId string
 
 	dbNode, err := s.repositories.OrganizationRepository.GetOrganizationById(ctx, common.GetTenantFromContext(ctx), organizationId)
 	if err != nil {
-		return nil, err
+		wrappedErr := errors.Wrap(err, fmt.Sprintf("Organization with id {%s} not found", organizationId))
+		return nil, wrappedErr
 	}
 	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
 }
