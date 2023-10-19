@@ -35,10 +35,12 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
   });
 
   const options = useMemo(() => {
-    return data?.users?.content?.map((o) => ({
-      value: o.id,
-      label: `${o.firstName} ${o.lastName}`.trim(),
-    }));
+    return data?.users?.content
+      ?.filter((e) => Boolean(e.firstName) || Boolean(e.lastName))
+      ?.map((o) => ({
+        value: o.id,
+        label: `${o.firstName} ${o.lastName}`.trim(),
+      }));
   }, [data]);
 
   const value = owner ? options?.find((o) => o.value === owner.id) : null;
