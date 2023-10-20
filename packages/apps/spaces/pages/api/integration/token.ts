@@ -18,7 +18,7 @@ export default async function handler(
   const options = {
     issuer: WORKSPACE_KEY,
     expiresIn: 7200,
-    algorithm: 'HS256'
+    algorithm: 'HS512'
   } as SignOptions;
 
   if (!tenant) {
