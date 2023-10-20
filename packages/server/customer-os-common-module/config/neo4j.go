@@ -13,6 +13,8 @@ func NewNeo4jDriver(cfg Neo4jConfig) (neo4j.DriverWithContext, error) {
 		func(config *config.Config) {
 			config.MaxConnectionPoolSize = cfg.MaxConnectionPoolSize
 			config.ConnectionAcquisitionTimeout = time.Duration(cfg.ConnectionAcquisitionTimeoutSec) * time.Second
+			config.SocketConnectTimeout = time.Duration(cfg.SocketConnectTimeout) * time.Second
+			config.SocketKeepalive = cfg.SocketKeepalive
 			config.Log = neo4j.ConsoleLogger(strToLogLevel(cfg.LogLevel))
 		})
 }
