@@ -1,5 +1,5 @@
 'use client';
-import React, { FC, useCallback, useEffect } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 import { useIsRestoring } from '@tanstack/react-query';
 import { DateTimeUtils } from '@spaces/utils/date';
@@ -69,14 +69,14 @@ function getEventDate(event?: TimelineEvent) {
     event?.createdAt
   );
 }
-
+const styles = { height: '100%', width: '100%', background: '#F9F9FB' };
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
   const queryClient = useQueryClient();
   const { virtuosoRef } = useTimelineRefContext();
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const isRestoring = useIsRestoring();
-
+  const virtuosoStyles = useMemo(() => styles, []);
   const client = getGraphQLClient();
   const { data, isInitialLoading, isFetchingNextPage, fetchNextPage } =
     useInfiniteGetTimelineQuery(
@@ -114,15 +114,16 @@ export const OrganizationTimeline: FC = () => {
     });
   }, [NEW_DATE, id]);
 
-  if (isInitialLoading) {
-    return (
-      <Flex direction='column' mt={4} pl={6}>
-        <TimelineItemSkeleton />
-        <TimelineItemSkeleton />
-        <TimelineItemSkeleton />
-      </Flex>
-    );
-  }
+  const virtuosoContext = useMemo(
+    () => ({
+      loadMore: () => fetchNextPage(),
+      loading: isFetchingNextPage,
+    }),
+    [fetchNextPage, isFetchingNextPage],
+  );
+  const Footer = useCallback(() => {
+    return <TimelineActions invalidateQuery={invalidateQuery} />;
+  }, [invalidateQuery]);
 
   const flattenData = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
@@ -187,16 +188,13 @@ export const OrganizationTimeline: FC = () => {
 
       <Virtuoso<TimelineEvent>
         ref={virtuosoRef}
-        style={{ height: '100%', width: '100%', background: '#F9F9FB' }}
+        style={virtuosoStyles}
         initialItemCount={timelineEmailEvents?.length}
         initialTopMostItemIndex={timelineEmailEvents?.length - 1}
         data={timelineEmailEvents}
         increaseViewportBy={300}
         atTopThreshold={100}
-        context={{
-          loadMore: () => fetchNextPage(),
-          loading: isFetchingNextPage,
-        }}
+        context={virtuosoContext}
         itemContent={(index, timelineEvent) => {
           if (!timelineEvent) return null;
           const showDate =
@@ -288,9 +286,7 @@ export const OrganizationTimeline: FC = () => {
               ) : null}
             </Flex>
           ),
-          Footer: () => {
-            return <TimelineActions invalidateQuery={invalidateQuery} />;
-          },
+          Footer: Footer,
         }}
       />
       <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
