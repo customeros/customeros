@@ -80,7 +80,7 @@ export const OrganizationTimeline: FC = () => {
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const isRestoring = useIsRestoring();
   const client = getGraphQLClient();
-  const { data, isInitialLoading, isFetchingNextPage, fetchNextPage } =
+  const { data, isFetchingNextPage, fetchNextPage } =
     useInfiniteGetTimelineQuery(
       'from',
       client,
@@ -134,7 +134,6 @@ export const OrganizationTimeline: FC = () => {
   const loadedDataCount = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
   )?.length;
-
   const timelineEmailEvents = flattenData
     ?.filter((d) => {
       if (!d) return false;

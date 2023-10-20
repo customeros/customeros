@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CardBody } from '@ui/presentation/Card';
 import { Flex } from '@ui/layout/Flex';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
@@ -222,6 +222,14 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       session?.user,
     );
   };
+  const filteredParticipants = useMemo(
+    () => ({
+      to: state.values.to?.filter((e) => !!e.value || !!e?.label),
+      cc: state.values.cc?.filter((e) => !!e.value || !!e?.label),
+      bcc: state.values.bcc?.filter((e) => !!e.value || !!e?.label),
+    }),
+    [state.values.to, state.values.cc, state.values.bcc],
+  );
 
   return (
     <TimelinePreviewBackdrop onCloseModal={handleClosePreview}>
@@ -270,12 +278,10 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         </CardBody>
 
         <ComposeEmailContainer
+          {...filteredParticipants}
           formId={formId}
           onModeChange={handleModeChange}
           modal
-          to={state.values.to}
-          cc={state.values.cc}
-          bcc={state.values.bcc}
           onSubmit={handleSubmit}
           isSending={isSending}
           remirrorProps={remirrorProps}

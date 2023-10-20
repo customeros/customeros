@@ -22,7 +22,10 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
 }) => {
   const data: boolean | Array<EmailMetaData> =
     typeof content !== 'string' &&
-    getEmailParticipantsNameAndEmail(content, 'email');
+    getEmailParticipantsNameAndEmail(content, 'email').filter(
+      (e) => e?.label || e?.email,
+    );
+  if (typeof data !== 'boolean' && !data?.length) return null;
   return (
     <Flex overflow='hidden' maxWidth={'100%'}>
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
