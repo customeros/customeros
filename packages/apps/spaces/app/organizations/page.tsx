@@ -46,7 +46,9 @@ export default function OrganizationsPage() {
 
   const where = useMemo(() => {
     return produce<Filter>({ AND: [] }, (draft) => {
-      if (!draft.AND) draft.AND = [];
+      if (!draft.AND) {
+        draft.AND = [];
+      }
       if (searchTerm) {
         draft.AND.push({
           filter: {
@@ -57,18 +59,18 @@ export default function OrganizationsPage() {
           },
         });
       }
+
       if (preset) {
         const [property, value] = (() => {
           if (preset === 'customer') {
             return ['IS_CUSTOMER', true];
           }
           if (preset === 'portfolio') {
-            const userId = globalCache?.global_Cache.user.id;
+            const userId = globalCache?.global_Cache?.user.id;
             return ['OWNER_ID', userId];
           }
           return [];
         })();
-
         if (!property || !value) return;
         draft.AND.push({
           filter: {
@@ -79,8 +81,7 @@ export default function OrganizationsPage() {
         });
       }
     });
-  }, [searchParams?.toString()]);
-
+  }, [searchParams?.toString(), globalCache?.global_Cache?.user.id]);
   const sortBy: SortBy | undefined = useMemo(() => {
     if (!sorting.length) return;
     return {
