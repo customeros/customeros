@@ -220,6 +220,17 @@ func ExtractAllRecordsAsDbNodeAndId(ctx context.Context, result neo4j.ResultWith
 	return output, nil
 }
 
+func ExtractAllRecordsAsDbNodeAndIdFromEagerResult(result *neo4j.EagerResult) []*DbNodeAndId {
+	output := make([]*DbNodeAndId, 0)
+	for _, v := range result.Records {
+		element := new(DbNodeAndId)
+		element.Node = NodePtr(v.Values[0].(neo4j.Node))
+		element.LinkedNodeId = v.Values[1].(string)
+		output = append(output, element)
+	}
+	return output
+}
+
 func ExtractAllRecordsAsDbNodePairAndId(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodePairAndId, error) {
 	if err != nil {
 		return nil, err
