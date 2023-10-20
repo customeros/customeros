@@ -106,19 +106,19 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by another error")
 	}
 
-	maxRetries := 1
-	for i := 0; i < maxRetries; i++ {
-		err := driver.VerifyConnectivity(ctx)
-		if err == nil {
-			break
-		}
-		if i == maxRetries-1 {
-			zap.L().With(
-				zap.String("accessMode", accessModeStr),
-			).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
+	//maxRetries := 1
+	//for i := 0; i < maxRetries; i++ {
+	//	err := driver.VerifyConnectivity(ctx)
+	//	if err == nil {
+	//		break
+	//	}
+	//	if i == maxRetries-1 {
+	//		zap.L().With(
+	//			zap.String("accessMode", accessModeStr),
+	//		).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
+	//	}
+	//	time.Sleep(100 * time.Millisecond)
+	//}
 
 	zap.L().With(zap.String("accessMode", accessModeStr)).Sugar().Info("(newNeo4jSession) Creating new session")
 	sessionConfig := neo4j.SessionConfig{
@@ -218,6 +218,17 @@ func ExtractAllRecordsAsDbNodeAndId(ctx context.Context, result neo4j.ResultWith
 		output = append(output, element)
 	}
 	return output, nil
+}
+
+func ExtractAllRecordsAsDbNodeAndIdFromEagerResult(result *neo4j.EagerResult) []*DbNodeAndId {
+	output := make([]*DbNodeAndId, 0)
+	for _, v := range result.Records {
+		element := new(DbNodeAndId)
+		element.Node = NodePtr(v.Values[0].(neo4j.Node))
+		element.LinkedNodeId = v.Values[1].(string)
+		output = append(output, element)
+	}
+	return output
 }
 
 func ExtractAllRecordsAsDbNodePairAndId(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodePairAndId, error) {

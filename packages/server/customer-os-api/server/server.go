@@ -86,7 +86,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	// check neo4j connectivity
 	err = neo4jDriver.VerifyConnectivity(ctx)
 	if err != nil {
-		panic(err)
+		server.log.Fatalf("Could not verify connectivity with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
 
 	// Setting up Postgres repositories
