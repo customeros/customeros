@@ -59,7 +59,9 @@ type SessionConfigurationOption func(config *neo4j.SessionConfig)
 
 func WithDatabaseName(databaseName string) SessionConfigurationOption {
 	return func(config *neo4j.SessionConfig) {
-		config.DatabaseName = databaseName
+		if databaseName != "" {
+			config.DatabaseName = databaseName
+		}
 	}
 }
 
@@ -89,42 +91,44 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 		accessModeStr = "write"
 	}
 
-	if err := ctx.Err(); errors.Is(err, context.Canceled) {
-		zap.L().With(
+	var err error
+	maxRetries := 3
+	for retry := 0; retry < maxRetries; retry++ {
+		sugarLogger := zap.L().With(
 			zap.String("accessMode", accessModeStr),
-			zap.String("ctxErr", err.Error()),
-		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by calling the cancel function")
-	} else if errors.Is(err, context.DeadlineExceeded) {
-		zap.L().With(
-			zap.String("accessMode", accessModeStr),
-			zap.String("ctxErr", err.Error()),
-		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by deadline exceeded")
-	} else if err != nil {
-		zap.L().With(
-			zap.String("accessMode", accessModeStr),
-			zap.String("ctxErr", err.Error()),
-		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by another error")
-	}
+			zap.String("retry", fmt.Sprintf("%d/%d", retry+1, maxRetries)),
+		).Sugar()
+		if err := ctx.Err(); errors.Is(err, context.Canceled) {
+			sugarLogger.Errorf("(newNeo4jSession) Context is cancelled by calling the cancel function: %s", err.Error())
+		} else if errors.Is(err, context.DeadlineExceeded) {
+			sugarLogger.Errorf("(newNeo4jSession) Context is cancelled by deadline exceeded: %s", err.Error())
+		} else if err != nil {
+			sugarLogger.Errorf("(newNeo4jSession) Context is cancelled by another error: %s", err.Error())
+		}
 
-	err := driver.VerifyConnectivity(ctx)
+		// Verify connectivity
+		err = driver.VerifyConnectivity(ctx)
+		if err == nil {
+			sugarLogger.Info("(VerifyConnectivity) Successfully verified connectivity, creating new session")
+			sessionConfig := neo4j.SessionConfig{
+				AccessMode: accessMode,
+				BoltLogger: neo4j.ConsoleBoltLogger(),
+			}
+			for _, option := range options {
+				option(&sessionConfig)
+			}
+			return driver.NewSession(
+				ctx,
+				sessionConfig,
+			)
+		} else {
+			sugarLogger.Errorf("(VerifyConnectivity) Failed to verify connectivity: %s", err.Error())
+		}
+	}
 	if err != nil {
-		zap.L().With(
-			zap.String("accessMode", accessModeStr),
-		).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
+		zap.L().Sugar().Fatalf("(VerifyConnectivity) Failed to verify connectivity: %s", err.Error())
 	}
-
-	zap.L().With(zap.String("accessMode", accessModeStr)).Sugar().Info("(newNeo4jSession) Creating new session")
-	sessionConfig := neo4j.SessionConfig{
-		AccessMode: accessMode,
-		BoltLogger: neo4j.ConsoleBoltLogger(),
-	}
-	for _, option := range options {
-		option(&sessionConfig)
-	}
-	return driver.NewSession(
-		ctx,
-		sessionConfig,
-	)
+	return nil
 }
 
 func ExtractFirstRecordFirstValueAsDbNodePtr(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, error) {
@@ -498,6 +502,8 @@ func ExecuteQueryInTx(ctx context.Context, tx neo4j.ManagedTransaction, query st
 }
 
 func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, database, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
+	zap.L().With(zap.String("database", database)).
+		Sugar().Infof("(ExecuteQuery): %s", cypher)
 	return neo4j.ExecuteQuery(ctx,
 		driver,
 		cypher,
