@@ -8,11 +8,10 @@ import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvide
 import { NextAuthProvider } from './SessionProvider';
 
 interface ProvidersProps {
-  sessionEmail?: string | null;
   children: React.ReactNode;
 }
 
-export const Providers = ({ children, sessionEmail }: ProvidersProps) => {
+export const Providers = ({ children }: ProvidersProps) => {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
