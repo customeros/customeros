@@ -91,14 +91,21 @@ export default function OrganizationsPage() {
   }, [sorting]);
 
   const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
-    useGetOrganizationsInfiniteQuery(client, {
-      pagination: {
-        page: 1,
-        limit: 40,
+    useGetOrganizationsInfiniteQuery(
+      client,
+      {
+        pagination: {
+          page: 1,
+          limit: 40,
+        },
+        sort: sortBy,
+        where,
       },
-      sort: sortBy,
-      where,
-    });
+      {
+        enabled:
+          preset === 'portfolio' ? !!globalCache?.global_Cache?.user.id : true,
+      },
+    );
 
   const flatData = useMemo(
     () =>
