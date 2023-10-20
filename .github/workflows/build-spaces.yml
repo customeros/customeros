@@ -43,6 +43,7 @@ jobs:
       - name: Deploy test Environment
         run: |
           curl http://openline.sh/install.sh | sh
+          openline dev start
 #      - name: Deploy test Environment
 #        run: |
 #          curl http://openline.sh/install.sh | sh
