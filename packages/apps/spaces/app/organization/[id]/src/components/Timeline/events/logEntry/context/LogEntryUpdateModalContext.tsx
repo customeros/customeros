@@ -8,7 +8,6 @@ import {
 } from 'react';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useForm } from 'react-inverted-form';
-import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateLogEntryMutation } from '@organization/src/graphql/updateLogEntry.generated';
 import {
   LogEntryUpdateFormDto,
@@ -17,6 +16,9 @@ import {
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { useSession } from 'next-auth/react';
+import { useUpdateCacheWithExistingEvent } from '@organization/src/components/Timeline/hooks/useCacheExistingEvent';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 
 interface LogEntryUpdateModalContextMethods {
   formId: string;
@@ -38,10 +40,14 @@ export const LogEntryUpdateModalContextProvider = ({
   const [openedLogEntryId, setOpenedLogEntryId] = useState<null | string>(null);
   const event = modalContent as LogEntryWithAliases;
   const client = getGraphQLClient();
-  const queryClient = useQueryClient();
   const formId = 'log-entry-update';
   const logEntryStartedAtValues = new LogEntryUpdateFormDto(event);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const updateTimelineCache = useUpdateCacheWithExistingEvent();
+  const [timelineMeta] = useTimelineMeta();
+  const queryKey = useInfiniteGetTimelineQuery.getKey(
+    timelineMeta.getTimelineVariables,
+  );
   const { data: session } = useSession();
 
   const isAuthor =
@@ -82,11 +88,14 @@ export const LogEntryUpdateModalContextProvider = ({
   });
 
   const updateLogEntryMutation = useUpdateLogEntryMutation(client, {
-    onSuccess: () => {
-      timeoutRef.current = setTimeout(
-        () => queryClient.invalidateQueries(['GetTimeline.infinite']),
-        500,
-      );
+    onSuccess: (data, variables, context) => {
+      const mappedData = {
+        logEntryStartedAt: variables?.input?.startedAt,
+        content: variables?.input?.content,
+        contentType: variables?.input?.contentType,
+      };
+
+      updateTimelineCache({ id: variables.id, ...mappedData }, queryKey);
     },
   });
 

@@ -55,7 +55,7 @@ export const LogEntryDatePicker: React.FC<{
         sx={{
           ...calendarStyles,
           '& .react-date-picker__calendar': {
-            inset: `116px auto auto auto !important`,
+            inset: `95px auto auto auto !important`,
           },
         }}
       >
