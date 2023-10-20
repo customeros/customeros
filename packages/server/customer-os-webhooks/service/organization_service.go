@@ -203,6 +203,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		matchingOrganizationExists := organizationId != ""
 		span.LogFields(log.Bool("found matching organization", matchingOrganizationExists))
 
+		if orgInput.UpdateOnly && !matchingOrganizationExists {
+			span.LogFields(log.Bool("skippedSync", true))
+			syncMutex.Unlock()
+			return NewSkippedSyncStatus("Update only flag enabled and no matching organization found")
+		}
+
 		// Create new organization id if not found
 		organizationId = utils.NewUUIDIfEmpty(organizationId)
 		orgInput.Id = organizationId

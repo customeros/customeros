@@ -9,7 +9,9 @@ import (
 )
 
 type Repositories struct {
-	Drivers                  Drivers
+	Drivers       Drivers
+	neo4jDatabase string
+
 	CommonRepositories       *commonRepository.Repositories
 	SyncRunWebhookRepository repository.SyncRunWebhookRepository
 	ExternalSystemRepository ExternalSystemRepository
@@ -27,15 +29,16 @@ type Drivers struct {
 	Neo4jDriver *neo4j.DriverWithContext
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase string) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
+		neo4jDatabase:            neo4jDatabase,
 		CommonRepositories:       commonRepository.InitRepositories(gormDb, driver),
 		SyncRunWebhookRepository: repository.NewSyncRunWebhookRepository(gormDb),
 	}
-	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
+	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver, neo4jDatabase)
 	repositories.UserRepository = NewUserRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)

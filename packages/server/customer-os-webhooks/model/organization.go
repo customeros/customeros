@@ -90,6 +90,10 @@ func (o *OrganizationData) Normalize() {
 
 	o.PhoneNumbers = GetNonEmptyPhoneNumbers(o.PhoneNumbers)
 	o.PhoneNumbers = RemoveDuplicatedPhoneNumbers(o.PhoneNumbers)
+
+	if o.CustomerOsId != "" {
+		o.UpdateOnly = true
+	}
 }
 
 func (o *OrganizationData) NormalizeDomains() {

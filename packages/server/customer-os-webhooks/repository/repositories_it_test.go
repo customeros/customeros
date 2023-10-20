@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 		}
 	}(postgresContainer, context.Background())
 
-	repositories = InitRepos(driver, postgresGormDB)
+	repositories = InitRepos(driver, postgresGormDB, "neo4j")
 
 	os.Exit(m.Run())
 }
