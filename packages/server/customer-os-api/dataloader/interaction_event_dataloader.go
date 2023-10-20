@@ -6,7 +6,6 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -60,9 +59,6 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForInteractionSessions(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -111,9 +107,6 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForMeetings(ctx, ids)
 	if err != nil {
@@ -164,9 +157,6 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForIssues(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -215,9 +205,6 @@ func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvent
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetReplyToInteractionsEventForInteractionEvents(ctx, ids)
 	if err != nil {

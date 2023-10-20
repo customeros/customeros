@@ -6,7 +6,6 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -82,9 +81,6 @@ func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, key
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	organizationEntitiesPtr, err := b.organizationService.GetOrganizationsForEmails(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -133,9 +129,6 @@ func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Contex
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	organizationEntitiesPtr, err := b.organizationService.GetOrganizationsForPhoneNumbers(ctx, ids)
 	if err != nil {
@@ -186,9 +179,6 @@ func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	organizationEntitiesPtr, err := b.organizationService.GetSubsidiariesForOrganizations(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -237,9 +227,6 @@ func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Conte
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	organizationEntitiesPtr, err := b.organizationService.GetSubsidiariesOfForOrganizations(ctx, ids)
 	if err != nil {
@@ -290,9 +277,6 @@ func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, k
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	organizationEntities, err := b.organizationService.GetOrganizationsForJobRoles(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -338,9 +322,6 @@ func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Con
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	organizationEntitiesPtr, err := b.organizationService.GetSuggestedMergeToForOrganizations(ctx, ids)
 	if err != nil {

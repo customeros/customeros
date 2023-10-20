@@ -6,7 +6,6 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -39,9 +38,6 @@ func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	emailEntitiesPtr, err := b.emailService.GetAllForEntityTypeByIds(ctx, entity.CONTACT, ids)
 	if err != nil {
@@ -92,9 +88,6 @@ func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys datal
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	emailEntitiesPtr, err := b.emailService.GetAllForEntityTypeByIds(ctx, entity.ORGANIZATION, ids)
 	if err != nil {

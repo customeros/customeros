@@ -6,7 +6,6 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -39,9 +38,6 @@ func (b *interactionEventParticipantBatcher) getSentByParticipantsForInteraction
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	participantEntitiesPtr, err := b.interactionEventService.GetSentByParticipantsForInteractionEvents(ctx, ids)
 	if err != nil {
@@ -92,9 +88,6 @@ func (b *interactionEventParticipantBatcher) getSentToParticipantsForInteraction
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	participantEntitiesPtr, err := b.interactionEventService.GetSentToParticipantsForInteractionEvents(ctx, ids)
 	if err != nil {

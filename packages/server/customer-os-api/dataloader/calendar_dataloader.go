@@ -6,7 +6,6 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -29,9 +28,6 @@ func (b *calendarBatcher) getCalendarsForUsers(ctx context.Context, keys dataloa
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	calendarEntitiesPtr, err := b.calendarService.GetAllForUsers(ctx, ids)
 	if err != nil {
