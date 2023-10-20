@@ -69,14 +69,16 @@ function getEventDate(event?: TimelineEvent) {
     event?.createdAt
   );
 }
-const styles = { height: '100%', width: '100%', background: '#F9F9FB' };
 export const OrganizationTimeline: FC = () => {
+  const styles = useMemo(
+    () => ({ height: '100%', width: '100%', background: '#F9F9FB' }),
+    [],
+  );
   const id = useParams()?.id as string;
   const queryClient = useQueryClient();
   const { virtuosoRef } = useTimelineRefContext();
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const isRestoring = useIsRestoring();
-  const virtuosoStyles = useMemo(() => styles, []);
   const client = getGraphQLClient();
   const { data, isInitialLoading, isFetchingNextPage, fetchNextPage } =
     useInfiniteGetTimelineQuery(
@@ -188,7 +190,7 @@ export const OrganizationTimeline: FC = () => {
 
       <Virtuoso<TimelineEvent>
         ref={virtuosoRef}
-        style={virtuosoStyles}
+        style={styles}
         initialItemCount={timelineEmailEvents?.length}
         initialTopMostItemIndex={timelineEmailEvents?.length - 1}
         data={timelineEmailEvents}
