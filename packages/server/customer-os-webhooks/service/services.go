@@ -38,7 +38,7 @@ func InitServices(log logger.Logger,
 	commonAuthServices *commonAuthService.Services,
 	grpcClients *grpc_client.Clients,
 	caches *caches.Cache) *Services {
-	repositories := repository.InitRepos(driver, gormDB)
+	repositories := repository.InitRepos(driver, gormDB, cfg.Neo4j.Database)
 
 	services := Services{
 		CommonServices:        commonServices,

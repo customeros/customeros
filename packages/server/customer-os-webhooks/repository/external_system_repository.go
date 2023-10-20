@@ -15,12 +15,14 @@ type ExternalSystemRepository interface {
 }
 
 type externalSystemRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewExternalSystemRepository(driver *neo4j.DriverWithContext) ExternalSystemRepository {
+func NewExternalSystemRepository(driver *neo4j.DriverWithContext, database string) ExternalSystemRepository {
 	return &externalSystemRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
@@ -30,20 +32,21 @@ func (r *externalSystemRepository) MergeExternalSystem(ctx context.Context, tena
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("externalSystemName", externalSystemName))
 
-	query := fmt.Sprintf(`MATCH(t:Tenant {name:$tenant})
+	cypher := fmt.Sprintf(`MATCH(t:Tenant {name:$tenant})
 							MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) 
 							ON CREATE SET e.name=$externalSystemName, e.createdAt=$now, e.updatedAt=$now, e:ExternalSystem_%s`, tenant)
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	return r.executeQuery(ctx, query, map[string]any{
+	params := map[string]any{
 		"tenant":             tenant,
 		"externalSystemId":   externalSystemId,
 		"externalSystemName": utils.FirstNotEmpty(externalSystemName, externalSystemId),
 		"now":                utils.Now(),
-	})
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	return r.executeQuery(ctx, cypher, params)
 }
 
 func (r *externalSystemRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
