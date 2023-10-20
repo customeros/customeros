@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { produce } from 'immer';
 import { useLocalStorage } from 'usehooks-ts';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useIsRestoring } from '@tanstack/react-query';
 
 import {
@@ -35,6 +35,7 @@ export default function OrganizationsPage() {
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
+  const router = useRouter();
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
@@ -148,7 +149,28 @@ export default function OrganizationsPage() {
     data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
     !searchTerm
   ) {
-    return <EmptyState onClick={handleCreateOrganization} />;
+    const emptyOrganization = {
+      title: "Let's get started",
+      description:
+        'Start seeing your customer conversations all in one place by adding an organization',
+      buttonLabel: 'Add Organization',
+      onClick: handleCreateOrganization,
+    };
+    const myPortfolioEmpty = {
+      title: 'No organizations assigned to you yet',
+      description:
+        'Currently, you have not been assigned to any organizations.\n' +
+        '\n' +
+        'Head to your list of organizations and assign yourself as an owner to one of them.',
+      buttonLabel: 'Go to Organizations',
+      onClick: () => {
+        router.push(`/organizations`);
+      },
+    };
+    const emptyState =
+      preset === 'portfolio' ? myPortfolioEmpty : emptyOrganization;
+
+    return <EmptyState {...emptyState} />;
   }
 
   return (
