@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type userRepository struct {
@@ -27,13 +28,7 @@ func (u *userRepository) toStringList(values []interface{}) []string {
 }
 
 func (u *userRepository) FindUserByEmail(ctx context.Context, email string) (string, string, []string, error) {
-	session := (*u.driver).NewSession(
-		ctx,
-		neo4j.SessionConfig{
-			AccessMode: neo4j.AccessModeRead,
-			BoltLogger: neo4j.ConsoleBoltLogger(),
-		},
-	)
+	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

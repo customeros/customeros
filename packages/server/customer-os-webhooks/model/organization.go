@@ -1,6 +1,9 @@
 package model
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"strings"
+)
 
 type OrganizationNote struct {
 	FieldSource string `json:"fieldSource"`
@@ -91,7 +94,7 @@ func (o *OrganizationData) Normalize() {
 	o.PhoneNumbers = GetNonEmptyPhoneNumbers(o.PhoneNumbers)
 	o.PhoneNumbers = RemoveDuplicatedPhoneNumbers(o.PhoneNumbers)
 
-	if o.CustomerOsId != "" {
+	if strings.TrimSpace(o.CustomerOsId) != "" {
 		o.UpdateOnly = true
 	}
 }

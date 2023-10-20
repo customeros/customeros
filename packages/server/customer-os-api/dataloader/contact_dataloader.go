@@ -6,7 +6,6 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -51,9 +50,6 @@ func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataload
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	contactEntitiesPtr, err := b.contactService.GetContactsForEmails(ctx, ids)
 	if err != nil {
@@ -104,9 +100,6 @@ func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys da
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	contactEntitiesPtr, err := b.contactService.GetContactsForPhoneNumbers(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -155,9 +148,6 @@ func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys datalo
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	contactEntities, err := b.contactService.GetContactsForJobRoles(ctx, ids)
 	if err != nil {

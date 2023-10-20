@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -50,9 +49,6 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_INTERACTION_EVENT, nil, ids)
 	if err != nil {
@@ -103,9 +99,6 @@ func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Con
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_INTERACTION_SESSION, nil, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -154,9 +147,6 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_MEETING, nil, ids)
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -86,9 +85,6 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	userEntitiesPtr, err := b.userService.GetUsersForEmails(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -136,9 +132,6 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	userEntitiesPtr, err := b.userService.GetUsersForPhoneNumbers(ctx, ids)
 	if err != nil {
@@ -189,9 +182,6 @@ func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Ke
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	userEntitiesPtr, err := b.userService.GetUsersForPlayers(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -241,9 +231,6 @@ func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys da
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	userEntities, err := b.userService.GetUserOwnersForOrganizations(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -290,9 +277,6 @@ func (b *userBatcher) getUsers(ctx context.Context, keys dataloader.Keys) []*dat
 
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
-
 	userEntities, err := b.userService.GetUsers(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -338,9 +322,6 @@ func (b *userBatcher) getUserAuthorsForLogEntries(ctx context.Context, keys data
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
 	ids, keyOrder := sortKeys(keys)
-
-	ctx, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 
 	userEntities, err := b.userService.GetUserAuthorsForLogEntries(ctx, ids)
 	if err != nil {
