@@ -106,19 +106,12 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by another error")
 	}
 
-	//maxRetries := 1
-	//for i := 0; i < maxRetries; i++ {
-	//	err := driver.VerifyConnectivity(ctx)
-	//	if err == nil {
-	//		break
-	//	}
-	//	if i == maxRetries-1 {
-	//		zap.L().With(
-	//			zap.String("accessMode", accessModeStr),
-	//		).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
-	//	}
-	//	time.Sleep(100 * time.Millisecond)
-	//}
+	err := driver.VerifyConnectivity(ctx)
+	if err != nil {
+		zap.L().With(
+			zap.String("accessMode", accessModeStr),
+		).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
+	}
 
 	zap.L().With(zap.String("accessMode", accessModeStr)).Sugar().Info("(newNeo4jSession) Creating new session")
 	sessionConfig := neo4j.SessionConfig{
