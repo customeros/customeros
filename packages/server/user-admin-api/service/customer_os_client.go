@@ -17,7 +17,9 @@ type CustomerOsClient interface {
 	GetTenantByUserEmail(email string) (*string, error)
 	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
 	MergeTenant(tenant *model.TenantInput) (string, error)
-	IsPlayer(authId string, provider string) (string, error)
+
+	IsPlayer(authId, provider string) (string, error)
+	CreatePlayer(tenant, userId, identityId, authId, provider string) error
 
 	GetUserByEmail(tenant, email string) (*string, error)
 
@@ -243,6 +245,38 @@ func (s *customerOsClient) IsPlayer(authId string, provider string) (string, err
 	return graphqlResponse.Id, nil
 }
 
+func (s *customerOsClient) CreatePlayer(tenant, userId, identityId, authId, provider string) error {
+
+	graphqlRequest := graphql.NewRequest(
+		`
+		mutation MergePlayer ($userId: ID!, $identityId: String!, $authId: String!, $provider: String!) {
+				player_Merge(userId: $userId, input: {
+					  identityId: $identityId,
+					  authId: $authId,
+					  provider: $provider
+				}) { result }
+		}
+	`)
+	graphqlRequest.Var("userId", userId)
+	graphqlRequest.Var("identityId", identityId)
+	graphqlRequest.Var("authId", authId)
+	graphqlRequest.Var("provider", provider)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return err
+	}
+	defer cancel()
+
+	var graphqlResponse model.Result
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, roles []Role) (string, error) {
 	if user == nil {
 		return "", errors.New("CreateUser: user is nil")
@@ -406,7 +440,11 @@ func (s *customerOsClient) GetUserByEmail(tenant, email string) (*string, error)
 
 	var graphqlResponse map[string]map[string]string
 	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, fmt.Errorf("user_ByEmail: %w", err)
+		if err.Error() == "graphql: User with email "+email+" not identified" {
+			return nil, nil
+		} else {
+			return nil, fmt.Errorf("user_ByEmail: %w", err)
+		}
 	}
 	id := graphqlResponse["user_ByEmail"]["id"]
 	return &id, nil

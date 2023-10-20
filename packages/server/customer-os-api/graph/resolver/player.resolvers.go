@@ -8,59 +8,45 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	usergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 // PlayerMerge is the resolver for the player_Merge field.
-func (r *mutationResolver) PlayerMerge(ctx context.Context, input model.PlayerInput) (*model.Player, error) {
+func (r *mutationResolver) PlayerMerge(ctx context.Context, userID string, input model.PlayerInput) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.userID", userID), log.String("IdentityID", utils.IfNotNilString(input.IdentityID)), log.String("AuthID", input.AuthID), log.String("Provider", input.Provider))
 
-	playerEntity, err := r.Services.PlayerService.Merge(ctx, mapper.MapPlayerInputToEntity(&input))
+	_, err := r.Clients.UserClient.AddPlayerInfo(ctx, &usergrpc.AddPlayerInfoGrpcRequest{
+		UserId:         userID,
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AuthId:         input.AuthID,
+		Provider:       input.Provider,
+		IdentityId:     utils.IfNotNilString(input.IdentityID),
+		SourceFields: &commongrpc.SourceFields{
+			Source:    string(entity.DataSourceOpenline),
+			AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		},
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to merge player")
-		return nil, err
+		r.log.Errorf("Failed to add player info for user %s: %s", userID, err.Error())
 	}
-	return mapper.MapEntityToPlayer(playerEntity), nil
-}
 
-// PlayerUpdate is the resolver for the player_Update field.
-func (r *mutationResolver) PlayerUpdate(ctx context.Context, id string, update model.PlayerUpdate) (*model.Player, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.playerID", id))
-
-	playerEntity, err := r.Services.PlayerService.Update(ctx, mapper.MapPlayerUpdateToEntity(id, &update))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update player %s", id)
-		return nil, err
-	}
-	return mapper.MapEntityToPlayer(playerEntity), nil
-}
-
-// PlayerSetDefaultUser is the resolver for the player_SetDefaultUser field.
-func (r *mutationResolver) PlayerSetDefaultUser(ctx context.Context, id string, userID string) (*model.Player, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerSetDefaultUser", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.playerID", id), log.String("request.userID", userID))
-
-	playerEntity, err := r.Services.PlayerService.SetDefaultUser(ctx, id, userID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to set default user for player %s", id)
-		return nil, err
-	}
-	return mapper.MapEntityToPlayer(playerEntity), nil
+	return &model.Result{Result: true}, nil
 }
 
 // Users is the resolver for the users field.
@@ -90,21 +76,6 @@ func (r *queryResolver) PlayerByAuthIDProvider(ctx context.Context, authID strin
 		return nil, err
 	}
 	return mapper.MapEntityToPlayer(playerEntity), nil
-}
-
-// PlayerGetUsers is the resolver for the player_GetUsers field.
-func (r *queryResolver) PlayerGetUsers(ctx context.Context) ([]*model.PlayerUser, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.PlayerGetUsers", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	dbUsers, err := r.Services.PlayerService.GetUsers(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get users")
-		return nil, err
-	}
-	return mapper.MapEntitiesToPlayerUsers(dbUsers), nil
 }
 
 // Player returns generated.PlayerResolver implementation.

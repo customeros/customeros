@@ -1,27 +1,11 @@
-mutation MergePlayer($identityId: String, $authId: String!, $provider: String!, $appSource: String) {
-  player_Merge(input: {
+mutation MergePlayer($userId: ID!, $identityId: String, $authId: String!, $provider: String!, $appSource: String) {
+  player_Merge(userId: $userId, input: {
         identityId: $identityId,
         authId: $authId,
         provider: $provider,
         appSource: $appSource
   }
   ) {
-    id
-    identityId
-    authId
-    provider
-    source
-    sourceOfTruth
-    appSource
-    users {
-      user {
-        id
-        firstName
-        lastName
-        roles
-      }
-      tenant
-      default
-    }
+    result
   }
 }

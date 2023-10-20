@@ -4,6 +4,10 @@ type GetPlayerResponse struct {
 	Id string `json:"id"`
 }
 
+type Result struct {
+	Result bool `json:"result"`
+}
+
 type GetTenantByWorkspaceResponse struct {
 	Workspace *string `json:"tenant_ByWorkspace"`
 }
