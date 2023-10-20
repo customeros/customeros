@@ -99,35 +99,56 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			if tenant != nil {
 				log.Printf("tenant found %s", *tenant)
 				var appSource = APP_SOURCE
-				playerId, errorIsPlayer := services.CustomerOsClient.IsPlayer(signInRequest.Email, signInRequest.Provider)
+				_, errorIsPlayer := services.CustomerOsClient.IsPlayer(signInRequest.Email, signInRequest.Provider)
 				//user exists if i don't have player
 				//if user exists but not player -> send event to create player
 				if errorIsPlayer != nil {
-					playerId, err = services.CustomerOsClient.CreateUser(&model.UserInput{
-						FirstName: userInfo.GivenName,
-						LastName:  userInfo.FamilyName,
-						Email: model.EmailInput{
-							Email:     signInRequest.Email,
-							Primary:   true,
-							AppSource: &appSource,
-						},
-						Player: model.PlayerInput{
-							IdentityId: signInRequest.OAuthToken.ProviderAccountId,
-							AuthId:     signInRequest.Email,
-							Provider:   signInRequest.Provider,
-							AppSource:  &appSource,
-						},
-						AppSource: &appSource,
-					}, *tenant, []service.Role{service.ROLE_USER})
+
+					userByEmail, err := services.CustomerOsClient.GetUserByEmail(*tenant, signInRequest.Email)
 					if err != nil {
-						log.Printf("unable to create user: %v", err.Error())
+						log.Printf("unable to get user: %v", err.Error())
 						ginContext.JSON(http.StatusInternalServerError, gin.H{
-							"result": fmt.Sprintf("unable to create user: %v", err.Error()),
+							"result": fmt.Sprintf("unable to get user: %v", err.Error()),
 						})
 						return
 					}
+					if userByEmail != nil {
+						err = services.CustomerOsClient.CreatePlayer(*tenant, *userByEmail, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Email, signInRequest.Provider)
+						if err != nil {
+							log.Printf("unable to create player: %v", err.Error())
+							ginContext.JSON(http.StatusInternalServerError, gin.H{
+								"result": fmt.Sprintf("unable to create player: %v", err.Error()),
+							})
+							return
+						}
+					} else {
+						_, err = services.CustomerOsClient.CreateUser(&model.UserInput{
+							FirstName: userInfo.GivenName,
+							LastName:  userInfo.FamilyName,
+							Email: model.EmailInput{
+								Email:     signInRequest.Email,
+								Primary:   true,
+								AppSource: &appSource,
+							},
+							Player: model.PlayerInput{
+								IdentityId: signInRequest.OAuthToken.ProviderAccountId,
+								AuthId:     signInRequest.Email,
+								Provider:   signInRequest.Provider,
+								AppSource:  &appSource,
+							},
+							AppSource: &appSource,
+						}, *tenant, []service.Role{service.ROLE_USER})
+						if err != nil {
+							log.Printf("unable to create user: %v", err.Error())
+							ginContext.JSON(http.StatusInternalServerError, gin.H{
+								"result": fmt.Sprintf("unable to create user: %v", err.Error()),
+							})
+							return
+						}
+
+					}
+
 				}
-				log.Printf("user created: %s", playerId)
 				tenantName = tenant
 			} else {
 				var appSource = APP_SOURCE

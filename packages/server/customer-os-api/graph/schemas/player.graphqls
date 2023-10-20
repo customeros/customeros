@@ -31,11 +31,8 @@ type Player {
 
 extend type Query {
     player_ByAuthIdProvider(authId: String!, provider: String!) :Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER])
-    player_GetUsers:[PlayerUser!]! @hasRole(roles: [USER])
 }
 
 extend type Mutation {
-    player_Merge(input: PlayerInput!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER])
-    player_Update(id: ID!, update: PlayerUpdate!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER])
-    player_SetDefaultUser(id: ID!, userId: ID!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER])
+    player_Merge(userId: ID!, input: PlayerInput!): Result! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER])
 }
