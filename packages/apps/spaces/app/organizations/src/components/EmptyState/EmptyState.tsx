@@ -5,9 +5,17 @@ import { Text } from '@ui/typography/Text';
 
 interface EmptyStateProps {
   onClick: () => void;
+  buttonLabel: string;
+  title: string;
+  description: string;
 }
 
-const EmptyState = ({ onClick }: EmptyStateProps) => {
+const EmptyState = ({
+  onClick,
+  title,
+  buttonLabel,
+  description,
+}: EmptyStateProps) => {
   return (
     <Center
       h='100%'
@@ -239,21 +247,24 @@ const EmptyState = ({ onClick }: EmptyStateProps) => {
         position='relative'
         flexDir='column'
         textAlign='center'
-        top='-5%'
         align='center'
+        top='-120px'
       >
-        <Text
-          color='gray.900'
-          fontSize='md'
-          fontWeight='semibold'
-        >{`Let's get started`}</Text>
-        <Text maxW='400px' fontSize='sm' color='gray.600'>
-          Start seeing your customer conversations all in one place by adding an
-          organization
+        <Text color='gray.900' fontSize='md' fontWeight='semibold'>
+          {title}
+        </Text>
+        <Text maxW='400px' fontSize='sm' color='gray.600' my={1}>
+          {description}
         </Text>
 
-        <Button onClick={onClick} mt='6' w='min-content' variant='outline'>
-          Add Organization
+        <Button
+          onClick={onClick}
+          mt='2'
+          w='min-content'
+          variant='outline'
+          fontSize='sm'
+        >
+          {buttonLabel}
         </Button>
       </Flex>
     </Center>
