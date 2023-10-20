@@ -78,7 +78,7 @@ export default async function RootLayout({
 
       <body className='scrollbar'>
         <ThemeProvider>
-          <Providers sessionEmail={session?.user?.email}>
+          <Providers>
             {children}
             <ToastContainer
               position='bottom-right'
