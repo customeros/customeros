@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -17,7 +18,7 @@ type EmailRepository interface {
 	MergeEmailToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdateEmailForInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, email string) error
-	GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) (any, error)
+	GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) ([]*db.Record, error)
 	GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error
@@ -29,12 +30,14 @@ type EmailRepository interface {
 }
 
 type emailRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
+func NewEmailRepository(driver *neo4j.DriverWithContext, database string) EmailRepository {
 	return &emailRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
@@ -137,38 +140,31 @@ func (r *emailRepository) UpdateEmailForInTx(ctx context.Context, tx neo4j.Manag
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
 
-func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) (any, error) {
+func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) ([]*db.Record, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetAllFor")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		query := ""
-
-		switch entityType {
-		case entity.CONTACT:
-			query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-		case entity.USER:
-			query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-		case entity.ORGANIZATION:
-			query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-		}
-
-		result, err := tx.Run(ctx, query+`, (entity)-[rel:HAS]->(e:Email) 				
-				RETURN e, rel`,
-			map[string]interface{}{
-				"entityId": entityId,
-				"tenant":   tenant,
-			})
-		records, err := result.Collect(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return records, nil
-	})
+	cypher := ""
+	switch entityType {
+	case entity.CONTACT:
+		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case entity.USER:
+		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	case entity.ORGANIZATION:
+		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
+	}
+	cypher += `, (entity)-[rel:HAS]->(e:Email) RETURN e, rel`
+	params := map[string]interface{}{
+		"entityId": entityId,
+		"tenant":   tenant,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+	result, err := r.executeQuery(ctx, cypher, params)
+	if err != nil {
+		return nil, err
+	}
+	return result.Records, nil
 }
 
 func (r *emailRepository) GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
@@ -176,7 +172,7 @@ func (r *emailRepository) GetAllForIds(ctx context.Context, tenant string, entit
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	query := ""
@@ -242,7 +238,7 @@ func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType ent
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	query := ""
@@ -277,7 +273,7 @@ func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	query := ""
@@ -311,7 +307,7 @@ func (r *emailRepository) DeleteById(ctx context.Context, tenant, emailId string
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -334,7 +330,7 @@ func (r *emailRepository) GetByIdAndRelatedEntity(ctx context.Context, entityTyp
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	query := ""
@@ -372,7 +368,7 @@ func (r *emailRepository) Exists(ctx context.Context, tenant string, email strin
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	query := "MATCH (e:Email_%s) WHERE e.rawEmail = $email OR e.email = $email RETURN e LIMIT 1"
@@ -403,7 +399,7 @@ func (r *emailRepository) GetByEmail(ctx context.Context, tenant, email string) 
 		"WHERE e.rawEmail = $email OR e.email = $email RETURN e ORDER BY e.createdAt LIMIT 1", tenant)
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
@@ -427,7 +423,7 @@ func (r *emailRepository) GetById(ctx context.Context, emailId string) (*dbtype.
 	query := "MATCH (:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId}) RETURN e"
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
@@ -441,4 +437,8 @@ func (r *emailRepository) GetById(ctx context.Context, emailId string) (*dbtype.
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *emailRepository) executeQuery(ctx context.Context, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
+	return utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params)
 }

@@ -71,7 +71,7 @@ func (r *organizationRepository) Archive(ctx context.Context, organizationId str
 			REMOVE org:Organization_%s`, tenant, tenant)
 	span.LogFields(log.String("query", query))
 
-	err := utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]interface{}{
 		"organizationId": organizationId,
 		"tenant":         tenant,
 		"now":            utils.Now(),

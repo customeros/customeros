@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"time"
@@ -54,15 +55,35 @@ type DbNodePairAndId struct {
 	LinkedNodeId string
 }
 
-func NewNeo4jReadSession(ctx context.Context, driver neo4j.DriverWithContext) neo4j.SessionWithContext {
-	return newNeo4jSession(ctx, driver, neo4j.AccessModeRead)
+type SessionConfigurationOption func(config *neo4j.SessionConfig)
+
+func WithDatabaseName(databaseName string) SessionConfigurationOption {
+	return func(config *neo4j.SessionConfig) {
+		config.DatabaseName = databaseName
+	}
 }
 
-func NewNeo4jWriteSession(ctx context.Context, driver neo4j.DriverWithContext) neo4j.SessionWithContext {
-	return newNeo4jSession(ctx, driver, neo4j.AccessModeWrite)
+func WithBoltLogger(logger log.BoltLogger) SessionConfigurationOption {
+	return func(config *neo4j.SessionConfig) {
+		config.BoltLogger = logger
+	}
 }
 
-func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, accessMode neo4j.AccessMode) neo4j.SessionWithContext {
+func WithFetchSize(fetchSize int) SessionConfigurationOption {
+	return func(config *neo4j.SessionConfig) {
+		config.FetchSize = fetchSize
+	}
+}
+
+func NewNeo4jReadSession(ctx context.Context, driver neo4j.DriverWithContext, options ...SessionConfigurationOption) neo4j.SessionWithContext {
+	return newNeo4jSession(ctx, driver, neo4j.AccessModeRead, options...)
+}
+
+func NewNeo4jWriteSession(ctx context.Context, driver neo4j.DriverWithContext, options ...SessionConfigurationOption) neo4j.SessionWithContext {
+	return newNeo4jSession(ctx, driver, neo4j.AccessModeWrite, options...)
+}
+
+func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, accessMode neo4j.AccessMode, options ...SessionConfigurationOption) neo4j.SessionWithContext {
 	accessModeStr := "read"
 	if accessMode == neo4j.AccessModeWrite {
 		accessModeStr = "write"
@@ -73,45 +94,43 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 			zap.String("accessMode", accessModeStr),
 			zap.String("ctxErr", err.Error()),
 		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by calling the cancel function")
-		return nil
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		zap.L().With(
 			zap.String("accessMode", accessModeStr),
 			zap.String("ctxErr", err.Error()),
 		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by deadline exceeded")
-		return nil
 	} else if err != nil {
 		zap.L().With(
 			zap.String("accessMode", accessModeStr),
 			zap.String("ctxErr", err.Error()),
 		).Sugar().Errorf("(VerifyConnectivity) Context is cancelled by another error")
-		return nil
 	}
 
-	maxRetries := 5
+	maxRetries := 1
 	for i := 0; i < maxRetries; i++ {
 		err := driver.VerifyConnectivity(ctx)
 		if err == nil {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
-		if i >= maxRetries-1 {
+		if i == maxRetries-1 {
 			zap.L().With(
 				zap.String("accessMode", accessModeStr),
-			).Sugar().Errorf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
+			).Sugar().Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %s", err.Error())
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
-	zap.L().With(
-		zap.String("accessMode", accessModeStr),
-	).Sugar().Info("(newNeo4jSession) Creating new session")
 
+	zap.L().With(zap.String("accessMode", accessModeStr)).Sugar().Info("(newNeo4jSession) Creating new session")
+	sessionConfig := neo4j.SessionConfig{
+		AccessMode: accessMode,
+		BoltLogger: neo4j.ConsoleBoltLogger(),
+	}
+	for _, option := range options {
+		option(&sessionConfig)
+	}
 	return driver.NewSession(
 		ctx,
-		neo4j.SessionConfig{
-			AccessMode: accessMode,
-			//BoltLogger: ConsoleBoltNoLoggerrr(),
-			BoltLogger: neo4j.ConsoleBoltLogger(),
-		},
+		sessionConfig,
 	)
 }
 
@@ -283,6 +302,17 @@ func ExtractSingleRecordFirstValueAsNode(ctx context.Context, result neo4j.Resul
 	return &dbTypeNode, err
 }
 
+func ExtractSingleRecordAsNodeFromEagerResult(result *neo4j.EagerResult) (*dbtype.Node, error) {
+	if len(result.Records) == 0 {
+		return nil, errors.New("no records found")
+	}
+	if len(result.Records) > 1 {
+		return nil, errors.New("more than one record found")
+	}
+	node := result.Records[0].Values[0].(dbtype.Node)
+	return &node, nil
+}
+
 func ExtractSingleRecordFirstValueAsString(ctx context.Context, result neo4j.ResultWithContext, err error) (string, error) {
 	value, err := ExtractSingleRecordFirstValue(ctx, result, err)
 	if err != nil {
@@ -446,7 +476,7 @@ func GetTimePropOrNil(props map[string]any, key string) *time.Time {
 	return nil
 }
 
-func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, query string, params map[string]any) error {
+func ExecuteWriteQuery(ctx context.Context, driver neo4j.DriverWithContext, query string, params map[string]any) error {
 	session := NewNeo4jWriteSession(ctx, driver)
 	defer session.Close(ctx)
 
@@ -461,4 +491,14 @@ func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, query str
 func ExecuteQueryInTx(ctx context.Context, tx neo4j.ManagedTransaction, query string, params map[string]any) error {
 	_, err := tx.Run(ctx, query, params)
 	return err
+}
+
+func ExecuteQuery(ctx context.Context, driver neo4j.DriverWithContext, database, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
+	return neo4j.ExecuteQuery(ctx,
+		driver,
+		cypher,
+		params,
+		neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase(database),
+		neo4j.ExecuteQueryWithBoltLogger(neo4j.ConsoleBoltLogger()))
 }

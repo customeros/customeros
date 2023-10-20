@@ -83,6 +83,11 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
+	// check neo4j connectivity
+	err = neo4jDriver.VerifyConnectivity(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	// Setting up Postgres repositories
 	commonServices := commonService.InitServices(db.GormDB, &neo4jDriver)

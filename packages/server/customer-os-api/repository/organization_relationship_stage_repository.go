@@ -121,7 +121,7 @@ func (r *organizationRelationshipRepository) CreateDefaultStagesForNewTenant(ctx
 								s:OrganizationRelationshipStage_%s`, tenant)
 	span.LogFields(log.String("query for non-Customer relationships", queryNonCustomers))
 
-	err := utils.ExecuteQuery(ctx, *r.driver, queryCustomers, map[string]any{
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, queryCustomers, map[string]any{
 		"tenant": tenant,
 		"now":    utils.Now(),
 	})
@@ -129,7 +129,7 @@ func (r *organizationRelationshipRepository) CreateDefaultStagesForNewTenant(ctx
 		return err
 	}
 
-	err = utils.ExecuteQuery(ctx, *r.driver, queryNonCustomers, map[string]any{
+	err = utils.ExecuteWriteQuery(ctx, *r.driver, queryNonCustomers, map[string]any{
 		"tenant": tenant,
 		"now":    utils.Now(),
 	})

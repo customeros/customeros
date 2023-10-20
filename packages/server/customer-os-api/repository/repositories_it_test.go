@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 		neo4jt.Terminate(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
-	repositories = InitRepos(driver)
+	repositories = InitRepos(driver, "neo4j")
 
 	os.Exit(m.Run())
 }

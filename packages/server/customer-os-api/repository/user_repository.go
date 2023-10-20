@@ -12,7 +12,7 @@ import (
 )
 
 type UserRepository interface {
-	FindUserByEmail(ctx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error)
+	FindUserByEmail(ctx context.Context, tenant string, email string) (*dbtype.Node, error)
 	IsOwner(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, userId string) (*bool, error)
 	GetOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error)
 	GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
@@ -27,35 +27,36 @@ type UserRepository interface {
 }
 
 type userRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
+func NewUserRepository(driver *neo4j.DriverWithContext, database string) UserRepository {
 	return &userRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
-func (r *userRepository) FindUserByEmail(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error) {
+func (r *userRepository) FindUserByEmail(parentCtx context.Context, tenant string, email string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.FindUserByEmail")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, `
-			MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email) 
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email) 
 			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN DISTINCT(u) ORDER by u.createdAt ASC limit 1`,
-			map[string]any{
-				"tenant": tenant,
-				"email":  email,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
+			RETURN DISTINCT(u) ORDER by u.createdAt ASC limit 1`
+	params := map[string]any{
+		"tenant": tenant,
+		"email":  email,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	result, err := r.executeQuery(ctx, cypher, params)
 	if err != nil {
 		return nil, err
 	}
-	return result.(*dbtype.Node), nil
+	return utils.ExtractSingleRecordAsNodeFromEagerResult(result)
 }
 
 func (r *userRepository) IsOwner(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, userId string) (*bool, error) {
@@ -187,7 +188,7 @@ func (r *userRepository) GetById(parentCtx context.Context, tenant, userId strin
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -211,7 +212,7 @@ func (r *userRepository) GetAllForEmails(parentCtx context.Context, tenant strin
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -239,7 +240,7 @@ func (r *userRepository) GetAllForPhoneNumbers(parentCtx context.Context, tenant
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -267,7 +268,7 @@ func (r *userRepository) GetAllOwnersForOrganizations(parentCtx context.Context,
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t)
@@ -302,7 +303,7 @@ func (r *userRepository) GetAllAuthorsForLogEntries(parentCtx context.Context, t
 			RETURN u, l.id as logEntryId`, tenant)
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -327,7 +328,7 @@ func (r *userRepository) GetDistinctOrganizationOwners(parentCtx context.Context
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:OWNS]->(:Organization)
@@ -360,7 +361,7 @@ func (r *userRepository) GetUsers(ctx context.Context, tenant string, ids []stri
 			RETURN u`
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,
@@ -377,4 +378,8 @@ func (r *userRepository) GetUsers(ctx context.Context, tenant string, ids []stri
 		return nil, err
 	}
 	return dbRecords.([]*dbtype.Node), err
+}
+
+func (r *userRepository) executeQuery(ctx context.Context, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
+	return utils.ExecuteQuery(ctx, *r.driver, r.database, cypher, params)
 }

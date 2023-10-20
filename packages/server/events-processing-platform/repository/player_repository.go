@@ -63,5 +63,5 @@ func (r *playerRepository) Merge(ctx context.Context, tenant, userId string, eve
 }
 
 func (r *playerRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

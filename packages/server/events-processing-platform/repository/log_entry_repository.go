@@ -55,7 +55,7 @@ func (r *logEntryRepository) Create(ctx context.Context, tenant, logEntryId stri
 							`, tenant, tenant)
 	span.LogFields(log.String("query", query))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"tenant":        tenant,
 		"logEntryId":    logEntryId,
 		"orgId":         event.LoggedOrganizationId,
@@ -101,5 +101,5 @@ func (r *logEntryRepository) Update(ctx context.Context, tenant, logEntryId stri
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

@@ -367,7 +367,7 @@ func (r *organizationRepository) UpdateRenewalLikelihood(ctx context.Context, or
 					org.sourceOfTruth=$source`
 	span.LogFields(log.String("query", query))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"tenant":            event.Tenant,
 		"organizationId":    orgId,
 		"renewalLikelihood": event.GetRenewalLikelihoodAsStringForGraphDb(),
@@ -395,7 +395,7 @@ func (r *organizationRepository) UpdateRenewalForecast(ctx context.Context, orgI
 					org.sourceOfTruth=$source`
 	span.LogFields(log.String("query", query))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"tenant":                   event.Tenant,
 		"organizationId":           orgId,
 		"renewalForecast":          event.Amount,
@@ -424,7 +424,7 @@ func (r *organizationRepository) UpdateBillingDetails(ctx context.Context, orgId
 					org.sourceOfTruth=$source`
 	span.LogFields(log.String("query", query))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"tenant":            event.Tenant,
 		"organizationId":    orgId,
 		"amount":            event.Amount,
@@ -456,7 +456,7 @@ func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organ
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"userId":         userId,
@@ -566,5 +566,5 @@ func (r *organizationRepository) UnlinkParentOrganization(ctx context.Context, t
 
 // Common database interaction method
 func (r *organizationRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

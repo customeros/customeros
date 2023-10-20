@@ -158,7 +158,7 @@ func (r *interactionEventRepository) RemoveAllActionItemsForInteractionEvent(ctx
 							DETACH DELETE a`, tenant)
 	span.LogFields(log.String("query", query))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"interactionEventId": interactionEventId,
 	})
 }

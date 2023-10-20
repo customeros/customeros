@@ -50,5 +50,5 @@ func (r *tenantRepository) GetTenant(ctx context.Context, tenant string) (*dbtyp
 }
 
 func (r *tenantRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }
