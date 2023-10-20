@@ -47,7 +47,7 @@ type Drivers struct {
 	Neo4jDriver *neo4j.DriverWithContext
 }
 
-func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
@@ -61,13 +61,13 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.EntityTemplateRepository = NewEntityTemplateRepository(driver, &repositories)
 	repositories.FieldSetTemplateRepository = NewFieldSetTemplateRepository(driver, &repositories)
 	repositories.FieldSetRepository = NewFieldSetRepository(driver)
-	repositories.UserRepository = NewUserRepository(driver)
+	repositories.UserRepository = NewUserRepository(driver, database)
 	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
 	repositories.NoteRepository = NewNoteRepository(driver)
 	repositories.JobRoleRepository = NewJobRoleRepository(driver)
 	repositories.CalendarRepository = NewCalendarRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
-	repositories.EmailRepository = NewEmailRepository(driver)
+	repositories.EmailRepository = NewEmailRepository(driver, database)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
 	repositories.TagRepository = NewTagRepository(driver)
 	repositories.SearchRepository = NewSearchRepository(driver)

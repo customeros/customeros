@@ -74,5 +74,5 @@ func (r *externalSystemRepository) LinkWithEntityInTx(ctx context.Context, tx ne
 
 // Common database interaction method
 func (r *externalSystemRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

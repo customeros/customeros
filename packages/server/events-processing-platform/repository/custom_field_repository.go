@@ -105,5 +105,5 @@ func (r *customFieldRepository) ExistsById(ctx context.Context, tenant, customFi
 
 // Common database interaction method
 func (r *customFieldRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

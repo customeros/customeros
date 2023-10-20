@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -62,13 +61,13 @@ func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityTy
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
 
-	queryResult, err := s.repositories.EmailRepository.GetAllFor(ctx, common.GetContext(ctx).Tenant, entityType, entityId)
+	records, err := s.repositories.EmailRepository.GetAllFor(ctx, common.GetContext(ctx).Tenant, entityType, entityId)
 	if err != nil {
 		return nil, err
 	}
 
-	emailEntities := make(entity.EmailEntities, 0, len(queryResult.([]*db.Record)))
-	for _, dbRecord := range queryResult.([]*db.Record) {
+	emailEntities := make(entity.EmailEntities, 0, len(records))
+	for _, dbRecord := range records {
 		emailEntity := s.mapDbNodeToEmailEntity(dbRecord.Values[0].(dbtype.Node))
 		s.addDbRelationshipToEmailEntity(dbRecord.Values[1].(dbtype.Relationship), emailEntity)
 		emailEntities = append(emailEntities, *emailEntity)

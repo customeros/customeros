@@ -69,5 +69,5 @@ func (r *socialRepository) MergeSocialFor(ctx context.Context, tenant, linkedEnt
 
 // Common database interaction method
 func (r *socialRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

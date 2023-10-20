@@ -57,7 +57,7 @@ type Services struct {
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
-	repositories := repository.InitRepos(driver)
+	repositories := repository.InitRepos(driver, cfg.Neo4j.Database)
 
 	services := Services{
 		CommonServices:                  commonServices,

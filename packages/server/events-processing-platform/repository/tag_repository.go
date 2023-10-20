@@ -74,5 +74,5 @@ func (r *tagRepository) RemoveTagByIdFrom(ctx context.Context, tenant, tagId, li
 
 // Common database interaction method
 func (r *tagRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

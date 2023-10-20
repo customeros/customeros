@@ -47,5 +47,5 @@ func (r *externalSystemRepository) MergeExternalSystem(ctx context.Context, tena
 }
 
 func (r *externalSystemRepository) executeQuery(ctx context.Context, query string, params map[string]any) error {
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

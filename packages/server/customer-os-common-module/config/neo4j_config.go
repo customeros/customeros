@@ -8,4 +8,5 @@ type Neo4jConfig struct {
 	MaxConnectionPoolSize           int    `env:"NEO4J_MAX_CONN_POOL_SIZE" envDefault:"100"`
 	ConnectionAcquisitionTimeoutSec int    `env:"NEO4J_CONN_ACQUISITION_TIMEOUT_SEC" envDefault:"60"`
 	LogLevel                        string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
+	Database                        string `env:"NEO4J_DATABASE" envDefault:"neo4j"`
 }

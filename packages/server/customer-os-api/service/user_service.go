@@ -393,10 +393,7 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	userDbNode, err := s.repositories.UserRepository.FindUserByEmail(ctx, session, common.GetContext(ctx).Tenant, email)
+	userDbNode, err := s.repositories.UserRepository.FindUserByEmail(ctx, common.GetContext(ctx).Tenant, email)
 	if err != nil {
 		return nil, err
 	}

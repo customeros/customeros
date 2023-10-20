@@ -278,7 +278,7 @@ func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, o
 		MERGE (o)-[:ASSOCIATED_WITH]->(l)
 		SET	o.updatedAt = $updatedAt`
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"tenant":         tenant,
 		"locationId":     locationId,
 		"organizationId": organizationId,
@@ -297,7 +297,7 @@ func (r *locationRepository) LinkWithContact(ctx context.Context, tenant, contac
 		MERGE (c)-[:ASSOCIATED_WITH]->(l)
 		SET	c.updatedAt = $updatedAt`
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"tenant":     tenant,
 		"locationId": locationId,
 		"contactId":  contactId,

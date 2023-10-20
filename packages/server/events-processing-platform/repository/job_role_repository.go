@@ -158,5 +158,5 @@ func (r *jobRoleRepository) LinkContactWithOrganization(ctx context.Context, ten
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, params)
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
 }

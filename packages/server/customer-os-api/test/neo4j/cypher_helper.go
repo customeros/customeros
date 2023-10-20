@@ -9,7 +9,7 @@ import (
 )
 
 func ExecuteWriteQuery(ctx context.Context, driver *neo4j.DriverWithContext, query string, params map[string]interface{}) {
-	session := utils.NewNeo4jWriteSession(ctx, *driver)
+	session := utils.NewNeo4jWriteSession(ctx, *driver, utils.WithDatabaseName("neo4j"))
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
@@ -25,7 +25,7 @@ func ExecuteWriteQuery(ctx context.Context, driver *neo4j.DriverWithContext, que
 }
 
 func ExecuteReadQueryWithSingleReturn(ctx context.Context, driver *neo4j.DriverWithContext, query string, params map[string]any) any {
-	session := utils.NewNeo4jReadSession(ctx, *driver)
+	session := utils.NewNeo4jReadSession(ctx, *driver, utils.WithDatabaseName("neo4j"))
 	defer session.Close(ctx)
 
 	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -42,7 +42,7 @@ func ExecuteReadQueryWithSingleReturn(ctx context.Context, driver *neo4j.DriverW
 }
 
 func ExecuteReadQueryWithCollectionReturn(ctx context.Context, driver *neo4j.DriverWithContext, query string, params map[string]any) []*db.Record {
-	session := utils.NewNeo4jReadSession(ctx, *driver)
+	session := utils.NewNeo4jReadSession(ctx, *driver, utils.WithDatabaseName("neo4j"))
 	defer session.Close(ctx)
 
 	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
