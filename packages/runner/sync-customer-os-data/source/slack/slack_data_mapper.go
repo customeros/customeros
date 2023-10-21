@@ -216,6 +216,11 @@ func MapInteractionEvent(inputJson string) (string, error) {
 	//output.Content = string(outputContentJson)
 
 	output.Content = replaceUserMentionsInText(input.Text, input.OpenlineFields.UserNamesById)
+	if output.Content == "" {
+		output.Skip = true
+		output.SkipReason = "Empty text message"
+		return utils.ToJson(output)
+	}
 
 	output.SentBy = entity.InteractionEventParticipant{
 		ReferencedUser: entity.ReferencedUser{
