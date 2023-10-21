@@ -4,18 +4,21 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	cmngrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
+	issue_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"log"
 )
 
 const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
+const appSource = "test_app"
 
 type Clients struct {
 	InteractionEventClient interaction_event_grpc_service.InteractionEventGrpcServiceClient
@@ -24,6 +27,7 @@ type Clients struct {
 	EmailClient            email_grpc_service.EmailGrpcServiceClient
 	PhoneNumberClient      phone_number_grpc_service.PhoneNumberGrpcServiceClient
 	LogEntryClient         log_entry_grpc_service.LogEntryGrpcServiceClient
+	IssueClient            issue_grpc_service.IssueGrpcServiceClient
 }
 
 var clients *Clients
@@ -51,7 +55,9 @@ func main() {
 	//testOrganizationLinkWithEmail()
 	//testOrganizationLinkWithPhoneNumber()
 	//testOrganizationLinkWithLocation()
-	testContactLinkWithOrganization()
+	//testContactLinkWithOrganization()
+	//testCreateIssue()
+	testUpdateIssue()
 }
 
 func InitClients() {
@@ -66,6 +72,7 @@ func InitClients() {
 		LogEntryClient:         log_entry_grpc_service.NewLogEntryGrpcServiceClient(conn),
 		EmailClient:            email_grpc_service.NewEmailGrpcServiceClient(conn),
 		PhoneNumberClient:      phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
+		IssueClient:            issue_grpc_service.NewIssueGrpcServiceClient(conn),
 	}
 }
 
@@ -98,10 +105,10 @@ func testCreateOrganization() {
 	website := ""
 
 	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
-		Tenant:  tenant,
-		Id:      organizationId,
-		Website: website,
-		UserId:  userId,
+		Tenant:         tenant,
+		Id:             organizationId,
+		Website:        website,
+		LoggedInUserId: userId,
 	})
 	print(result)
 }
@@ -154,7 +161,7 @@ func testCreateLogEntry() {
 	result, _ := clients.LogEntryClient.UpsertLogEntry(context.TODO(), &log_entry_grpc_service.UpsertLogEntryGrpcRequest{
 		Tenant:               tenant,
 		LoggedOrganizationId: utils.StringPtr(organizationId),
-		SourceFields: &common_grpc_service.SourceFields{
+		SourceFields: &cmngrpc.SourceFields{
 			AppSource: "test_app",
 		},
 		AuthorUserId: utils.StringPtr(authorId),
@@ -208,7 +215,7 @@ func testCreateEmail() {
 		Tenant:         tenant,
 		RawEmail:       rawEmail,
 		LoggedInUserId: userId,
-		SourceFields: &common_grpc_service.SourceFields{
+		SourceFields: &cmngrpc.SourceFields{
 			AppSource: "test_app",
 		},
 	})
@@ -231,7 +238,7 @@ func testCreatePhoneNumber() {
 func testAddParentOrganization() {
 	tenant := "openline"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	parentOrgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	parentOrgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	relType := "store"
 	result, err := clients.OrganizationClient.AddParentOrganization(context.TODO(), &organization_grpc_service.AddParentOrganizationGrpcRequest{
 		Tenant:               tenant,
@@ -240,9 +247,9 @@ func testAddParentOrganization() {
 		Type:                 relType,
 	})
 	if err != nil {
-		print(err)
+		log.Fatalf("Failed: %v", err.Error())
 	}
-	print(result)
+	log.Printf("Result: %v", result)
 }
 
 func testRemoveParentOrganization() {
@@ -269,7 +276,7 @@ func testCreateContact() {
 		Tenant:         tenant,
 		LoggedInUserId: userId,
 		Name:           name,
-		ExternalSystemFields: &common_grpc_service.ExternalSystemFields{
+		ExternalSystemFields: &cmngrpc.ExternalSystemFields{
 			ExternalSystemId: "hubspot",
 			ExternalId:       "123",
 		},
@@ -286,7 +293,7 @@ func testUpdateContact() {
 		Tenant: tenant,
 		Name:   name,
 		Id:     contactId,
-		ExternalSystemFields: &common_grpc_service.ExternalSystemFields{
+		ExternalSystemFields: &cmngrpc.ExternalSystemFields{
 			ExternalSystemId: "hubspot",
 			ExternalId:       "ABC",
 		},
@@ -396,4 +403,63 @@ func testContactLinkWithOrganization() {
 		StartedAt:      timestamppb.Now(),
 	})
 	print(result)
+}
+
+func testCreateIssue() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	subject := "test issue"
+	description := "nice issue"
+	status := "open"
+	priority := "high"
+	orgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+
+	result, err := clients.IssueClient.UpsertIssue(context.TODO(), &issue_grpc_service.UpsertIssueGrpcRequest{
+		Tenant:                   tenant,
+		Subject:                  subject,
+		Description:              description,
+		Status:                   status,
+		Priority:                 priority,
+		LoggedInUserId:           userId,
+		ReportedByOrganizationId: utils.StringPtr(orgId),
+		SourceFields: &cmngrpc.SourceFields{
+			AppSource: appSource,
+		},
+		ExternalSystemFields: &cmngrpc.ExternalSystemFields{
+			ExternalSystemId: "hubspot",
+			ExternalId:       "123",
+		},
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Created issue id: %v", result.Id)
+}
+
+func testUpdateIssue() {
+	tenant := "openline"
+	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
+	issueId := "ed17dbab-e79b-4e87-8914-2d93ed55324b"
+	desription := "updated description"
+
+	result, err := clients.IssueClient.UpsertIssue(context.TODO(), &issue_grpc_service.UpsertIssueGrpcRequest{
+		Tenant:         tenant,
+		Id:             issueId,
+		LoggedInUserId: userId,
+		Description:    desription,
+		SourceFields: &cmngrpc.SourceFields{
+			AppSource: appSource,
+		},
+		ExternalSystemFields: &cmngrpc.ExternalSystemFields{
+			ExternalSystemId: "hubspot",
+			ExternalId:       "456",
+		},
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	if issueId != result.Id {
+		log.Fatalf("Result is not expected")
+	}
+	log.Printf("Updated issue id: %v", result.Id)
 }

@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
-	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
+	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -34,7 +35,7 @@ func (s *contactService) UpsertContact(ctx context.Context, request *pb.UpsertCo
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.UpsertContact")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request.contactId", request.Id))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	contactId := utils.NewUUIDIfEmpty(request.Id)
 
@@ -71,7 +72,7 @@ func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkPhoneNumberToContact")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("phoneNumberId", request.PhoneNumberId), log.String("contactId", request.ContactId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkPhoneNumberCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.contactCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
@@ -86,7 +87,7 @@ func (s *contactService) LinkEmailToContact(ctx context.Context, request *pb.Lin
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkEmailToContact")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("emailId", request.EmailId), log.String("contactId", request.ContactId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkEmailCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
 	if err := s.contactCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
@@ -101,7 +102,7 @@ func (s *contactService) LinkLocationToContact(ctx context.Context, request *pb.
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkLocationToContact")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("locationId", request.LocationId), log.String("contactId", request.ContactId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkLocationCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.LocationId)
 	if err := s.contactCommands.LinkLocationCommand.Handle(ctx, cmd); err != nil {
@@ -116,7 +117,7 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *pb.L
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkWithOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("contactId", request.ContactId), log.String("organizationId", request.OrganizationId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -140,5 +141,5 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *pb.L
 }
 
 func (s *contactService) errResponse(err error) error {
-	return grpc_errors.ErrResponse(err)
+	return grpcerr.ErrResponse(err)
 }

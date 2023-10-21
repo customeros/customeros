@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
@@ -17,17 +17,17 @@ const (
 )
 
 type PhoneNumberCreateEvent struct {
-	Tenant         string               `json:"tenant" validate:"required"`
-	RawPhoneNumber string               `json:"rawPhoneNumber" validate:"required"`
-	Source         string               `json:"source"`        //Deprecated
-	SourceOfTruth  string               `json:"sourceOfTruth"` //Deprecated
-	AppSource      string               `json:"appSource"`     //Deprecated
-	SourceFields   common_models.Source `json:"sourceFields"`
-	CreatedAt      time.Time            `json:"createdAt"`
-	UpdatedAt      time.Time            `json:"updatedAt"`
+	Tenant         string        `json:"tenant" validate:"required"`
+	RawPhoneNumber string        `json:"rawPhoneNumber" validate:"required"`
+	Source         string        `json:"source"`        //Deprecated
+	SourceOfTruth  string        `json:"sourceOfTruth"` //Deprecated
+	AppSource      string        `json:"appSource"`     //Deprecated
+	SourceFields   cmnmod.Source `json:"sourceFields"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	UpdatedAt      time.Time     `json:"updatedAt"`
 }
 
-func NewPhoneNumberCreateEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber string, source common_models.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewPhoneNumberCreateEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber string, source cmnmod.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := PhoneNumberCreateEvent{
 		Tenant:         tenant,
 		RawPhoneNumber: rawPhoneNumber,

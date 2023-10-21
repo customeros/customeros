@@ -2,17 +2,17 @@ package models
 
 import (
 	"fmt"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"time"
 )
 
 type InteractionEvent struct {
-	ID          string               `json:"id"`
-	Source      common_models.Source `json:"source"`
-	CreatedAt   time.Time            `json:"createdAt"`
-	UpdatedAt   time.Time            `json:"updatedAt"`
-	Summary     string               `json:"summary"`
-	ActionItems []string             `json:"actionItems"`
+	ID          string        `json:"id"`
+	Source      cmnmod.Source `json:"source"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
+	Summary     string        `json:"summary"`
+	ActionItems []string      `json:"actionItems"`
 }
 
 func (i *InteractionEvent) String() string {

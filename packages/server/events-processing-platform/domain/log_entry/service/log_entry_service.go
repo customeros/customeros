@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
@@ -13,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 )
 
@@ -35,6 +37,7 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *pb.Upsert
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.UpsertLogEntry")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	logEntryId := request.Id
 	if strings.TrimSpace(logEntryId) == "" {
@@ -69,6 +72,7 @@ func (s *logEntryService) AddTag(ctx context.Context, request *pb.AddTagGrpcRequ
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.Addtag")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	command := cmd.NewAddTagCommand(request.Id, request.Tenant, request.UserId, request.TagId, utils.TimePtr(utils.Now()))
 	if err := s.logEntryCommands.AddTag.Handle(ctx, command); err != nil {
@@ -84,6 +88,7 @@ func (s *logEntryService) RemoveTag(ctx context.Context, request *pb.RemoveTagGr
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.RemoveTag")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	command := cmd.NewRemoveTagCommand(request.Id, request.Tenant, request.UserId, request.TagId)
 	if err := s.logEntryCommands.RemoveTag.Handle(ctx, command); err != nil {

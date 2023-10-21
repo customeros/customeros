@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -7,11 +7,11 @@ import (
 import grpccommon "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 
 type ExternalSystem struct {
-	ExternalSystemId string     `json:"externalSystemId"`
-	ExternalUrl      string     `json:"externalUrl"`
-	ExternalId       string     `json:"externalId"`
-	ExternalIdSecond string     `json:"externalIdSecond"`
-	ExternalSource   string     `json:"externalSource"`
+	ExternalSystemId string     `json:"externalSystemId,omitempty"`
+	ExternalUrl      string     `json:"externalUrl,omitempty"`
+	ExternalId       string     `json:"externalId,omitempty"`
+	ExternalIdSecond string     `json:"externalIdSecond,omitempty"`
+	ExternalSource   string     `json:"externalSource,omitempty"`
 	SyncDate         *time.Time `json:"syncDate,omitempty"`
 }
 

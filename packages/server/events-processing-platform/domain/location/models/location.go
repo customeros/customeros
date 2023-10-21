@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"time"
 )
 
@@ -107,14 +107,14 @@ func (l *LocationAddress) From(fields LocationAddressFields) {
 }
 
 type Location struct {
-	ID                 string               `json:"id"`
-	Source             common_models.Source `json:"source"`
-	CreatedAt          time.Time            `json:"createdAt"`
-	UpdatedAt          time.Time            `json:"updatedAt"`
-	LocationValidation LocationValidation   `json:"locationValidation"`
-	Name               string               `json:"name"`
-	RawAddress         string               `json:"rawAddress"`
-	LocationAddress    LocationAddress      `json:"locationAddress"`
+	ID                 string             `json:"id"`
+	Source             cmnmod.Source      `json:"source"`
+	CreatedAt          time.Time          `json:"createdAt"`
+	UpdatedAt          time.Time          `json:"updatedAt"`
+	LocationValidation LocationValidation `json:"locationValidation"`
+	Name               string             `json:"name"`
+	RawAddress         string             `json:"rawAddress"`
+	LocationAddress    LocationAddress    `json:"locationAddress"`
 }
 
 func (l *Location) String() string {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contactAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	contactModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
@@ -33,8 +33,8 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 		Description: "This is a test contact.",
 	}
 	source :=
-		commonModels.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "unit-test"}
-	event, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, commonModels.ExternalSystem{}, curTime, curTime)
+		cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "unit-test"}
+	event, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
 	require.Nil(t, err)

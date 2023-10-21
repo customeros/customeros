@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
@@ -38,7 +39,8 @@ func (a *LocationAggregate) createLocation(ctx context.Context, cmd *command.Ups
 	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.createLocation")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
@@ -62,7 +64,8 @@ func (a *LocationAggregate) updateLocation(ctx context.Context, cmd *command.Ups
 	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.updateLocation")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	if cmd.Source.Source == "" {
@@ -87,7 +90,8 @@ func (a *LocationAggregate) failLocationValidation(ctx context.Context, cmd *com
 	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.failLocationValidation")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewLocationFailedValidationEvent(a, cmd.RawAddress, cmd.Country, cmd.ValidationError)
 	if err != nil {
@@ -104,7 +108,8 @@ func (a *LocationAggregate) skipLocationValidation(ctx context.Context, cmd *com
 	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.SkipLocationValidation")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewLocationSkippedValidationEvent(a, cmd.RawAddress, cmd.ValidationSkipReason)
 	if err != nil {
@@ -121,7 +126,8 @@ func (a *LocationAggregate) locationValidated(ctx context.Context, cmd *command.
 	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.locationValidated")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	locationAddress := models.LocationAddress{}
 	locationAddress.From(cmd.LocationAddressFields)

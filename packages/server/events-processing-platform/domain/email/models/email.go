@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"time"
 )
 
@@ -21,13 +21,13 @@ type EmailValidation struct {
 }
 
 type Email struct {
-	ID              string              `json:"id"`
-	RawEmail        string              `json:"rawEmail"`
-	Email           string              `json:"email"`
-	Source          commonModels.Source `json:"source"`
-	CreatedAt       time.Time           `json:"createdAt"`
-	UpdatedAt       time.Time           `json:"updatedAt"`
-	EmailValidation EmailValidation     `json:"emailValidation"`
+	ID              string          `json:"id"`
+	RawEmail        string          `json:"rawEmail"`
+	Email           string          `json:"email"`
+	Source          cmnmod.Source   `json:"source"`
+	CreatedAt       time.Time       `json:"createdAt"`
+	UpdatedAt       time.Time       `json:"updatedAt"`
+	EmailValidation EmailValidation `json:"emailValidation"`
 }
 
 func (p *Email) String() string {

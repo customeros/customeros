@@ -19,17 +19,6 @@ func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
 	ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
 }
 
-func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
-	query := fmt.Sprintf("DROP INDEX basicSearchStandard_location_terms IF EXISTS")
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
-
-	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_location_terms IF NOT EXISTS FOR (n:State) ON EACH [n.name, n.code] " +
-		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }")
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
-
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
-}
-
 func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MERGE (t:Tenant {name:$tenant})`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -168,6 +157,46 @@ func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, 
 		"startedAt":   logEntry.StartedAt,
 	})
 	return logEntryId
+}
+
+func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
+	issueId := utils.NewUUIDIfEmpty(issue.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$id})
+				SET i:Issue_%s,
+					i:TimelineEvent,
+					i:TimelineEvent_%s,
+					i.subject=$subject,
+					i.status=$status,
+					i.priority=$priority,
+					i.description=$description,
+					i.source=$source,
+					i.sourceOfTruth=$sourceOfTruth
+				`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":        tenant,
+		"id":            issueId,
+		"subject":       issue.Subject,
+		"status":        issue.Status,
+		"priority":      issue.Priority,
+		"description":   issue.Description,
+		"source":        issue.Source,
+		"sourceOfTruth": issue.SourceOfTruth,
+	})
+	return issueId
+}
+
+func LinkIssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
+
+	query := `MATCH (e {id:$entityId})
+				MATCH (i:Issue {id:$issueId})
+				MERGE (i)-[:REPORTED_BY]->(e)`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"issueId":  issueId,
+		"entityId": entityId,
+	})
 }
 
 func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, tag entity.TagEntity) string {
@@ -370,4 +399,11 @@ func AssertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.D
 		actualCount := GetCountOfRelationships(ctx, driver, name)
 		require.Equal(t, expectedCount, actualCount, "Unexpected count for relationship: "+name)
 	}
+}
+
+func AssertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string) {
+	rel, err := GetRelationship(ctx, driver, fromNodeId, toNodeId)
+	require.Nil(t, err)
+	require.NotNil(t, rel)
+	require.Equal(t, relationshipType, rel.Type)
 }

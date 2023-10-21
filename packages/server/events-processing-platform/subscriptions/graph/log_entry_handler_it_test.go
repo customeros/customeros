@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
@@ -51,11 +51,11 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 		ContentType:          "test content type",
 		AuthorUserId:         utils.StringPtr(userId),
 		LoggedOrganizationId: utils.StringPtr(orgId),
-	}, commonModels.Source{
+	}, cmnmod.Source{
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatform,
 		SourceOfTruth: constants.SourceOpenline,
-	}, commonModels.ExternalSystem{
+	}, cmnmod.ExternalSystem{
 		ExternalSystemId: "sf",
 		ExternalId:       "123",
 	}, now, now, now)

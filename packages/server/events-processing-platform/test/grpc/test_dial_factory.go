@@ -43,7 +43,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 
 	myServer := server.NewServer(&config.Config{}, appLogger)
 	myServer.SetRepository(repositories)
-	myServer.SetCommands(commands.CreateCommands(appLogger, &config.Config{}, aggregateStore, repositories))
+	myServer.SetCommands(commands.InitCommandHandlers(appLogger, &config.Config{}, aggregateStore, repositories))
 
 	server.RegisterGrpcServices(myServer, grpcServer)
 	go func() {

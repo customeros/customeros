@@ -6,6 +6,7 @@ import (
 	contactcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	emailcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	iecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
+	issuecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command_handler"
 	jobrolecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	logentrycmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
@@ -17,7 +18,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
-func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore eventstore.AggregateStore, repositories *repository.Repositories) *domain.Commands {
+func InitCommandHandlers(log logger.Logger,
+	cfg *config.Config,
+	aggregateStore eventstore.AggregateStore,
+	repositories *repository.Repositories) *domain.Commands {
+
 	return &domain.Commands{
 		ContactCommands:          contactcmd.NewContactCommands(log, aggregateStore),
 		OrganizationCommands:     orgcmd.NewOrganizationCommands(log, cfg, aggregateStore, repositories),
@@ -28,5 +33,6 @@ func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore events
 		UserCommands:             usercmd.NewUserCommands(log, cfg, aggregateStore),
 		JobRoleCommands:          jobrolecmd.NewJobRoleCommands(log, cfg, aggregateStore),
 		LogEntryCommands:         logentrycmd.NewLogEntryCommands(log, cfg, aggregateStore),
+		IssueCommands:            issuecmd.NewIssueCommandHandlers(log, cfg, aggregateStore),
 	}
 }

@@ -50,11 +50,10 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 		}
 	}
 
-	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, eventData.LoggedOrganizationId, ""))
+	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, eventData.LoggedOrganizationId, "", constants.AppSourceEventProcessingPlatform))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("RefreshLastTouchpointCommand failed: %v", err.Error())
-		return nil
 	}
 
 	return nil

@@ -2,20 +2,22 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	locationgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
-	grpcErrors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
+	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type locationService struct {
-	location_grpc_service.UnimplementedLocationGrpcServiceServer
+	locationgrpc.UnimplementedLocationGrpcServiceServer
 	log              logger.Logger
 	repositories     *repository.Repositories
 	locationCommands *command_handler.LocationCommands
@@ -29,15 +31,16 @@ func NewLocationService(log logger.Logger, repositories *repository.Repositories
 	}
 }
 
-func (s *locationService) UpsertLocation(ctx context.Context, request *location_grpc_service.UpsertLocationGrpcRequest) (*location_grpc_service.LocationIdGrpcResponse, error) {
+func (s *locationService) UpsertLocation(ctx context.Context, request *locationgrpc.UpsertLocationGrpcRequest) (*locationgrpc.LocationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LocationService.UpsertLocation")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	locationId := request.Id
 	locationId = utils.NewUUIDIfEmpty(locationId)
 
-	sourceFields := common_models.Source{}
+	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
 	sourceFields.SourceOfTruth = utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
@@ -71,9 +74,9 @@ func (s *locationService) UpsertLocation(ctx context.Context, request *location_
 
 	s.log.Infof("(Upserted location): {%s}", locationId)
 
-	return &location_grpc_service.LocationIdGrpcResponse{Id: locationId}, nil
+	return &locationgrpc.LocationIdGrpcResponse{Id: locationId}, nil
 }
 
 func (s *locationService) errResponse(err error) error {
-	return grpcErrors.ErrResponse(err)
+	return grpcerr.ErrResponse(err)
 }

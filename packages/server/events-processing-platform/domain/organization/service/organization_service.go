@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
@@ -37,7 +38,8 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 func (s *organizationService) UpsertOrganization(ctx context.Context, request *pb.UpsertOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertOrganization")
 	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	organizationId := utils.NewUUIDIfEmpty(request.Id)
 
@@ -69,7 +71,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 	externalSystem := cmnmod.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	command := command.NewUpsertOrganizationCommand(organizationId, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
+	command := command.NewUpsertOrganizationCommand(organizationId, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId),
 		sourceFields, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
@@ -86,7 +88,7 @@ func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context,
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkPhoneNumberToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("phoneNumberId", request.PhoneNumberId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkPhoneNumberCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
@@ -104,7 +106,7 @@ func (s *organizationService) LinkEmailToOrganization(ctx context.Context, reque
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("emailId", request.EmailId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkEmailCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
@@ -122,7 +124,7 @@ func (s *organizationService) LinkLocationToOrganization(ctx context.Context, re
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkLocationToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("locationId", request.LocationId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	command := command.NewLinkLocationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.LocationId)
 	if err := s.organizationCommands.LinkLocationCommand.Handle(ctx, command); err != nil {
@@ -139,7 +141,8 @@ func (s *organizationService) LinkLocationToOrganization(ctx context.Context, re
 func (s *organizationService) LinkDomainToOrganization(ctx context.Context, request *pb.LinkDomainToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkDomainToOrganization")
 	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	command := command.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
 	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, command); err != nil {
@@ -156,8 +159,8 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Context, request *pb.OrganizationRenewalLikelihoodRequest) (*pb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalLikelihood")
 	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
-	span.LogFields(log.Object("request", request))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -185,7 +188,7 @@ func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Cont
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalForecast")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
-	span.LogFields(log.Object("request", request))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -213,7 +216,7 @@ func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Conte
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationBillingDetails")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
-	span.LogFields(log.Object("request", request))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -243,7 +246,7 @@ func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, req
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RequestRenewNextCycleDate")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -266,7 +269,7 @@ func (s *organizationService) HideOrganization(ctx context.Context, request *pb.
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.HideOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
-	span.LogFields(log.Object("request", request))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -289,7 +292,7 @@ func (s *organizationService) ShowOrganization(ctx context.Context, request *pb.
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.ShowOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
-	span.LogFields(log.Object("request", request))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	// handle deadlines
 	if err := ctx.Err(); err != nil {
@@ -311,7 +314,8 @@ func (s *organizationService) ShowOrganization(ctx context.Context, request *pb.
 func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Context, request *pb.CustomFieldForOrganizationGrpcRequest) (*pb.CustomFieldIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertCustomFieldToOrganization")
 	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	customFieldId := request.CustomFieldId
 	if customFieldId == "" {
@@ -350,7 +354,7 @@ func (s *organizationService) AddParentOrganization(ctx context.Context, request
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.AddParentOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("parentOrganizationId", request.ParentOrganizationId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	command := command.NewAddParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId, request.Type)
 	if err := s.organizationCommands.AddParentCommand.Handle(ctx, command); err != nil {
@@ -366,7 +370,7 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, requ
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RemoveParentOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("parentOrganizationId", request.ParentOrganizationId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	command := command.NewRemoveParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId)
 	if err := s.organizationCommands.RemoveParentCommand.Handle(ctx, command); err != nil {

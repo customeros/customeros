@@ -7,6 +7,7 @@ import (
 	contactevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	interactionevtevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
+	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
@@ -40,6 +41,7 @@ type GraphSubscriber struct {
 	jobRoleEventHandler      *GraphJobRoleEventHandler
 	interactionEventHandler  *GraphInteractionEventHandler
 	logEntryEventHandler     *GraphLogEntryEventHandler
+	issueEventHandler        *GraphIssueEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commands *domain.Commands, cfg *config.Config) *GraphSubscriber {
@@ -57,6 +59,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
 		interactionEventHandler:  &GraphInteractionEventHandler{Repositories: repositories, Log: log},
 		logEntryEventHandler:     &GraphLogEntryEventHandler{Repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
+		issueEventHandler:        &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
 	}
 }
 
@@ -255,6 +258,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.logEntryEventHandler.OnAddTag(ctx, evt)
 	case logentryevents.LogEntryRemoveTagV1:
 		return s.logEntryEventHandler.OnRemoveTag(ctx, evt)
+
+	case issueevent.IssueCreateV1:
+		return s.issueEventHandler.OnCreate(ctx, evt)
+	case issueevent.IssueUpdateV1:
+		return s.issueEventHandler.OnUpdate(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType

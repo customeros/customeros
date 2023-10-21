@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
@@ -38,7 +39,8 @@ func (a *ContactAggregate) createContact(ctx context.Context, cmd *command.Upser
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.createContact")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
@@ -50,7 +52,7 @@ func (a *ContactAggregate) createContact(ctx context.Context, cmd *command.Upser
 		return errors.Wrap(err, "NewContactCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, &span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.Metadata{
 		Tenant: a.Tenant,
 		UserId: cmd.UserID,
 		App:    cmd.Source.AppSource,
@@ -63,7 +65,8 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.createContact")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
@@ -82,7 +85,8 @@ func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmail
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.linkEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.Now()
 
@@ -115,7 +119,9 @@ func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmail
 func (a *ContactAggregate) SetEmailNonPrimary(ctx context.Context, emailId, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.SetEmailNonPrimary")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("emailId", emailId), log.String("userId", userId))
 
 	updatedAtNotNil := utils.Now()
 
@@ -141,7 +147,8 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.linkPhoneNumber")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.Now()
 
@@ -162,7 +169,7 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 	if cmd.Primary {
 		for k, v := range a.Contact.PhoneNumbers {
 			if k != cmd.PhoneNumberId && v.Primary {
-				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.UserID); err != nil {
+				if err = a.SetPhoneNumberNonPrimary(ctx, k, cmd.UserID); err != nil {
 					return err
 				}
 			}
@@ -171,10 +178,12 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 	return nil
 }
 
-func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId, userId string) error {
+func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, phoneNumberId, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.SetPhoneNumberNonPrimary")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("phoneNumberId", phoneNumberId), log.String("userId", userId))
 
 	updatedAtNotNil := utils.Now()
 
@@ -200,7 +209,8 @@ func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLo
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.linkLocation")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.Now()
 
@@ -219,7 +229,8 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.linkOrganization")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())

@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
@@ -41,8 +42,9 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comman
 func (a *UserAggregate) createUser(ctx context.Context, cmd *command.UpsertUserCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.createUser")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
@@ -62,8 +64,9 @@ func (a *UserAggregate) createUser(ctx context.Context, cmd *command.UpsertUserC
 func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.updateUser")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
@@ -81,8 +84,9 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 func (a *UserAggregate) addPlayerInfo(ctx context.Context, cmd *command.AddPlayerInfoCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.addPlayerInfo")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	timestampNotNil := utils.IfNotNilTimeWithDefault(cmd.Timestamp, utils.Now())
 	cmd.Source.SetDefaultValues()
@@ -104,7 +108,8 @@ func (a *UserAggregate) addPlayerInfo(ctx context.Context, cmd *command.AddPlaye
 func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId, loggedInUserId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.LinkJobRole")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 
 	updatedAtNotNil := utils.Now()
 
@@ -122,8 +127,9 @@ func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId, logg
 func (a *UserAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.linkPhoneNumber")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.Now()
 
@@ -156,7 +162,8 @@ func (a *UserAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPh
 func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId, loggedInUserId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.SetPhoneNumberNonPrimary")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 
 	updatedAtNotNil := utils.Now()
 
@@ -181,8 +188,9 @@ func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, ph
 func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.linkEmail")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.Now()
 
@@ -215,7 +223,8 @@ func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCom
 func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId, loggedInUserId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.SetEmailNonPrimary")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 
 	updatedAtNotNil := utils.Now()
 
@@ -240,8 +249,9 @@ func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId,
 func (a *UserAggregate) addRole(ctx context.Context, cmd *command.AddRoleCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.addRole")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewUserAddRoleEvent(a, cmd.Role, utils.Now())
 	if err != nil {
@@ -256,8 +266,9 @@ func (a *UserAggregate) addRole(ctx context.Context, cmd *command.AddRoleCommand
 func (a *UserAggregate) removeRole(ctx context.Context, cmd *command.RemoveRoleCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.removeRole")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewUserRemoveRoleEvent(a, cmd.Role, utils.Now())
 	if err != nil {
