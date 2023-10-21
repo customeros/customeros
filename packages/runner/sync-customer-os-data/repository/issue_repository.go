@@ -189,8 +189,7 @@ func (r *issueRepository) LinkIssueWithCollaboratorUserByExternalId(ctx context.
 		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$userExternalId}]-(u:User)
 				MATCH (i:Issue {id:$issueId})-[:IS_LINKED_WITH]->(e)
-				MERGE (u)-[:FOLLOWS]->(i)
-				`,
+				MERGE (u)<-[:FOLLOWED_BY]-(i)`,
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": externalSystem,
@@ -214,7 +213,7 @@ func (r *issueRepository) LinkIssueWithFollowerUserByExternalId(ctx context.Cont
 		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$userExternalId}]-(u:User)
 				MATCH (i:Issue {id:$issueId})-[:IS_LINKED_WITH]->(e)
-				MERGE (u)-[:FOLLOWS]->(i)
+				MERGE (u)<-[:FOLLOWED_BY]-(i)
 				`,
 			map[string]interface{}{
 				"tenant":         tenant,
@@ -265,8 +264,7 @@ func (r *issueRepository) LinkIssueWithAssigneeUserByExternalId(ctx context.Cont
 		_, err := tx.Run(ctx, `
 				MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$externalId}]-(n:User)
 				MATCH (i:Issue {id:$issueId})-[:IS_LINKED_WITH]->(e)
-				MERGE (n)-[:IS_ASSIGNED_TO]->(i)
-				`,
+				MERGE (n)<-[:ASSIGNED_TO]-(i)`,
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": externalSystem,
