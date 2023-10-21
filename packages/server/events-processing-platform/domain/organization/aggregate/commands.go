@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -376,7 +377,9 @@ func (a *OrganizationAggregate) updateBillingDetails(ctx context.Context, cmd *c
 func (a *OrganizationAggregate) requestNextCycleDate(ctx context.Context, cmd *command.RequestNextCycleDateCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.requestNextCycleDate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewOrganizationRequestNextCycleDateEvent(a)
 	if err != nil {
@@ -392,7 +395,9 @@ func (a *OrganizationAggregate) requestNextCycleDate(ctx context.Context, cmd *c
 func (a *OrganizationAggregate) hideOrganization(ctx context.Context, cmd *command.HideOrganizationCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.hideOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewHideOrganizationEventEvent(a)
 	if err != nil {
@@ -408,7 +413,9 @@ func (a *OrganizationAggregate) hideOrganization(ctx context.Context, cmd *comma
 func (a *OrganizationAggregate) showOrganization(ctx context.Context, cmd *command.ShowOrganizationCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.showOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewShowOrganizationEventEvent(a)
 	if err != nil {
@@ -424,7 +431,9 @@ func (a *OrganizationAggregate) showOrganization(ctx context.Context, cmd *comma
 func (a *OrganizationAggregate) refreshLastTouchpoint(ctx context.Context, cmd *command.RefreshLastTouchpointCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.refreshLastTouchpoint")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewOrganizationRefreshLastTouchpointEvent(a)
 	if err != nil {
@@ -440,7 +449,9 @@ func (a *OrganizationAggregate) refreshLastTouchpoint(ctx context.Context, cmd *
 func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *command.UpsertCustomFieldCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.upsertCustomField")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
@@ -477,7 +488,9 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *command.AddParentCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addParentOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewOrganizationAddParentEvent(a, cmd.ParentOrganizationId, cmd.Type)
 	if err != nil {
@@ -493,7 +506,9 @@ func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *
 func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cmd *command.RemoveParentCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeParentOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewOrganizationRemoveParentEvent(a, cmd.ParentOrganizationId)
 	if err != nil {

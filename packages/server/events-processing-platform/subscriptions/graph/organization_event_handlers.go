@@ -106,7 +106,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Request last touch point update
-	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, organizationId, evtMetadata.UserId))
+	err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, organizationId, "", constants.AppSourceEventProcessingPlatform))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("RefreshLastTouchpointCommand failed: %v", err.Error())

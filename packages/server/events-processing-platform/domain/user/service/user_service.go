@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
@@ -34,7 +35,7 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.UpsertUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("userRequestId", request.Id))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	userInputId := utils.NewUUIDIfEmpty(request.Id)
 
@@ -71,6 +72,7 @@ func (s *userService) AddPlayerInfo(ctx context.Context, request *pb.AddPlayerIn
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddPlayerInfo")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -92,6 +94,7 @@ func (s *userService) LinkJobRoleToUser(ctx context.Context, request *pb.LinkJob
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddPlayerInfo")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "")
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	aggregateID := request.UserId
 
@@ -110,7 +113,7 @@ func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *pb.Lin
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("phoneNumberId", request.PhoneNumberId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkPhoneNumberCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.userCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
@@ -127,7 +130,7 @@ func (s *userService) LinkEmailToUser(ctx context.Context, request *pb.LinkEmail
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("emailId", request.EmailId))
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkEmailCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
 	if err := s.userCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
@@ -144,6 +147,7 @@ func (s *userService) AddRole(ctx context.Context, request *pb.AddRoleGrpcReques
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddRole")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewAddRole(request.UserId, request.Tenant, request.LoggedInUserId, request.Role)
 	if err := s.userCommands.AddRole.Handle(ctx, cmd); err != nil {
@@ -161,6 +165,7 @@ func (s *userService) RemoveRole(ctx context.Context, request *pb.RemoveRoleGrpc
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.RemoveRole")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewRemoveRole(request.UserId, request.Tenant, request.LoggedInUserId, request.Role)
 	if err := s.userCommands.RemoveRole.Handle(ctx, cmd); err != nil {

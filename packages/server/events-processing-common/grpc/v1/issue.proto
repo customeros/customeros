@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+import "common/external_system.proto";
+
+option go_package = "api/grpc/v1/issue;issue_grpc_service";
+
+message UpsertIssueGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string subject = 4;
+  string description = 5;
+  string status = 8;
+  string priority = 9;
+  google.protobuf.Timestamp createdAt = 10;
+  google.protobuf.Timestamp updatedAt = 11;
+  optional string reportedByOrganizationId = 12;
+  SourceFields sourceFields = 13;
+  ExternalSystemFields externalSystemFields = 14;
+}
+
+message IssueIdGrpcResponse {
+  string id = 1;
+}
+
+service issueGrpcService {
+  rpc UpsertIssue(UpsertIssueGrpcRequest) returns (IssueIdGrpcResponse);
+}

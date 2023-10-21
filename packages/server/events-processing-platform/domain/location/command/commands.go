@@ -1,7 +1,7 @@
 package command
 
 import (
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
@@ -10,7 +10,7 @@ import (
 type UpsertLocationCommand struct {
 	eventstore.BaseCommand
 	IsCreateCommand       bool
-	Source                common_models.Source
+	Source                cmnmod.Source
 	CreatedAt             *time.Time
 	UpdatedAt             *time.Time
 	Name                  string
@@ -38,7 +38,7 @@ type LocationValidatedCommand struct {
 	LocationAddressFields models.LocationAddressFields
 }
 
-func NewUpsertLocationCommand(locationId, tenant, userId, name, rawAddress string, addressFields models.LocationAddressFields, source common_models.Source, createdAt, updatedAt *time.Time) *UpsertLocationCommand {
+func NewUpsertLocationCommand(locationId, tenant, userId, name, rawAddress string, addressFields models.LocationAddressFields, source cmnmod.Source, createdAt, updatedAt *time.Time) *UpsertLocationCommand {
 	return &UpsertLocationCommand{
 		BaseCommand:           eventstore.NewBaseCommand(locationId, tenant, userId),
 		RawAddress:            rawAddress,

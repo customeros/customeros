@@ -4,7 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -97,7 +97,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.IsCustomer = eventData.IsCustomer
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
-	a.Organization.Source = common_models.Source{
+	a.Organization.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,
@@ -105,7 +105,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.CreatedAt = eventData.CreatedAt
 	a.Organization.UpdatedAt = eventData.UpdatedAt
 	if eventData.ExternalSystem.Available() {
-		a.Organization.ExternalSystems = []common_models.ExternalSystem{eventData.ExternalSystem}
+		a.Organization.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
 	}
 	return nil
 }
@@ -121,46 +121,46 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	a.Organization.UpdatedAt = eventData.UpdatedAt
 
 	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == constants.SourceOpenline {
-		if a.Organization.Name != "" {
+		if a.Organization.Name == "" {
 			a.Organization.Name = eventData.Name
 		}
-		if a.Organization.Description != "" {
+		if a.Organization.Description == "" {
 			a.Organization.Description = eventData.Description
 		}
-		if a.Organization.Website != "" {
+		if a.Organization.Website == "" {
 			a.Organization.Website = eventData.Website
 		}
-		if a.Organization.Industry != "" {
+		if a.Organization.Industry == "" {
 			a.Organization.Industry = eventData.Industry
 		}
-		if a.Organization.SubIndustry != "" {
+		if a.Organization.SubIndustry == "" {
 			a.Organization.SubIndustry = eventData.SubIndustry
 		}
-		if a.Organization.IndustryGroup != "" {
+		if a.Organization.IndustryGroup == "" {
 			a.Organization.IndustryGroup = eventData.IndustryGroup
 		}
-		if a.Organization.TargetAudience != "" {
+		if a.Organization.TargetAudience == "" {
 			a.Organization.TargetAudience = eventData.TargetAudience
 		}
-		if a.Organization.ValueProposition != "" {
+		if a.Organization.ValueProposition == "" {
 			a.Organization.ValueProposition = eventData.ValueProposition
 		}
-		if a.Organization.LastFundingRound != "" {
+		if a.Organization.LastFundingRound == "" {
 			a.Organization.LastFundingRound = eventData.LastFundingRound
 		}
-		if a.Organization.LastFundingAmount != "" {
+		if a.Organization.LastFundingAmount == "" {
 			a.Organization.LastFundingAmount = eventData.LastFundingAmount
 		}
-		if a.Organization.ReferenceId != "" {
+		if a.Organization.ReferenceId == "" {
 			a.Organization.ReferenceId = eventData.ReferenceId
 		}
-		if a.Organization.Note != "" {
+		if a.Organization.Note == "" {
 			a.Organization.Note = eventData.Note
 		}
-		if a.Organization.Employees != 0 {
+		if a.Organization.Employees == 0 {
 			a.Organization.Employees = eventData.Employees
 		}
-		if a.Organization.Market != "" {
+		if a.Organization.Market == "" {
 			a.Organization.Market = eventData.Market
 		}
 		if !a.Organization.IsCustomer {
@@ -398,7 +398,7 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 		val.Name = eventData.CustomFieldName
 	} else {
 		a.Organization.CustomFields[eventData.CustomFieldId] = models.CustomField{
-			Source: common_models.Source{
+			Source: cmnmod.Source{
 				Source:        eventData.Source,
 				SourceOfTruth: eventData.SourceOfTruth,
 				AppSource:     eventData.AppSource,

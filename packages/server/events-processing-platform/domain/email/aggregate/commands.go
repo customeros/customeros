@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
@@ -35,7 +36,8 @@ func (a *EmailAggregate) createEmail(ctx context.Context, cmd *command.UpsertEma
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.createEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
@@ -56,7 +58,8 @@ func (a *EmailAggregate) updateEmail(ctx context.Context, cmd *command.UpsertEma
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.updateEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	if cmd.Source.Source == "" {
@@ -78,7 +81,8 @@ func (a *EmailAggregate) failEmailValidation(ctx context.Context, cmd *command.F
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.updateEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewEmailFailedValidationEvent(a, cmd.Tenant, cmd.ValidationError)
 	if err != nil {
@@ -95,7 +99,8 @@ func (a *EmailAggregate) emailValidated(ctx context.Context, cmd *command.EmailV
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.emailValidated")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	event, err := events.NewEmailValidatedEvent(a, cmd.Tenant, cmd.RawEmail, cmd.IsReachable, cmd.ValidationError,
 		cmd.Domain, cmd.Username, cmd.EmailAddress, cmd.AcceptsMail, cmd.CanConnectSmtp, cmd.HasFullInbox, cmd.IsCatchAll,

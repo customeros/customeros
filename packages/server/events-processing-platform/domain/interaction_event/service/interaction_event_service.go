@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -29,7 +30,8 @@ func NewInteractionEventService(log logger.Logger, repositories *repository.Repo
 func (s *interactionEventService) RequestGenerateSummary(ctx context.Context, request *interaction_event_grpc_service.RequestGenerateSummaryGrpcRequest) (*interaction_event_grpc_service.InteractionEventIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestGenerateSummary")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", request.Tenant), log.String("InteractionEventId", request.InteractionEventId))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "") // TODO enhance request with LoggedInUserId
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	command := commands.NewRequestSummaryCommand(request.Tenant, request.InteractionEventId)
 	if err := s.interactionEventsCommands.RequestSummary.Handle(ctx, command); err != nil {
@@ -44,7 +46,8 @@ func (s *interactionEventService) RequestGenerateSummary(ctx context.Context, re
 func (s *interactionEventService) RequestGenerateActionItems(ctx context.Context, request *interaction_event_grpc_service.RequestGenerateActionItensGrpcRequest) (*interaction_event_grpc_service.InteractionEventIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestGenerateActionItems")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", request.Tenant), log.String("InteractionEventId", request.InteractionEventId))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "") // TODO enhance request with LoggedInUserId
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	command := commands.NewRequestActionItemsCommand(request.Tenant, request.InteractionEventId)
 	if err := s.interactionEventsCommands.RequestActionItems.Handle(ctx, command); err != nil {

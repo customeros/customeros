@@ -2,20 +2,22 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
-	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
+	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 )
 
 type emailService struct {
-	email_grpc_service.UnimplementedEmailGrpcServiceServer
+	emailgrpc.UnimplementedEmailGrpcServiceServer
 	log           logger.Logger
 	repositories  *repository.Repositories
 	emailCommands *command_handler.EmailCommands
@@ -29,10 +31,11 @@ func NewEmailService(log logger.Logger, repositories *repository.Repositories, e
 	}
 }
 
-func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_service.UpsertEmailGrpcRequest) (*email_grpc_service.EmailIdGrpcResponse, error) {
+func (s *emailService) UpsertEmail(ctx context.Context, request *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.UpsertEmail")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	emailId := strings.TrimSpace(request.Id)
 	var err error
@@ -46,7 +49,7 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_serv
 		emailId = utils.NewUUIDIfEmpty(emailId)
 	}
 
-	sourceFields := common_models.Source{}
+	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	cmd := command.NewUpsertEmailCommand(emailId, request.Tenant, request.LoggedInUserId, request.RawEmail, sourceFields,
@@ -58,9 +61,9 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_serv
 
 	s.log.Infof("(UpsertEmail): {%s}", request.RawEmail)
 
-	return &email_grpc_service.EmailIdGrpcResponse{Id: emailId}, nil
+	return &emailgrpc.EmailIdGrpcResponse{Id: emailId}, nil
 }
 
 func (s *emailService) errResponse(err error) error {
-	return grpc_errors.ErrResponse(err)
+	return grpcerr.ErrResponse(err)
 }

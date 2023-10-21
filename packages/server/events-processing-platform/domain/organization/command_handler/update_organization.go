@@ -2,7 +2,7 @@ package command_handler
 
 import (
 	"context"
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
@@ -49,7 +49,7 @@ func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *
 		Tenant:                 command.Tenant,
 		IgnoreEmptyFields:      command.IgnoreEmptyFields,
 		OrganizationDataFields: command.DataFields,
-		Source: commonModels.Source{
+		Source: cmnmod.Source{
 			Source: command.Source,
 		},
 		UpdatedAt: command.UpdatedAt,

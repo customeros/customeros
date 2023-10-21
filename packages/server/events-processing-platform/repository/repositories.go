@@ -31,6 +31,7 @@ type Repositories struct {
 	InteractionEventRepository InteractionEventRepository
 	ActionRepository           ActionRepository
 	LogEntryRepository         LogEntryRepository
+	IssueRepository            IssueRepository
 	TagRepository              TagRepository
 	PlayerRepository           PlayerRepository
 	ExternalSystemRepository   ExternalSystemRepository
@@ -57,6 +58,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, log logger.Logg
 		InteractionEventRepository: NewInteractionEventRepository(driver),
 		ActionRepository:           NewActionRepository(driver),
 		LogEntryRepository:         NewLogEntryRepository(driver),
+		IssueRepository:            NewIssueRepository(driver),
 		TagRepository:              NewTagRepository(driver),
 		PlayerRepository:           NewPlayerRepository(driver),
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),

@@ -4,6 +4,7 @@ import (
 	contactcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	emailcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	iecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
+	issuecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command_handler"
 	jobrolecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	logentrycmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
@@ -22,4 +23,5 @@ type Commands struct {
 	JobRoleCommands          *jobrolecmd.JobRoleCommands
 	InteractionEventCommands *iecmd.InteractionEventCommands
 	LogEntryCommands         *logentrycmd.LogEntryCommands
+	IssueCommands            *issuecmd.IssueCommandHandlers
 }

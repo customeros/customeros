@@ -147,7 +147,7 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 func (as *aggregateStore) Exists(ctx context.Context, aggregateID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AggregateStore.Exists")
 	defer span.Finish()
-	span.SetTag("AggregateID", aggregateID)
+	span.SetTag("aggregateID", aggregateID)
 
 	readStreamOptions := esdb.ReadStreamOptions{Direction: esdb.Backwards, From: esdb.Revision(1)}
 

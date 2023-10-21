@@ -1,7 +1,7 @@
 package command
 
 import (
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
 )
@@ -10,7 +10,7 @@ type UpsertEmailCommand struct {
 	eventstore.BaseCommand
 	IsCreateCommand bool
 	RawEmail        string `json:"rawEmail" validate:"required"`
-	Source          common_models.Source
+	Source          cmnmod.Source
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
 }
@@ -37,7 +37,7 @@ type EmailValidatedCommand struct {
 	EmailAddress    string
 }
 
-func NewUpsertEmailCommand(objectId, tenant, loggedInUserId, rawEmail string, source common_models.Source, createdAt, updatedAt *time.Time) *UpsertEmailCommand {
+func NewUpsertEmailCommand(objectId, tenant, loggedInUserId, rawEmail string, source cmnmod.Source, createdAt, updatedAt *time.Time) *UpsertEmailCommand {
 	return &UpsertEmailCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectId, tenant, loggedInUserId),
 		RawEmail:    rawEmail,

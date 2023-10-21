@@ -2,8 +2,8 @@ package aggregate
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
@@ -35,7 +35,8 @@ func (a *LogEntryAggregate) createLogEntry(ctx context.Context, command *cmd.Ups
 	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.createLogEntry")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", command)))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(command.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(command.UpdatedAt, createdAtNotNil)
@@ -55,25 +56,14 @@ func (a *LogEntryAggregate) updateLogEntry(ctx context.Context, command *cmd.Ups
 	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.updateLogEntry")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", command)))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(command.UpdatedAt, utils.Now())
 	startedAtNotNil := utils.IfNotNilTimeWithDefault(command.DataFields.StartedAt, a.LogEntry.StartedAt)
 	sourceOfTruth := command.Source.SourceOfTruth
 	if sourceOfTruth == "" {
 		sourceOfTruth = a.LogEntry.Source.SourceOfTruth
-	}
-
-	// do not change data if log entry was modified by openline
-	if sourceOfTruth != a.LogEntry.Source.SourceOfTruth && a.LogEntry.Source.SourceOfTruth == constants.SourceOpenline {
-		sourceOfTruth = a.LogEntry.Source.SourceOfTruth
-		startedAtNotNil = a.LogEntry.StartedAt
-		if a.LogEntry.Content != "" {
-			command.DataFields.Content = a.LogEntry.Content
-		}
-		if a.LogEntry.ContentType != "" {
-			command.DataFields.ContentType = a.LogEntry.ContentType
-		}
 	}
 
 	event, err := events.NewLogEntryUpdateEvent(a, command.DataFields.Content, command.DataFields.ContentType,
@@ -91,7 +81,8 @@ func (a *LogEntryAggregate) addTag(ctx context.Context, command *cmd.AddTagComma
 	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.addTag")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", command)))
 
 	taggedAtNotNil := utils.IfNotNilTimeWithDefault(command.TaggedAt, utils.Now())
 
@@ -109,7 +100,8 @@ func (a *LogEntryAggregate) removeTag(ctx context.Context, command *cmd.RemoveTa
 	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.removeTag")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", command)))
 
 	event, err := events.NewLogEntryRemoveTagEvent(a, command.TagId)
 	if err != nil {

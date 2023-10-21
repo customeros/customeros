@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	job_role_aggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/aggregate"
 	job_role_model "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands/model"
 	job_role_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
@@ -37,12 +37,12 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		Timezone:        "Europe/Paris",
 	},
-		commonModels.Source{
+		cmnmod.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
 			AppSource:     "unit-test",
 		},
-		commonModels.ExternalSystem{},
+		cmnmod.ExternalSystem{},
 		curTime, curTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnUserCreate(context.Background(), event)
@@ -96,11 +96,11 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 		Internal:        true,
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		Timezone:        "Europe/Paris",
-	}, commonModels.Source{
+	}, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "unit-test",
-	}, commonModels.ExternalSystem{
+	}, cmnmod.ExternalSystem{
 		ExternalSystemId: "sf",
 		ExternalId:       "123",
 		ExternalIdSecond: "ABC",
@@ -163,12 +163,12 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		Timezone:        "Africa/Abidjan",
 	},
-		commonModels.Source{
+		cmnmod.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
 			AppSource:     "unit-test",
 		},
-		commonModels.ExternalSystem{},
+		cmnmod.ExternalSystem{},
 		curTime, curTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnUserCreate(context.Background(), userCreateEvent)
@@ -251,11 +251,11 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 		FirstName: "Bob",
 		LastName:  "Dole",
 		Name:      "Bob Dole",
-	}, commonModels.Source{
+	}, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "unit-test",
-	}, commonModels.ExternalSystem{}, curTime, curTime)
+	}, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnUserCreate(context.Background(), userCreateEvent)
 	require.Nil(t, err)

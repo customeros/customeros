@@ -25,6 +25,7 @@ const (
 	NodeLabel_User             = "User"
 	NodeLabel_Contact          = "Contact"
 	NodeLabel_LogEntry         = "LogEntry"
+	NodeLabel_Issue            = "Issue"
 
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 	ApiKeyHeader    = "X-Openline-API-KEY"

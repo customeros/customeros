@@ -126,3 +126,20 @@ func MapDbNodeToSocialEntity(node dbtype.Node) *entity.SocialEntity {
 	}
 	return &social
 }
+
+func MapDbNodeToIssueEntity(node dbtype.Node) *entity.IssueEntity {
+	props := utils.GetPropsFromNode(node)
+	issue := entity.IssueEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Subject:       utils.GetStringPropOrEmpty(props, "subject"),
+		Description:   utils.GetStringPropOrEmpty(props, "description"),
+		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &issue
+}

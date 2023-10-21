@@ -24,8 +24,8 @@ func EnrichEventWithMetadata(event *eventstore.Event, span *opentracing.Span, te
 	}
 }
 
-func EnrichEventWithMetadataExtended(event *eventstore.Event, span *opentracing.Span, mtd Metadata) {
-	metadata := tracing.ExtractTextMapCarrier((*span).Context())
+func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.Span, mtd Metadata) {
+	metadata := tracing.ExtractTextMapCarrier(span.Context())
 	metadata["tenant"] = mtd.Tenant
 	if mtd.UserId != "" {
 		metadata["user-id"] = mtd.UserId
@@ -34,6 +34,6 @@ func EnrichEventWithMetadataExtended(event *eventstore.Event, span *opentracing.
 		metadata["app"] = mtd.App
 	}
 	if err := event.SetMetadata(metadata); err != nil {
-		tracing.TraceErr(*span, err)
+		tracing.TraceErr(span, err)
 	}
 }

@@ -1,7 +1,7 @@
 package command
 
 import (
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
@@ -12,8 +12,8 @@ type UpsertOrganizationCommand struct {
 	IsCreateCommand   bool
 	IgnoreEmptyFields bool
 	DataFields        models.OrganizationDataFields
-	Source            common_models.Source
-	ExternalSystem    common_models.ExternalSystem
+	Source            cmnmod.Source
+	ExternalSystem    cmnmod.ExternalSystem
 	CreatedAt         *time.Time
 	UpdatedAt         *time.Time
 }
@@ -31,7 +31,7 @@ func UpsertOrganizationCommandToOrganizationFieldsStruct(command *UpsertOrganiza
 	}
 }
 
-func NewUpsertOrganizationCommand(organizationId, tenant, userId string, source common_models.Source, externalSystem common_models.ExternalSystem, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time, ignoreEmptyFields bool) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(organizationId, tenant, userId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time, ignoreEmptyFields bool) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
 		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant, userId),
 		IgnoreEmptyFields: ignoreEmptyFields,
@@ -180,7 +180,7 @@ type AddSocialCommand struct {
 	SocialId       string
 	SocialPlatform string
 	SocialUrl      string `json:"socialUrl" validate:"required"`
-	Source         common_models.Source
+	Source         cmnmod.Source
 	CreatedAt      *time.Time
 	UpdatedAt      *time.Time
 }
@@ -191,7 +191,7 @@ func NewAddSocialCommand(objectID, tenant, socialId, socialPlatform, socialUrl, 
 		SocialId:       socialId,
 		SocialPlatform: socialPlatform,
 		SocialUrl:      socialUrl,
-		Source: common_models.Source{
+		Source: cmnmod.Source{
 			Source:        source,
 			SourceOfTruth: sourceOfTruth,
 			AppSource:     appSource,
@@ -223,17 +223,19 @@ func NewShowOrganizationCommand(tenant, orgId, userId string) *ShowOrganizationC
 
 type RefreshLastTouchpointCommand struct {
 	eventstore.BaseCommand
+	AppSource string
 }
 
-func NewRefreshLastTouchpointCommand(tenant, orgId, userId string) *RefreshLastTouchpointCommand {
+func NewRefreshLastTouchpointCommand(tenant, orgId, userId, appSource string) *RefreshLastTouchpointCommand {
 	return &RefreshLastTouchpointCommand{
 		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
+		AppSource:   appSource,
 	}
 }
 
 type UpsertCustomFieldCommand struct {
 	eventstore.BaseCommand
-	Source          common_models.Source
+	Source          cmnmod.Source
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
 	CustomFieldData models.CustomField
@@ -243,7 +245,7 @@ func NewUpsertCustomFieldCommand(organizationId, tenant, source, sourceOfTruth, 
 	createdAt, updatedAt *time.Time, customField models.CustomField) *UpsertCustomFieldCommand {
 	return &UpsertCustomFieldCommand{
 		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
-		Source: common_models.Source{
+		Source: cmnmod.Source{
 			Source:        source,
 			SourceOfTruth: sourceOfTruth,
 			AppSource:     appSource,
@@ -256,7 +258,7 @@ func NewUpsertCustomFieldCommand(organizationId, tenant, source, sourceOfTruth, 
 
 type AddParentCommand struct {
 	eventstore.BaseCommand
-	ParentOrganizationId string `json:"parentOrganizationId" validate:"required,nefield=ObjectID"` // alexb test it
+	ParentOrganizationId string `json:"parentOrganizationId" validate:"required,nefield=ObjectID"`
 	Type                 string
 }
 

@@ -4,6 +4,7 @@ import (
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
+	issue_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
 	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
 	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
@@ -14,6 +15,7 @@ import (
 	contact_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
 	email_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/service"
 	interaction_event_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/service"
+	issue_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/service"
 	job_role_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/service"
 	location_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/service"
 	log_entry_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/service"
@@ -98,4 +100,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	logEntryService := log_entry_service.NewLogEntryService(server.log, server.repositories, server.commands.LogEntryCommands)
 	log_entry_grpc_service.RegisterLogEntryGrpcServiceServer(grpcServer, logEntryService)
+
+	issueService := issue_service.NewIssueService(server.log, server.commands.IssueCommands)
+	issue_grpc_service.RegisterIssueGrpcServiceServer(grpcServer, issueService)
 }

@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
@@ -16,17 +16,17 @@ const (
 )
 
 type EmailCreateEvent struct {
-	Tenant        string               `json:"tenant" validate:"required"`
-	RawEmail      string               `json:"rawEmail" validate:"required"`
-	Source        string               `json:"source"`        //Deprecated
-	SourceOfTruth string               `json:"sourceOfTruth"` //Deprecated
-	AppSource     string               `json:"appSource"`     //Deprecated
-	SourceFields  common_models.Source `json:"sourceFields"`
-	CreatedAt     time.Time            `json:"createdAt"`
-	UpdatedAt     time.Time            `json:"updatedAt"`
+	Tenant        string        `json:"tenant" validate:"required"`
+	RawEmail      string        `json:"rawEmail" validate:"required"`
+	Source        string        `json:"source"`        //Deprecated
+	SourceOfTruth string        `json:"sourceOfTruth"` //Deprecated
+	AppSource     string        `json:"appSource"`     //Deprecated
+	SourceFields  cmnmod.Source `json:"sourceFields"`
+	CreatedAt     time.Time     `json:"createdAt"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
 }
 
-func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source common_models.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source cmnmod.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := EmailCreateEvent{
 		Tenant:       tenant,
 		RawEmail:     rawEmail,

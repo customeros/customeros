@@ -4,7 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -72,7 +72,7 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	a.User.UpdatedAt = eventData.UpdatedAt
 	a.User.Timezone = eventData.Timezone
 	if eventData.ExternalSystem.Available() {
-		a.User.ExternalSystems = []common_models.ExternalSystem{eventData.ExternalSystem}
+		a.User.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
 	}
 	return nil
 }

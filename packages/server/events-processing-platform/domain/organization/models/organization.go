@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"time"
 )
 
@@ -68,14 +68,14 @@ func (c *CustomFieldValue) RealValue() any {
 }
 
 type CustomField struct {
-	Id                  string               `json:"id"`
-	Name                string               `json:"name"`
-	TemplateId          *string              `json:"templateId,omitempty"`
-	CustomFieldValue    CustomFieldValue     `json:"customFieldValue"`
-	CustomFieldDataType CustomFieldDataType  `json:"customFieldDataType"`
-	Source              common_models.Source `json:"source"`
-	CreatedAt           time.Time            `json:"createdAt,omitempty"`
-	UpdatedAt           time.Time            `json:"updatedAt,omitempty"`
+	Id                  string              `json:"id"`
+	Name                string              `json:"name"`
+	TemplateId          *string             `json:"templateId,omitempty"`
+	CustomFieldValue    CustomFieldValue    `json:"customFieldValue"`
+	CustomFieldDataType CustomFieldDataType `json:"customFieldDataType"`
+	Source              cmnmod.Source       `json:"source"`
+	CreatedAt           time.Time           `json:"createdAt,omitempty"`
+	UpdatedAt           time.Time           `json:"updatedAt,omitempty"`
 }
 
 type Organization struct {
@@ -97,7 +97,7 @@ type Organization struct {
 	LastFundingAmount   string                             `json:"lastFundingAmount"`
 	ReferenceId         string                             `json:"referenceId"`
 	Note                string                             `json:"note"`
-	Source              common_models.Source               `json:"source"`
+	Source              cmnmod.Source                      `json:"source"`
 	CreatedAt           time.Time                          `json:"createdAt,omitempty"`
 	UpdatedAt           time.Time                          `json:"updatedAt,omitempty"`
 	PhoneNumbers        map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
@@ -109,7 +109,7 @@ type Organization struct {
 	RenewalForecast     RenewalForecast                    `json:"renewalForecast,omitempty"`
 	BillingDetails      BillingDetails                     `json:"billingDetails,omitempty"`
 	CustomFields        map[string]CustomField             `json:"customFields,omitempty"`
-	ExternalSystems     []common_models.ExternalSystem     `json:"externalSystems"`
+	ExternalSystems     []cmnmod.ExternalSystem            `json:"externalSystems"`
 	ParentOrganizations map[string]ParentOrganization      `json:"parentOrganizations,omitempty"`
 }
 
