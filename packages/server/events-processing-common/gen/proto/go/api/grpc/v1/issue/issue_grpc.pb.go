@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IssueGrpcServiceClient interface {
 	UpsertIssue(ctx context.Context, in *UpsertIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
-	AssUserAssignee(ctx context.Context, in *AddUserAssigneeToIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
+	AddUserAssignee(ctx context.Context, in *AddUserAssigneeToIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
 	RemoveUserAssignee(ctx context.Context, in *RemoveUserAssigneeFromIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
 	AddUserFollower(ctx context.Context, in *AddUserFollowerToIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
 	RemoveUserFollower(ctx context.Context, in *RemoveUserFollowerFromIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error)
@@ -46,9 +46,9 @@ func (c *issueGrpcServiceClient) UpsertIssue(ctx context.Context, in *UpsertIssu
 	return out, nil
 }
 
-func (c *issueGrpcServiceClient) AssUserAssignee(ctx context.Context, in *AddUserAssigneeToIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error) {
+func (c *issueGrpcServiceClient) AddUserAssignee(ctx context.Context, in *AddUserAssigneeToIssueGrpcRequest, opts ...grpc.CallOption) (*IssueIdGrpcResponse, error) {
 	out := new(IssueIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/issueGrpcService/AssUserAssignee", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/issueGrpcService/AddUserAssignee", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (c *issueGrpcServiceClient) RemoveUserFollower(ctx context.Context, in *Rem
 // for forward compatibility
 type IssueGrpcServiceServer interface {
 	UpsertIssue(context.Context, *UpsertIssueGrpcRequest) (*IssueIdGrpcResponse, error)
-	AssUserAssignee(context.Context, *AddUserAssigneeToIssueGrpcRequest) (*IssueIdGrpcResponse, error)
+	AddUserAssignee(context.Context, *AddUserAssigneeToIssueGrpcRequest) (*IssueIdGrpcResponse, error)
 	RemoveUserAssignee(context.Context, *RemoveUserAssigneeFromIssueGrpcRequest) (*IssueIdGrpcResponse, error)
 	AddUserFollower(context.Context, *AddUserFollowerToIssueGrpcRequest) (*IssueIdGrpcResponse, error)
 	RemoveUserFollower(context.Context, *RemoveUserFollowerFromIssueGrpcRequest) (*IssueIdGrpcResponse, error)
@@ -100,8 +100,8 @@ type UnimplementedIssueGrpcServiceServer struct {
 func (UnimplementedIssueGrpcServiceServer) UpsertIssue(context.Context, *UpsertIssueGrpcRequest) (*IssueIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertIssue not implemented")
 }
-func (UnimplementedIssueGrpcServiceServer) AssUserAssignee(context.Context, *AddUserAssigneeToIssueGrpcRequest) (*IssueIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AssUserAssignee not implemented")
+func (UnimplementedIssueGrpcServiceServer) AddUserAssignee(context.Context, *AddUserAssigneeToIssueGrpcRequest) (*IssueIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddUserAssignee not implemented")
 }
 func (UnimplementedIssueGrpcServiceServer) RemoveUserAssignee(context.Context, *RemoveUserAssigneeFromIssueGrpcRequest) (*IssueIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveUserAssignee not implemented")
@@ -142,20 +142,20 @@ func _IssueGrpcService_UpsertIssue_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _IssueGrpcService_AssUserAssignee_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _IssueGrpcService_AddUserAssignee_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddUserAssigneeToIssueGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IssueGrpcServiceServer).AssUserAssignee(ctx, in)
+		return srv.(IssueGrpcServiceServer).AddUserAssignee(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/issueGrpcService/AssUserAssignee",
+		FullMethod: "/issueGrpcService/AddUserAssignee",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IssueGrpcServiceServer).AssUserAssignee(ctx, req.(*AddUserAssigneeToIssueGrpcRequest))
+		return srv.(IssueGrpcServiceServer).AddUserAssignee(ctx, req.(*AddUserAssigneeToIssueGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -226,8 +226,8 @@ var IssueGrpcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _IssueGrpcService_UpsertIssue_Handler,
 		},
 		{
-			MethodName: "AssUserAssignee",
-			Handler:    _IssueGrpcService_AssUserAssignee_Handler,
+			MethodName: "AddUserAssignee",
+			Handler:    _IssueGrpcService_AddUserAssignee_Handler,
 		},
 		{
 			MethodName: "RemoveUserAssignee",

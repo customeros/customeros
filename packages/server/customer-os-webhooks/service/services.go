@@ -26,8 +26,10 @@ type Services struct {
 	LogEntryService       LogEntryService
 	OrganizationService   OrganizationService
 	ContactService        ContactService
+	IssueService          IssueService
 	SyncStatusService     SyncStatusService
 	ExternalSystemService ExternalSystemService
+	FinderService         FinderService
 }
 
 func InitServices(log logger.Logger,
@@ -55,6 +57,8 @@ func InitServices(log logger.Logger,
 	services.OrganizationService = NewOrganizationService(log, repositories, grpcClients, &services)
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
 	services.LogEntryService = NewLogEntryService(log, repositories, grpcClients, &services)
+	services.IssueService = NewIssueService(log, repositories, grpcClients, &services)
+	services.FinderService = NewFinderService(log, &services)
 	services.cfg = cfg
 	return &services
 }

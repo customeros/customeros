@@ -28,7 +28,6 @@ const maxWorkersLogEntrySync = 10
 
 type LogEntryService interface {
 	SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) error
-	mapDbNodeToLogEntryEntity(dbNode dbtype.Node) *entity.LogEntryEntity
 }
 
 type logEntryService struct {
@@ -74,6 +73,7 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 	workerLimit := make(chan struct{}, maxWorkersLogEntrySync)
 
 	syncMutex := &sync.Mutex{}
+	statusesMutex := &sync.Mutex{}
 	syncDate := utils.Now()
 	var statuses []SyncStatus
 
@@ -99,7 +99,9 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 			}()
 
 			result := s.syncLogEntry(ctx, syncMutex, syncLogEntry, syncDate, common.GetTenantFromContext(ctx))
+			statusesMutex.Lock()
 			statuses = append(statuses, result)
+			statusesMutex.Unlock()
 		}(logEntryData)
 	}
 	// Wait for all workers to finish
@@ -126,12 +128,13 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 		tracing.TraceErr(span, err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", logEntryInput.ExternalSystem, tenant, err.Error())
 		s.log.Error(reason)
+		span.LogFields(log.String("output", "failed"))
 		return NewFailedSyncStatus(reason)
 	}
 
 	// Check if log entry sync should be skipped
 	if logEntryInput.Skip {
-		span.LogFields(log.Bool("skippedSync", true))
+		span.LogFields(log.String("output", "skipped"))
 		return NewSkippedSyncStatus(logEntryInput.SkipReason)
 	}
 
@@ -154,6 +157,7 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 			failedSync = true
 			reason = fmt.Sprintf("organization not found for log entry %s for tenant %s", logEntryInput.ExternalId, tenant)
 			s.log.Error(reason)
+			span.LogFields(log.String("output", "failed"))
 			return NewFailedSyncStatus(reason)
 		}
 		loggedOrgIds = utils.RemoveDuplicates(loggedOrgIds)
@@ -214,8 +218,10 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {
+		span.LogFields(log.String("output", "failed"))
 		return NewFailedSyncStatus(reason)
 	}
+	span.LogFields(log.String("output", "success"))
 	return NewSuccessfulSyncStatus()
 }
 

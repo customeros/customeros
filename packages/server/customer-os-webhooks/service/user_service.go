@@ -28,7 +28,6 @@ const maxWorkersUserSync = 4
 type UserService interface {
 	SyncUsers(ctx context.Context, users []model.UserData) error
 	GetIdForReferencedUser(ctx context.Context, tenant, externalSystemId string, user model.ReferencedUser) (string, error)
-	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
 }
 
 type userService struct {
@@ -74,6 +73,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	workerLimit := make(chan struct{}, maxWorkersUserSync)
 
 	syncMutex := &sync.Mutex{}
+	statusesMutex := &sync.Mutex{}
 	syncDate := utils.Now()
 	var statuses []SyncStatus
 
@@ -99,7 +99,9 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 			}()
 
 			result := s.syncUser(ctx, syncMutex, userData, syncDate, common.GetTenantFromContext(ctx))
+			statusesMutex.Lock()
 			statuses = append(statuses, result)
+			statusesMutex.Unlock()
 		}(userData)
 	}
 	// Wait for all workers to finish
@@ -126,12 +128,13 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		tracing.TraceErr(span, err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", userInput.ExternalSystem, tenant, err.Error())
 		s.log.Error(reason)
+		span.LogFields(log.String("output", "failed"))
 		return NewFailedSyncStatus(reason)
 	}
 
 	// Check if user sync should be skipped
 	if userInput.Skip {
-		span.LogFields(log.Bool("skippedSync", true))
+		span.LogFields(log.String("output", "skipped"))
 		return NewSkippedSyncStatus(userInput.SkipReason)
 	}
 
@@ -256,8 +259,10 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {
+		span.LogFields(log.String("output", "failed"))
 		return NewFailedSyncStatus(reason)
 	}
+	span.LogFields(log.String("output", "success"))
 	return NewSuccessfulSyncStatus()
 }
 

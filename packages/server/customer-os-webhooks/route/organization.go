@@ -1,13 +1,15 @@
-package rest
+package route
 
 import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
+	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
@@ -17,7 +19,18 @@ import (
 	"time"
 )
 
-func SyncOrganizationsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func AddOrganizationRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger) {
+	route.POST("/sync/organizations",
+		cosHandler.TracingEnhancer(ctx, "/sync/organizations"),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		syncOrganizationsHandler(services, log))
+	route.POST("/sync/organization",
+		cosHandler.TracingEnhancer(ctx, "/sync/organization"),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		syncOrganizationHandler(services, log))
+}
+
+func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncOrganizations", c.Request.Header)
 		defer span.Finish()
@@ -43,7 +56,7 @@ func SyncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 		var organizations []model.OrganizationData
 		if err = json.Unmarshal(requestBody, &organizations); err != nil {
 			log.Errorf("(SyncOrganizations) Failed unmarshalling body request: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot unmarshal request body"})
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
 
@@ -74,7 +87,7 @@ func SyncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 	}
 }
 
-func SyncOrganizationHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncOrganization", c.Request.Header)
 		defer span.Finish()
@@ -100,7 +113,7 @@ func SyncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 		var organization model.OrganizationData
 		if err = json.Unmarshal(requestBody, &organization); err != nil {
 			log.Errorf("(SyncOrganization) Failed unmarshalling body request: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot unmarshal request body"})
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
 

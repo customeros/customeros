@@ -34,7 +34,6 @@ type domains struct {
 type OrganizationService interface {
 	SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) error
 	GetIdForReferencedOrganization(ctx context.Context, tenant, externalSystem string, org model.ReferencedOrganization) (string, error)
-	mapDbNodeToOrganizationEntity(dbNode dbtype.Node) *entity.OrganizationEntity
 }
 
 type organizationService struct {
@@ -80,6 +79,7 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	workerLimit := make(chan struct{}, maxWorkersOrganizationSync)
 
 	syncMutex := &sync.Mutex{}
+	statusesMutex := &sync.Mutex{}
 	syncDate := utils.Now()
 	var statuses []SyncStatus
 
@@ -120,7 +120,9 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 			}()
 
 			result := s.syncOrganization(ctx, syncMutex, organizationData, syncDate, controlDomains)
+			statusesMutex.Lock()
 			statuses = append(statuses, result)
+			statusesMutex.Unlock()
 		}(organizationData)
 	}
 	// Wait for all workers to finish
@@ -162,12 +164,13 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		tracing.TraceErr(span, err)
 		reason = fmt.Sprintf("failed merging external system %s for tenant %s :%s", orgInput.ExternalSystem, tenant, err.Error())
 		s.log.Error(reason)
+		span.LogFields(log.String("output", "failed"))
 		return NewFailedSyncStatus(reason)
 	}
 
 	// Check if organization sync should be skipped
 	if orgInput.Skip {
-		span.LogFields(log.Bool("skippedSync", true))
+		span.LogFields(log.String("output", "skipped"))
 		return NewSkippedSyncStatus(orgInput.SkipReason)
 	}
 
@@ -179,7 +182,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	orgInput.Domains = nonPersonalEmailProviderDomains
 	if orgInput.DomainRequired && !orgInput.IsSubOrg() && !orgInput.HasDomains() {
-		span.LogFields(log.Bool("skippedSync", true))
+		span.LogFields(log.String("output", "skipped"))
 		return NewSkippedSyncStatus("Missing domain while required")
 	}
 	orgHasWhitelistedDomain := false
@@ -204,8 +207,8 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		span.LogFields(log.Bool("found matching organization", matchingOrganizationExists))
 
 		if orgInput.UpdateOnly && !matchingOrganizationExists {
-			span.LogFields(log.Bool("skippedSync", true))
 			syncMutex.Unlock()
+			span.LogFields(log.String("output", "skipped"))
 			return NewSkippedSyncStatus("Update only flag enabled and no matching organization found")
 		}
 
@@ -396,8 +399,10 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {
+		span.LogFields(log.String("output", "failed"))
 		return NewFailedSyncStatus(reason)
 	}
+	span.LogFields(log.String("output", "success"))
 	return NewSuccessfulSyncStatus()
 }
 

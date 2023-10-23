@@ -13,7 +13,7 @@ type Issue struct {
 	Description            string                  `json:"description"`
 	Status                 string                  `json:"status"`
 	Priority               string                  `json:"priority"`
-	ReportedByOrganization string                  `json:"loggedOrganizationIds,omitempty"`
+	ReportedByOrganization string                  `json:"reportedByOrganizationId,omitempty"`
 	Source                 cmnmod.Source           `json:"source"`
 	ExternalSystems        []cmnmod.ExternalSystem `json:"externalSystem"`
 	CreatedAt              time.Time               `json:"createdAt,omitempty"`

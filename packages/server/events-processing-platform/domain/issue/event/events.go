@@ -24,7 +24,7 @@ type IssueCreateEvent struct {
 	Description              string                `json:"description" validate:"required_without=Subject"`
 	Status                   string                `json:"status"`
 	Priority                 string                `json:"priority"`
-	ReportedByOrganizationId string                `json:"loggedOrganizationId,omitempty"`
+	ReportedByOrganizationId string                `json:"reportedByOrganizationId,omitempty"`
 	Source                   string                `json:"source"`
 	AppSource                string                `json:"appSource"`
 	CreatedAt                time.Time             `json:"createdAt"`

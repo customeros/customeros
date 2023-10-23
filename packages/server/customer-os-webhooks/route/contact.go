@@ -1,13 +1,15 @@
-package rest
+package route
 
 import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
+	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
@@ -17,7 +19,18 @@ import (
 	"time"
 )
 
-func SyncContactsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func AddContactRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger) {
+	route.POST("/sync/contacts",
+		cosHandler.TracingEnhancer(ctx, "/sync/contacts"),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		syncContactsHandler(services, log))
+	route.POST("/sync/contact",
+		cosHandler.TracingEnhancer(ctx, "/sync/contact"),
+		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		syncContactHandler(services, log))
+}
+
+func syncContactsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncContacts", c.Request.Header)
 		defer span.Finish()
@@ -43,7 +56,7 @@ func SyncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		var contacts []model.ContactData
 		if err = json.Unmarshal(requestBody, &contacts); err != nil {
 			log.Errorf("(SyncContacts) Failed unmarshalling body request: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot unmarshal request body"})
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
 
@@ -74,7 +87,7 @@ func SyncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 	}
 }
 
-func SyncContactHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func syncContactHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncContact", c.Request.Header)
 		defer span.Finish()
@@ -100,7 +113,7 @@ func SyncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 		var contact model.ContactData
 		if err = json.Unmarshal(requestBody, &contact); err != nil {
 			log.Errorf("(SyncContact) Failed unmarshalling body request: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot unmarshal request body"})
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
 
