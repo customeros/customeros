@@ -96,7 +96,7 @@ func (a *IssueAggregate) addUserAssignee(ctx context.Context, cmd *command.AddUs
 
 	atNotNil := utils.IfNotNilTimeWithDefault(cmd.At, utils.Now())
 
-	addUserAssigneeEvent, err := event.NewIssueAddUserAssigneeEvent(a, cmd.LoggedInUserId, atNotNil)
+	addUserAssigneeEvent, err := event.NewIssueAddUserAssigneeEvent(a, cmd.AssigneeId, atNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueAddUserAssigneeEvent")
@@ -119,7 +119,7 @@ func (a *IssueAggregate) removeUserAssignee(ctx context.Context, cmd *command.Re
 
 	atNotNil := utils.IfNotNilTimeWithDefault(cmd.At, utils.Now())
 
-	removeUserAssigneeEvent, err := event.NewIssueRemoveUserAssigneeEvent(a, cmd.LoggedInUserId, atNotNil)
+	removeUserAssigneeEvent, err := event.NewIssueRemoveUserAssigneeEvent(a, cmd.AssigneeId, atNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueRemoveUserAssigneeEvent")
@@ -142,7 +142,7 @@ func (a *IssueAggregate) addUserFollower(ctx context.Context, cmd *command.AddUs
 
 	atNotNil := utils.IfNotNilTimeWithDefault(cmd.At, utils.Now())
 
-	addUserFollowerEvent, err := event.NewIssueAddUserFollowerEvent(a, cmd.LoggedInUserId, atNotNil)
+	addUserFollowerEvent, err := event.NewIssueAddUserFollowerEvent(a, cmd.FollowerId, atNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueAddUserFollowerEvent")
@@ -165,7 +165,7 @@ func (a *IssueAggregate) removeUserFollower(ctx context.Context, cmd *command.Re
 
 	atNotNil := utils.IfNotNilTimeWithDefault(cmd.At, utils.Now())
 
-	removeUserFollowerEvent, err := event.NewIssueRemoveUserFollowerEvent(a, cmd.LoggedInUserId, atNotNil)
+	removeUserFollowerEvent, err := event.NewIssueRemoveUserFollowerEvent(a, cmd.FollowerId, atNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueRemoveUserFollowerEvent")

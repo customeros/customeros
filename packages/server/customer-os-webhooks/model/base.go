@@ -52,4 +52,5 @@ func (b *BaseData) SetTimes() {
 
 func (b *BaseData) Normalize() {
 	b.ExternalSystem = strings.ToLower(strings.TrimSpace(b.ExternalSystem))
+	b.ExternalId = strings.TrimSpace(b.ExternalId)
 }

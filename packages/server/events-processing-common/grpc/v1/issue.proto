@@ -59,7 +59,7 @@ message IssueIdGrpcResponse {
 
 service issueGrpcService {
   rpc UpsertIssue(UpsertIssueGrpcRequest) returns (IssueIdGrpcResponse);
-  rpc AssUserAssignee(AddUserAssigneeToIssueGrpcRequest) returns (IssueIdGrpcResponse);
+  rpc AddUserAssignee(AddUserAssigneeToIssueGrpcRequest) returns (IssueIdGrpcResponse);
   rpc RemoveUserAssignee(RemoveUserAssigneeFromIssueGrpcRequest) returns (IssueIdGrpcResponse);
   rpc AddUserFollower(AddUserFollowerToIssueGrpcRequest) returns (IssueIdGrpcResponse);
   rpc RemoveUserFollower(RemoveUserFollowerFromIssueGrpcRequest) returns (IssueIdGrpcResponse);

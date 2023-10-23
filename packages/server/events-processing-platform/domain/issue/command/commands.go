@@ -46,15 +46,15 @@ func NewAddUserAssigneeCommand(issueId, tenant, loggedInUserId, userId, appSourc
 
 type RemoveUserAssigneeCommand struct {
 	eventstore.BaseCommand
-	UserId    string `json:"assigneeId" validate:"required"`
-	At        *time.Time
-	AppSource string
+	AssigneeId string `json:"assigneeId" validate:"required"`
+	At         *time.Time
+	AppSource  string
 }
 
 func NewRemoveUserAssigneeCommand(issueId, tenant, loggedInUserId, userId, appSource string, at *time.Time) *RemoveUserAssigneeCommand {
 	return &RemoveUserAssigneeCommand{
 		BaseCommand: eventstore.NewBaseCommand(issueId, tenant, loggedInUserId),
-		UserId:      userId,
+		AssigneeId:  userId,
 		At:          at,
 		AppSource:   appSource,
 	}
@@ -62,15 +62,15 @@ func NewRemoveUserAssigneeCommand(issueId, tenant, loggedInUserId, userId, appSo
 
 type AddUserFollowerCommand struct {
 	eventstore.BaseCommand
-	UserId    string `json:"followerId" validate:"required"`
-	At        *time.Time
-	AppSource string
+	FollowerId string `json:"followerId" validate:"required"`
+	At         *time.Time
+	AppSource  string
 }
 
 func NewAddUserFollowerCommand(issueId, tenant, loggedInUserId, userId, appSource string, at *time.Time) *AddUserFollowerCommand {
 	return &AddUserFollowerCommand{
 		BaseCommand: eventstore.NewBaseCommand(issueId, tenant, loggedInUserId),
-		UserId:      userId,
+		FollowerId:  userId,
 		At:          at,
 		AppSource:   appSource,
 	}
@@ -78,15 +78,15 @@ func NewAddUserFollowerCommand(issueId, tenant, loggedInUserId, userId, appSourc
 
 type RemoveUserFollowerCommand struct {
 	eventstore.BaseCommand
-	UserId    string `json:"followerId" validate:"required"`
-	At        *time.Time
-	AppSource string
+	FollowerId string `json:"followerId" validate:"required"`
+	At         *time.Time
+	AppSource  string
 }
 
 func NewRemoveUserFollowerCommand(issueId, tenant, loggedInUserId, userId, appSource string, at *time.Time) *RemoveUserFollowerCommand {
 	return &RemoveUserFollowerCommand{
 		BaseCommand: eventstore.NewBaseCommand(issueId, tenant, loggedInUserId),
-		UserId:      userId,
+		FollowerId:  userId,
 		At:          at,
 		AppSource:   appSource,
 	}

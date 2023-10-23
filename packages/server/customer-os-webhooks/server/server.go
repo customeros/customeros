@@ -15,8 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
-	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/route"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/validator"
 	"github.com/opentracing/opentracing-go"
@@ -103,41 +102,15 @@ func (server *server) Run(parentCtx context.Context) error {
 	// Setting up services
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb.GormDB, server.cfg, commonServices, commonAuthServices, grpcContainer, appCache)
 
-	r.POST("/sync/users",
-		cosHandler.TracingEnhancer(ctx, "/sync/users"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.SyncUsersHandler(serviceContainer, server.log))
-	r.POST("/sync/user",
-		cosHandler.TracingEnhancer(ctx, "/sync/user"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.SyncUserHandler(serviceContainer, server.log))
-	r.POST("/sync/organizations",
-		cosHandler.TracingEnhancer(ctx, "/sync/organizations"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.SyncOrganizationsHandler(serviceContainer, server.log))
-	r.POST("/sync/organization",
-		cosHandler.TracingEnhancer(ctx, "/sync/organization"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.SyncOrganizationHandler(serviceContainer, server.log))
-	r.POST("/sync/log-entries",
-		cosHandler.TracingEnhancer(ctx, "/sync/log-entries"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.SyncLogEntriesHandler(serviceContainer, server.log))
-	r.POST("/sync/log-entry",
-		cosHandler.TracingEnhancer(ctx, "/sync/log-entry"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.SyncLogEntryHandler(serviceContainer, server.log))
-	r.POST("/sync/contacts",
-		cosHandler.TracingEnhancer(ctx, "/sync/contacts"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.SyncContactsHandler(serviceContainer, server.log))
-	r.POST("/sync/contact",
-		cosHandler.TracingEnhancer(ctx, "/sync/contact"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		rest.SyncContactHandler(serviceContainer, server.log))
+	route.AddUserRoutes(ctx, r, serviceContainer, server.log)
+	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log)
+	route.AddLogEntryRoutes(ctx, r, serviceContainer, server.log)
+	route.AddContactRoutes(ctx, r, serviceContainer, server.log)
+	route.AddIssueRoutes(ctx, r, serviceContainer, server.log)
 
 	r.GET("/health", HealthCheckHandler)
-	r.GET("/readiness", HealthCheckHandler)
+	r.GET("/readiness", ReadinessHandler)
+	r.GET("/", RootHandler)
 
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
 		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
@@ -167,6 +140,16 @@ func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, 
 
 func HealthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
+}
+
+func ReadinessHandler(c *gin.Context) {
+	c.JSON(200, gin.H{"status": "READY"})
+}
+
+func RootHandler(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "Customer OS Webhooks",
+	})
 }
 
 func metricsHandler(c *gin.Context) {
