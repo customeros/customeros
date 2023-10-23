@@ -1,11 +1,22 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 
 import { Box } from '@ui/layout/Box';
 import { TimelineActionLogEntryContextContextProvider } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
 import { TimelineActionButtons } from './TimelineActionButtons';
-import { TimelineActionEmailContextContextProvider } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
+// import { TimelineActionEmailContextContextProvider } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
 import { TimelineActionsArea } from './TimelineActionsArea';
+
+const TimelineActionEmailContextContextProvider = dynamic(
+  () =>
+    import(
+      '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext'
+    ),
+  {
+    ssr: false,
+  },
+);
 
 interface TimelineActionsProps {
   invalidateQuery: () => void;

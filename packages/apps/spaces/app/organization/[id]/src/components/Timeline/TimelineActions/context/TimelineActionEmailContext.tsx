@@ -1,3 +1,5 @@
+'use client';
+
 import React, {
   useState,
   useContext,
@@ -21,7 +23,6 @@ import { useTimelineActionContext } from './TimelineActionContext';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
-import { VirtuosoHandle } from 'react-virtuoso';
 import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
 
 export const noop = () => undefined;
@@ -195,3 +196,5 @@ export const TimelineActionEmailContextContextProvider = ({
     </TimelineActionEmailContextContext.Provider>
   );
 };
+
+export default TimelineActionEmailContextContextProvider;
