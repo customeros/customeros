@@ -65,7 +65,8 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
       ?.map((o) => ({
         value: o.id,
         label: `${o.firstName} ${o.lastName}`.trim(),
-      }));
+      }))
+      ?.sort((a, b) => a.label.localeCompare(b.label));
   }, [data]);
 
   const value = owner ? options?.find((o) => o.value === owner.id) : null;
@@ -81,19 +82,35 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
         (old) => {
           return produce(old, (draft) => {
             const pageIndex = getOrganization.pagination.page - 1;
-            const ownerItem = draft?.pages[
+            const targetOrgIndex = draft?.pages[
               pageIndex
-            ]?.dashboardView_Organizations?.content.find(
+            ]?.dashboardView_Organizations?.content.findIndex(
               (c) => c.id === id,
-            )?.owner;
+            );
+            if (typeof targetOrgIndex === 'undefined' || targetOrgIndex < 0)
+              return;
 
-            if (ownerItem && value) {
-              const foundOption = options?.find(
-                (o) => o.value === payload.userId,
-              );
+            const targetOrg =
+              draft?.pages[pageIndex]?.dashboardView_Organizations?.content[
+                targetOrgIndex
+              ];
+            if (!targetOrg) return;
 
-              if (!foundOption) return;
-              const [firstName, lastName] = foundOption.label.split(' ');
+            const foundOption = options?.find(
+              (o) => o.value === payload.userId,
+            );
+
+            if (!foundOption) return;
+            const [firstName, lastName] = foundOption.label.split(' ');
+
+            const ownerItem = targetOrg?.owner;
+            if (!ownerItem) {
+              targetOrg.owner = {
+                id: payload.userId,
+                firstName,
+                lastName,
+              };
+            } else {
               ownerItem.id = payload.userId;
               ownerItem.firstName = firstName;
               ownerItem.lastName = lastName;
@@ -139,6 +156,7 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
             )?.owner;
 
             if (owner) {
+              owner.id = '';
               owner.firstName = '';
               owner.lastName = '';
             }
@@ -226,7 +244,9 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
       size='sm'
       isClearable
       value={value}
-      isLoading={setOrganizationOwner.isLoading}
+      isLoading={
+        setOrganizationOwner.isLoading || removeOrganizationOwner.isLoading
+      }
       variant='unstyled'
       placeholder='Owner'
       autoFocus
