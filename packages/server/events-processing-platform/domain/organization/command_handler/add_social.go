@@ -29,7 +29,7 @@ func NewAddSocialCommandHandler(log logger.Logger, es eventstore.AggregateStore)
 func (c *addSocialCommandHandler) Handle(ctx context.Context, cmd *command.AddSocialCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddSocialCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	if err := validator.GetValidator().Struct(cmd); err != nil {

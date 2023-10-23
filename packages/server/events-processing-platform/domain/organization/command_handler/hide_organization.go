@@ -29,7 +29,7 @@ func NewHideOrganizationCommandHandler(log logger.Logger, es eventstore.Aggregat
 func (h *hideOrganizationCommandHandler) Handle(ctx context.Context, command *cmd.HideOrganizationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "HideOrganizationCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
 	span.LogFields(log.Object("command", command))
 
 	if err := validator.GetValidator().Struct(command); err != nil {

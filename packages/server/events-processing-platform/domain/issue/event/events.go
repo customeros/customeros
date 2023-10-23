@@ -10,8 +10,12 @@ import (
 )
 
 const (
-	IssueCreateV1 = "V1_ISSUE_CREATE"
-	IssueUpdateV1 = "V1_ISSUE_UPDATE"
+	IssueCreateV1             = "V1_ISSUE_CREATE"
+	IssueUpdateV1             = "V1_ISSUE_UPDATE"
+	IssueAddUserAssigneeV1    = "V1_ISSUE_ADD_USER_ASSIGNEE"
+	IssueRemoveUserAssigneeV1 = "V1_ISSUE_REMOVE_USER_ASSIGNEE"
+	IssueAddUserFollowerV1    = "V1_ISSUE_ADD_USER_FOLLOWER"
+	IssueRemoveUserFollowerV1 = "V1_ISSUE_REMOVE_USER_FOLLOWER"
 )
 
 type IssueCreateEvent struct {
@@ -86,6 +90,102 @@ func NewIssueUpdateEvent(aggregate eventstore.Aggregate, dataFields model.IssueD
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, IssueUpdateV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type IssueAddUserAssigneeEvent struct {
+	Tenant string    `json:"tenant" validate:"required"`
+	At     time.Time `json:"at"`
+	UserId string    `json:"userId" validate:"required"`
+}
+
+func NewIssueAddUserAssigneeEvent(aggregate eventstore.Aggregate, userId string, at time.Time) (eventstore.Event, error) {
+	eventData := IssueAddUserAssigneeEvent{
+		Tenant: aggregate.GetTenant(),
+		At:     at,
+		UserId: userId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, IssueAddUserAssigneeV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type IssueRemoveUserAssigneeEvent struct {
+	Tenant string    `json:"tenant" validate:"required"`
+	At     time.Time `json:"at"`
+	UserId string    `json:"userId" validate:"required"`
+}
+
+func NewIssueRemoveUserAssigneeEvent(aggregate eventstore.Aggregate, userId string, at time.Time) (eventstore.Event, error) {
+	eventData := IssueRemoveUserAssigneeEvent{
+		Tenant: aggregate.GetTenant(),
+		At:     at,
+		UserId: userId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, IssueRemoveUserAssigneeV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type IssueAddUserFollowerEvent struct {
+	Tenant string    `json:"tenant" validate:"required"`
+	At     time.Time `json:"at"`
+	UserId string    `json:"userId" validate:"required"`
+}
+
+func NewIssueAddUserFollowerEvent(aggregate eventstore.Aggregate, userId string, at time.Time) (eventstore.Event, error) {
+	eventData := IssueAddUserFollowerEvent{
+		Tenant: aggregate.GetTenant(),
+		At:     at,
+		UserId: userId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, IssueAddUserFollowerV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type IssueRemoveUserFollowerEvent struct {
+	Tenant string    `json:"tenant" validate:"required"`
+	At     time.Time `json:"at"`
+	UserId string    `json:"userId" validate:"required"`
+}
+
+func NewIssueRemoveUserFollowerEvent(aggregate eventstore.Aggregate, userId string, at time.Time) (eventstore.Event, error) {
+	eventData := IssueRemoveUserFollowerEvent{
+		Tenant: aggregate.GetTenant(),
+		At:     at,
+		UserId: userId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, IssueRemoveUserFollowerV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

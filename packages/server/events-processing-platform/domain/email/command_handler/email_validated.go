@@ -29,7 +29,7 @@ func NewEmailValidatedCommandHandler(log logger.Logger, cfg *config.Config, es e
 func (h *emailValidatedCommandHandler) Handle(ctx context.Context, cmd *command.EmailValidatedCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidatedCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	emailAggregate, err := aggregate.LoadEmailAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)

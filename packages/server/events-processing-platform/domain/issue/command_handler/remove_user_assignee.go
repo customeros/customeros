@@ -14,27 +14,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-type UpsertIssueCommandHandler interface {
-	Handle(ctx context.Context, cmd *command.UpsertIssueCommand) error
+type RemoveUserAssigneeCommandHandler interface {
+	Handle(ctx context.Context, cmd *command.RemoveUserAssigneeCommand) error
 }
 
-type upsertIssueCommandHandler struct {
+type removeUserAssigneeCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 }
 
-func NewUpsertIssueCommandHandler(log logger.Logger, es eventstore.AggregateStore) UpsertIssueCommandHandler {
-	return &upsertIssueCommandHandler{log: log, es: es}
+func NewRemoveUserAssigneeCommandHandler(log logger.Logger, es eventstore.AggregateStore) RemoveUserAssigneeCommandHandler {
+	return &removeUserAssigneeCommandHandler{log: log, es: es}
 }
 
-func (c *upsertIssueCommandHandler) Handle(ctx context.Context, cmd *command.UpsertIssueCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertIssueCommandHandler.Handle")
+func (c *removeUserAssigneeCommandHandler) Handle(ctx context.Context, cmd *command.RemoveUserAssigneeCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "removeUserAssigneeCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("command", fmt.Sprintf("%+v", cmd)))
 
 	if err := validator.GetValidator().Struct(cmd); err != nil {
-		wrappedErr := errors.Wrap(err, "failed validation for UpsertIssueCommand")
+		wrappedErr := errors.Wrap(err, "failed validation for RemoveUserAssigneeCommand")
 		tracing.TraceErr(span, wrappedErr)
 		return wrappedErr
 	}
@@ -45,9 +45,6 @@ func (c *upsertIssueCommandHandler) Handle(ctx context.Context, cmd *command.Ups
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(issueAggregate) {
-		cmd.IsCreateCommand = true
-	}
 	if err = issueAggregate.HandleCommand(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		return err

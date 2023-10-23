@@ -11,11 +11,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"time"
 )
 
 type IssueRepository interface {
 	Create(ctx context.Context, tenant, issueId string, evt event.IssueCreateEvent) error
 	Update(ctx context.Context, tenant, logEntryId string, eventData event.IssueUpdateEvent) error
+	AddUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
+	RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
+	AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
+	RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 }
 
 type issueRepository struct {
@@ -108,6 +113,92 @@ func (r *issueRepository) Update(ctx context.Context, tenant, issueId string, ev
 		"priority":      evt.Priority,
 		"sourceOfTruth": helper.GetSourceOfTruth(evt.Source),
 		"overwrite":     helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+}
+
+func (r *issueRepository) AddUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.AddUserAssignee")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("issueId", issueId), log.String("userId", userId), log.Object("at", at))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+		 	MERGE (i)-[:ASSIGNED_TO]->(u)
+				ON CREATE SET i.updatedAt = $updatedAt`
+	params := map[string]any{
+		"tenant":    tenant,
+		"issueId":   issueId,
+		"updatedAt": at,
+		"userId":    userId,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+}
+
+func (r *issueRepository) AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.AddUserFollower")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("issueId", issueId), log.String("userId", userId), log.Object("at", at))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+		 	MERGE (i)-[:FOLLOWED_BY]->(u)
+				ON CREATE SET i.updatedAt = $updatedAt`
+	params := map[string]any{
+		"tenant":    tenant,
+		"issueId":   issueId,
+		"updatedAt": at,
+		"userId":    userId,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+}
+
+func (r *issueRepository) RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.RemoveUserAssignee")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("issueId", issueId), log.String("userId", userId), log.Object("at", at))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
+				(i)-[r:ASSIGNED_TO]->(u)
+				SET i.updatedAt = $updatedAt
+		 		DELETE r`
+	params := map[string]any{
+		"tenant":    tenant,
+		"issueId":   issueId,
+		"updatedAt": at,
+		"userId":    userId,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+}
+
+func (r *issueRepository) RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.RemoveUserFollower")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("issueId", issueId), log.String("userId", userId), log.Object("at", at))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
+				(i)-[r:FOLLOWED_BY]->(u)
+				SET i.updatedAt = $updatedAt
+		 		DELETE r`
+	params := map[string]any{
+		"tenant":    tenant,
+		"issueId":   issueId,
+		"updatedAt": at,
+		"userId":    userId,
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 

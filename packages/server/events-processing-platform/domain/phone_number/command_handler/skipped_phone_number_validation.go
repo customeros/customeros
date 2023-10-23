@@ -29,7 +29,7 @@ func NewSkippedPhoneNumberValidationCommandHandler(log logger.Logger, cfg *confi
 func (h *skippedPhoneNumberValidationCommandHandler) Handle(ctx context.Context, cmd *command.SkippedPhoneNumberValidationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SkippedPhoneNumberValidationCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	phoneNumberAggregate, err := aggregate.LoadPhoneNumberAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)

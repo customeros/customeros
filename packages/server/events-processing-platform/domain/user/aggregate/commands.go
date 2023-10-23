@@ -56,7 +56,7 @@ func (a *UserAggregate) createUser(ctx context.Context, cmd *command.UpsertUserC
 		return errors.Wrap(err, "NewUserCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(createEvent)
 }
@@ -76,7 +76,7 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 		return errors.Wrap(err, "NewUserUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -100,7 +100,7 @@ func (a *UserAggregate) addPlayerInfo(ctx context.Context, cmd *command.AddPlaye
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserAddPlayerInfoEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -139,7 +139,7 @@ func (a *UserAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPh
 		return errors.Wrap(err, "NewUserLinkPhoneNumberEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	err = a.Apply(event)
 	if err != nil {
@@ -150,7 +150,7 @@ func (a *UserAggregate) linkPhoneNumber(ctx context.Context, cmd *command.LinkPh
 	if cmd.Primary {
 		for k, v := range a.User.PhoneNumbers {
 			if k != cmd.PhoneNumberId && v.Primary {
-				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.UserID); err != nil {
+				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.LoggedInUserId); err != nil {
 					return err
 				}
 			}
@@ -200,7 +200,7 @@ func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCom
 		return errors.Wrap(err, "NewUserLinkEmailEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	err = a.Apply(event)
 	if err != nil {
@@ -211,7 +211,7 @@ func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCom
 	if cmd.Primary {
 		for k, v := range a.User.Emails {
 			if k != cmd.EmailId && v.Primary {
-				if err = a.SetEmailNonPrimary(ctx, cmd.Tenant, k, cmd.UserID); err != nil {
+				if err = a.SetEmailNonPrimary(ctx, cmd.Tenant, k, cmd.LoggedInUserId); err != nil {
 					return err
 				}
 			}
@@ -258,7 +258,7 @@ func (a *UserAggregate) addRole(ctx context.Context, cmd *command.AddRoleCommand
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserAddRoleEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -275,7 +275,7 @@ func (a *UserAggregate) removeRole(ctx context.Context, cmd *command.RemoveRoleC
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserRemoveRoleEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

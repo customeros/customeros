@@ -28,7 +28,7 @@ func NewRefreshLastTouchpointCommandHandler(log logger.Logger, es eventstore.Agg
 func (c *refreshLastTouchpointCommandHandler) Handle(ctx context.Context, cmd *command.RefreshLastTouchpointCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RefreshLastTouchpointCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	if err := validator.GetValidator().Struct(cmd); err != nil {

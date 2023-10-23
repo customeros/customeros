@@ -30,7 +30,7 @@ func NewAddRoleCommandHandler(log logger.Logger, cfg *config.Config, es eventsto
 func (c *addRoleCommandHandler) Handle(ctx context.Context, cmd *command.AddRoleCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddRoleCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	if err := validator.GetValidator().Struct(cmd); err != nil {

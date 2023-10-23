@@ -45,7 +45,7 @@ func (a *PhoneNumberAggregate) createPhoneNumber(ctx context.Context, cmd *comma
 		return errors.Wrap(err, "NewPhoneNumberCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -68,7 +68,7 @@ func (a *PhoneNumberAggregate) updatePhoneNumber(ctx context.Context, cmd *comma
 		return errors.Wrap(err, "NewPhoneNumberUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
