@@ -6,7 +6,6 @@ import { IconButton } from '@ui/form/IconButton';
 import { Divider } from '@ui/presentation/Divider';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { useDisclosure } from '@ui/utils';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { RenewalForecastModal } from './RenewalForecastModal';
 import {
@@ -17,6 +16,7 @@ import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { UseDisclosureReturn } from '@chakra-ui/hooks/dist/use-disclosure';
 
 export type RenewalForecastType = RenewalForecastT & { amount?: string | null };
 
@@ -24,16 +24,17 @@ interface RenewalForecastProps {
   renewalForecast: RenewalForecastType;
   renewalProbability?: RenewalLikelihoodProbability | null;
   name: string;
+  infoModal: UseDisclosureReturn;
+  updateModal: UseDisclosureReturn;
 }
 
 export const RenewalForecast = ({
   renewalForecast,
   renewalProbability,
   name,
+  infoModal,
+  updateModal,
 }: RenewalForecastProps) => {
-  const update = useDisclosure();
-  const info = useDisclosure();
-
   const getForecastMetaInfo = () => {
     if (!renewalForecast?.amount) {
       return 'Not calculated yet';
@@ -66,7 +67,7 @@ export const RenewalForecast = ({
           boxShadow: 'md',
         }}
         transition='all 0.2s ease-out'
-        onClick={update.onOpen}
+        onClick={updateModal.onOpen}
       >
         <CardBody as={Flex} p='0' align='center'>
           <FeaturedIcon
@@ -104,7 +105,7 @@ export const RenewalForecast = ({
                   aria-label='Help'
                   onClick={(e) => {
                     e.stopPropagation();
-                    info.onOpen();
+                    infoModal.onOpen();
                   }}
                   icon={<Icons.HelpCircle color='gray.400' />}
                 />
@@ -149,14 +150,14 @@ export const RenewalForecast = ({
         }}
         renewalProbability={renewalProbability}
         name={name}
-        isOpen={update.isOpen}
-        onClose={update.onClose}
+        isOpen={updateModal.isOpen}
+        onClose={updateModal.onClose}
       />
 
       <InfoDialog
-        isOpen={info.isOpen}
-        onClose={info.onClose}
-        onConfirm={info.onClose}
+        isOpen={infoModal.isOpen}
+        onClose={infoModal.onClose}
+        onConfirm={infoModal.onClose}
         confirmButtonLabel='Got it'
         label='ARR forecast'
       >
