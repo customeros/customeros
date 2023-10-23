@@ -29,16 +29,16 @@ export const AccountPanel = () => {
   );
   const isModalOpen = useMemo(() => {
     return (
-      renewalForecastUpdateModal?.isOpen ||
-      renewalLikelihoodUpdateModal?.isOpen ||
-      renewalForecastInfoModal?.isOpen ||
-      renewalLikelihoodInfoModal?.isOpen
+      renewalForecastUpdateModal.isOpen ||
+      renewalLikelihoodUpdateModal.isOpen ||
+      renewalForecastInfoModal.isOpen ||
+      renewalLikelihoodInfoModal.isOpen
     );
   }, [
-    renewalForecastUpdateModal?.isOpen,
-    renewalLikelihoodUpdateModal?.isOpen,
-    renewalForecastInfoModal?.isOpen,
-    renewalLikelihoodInfoModal?.isOpen,
+    renewalForecastUpdateModal.isOpen,
+    renewalLikelihoodUpdateModal.isOpen,
+    renewalForecastInfoModal.isOpen,
+    renewalLikelihoodInfoModal.isOpen,
   ]);
 
   if (isInitialLoading) {
