@@ -16,11 +16,19 @@ import { useMemo } from 'react';
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
   // Moved to upperscope due to error in safari https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
-  const renewalLikelihoodUpdateModal = useDisclosure();
-  const renewalLikelihoodInfoModal = useDisclosure();
+  const renewalLikelihoodUpdateModal = useDisclosure({
+    id: 'renewal-likelihood-update-modal',
+  });
+  const renewalLikelihoodInfoModal = useDisclosure({
+    id: 'renewal-likelihood-info-modal',
+  });
 
-  const renewalForecastUpdateModal = useDisclosure();
-  const renewalForecastInfoModal = useDisclosure();
+  const renewalForecastUpdateModal = useDisclosure({
+    id: 'renewal-renewal-update-modal',
+  });
+  const renewalForecastInfoModal = useDisclosure({
+    id: 'renewal-renewal-info-modal',
+  });
 
   const client = getGraphQLClient();
   const { data, isInitialLoading } = useOrganizationAccountDetailsQuery(
