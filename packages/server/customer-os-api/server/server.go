@@ -184,9 +184,25 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		var e error
+
+		if er, ok := err.(error); ok {
+			e = er
+		}
+		if e == nil {
+			e = ctx.Err()
+		}
+
+		if errors.Is(e, context.Canceled) {
+			return gqlerror.Errorf("Request canceled!")
+		}
+		if errors.Is(e, context.DeadlineExceeded) {
+			return gqlerror.Errorf("Request timeout!")
+		}
+
 		buf := make([]byte, 4096)
 		stackSize := runtime.Stack(buf, false)
-		server.log.Errorf("panic occurred: %v\nBacktrace:\n%s", err, string(buf[:stackSize]))
+		server.log.Errorf("panic occurred: %v\nBacktrace:\n%s", e, string(buf[:stackSize]))
 		return gqlerror.Errorf("Internal server error!")
 	})
 	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
