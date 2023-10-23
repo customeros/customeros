@@ -40,7 +40,7 @@ export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
 
   const defaultValues = TimeToRenewalDTO.toForm(data);
 
-  useForm({
+  const { setDefaultValues } = useForm({
     formId: 'time-to-renewal',
     defaultValues,
     stateReducer: (state, action, next) => {
@@ -105,6 +105,13 @@ export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
   });
 
   const [value, label] = getTimeToRenewal(data?.renewalCycleNext);
+
+  useEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [
+    defaultValues.renewalCycle,
+    defaultValues.renewalCycleStart?.toISOString(),
+  ]);
 
   useEffect(() => {
     return () => {

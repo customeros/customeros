@@ -71,6 +71,7 @@ export const AccountPanel = () => {
       <RenewalForecast
         infoModal={renewalForecastInfoModal}
         updateModal={renewalForecastUpdateModal}
+        isInitialLoading={isInitialLoading}
         name={data?.organization?.name || ''}
         renewalProbability={
           data?.organization?.accountDetails?.renewalLikelihood?.probability

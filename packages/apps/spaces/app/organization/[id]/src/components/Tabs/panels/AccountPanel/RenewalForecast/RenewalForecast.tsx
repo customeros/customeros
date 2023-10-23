@@ -1,4 +1,6 @@
 'use client';
+import { useIsMutating, useIsRestoring } from '@tanstack/react-query';
+
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -17,24 +19,33 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { UseDisclosureReturn } from '@chakra-ui/hooks/dist/use-disclosure';
+import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
 
 export type RenewalForecastType = RenewalForecastT & { amount?: string | null };
 
 interface RenewalForecastProps {
+  name: string;
+  isInitialLoading?: boolean;
   renewalForecast: RenewalForecastType;
   renewalProbability?: RenewalLikelihoodProbability | null;
-  name: string;
   infoModal: UseDisclosureReturn;
   updateModal: UseDisclosureReturn;
 }
 
 export const RenewalForecast = ({
+  isInitialLoading,
   renewalForecast,
   renewalProbability,
   name,
   infoModal,
   updateModal,
 }: RenewalForecastProps) => {
+  const isRestoring = useIsRestoring();
+
+  const isMutating = useIsMutating({
+    mutationKey: useUpdateRenewalLikelihoodMutation.getKey(),
+  });
+
   const getForecastMetaInfo = () => {
     if (!renewalForecast?.amount) {
       return 'Not calculated yet';
@@ -119,7 +130,9 @@ export const RenewalForecast = ({
               fontSize='2xl'
               color={isAmountSet ? 'gray.700' : 'gray.400'}
             >
-              {isAmountSet
+              {isMutating && (!isInitialLoading || !isRestoring)
+                ? 'Calculating...'
+                : isAmountSet
                 ? formatCurrency(renewalForecast?.amount ?? 0)
                 : 'Unknown'}
             </Heading>
