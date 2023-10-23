@@ -1,4 +1,4 @@
-FROM node:18-alpine as base
+FROM node:18-alpine@sha256:435dcad253bb5b7f347ebc69c8cc52de7c912eb7241098b920f2fc2d7843183d as base
 
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
@@ -30,8 +30,6 @@ COPY --from=builder --chown=openlineuser:openlinegroup /app/.next/standalone ./
 COPY --from=builder --chown=openlineuser:openlinegroup /app/.next/static ./.next/static
 
 USER openlineuser
-
-EXPOSE 3001
 
 ENV PORT 3001
 
