@@ -10,22 +10,50 @@ import { BillingDetailsCard } from './BillingDetailsCard/BillingDetailsCard';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
 import { TimeToRenewal } from './TimeToRenewal';
 import { Notes } from './Notes';
+import { useDisclosure } from '@ui/utils';
+import { useMemo } from 'react';
 
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
+  // Moved to upperscope due to error in safari https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
+  const renewalLikelihoodUpdateModal = useDisclosure();
+  const renewalLikelihoodInfoModal = useDisclosure();
+
+  const renewalForecastUpdateModal = useDisclosure();
+  const renewalForecastInfoModal = useDisclosure();
 
   const client = getGraphQLClient();
   const { data, isInitialLoading } = useOrganizationAccountDetailsQuery(
     client,
     { id },
   );
+  const isModalOpen = useMemo(() => {
+    return (
+      renewalForecastUpdateModal?.isOpen ||
+      renewalLikelihoodUpdateModal?.isOpen ||
+      renewalForecastInfoModal?.isOpen ||
+      renewalLikelihoodInfoModal?.isOpen
+    );
+  }, [
+    renewalForecastUpdateModal?.isOpen,
+    renewalLikelihoodUpdateModal?.isOpen,
+    renewalForecastInfoModal?.isOpen,
+    renewalLikelihoodInfoModal?.isOpen,
+  ]);
+
   if (isInitialLoading) {
     return <AccountPanelSkeleton />;
   }
 
   return (
-    <OrganizationPanel title='Account' withFade>
+    <OrganizationPanel
+      title='Account'
+      withFade
+      shouldBlockPanelScroll={isModalOpen}
+    >
       <RenewalLikelihood
+        infoModal={renewalLikelihoodInfoModal}
+        updateModal={renewalLikelihoodUpdateModal}
         name={data?.organization?.name || ''}
         data={
           data?.organization?.accountDetails
@@ -33,6 +61,8 @@ export const AccountPanel = () => {
         }
       />
       <RenewalForecast
+        infoModal={renewalForecastInfoModal}
+        updateModal={renewalForecastUpdateModal}
         name={data?.organization?.name || ''}
         renewalProbability={
           data?.organization?.accountDetails?.renewalLikelihood?.probability

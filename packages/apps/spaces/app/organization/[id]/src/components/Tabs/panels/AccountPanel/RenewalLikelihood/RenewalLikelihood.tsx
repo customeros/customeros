@@ -6,7 +6,6 @@ import { IconButton } from '@ui/form/IconButton';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Divider } from '@ui/presentation/Divider';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { useDisclosure } from '@ui/utils';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { RenewalLikelihoodModal } from './RenewalLikelihoodModal';
 import {
@@ -17,18 +16,23 @@ import {
 import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { UseDisclosureReturn } from '@chakra-ui/hooks/dist/use-disclosure';
 
 export type RenewalLikelihoodType = RenewalLikelihoodT;
 
 interface RenewalLikelihoodProps {
   data: RenewalLikelihoodType;
   name: string;
+  infoModal: UseDisclosureReturn;
+  updateModal: UseDisclosureReturn;
 }
 
-export const RenewalLikelihood = ({ data, name }: RenewalLikelihoodProps) => {
-  const updateModal = useDisclosure();
-  const infoModal = useDisclosure();
-
+export const RenewalLikelihood = ({
+  data,
+  name,
+  updateModal,
+  infoModal,
+}: RenewalLikelihoodProps) => {
   return (
     <>
       <Card
