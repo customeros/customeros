@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -43,15 +44,29 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	response.IsOwner = *isOwner
 
 	if userEmail != "" {
-		userGoogleOauthToken, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetForEmail("google", tenantName, userEmail)
+		privateKey, err := r.Services.CommonAuthServices.CommonAuthRepositories.ApiKeyRepository.GetApiKeyByTenantService(tenantName, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
 			return nil, err
 		}
-		if userGoogleOauthToken != nil {
-			response.IsGoogleActive = userGoogleOauthToken.GmailSyncEnabled
-			response.IsGoogleTokenExpired = userGoogleOauthToken.NeedsManualRefresh
+		serviceEmail, err := r.Services.CommonAuthServices.CommonAuthRepositories.ApiKeyRepository.GetApiKeyByTenantService(tenantName, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+		if err != nil {
+			return nil, err
+		}
+
+		if privateKey != "" && serviceEmail != "" {
+			response.IsGoogleActive = true
+			response.IsGoogleTokenExpired = false
+		} else {
+			userGoogleOauthToken, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetForEmail("google", tenantName, userEmail)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
+				return nil, err
+			}
+			if userGoogleOauthToken != nil {
+				response.IsGoogleActive = userGoogleOauthToken.GmailSyncEnabled
+				response.IsGoogleTokenExpired = userGoogleOauthToken.NeedsManualRefresh
+			}
 		}
 	}
 

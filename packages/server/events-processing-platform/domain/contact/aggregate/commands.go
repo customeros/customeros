@@ -54,7 +54,7 @@ func (a *ContactAggregate) createContact(ctx context.Context, cmd *command.Upser
 
 	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.Metadata{
 		Tenant: a.Tenant,
-		UserId: cmd.UserID,
+		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
 	})
 
@@ -76,7 +76,7 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 		return errors.Wrap(err, "NewContactUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&updateEvent, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&updateEvent, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(updateEvent)
 }
@@ -96,7 +96,7 @@ func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmail
 		return errors.Wrap(err, "NewContactLinkEmailEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	err = a.Apply(event)
 	if err != nil {
@@ -107,7 +107,7 @@ func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmail
 	if cmd.Primary {
 		for k, v := range a.Contact.Emails {
 			if k != cmd.EmailId && v.Primary {
-				if err = a.SetEmailNonPrimary(ctx, k, cmd.UserID); err != nil {
+				if err = a.SetEmailNonPrimary(ctx, k, cmd.LoggedInUserId); err != nil {
 					return err
 				}
 			}
@@ -158,7 +158,7 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 		return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	err = a.Apply(event)
 	if err != nil {
@@ -169,7 +169,7 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 	if cmd.Primary {
 		for k, v := range a.Contact.PhoneNumbers {
 			if k != cmd.PhoneNumberId && v.Primary {
-				if err = a.SetPhoneNumberNonPrimary(ctx, k, cmd.UserID); err != nil {
+				if err = a.SetPhoneNumberNonPrimary(ctx, k, cmd.LoggedInUserId); err != nil {
 					return err
 				}
 			}
@@ -220,7 +220,7 @@ func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLo
 		return errors.Wrap(err, "NewContactLinkLocationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -242,7 +242,7 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 		return errors.Wrap(err, "NewContactLinkWithOrganizationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

@@ -30,7 +30,7 @@ func NewAddTagCommandHandler(log logger.Logger, cfg *config.Config, es eventstor
 func (c *addTagCommandHandler) Handle(ctx context.Context, command *cmd.AddTagCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddTagCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", command.ObjectID))
 
 	if err := validator.GetValidator().Struct(command); err != nil {

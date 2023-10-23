@@ -29,7 +29,7 @@ func NewFailEmailValidationCommandHandler(log logger.Logger, cfg *config.Config,
 func (h *failEmailValidationCommandHandler) Handle(ctx context.Context, cmd *command.FailedEmailValidationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "failEmailValidationCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	emailAggregate, err := aggregate.LoadEmailAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)

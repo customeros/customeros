@@ -28,7 +28,7 @@ func NewLinkDomainCommandHandler(log logger.Logger, es eventstore.AggregateStore
 func (c *linkDomainCommandHandler) Handle(ctx context.Context, command *command.LinkDomainCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LinkDomainCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", command.ObjectID))
 
 	if command.Tenant == "" {

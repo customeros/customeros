@@ -28,7 +28,7 @@ func NewUpsertContactCommandHandler(log logger.Logger, es eventstore.AggregateSt
 func (h *upsertContactCommandHandler) Handle(ctx context.Context, cmd *command.UpsertContactCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertContactCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	if err := validator.GetValidator().Struct(cmd); err != nil {

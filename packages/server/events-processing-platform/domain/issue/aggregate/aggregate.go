@@ -35,6 +35,14 @@ func (a *IssueAggregate) When(evt eventstore.Event) error {
 		return a.onIssueCreate(evt)
 	case event.IssueUpdateV1:
 		return a.onIssueUpdate(evt)
+	case event.IssueAddUserAssigneeV1:
+		return a.onIssueAddUserAssignee(evt)
+	case event.IssueRemoveUserAssigneeV1:
+		return a.onIssueRemoveUserAssignee(evt)
+	case event.IssueAddUserFollowerV1:
+		return a.onIssueAddUserFollower(evt)
+	case event.IssueRemoveUserFollowerV1:
+		return a.onIssueRemoveUserFollower(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -95,5 +103,41 @@ func (a *IssueAggregate) onIssueUpdate(evt eventstore.Event) error {
 		a.Issue.Priority = eventData.Priority
 	}
 	a.Issue.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *IssueAggregate) onIssueAddUserAssignee(evt eventstore.Event) error {
+	var eventData event.IssueAddUserAssigneeEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Issue.AddAssignedToUserId(eventData.UserId)
+	return nil
+}
+
+func (a *IssueAggregate) onIssueRemoveUserAssignee(evt eventstore.Event) error {
+	var eventData event.IssueRemoveUserAssigneeEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Issue.RemoveAssignedToUserId(eventData.UserId)
+	return nil
+}
+
+func (a *IssueAggregate) onIssueAddUserFollower(evt eventstore.Event) error {
+	var eventData event.IssueAddUserFollowerEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Issue.AddFollowedByUserId(eventData.UserId)
+	return nil
+}
+
+func (a *IssueAggregate) onIssueRemoveUserFollower(evt eventstore.Event) error {
+	var eventData event.IssueRemoveUserFollowerEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Issue.RemoveFollowedByUserId(eventData.UserId)
 	return nil
 }

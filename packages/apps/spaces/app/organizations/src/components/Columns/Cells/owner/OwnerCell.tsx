@@ -61,10 +61,12 @@ export const OwnerCell = ({ id, owner }: OwnerProps) => {
 
   const options = useMemo(() => {
     return data?.users?.content
-      ?.filter((e) => Boolean(e.firstName) || Boolean(e.lastName))
+      ?.filter(
+        (e) => Boolean(e.firstName) || Boolean(e.lastName) || Boolean(e.name),
+      )
       ?.map((o) => ({
         value: o.id,
-        label: `${o.firstName} ${o.lastName}`.trim(),
+        label: `${o.name ?? o.firstName + ' ' + o.lastName}`.trim(),
       }))
       ?.sort((a, b) => a.label.localeCompare(b.label));
   }, [data]);

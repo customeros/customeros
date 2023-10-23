@@ -30,7 +30,7 @@ func NewRemoveTagCommandHandler(log logger.Logger, cfg *config.Config, es events
 func (c *removeTagCommandHandler) Handle(ctx context.Context, command *cmd.RemoveTagCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RemoveTagCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", command.ObjectID))
 
 	if err := validator.GetValidator().Struct(command); err != nil {
