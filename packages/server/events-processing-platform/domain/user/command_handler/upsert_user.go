@@ -30,7 +30,7 @@ func NewUpsertUserCommandHandler(log logger.Logger, cfg *config.Config, es event
 func (c *upsertUserCommandHandler) Handle(ctx context.Context, cmd *command.UpsertUserCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertUserCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	if err := validator.GetValidator().Struct(cmd); err != nil {

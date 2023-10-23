@@ -30,7 +30,7 @@ func NewUpsertPhoneNumberHandler(log logger.Logger, cfg *config.Config, es event
 func (h *upsertPhoneNumberHandler) Handle(ctx context.Context, cmd *command.UpsertPhoneNumberCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertUserCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.String("ObjectID", cmd.ObjectID))
 
 	if err := validator.GetValidator().Struct(cmd); err != nil {

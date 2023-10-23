@@ -49,7 +49,7 @@ func (a *EmailAggregate) createEmail(ctx context.Context, cmd *command.UpsertEma
 		return errors.Wrap(err, "NewEmailCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -72,7 +72,7 @@ func (a *EmailAggregate) updateEmail(ctx context.Context, cmd *command.UpsertEma
 		return errors.Wrap(err, "NewEmailUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -90,7 +90,7 @@ func (a *EmailAggregate) failEmailValidation(ctx context.Context, cmd *command.F
 		return errors.Wrap(err, "NewEmailFailedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -110,7 +110,7 @@ func (a *EmailAggregate) emailValidated(ctx context.Context, cmd *command.EmailV
 		return errors.Wrap(err, "NewEmailValidatedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

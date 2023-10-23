@@ -95,3 +95,96 @@ func (h *GraphIssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Ev
 
 	return err
 }
+
+func (h *GraphIssueEventHandler) OnAddUserAssignee(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnAddUserAssignee")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+
+	var eventData event.IssueAddUserAssigneeEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
+
+	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.IssueRepository.AddUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while adding assignee to issue %s: %s", issueId, err.Error())
+	}
+
+	return err
+}
+
+func (h *GraphIssueEventHandler) OnAddUserFollower(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnAddUserFollower")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+
+	var eventData event.IssueAddUserFollowerEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
+
+	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.IssueRepository.AddUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while adding follower to issue %s: %s", issueId, err.Error())
+	}
+
+	return err
+}
+
+func (h *GraphIssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnRemoveUserAssignee")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+
+	var eventData event.IssueRemoveUserAssigneeEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
+
+	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.IssueRepository.RemoveUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while removing assignee from issue %s: %s", issueId, err.Error())
+	}
+
+	return err
+
+}
+
+func (h *GraphIssueEventHandler) OnRemoveUserFollower(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnRemoveUserFollower")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+
+	var eventData event.IssueRemoveUserFollowerEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
+
+	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.Repositories.IssueRepository.RemoveUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while removing follower from issue %s: %s", issueId, err.Error())
+	}
+
+	return err
+}

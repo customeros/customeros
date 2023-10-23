@@ -6,16 +6,16 @@ type Command interface {
 }
 
 type BaseCommand struct {
-	ObjectID string `json:"objectID" validate:"required"`
-	Tenant   string `json:"tenant" validate:"required"`
-	UserID   string `json:"userId"`
+	ObjectID       string `json:"objectID" validate:"required"`
+	Tenant         string `json:"tenant" validate:"required"`
+	LoggedInUserId string `json:"loggedInUserId"`
 }
 
-func NewBaseCommand(objectID, tenant, userID string) BaseCommand {
+func NewBaseCommand(objectID, tenant, loggedInUserId string) BaseCommand {
 	return BaseCommand{
-		ObjectID: objectID,
-		Tenant:   tenant,
-		UserID:   userID,
+		ObjectID:       objectID,
+		Tenant:         tenant,
+		LoggedInUserId: loggedInUserId,
 	}
 }
 
@@ -27,6 +27,6 @@ func (c *BaseCommand) GetTenant() string {
 	return c.Tenant
 }
 
-func (c *BaseCommand) GetUserID() string {
-	return c.UserID
+func (c *BaseCommand) GetLoggedInUserId() string {
+	return c.LoggedInUserId
 }

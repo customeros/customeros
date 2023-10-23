@@ -19,6 +19,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
@@ -215,4 +216,154 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 	require.Equal(t, "low", issue.Priority)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
 	require.Equal(t, now, issue.UpdatedAt)
+}
+
+func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 0})
+
+	// prepare event handler
+	issueEventHandler := &GraphIssueEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	updatedAt := utils.Now().Add(time.Duration(-1) * time.Minute)
+	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
+	addUserAssigneeEvent, err := event.NewIssueAddUserAssigneeEvent(issueAggregate, userId, updatedAt)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = issueEventHandler.OnAddUserAssignee(context.Background(), addUserAssigneeEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"User": 1, "User_" + tenantName: 1,
+		"Issue": 1, "Issue_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "ASSIGNED_TO", userId)
+
+	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	require.Nil(t, err)
+	require.NotNil(t, issueDbNode)
+	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	require.Equal(t, updatedAt, issue.UpdatedAt)
+}
+
+func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	neo4jt.LinkIssueAssignedTo(ctx, testDatabase.Driver, issueId, userId)
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 1})
+
+	// prepare event handler
+	issueEventHandler := &GraphIssueEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	updatedAt := utils.Now().Add(time.Duration(-1) * time.Hour)
+	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
+	removeUserAssigneeEvent, err := event.NewIssueRemoveUserAssigneeEvent(issueAggregate, userId, updatedAt)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = issueEventHandler.OnRemoveUserAssignee(context.Background(), removeUserAssigneeEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"User": 1, "User_" + tenantName: 1,
+		"Issue": 1, "Issue_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"ASSIGNED_TO": 0})
+
+	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	require.Nil(t, err)
+	require.NotNil(t, issueDbNode)
+	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	require.Equal(t, updatedAt, issue.UpdatedAt)
+}
+
+func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 0})
+
+	// prepare event handler
+	issueEventHandler := &GraphIssueEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	updatedAt := utils.Now().Add(time.Duration(-10) * time.Minute)
+	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
+	addUserFollowerEvent, err := event.NewIssueAddUserFollowerEvent(issueAggregate, userId, updatedAt)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = issueEventHandler.OnAddUserFollower(context.Background(), addUserFollowerEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"User": 1, "User_" + tenantName: 1,
+		"Issue": 1, "Issue_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "FOLLOWED_BY", userId)
+
+	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	require.Nil(t, err)
+	require.NotNil(t, issueDbNode)
+	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	require.Equal(t, updatedAt, issue.UpdatedAt)
+}
+
+func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	neo4jt.LinkIssueFollowedBy(ctx, testDatabase.Driver, issueId, userId)
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "Issue": 1, "TimelineEvent": 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 1})
+
+	// prepare event handler
+	issueEventHandler := &GraphIssueEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	updatedAt := utils.Now().Add(time.Duration(-1) * time.Hour)
+	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
+	removeUserFollowerEvent, err := event.NewIssueRemoveUserFollowerEvent(issueAggregate, userId, updatedAt)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = issueEventHandler.OnRemoveUserFollower(context.Background(), removeUserFollowerEvent)
+	require.Nil(t, err, "failed to execute event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"User": 1, "User_" + tenantName: 1,
+		"Issue": 1, "Issue_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{"FOLLOWED_BY": 0})
+
+	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
+	require.Nil(t, err)
+	require.NotNil(t, issueDbNode)
+	issue := graph_db.MapDbNodeToIssueEntity(*issueDbNode)
+	require.Equal(t, updatedAt, issue.UpdatedAt)
 }

@@ -33,6 +33,6 @@ func InitCommandHandlers(log logger.Logger,
 		UserCommands:             usercmd.NewUserCommands(log, cfg, aggregateStore),
 		JobRoleCommands:          jobrolecmd.NewJobRoleCommands(log, cfg, aggregateStore),
 		LogEntryCommands:         logentrycmd.NewLogEntryCommands(log, cfg, aggregateStore),
-		IssueCommands:            issuecmd.NewIssueCommandHandlers(log, cfg, aggregateStore),
+		IssueCommands:            issuecmd.NewIssueCommandHandlers(log, aggregateStore),
 	}
 }

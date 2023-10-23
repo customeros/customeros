@@ -188,10 +188,31 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 }
 
 func LinkIssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
-
 	query := `MATCH (e {id:$entityId})
 				MATCH (i:Issue {id:$issueId})
 				MERGE (i)-[:REPORTED_BY]->(e)`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"issueId":  issueId,
+		"entityId": entityId,
+	})
+}
+
+func LinkIssueAssignedTo(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
+	query := `MATCH (e {id:$entityId})
+				MATCH (i:Issue {id:$issueId})
+				MERGE (i)-[:ASSIGNED_TO]->(e)`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"issueId":  issueId,
+		"entityId": entityId,
+	})
+}
+
+func LinkIssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
+	query := `MATCH (e {id:$entityId})
+				MATCH (i:Issue {id:$issueId})
+				MERGE (i)-[:FOLLOWED_BY]->(e)`
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"issueId":  issueId,

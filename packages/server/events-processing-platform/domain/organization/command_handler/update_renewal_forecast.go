@@ -32,7 +32,7 @@ func NewUpdateRenewalForecastCommandHandler(log logger.Logger, es eventstore.Agg
 func (h *updateRenewalForecastCommandHandler) Handle(ctx context.Context, command *cmd.UpdateRenewalForecastCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateRenewalForecastCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.UserID)
+	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
 	span.LogFields(log.Object("command", command))
 
 	if err := validator.GetValidator().Struct(command); err != nil {
@@ -62,7 +62,7 @@ func (h *updateRenewalForecastCommandHandler) Handle(ctx context.Context, comman
 		if err = organizationAggregate.CreateOrganization(ctx, &models.OrganizationFields{
 			ID:     command.ObjectID,
 			Tenant: command.Tenant,
-		}, command.UserID); err != nil {
+		}, command.LoggedInUserId); err != nil {
 			err := errors.Wrap(err, "Error while creating organization")
 			tracing.TraceErr(span, err)
 			return err

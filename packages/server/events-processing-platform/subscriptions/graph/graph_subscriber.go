@@ -263,6 +263,14 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.issueEventHandler.OnCreate(ctx, evt)
 	case issueevent.IssueUpdateV1:
 		return s.issueEventHandler.OnUpdate(ctx, evt)
+	case issueevent.IssueAddUserAssigneeV1:
+		return s.issueEventHandler.OnAddUserAssignee(ctx, evt)
+	case issueevent.IssueRemoveUserAssigneeV1:
+		return s.issueEventHandler.OnRemoveUserAssignee(ctx, evt)
+	case issueevent.IssueAddUserFollowerV1:
+		return s.issueEventHandler.OnAddUserFollower(ctx, evt)
+	case issueevent.IssueRemoveUserFollowerV1:
+		return s.issueEventHandler.OnRemoveUserFollower(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType

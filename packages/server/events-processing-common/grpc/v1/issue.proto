@@ -21,10 +21,46 @@ message UpsertIssueGrpcRequest {
   ExternalSystemFields externalSystemFields = 14;
 }
 
+message AddUserAssigneeToIssueGrpcRequest {
+  string tenant = 1;
+  string issueId = 2;
+  string userId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+}
+
+message RemoveUserAssigneeFromIssueGrpcRequest {
+  string tenant = 1;
+  string issueId = 2;
+  string userId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+}
+
+message AddUserFollowerToIssueGrpcRequest {
+  string tenant = 1;
+  string issueId = 2;
+  string userId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+}
+
+message RemoveUserFollowerFromIssueGrpcRequest {
+  string tenant = 1;
+  string issueId = 2;
+  string userId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
+}
+
 message IssueIdGrpcResponse {
   string id = 1;
 }
 
 service issueGrpcService {
   rpc UpsertIssue(UpsertIssueGrpcRequest) returns (IssueIdGrpcResponse);
+  rpc AssUserAssignee(AddUserAssigneeToIssueGrpcRequest) returns (IssueIdGrpcResponse);
+  rpc RemoveUserAssignee(RemoveUserAssigneeFromIssueGrpcRequest) returns (IssueIdGrpcResponse);
+  rpc AddUserFollower(AddUserFollowerToIssueGrpcRequest) returns (IssueIdGrpcResponse);
+  rpc RemoveUserFollower(RemoveUserFollowerFromIssueGrpcRequest) returns (IssueIdGrpcResponse);
 }

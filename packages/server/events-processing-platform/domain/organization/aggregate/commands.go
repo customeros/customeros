@@ -134,7 +134,7 @@ func (a *OrganizationAggregate) linkPhoneNumber(ctx context.Context, cmd *comman
 		return errors.Wrap(err, "NewOrganizationLinkPhoneNumberEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	err = a.Apply(event)
 	if err != nil {
@@ -145,7 +145,7 @@ func (a *OrganizationAggregate) linkPhoneNumber(ctx context.Context, cmd *comman
 	if cmd.Primary {
 		for k, v := range a.Organization.PhoneNumbers {
 			if k != cmd.PhoneNumberId && v.Primary {
-				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.UserID); err != nil {
+				if err = a.SetPhoneNumberNonPrimary(ctx, cmd.Tenant, k, cmd.LoggedInUserId); err != nil {
 					return err
 				}
 			}
@@ -193,7 +193,7 @@ func (a *OrganizationAggregate) linkEmail(ctx context.Context, cmd *command.Link
 		return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	err = a.Apply(event)
 	if err != nil {
@@ -204,7 +204,7 @@ func (a *OrganizationAggregate) linkEmail(ctx context.Context, cmd *command.Link
 	if cmd.Primary {
 		for k, v := range a.Organization.Emails {
 			if k != cmd.EmailId && v.Primary {
-				if err = a.SetEmailNonPrimary(ctx, k, cmd.UserID); err != nil {
+				if err = a.SetEmailNonPrimary(ctx, k, cmd.LoggedInUserId); err != nil {
 					return err
 				}
 			}
@@ -227,7 +227,7 @@ func (a *OrganizationAggregate) linkLocation(ctx context.Context, cmd *command.L
 		return errors.Wrap(err, "NewOrganizationLinkLocationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -268,7 +268,7 @@ func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.Lin
 		return errors.Wrap(err, "NewOrganizationLinkDomainEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -295,7 +295,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, cmd *command.AddS
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAddSocialEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -316,7 +316,7 @@ func (a *OrganizationAggregate) updateRenewalLikelihood(ctx context.Context, cmd
 		return err
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -337,7 +337,7 @@ func (a *OrganizationAggregate) updateRenewalForecast(ctx context.Context, cmd *
 		return err
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -353,7 +353,7 @@ func (a *OrganizationAggregate) requestRenewalForecast(ctx context.Context, cmd 
 		return errors.Wrap(err, "NewOrganizationRequestRenewalForecastEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -369,7 +369,7 @@ func (a *OrganizationAggregate) updateBillingDetails(ctx context.Context, cmd *c
 		return err
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -387,7 +387,7 @@ func (a *OrganizationAggregate) requestNextCycleDate(ctx context.Context, cmd *c
 		return errors.Wrap(err, "NewOrganizationRequestNextCycleDateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -405,7 +405,7 @@ func (a *OrganizationAggregate) hideOrganization(ctx context.Context, cmd *comma
 		return errors.Wrap(err, "NewHideOrganizationEventEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -423,7 +423,7 @@ func (a *OrganizationAggregate) showOrganization(ctx context.Context, cmd *comma
 		return errors.Wrap(err, "NewShowOrganizationEventEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -441,7 +441,7 @@ func (a *OrganizationAggregate) refreshLastTouchpoint(ctx context.Context, cmd *
 		return errors.Wrap(err, "NewOrganizationRefreshLastTouchpointEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -480,7 +480,7 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationUpsertCustomField")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, cmd.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, cmd.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -498,7 +498,7 @@ func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *
 		return errors.Wrap(err, "NewOrganizationAddParentEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -516,7 +516,7 @@ func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cm
 		return errors.Wrap(err, "NewOrganizationRemoveParentEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

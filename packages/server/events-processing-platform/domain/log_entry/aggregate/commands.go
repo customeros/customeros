@@ -47,7 +47,7 @@ func (a *LogEntryAggregate) createLogEntry(ctx context.Context, command *cmd.Ups
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, command.UserID)
+	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, command.LoggedInUserId)
 
 	return a.Apply(createEvent)
 }
@@ -72,7 +72,7 @@ func (a *LogEntryAggregate) updateLogEntry(ctx context.Context, command *cmd.Ups
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -91,7 +91,7 @@ func (a *LogEntryAggregate) addTag(ctx context.Context, command *cmd.AddTagComma
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryAddTagEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -108,7 +108,7 @@ func (a *LogEntryAggregate) removeTag(ctx context.Context, command *cmd.RemoveTa
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryRemoveTagEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.UserID)
+	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, command.LoggedInUserId)
 
 	return a.Apply(event)
 }
