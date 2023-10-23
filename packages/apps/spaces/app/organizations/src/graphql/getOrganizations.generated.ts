@@ -54,6 +54,7 @@ export type GetOrganizationsQuery = {
         id: string;
         firstName: string;
         lastName: string;
+        name?: string | null;
       } | null;
       accountDetails?: {
         __typename?: 'OrgAccountDetails';
@@ -238,6 +239,7 @@ export const GetOrganizationsDocument = `
         id
         firstName
         lastName
+        name
       }
       description
       industry

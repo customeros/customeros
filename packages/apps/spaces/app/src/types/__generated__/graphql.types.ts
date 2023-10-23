@@ -1327,9 +1327,7 @@ export type Mutation = {
   phoneNumberUpdateInContact: PhoneNumber;
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
-  player_Merge: Player;
-  player_SetDefaultUser: Player;
-  player_Update: Player;
+  player_Merge: Result;
   social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
@@ -1870,16 +1868,7 @@ export type MutationPhoneNumberUpdateInUserArgs = {
 
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
-};
-
-export type MutationPlayer_SetDefaultUserArgs = {
-  id: Scalars['ID'];
   userId: Scalars['ID'];
-};
-
-export type MutationPlayer_UpdateArgs = {
-  id: Scalars['ID'];
-  update: PlayerUpdate;
 };
 
 export type MutationSocial_RemoveArgs = {
@@ -2392,9 +2381,9 @@ export type Query = {
    * - CREATED_AT
    */
   contacts: ContactsPage;
-  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE */
+  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
   dashboardView_Contacts?: Maybe<ContactsPage>;
-  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
@@ -2413,7 +2402,6 @@ export type Query = {
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
   player_ByAuthIdProvider: Player;
-  player_GetUsers: Array<PlayerUser>;
   tags: Array<Tag>;
   tenant: Scalars['String'];
   tenant_ByEmail?: Maybe<Scalars['String']>;

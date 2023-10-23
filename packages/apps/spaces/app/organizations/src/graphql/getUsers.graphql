@@ -4,6 +4,7 @@ query getUsers($pagination: Pagination!, $where: Filter) {
       id
       firstName
       lastName
+      name
     }
     totalElements
   }

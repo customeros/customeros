@@ -38,6 +38,7 @@ export type GetUsersQuery = {
       id: string;
       firstName: string;
       lastName: string;
+      name?: string | null;
     }>;
   };
 };
@@ -49,6 +50,7 @@ export const GetUsersDocument = `
       id
       firstName
       lastName
+      name
     }
     totalElements
   }

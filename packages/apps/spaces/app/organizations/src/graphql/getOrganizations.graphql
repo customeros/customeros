@@ -21,6 +21,7 @@ query getOrganizations(
         id
         firstName
         lastName
+        name
       }
       description
       industry
