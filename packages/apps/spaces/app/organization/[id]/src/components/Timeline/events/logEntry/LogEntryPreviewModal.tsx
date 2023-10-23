@@ -45,8 +45,8 @@ export const LogEntryPreviewModal: React.FC = () => {
   const authorEmail = event?.logEntryCreatedBy?.emails?.[0]?.email;
   const client = getGraphQLClient();
   const { data } = useGetTagsQuery(client);
-
   const isAuthor =
+    !!event.logEntryCreatedBy &&
     event.logEntryCreatedBy?.emails?.findIndex(
       (e) => session?.user?.email === e.email,
     ) !== -1;
