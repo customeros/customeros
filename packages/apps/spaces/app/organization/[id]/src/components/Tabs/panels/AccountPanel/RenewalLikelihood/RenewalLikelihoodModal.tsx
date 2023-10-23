@@ -60,10 +60,15 @@ export const RenewalLikelihoodModal = ({
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
+
+  const getOrganizationQueryKey = useOrganizationAccountDetailsQuery.getKey({
+    id,
+  });
+
   const updateRenewalLikelihood = useUpdateRenewalLikelihoodMutation(client, {
     onSuccess: () => {
       queryClient.setQueryData<OrganizationAccountDetailsQuery>(
-        useOrganizationAccountDetailsQuery.getKey({ id }),
+        getOrganizationQueryKey,
         (oldData) => {
           if (!oldData || !oldData?.organization) return;
           return {
@@ -141,6 +146,14 @@ export const RenewalLikelihoodModal = ({
           };
         },
       );
+    },
+    onSettled: () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries(getOrganizationQueryKey);
+      }, 1000);
     },
   });
 
