@@ -100,9 +100,9 @@ export const handleSendEmail = (
     username: user?.email || '',
     content: textEmailContent || '',
     direction: 'OUTBOUND',
-    to: to,
-    cc: cc,
-    bcc: bcc,
+    to: to.filter((e) => e),
+    cc: cc.filter((e) => e),
+    bcc: bcc.filter((e) => e),
   };
   if (replyTo) {
     request.replyTo = replyTo;
