@@ -2,7 +2,7 @@ name: spaces
 
 on:
   push:
-    branches: ["otter", "silviu/cos-624-enable-fe-tests"]
+    branches: ["otter" ]
     paths:
       - "packages/apps/spaces/**"
       - ".github/workflows/build-spaces.yml"
@@ -43,7 +43,7 @@ jobs:
       - name: Deploy test Environment
         run: |
           curl http://openline.sh/install.sh | sh
-          openline dev start -v
+          openline dev start dev-env -v
 #      - name: Deploy test Environment
 #        run: |
 #          curl http://openline.sh/install.sh | sh
