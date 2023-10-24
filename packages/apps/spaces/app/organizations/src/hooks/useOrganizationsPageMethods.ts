@@ -40,7 +40,7 @@ export const useOrganizationsPageMethods = () => {
             if (!draft) return;
 
             const page = draft.pages?.[pageIndex];
-            const content = page?.dashboardView_Organizations?.content;
+            let content = page?.dashboardView_Organizations?.content;
 
             const emptyRow = produce(content?.[0], (draft) => {
               if (!draft) return;
@@ -53,7 +53,7 @@ export const useOrganizationsPageMethods = () => {
             });
 
             if (!emptyRow) return;
-            content?.unshift(emptyRow);
+            content = [emptyRow, ...(content ?? [])];
           });
         },
       );
