@@ -99,21 +99,61 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			if tenant != nil {
 				log.Printf("tenant found %s", *tenant)
 				var appSource = APP_SOURCE
-				_, errorIsPlayer := services.CustomerOsClient.IsPlayer(signInRequest.Email, signInRequest.Provider)
-				//user exists if i don't have player
-				//if user exists but not player -> send event to create player
-				if errorIsPlayer != nil {
 
-					userByEmail, err := services.CustomerOsClient.GetUserByEmail(*tenant, signInRequest.Email)
+				playerExists := false
+				userExists := false
+
+				player, err := services.CustomerOsClient.GetPlayer(signInRequest.Email, signInRequest.Provider)
+				if err != nil {
+					log.Printf("unable to check if player exists: %v", err.Error())
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("unable to check if player exists: %v", err.Error()),
+					})
+					return
+				}
+				if player != nil && player.Id != "" {
+					playerExists = true
+				}
+
+				userByEmail, err := services.CustomerOsClient.GetUserByEmail(*tenant, signInRequest.Email)
+				if err != nil {
+					log.Printf("unable to get user: %v", err.Error())
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("unable to get user: %v", err.Error()),
+					})
+					return
+				}
+				if userByEmail != nil && userByEmail.ID != "" {
+					userExists = true
+				}
+
+				if !playerExists && !userExists {
+					userByEmail, err = services.CustomerOsClient.CreateUser(&model.UserInput{
+						FirstName: userInfo.GivenName,
+						LastName:  userInfo.FamilyName,
+						Email: model.EmailInput{
+							Email:     signInRequest.Email,
+							Primary:   true,
+							AppSource: &appSource,
+						},
+						Player: model.PlayerInput{
+							IdentityId: signInRequest.OAuthToken.ProviderAccountId,
+							AuthId:     signInRequest.Email,
+							Provider:   signInRequest.Provider,
+							AppSource:  &appSource,
+						},
+						AppSource: &appSource,
+					}, *tenant, []model.Role{model.RoleUser, model.RoleOwner})
 					if err != nil {
-						log.Printf("unable to get user: %v", err.Error())
+						log.Printf("unable to create user: %v", err.Error())
 						ginContext.JSON(http.StatusInternalServerError, gin.H{
-							"result": fmt.Sprintf("unable to get user: %v", err.Error()),
+							"result": fmt.Sprintf("unable to create user: %v", err.Error()),
 						})
 						return
 					}
-					if userByEmail != nil {
-						err = services.CustomerOsClient.CreatePlayer(*tenant, *userByEmail, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Email, signInRequest.Provider)
+				} else {
+					if !playerExists {
+						err = services.CustomerOsClient.CreatePlayer(*tenant, userByEmail.ID, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Email, signInRequest.Provider)
 						if err != nil {
 							log.Printf("unable to create player: %v", err.Error())
 							ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -121,34 +161,11 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 							})
 							return
 						}
-					} else {
-						_, err = services.CustomerOsClient.CreateUser(&model.UserInput{
-							FirstName: userInfo.GivenName,
-							LastName:  userInfo.FamilyName,
-							Email: model.EmailInput{
-								Email:     signInRequest.Email,
-								Primary:   true,
-								AppSource: &appSource,
-							},
-							Player: model.PlayerInput{
-								IdentityId: signInRequest.OAuthToken.ProviderAccountId,
-								AuthId:     signInRequest.Email,
-								Provider:   signInRequest.Provider,
-								AppSource:  &appSource,
-							},
-							AppSource: &appSource,
-						}, *tenant, []service.Role{service.ROLE_USER})
-						if err != nil {
-							log.Printf("unable to create user: %v", err.Error())
-							ginContext.JSON(http.StatusInternalServerError, gin.H{
-								"result": fmt.Sprintf("unable to create user: %v", err.Error()),
-							})
-							return
-						}
-
 					}
-
 				}
+
+				addDefaultMissingRoles(services, userByEmail, tenant, ginContext)
+
 				tenantName = tenant
 			} else {
 				var appSource = APP_SOURCE
@@ -325,7 +342,7 @@ func makeTenantAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenan
 		}
 	}
 
-	id, err := cosClient.CreateUser(&model.UserInput{
+	user, err := cosClient.CreateUser(&model.UserInput{
 		FirstName: userInfo.GivenName,
 		LastName:  userInfo.FamilyName,
 		Email: model.EmailInput{
@@ -340,7 +357,7 @@ func makeTenantAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenan
 			AppSource:  &appSource,
 		},
 		AppSource: &appSource,
-	}, newTenantStr, []service.Role{service.ROLE_USER, service.ROLE_OWNER})
+	}, newTenantStr, []model.Role{model.RoleUser, model.RoleOwner})
 	if err != nil {
 		log.Printf("unable to create user: %v", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -348,5 +365,41 @@ func makeTenantAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenan
 		})
 		return "", true
 	}
-	return id, false
+	return user.ID, false
+}
+
+func addDefaultMissingRoles(services *service.Services, user *model.UserResponse, tenant *string, ginContext *gin.Context) {
+	var rolesToAdd []model.Role
+
+	if user.Roles == nil || len(*user.Roles) == 0 {
+		rolesToAdd = []model.Role{model.RoleUser, model.RoleOwner}
+	} else {
+		userRoleFound := false
+		ownerRoleFound := false
+		for _, role := range *user.Roles {
+			if role == model.RoleUser {
+				userRoleFound = true
+			}
+			if role == model.RoleOwner {
+				ownerRoleFound = true
+			}
+		}
+		if !userRoleFound {
+			rolesToAdd = append(rolesToAdd, model.RoleUser)
+		}
+		if !ownerRoleFound {
+			rolesToAdd = append(rolesToAdd, model.RoleOwner)
+		}
+	}
+
+	if len(rolesToAdd) > 0 {
+		_, err := services.CustomerOsClient.AddUserRoles(*tenant, user.ID, rolesToAdd)
+		if err != nil {
+			log.Printf("unable to add role: %v", err.Error())
+			ginContext.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to add role: %v", err.Error()),
+			})
+			return
+		}
+	}
 }

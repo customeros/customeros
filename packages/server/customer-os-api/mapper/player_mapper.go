@@ -39,6 +39,9 @@ func MapPlayerUpdateToEntity(id string, input *model.PlayerUpdate) *entity.Playe
 }
 
 func MapEntityToPlayer(entity *entity.PlayerEntity) *model.Player {
+	if entity == nil {
+		return nil
+	}
 	return &model.Player{
 		ID:            entity.Id,
 		IdentityID:    entity.IdentityId,

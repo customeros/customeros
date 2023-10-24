@@ -70,7 +70,7 @@ func (r *queryResolver) PlayerByAuthIDProvider(ctx context.Context, authID strin
 	span.LogFields(log.String("request.authID", authID), log.String("request.provider", provider))
 
 	playerEntity, err := r.Services.PlayerService.GetPlayerByAuthIdProvider(ctx, authID, provider)
-	if err != nil {
+	if err != nil || playerEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get player by authId and provider")
 		return nil, err
