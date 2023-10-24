@@ -187,7 +187,7 @@ export type GetOrganizationsQuery = {
             >;
           }
         | { __typename: 'InteractionSession' }
-        | { __typename: 'Issue'; id: string }
+        | { __typename: 'Issue'; id: string; createdAt: any; updatedAt: any }
         | {
             __typename: 'LogEntry';
             id: string;
@@ -305,6 +305,8 @@ export const GetOrganizationsDocument = `
         }
         ... on Issue {
           id
+          createdAt
+          updatedAt
         }
         ... on LogEntry {
           id

@@ -277,12 +277,13 @@ export type ContactInput = {
    */
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   description?: InputMaybe<Scalars['String']>;
-  /** An email addresses associated with the contact. */
+  /** An email addresses associted with the contact. */
   email?: InputMaybe<EmailInput>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   /** The first name of the contact. */
   firstName?: InputMaybe<Scalars['String']>;
+  label?: InputMaybe<Scalars['String']>;
   /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
@@ -806,8 +807,7 @@ export enum GCliSearchResultType {
 export type GlobalCache = {
   __typename?: 'GlobalCache';
   gCliCache: Array<GCliItem>;
-  isGoogleActive: Scalars['Boolean'];
-  isGoogleTokenExpired: Scalars['Boolean'];
+  gmailOauthTokenNeedsManualRefresh: Scalars['Boolean'];
   isOwner: Scalars['Boolean'];
   user: User;
 };
@@ -846,8 +846,6 @@ export type InteractionEventInput = {
   createdAt?: InputMaybe<Scalars['Time']>;
   eventIdentifier?: InputMaybe<Scalars['String']>;
   eventType?: InputMaybe<Scalars['String']>;
-  externalId?: InputMaybe<Scalars['String']>;
-  externalSystemId?: InputMaybe<Scalars['String']>;
   interactionSession?: InputMaybe<Scalars['ID']>;
   meetingId?: InputMaybe<Scalars['ID']>;
   repliesTo?: InputMaybe<Scalars['ID']>;
@@ -1327,7 +1325,9 @@ export type Mutation = {
   phoneNumberUpdateInContact: PhoneNumber;
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
-  player_Merge: Result;
+  player_Merge: Player;
+  player_SetDefaultUser: Player;
+  player_Update: Player;
   social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
@@ -1868,7 +1868,16 @@ export type MutationPhoneNumberUpdateInUserArgs = {
 
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
+};
+
+export type MutationPlayer_SetDefaultUserArgs = {
+  id: Scalars['ID'];
   userId: Scalars['ID'];
+};
+
+export type MutationPlayer_UpdateArgs = {
+  id: Scalars['ID'];
+  update: PlayerUpdate;
 };
 
 export type MutationSocial_RemoveArgs = {
@@ -2381,9 +2390,9 @@ export type Query = {
    * - CREATED_AT
    */
   contacts: ContactsPage;
-  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
+  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE */
   dashboardView_Contacts?: Maybe<ContactsPage>;
-  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
+  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
@@ -2402,6 +2411,7 @@ export type Query = {
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
   player_ByAuthIdProvider: Player;
+  player_GetUsers: Array<PlayerUser>;
   tags: Array<Tag>;
   tenant: Scalars['String'];
   tenant_ByEmail?: Maybe<Scalars['String']>;
