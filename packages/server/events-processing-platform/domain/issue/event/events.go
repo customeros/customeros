@@ -19,31 +19,35 @@ const (
 )
 
 type IssueCreateEvent struct {
-	Tenant                   string                `json:"tenant" validate:"required"`
-	Subject                  string                `json:"subject" validate:"required_without=Description"`
-	Description              string                `json:"description" validate:"required_without=Subject"`
-	Status                   string                `json:"status"`
-	Priority                 string                `json:"priority"`
-	ReportedByOrganizationId string                `json:"reportedByOrganizationId,omitempty"`
-	Source                   string                `json:"source"`
-	AppSource                string                `json:"appSource"`
-	CreatedAt                time.Time             `json:"createdAt"`
-	UpdatedAt                time.Time             `json:"updatedAt"`
-	ExternalSystem           cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
+	Tenant                    string                `json:"tenant" validate:"required"`
+	Subject                   string                `json:"subject" validate:"required_without=Description"`
+	Description               string                `json:"description" validate:"required_without=Subject"`
+	Status                    string                `json:"status"`
+	Priority                  string                `json:"priority"`
+	ReportedByOrganizationId  string                `json:"reportedByOrganizationId,omitempty"`
+	SubmittedByOrganizationId string                `json:"submittedByOrganizationId,omitempty"`
+	SubmittedByUserId         string                `json:"submittedByUserId,omitempty"`
+	Source                    string                `json:"source"`
+	AppSource                 string                `json:"appSource"`
+	CreatedAt                 time.Time             `json:"createdAt"`
+	UpdatedAt                 time.Time             `json:"updatedAt"`
+	ExternalSystem            cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
 func NewIssueCreateEvent(aggregate eventstore.Aggregate, dataFields model.IssueDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := IssueCreateEvent{
-		Tenant:                   aggregate.GetTenant(),
-		Subject:                  dataFields.Subject,
-		Description:              dataFields.Description,
-		Status:                   dataFields.Status,
-		Priority:                 dataFields.Priority,
-		ReportedByOrganizationId: utils.IfNotNilString(dataFields.ReportedByOrganizationId),
-		Source:                   source.Source,
-		AppSource:                source.AppSource,
-		CreatedAt:                createdAt,
-		UpdatedAt:                updatedAt,
+		Tenant:                    aggregate.GetTenant(),
+		Subject:                   dataFields.Subject,
+		Description:               dataFields.Description,
+		Status:                    dataFields.Status,
+		Priority:                  dataFields.Priority,
+		ReportedByOrganizationId:  utils.IfNotNilString(dataFields.ReportedByOrganizationId),
+		SubmittedByOrganizationId: utils.IfNotNilString(dataFields.SubmittedByOrganizationId),
+		SubmittedByUserId:         utils.IfNotNilString(dataFields.SubmittedByUserId),
+		Source:                    source.Source,
+		AppSource:                 source.AppSource,
+		CreatedAt:                 createdAt,
+		UpdatedAt:                 updatedAt,
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem

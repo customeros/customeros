@@ -7,19 +7,21 @@ import (
 )
 
 type Issue struct {
-	ID                     string                  `json:"id"`
-	Tenant                 string                  `json:"tenant"`
-	Subject                string                  `json:"subject"`
-	Description            string                  `json:"description"`
-	Status                 string                  `json:"status"`
-	Priority               string                  `json:"priority"`
-	ReportedByOrganization string                  `json:"reportedByOrganizationId,omitempty"`
-	Source                 cmnmod.Source           `json:"source"`
-	ExternalSystems        []cmnmod.ExternalSystem `json:"externalSystem"`
-	CreatedAt              time.Time               `json:"createdAt,omitempty"`
-	UpdatedAt              time.Time               `json:"updatedAt,omitempty"`
-	AssignedToUserIds      []string                `json:"assignedToUserIds,omitempty"`
-	FollowedByUserIds      []string                `json:"followedByUserIds,omitempty"`
+	ID                      string                  `json:"id"`
+	Tenant                  string                  `json:"tenant"`
+	Subject                 string                  `json:"subject"`
+	Description             string                  `json:"description"`
+	Status                  string                  `json:"status"`
+	Priority                string                  `json:"priority"`
+	ReportedByOrganization  string                  `json:"reportedByOrganization,omitempty"`
+	SubmittedByOrganization string                  `json:"submittedByOrganization,omitempty"`
+	SubmittedByUser         string                  `json:"submittedByUser,omitempty"`
+	Source                  cmnmod.Source           `json:"source"`
+	ExternalSystems         []cmnmod.ExternalSystem `json:"externalSystem"`
+	CreatedAt               time.Time               `json:"createdAt,omitempty"`
+	UpdatedAt               time.Time               `json:"updatedAt,omitempty"`
+	AssignedToUserIds       []string                `json:"assignedToUserIds,omitempty"`
+	FollowedByUserIds       []string                `json:"followedByUserIds,omitempty"`
 }
 
 func (i *Issue) AddAssignedToUserId(userId string) {

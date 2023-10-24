@@ -38,11 +38,13 @@ func (s *issueService) UpsertIssue(ctx context.Context, request *pb.UpsertIssueG
 	issueId := strings.TrimSpace(utils.NewUUIDIfEmpty(request.Id))
 
 	dataFields := model.IssueDataFields{
-		Subject:                  request.Subject,
-		Description:              request.Description,
-		Status:                   request.Status,
-		Priority:                 request.Priority,
-		ReportedByOrganizationId: request.ReportedByOrganizationId,
+		Subject:                   request.Subject,
+		Description:               request.Description,
+		Status:                    request.Status,
+		Priority:                  request.Priority,
+		ReportedByOrganizationId:  request.ReportedByOrganizationId,
+		SubmittedByOrganizationId: request.SubmittedByOrganizationId,
+		SubmittedByUserId:         request.SubmittedByUserId,
 	}
 
 	source := cmnmod.Source{}
