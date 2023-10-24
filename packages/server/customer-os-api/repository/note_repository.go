@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -28,7 +27,6 @@ type NoteRepository interface {
 	GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error)
 	GetPaginatedNotesForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	GetNotesForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	GetMentionedByNotesForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error)
 
 	CreateNoteForContact(ctx context.Context, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	CreateNoteForOrganization(ctx context.Context, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
@@ -41,7 +39,6 @@ type NoteRepository interface {
 	SetNoteCreator(ctx context.Context, tenant, userId, noteId string) error
 
 	GetNotedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	GetMentionedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 }
 
 type noteRepository struct {
@@ -435,35 +432,6 @@ func (r *noteRepository) GetNotedEntitiesForNotes(ctx context.Context, tenant st
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *noteRepository) GetMentionedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetMentionedEntitiesForNotes")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := fmt.Sprintf(`MATCH (n:Note_%s)-[:MENTIONED]->(:Tag)<-[:TAGGED]-(e:Issue_%s)
-			WHERE n.id IN $ids
-			RETURN e, n.id`, tenant, tenant)
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"ids": ids,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
-}
-
 func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId string, entity *entity.NoteEntity) (map[string]any, string) {
 	query := "MATCH (m:Meeting_%s {id:$meetingId}) " +
 		" MERGE (m)-[:NOTED]->(n:Note {id:randomUUID()}) " +
@@ -489,33 +457,4 @@ func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId st
 		"appSource":     entity.AppSource,
 	}
 	return params, fmt.Sprintf(query, tenant, tenant, tenant)
-}
-
-func (r *noteRepository) GetMentionedByNotesForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetMentionedByNotesForIssues")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (i:Issue_%s)-[:TAGGED]->(tag:Tag)<-[:MENTIONED]-(n:Note_%s)
-			WHERE i.id IN $issueIds
-			RETURN n, i.id ORDER BY tag.name`
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
-			map[string]any{
-				"tenant":   tenant,
-				"issueIds": issueIds,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
 }

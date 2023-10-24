@@ -11,12 +11,6 @@
   "externalOrganizationsIds": [
     "org-123"
   ],
-  "mentionedTags": [
-    "important",
-    "update"
-  ],
-  "mentionedIssueExternalId": "issue-123",
-
   "skip": false,
   "skipReason": "draft data",
   "externalId": "abcd1234",

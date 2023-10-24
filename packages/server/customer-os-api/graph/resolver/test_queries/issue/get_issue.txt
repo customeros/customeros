@@ -11,10 +11,6 @@ query GetIssue($issueId: ID!){
             id
             name
        }
-       mentionedByNotes {
-            id
-            content
-       }
        interactionEvents {
             id
        }

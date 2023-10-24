@@ -647,15 +647,6 @@ func TagIssue(ctx context.Context, driver *neo4j.DriverWithContext, issueId, tag
 	})
 }
 
-func NoteMentionsTag(ctx context.Context, driver *neo4j.DriverWithContext, noteId, tagId string) {
-	query := `MATCH (n:Note {id:$noteId}), (tag:Tag {id:$tagId})
-			MERGE (n)-[:MENTIONED]->(tag)`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tagId":  tagId,
-		"noteId": noteId,
-	})
-}
-
 func TagContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId, tagId string) {
 	query := `MATCH (c:Contact {id:$contactId}), (tag:Tag {id:$tagId})
 			MERGE (c)-[r:TAGGED]->(tag)

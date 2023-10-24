@@ -35,12 +35,6 @@ func (issue *IssueEntity) GetDataloaderKey() string {
 	return issue.DataloaderKey
 }
 
-func (*IssueEntity) IsMentionedEntity() {}
-
-func (*IssueEntity) MentionedEntityLabel() string {
-	return NodeLabel_Issue
-}
-
 func (*IssueEntity) Labels(tenant string) []string {
 	return []string{
 		NodeLabel_Issue,
