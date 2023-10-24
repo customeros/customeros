@@ -154,6 +154,15 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		span.LogFields(log.String("output", "failed"))
 		return NewFailedSyncStatus(reason)
 	}
+	submitterId, submitterLabel, err := s.services.FinderService.FindReferencedEntityId(ctx, issueInput.ExternalSystem, &issueInput.Submitter)
+	if err != nil {
+		failedSync = true
+		tracing.TraceErr(span, err)
+		reason = fmt.Sprintf("failed finding submitter for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
+		s.log.Error(reason)
+		span.LogFields(log.String("output", "failed"))
+		return NewFailedSyncStatus(reason)
+	}
 
 	if issueInput.OrganizationRequired && reporterLabel != entity.NodeLabel_Organization {
 		reason = fmt.Sprintf("organization(s) not found for issue %s for tenant %s", issueInput.ExternalId, tenant)
@@ -206,6 +215,14 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		}
 		if reporterId != "" && reporterLabel == entity.NodeLabel_Organization {
 			issueGrpcRequest.ReportedByOrganizationId = &reporterId
+		}
+		if submitterId != "" {
+			switch submitterLabel {
+			case entity.NodeLabel_Organization:
+				issueGrpcRequest.SubmittedByOrganizationId = &submitterId
+			case entity.NodeLabel_User:
+				issueGrpcRequest.SubmittedByUserId = &submitterId
+			}
 		}
 		_, err = s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
 		if err != nil {

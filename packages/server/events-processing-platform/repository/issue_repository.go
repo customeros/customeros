@@ -67,21 +67,33 @@ func (r *issueRepository) Create(ctx context.Context, tenant, issueId string, ev
 							WHERE $reportedByOrganizationId <> ""
 							FOREACH (ignore IN CASE WHEN o IS NOT NULL THEN [1] ELSE [] END |
     							MERGE (i)-[:REPORTED_BY]->(o))
+							WITH i, t
+							OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$submittedByOrganizationId}) 
+							WHERE $submittedByOrganizationId <> ""
+							FOREACH (ignore IN CASE WHEN o IS NOT NULL THEN [1] ELSE [] END |
+    							MERGE (i)-[:SUBMITTED_BY]->(o))
+							WITH i, t
+							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$submittedByUserId}) 
+							WHERE $submittedByUserId <> ""
+							FOREACH (ignore IN CASE WHEN u IS NOT NULL THEN [1] ELSE [] END |
+    							MERGE (i)-[:SUBMITTED_BY]->(u))
 							`, tenant, tenant)
 	params := map[string]any{
-		"tenant":                   tenant,
-		"issueId":                  issueId,
-		"createdAt":                evt.CreatedAt,
-		"updatedAt":                evt.UpdatedAt,
-		"source":                   helper.GetSource(evt.Source),
-		"sourceOfTruth":            helper.GetSourceOfTruth(evt.Source),
-		"appSource":                helper.GetAppSource(evt.AppSource),
-		"subject":                  evt.Subject,
-		"description":              evt.Description,
-		"status":                   evt.Status,
-		"priority":                 evt.Priority,
-		"reportedByOrganizationId": evt.ReportedByOrganizationId,
-		"overwrite":                helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
+		"tenant":                    tenant,
+		"issueId":                   issueId,
+		"createdAt":                 evt.CreatedAt,
+		"updatedAt":                 evt.UpdatedAt,
+		"source":                    helper.GetSource(evt.Source),
+		"sourceOfTruth":             helper.GetSourceOfTruth(evt.Source),
+		"appSource":                 helper.GetAppSource(evt.AppSource),
+		"subject":                   evt.Subject,
+		"description":               evt.Description,
+		"status":                    evt.Status,
+		"priority":                  evt.Priority,
+		"reportedByOrganizationId":  evt.ReportedByOrganizationId,
+		"submittedByOrganizationId": evt.SubmittedByOrganizationId,
+		"submittedByUserId":         evt.SubmittedByUserId,
+		"overwrite":                 helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 

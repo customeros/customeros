@@ -10,6 +10,7 @@ type IssueData struct {
 	Followers            []ReferencedParticipant `json:"followers,omitempty"`
 	Assignee             ReferencedUser          `json:"userAssignee,omitempty"`
 	Reporter             ReferencedParticipant   `json:"reporter,omitempty"`
+	Submitter            ReferencedParticipant   `json:"submitter,omitempty"`
 	OrganizationRequired bool                    `json:"organizationRequired,omitempty"`
 }
 

@@ -62,6 +62,8 @@ func (a *IssueAggregate) onIssueCreate(evt eventstore.Event) error {
 	a.Issue.Status = eventData.Status
 	a.Issue.Priority = eventData.Priority
 	a.Issue.ReportedByOrganization = eventData.ReportedByOrganizationId
+	a.Issue.SubmittedByOrganization = eventData.SubmittedByOrganizationId
+	a.Issue.SubmittedByUser = eventData.SubmittedByUserId
 	a.Issue.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,

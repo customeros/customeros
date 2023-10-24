@@ -46,7 +46,9 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 			Source:    "openline",
 			AppSource: "unit-test",
 		},
-		ReportedByOrganizationId: utils.StringPtr("456"),
+		ReportedByOrganizationId:  utils.StringPtr("456"),
+		SubmittedByOrganizationId: utils.StringPtr("ABC"),
+		SubmittedByUserId:         utils.StringPtr("DEF"),
 	})
 	require.Nil(t, err, "Failed to create issue")
 	require.NotNil(t, response)
@@ -76,6 +78,8 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 	require.Equal(t, "open", eventData.Status)
 	require.Equal(t, "high", eventData.Priority)
 	require.Equal(t, "456", eventData.ReportedByOrganizationId)
+	require.Equal(t, "ABC", eventData.SubmittedByOrganizationId)
+	require.Equal(t, "DEF", eventData.SubmittedByUserId)
 }
 
 func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {

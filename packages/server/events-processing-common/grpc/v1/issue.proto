@@ -19,6 +19,8 @@ message UpsertIssueGrpcRequest {
   optional string reportedByOrganizationId = 12;
   SourceFields sourceFields = 13;
   ExternalSystemFields externalSystemFields = 14;
+  optional string submittedByOrganizationId = 15;
+  optional string submittedByUserId = 16;
 }
 
 message AddUserAssigneeToIssueGrpcRequest {

@@ -32,27 +32,29 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	externalSystemId := "sf"
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, externalSystemId)
-	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
-		Name: "test org",
-	})
+	reporterOrgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	submitterOrgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	submitterUserId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization": 1, "ExternalSystem": 1, "Issue": 0, "TimelineEvent": 0})
+		"User": 1, "Organization": 2, "ExternalSystem": 1, "Issue": 0, "TimelineEvent": 0})
 
 	// prepare event handler
 	issueEventHandler := &GraphIssueEventHandler{
 		Repositories:         testDatabase.Repositories,
 		organizationCommands: orgcmdhnd.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
-	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, reporterOrgId)
 	now := utils.Now()
 	issueId := uuid.New().String()
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
 	createEvent, err := event.NewIssueCreateEvent(issueAggregate, model.IssueDataFields{
-		Subject:                  "test subject",
-		Description:              "test description",
-		Status:                   "open",
-		Priority:                 "high",
-		ReportedByOrganizationId: utils.StringPtr(orgId),
+		Subject:                   "test subject",
+		Description:               "test description",
+		Status:                    "open",
+		Priority:                  "high",
+		ReportedByOrganizationId:  utils.StringPtr(reporterOrgId),
+		SubmittedByOrganizationId: utils.StringPtr(submitterOrgId),
+		SubmittedByUserId:         utils.StringPtr(submitterUserId),
 	}, cmnmod.Source{
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatform,
@@ -68,15 +70,19 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err, "failed to execute event handler")
 
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization": 1, "Organization_" + tenantName: 1,
+		"User": 1, "User_" + tenantName: 1,
+		"Organization": 2, "Organization_" + tenantName: 2,
 		"ExternalSystem": 1, "ExternalSystem_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
 		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
 	neo4jt.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
 		"REPORTED_BY":    1,
+		"SUBMITTED_BY":   2,
 		"IS_LINKED_WITH": 1,
 	})
-	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "REPORTED_BY", orgId)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "REPORTED_BY", reporterOrgId)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "SUBMITTED_BY", submitterOrgId)
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "SUBMITTED_BY", submitterUserId)
 	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, issueId, "IS_LINKED_WITH", externalSystemId)
 
 	issueDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Issue_"+tenantName, issueId)
