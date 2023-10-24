@@ -87,6 +87,8 @@ query getOrganizations(
         }
         ... on Issue {
           id
+          createdAt
+          updatedAt
         }
         ... on LogEntry {
           id

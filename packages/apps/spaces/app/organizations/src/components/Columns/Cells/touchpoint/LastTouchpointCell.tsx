@@ -33,7 +33,14 @@ export const LastTouchpointCell = ({
       Building07,
     ])
     .with({ __typename: 'PageView' }, () => ['Page View', () => <></>])
-    .with({ __typename: 'Issue' }, () => ['Issue', Ticket02])
+    .with({ __typename: 'Issue' }, (event) => {
+      const issueLastUpdateType =
+        DateTimeUtils.diffetenceInMins(event.updatedAt, event.createdAt) > 1
+          ? 'updated'
+          : 'created';
+
+      return [`Issue ${issueLastUpdateType}`, Ticket02];
+    })
     .with({ __typename: 'Note' }, (event) => [
       `Note by ${event.createdBy?.firstName} ${event.createdBy?.lastName}`,
       File02,

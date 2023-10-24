@@ -1,4 +1,5 @@
 import {
+  differenceInMinutes,
   formatDistanceToNow,
   formatDuration as formatDurationDateFns,
   isBefore,
@@ -75,6 +76,9 @@ export class DateTimeUtils {
 
   public static isSameDay(dateLeft: string, dateRight: string): boolean {
     return isSameDayDateFns(this.getDate(dateLeft), this.getDate(dateRight));
+  }
+  public static diffetenceInMins(dateLeft: string, dateRight: string): number {
+    return differenceInMinutes(this.getDate(dateLeft), this.getDate(dateRight));
   }
 
   public static convertToTimeZone(
