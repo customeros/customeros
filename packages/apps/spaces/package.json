@@ -44,6 +44,7 @@
     "jsonwebtoken": "^9.0.2",
     "linkify-html": "^4.1.0",
     "linkifyjs": "^4.1.0",
+    "lodash": "^4.17.21",
     "next": "13.5.4",
     "next-auth": "4.22.1",
     "next-pwa": "^5.6.0",
@@ -58,6 +59,7 @@
     "react-virtuoso": "4.4.2",
     "recoil": "^0.7.6",
     "remirror": "^2.0.36",
+    "rxjs": "^7.8.1",
     "sanitize-html": "^2.9.0",
     "sass": "^1.58.0",
     "slack-to-html": "^1.0.0",
@@ -104,8 +106,5 @@
     "got": "^11.8.5",
     "semver": "^7.5.2"
   },
-  "peerDependencies": {
-    "lodash": "^4.17.21",
-    "rxjs": "^7.8.1"
-  }
+  "peerDependencies": {}
 }
