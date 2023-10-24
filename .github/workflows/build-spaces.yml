@@ -40,30 +40,33 @@ jobs:
 
       - run: npm install -g yarn
 
-      # - name: Deploy test Environment
-      #   run: |
-      #     set -e
-      #     curl http://openline.sh/install.sh | sh
-      #     openline dev start test-env
-      #     echo "[INFO] Checking Openline CLI services..."
-      #     openline dev ping || { echo 'Openline CLI services check failed' ; exit 1; }
-      #     echo "[INFO] Checking PODs..."
-      #     kubectl -n openline get pods || { echo 'PODs check failed' ; exit 1; }
-      #     echo "[INFO] wait for 3 seconds to make sure all services are up and running..."
-      #     sleep 3
+      - name: Deploy test Environment
+        run: |
+          curl http://openline.sh/install.sh | sh
+          openline dev start test-env -v
+#      - name: Deploy test Environment
+#        run: |
+#          curl http://openline.sh/install.sh | sh
+#          openline dev start
+#          echo "[INFO] Checking Openline CLI services..."
+#          openline dev ping || { echo 'Openline CLI services check failed' ; exit 1; }
+#          echo "[INFO] Checking PODs..."
+#          kubectl -n openline get pods || { echo 'PODs check failed' ; exit 1; }
+#          echo "[INFO] wait for 3 seconds to make sure all services are up and running..."
+#          sleep 3
 
-      # - name: Test GraphQL contracts
-      #   run: |
-      #     cd packages/apps/spaces
-      #     yarn install --frozen-lockfile
-      #     yarn test:graphql
-      #   env:
-      #     CUSTOMER_OS_API_PATH: http://127.0.0.1:10000
-      #     CUSTOMER_OS_API_KEY: ${{ secrets.CLI_CUSTOMER_OS_API_KEY }}
+      - name: Test GraphQL contracts
+        run: |
+          cd packages/apps/spaces
+          yarn install --frozen-lockfile
+          yarn test:graphql
+        env:
+          CUSTOMER_OS_API_PATH: http://127.0.0.1:10000
+          CUSTOMER_OS_API_KEY: ${{ secrets.CLI_CUSTOMER_OS_API_KEY }}
 
-      # - name: Cleanup test environment
-      #   if: ${{ always() }}
-      #   run: openline dev remove
+      - name: Cleanup test environment
+        if: ${{ always() }}
+        run: openline dev remove
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3.0.0
