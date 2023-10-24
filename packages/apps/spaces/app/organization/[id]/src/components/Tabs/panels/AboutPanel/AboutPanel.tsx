@@ -35,6 +35,12 @@ import {
   OrganizationAboutFormDto,
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
+import {
+  useUpdateAboutPanelCache,
+  useUpdateOrganizationInTableCache,
+} from '@organization/src/components/Tabs/panels/AboutPanel/hooks/useUpdateAboutPanelCache';
+import { useEffect } from 'react';
+import { Organization } from '@graphql/types';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -47,12 +53,22 @@ export const AboutPanel = () => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const { data } = useOrganizationQuery(client, { id });
+  const updateAboutPanelCache = useUpdateAboutPanelCache();
+  const updateOrganizationTableData = useUpdateOrganizationInTableCache();
 
   const invalidateQuery = () =>
     queryClient.invalidateQueries(useOrganizationQuery.getKey({ id }));
 
   const updateOrganization = useUpdateOrganizationMutation(client, {
-    onSuccess: invalidateQuery,
+    onSuccess: async ({ organization_Update }, variables, context) => {
+      const queryKey = useOrganizationQuery.getKey({ id });
+      const updatedData = {
+        ...organization_Update,
+        ...variables.input,
+      } as Organization;
+      await updateAboutPanelCache(updatedData, queryKey);
+      await updateOrganizationTableData(updatedData);
+    },
   });
 
   const addSocial = useAddSocialMutation(client, {
@@ -130,6 +146,12 @@ export const AboutPanel = () => {
     },
   });
 
+  useEffect(() => {
+    return () => {
+      // flush data on unmount
+      mutateOrganization(state.values);
+    };
+  }, [state.values, data?.organization]);
   const handleAddSocial = ({
     newValue,
     onSuccess,
