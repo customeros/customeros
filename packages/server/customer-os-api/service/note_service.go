@@ -21,7 +21,6 @@ type NoteService interface {
 	GetNotesForContactTimeRange(ctx context.Context, contactId string, start, end time.Time) (*entity.NoteEntities, error)
 	GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error)
 	GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error)
-	GetMentionedByNotesForIssues(ctx context.Context, issueIds []string) (*entity.NoteEntities, error)
 
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	CreateNoteForOrganization(ctx context.Context, organizationId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -31,7 +30,6 @@ type NoteService interface {
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
 
 	GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error)
-	GetMentionedEntities(ctx context.Context, ids []string) (*entity.MentionedEntities, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 
@@ -271,29 +269,6 @@ func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*enti
 	return &notedEntities, nil
 }
 
-func (s *noteService) GetMentionedEntities(ctx context.Context, ids []string) (*entity.MentionedEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetMentionedEntities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
-
-	records, err := s.repositories.NoteRepository.GetMentionedEntitiesForNotes(ctx, common.GetTenantFromContext(ctx), ids)
-	if err != nil {
-		return nil, err
-	}
-
-	mentionedEntities := entity.MentionedEntities{}
-	for _, v := range records {
-		if slices.Contains(v.Node.Labels, entity.NodeLabel_Issue) {
-			mentionedEntity := s.services.IssueService.mapDbNodeToIssue(*v.Node)
-			mentionedEntity.DataloaderKey = v.LinkedNodeId
-			mentionedEntities = append(mentionedEntities, mentionedEntity)
-		}
-	}
-
-	return &mentionedEntities, nil
-}
-
 func (s *noteService) GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error) {
 
 	records, err := s.repositories.NoteRepository.GetNotesForMeetings(ctx, common.GetContext(ctx).Tenant, ids)
@@ -323,25 +298,6 @@ func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string
 		s.repositories.NoteRepository.SetNoteCreator(ctx, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
 	}
 	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
-}
-
-func (s *noteService) GetMentionedByNotesForIssues(ctx context.Context, issueIds []string) (*entity.NoteEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetMentionedByNotesForIssues")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("issueIds", issueIds))
-
-	notes, err := s.repositories.NoteRepository.GetMentionedByNotesForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
-	if err != nil {
-		return nil, err
-	}
-	noteEntities := entity.NoteEntities{}
-	for _, v := range notes {
-		noteEntity := s.mapDbNodeToNoteEntity(*v.Node)
-		noteEntity.DataloaderKey = v.LinkedNodeId
-		noteEntities = append(noteEntities, *noteEntity)
-	}
-	return &noteEntities, nil
 }
 
 func (s *noteService) mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity {

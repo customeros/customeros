@@ -38,7 +38,6 @@ type Loaders struct {
 	PhoneNumbersForUser                         *dataloader.Loader
 	PhoneNumbersForContact                      *dataloader.Loader
 	NotedEntitiesForNote                        *dataloader.Loader
-	MentionedEntitiesForNote                    *dataloader.Loader
 	UsersForEmail                               *dataloader.Loader
 	UsersForPhoneNumber                         *dataloader.Loader
 	UsersForPlayer                              *dataloader.Loader
@@ -58,7 +57,6 @@ type Loaders struct {
 	AttendedByParticipantsForMeeting            *dataloader.Loader
 	InteractionEventsForMeeting                 *dataloader.Loader
 	InteractionEventsForIssue                   *dataloader.Loader
-	MentionedByNotesForIssue                    *dataloader.Loader
 	NotesForMeeting                             *dataloader.Loader
 	AttachmentsForInteractionEvent              *dataloader.Loader
 	AttachmentsForInteractionSession            *dataloader.Loader
@@ -117,9 +115,6 @@ type phoneNumberBatcher struct {
 	phoneNumberService service.PhoneNumberService
 }
 type notedEntityBatcher struct {
-	noteService service.NoteService
-}
-type mentionedEntityBatcher struct {
 	noteService service.NoteService
 }
 type userBatcher struct {
@@ -206,9 +201,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 	notedEntityBatcher := &notedEntityBatcher{
 		noteService: services.NoteService,
 	}
-	mentionedEntityBatcher := &mentionedEntityBatcher{
-		noteService: services.NoteService,
-	}
 	userBatcher := &userBatcher{
 		userService: services.UserService,
 	}
@@ -276,7 +268,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 		PhoneNumbersForContact:                      dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ReplyToInteractionEventForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventBatcher.getReplyToInteractionEventsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		NotedEntitiesForNote:                        dataloader.NewBatchedLoader(notedEntityBatcher.getNotedEntitiesForNotes, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		MentionedEntitiesForNote:                    dataloader.NewBatchedLoader(mentionedEntityBatcher.getMentionedEntitiesForNotes, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForEmail:                               dataloader.NewBatchedLoader(userBatcher.getUsersForEmails, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForPhoneNumber:                         dataloader.NewBatchedLoader(userBatcher.getUsersForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForPlayer:                              dataloader.NewBatchedLoader(userBatcher.getUsersForPlayers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -291,7 +282,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 		SubsidiariesOfForOrganization:               dataloader.NewBatchedLoader(organizationBatcher.getSubsidiariesOfForOrganization, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(20*time.Millisecond), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SuggestedMergeToForOrganization:             dataloader.NewBatchedLoader(organizationBatcher.getSuggestedMergeToForOrganization, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		DescribesForAnalysis:                        dataloader.NewBatchedLoader(analysisBatcher.getDescribesForAnalysis, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		MentionedByNotesForIssue:                    dataloader.NewBatchedLoader(noteBatcher.getMentionedByNotesForIssue, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		DescribedByFor:                              dataloader.NewBatchedLoader(analysisBatcher.getDescribedByFor, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		NotesForMeeting:                             dataloader.NewBatchedLoader(noteBatcher.getNotesForMeetings, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		AttachmentsForInteractionEvent:              dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

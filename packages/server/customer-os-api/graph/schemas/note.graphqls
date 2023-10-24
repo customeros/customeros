@@ -18,7 +18,7 @@ type Note {
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     noted: [NotedEntity!]! @goField(forceResolver: true)
-    mentioned: [MentionedEntity!]! @goField(forceResolver: true)
+    mentioned: [MentionedEntity!]! @goField(forceResolver: true) @deprecated(reason: "will be removed in future versions")
     includes: [Attachment!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!

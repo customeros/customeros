@@ -145,15 +145,7 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 
 // Mentioned is the resolver for the mentioned field.
 func (r *noteResolver) Mentioned(ctx context.Context, obj *model.Note) ([]model.MentionedEntity, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	entities, err := dataloader.For(ctx).GetMentionedEntitiesForNote(ctx, obj.ID)
-	if err != nil {
-		r.log.Errorf("Failed to get mentioned entities for note %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get noted entities for note %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToMentionedEntities(entities), nil
+	return nil, nil
 }
 
 // Includes is the resolver for the includes field.
