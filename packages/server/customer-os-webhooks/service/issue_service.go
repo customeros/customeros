@@ -227,6 +227,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	}
 	syncMutex.Unlock()
 
+	processedFollowerUserIds := make([]string, 0)
 	// add user followers
 	if !failedSync && issueInput.HasFollowers() {
 		for _, follower := range issueInput.Followers {
@@ -237,13 +238,14 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				reason = fmt.Sprintf("failed finding follower for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			if followerId != "" && followerLabel == entity.NodeLabel_User {
+			if followerId != "" && followerLabel == entity.NodeLabel_User && !utils.Contains(processedFollowerUserIds, followerId) {
 				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuegrpc.AddUserFollowerToIssueGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					IssueId:   issueId,
 					UserId:    followerId,
 					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 				})
+				processedFollowerUserIds = append(processedFollowerUserIds, followerId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("failed sending event to add follower %s to issue %s for tenant %s :%s", followerId, issueId, tenant, err.Error())
@@ -263,13 +265,14 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				reason = fmt.Sprintf("failed finding collaborator for issue %s for tenant %s :%s", issueInput.ExternalId, tenant, err.Error())
 				s.log.Error(reason)
 			}
-			if collaboratorId != "" && collaboratorLabel == entity.NodeLabel_User {
+			if collaboratorId != "" && collaboratorLabel == entity.NodeLabel_User && !utils.Contains(processedFollowerUserIds, collaboratorId) {
 				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuegrpc.AddUserFollowerToIssueGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					IssueId:   issueId,
 					UserId:    collaboratorId,
 					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 				})
+				processedFollowerUserIds = append(processedFollowerUserIds, collaboratorId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("failed sending event to add follower %s to issue %s for tenant %s :%s", collaboratorId, issueId, tenant, err.Error())
