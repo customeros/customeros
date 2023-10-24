@@ -20,15 +20,15 @@ type MergeTenantToWorkspaceResponse struct {
 
 type CreateUserResponse struct {
 	User struct {
-		ID        string `json:"id"`
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
+		ID    string  `json:"id"`
+		Roles *[]Role `json:"roles"`
 	} `json:"user_Create"`
 }
 
-type AddRoleResponse struct {
-	Role struct {
-		ID string `json:"id"`
+type UserAddRoleResponse struct {
+	UserAddRole struct {
+		ID    string  `json:"id"`
+		Roles *[]Role `json:"roles"`
 	} `json:"user_AddRole"`
 }
 
@@ -46,4 +46,31 @@ type CreateMeetingResponse struct {
 	MeetingCreate struct {
 		Id string `json:"id"`
 	} `json:"meeting_Create"`
+}
+
+type Role string
+
+const (
+	RoleAdmin                   Role = "ADMIN"
+	RoleCustomerOsPlatformOwner Role = "CUSTOMER_OS_PLATFORM_OWNER"
+	RoleOwner                   Role = "OWNER"
+	RoleUser                    Role = "USER"
+)
+
+type GetUserByEmailResponse struct {
+	UserByEmail struct {
+		ID    string  `json:"id"`
+		Roles *[]Role `json:"roles"`
+	} `json:"user_ByEmail"`
+}
+type GetUserByIdResponse struct {
+	User struct {
+		ID    string  `json:"id"`
+		Roles *[]Role `json:"roles"`
+	} `json:"user"`
+}
+
+type UserResponse struct {
+	ID    string  `json:"id"`
+	Roles *[]Role `json:"roles"`
 }

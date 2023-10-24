@@ -18,12 +18,15 @@ type CustomerOsClient interface {
 	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
 	MergeTenant(tenant *model.TenantInput) (string, error)
 
-	IsPlayer(authId, provider string) (string, error)
+	GetPlayer(authId string, provider string) (*model.GetPlayerResponse, error)
 	CreatePlayer(tenant, userId, identityId, authId, provider string) error
 
-	GetUserByEmail(tenant, email string) (*string, error)
+	GetUserById(tenant, userId string) (*model.UserResponse, error)
+	GetUserByEmail(tenant, email string) (*model.UserResponse, error)
 
-	CreateUser(user *model.UserInput, tenant string, roles []Role) (string, error)
+	CreateUser(user *model.UserInput, tenant string, roles []model.Role) (*model.UserResponse, error)
+	AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error)
+	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
 	CreateContact(tenant, username, firstName, lastname, email string) (string, error)
 	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
@@ -38,13 +41,6 @@ type customerOsClient struct {
 	cfg           *config.Config
 	graphqlClient *graphql.Client
 }
-
-type Role string
-
-const (
-	ROLE_OWNER Role = "OWNER"
-	ROLE_USER  Role = "USER"
-)
 
 func NewCustomerOsClient(cfg *config.Config) CustomerOsClient {
 	return &customerOsClient{
@@ -154,35 +150,48 @@ func (s *customerOsClient) MergeTenantToWorkspace(workspace *model.WorkspaceInpu
 	return graphqlResponse.Workspace.Result, nil
 }
 
-func (s *customerOsClient) AddRole(userId string, tenant string, role Role) (string, error) {
+func (s *customerOsClient) AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error) {
 	graphqlRequest := graphql.NewRequest(
 		`
-			mutation AddRole($userId: ID!, $role: Role!) {
-			   user_AddRole(
-					id: $userId,
-					role: $role) {
+			mutation user_AddRole($id: ID!, $role: Role!) {
+			  user_AddRole(id: $id, role: $role) {
 				id
+				roles
 			  }
 			}
 	`)
-	graphqlRequest.Var("userId", userId)
+	graphqlRequest.Var("id", userId)
 	graphqlRequest.Var("role", role)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	ctx, cancel, err := s.contextWithTimeout()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer cancel()
 
-	var graphqlResponse model.AddRoleResponse
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", err
+	var userAddRoleResponse model.UserAddRoleResponse
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &userAddRoleResponse); err != nil {
+		return nil, err
 	}
-	return graphqlResponse.Role.ID, nil
+	return &model.UserResponse{
+		ID:    userAddRoleResponse.UserAddRole.ID,
+		Roles: userAddRoleResponse.UserAddRole.Roles,
+	}, nil
+}
+
+func (s *customerOsClient) AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error) {
+	for _, role := range roles {
+		_, err := s.AddUserRole(tenant, userId, role)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s.GetUserById(tenant, userId)
 }
 
 func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error) {
@@ -216,7 +225,7 @@ func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error
 	return graphqlResponse.Tenant, nil
 }
 
-func (s *customerOsClient) IsPlayer(authId string, provider string) (string, error) {
+func (s *customerOsClient) GetPlayer(authId string, provider string) (*model.GetPlayerResponse, error) {
 
 	graphqlRequest := graphql.NewRequest(
 		`
@@ -234,15 +243,19 @@ func (s *customerOsClient) IsPlayer(authId string, provider string) (string, err
 
 	ctx, cancel, err := s.contextWithTimeout()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer cancel()
 
 	var graphqlResponse model.GetPlayerResponse
 	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", err
+		if err.Error() == "graphql: Failed to get player by authId and provider" {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
-	return graphqlResponse.Id, nil
+	return &graphqlResponse, nil
 }
 
 func (s *customerOsClient) CreatePlayer(tenant, userId, identityId, authId, provider string) error {
@@ -277,18 +290,14 @@ func (s *customerOsClient) CreatePlayer(tenant, userId, identityId, authId, prov
 	return nil
 }
 
-func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, roles []Role) (string, error) {
-	if user == nil {
-		return "", errors.New("CreateUser: user is nil")
-	}
+func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, roles []model.Role) (*model.UserResponse, error) {
 	graphqlRequest := graphql.NewRequest(
 		`
 			mutation AddUser($user: UserInput!) {
 			   user_Create(
 					input: $user) {
-				id,
-				firstName,
-				lastName,
+				id
+				roles
 			  }
 			}
 	`)
@@ -297,26 +306,29 @@ func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, role
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	ctx, cancel, err := s.contextWithTimeout()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer cancel()
 
 	var graphqlResponse model.CreateUserResponse
 	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, role := range roles {
-		_, err = s.AddRole(graphqlResponse.User.ID, tenant, role)
+		_, err = s.AddUserRole(tenant, graphqlResponse.User.ID, role)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
-	return graphqlResponse.User.ID, nil
+	return &model.UserResponse{
+		ID:    graphqlResponse.User.ID,
+		Roles: graphqlResponse.User.Roles,
+	}, nil
 }
 
 func (cosService *customerOsClient) CreateContact(tenant, username, firstName, lastname, email string) (string, error) {
@@ -420,9 +432,53 @@ func (s *customerOsClient) AddOrganizationToContact(tenant, username, contactId,
 	return nil
 }
 
-func (s *customerOsClient) GetUserByEmail(tenant, email string) (*string, error) {
+func (s *customerOsClient) GetUserById(tenant, userId string) (*model.UserResponse, error) {
 	graphqlRequest := graphql.NewRequest(
-		`query GetUserByEmail($email: String!){ user_ByEmail(email: $email) { id } }`)
+		`
+			query GetUserById($id: ID!) {
+			  user(id: $id) {
+				id
+				roles
+			  }
+			}`)
+
+	graphqlRequest.Var("id", userId)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
+
+	if err != nil {
+		return nil, fmt.Errorf("user_ByEmail: %w", err)
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, fmt.Errorf("user_ByEmail: %v", err)
+	}
+	defer cancel()
+
+	var getUserResponse model.GetUserByIdResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &getUserResponse); err != nil {
+		if err.Error() == "graphql: User with id "+userId+" not identified" {
+			return nil, nil
+		} else {
+			return nil, fmt.Errorf("GetUserById: %w", err)
+		}
+	}
+	return &model.UserResponse{
+		ID:    getUserResponse.User.ID,
+		Roles: getUserResponse.User.Roles,
+	}, nil
+}
+
+func (s *customerOsClient) GetUserByEmail(tenant, email string) (*model.UserResponse, error) {
+	graphqlRequest := graphql.NewRequest(
+		`
+			query GetUserByEmail($email: String!) {
+			  user_ByEmail(email: $email) {
+				id
+				roles
+			  }
+			}`)
 
 	graphqlRequest.Var("email", email)
 
@@ -438,16 +494,18 @@ func (s *customerOsClient) GetUserByEmail(tenant, email string) (*string, error)
 	}
 	defer cancel()
 
-	var graphqlResponse map[string]map[string]string
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+	var getUserResponse model.GetUserByEmailResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &getUserResponse); err != nil {
 		if err.Error() == "graphql: User with email "+email+" not identified" {
 			return nil, nil
 		} else {
 			return nil, fmt.Errorf("user_ByEmail: %w", err)
 		}
 	}
-	id := graphqlResponse["user_ByEmail"]["id"]
-	return &id, nil
+	return &model.UserResponse{
+		ID:    getUserResponse.UserByEmail.ID,
+		Roles: getUserResponse.UserByEmail.Roles,
+	}, nil
 }
 
 func (s *customerOsClient) CreateMeeting(tenant, username string, input model.MeetingInput) (string, error) {
