@@ -46,13 +46,13 @@ func (s *syncService) GetWhitelistedDomain(domain string, whitelistedDomains []c
 func (s *syncService) BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []commonEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
 	var allEmails []string
 
-	if from != "" && from != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(from)) {
+	if from != "" && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(from)) {
 		allEmails = append(allEmails, from)
 	}
 	for _, email := range [][]string{to, cc, bcc} {
-		for _, email := range email {
-			if email != "" && email != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(email)) {
-				allEmails = append(allEmails, email)
+		for _, e := range email {
+			if e != "" && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(e)) {
+				allEmails = append(allEmails, e)
 			}
 		}
 	}
