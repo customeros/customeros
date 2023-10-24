@@ -166,7 +166,7 @@ export const Table = <T extends object>({
                       <Checkbox
                         size='lg'
                         className='row-select-checkbox'
-                        checked={row?.getIsSelected()}
+                        isChecked={row?.getIsSelected()}
                         key={`checkbox-${virtualRow.index}`}
                         disabled={!row || !row?.getCanSelect()}
                         onChange={row?.getToggleSelectedHandler()}
