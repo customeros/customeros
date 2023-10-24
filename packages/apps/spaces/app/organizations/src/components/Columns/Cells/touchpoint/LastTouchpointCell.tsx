@@ -35,7 +35,7 @@ export const LastTouchpointCell = ({
     .with({ __typename: 'PageView' }, () => ['Page View', () => <></>])
     .with({ __typename: 'Issue' }, (event) => {
       const issueLastUpdateType =
-        DateTimeUtils.diffetenceInMins(event.updatedAt, event.createdAt) > 1
+        DateTimeUtils.differenceInMins(event.updatedAt, event.createdAt) > 1
           ? 'updated'
           : 'created';
 
