@@ -313,15 +313,15 @@ func bookingCreatedHandler(cosService s.CustomerOSService, request model.Booking
 }
 
 func getParticipantAndTenant(cosService s.CustomerOSService, userEmail *string) (*cosModel.MeetingParticipantInput, *string, error) {
-	userId, err := cosService.GetUserByEmail(userEmail)
+	user, err := cosService.GetUserByEmail(userEmail)
 	if err != nil {
 		return nil, nil, fmt.Errorf("no user for meeting creation to parse json: %v", err.Error())
 	} else {
-		log.Printf("createdBy: %s %s", *userId, *userEmail)
+		log.Printf("createdBy: %s %s", user.UserByEmail.ID, *userEmail)
 	}
 	tenant, err := cosService.GetTenant(userEmail)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to get tenant by for user: %v", err.Error())
 	}
-	return &cosModel.MeetingParticipantInput{UserID: userId}, &tenant.Tenant, nil
+	return &cosModel.MeetingParticipantInput{UserID: &user.UserByEmail.ID}, &tenant.Tenant, nil
 }

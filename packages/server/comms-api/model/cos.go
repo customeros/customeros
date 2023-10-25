@@ -79,3 +79,12 @@ type EmailChannelData struct {
 	InReplyTo []string `json:"InReplyTo"`
 	Reference []string `json:"Reference"`
 }
+
+type GetUserByEmailResponse struct {
+	UserByEmail struct {
+		ID        string  `json:"id"`
+		FirstName *string `json:"firstName"`
+		LastName  *string `json:"lastName"`
+		Name      *string `json:"name"`
+	} `json:"user_ByEmail"`
+}
