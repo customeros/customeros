@@ -1,7 +1,7 @@
 'use client';
+import { useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -18,8 +18,6 @@ import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
-import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
-import { useAddSocialMutation } from '@organization/src/graphql/addOrganizationSocial.generated';
 import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 
 import { FormSocialInput } from '../../shared/FormSocialInput';
@@ -35,45 +33,20 @@ import {
   OrganizationAboutFormDto,
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
-import {
-  useUpdateAboutPanelCache,
-  useUpdateOrganizationInTableCache,
-} from '@organization/src/components/Tabs/panels/AboutPanel/hooks/useUpdateAboutPanelCache';
-import { useEffect } from 'react';
-import { Organization } from '@graphql/types';
+import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
 };
 
 export const AboutPanel = () => {
-  const id = useParams()?.id as string;
-  const [_, copyToClipboard] = useCopyToClipboard();
-
   const client = getGraphQLClient();
-  const queryClient = useQueryClient();
+  const id = useParams()?.id as string;
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const [_, copyToClipboard] = useCopyToClipboard();
   const { data } = useOrganizationQuery(client, { id });
-  const updateAboutPanelCache = useUpdateAboutPanelCache();
-  const updateOrganizationTableData = useUpdateOrganizationInTableCache();
-
-  const invalidateQuery = () =>
-    queryClient.invalidateQueries(useOrganizationQuery.getKey({ id }));
-
-  const updateOrganization = useUpdateOrganizationMutation(client, {
-    onSuccess: async ({ organization_Update }, variables, context) => {
-      const queryKey = useOrganizationQuery.getKey({ id });
-      const updatedData = {
-        ...organization_Update,
-        ...variables.input,
-      } as Organization;
-      await updateAboutPanelCache(updatedData, queryKey);
-      await updateOrganizationTableData(updatedData);
-    },
-  });
-
-  const addSocial = useAddSocialMutation(client, {
-    onSuccess: invalidateQuery,
-  });
+  const { updateOrganization, addSocial, invalidateQuery } =
+    useAboutPanelMethods({ id });
 
   const defaultValues: OrganizationAboutForm = new OrganizationAboutFormDto(
     data?.organization,
@@ -93,13 +66,6 @@ export const AboutPanel = () => {
     defaultValues,
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        const shouldPreventSave =
-          action.payload?.value?.value ===
-          //@ts-expect-error fixme
-          defaultValues?.[action.payload.name]?.value;
-        if (shouldPreventSave) {
-          return next;
-        }
         switch (action.payload.name) {
           case 'isCustomer':
           case 'industry':
@@ -111,13 +77,6 @@ export const AboutPanel = () => {
             });
             break;
           }
-          default:
-            return next;
-        }
-      }
-
-      if (action.type === 'FIELD_BLUR') {
-        switch (action.payload.name) {
           case 'name':
           case 'website':
           case 'valueProposition':
@@ -132,9 +91,16 @@ export const AboutPanel = () => {
             ) {
               return next;
             }
-            mutateOrganization({
-              [action.payload.name]: trimmedValue,
-            });
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+            }
+            timeoutRef.current = setTimeout(
+              () =>
+                mutateOrganization({
+                  [action.payload.name]: trimmedValue,
+                }),
+              300,
+            );
             break;
           }
           default:
@@ -146,12 +112,6 @@ export const AboutPanel = () => {
     },
   });
 
-  useEffect(() => {
-    return () => {
-      // flush data on unmount
-      mutateOrganization(state.values);
-    };
-  }, [state.values, data?.organization]);
   const handleAddSocial = ({
     newValue,
     onSuccess,

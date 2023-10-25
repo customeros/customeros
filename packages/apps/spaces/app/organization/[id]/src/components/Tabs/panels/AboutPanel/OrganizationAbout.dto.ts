@@ -1,8 +1,7 @@
-import { Organization, Social } from '@graphql/types';
+import { Organization, Social, OrganizationUpdateInput } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
 
 import { OrganizationQuery } from '@organization/src/graphql/organization.generated';
-import { UpdateOrganizationMutationVariables } from '@shared/graphql/updateOrganization.generated';
 import {
   industryOptions,
   employeesOptions,
@@ -99,6 +98,6 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
       lastFundingRound: data.lastFundingRound?.value,
       lastFundingAmount: data.lastFundingAmount,
       isCustomer: data.isCustomer?.value,
-    } as UpdateOrganizationMutationVariables['input'];
+    } as OrganizationUpdateInput;
   }
 }
