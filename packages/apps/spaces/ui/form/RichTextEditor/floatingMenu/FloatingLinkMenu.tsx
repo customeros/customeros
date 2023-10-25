@@ -101,8 +101,7 @@ const cancelHref = useCallback(() => {
               aria-label='Go to url'
               disabled={!href}
               onClick={() => {
-                window.open(getExternalUrl(href), '_blank', 'noopener');
-              }}
+window.open(getExternalUrl(href), '_blank', 'noopener noreferrer');
               icon={<Link01 color='gray.25' />}
               mr={2}
               borderRadius='sm'
