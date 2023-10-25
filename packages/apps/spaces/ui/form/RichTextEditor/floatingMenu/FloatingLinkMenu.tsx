@@ -50,11 +50,11 @@ export const FloatingLinkToolbar = () => {
     chain.focus(range?.to ?? to).run();
   }, [href, chain, setIsEditing, linkShortcut, to]);
 
-  const cancelHref = useCallback(() => {
-    const range = linkShortcut;
-    setHref('');
-    chain.focus(range?.to ?? to).run();
-  }, [setIsEditing]);
+const cancelHref = useCallback(() => {
+  const range = linkShortcut;
+  setHref('');
+  chain.focus(range?.to ?? to).run();
+}, [chain, linkShortcut, to]);
 
   return (
     <>
