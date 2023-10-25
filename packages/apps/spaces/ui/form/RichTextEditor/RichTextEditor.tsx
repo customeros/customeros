@@ -8,6 +8,7 @@ import { Remirror, ThemeProvider, Toolbar } from '@remirror/react';
 import { useField } from 'react-inverted-form';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { RemirrorProps } from '@ui/form/RichTextEditor/types';
+import { FloatingLinkToolbar } from '@ui/form/RichTextEditor/floatingMenu/FloatingLinkMenu';
 
 export const RichTextEditor: FC<
   {
@@ -53,6 +54,7 @@ export const RichTextEditor: FC<
           initialContent={state}
           autoRender='end'
         >
+          <FloatingLinkToolbar />
           {showToolbar ? (
             <Toolbar
               height={'var(--chakra-sizes-8)'}
