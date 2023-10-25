@@ -23,7 +23,7 @@ export const FloatingLinkToolbar = () => {
   const url = (useAttrs().link()?.href as string) ?? '';
   const [href, setHref] = useState<string>(url);
 
-  const onRemove = useCallback(() => chain.removeLink().focus().run(), [chain]);
+const onRemove = useCallback(() => chain.removeLink().focus().run(), [chain, cancelHref]);
 
   useEffect(() => {
     if (isEditing && from === to) {
