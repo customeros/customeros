@@ -10,8 +10,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -23,7 +24,7 @@ import (
 
 type interactionEventHandler struct {
 	repositories             *repository.Repositories
-	interactionEventCommands *commands.InteractionEventCommands
+	interactionEventCommands *command_handler.InteractionEventCommandHandlers
 	log                      logger.Logger
 	cfg                      *config.Config
 }
@@ -33,7 +34,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.InteractionEventRequestSummaryEvent
+	var eventData event.InteractionEventRequestSummaryEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -103,7 +104,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 	}
 	summary := utils.ExtractAfterColon(aiResponse)
 
-	err = h.interactionEventCommands.ReplaceSummary.Handle(ctx, commands.NewReplaceSummaryCommand(eventData.Tenant, interactionEventId, summary, "text/plain", nil))
+	err = h.interactionEventCommands.ReplaceSummary.Handle(ctx, command.NewReplaceSummaryCommand(eventData.Tenant, interactionEventId, summary, "text/plain", nil))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error replacing summary: %v", err)
@@ -118,7 +119,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.InteractionEventRequestSummaryEvent
+	var eventData event.InteractionEventRequestSummaryEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -207,7 +208,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 		}
 	}
 
-	err = h.interactionEventCommands.ReplaceActionItems.Handle(ctx, commands.NewReplaceActionItemsCommand(eventData.Tenant, interactionEventId, actionItems, nil))
+	err = h.interactionEventCommands.ReplaceActionItems.Handle(ctx, command.NewReplaceActionItemsCommand(eventData.Tenant, interactionEventId, actionItems, nil))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error replacing action items: %v", err)

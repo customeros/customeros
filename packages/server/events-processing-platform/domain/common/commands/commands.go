@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	contactcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	emailcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
-	iecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
+	iecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
 	issuecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command_handler"
 	jobrolecmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationcmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
@@ -26,13 +26,13 @@ func InitCommandHandlers(log logger.Logger,
 	return &domain.Commands{
 		ContactCommands:          contactcmd.NewContactCommands(log, aggregateStore),
 		OrganizationCommands:     orgcmd.NewOrganizationCommands(log, cfg, aggregateStore, repositories),
-		InteractionEventCommands: iecmd.NewInteractionEventCommands(log, cfg, aggregateStore),
+		InteractionEventCommands: iecmd.NewInteractionEventCommandHandlers(log, aggregateStore),
 		PhoneNumberCommands:      phonecmd.NewPhoneNumberCommands(log, cfg, aggregateStore),
 		LocationCommands:         locationcmd.NewLocationCommands(log, cfg, aggregateStore),
 		EmailCommands:            emailcmd.NewEmailCommands(log, cfg, aggregateStore),
 		UserCommands:             usercmd.NewUserCommands(log, cfg, aggregateStore),
 		JobRoleCommands:          jobrolecmd.NewJobRoleCommands(log, cfg, aggregateStore),
-		LogEntryCommands:         logentrycmd.NewLogEntryCommands(log, cfg, aggregateStore),
+		LogEntryCommands:         logentrycmd.NewLogEntryCommands(log, aggregateStore),
 		IssueCommands:            issuecmd.NewIssueCommandHandlers(log, aggregateStore),
 	}
 }

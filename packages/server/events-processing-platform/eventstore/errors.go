@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrInvalidEventType    = InvalidEventTypeError{}
-	ErrAlreadyExists       = errors.New("Already exists")
+	ErrAlreadyExists       = errors.New("already exists")
 	ErrAggregateNotFound   = errors.New("aggregate not found")
 	ErrInvalidCommandType  = errors.New("invalid command type")
 	ErrInvalidAggregate    = errors.New("invalid aggregate")

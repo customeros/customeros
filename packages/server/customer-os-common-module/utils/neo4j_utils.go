@@ -487,6 +487,18 @@ func GetTimePropOrNil(props map[string]any, key string) *time.Time {
 	return nil
 }
 
+func ExecuteWriteQueryOnDb(ctx context.Context, driver neo4j.DriverWithContext, database, query string, params map[string]any) error {
+	session := NewNeo4jWriteSession(ctx, driver, WithDatabaseName(database))
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query, params)
+		return nil, err
+	})
+
+	return err
+}
+
 func ExecuteWriteQuery(ctx context.Context, driver neo4j.DriverWithContext, query string, params map[string]any) error {
 	session := NewNeo4jWriteSession(ctx, driver)
 	defer session.Close(ctx)

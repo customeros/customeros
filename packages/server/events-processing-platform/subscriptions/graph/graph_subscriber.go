@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	contactevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
-	interactionevtevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
+	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
@@ -57,7 +57,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		userEventHandler:         &GraphUserEventHandler{repositories: repositories, log: log},
 		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
-		interactionEventHandler:  &GraphInteractionEventHandler{Repositories: repositories, Log: log},
+		interactionEventHandler:  &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
 		logEntryEventHandler:     &GraphLogEntryEventHandler{Repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
 		issueEventHandler:        &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
 	}
@@ -242,13 +242,17 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case jobroleevents.JobRoleCreateV1:
 		return s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
 
-	case interactionevtevents.InteractionEventRequestSummaryV1,
-		interactionevtevents.InteractionEventRequestActionItemsV1:
+	case ieevent.InteractionEventRequestSummaryV1,
+		ieevent.InteractionEventRequestActionItemsV1:
 		return nil
-	case interactionevtevents.InteractionEventReplaceSummaryV1:
+	case ieevent.InteractionEventReplaceSummaryV1:
 		return s.interactionEventHandler.OnSummaryReplace(ctx, evt)
-	case interactionevtevents.InteractionEventReplaceActionItemsV1:
+	case ieevent.InteractionEventReplaceActionItemsV1:
 		return s.interactionEventHandler.OnActionItemsReplace(ctx, evt)
+	case ieevent.InteractionEventCreateV1:
+		return s.interactionEventHandler.OnCreate(ctx, evt)
+	case ieevent.InteractionEventUpdateV1:
+		return s.interactionEventHandler.OnUpdate(ctx, evt)
 
 	case logentryevents.LogEntryCreateV1:
 		return s.logEntryEventHandler.OnCreate(ctx, evt)

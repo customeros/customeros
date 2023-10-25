@@ -31,7 +31,7 @@ func (a *IssueAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comma
 	case *command.RemoveUserFollowerCommand:
 		return a.removeUserFollower(ctx, c)
 	default:
-		return errors.New("invalid command type")
+		return eventstore.ErrInvalidCommandType
 	}
 }
 
