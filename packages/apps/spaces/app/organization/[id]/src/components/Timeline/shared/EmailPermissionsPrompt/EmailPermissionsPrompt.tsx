@@ -57,19 +57,19 @@ export const MissingPermissionsPrompt: FC<{
         bg={modal ? '#F8F9FC' : 'white'}
         p={6}
       >
-        <FeaturedIcon size='md' minW='10' colorScheme='gray' mb={2}>
+        <FeaturedIcon size='md' minW='10' colorScheme='gray' mb={4}>
           <Mail01 color='gray.700' boxSize='6' />
         </FeaturedIcon>
         <Text color='gray.700' fontWeight={600} mb={1}>
           Allow CustomerOS to send emails
         </Text>
 
-        <Text color='gray.500' mt={1} mb={6} textAlign='center'>
+        <Text color='gray.500' mb={6} textAlign='center'>
           To send emails, you need to allow CustomerOS to connect to your gmail
           account
         </Text>
         <Button variant='outline' colorScheme='gray' onClick={signInWithScopes}>
-          <Google />
+          <Google mr={2} />
           Allow with google
         </Button>
       </Flex>
