@@ -22,8 +22,15 @@ export const FloatingLinkToolbar = () => {
   const { to, from } = useCurrentSelection();
   const url = (useAttrs().link()?.href as string) ?? '';
   const [href, setHref] = useState<string>(url);
-
-const onRemove = useCallback(() => chain.removeLink().focus().run(), [chain, cancelHref]);
+  const cancelHref = useCallback(() => {
+    const range = linkShortcut;
+    setHref('');
+    chain.focus(range?.to ?? to).run();
+  }, [chain, linkShortcut, to]);
+  const onRemove = useCallback(
+    () => chain.removeLink().focus().run(),
+    [chain, cancelHref],
+  );
 
   useEffect(() => {
     if (isEditing && from === to) {
@@ -50,20 +57,12 @@ const onRemove = useCallback(() => chain.removeLink().focus().run(), [chain, can
     chain.focus(range?.to ?? to).run();
   }, [href, chain, setIsEditing, linkShortcut, to]);
 
-const cancelHref = useCallback(() => {
-  const range = linkShortcut;
-  setHref('');
-  chain.focus(range?.to ?? to).run();
-}, [chain, linkShortcut, to]);
-
   return (
     <>
       <FloatingWrapper
         positioner='selection'
         placement='bottom-start'
         enabled={isEditing}
-        displayArrow
-        hideWhenInvisible
       >
         {isEditing && (
           <Flex
@@ -101,7 +100,12 @@ const cancelHref = useCallback(() => {
               aria-label='Go to url'
               disabled={!href}
               onClick={() => {
-window.open(getExternalUrl(href), '_blank', 'noopener noreferrer');
+                window.open(
+                  getExternalUrl(href),
+                  '_blank',
+                  'noopener noreferrer',
+                );
+              }}
               icon={<Link01 color='gray.25' />}
               mr={2}
               borderRadius='sm'
