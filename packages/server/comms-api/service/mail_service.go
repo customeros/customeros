@@ -138,7 +138,27 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 		return nil, fmt.Errorf("unable to build a gmail service with service account or auth token: %v", err)
 	}
 
-	fromAddress := []*mimemail.Address{{"", *username}}
+	user, err := s.services.CustomerOsService.GetUserByEmail(username)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve user for %s", *username)
+	}
+
+	sentByName := ""
+	if user.UserByEmail.Name != nil && *user.UserByEmail.Name != "" {
+		sentByName = *user.UserByEmail.Name
+	} else if user.UserByEmail.FirstName != nil && user.UserByEmail.LastName != nil {
+		if *user.UserByEmail.FirstName != "" && *user.UserByEmail.LastName != "" {
+			sentByName = *user.UserByEmail.FirstName + " " + *user.UserByEmail.LastName
+		} else if *user.UserByEmail.LastName != "" {
+			sentByName = *user.UserByEmail.LastName
+		} else if *user.UserByEmail.FirstName != "" {
+			sentByName = *user.UserByEmail.FirstName
+		}
+	} else {
+		sentByName = *username
+	}
+
+	fromAddress := []*mimemail.Address{{sentByName, *username}}
 	retMail.From = fromAddress
 	var toAddress []*mimemail.Address
 	var ccAddress []*mimemail.Address
@@ -161,7 +181,6 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	}
 
 	var b bytes.Buffer
-	user := "me"
 
 	h.SetDate(time.Now())
 	h.SetAddressList("From", fromAddress)
@@ -220,7 +239,7 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	msgToSend := &gmail.Message{
 		Raw: raw,
 	}
-	result, err := gSrv.Users.Messages.Send(user, msgToSend).Do()
+	result, err := gSrv.Users.Messages.Send("me", msgToSend).Do()
 	if err != nil {
 		log.Printf("Unable to send email: %v", err)
 		return nil, err

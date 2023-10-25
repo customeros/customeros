@@ -29,7 +29,7 @@ type CustomerOSService interface {
 	ExternalMeeting(externalSystemId string, externalId string, user *string) (*model.ExternalMeeting, error)
 	MeetingLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error)
 	MeetingUnLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error)
-	GetUserByEmail(email *string) (*string, error)
+	GetUserByEmail(email *string) (*model.GetUserByEmailResponse, error)
 	GetContactByEmail(user *string, email *string) (*string, error)
 
 	CreateContact(user *string, email *string) (*string, error)
@@ -282,7 +282,11 @@ func (cosService *customerOSService) GetInteractionSession(sessionIdentifier *st
 
 	var graphqlResponse map[string]map[string]string
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, fmt.Errorf("GetInteractionSession: %w", err)
+		if err.Error() != "graphql: InteractionEvent with identifier "+*sessionIdentifier+" not found" {
+			return nil, fmt.Errorf("GetInteractionSession: %w", err)
+		} else {
+			return nil, nil
+		}
 	}
 	id := graphqlResponse["interactionSession_BySessionIdentifier"]["id"]
 	return &id, nil
@@ -341,9 +345,9 @@ func (cosService *customerOSService) CreateInteractionSession(options ...Session
 
 }
 
-func (cosService *customerOSService) GetUserByEmail(email *string) (*string, error) {
+func (cosService *customerOSService) GetUserByEmail(email *string) (*model.GetUserByEmailResponse, error) {
 	graphqlRequest := graphql.NewRequest(
-		`query GetUserByEmail($email: String!){ user_ByEmail(email: $email) { id } }`)
+		`query GetUserByEmail($email: String!){ user_ByEmail(email: $email) { id firstName lastName name } }`)
 
 	graphqlRequest.Var("email", *email)
 
@@ -359,12 +363,12 @@ func (cosService *customerOSService) GetUserByEmail(email *string) (*string, err
 	}
 	defer cancel()
 
-	var graphqlResponse map[string]map[string]string
+	var graphqlResponse model.GetUserByEmailResponse
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("user_ByEmail: %w", err)
 	}
-	id := graphqlResponse["user_ByEmail"]["id"]
-	return &id, nil
+
+	return &graphqlResponse, nil
 }
 
 func (cosService *customerOSService) MeetingUnLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error) {
