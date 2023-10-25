@@ -3,8 +3,8 @@ package interactionEvent
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"strings"
 
-	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
@@ -25,7 +25,7 @@ type InteractionEventSubscriber struct {
 	interactionEventHandler *interactionEventHandler
 }
 
-func NewInteractionEventSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *commands.InteractionEventCommands, repositories *repository.Repositories) *InteractionEventSubscriber {
+func NewInteractionEventSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *command_handler.InteractionEventCommandHandlers, repositories *repository.Repositories) *InteractionEventSubscriber {
 	return &InteractionEventSubscriber{
 		log: log,
 		db:  db,
@@ -114,12 +114,14 @@ func (s *InteractionEventSubscriber) When(ctx context.Context, evt eventstore.Ev
 	}
 
 	switch evt.GetEventType() {
-	case events.InteractionEventRequestSummaryV1:
+	case event.InteractionEventRequestSummaryV1:
 		return s.interactionEventHandler.GenerateSummaryForEmail(ctx, evt)
-	case events.InteractionEventRequestActionItemsV1:
+	case event.InteractionEventRequestActionItemsV1:
 		return s.interactionEventHandler.GenerateActionItemsForEmail(ctx, evt)
-	case events.InteractionEventReplaceSummaryV1,
-		events.InteractionEventReplaceActionItemsV1:
+	case event.InteractionEventReplaceSummaryV1,
+		event.InteractionEventReplaceActionItemsV1,
+		event.InteractionEventCreateV1,
+		event.InteractionEventUpdateV1:
 		return nil
 
 	default:

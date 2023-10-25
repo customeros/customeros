@@ -2,7 +2,6 @@ package command_handler
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -19,12 +18,11 @@ type RemoveTagCommandHandler interface {
 
 type removeTagCommandHandler struct {
 	log logger.Logger
-	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewRemoveTagCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) RemoveTagCommandHandler {
-	return &removeTagCommandHandler{log: log, cfg: cfg, es: es}
+func NewRemoveTagCommandHandler(log logger.Logger, es eventstore.AggregateStore) RemoveTagCommandHandler {
+	return &removeTagCommandHandler{log: log, es: es}
 }
 
 func (c *removeTagCommandHandler) Handle(ctx context.Context, command *cmd.RemoveTagCommand) error {

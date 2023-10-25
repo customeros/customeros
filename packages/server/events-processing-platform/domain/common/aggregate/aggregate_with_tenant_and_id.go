@@ -11,6 +11,10 @@ type CommonTenantIdAggregate struct {
 	when *func(event eventstore.Event) error
 }
 
+func (a CommonTenantIdAggregate) NotFound() bool {
+	return a.GetVersion() < 0
+}
+
 func NewCommonAggregateWithTenantAndId(aggregateType eventstore.AggregateType, tenant, id string) *CommonTenantIdAggregate {
 	if id == "" {
 		return nil

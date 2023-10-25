@@ -91,7 +91,7 @@ func testRequestGenerateActionItemsRequest() {
 	tenant := "openline"
 	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
 
-	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.TODO(), &interaction_event_grpc_service.RequestGenerateActionItensGrpcRequest{
+	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.TODO(), &interaction_event_grpc_service.RequestGenerateActionItemsGrpcRequest{
 		Tenant:             tenant,
 		InteractionEventId: interactionEventId,
 	})

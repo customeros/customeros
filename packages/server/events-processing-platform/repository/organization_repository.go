@@ -33,15 +33,18 @@ type OrganizationRepository interface {
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
 	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
 	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
+	GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error)
 }
 
 type organizationRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepository {
+func NewOrganizationRepository(driver *neo4j.DriverWithContext, database string) OrganizationRepository {
 	return &organizationRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
@@ -50,7 +53,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, organiz
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -268,7 +271,7 @@ func (r *organizationRepository) LinkWithDomain(ctx context.Context, tenant, org
 				RETURN rel`
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -303,7 +306,7 @@ func (r *organizationRepository) OrganizationWebscrapedForDomain(ctx context.Con
 				RETURN org`
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -331,7 +334,7 @@ func (r *organizationRepository) GetOrganization(ctx context.Context, tenant, or
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) RETURN org`
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -453,7 +456,7 @@ func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organ
 			MERGE (u)-[:OWNS]->(org)
 			SET org.updatedAt=$now, org.sourceOfTruth=$source`
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
@@ -495,7 +498,7 @@ func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenan
 		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId`
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	return r.executeQuery(ctx, query, map[string]any{
@@ -516,7 +519,7 @@ func (r *organizationRepository) SetCustomerOsIdIfMissing(ctx context.Context, t
 		 SET org.customerOsId = CASE WHEN (org.customerOsId IS NULL OR org.customerOsId = '') AND $customerOsId <> '' THEN $customerOsId ELSE org.customerOsId END`
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
 	return r.executeQuery(ctx, query, map[string]any{
@@ -562,6 +565,46 @@ func (r *organizationRepository) UnlinkParentOrganization(ctx context.Context, t
 		"subOrganizationId":    organizationId,
 		"parentOrganizationId": parentOrganizationId,
 	})
+}
+
+func (r *organizationRepository) GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdsConnectedToInteractionEvent")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId))
+
+	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}),
+				(t:Tenant {name:$tenant})
+				CALL {
+					WITH ie, t 
+					MATCH (ie)-[:PART_OF]->(is:Issue)-[:REPORTED_BY]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+					RETURN org.id as orgId
+				UNION 
+					WITH ie, t 
+					MATCH (ie)-[:PART_OF]->(is:Issue)-[:SUBMITTED_BY]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+					RETURN org.id as orgId
+				}
+				RETURN distinct orgId`, tenant)
+	params := map[string]any{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+	}
+	span.LogFields(log.String("query", query), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]string), err
 }
 
 // Common database interaction method

@@ -16,7 +16,7 @@ import (
 
 type IssueRepository interface {
 	Create(ctx context.Context, tenant, issueId string, evt event.IssueCreateEvent) error
-	Update(ctx context.Context, tenant, logEntryId string, eventData event.IssueUpdateEvent) error
+	Update(ctx context.Context, tenant, issueId string, eventData event.IssueUpdateEvent) error
 	AddUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 	RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 	AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
@@ -24,12 +24,14 @@ type IssueRepository interface {
 }
 
 type issueRepository struct {
-	driver *neo4j.DriverWithContext
+	driver   *neo4j.DriverWithContext
+	database string
 }
 
-func NewIssueRepository(driver *neo4j.DriverWithContext) IssueRepository {
+func NewIssueRepository(driver *neo4j.DriverWithContext, database string) IssueRepository {
 	return &issueRepository{
-		driver: driver,
+		driver:   driver,
+		database: database,
 	}
 }
 
@@ -97,7 +99,7 @@ func (r *issueRepository) Create(ctx context.Context, tenant, issueId string, ev
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+	return r.executeWriteQuery(ctx, query, params)
 }
 
 func (r *issueRepository) Update(ctx context.Context, tenant, issueId string, evt event.IssueUpdateEvent) error {
@@ -128,7 +130,7 @@ func (r *issueRepository) Update(ctx context.Context, tenant, issueId string, ev
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+	return r.executeWriteQuery(ctx, query, params)
 }
 
 func (r *issueRepository) AddUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
@@ -149,7 +151,7 @@ func (r *issueRepository) AddUserAssignee(ctx context.Context, tenant, issueId, 
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+	return r.executeWriteQuery(ctx, query, params)
 }
 
 func (r *issueRepository) AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
@@ -170,7 +172,7 @@ func (r *issueRepository) AddUserFollower(ctx context.Context, tenant, issueId, 
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+	return r.executeWriteQuery(ctx, query, params)
 }
 
 func (r *issueRepository) RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
@@ -192,7 +194,7 @@ func (r *issueRepository) RemoveUserAssignee(ctx context.Context, tenant, issueI
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+	return r.executeWriteQuery(ctx, query, params)
 }
 
 func (r *issueRepository) RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
@@ -214,5 +216,9 @@ func (r *issueRepository) RemoveUserFollower(ctx context.Context, tenant, issueI
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
-	return utils.ExecuteWriteQuery(ctx, *r.driver, query, params)
+	return r.executeWriteQuery(ctx, query, params)
+}
+
+func (r *issueRepository) executeWriteQuery(ctx context.Context, query string, params map[string]any) error {
+	return utils.ExecuteWriteQueryOnDb(ctx, *r.driver, r.database, query, params)
 }

@@ -220,6 +220,36 @@ func LinkIssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, i
 	})
 }
 
+func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, interactionEvent entity.InteractionEventEntity) string {
+	interactionEventId := utils.NewUUIDIfEmpty(interactionEvent.Id)
+	query := fmt.Sprintf(`MERGE (i:InteractionEvent {id:$id})
+				SET i:InteractionEvent_%s,
+					i:TimelineEvent,
+					i:TimelineEvent_%s,
+					i.content=$content,
+					i.contentType=$contentType,
+					i.channel=$channel,
+					i.channelData=$channelData,
+					i.identifier=$identifier,
+					i.eventType=$eventType,
+					i.source=$source,
+					i.sourceOfTruth=$sourceOfTruth
+				`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":            interactionEventId,
+		"content":       interactionEvent.Content,
+		"contentType":   interactionEvent.ContentType,
+		"channel":       interactionEvent.Channel,
+		"channelData":   interactionEvent.ChannelData,
+		"identifier":    interactionEvent.Identifier,
+		"eventType":     interactionEvent.EventType,
+		"source":        interactionEvent.Source,
+		"sourceOfTruth": interactionEvent.SourceOfTruth,
+	})
+	return interactionEventId
+}
+
 func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, tag entity.TagEntity) string {
 	tagId := tag.Id
 	if tagId == "" {

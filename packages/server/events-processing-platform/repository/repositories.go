@@ -39,7 +39,7 @@ type Repositories struct {
 	CustomFieldRepository      CustomFieldRepository
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, log logger.Logger) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB, log logger.Logger) *Repositories {
 	repositories := Repositories{
 		Drivers: Drivers{
 			Neo4jDriver: driver,
@@ -49,16 +49,16 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, log logger.Logg
 		PhoneNumberRepository:      NewPhoneNumberRepository(driver),
 		EmailRepository:            NewEmailRepository(driver),
 		ContactRepository:          NewContactRepository(driver),
-		OrganizationRepository:     NewOrganizationRepository(driver),
+		OrganizationRepository:     NewOrganizationRepository(driver, neo4jDatabase),
 		UserRepository:             NewUserRepository(driver),
 		LocationRepository:         NewLocationRepository(driver),
 		CountryRepository:          NewCountryRepository(driver),
 		JobRoleRepository:          NewJobRoleRepository(driver),
 		SocialRepository:           NewSocialRepository(driver),
-		InteractionEventRepository: NewInteractionEventRepository(driver),
+		InteractionEventRepository: NewInteractionEventRepository(driver, neo4jDatabase),
 		ActionRepository:           NewActionRepository(driver),
 		LogEntryRepository:         NewLogEntryRepository(driver),
-		IssueRepository:            NewIssueRepository(driver),
+		IssueRepository:            NewIssueRepository(driver, neo4jDatabase),
 		TagRepository:              NewTagRepository(driver),
 		PlayerRepository:           NewPlayerRepository(driver),
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),

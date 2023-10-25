@@ -23,7 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InteractionEventGrpcServiceClient interface {
 	RequestGenerateSummary(ctx context.Context, in *RequestGenerateSummaryGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
-	RequestGenerateActionItems(ctx context.Context, in *RequestGenerateActionItensGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
+	RequestGenerateActionItems(ctx context.Context, in *RequestGenerateActionItemsGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
+	UpsertInteractionEvent(ctx context.Context, in *UpsertInteractionEventGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error)
 }
 
 type interactionEventGrpcServiceClient struct {
@@ -43,9 +44,18 @@ func (c *interactionEventGrpcServiceClient) RequestGenerateSummary(ctx context.C
 	return out, nil
 }
 
-func (c *interactionEventGrpcServiceClient) RequestGenerateActionItems(ctx context.Context, in *RequestGenerateActionItensGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error) {
+func (c *interactionEventGrpcServiceClient) RequestGenerateActionItems(ctx context.Context, in *RequestGenerateActionItemsGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error) {
 	out := new(InteractionEventIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/interactionEventGrpcService/RequestGenerateActionItems", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *interactionEventGrpcServiceClient) UpsertInteractionEvent(ctx context.Context, in *UpsertInteractionEventGrpcRequest, opts ...grpc.CallOption) (*InteractionEventIdGrpcResponse, error) {
+	out := new(InteractionEventIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/interactionEventGrpcService/UpsertInteractionEvent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +67,8 @@ func (c *interactionEventGrpcServiceClient) RequestGenerateActionItems(ctx conte
 // for forward compatibility
 type InteractionEventGrpcServiceServer interface {
 	RequestGenerateSummary(context.Context, *RequestGenerateSummaryGrpcRequest) (*InteractionEventIdGrpcResponse, error)
-	RequestGenerateActionItems(context.Context, *RequestGenerateActionItensGrpcRequest) (*InteractionEventIdGrpcResponse, error)
+	RequestGenerateActionItems(context.Context, *RequestGenerateActionItemsGrpcRequest) (*InteractionEventIdGrpcResponse, error)
+	UpsertInteractionEvent(context.Context, *UpsertInteractionEventGrpcRequest) (*InteractionEventIdGrpcResponse, error)
 }
 
 // UnimplementedInteractionEventGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -67,8 +78,11 @@ type UnimplementedInteractionEventGrpcServiceServer struct {
 func (UnimplementedInteractionEventGrpcServiceServer) RequestGenerateSummary(context.Context, *RequestGenerateSummaryGrpcRequest) (*InteractionEventIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestGenerateSummary not implemented")
 }
-func (UnimplementedInteractionEventGrpcServiceServer) RequestGenerateActionItems(context.Context, *RequestGenerateActionItensGrpcRequest) (*InteractionEventIdGrpcResponse, error) {
+func (UnimplementedInteractionEventGrpcServiceServer) RequestGenerateActionItems(context.Context, *RequestGenerateActionItemsGrpcRequest) (*InteractionEventIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestGenerateActionItems not implemented")
+}
+func (UnimplementedInteractionEventGrpcServiceServer) UpsertInteractionEvent(context.Context, *UpsertInteractionEventGrpcRequest) (*InteractionEventIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertInteractionEvent not implemented")
 }
 
 // UnsafeInteractionEventGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -101,7 +115,7 @@ func _InteractionEventGrpcService_RequestGenerateSummary_Handler(srv interface{}
 }
 
 func _InteractionEventGrpcService_RequestGenerateActionItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RequestGenerateActionItensGrpcRequest)
+	in := new(RequestGenerateActionItemsGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -113,7 +127,25 @@ func _InteractionEventGrpcService_RequestGenerateActionItems_Handler(srv interfa
 		FullMethod: "/interactionEventGrpcService/RequestGenerateActionItems",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InteractionEventGrpcServiceServer).RequestGenerateActionItems(ctx, req.(*RequestGenerateActionItensGrpcRequest))
+		return srv.(InteractionEventGrpcServiceServer).RequestGenerateActionItems(ctx, req.(*RequestGenerateActionItemsGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InteractionEventGrpcService_UpsertInteractionEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertInteractionEventGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractionEventGrpcServiceServer).UpsertInteractionEvent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/interactionEventGrpcService/UpsertInteractionEvent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractionEventGrpcServiceServer).UpsertInteractionEvent(ctx, req.(*UpsertInteractionEventGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,6 +164,10 @@ var InteractionEventGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RequestGenerateActionItems",
 			Handler:    _InteractionEventGrpcService_RequestGenerateActionItems_Handler,
+		},
+		{
+			MethodName: "UpsertInteractionEvent",
+			Handler:    _InteractionEventGrpcService_UpsertInteractionEvent_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

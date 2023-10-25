@@ -127,6 +127,26 @@ func MapDbNodeToSocialEntity(node dbtype.Node) *entity.SocialEntity {
 	return &social
 }
 
+func MapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity {
+	props := utils.GetPropsFromNode(node)
+	issue := entity.InteractionEventEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
+		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
+		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
+		EventType:     utils.GetStringPropOrEmpty(props, "eventType"),
+		Hide:          utils.GetBoolPropOrFalse(props, "hide"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &issue
+}
+
 func MapDbNodeToIssueEntity(node dbtype.Node) *entity.IssueEntity {
 	props := utils.GetPropsFromNode(node)
 	issue := entity.IssueEntity{

@@ -2,7 +2,6 @@ package command_handler
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -19,12 +18,11 @@ type UpsertLogEntryCommandHandler interface {
 
 type upsertLogEntryCommandHandler struct {
 	log logger.Logger
-	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewUpsertLogEntryCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) UpsertLogEntryCommandHandler {
-	return &upsertLogEntryCommandHandler{log: log, cfg: cfg, es: es}
+func NewUpsertLogEntryCommandHandler(log logger.Logger, es eventstore.AggregateStore) UpsertLogEntryCommandHandler {
+	return &upsertLogEntryCommandHandler{log: log, es: es}
 }
 
 func (c *upsertLogEntryCommandHandler) Handle(ctx context.Context, command *cmd.UpsertLogEntryCommand) error {
