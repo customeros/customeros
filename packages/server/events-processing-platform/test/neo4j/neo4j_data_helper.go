@@ -186,6 +186,34 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	})
 	return issueId
 }
+func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
+	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(i:PhoneNumber {id:$id})
+				SET i:PhoneNumber_%s,
+					i.e164=$e164,
+					i.validated=$validated,
+					i.rawPhoneNumber=$rawPhoneNumber,
+					i.source=$source,
+					i.sourceOfTruth=$sourceOfTruth,
+					i.appSource=$appSource,
+					i.createdAt=$createdAt,
+					i.updatedAt=$updatedAt`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":         tenant,
+		"id":             phoneNumberId,
+		"e164":           phoneNumber.E164,
+		"validated":      phoneNumber.Validated,
+		"rawPhoneNumber": phoneNumber.RawPhoneNumber,
+		"source":         phoneNumber.Source,
+		"sourceOfTruth":  phoneNumber.SourceOfTruth,
+		"appSource":      phoneNumber.AppSource,
+		"createdAt":      phoneNumber.CreatedAt,
+		"updatedAt":      phoneNumber.UpdatedAt,
+	})
+	return phoneNumberId
+}
 
 func LinkIssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
 	query := `MATCH (e {id:$entityId})
@@ -457,4 +485,21 @@ func AssertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverW
 	require.Nil(t, err)
 	require.NotNil(t, rel)
 	require.Equal(t, relationshipType, rel.Type)
+}
+
+func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, codeA2, codeA3, name, phoneCode string) {
+	query := `MERGE (c:Country{codeA3: $codeA3}) 
+				ON CREATE SET 
+					c.phoneCode = $phoneCode,
+					c.codeA2 = $codeA2,
+					c.name = $name, 
+					c.createdAt = $now, 
+					c.updatedAt = $now`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"codeA2":    codeA2,
+		"codeA3":    codeA3,
+		"phoneCode": phoneCode,
+		"name":      name,
+		"now":       utils.Now(),
+	})
 }
