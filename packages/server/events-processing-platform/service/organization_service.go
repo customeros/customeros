@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
@@ -21,13 +21,13 @@ import (
 )
 
 type organizationService struct {
-	pb.UnimplementedOrganizationGrpcServiceServer
+	organizationpb.UnimplementedOrganizationGrpcServiceServer
 	log                  logger.Logger
 	repositories         *repository.Repositories
-	organizationCommands *command_handler.OrganizationCommands
+	organizationCommands *command_handler.OrganizationCommandHandlers
 }
 
-func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, organizationCommands *command_handler.OrganizationCommands) *organizationService {
+func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, organizationCommands *command_handler.OrganizationCommandHandlers) *organizationService {
 	return &organizationService{
 		log:                  log,
 		repositories:         repositories,
@@ -35,7 +35,7 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 	}
 }
 
-func (s *organizationService) UpsertOrganization(ctx context.Context, request *pb.UpsertOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) UpsertOrganization(ctx context.Context, request *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
@@ -62,13 +62,13 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 		ReferenceId:       request.ReferenceId,
 		Note:              request.Note,
 	}
-	sourceFields := cmnmod.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
 	sourceFields.SourceOfTruth = utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
 	sourceFields.AppSource = utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
 
-	externalSystem := cmnmod.ExternalSystem{}
+	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	command := command.NewUpsertOrganizationCommand(organizationId, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId),
@@ -81,10 +81,10 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *p
 
 	s.log.Infof("Upserted organization %s", organizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: organizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: organizationId}, nil
 }
 
-func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context, request *pb.LinkPhoneNumberToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context, request *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkPhoneNumberToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -99,10 +99,10 @@ func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context,
 
 	s.log.Infof("Linked phone number {%s} to organization {%s}", request.PhoneNumberId, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) LinkEmailToOrganization(ctx context.Context, request *pb.LinkEmailToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) LinkEmailToOrganization(ctx context.Context, request *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -117,10 +117,10 @@ func (s *organizationService) LinkEmailToOrganization(ctx context.Context, reque
 
 	s.log.Infof("Linked email {%s} to organization {%s}", request.EmailId, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) LinkLocationToOrganization(ctx context.Context, request *pb.LinkLocationToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) LinkLocationToOrganization(ctx context.Context, request *organizationpb.LinkLocationToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkLocationToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -135,10 +135,10 @@ func (s *organizationService) LinkLocationToOrganization(ctx context.Context, re
 
 	s.log.Infof("Linked location {%s} to organization {%s}", request.LocationId, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) LinkDomainToOrganization(ctx context.Context, request *pb.LinkDomainToOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) LinkDomainToOrganization(ctx context.Context, request *organizationpb.LinkDomainToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkDomainToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
@@ -153,10 +153,10 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 
 	s.log.Infof("Linked domain {%s} to organization {%s}", request.Domain, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Context, request *pb.OrganizationRenewalLikelihoodRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Context, request *organizationpb.OrganizationRenewalLikelihoodRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalLikelihood")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
@@ -181,10 +181,10 @@ func (s *organizationService) UpdateOrganizationRenewalLikelihood(ctx context.Co
 
 	s.log.Infof("Updated renewal likelihood for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Context, request *pb.OrganizationRenewalForecastRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Context, request *organizationpb.OrganizationRenewalForecastRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationRenewalForecast")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
@@ -209,10 +209,10 @@ func (s *organizationService) UpdateOrganizationRenewalForecast(ctx context.Cont
 
 	s.log.Infof("Updated renewal forecast for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Context, request *pb.OrganizationBillingDetailsRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Context, request *organizationpb.OrganizationBillingDetailsRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpdateOrganizationBillingDetails")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
@@ -239,10 +239,10 @@ func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Conte
 
 	s.log.Infof("Updated billing details for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, request *pb.RequestRenewNextCycleDateRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, request *organizationpb.RequestRenewNextCycleDateRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RequestRenewNextCycleDate")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -262,10 +262,10 @@ func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, req
 
 	s.log.Infof("Requested next cycle date renewal for tenant:%s organizationID: %s", request.Tenant, request.OrganizationId)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) HideOrganization(ctx context.Context, request *pb.OrganizationIdGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) HideOrganization(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.HideOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
@@ -285,10 +285,10 @@ func (s *organizationService) HideOrganization(ctx context.Context, request *pb.
 
 	s.log.Infof("Hidden organization with id %s for tenant %s", request.OrganizationId, request.Tenant)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) ShowOrganization(ctx context.Context, request *pb.OrganizationIdGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) ShowOrganization(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.ShowOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
@@ -308,10 +308,10 @@ func (s *organizationService) ShowOrganization(ctx context.Context, request *pb.
 
 	s.log.Infof("Show organization with id %s for tenant %s", request.OrganizationId, request.Tenant)
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Context, request *pb.CustomFieldForOrganizationGrpcRequest) (*pb.CustomFieldIdGrpcResponse, error) {
+func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Context, request *organizationpb.CustomFieldForOrganizationGrpcRequest) (*organizationpb.CustomFieldIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertCustomFieldToOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
@@ -321,7 +321,7 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 	if customFieldId == "" {
 		customFieldId = uuid.New().String()
 	}
-	sourceFields := cmnmod.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	customField := models.CustomField{
@@ -347,10 +347,10 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.CustomFieldIdGrpcResponse{Id: customFieldId}, nil
+	return &organizationpb.CustomFieldIdGrpcResponse{Id: customFieldId}, nil
 }
 
-func (s *organizationService) AddParentOrganization(ctx context.Context, request *pb.AddParentOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) AddParentOrganization(ctx context.Context, request *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.AddParentOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -363,10 +363,10 @@ func (s *organizationService) AddParentOrganization(ctx context.Context, request
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) RemoveParentOrganization(ctx context.Context, request *pb.RemoveParentOrganizationGrpcRequest) (*pb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) RemoveParentOrganization(ctx context.Context, request *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RemoveParentOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -379,7 +379,7 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, requ
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
 func (s *organizationService) errResponse(err error) error {

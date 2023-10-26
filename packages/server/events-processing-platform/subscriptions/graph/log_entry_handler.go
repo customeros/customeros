@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -18,8 +18,8 @@ import (
 
 type GraphLogEntryEventHandler struct {
 	log                  logger.Logger
-	organizationCommands *orgcmdhnd.OrganizationCommands
-	Repositories         *repository.Repositories
+	organizationCommands *orgcmdhnd.OrganizationCommandHandlers
+	repositories         *repository.Repositories
 }
 
 func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -27,14 +27,14 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.LogEntryCreateEvent
+	var eventData event.LogEntryCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.LogEntryRepository.Create(ctx, eventData.Tenant, logEntryId, eventData)
+	err := h.repositories.LogEntryRepository.Create(ctx, eventData.Tenant, logEntryId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving log entry %s: %s", logEntryId, err.Error())
@@ -42,7 +42,7 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.Repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, constants.NodeLabel_LogEntry, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, constants.NodeLabel_LogEntry, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link log entry %s with external system %s: %s", logEntryId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -64,14 +64,14 @@ func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.LogEntryUpdateEvent
+	var eventData event.LogEntryUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.LogEntryRepository.Update(ctx, eventData.Tenant, logEntryId, eventData)
+	err := h.repositories.LogEntryRepository.Update(ctx, eventData.Tenant, logEntryId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving log entry %s: %s", logEntryId, err.Error())
@@ -85,14 +85,14 @@ func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.LogEntryAddTagEvent
+	var eventData event.LogEntryAddTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.TagRepository.AddTagByIdTo(ctx, eventData.Tenant, eventData.TagId, logEntryId, "LogEntry", eventData.TaggedAt)
+	err := h.repositories.TagRepository.AddTagByIdTo(ctx, eventData.Tenant, eventData.TagId, logEntryId, "LogEntry", eventData.TaggedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding tag %s to log entry %s: %s", eventData.TagId, logEntryId, err.Error())
@@ -106,14 +106,14 @@ func (h *GraphLogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventst
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.LogEntryRemoveTagEvent
+	var eventData event.LogEntryRemoveTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.TagRepository.RemoveTagByIdFrom(ctx, eventData.Tenant, eventData.TagId, logEntryId, "LogEntry")
+	err := h.repositories.TagRepository.RemoveTagByIdFrom(ctx, eventData.Tenant, eventData.TagId, logEntryId, "LogEntry")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing tag %s to log entry %s: %s", eventData.TagId, logEntryId, err.Error())

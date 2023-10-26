@@ -6,15 +6,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type EmailCommands struct {
-	UpsertEmail         UpsertEmailCommandHandler
+type EmailCommandHandlers struct {
+	Upsert              UpsertEmailCommandHandler
 	FailEmailValidation FailEmailValidationCommandHandler
 	EmailValidated      EmailValidatedCommandHandler
 }
 
-func NewEmailCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *EmailCommands {
-	return &EmailCommands{
-		UpsertEmail:         NewUpsertEmailHandler(log, cfg, es),
+func NewEmailCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *EmailCommandHandlers {
+	return &EmailCommandHandlers{
+		Upsert:              NewUpsertEmailHandler(log, cfg, es),
 		FailEmailValidation: NewFailEmailValidationCommandHandler(log, cfg, es),
 		EmailValidated:      NewEmailValidatedCommandHandler(log, cfg, es),
 	}

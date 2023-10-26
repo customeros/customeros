@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	organizationAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
@@ -28,11 +28,11 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to processing platform: %v", err)
 	}
-	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
 	organizationId := uuid.New().String()
 	tenant := "ziggy"
-	response, err := organizationClient.UpsertOrganization(ctx, &organization_grpc_service.UpsertOrganizationGrpcRequest{
+	response, err := organizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:            tenant,
 		Id:                organizationId,
 		Name:              "Test Organization",
@@ -51,7 +51,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		Note:              "Some important notes",
 		IsPublic:          false,
 		IsCustomer:        true,
-		SourceFields: &common_grpc_service.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			AppSource: "unit-test",
 			Source:    "N/A",
 		},
@@ -115,11 +115,11 @@ func TestOrganizationsService_LinkDomain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to processing platform: %v", err)
 	}
-	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
 	organizationId := uuid.New().String()
 	domain := "openline.ai"
 	tenant := "ziggy"
-	response, err := organizationClient.LinkDomainToOrganization(ctx, &organization_grpc_service.LinkDomainToOrganizationGrpcRequest{
+	response, err := organizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: organizationId,
 		Domain:         domain,
@@ -152,7 +152,7 @@ func TestOrganizationsService_UpdateRenewalLikelihood(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to processing platform: %v", err)
 	}
-	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
 
 	organizationId := uuid.New().String()
 	tenant := "openline"
@@ -161,10 +161,10 @@ func TestOrganizationsService_UpdateRenewalLikelihood(t *testing.T) {
 		ID: organizationId,
 	})
 
-	response, err := organizationClient.UpdateOrganizationRenewalLikelihood(ctx, &organization_grpc_service.OrganizationRenewalLikelihoodRequest{
+	response, err := organizationClient.UpdateOrganizationRenewalLikelihood(ctx, &organizationpb.OrganizationRenewalLikelihoodRequest{
 		Tenant:         tenant,
 		OrganizationId: organizationId,
-		Likelihood:     organization_grpc_service.Likelihood_HIGH,
+		Likelihood:     organizationpb.Likelihood_HIGH,
 		Comment:        utils.StringPtr("test comment"),
 		UserId:         "user-123",
 	})
@@ -206,7 +206,7 @@ func TestOrganizationsService_UpdateRenewalForecast(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to processing platform: %v", err)
 	}
-	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
 
 	organizationId := uuid.New().String()
 	tenant := "openline"
@@ -215,7 +215,7 @@ func TestOrganizationsService_UpdateRenewalForecast(t *testing.T) {
 		ID: organizationId,
 	})
 
-	response, err := organizationClient.UpdateOrganizationRenewalForecast(ctx, &organization_grpc_service.OrganizationRenewalForecastRequest{
+	response, err := organizationClient.UpdateOrganizationRenewalForecast(ctx, &organizationpb.OrganizationRenewalForecastRequest{
 		Tenant:         tenant,
 		OrganizationId: organizationId,
 		Amount:         utils.Float64Ptr(100),
@@ -261,7 +261,7 @@ func TestOrganizationsService_UpdateBillingDetails(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to processing platform: %v", err)
 	}
-	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+	organizationClient := organizationpb.NewOrganizationGrpcServiceClient(grpcConnection)
 
 	organizationId := uuid.New().String()
 	tenant := "openline"
@@ -271,13 +271,13 @@ func TestOrganizationsService_UpdateBillingDetails(t *testing.T) {
 	})
 	now := utils.Now()
 
-	response, err := organizationClient.UpdateOrganizationBillingDetails(ctx, &organization_grpc_service.OrganizationBillingDetailsRequest{
+	response, err := organizationClient.UpdateOrganizationBillingDetails(ctx, &organizationpb.OrganizationBillingDetailsRequest{
 		Tenant:         tenant,
 		OrganizationId: organizationId,
 		Amount:         utils.Float64Ptr(100),
 		UserId:         "user-123",
-		Frequency:      utils.ToPtr(organization_grpc_service.Frequency_WEEKLY),
-		RenewalCycle:   utils.ToPtr(organization_grpc_service.Frequency_MONTHLY),
+		Frequency:      utils.ToPtr(organizationpb.Frequency_WEEKLY),
+		RenewalCycle:   utils.ToPtr(organizationpb.Frequency_MONTHLY),
 		CycleStart:     utils.ConvertTimeToTimestampPtr(utils.TimePtr(now)),
 	})
 	if err != nil {

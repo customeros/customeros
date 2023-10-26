@@ -19,7 +19,7 @@ import (
 
 type GraphInteractionEventHandler struct {
 	log                  logger.Logger
-	organizationCommands *orgcmdhnd.OrganizationCommands
+	organizationCommands *orgcmdhnd.OrganizationCommandHandlers
 	repositories         *repository.Repositories
 }
 

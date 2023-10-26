@@ -21,6 +21,7 @@ type IssueRepository interface {
 	RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 	AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
 	RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
+	ExistsById(ctx context.Context, tenant, issueId string) (bool, error)
 }
 
 type issueRepository struct {
@@ -41,7 +42,7 @@ func (r *issueRepository) Create(ctx context.Context, tenant, issueId string, ev
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("issueId", issueId), log.String("issueCreateEvent", fmt.Sprintf("%+v", evt)))
 
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 							MERGE (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}) 
 							ON CREATE SET 
 								i:Issue_%s,
@@ -97,9 +98,9 @@ func (r *issueRepository) Create(ctx context.Context, tenant, issueId string, ev
 		"submittedByUserId":         evt.SubmittedByUserId,
 		"overwrite":                 helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	return r.executeWriteQuery(ctx, query, params)
+	return r.executeWriteQuery(ctx, cypher, params)
 }
 
 func (r *issueRepository) Update(ctx context.Context, tenant, issueId string, evt event.IssueUpdateEvent) error {
@@ -108,7 +109,7 @@ func (r *issueRepository) Update(ctx context.Context, tenant, issueId string, ev
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("issueId", issueId), log.Object("event", fmt.Sprintf("%+v", evt)))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})
 		 	SET	
 				i.subject = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.subject is null OR i.subject = '' THEN $subject ELSE i.subject END,
 				i.description = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.description is null OR i.description = '' THEN $description ELSE i.description END,
@@ -128,9 +129,9 @@ func (r *issueRepository) Update(ctx context.Context, tenant, issueId string, ev
 		"sourceOfTruth": helper.GetSourceOfTruth(evt.Source),
 		"overwrite":     helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	return r.executeWriteQuery(ctx, query, params)
+	return r.executeWriteQuery(ctx, cypher, params)
 }
 
 func (r *issueRepository) AddUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
@@ -139,7 +140,7 @@ func (r *issueRepository) AddUserAssignee(ctx context.Context, tenant, issueId, 
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("issueId", issueId), log.String("userId", userId), log.Object("at", at))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 		 	MERGE (i)-[:ASSIGNED_TO]->(u)
 				ON CREATE SET i.updatedAt = $updatedAt`
@@ -149,9 +150,9 @@ func (r *issueRepository) AddUserAssignee(ctx context.Context, tenant, issueId, 
 		"updatedAt": at,
 		"userId":    userId,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	return r.executeWriteQuery(ctx, query, params)
+	return r.executeWriteQuery(ctx, cypher, params)
 }
 
 func (r *issueRepository) AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
@@ -160,7 +161,7 @@ func (r *issueRepository) AddUserFollower(ctx context.Context, tenant, issueId, 
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("issueId", issueId), log.String("userId", userId), log.Object("at", at))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 		 	MERGE (i)-[:FOLLOWED_BY]->(u)
 				ON CREATE SET i.updatedAt = $updatedAt`
@@ -170,9 +171,9 @@ func (r *issueRepository) AddUserFollower(ctx context.Context, tenant, issueId, 
 		"updatedAt": at,
 		"userId":    userId,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	return r.executeWriteQuery(ctx, query, params)
+	return r.executeWriteQuery(ctx, cypher, params)
 }
 
 func (r *issueRepository) RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
@@ -181,7 +182,7 @@ func (r *issueRepository) RemoveUserAssignee(ctx context.Context, tenant, issueI
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("issueId", issueId), log.String("userId", userId), log.Object("at", at))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
 				(i)-[r:ASSIGNED_TO]->(u)
 				SET i.updatedAt = $updatedAt
@@ -192,9 +193,9 @@ func (r *issueRepository) RemoveUserAssignee(ctx context.Context, tenant, issueI
 		"updatedAt": at,
 		"userId":    userId,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	return r.executeWriteQuery(ctx, query, params)
+	return r.executeWriteQuery(ctx, cypher, params)
 }
 
 func (r *issueRepository) RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
@@ -203,7 +204,7 @@ func (r *issueRepository) RemoveUserFollower(ctx context.Context, tenant, issueI
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("issueId", issueId), log.String("userId", userId), log.Object("at", at))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
 				(i)-[r:FOLLOWED_BY]->(u)
 				SET i.updatedAt = $updatedAt
@@ -214,9 +215,38 @@ func (r *issueRepository) RemoveUserFollower(ctx context.Context, tenant, issueI
 		"updatedAt": at,
 		"userId":    userId,
 	}
-	span.LogFields(log.String("query", query), log.Object("params", params))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	return r.executeWriteQuery(ctx, query, params)
+	return r.executeWriteQuery(ctx, cypher, params)
+}
+
+func (r *issueRepository) ExistsById(ctx context.Context, tenant, issueId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.ExistsById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("issueId", issueId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}) RETURN i LIMIT 1`
+	params := map[string]any{
+		"tenant":  tenant,
+		"issueId": issueId,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return false, err
+		} else {
+			return queryResult.Next(ctx), nil
+		}
+	})
+	if err != nil {
+		return false, err
+	}
+	return result.(bool), err
 }
 
 func (r *issueRepository) executeWriteQuery(ctx context.Context, query string, params map[string]any) error {

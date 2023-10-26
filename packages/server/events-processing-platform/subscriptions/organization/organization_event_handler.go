@@ -65,7 +65,7 @@ type WebscrapeResponseV1 struct {
 
 type organizationEventHandler struct {
 	repositories         *repository.Repositories
-	organizationCommands *command_handler.OrganizationCommands
+	organizationCommands *command_handler.OrganizationCommandHandlers
 	log                  logger.Logger
 	cfg                  *config.Config
 	caches               caches.Cache

@@ -26,7 +26,7 @@ type PhoneNumberValidationSubscriber struct {
 	repositories            *repository.Repositories
 }
 
-func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *command_handler.PhoneNumberCommands, repositories *repository.Repositories) *PhoneNumberValidationSubscriber {
+func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *command_handler.PhoneNumberCommandHandlers, repositories *repository.Repositories) *PhoneNumberValidationSubscriber {
 	return &PhoneNumberValidationSubscriber{
 		log: log,
 		db:  db,

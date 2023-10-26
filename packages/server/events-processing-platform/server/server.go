@@ -35,13 +35,13 @@ const (
 )
 
 type server struct {
-	cfg          *config.Config
-	log          logger.Logger
-	repositories *repository.Repositories
-	commands     *domain.Commands
-	echo         *echo.Echo
-	doneCh       chan struct{}
-	caches       caches.Cache
+	cfg             *config.Config
+	log             logger.Logger
+	repositories    *repository.Repositories
+	commandHandlers *domain.CommandHandlers
+	echo            *echo.Echo
+	doneCh          chan struct{}
+	caches          caches.Cache
 	//	metrics            *metrics.ESMicroserviceMetrics
 }
 
@@ -58,8 +58,8 @@ func (server *server) SetRepository(repository *repository.Repositories) {
 	server.repositories = repository
 }
 
-func (server *server) SetCommands(commands *domain.Commands) {
-	server.commands = commands
+func (server *server) SetCommands(commands *domain.CommandHandlers) {
+	server.commandHandlers = commands
 }
 
 func (server *server) Run(parentCtx context.Context) error {
@@ -108,10 +108,10 @@ func (server *server) Run(parentCtx context.Context) error {
 	server.repositories = repository.InitRepos(&neo4jDriver, server.cfg.Neo4j.Database, postgresDb.GormDB, server.log)
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
-	server.commands = commands.InitCommandHandlers(server.log, server.cfg, aggregateStore, server.repositories)
+	server.commandHandlers = commands.InitCommandHandlers(server.log, server.cfg, aggregateStore, server.repositories)
 
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.commands, server.cfg)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.commandHandlers, server.cfg)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
@@ -122,7 +122,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, db, server.cfg, server.commands.EmailCommands)
+		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, db, server.cfg, server.commandHandlers.Email)
 		go func() {
 			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -133,7 +133,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.PhoneNumberValidationSubscription.Enabled {
-		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, db, server.cfg, server.commands.PhoneNumberCommands, server.repositories)
+		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, db, server.cfg, server.commandHandlers.PhoneNumber, server.repositories)
 		go func() {
 			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -144,7 +144,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.LocationValidationSubscription.Enabled {
-		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.log, db, server.cfg, server.commands.LocationCommands, server.repositories)
+		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.log, db, server.cfg, server.commandHandlers.Location, server.repositories)
 		go func() {
 			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -155,7 +155,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands, server.repositories, server.caches)
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {
@@ -166,7 +166,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
-		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands, server.repositories, server.caches)
+		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, db, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
 		go func() {
 			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
 			if err != nil {
@@ -177,7 +177,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.InteractionEventSubscription.Enabled {
-		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.log, db, server.cfg, server.commands.InteractionEventCommands, server.repositories)
+		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.log, db, server.cfg, server.commandHandlers.InteractionEvent, server.repositories)
 		go func() {
 			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
 			if err != nil {

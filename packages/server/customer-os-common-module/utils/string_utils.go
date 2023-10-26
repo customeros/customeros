@@ -18,5 +18,5 @@ func NewUUIDIfEmpty(str string) string {
 	if strings.TrimSpace(str) == "" {
 		return uuid.New().String()
 	}
-	return str
+	return strings.TrimSpace(str)
 }

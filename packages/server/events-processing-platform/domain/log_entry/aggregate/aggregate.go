@@ -3,9 +3,9 @@ package aggregate
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
 )
@@ -16,39 +16,39 @@ const (
 
 type LogEntryAggregate struct {
 	*aggregate.CommonTenantIdAggregate
-	LogEntry *models.LogEntry
+	LogEntry *model.LogEntry
 }
 
 func NewLogEntryAggregateWithTenantAndID(tenant, id string) *LogEntryAggregate {
 	logEntryAggregate := LogEntryAggregate{}
 	logEntryAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(LogEntryAggregateType, tenant, id)
 	logEntryAggregate.SetWhen(logEntryAggregate.When)
-	logEntryAggregate.LogEntry = &models.LogEntry{}
+	logEntryAggregate.LogEntry = &model.LogEntry{}
 	logEntryAggregate.Tenant = tenant
 
 	return &logEntryAggregate
 }
 
-func (a *LogEntryAggregate) When(event eventstore.Event) error {
-	switch event.GetEventType() {
-	case events.LogEntryCreateV1:
-		return a.onLogEntryCreate(event)
-	case events.LogEntryUpdateV1:
-		return a.onLogEntryUpdate(event)
-	case events.LogEntryAddTagV1:
-		return a.onLogEntryAddTag(event)
-	case events.LogEntryRemoveTagV1:
-		return a.onLogEntryRemoveTag(event)
+func (a *LogEntryAggregate) When(evt eventstore.Event) error {
+	switch evt.GetEventType() {
+	case event.LogEntryCreateV1:
+		return a.onLogEntryCreate(evt)
+	case event.LogEntryUpdateV1:
+		return a.onLogEntryUpdate(evt)
+	case event.LogEntryAddTagV1:
+		return a.onLogEntryAddTag(evt)
+	case event.LogEntryRemoveTagV1:
+		return a.onLogEntryRemoveTag(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
-		err.EventType = event.GetEventType()
+		err.EventType = evt.GetEventType()
 		return err
 	}
 }
 
-func (a *LogEntryAggregate) onLogEntryCreate(event eventstore.Event) error {
-	var eventData events.LogEntryCreateEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *LogEntryAggregate) onLogEntryCreate(evt eventstore.Event) error {
+	var eventData event.LogEntryCreateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.LogEntry.ID = a.ID
@@ -60,7 +60,7 @@ func (a *LogEntryAggregate) onLogEntryCreate(event eventstore.Event) error {
 		a.LogEntry.LoggedOrganizationIds = utils.AddToListIfNotExists(a.LogEntry.LoggedOrganizationIds, eventData.LoggedOrganizationId)
 	}
 	a.LogEntry.StartedAt = eventData.StartedAt
-	a.LogEntry.Source = cmnmod.Source{
+	a.LogEntry.Source = commonmodel.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,
@@ -68,14 +68,14 @@ func (a *LogEntryAggregate) onLogEntryCreate(event eventstore.Event) error {
 	a.LogEntry.CreatedAt = eventData.CreatedAt
 	a.LogEntry.UpdatedAt = eventData.UpdatedAt
 	if eventData.ExternalSystem.Available() {
-		a.LogEntry.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
+		a.LogEntry.ExternalSystems = []commonmodel.ExternalSystem{eventData.ExternalSystem}
 	}
 	return nil
 }
 
-func (a *LogEntryAggregate) onLogEntryUpdate(event eventstore.Event) error {
-	var eventData events.LogEntryUpdateEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *LogEntryAggregate) onLogEntryUpdate(evt eventstore.Event) error {
+	var eventData event.LogEntryUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.LogEntry.Content = eventData.Content
@@ -91,9 +91,9 @@ func (a *LogEntryAggregate) onLogEntryUpdate(event eventstore.Event) error {
 	return nil
 }
 
-func (a *LogEntryAggregate) onLogEntryAddTag(event eventstore.Event) error {
-	var eventData events.LogEntryAddTagEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *LogEntryAggregate) onLogEntryAddTag(evt eventstore.Event) error {
+	var eventData event.LogEntryAddTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
@@ -103,9 +103,9 @@ func (a *LogEntryAggregate) onLogEntryAddTag(event eventstore.Event) error {
 	return nil
 }
 
-func (a *LogEntryAggregate) onLogEntryRemoveTag(event eventstore.Event) error {
-	var eventData events.LogEntryRemoveTagEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *LogEntryAggregate) onLogEntryRemoveTag(evt eventstore.Event) error {
+	var eventData event.LogEntryRemoveTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 

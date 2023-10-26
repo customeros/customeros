@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	cmngrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	issuegrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -23,17 +23,17 @@ func TestIssueService_UpsertIssue_CreateIssue(t *testing.T) {
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(nil, aggregateStore)
 	require.Nil(t, err)
 
-	issueClient := issuegrpc.NewIssueGrpcServiceClient(grpcConnection)
+	issueClient := issuepb.NewIssueGrpcServiceClient(grpcConnection)
 	timeNow := utils.Now()
 	tenant := "ziggy"
-	response, err := issueClient.UpsertIssue(ctx, &issuegrpc.UpsertIssueGrpcRequest{
+	response, err := issueClient.UpsertIssue(ctx, &issuepb.UpsertIssueGrpcRequest{
 		Tenant:      tenant,
 		Subject:     "This is subject",
 		Description: "This is description",
 		Status:      "open",
 		Priority:    "high",
 		CreatedAt:   timestamppb.New(timeNow),
-		SourceFields: &cmngrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
 			AppSource: "unit-test",
 		},
@@ -81,7 +81,7 @@ func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(nil, aggregateStore)
 	require.Nil(t, err)
 
-	issueClient := issuegrpc.NewIssueGrpcServiceClient(grpcConnection)
+	issueClient := issuepb.NewIssueGrpcServiceClient(grpcConnection)
 
 	timeNow := utils.Now()
 	issueId := uuid.New().String()
@@ -102,14 +102,14 @@ func TestIssueService_UpsertIssue_UpdateIssue(t *testing.T) {
 	err = aggregateStore.Save(ctx, issueAggregate)
 	require.Nil(t, err)
 
-	response, err := issueClient.UpsertIssue(ctx, &issuegrpc.UpsertIssueGrpcRequest{
+	response, err := issueClient.UpsertIssue(ctx, &issuepb.UpsertIssueGrpcRequest{
 		Tenant:      tenant,
 		Id:          issueId,
 		Subject:     "New subject",
 		Description: "New description",
 		Status:      "closed",
 		Priority:    "low",
-		SourceFields: &cmngrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
 			AppSource: "unit-test",
 		},

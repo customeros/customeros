@@ -1,8 +1,8 @@
 package command
 
 import (
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"time"
 )
@@ -10,14 +10,14 @@ import (
 type UpsertLogEntryCommand struct {
 	eventstore.BaseCommand
 	IsCreateCommand bool
-	DataFields      models.LogEntryDataFields
-	Source          cmnmod.Source
-	ExternalSystem  cmnmod.ExternalSystem
+	DataFields      model.LogEntryDataFields
+	Source          commonmodel.Source
+	ExternalSystem  commonmodel.ExternalSystem
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
 }
 
-func NewUpsertLogEntryCommand(logEntryId, tenant, userId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, dataFields models.LogEntryDataFields, createdAt, updatedAt *time.Time) *UpsertLogEntryCommand {
+func NewUpsertLogEntryCommand(logEntryId, tenant, userId string, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, dataFields model.LogEntryDataFields, createdAt, updatedAt *time.Time) *UpsertLogEntryCommand {
 	return &UpsertLogEntryCommand{
 		BaseCommand:    eventstore.NewBaseCommand(logEntryId, tenant, userId),
 		DataFields:     dataFields,

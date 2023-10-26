@@ -2,8 +2,8 @@ package servicet
 
 import (
 	"context"
-	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	contactAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
@@ -24,9 +24,9 @@ func TestContactService_CreateContact(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
 	}
-	contactClient := contact_grpc_service.NewContactGrpcServiceClient(grpcConnection)
+	contactClient := contactpb.NewContactGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
-	response, err := contactClient.UpsertContact(ctx, &contact_grpc_service.UpsertContactGrpcRequest{
+	response, err := contactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
 		Tenant:          "ziggy",
 		FirstName:       "Bob",
 		LastName:        "Smith",
@@ -75,11 +75,11 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
 	}
-	contactClient := contact_grpc_service.NewContactGrpcServiceClient(grpcConnection)
-	emailClient := email_grpc_service.NewEmailGrpcServiceClient(grpcConnection)
+	contactClient := contactpb.NewContactGrpcServiceClient(grpcConnection)
+	emailClient := emailpb.NewEmailGrpcServiceClient(grpcConnection)
 
 	timeNow := time.Now().UTC()
-	responseContact, err := contactClient.UpsertContact(ctx, &contact_grpc_service.UpsertContactGrpcRequest{
+	responseContact, err := contactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
 		Tenant:          "ziggy",
 		FirstName:       "Bob",
 		LastName:        "Smith",
@@ -106,7 +106,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
 
-	responseEmail, err := emailClient.UpsertEmail(ctx, &email_grpc_service.UpsertEmailGrpcRequest{
+	responseEmail, err := emailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
 		Tenant:        "ziggy",
 		RawEmail:      "test@openline.ai",
 		AppSource:     "unit-test",
@@ -131,7 +131,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	}
 	require.Equal(t, "test@openline.ai", eventData.RawEmail)
 
-	responseLinkEmail, err := contactClient.LinkEmailToContact(ctx, &contact_grpc_service.LinkEmailToContactGrpcRequest{
+	responseLinkEmail, err := contactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
 		Tenant:    "ziggy",
 		ContactId: responseContact.Id,
 		EmailId:   responseEmail.Id,

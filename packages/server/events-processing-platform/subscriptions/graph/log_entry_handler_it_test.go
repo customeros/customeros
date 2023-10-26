@@ -8,8 +8,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -39,14 +39,14 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &GraphLogEntryEventHandler{
-		Repositories:         testDatabase.Repositories,
+		repositories:         testDatabase.Repositories,
 		organizationCommands: orgcmdhnd.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
 	logEntryId := uuid.New().String()
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
-	event, err := events.NewLogEntryCreateEvent(logEntryAggregate, models.LogEntryDataFields{
+	createEvent, err := event.NewLogEntryCreateEvent(logEntryAggregate, model.LogEntryDataFields{
 		Content:              "test content",
 		ContentType:          "test content type",
 		AuthorUserId:         utils.StringPtr(userId),
@@ -62,7 +62,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
-	err = logEntryEventHandler.OnCreate(context.Background(), event)
+	err = logEntryEventHandler.OnCreate(context.Background(), createEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -119,15 +119,15 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &GraphLogEntryEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
-	event, err := events.NewLogEntryUpdateEvent(logEntryAggregate, "test content", "test content type", "openline", now, now, nil)
+	updateEvent, err := event.NewLogEntryUpdateEvent(logEntryAggregate, "test content", "test content type", "openline", now, now, nil)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
-	err = logEntryEventHandler.OnUpdate(context.Background(), event)
+	err = logEntryEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -163,15 +163,15 @@ func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &GraphLogEntryEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	now := utils.Now()
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
-	event, err := events.NewLogEntryAddTagEvent(logEntryAggregate, tagId, now)
+	addTagEvent, err := event.NewLogEntryAddTagEvent(logEntryAggregate, tagId, now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
-	err = logEntryEventHandler.OnAddTag(context.Background(), event)
+	err = logEntryEventHandler.OnAddTag(context.Background(), addTagEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
 	// CHECK
@@ -207,14 +207,14 @@ func TestGraphLogEntryEventHandler_OnRemoveTag(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &GraphLogEntryEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
-	event, err := events.NewLogEntryRemoveTagEvent(logEntryAggregate, tagId)
+	removeTagEvent, err := event.NewLogEntryRemoveTagEvent(logEntryAggregate, tagId)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
-	err = logEntryEventHandler.OnRemoveTag(context.Background(), event)
+	err = logEntryEventHandler.OnRemoveTag(context.Background(), removeTagEvent)
 	require.Nil(t, err, "failed to execute event handler")
 
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{

@@ -3,8 +3,8 @@ package servicet
 import (
 	"context"
 	"github.com/google/uuid"
-	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -23,13 +23,13 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to events processing platform: %v", err)
 	}
-	emailClient := email_grpc_service.NewEmailGrpcServiceClient(grpcConnection)
+	emailClient := emailpb.NewEmailGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
 	emailId, _ := uuid.NewUUID()
-	response, err := emailClient.UpsertEmail(ctx, &email_grpc_service.UpsertEmailGrpcRequest{
+	response, err := emailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
 		Tenant:   "ziggy",
 		RawEmail: "test@openline.ai",
-		SourceFields: &common_grpc_service.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			AppSource:     "unit-test",
 			Source:        "N/A",
 			SourceOfTruth: "N/A",

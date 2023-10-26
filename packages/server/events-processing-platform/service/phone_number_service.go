@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	phonenumbergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -17,13 +17,13 @@ import (
 )
 
 type phoneNumberService struct {
-	phonenumbergrpc.UnimplementedPhoneNumberGrpcServiceServer
+	phonenumberpb.UnimplementedPhoneNumberGrpcServiceServer
 	log                 logger.Logger
 	repositories        *repository.Repositories
-	phoneNumberCommands *command_handler.PhoneNumberCommands
+	phoneNumberCommands *command_handler.PhoneNumberCommandHandlers
 }
 
-func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, phoneNumberCommands *command_handler.PhoneNumberCommands) *phoneNumberService {
+func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, phoneNumberCommands *command_handler.PhoneNumberCommandHandlers) *phoneNumberService {
 	return &phoneNumberService{
 		log:                 log,
 		repositories:        repositories,
@@ -31,7 +31,7 @@ func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositor
 	}
 }
 
-func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *phonenumbergrpc.UpsertPhoneNumberGrpcRequest) (*phonenumbergrpc.PhoneNumberIdGrpcResponse, error) {
+func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *phonenumberpb.UpsertPhoneNumberGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "PhoneNumberService.UpsertPhoneNumber")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -49,7 +49,7 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 		objectID = utils.NewUUIDIfEmpty(objectID)
 	}
 
-	sourceFields := cmnmod.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	cmd := command.NewUpsertPhoneNumberCommand(objectID, request.Tenant, request.LoggedInUserId, request.PhoneNumber,
@@ -61,7 +61,7 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 
 	s.log.Infof("(UpsertPhoneNumber): {%s}", objectID)
 
-	return &phonenumbergrpc.PhoneNumberIdGrpcResponse{Id: objectID}, nil
+	return &phonenumberpb.PhoneNumberIdGrpcResponse{Id: objectID}, nil
 }
 
 func (s *phoneNumberService) errResponse(err error) error {

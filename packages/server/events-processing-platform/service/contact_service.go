@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
@@ -17,21 +17,21 @@ import (
 )
 
 type contactService struct {
-	pb.UnimplementedContactGrpcServiceServer
-	log             logger.Logger
-	repositories    *repository.Repositories
-	contactCommands *command_handler.ContactCommands
+	contactpb.UnimplementedContactGrpcServiceServer
+	log                    logger.Logger
+	repositories           *repository.Repositories
+	contactCommandHandlers *command_handler.ContactCommandHandlers
 }
 
-func NewContactService(log logger.Logger, repositories *repository.Repositories, contactCommands *command_handler.ContactCommands) *contactService {
+func NewContactService(log logger.Logger, repositories *repository.Repositories, contactCommandHandlers *command_handler.ContactCommandHandlers) *contactService {
 	return &contactService{
-		log:             log,
-		repositories:    repositories,
-		contactCommands: contactCommands,
+		log:                    log,
+		repositories:           repositories,
+		contactCommandHandlers: contactCommandHandlers,
 	}
 }
 
-func (s *contactService) UpsertContact(ctx context.Context, request *pb.UpsertContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.UpsertContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.UpsertContact")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -48,78 +48,78 @@ func (s *contactService) UpsertContact(ctx context.Context, request *pb.UpsertCo
 		Timezone:        request.Timezone,
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
 	}
-	sourceFields := cmnmod.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
 	sourceFields.SourceOfTruth = utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
 	sourceFields.AppSource = utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
 
-	externalSystem := cmnmod.ExternalSystem{}
+	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	cmd := command.NewUpsertContactCommand(contactId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem,
 		dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.Id == "")
-	if err := s.contactCommands.UpsertContact.Handle(ctx, cmd); err != nil {
+	if err := s.contactCommandHandlers.Upsert.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertContact.Handle) tenant:%s, contactID: %s, err: {%v}", request.Tenant, contactId, err)
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.ContactIdGrpcResponse{Id: contactId}, nil
+	return &contactpb.ContactIdGrpcResponse{Id: contactId}, nil
 }
 
-func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *pb.LinkPhoneNumberToContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *contactpb.LinkPhoneNumberToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkPhoneNumberToContact")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkPhoneNumberCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.Primary)
-	if err := s.contactCommands.LinkPhoneNumberCommand.Handle(ctx, cmd); err != nil {
+	if err := s.contactCommandHandlers.LinkPhoneNumber.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(LinkPhoneNumberCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) LinkEmailToContact(ctx context.Context, request *pb.LinkEmailToContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+func (s *contactService) LinkEmailToContact(ctx context.Context, request *contactpb.LinkEmailToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkEmailToContact")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkEmailCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
-	if err := s.contactCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
+	if err := s.contactCommandHandlers.LinkEmail.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(LinkEmailCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) LinkLocationToContact(ctx context.Context, request *pb.LinkLocationToContactGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+func (s *contactService) LinkLocationToContact(ctx context.Context, request *contactpb.LinkLocationToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkLocationToContact")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	cmd := command.NewLinkLocationCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.LocationId)
-	if err := s.contactCommands.LinkLocationCommand.Handle(ctx, cmd); err != nil {
+	if err := s.contactCommandHandlers.LinkLocation.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(LinkLocationCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) LinkWithOrganization(ctx context.Context, request *pb.LinkWithOrganizationGrpcRequest) (*pb.ContactIdGrpcResponse, error) {
+func (s *contactService) LinkWithOrganization(ctx context.Context, request *contactpb.LinkWithOrganizationGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkWithOrganization")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
-	sourceFields := cmnmod.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	jobRoleFields := models.JobRole{
@@ -132,12 +132,12 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *pb.L
 
 	cmd := command.NewLinkOrganizationCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.OrganizationId, sourceFields, jobRoleFields,
 		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
-	if err := s.contactCommands.LinkOrganizationCommand.Handle(ctx, cmd); err != nil {
+	if err := s.contactCommandHandlers.LinkOrganization.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(LinkOrganizationCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
 func (s *contactService) errResponse(err error) error {

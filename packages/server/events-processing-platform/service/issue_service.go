@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
@@ -17,7 +17,7 @@ import (
 )
 
 type issueService struct {
-	pb.UnimplementedIssueGrpcServiceServer
+	issuepb.UnimplementedIssueGrpcServiceServer
 	log                  logger.Logger
 	issueCommandHandlers *cmdhnd.IssueCommandHandlers
 }
@@ -29,7 +29,7 @@ func NewIssueService(log logger.Logger, issueCommandHandlers *cmdhnd.IssueComman
 	}
 }
 
-func (s *issueService) UpsertIssue(ctx context.Context, request *pb.UpsertIssueGrpcRequest) (*pb.IssueIdGrpcResponse, error) {
+func (s *issueService) UpsertIssue(ctx context.Context, request *issuepb.UpsertIssueGrpcRequest) (*issuepb.IssueIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.UpsertIssue")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -47,10 +47,10 @@ func (s *issueService) UpsertIssue(ctx context.Context, request *pb.UpsertIssueG
 		SubmittedByUserId:         request.SubmittedByUserId,
 	}
 
-	source := cmnmod.Source{}
+	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
 
-	externalSystem := cmnmod.ExternalSystem{}
+	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	cmd := command.NewUpsertIssueCommand(issueId, request.Tenant, request.LoggedInUserId, dataFields, source, externalSystem, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
@@ -60,10 +60,10 @@ func (s *issueService) UpsertIssue(ctx context.Context, request *pb.UpsertIssueG
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.IssueIdGrpcResponse{Id: issueId}, nil
+	return &issuepb.IssueIdGrpcResponse{Id: issueId}, nil
 }
 
-func (s *issueService) AddUserAssignee(ctx context.Context, request *pb.AddUserAssigneeToIssueGrpcRequest) (*pb.IssueIdGrpcResponse, error) {
+func (s *issueService) AddUserAssignee(ctx context.Context, request *issuepb.AddUserAssigneeToIssueGrpcRequest) (*issuepb.IssueIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.AddUserAssignee")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -76,10 +76,10 @@ func (s *issueService) AddUserAssignee(ctx context.Context, request *pb.AddUserA
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.IssueIdGrpcResponse{Id: request.IssueId}, nil
+	return &issuepb.IssueIdGrpcResponse{Id: request.IssueId}, nil
 }
 
-func (s *issueService) RemoveUserAssignee(ctx context.Context, request *pb.RemoveUserAssigneeFromIssueGrpcRequest) (*pb.IssueIdGrpcResponse, error) {
+func (s *issueService) RemoveUserAssignee(ctx context.Context, request *issuepb.RemoveUserAssigneeFromIssueGrpcRequest) (*issuepb.IssueIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.RemoveUserAssignee")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -92,10 +92,10 @@ func (s *issueService) RemoveUserAssignee(ctx context.Context, request *pb.Remov
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.IssueIdGrpcResponse{Id: request.IssueId}, nil
+	return &issuepb.IssueIdGrpcResponse{Id: request.IssueId}, nil
 }
 
-func (s *issueService) AddUserFollower(ctx context.Context, request *pb.AddUserFollowerToIssueGrpcRequest) (*pb.IssueIdGrpcResponse, error) {
+func (s *issueService) AddUserFollower(ctx context.Context, request *issuepb.AddUserFollowerToIssueGrpcRequest) (*issuepb.IssueIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.AddUserFollower")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -108,10 +108,10 @@ func (s *issueService) AddUserFollower(ctx context.Context, request *pb.AddUserF
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.IssueIdGrpcResponse{Id: request.IssueId}, nil
+	return &issuepb.IssueIdGrpcResponse{Id: request.IssueId}, nil
 }
 
-func (s *issueService) RemoveUserFollower(ctx context.Context, request *pb.RemoveUserFollowerFromIssueGrpcRequest) (*pb.IssueIdGrpcResponse, error) {
+func (s *issueService) RemoveUserFollower(ctx context.Context, request *issuepb.RemoveUserFollowerFromIssueGrpcRequest) (*issuepb.IssueIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "IssueService.RemoveUserFollower")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -124,7 +124,7 @@ func (s *issueService) RemoveUserFollower(ctx context.Context, request *pb.Remov
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.IssueIdGrpcResponse{Id: request.IssueId}, nil
+	return &issuepb.IssueIdGrpcResponse{Id: request.IssueId}, nil
 }
 
 func (s *issueService) errResponse(err error) error {

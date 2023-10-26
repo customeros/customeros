@@ -32,7 +32,7 @@ type ActionForecastMetadata struct {
 
 type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
-	organizationCommands *cmdhnd.OrganizationCommands
+	organizationCommands *cmdhnd.OrganizationCommandHandlers
 	log                  logger.Logger
 }
 
