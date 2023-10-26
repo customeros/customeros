@@ -56,7 +56,7 @@ export const OrganizationRelationship = ({
               (item) => item.id === payload.input.id,
             );
 
-            if (content && !!index) {
+            if (content && index !== undefined && index > -1) {
               content[index].isCustomer = payload.input.isCustomer;
             }
           });
