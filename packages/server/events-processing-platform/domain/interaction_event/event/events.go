@@ -33,6 +33,7 @@ type InteractionEventCreateEvent struct {
 	CreatedAt       time.Time             `json:"createdAt"`
 	UpdatedAt       time.Time             `json:"updatedAt"`
 	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
+	Hide            bool                  `json:"hide"`
 }
 
 func NewInteractionEventCreateEvent(aggregate eventstore.Aggregate, dataFields model.InteractionEventDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -44,6 +45,7 @@ func NewInteractionEventCreateEvent(aggregate eventstore.Aggregate, dataFields m
 		ChannelData:     dataFields.ChannelData,
 		EventType:       dataFields.EventType,
 		Identifier:      dataFields.Identifier,
+		Hide:            dataFields.Hide,
 		PartOfIssueId:   utils.IfNotNilString(dataFields.PartOfIssueId),
 		PartOfSessionId: utils.IfNotNilString(dataFields.PartOfSessionId),
 		Source:          source.Source,
@@ -77,6 +79,7 @@ type InteractionEventUpdateEvent struct {
 	UpdatedAt      time.Time             `json:"updatedAt"`
 	Source         string                `json:"source"`
 	ExternalSystem cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
+	Hide           bool                  `json:"hide"`
 }
 
 func NewInteractionEventUpdateEvent(aggregate eventstore.Aggregate, dataFields model.InteractionEventDataFields, source string, externalSystem cmnmod.ExternalSystem, updatedAt time.Time) (eventstore.Event, error) {
@@ -88,6 +91,7 @@ func NewInteractionEventUpdateEvent(aggregate eventstore.Aggregate, dataFields m
 		ChannelData: dataFields.ChannelData,
 		EventType:   dataFields.EventType,
 		Identifier:  dataFields.Identifier,
+		Hide:        dataFields.Hide,
 		UpdatedAt:   updatedAt,
 		Source:      source,
 	}

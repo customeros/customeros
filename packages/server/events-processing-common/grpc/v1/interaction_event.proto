@@ -16,7 +16,7 @@ message UpsertInteractionEventGrpcRequest {
   string channel = 7;
   string channelData = 8;
   string eventType = 9;
-  string hide = 10;
+  bool hide = 10;
   google.protobuf.Timestamp createdAt = 11;
   google.protobuf.Timestamp updatedAt = 12;
   optional string partOfIssueId = 13;

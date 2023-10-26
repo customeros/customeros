@@ -22,4 +22,5 @@ type InteractionEvent struct {
 	ExternalSystems []cmnmod.ExternalSystem `json:"externalSystem"`
 	PartOfIssueId   string                  `json:"partOfIssueId,omitempty"`
 	PartOfSessionId string                  `json:"partOfSessionId,omitempty"`
+	Hide            bool                    `json:"hide"`
 }
