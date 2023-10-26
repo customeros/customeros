@@ -190,8 +190,7 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(i:PhoneNumber {id:$id})
-				SET i:PhoneNumber,
-					i:PhoneNumber_%s,
+				SET i:PhoneNumber_%s,
 					i.e164=$e164,
 					i.validated=$validated,
 					i.rawPhoneNumber=$rawPhoneNumber,
