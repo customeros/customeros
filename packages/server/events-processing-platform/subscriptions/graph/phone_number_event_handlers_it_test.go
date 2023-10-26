@@ -98,3 +98,53 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidated(t *testing.T) {
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "appSource"))
 }
+
+func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	validated := false
+	e164 := "+0123456789"
+	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, testDatabase.Driver, tenantName, entity.PhoneNumberEntity{
+		E164:           e164,
+		Validated:      &validated,
+		RawPhoneNumber: e164,
+		Source:         constants.SourceOpenline,
+		SourceOfTruth:  constants.SourceOpenline,
+		AppSource:      constants.SourceOpenline,
+	})
+
+	dbNodeAfterCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNodeAfterCreate)
+	propsAfterCreate := utils.GetPropsFromNode(*dbNodeAfterCreate)
+	require.Equal(t, false, utils.GetBoolPropOrFalse(propsAfterCreate, "validated"))
+	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+	require.Equal(t, &creationTime, utils.GetTimePropOrNil(propsAfterCreate, "updatedAt"))
+
+	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId)
+	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
+	event, err := events.NewPhoneNumberFailedValidationEvent(phoneNumberAggregate, tenantName, e164, "US", "Validation failed with this custom message!")
+	require.Nil(t, err)
+
+	phoneNumberEventHandler := &GraphPhoneNumberEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	err = phoneNumberEventHandler.OnPhoneNumberValidationFailed(context.Background(), event)
+	require.Nil(t, err)
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	props := utils.GetPropsFromNode(*dbNode)
+
+	require.Equal(t, e164, utils.GetStringPropOrEmpty(props, "e164"))
+	require.Equal(t, false, utils.GetBoolPropOrFalse(props, "validated"))
+	require.Equal(t, "Validation failed with this custom message!", utils.GetStringPropOrEmpty(props, "validationError"))
+	require.NotEqual(t, &creationTime, utils.GetTimePropOrNil(props, "updatedAt"))
+	require.Equal(t, e164, utils.GetStringPropOrEmpty(props, "rawPhoneNumber"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "source"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "appSource"))
+}
