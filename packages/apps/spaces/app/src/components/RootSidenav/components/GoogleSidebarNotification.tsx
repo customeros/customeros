@@ -81,19 +81,26 @@ export const GoogleSidebarNotification = () => {
             borderColor={'warning.200'}
             w={'full'}
             padding={'20px 16px'}
+            borderRadius='8px'
           >
             <FeaturedIcon size='md' minW='10' colorScheme={'orange'}>
               <AlertCircle />
             </FeaturedIcon>
 
-            <Box color={'warning.700'} mt={2}>
+            <Box color={'warning.700'} mt={2} fontSize='sm'>
               Your conversations and meetings are no longer syncing because
               access to your Google account has expired
             </Box>
-            <Flex mt={2}>
+            <Flex mt={2} justify='space-between'>
               <Button
-                variant={'ghost'}
+                colorScheme='warning'
+                variant={'link'}
                 fontSize={'14px'}
+                color='gray.500'
+                fontWeight='semibold'
+                _hover={{
+                  color: 'gray.700',
+                }}
                 onClick={() => {
                   infoModal.onOpen();
                 }}
@@ -101,8 +108,13 @@ export const GoogleSidebarNotification = () => {
                 Learn more
               </Button>
               <Button
-                variant={'ghost'}
+                colorScheme='warning'
+                variant={'link'}
                 fontSize={'14px'}
+                fontWeight='semibold'
+                _hover={{
+                  color: 'warning.900',
+                }}
                 color={'warning.700'}
                 onClick={requestAccess}
               >
