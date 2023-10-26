@@ -55,7 +55,12 @@ export const getParticipantNameAndEmail = (
   const { contacts, users, email, rawEmail } = emailParticipant;
 
   if (contacts.length) {
-    const label = contacts.find((c) => c?.name || c?.firstName || c?.lastName);
+    const label = contacts.find(
+      (c) =>
+        (c?.name && c.name.toLowerCase() !== 'unknown') ||
+        (c?.firstName && c.firstName.toLowerCase() !== 'unknown') ||
+        (c?.lastName && c.lastName.toLowerCase() !== 'unknown'),
+    );
 
     return {
       label: label
@@ -65,7 +70,12 @@ export const getParticipantNameAndEmail = (
     };
   }
   if (users.length) {
-    const label = users.find((c) => c?.firstName || c?.lastName);
+    const label = users.find(
+      (c) =>
+        (c?.name && c.name.toLowerCase() !== 'unknown') ||
+        (c?.firstName && c.firstName.toLowerCase() !== 'unknown') ||
+        (c?.lastName && c.lastName.toLowerCase() !== 'unknown'),
+    );
 
     return {
       label: label ? `${label?.firstName} ${label?.lastName}`.trim() : '',
