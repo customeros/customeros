@@ -95,7 +95,7 @@ export const TableActions = ({
             }}
           >
             {`Archive ${
-              selectCount > 1 ? `these ${selectCount}` : ' this company'
+              selectCount > 1 ? `these ${selectCount}` : ' this organization'
             }`}
           </Button>
           {selectCount > 1 && (

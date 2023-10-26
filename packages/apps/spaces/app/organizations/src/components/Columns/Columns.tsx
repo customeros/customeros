@@ -39,10 +39,10 @@ export const getColumns = (options: GetColumnsOptions) => [
     minSize: 200,
     header: (props) => (
       <THead<Organization>
-        title='Company'
+        title='Organization'
         icon={
           <Flex w='10' h='10' align='center' justify='center' mr='3'>
-            <Tooltip label='Create a company'>
+            <Tooltip label='Create an organization'>
               <IconButton
                 size='sm'
                 variant='ghost'
