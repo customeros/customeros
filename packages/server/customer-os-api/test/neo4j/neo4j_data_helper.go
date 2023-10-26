@@ -628,12 +628,39 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return issueId.String()
 }
 
-func IssueReportedByOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, issueId string) {
-	query := `MATCH (o:Organization {id:$organizationId}), (i:Issue {id:$issueId})
-			MERGE (o)<-[:REPORTED_BY]-(i)`
+func IssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
+	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
+			MERGE (e)<-[:REPORTED_BY]-(i)`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"issueId":        issueId,
-		"organizationId": organizationId,
+		"issueId":  issueId,
+		"entityId": entityId,
+	})
+}
+
+func IssueSubmittedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
+	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
+			MERGE (e)<-[:SUBMITTED_BY]-(i)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"issueId":  issueId,
+		"entityId": entityId,
+	})
+}
+
+func IssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
+	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
+			MERGE (e)<-[:FOLLOWED_BY]-(i)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"issueId":  issueId,
+		"entityId": entityId,
+	})
+}
+
+func IssueAssignedTo(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
+	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
+			MERGE (e)<-[:ASSIGNED_TO]-(i)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"issueId":  issueId,
+		"entityId": entityId,
 	})
 }
 

@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -27,37 +26,6 @@ type EmailEntity struct {
 	IsDeliverable  *bool
 	IsDisabled     *bool
 	Error          *string
-
-	InteractionEventParticipantDetails   InteractionEventParticipantDetails
-	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
-	DataloaderKey                        string
-}
-
-func (email EmailEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nemail: %s\nlabel: %s", email.Id, email.Email, email.Label)
 }
 
 type EmailEntities []EmailEntity
-
-func (EmailEntity) IsInteractionEventParticipant() {}
-
-func (EmailEntity) InteractionEventParticipantLabel() string {
-	return NodeLabel_Email
-}
-
-func (EmailEntity) IsInteractionSessionParticipant() {}
-
-func (EmailEntity) InteractionSessionParticipantLabel() string {
-	return NodeLabel_Email
-}
-
-func (email EmailEntity) GetDataloaderKey() string {
-	return email.DataloaderKey
-}
-
-func (EmailEntity) Labels(tenant string) []string {
-	return []string{
-		NodeLabel_Email,
-		NodeLabel_Email + "_" + tenant,
-	}
-}

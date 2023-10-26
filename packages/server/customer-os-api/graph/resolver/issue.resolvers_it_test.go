@@ -74,3 +74,72 @@ func TestQueryResolver_Issue(t *testing.T) {
 	require.Equal(t, "ticket", *issue.ExternalLinks[0].ExternalSource)
 	require.Equal(t, syncDate, *issue.ExternalLinks[0].SyncDate)
 }
+
+func TestQueryResolver_Issue_WithParticipants(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	issueId := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
+		Subject:     "testSubject",
+		Status:      "testStatus",
+		Priority:    "testPriority",
+		Description: "testDescription",
+		CreatedAt:   utils.Now(),
+	})
+
+	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{})
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{})
+
+	neo4jt.IssueSubmittedBy(ctx, driver, issueId, userId)
+	neo4jt.IssueReportedBy(ctx, driver, issueId, orgId)
+	neo4jt.IssueAssignedTo(ctx, driver, issueId, userId)
+	neo4jt.IssueFollowedBy(ctx, driver, issueId, userId)
+	neo4jt.IssueFollowedBy(ctx, driver, issueId, contactId)
+	neo4jt.IssueFollowedBy(ctx, driver, issueId, orgId)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Issue":        1,
+		"User":         1,
+		"Organization": 1,
+		"Contact":      1,
+	})
+
+	rawResponse := callGraphQL(t, "issue/get_issue_with_participants", map[string]interface{}{"issueId": issueId})
+
+	issue := rawResponse.Data.(map[string]interface{})["issue"]
+	submittedBy := issue.(map[string]interface{})["submittedBy"].(map[string]interface{})
+	require.Equal(t, userId, submittedBy["userParticipant"].(map[string]interface{})["id"])
+	require.Equal(t, "UserParticipant", submittedBy["__typename"])
+
+	reportedBy := issue.(map[string]interface{})["reportedBy"].(map[string]interface{})
+	require.Equal(t, orgId, reportedBy["organizationParticipant"].(map[string]interface{})["id"])
+	require.Equal(t, "OrganizationParticipant", reportedBy["__typename"])
+
+	assignedTo := issue.(map[string]interface{})["assignedTo"].([]interface{})
+	require.Equal(t, 1, len(assignedTo))
+	require.Equal(t, userId, assignedTo[0].(map[string]interface{})["userParticipant"].(map[string]interface{})["id"])
+	require.Equal(t, "UserParticipant", assignedTo[0].(map[string]interface{})["__typename"])
+
+	followedBy := issue.(map[string]interface{})["followedBy"].([]interface{})
+	require.Equal(t, 3, len(followedBy))
+	require.ElementsMatch(t, []string{userId, contactId, orgId}, []string{
+		extractParticipantId(followedBy[0].(map[string]interface{})),
+		extractParticipantId(followedBy[1].(map[string]interface{})),
+		extractParticipantId(followedBy[2].(map[string]interface{})),
+	})
+}
+
+func extractParticipantId(participant map[string]interface{}) string {
+	switch participant["__typename"] {
+	case "UserParticipant":
+		return participant["userParticipant"].(map[string]interface{})["id"].(string)
+	case "OrganizationParticipant":
+		return participant["organizationParticipant"].(map[string]interface{})["id"].(string)
+	case "ContactParticipant":
+		return participant["contactParticipant"].(map[string]interface{})["id"].(string)
+	default:
+		return ""
+	}
+}

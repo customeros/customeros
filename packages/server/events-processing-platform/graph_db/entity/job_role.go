@@ -32,7 +32,7 @@ func (jobRole JobRoleEntity) ToString() string {
 
 func (JobRoleEntity) IsInteractionEventParticipant() {}
 
-func (JobRoleEntity) InteractionEventParticipantLabel() string {
+func (JobRoleEntity) ParticipantLabel() string {
 	return NodeLabel_JobRole
 }
 

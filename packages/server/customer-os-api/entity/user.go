@@ -36,15 +36,13 @@ type UserEntities []UserEntity
 
 func (UserEntity) IsInteractionEventParticipant() {}
 
-func (UserEntity) InteractionEventParticipantLabel() string {
-	return NodeLabel_User
-}
-
 func (UserEntity) IsInteractionSessionParticipant() {}
+
+func (UserEntity) IsIssueParticipant() {}
 
 func (UserEntity) IsMeetingParticipant() {}
 
-func (UserEntity) InteractionSessionParticipantLabel() string {
+func (UserEntity) ParticipantLabel() string {
 	return NodeLabel_User
 }
 

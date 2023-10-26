@@ -2,6 +2,8 @@ extend type Query {
     issue(id: ID!): Issue! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
+union IssueParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
+
 type Issue implements SourceFields & Node {
     id: ID!
     createdAt: Time!
@@ -14,6 +16,10 @@ type Issue implements SourceFields & Node {
     mentionedByNotes: [Note!]! @goField(forceResolver: true) @deprecated(reason: "Will be removed in a future release")
     interactionEvents: [InteractionEvent!]! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+    submittedBy: IssueParticipant @goField(forceResolver: true)
+    reportedBy: IssueParticipant @goField(forceResolver: true)
+    assignedTo: [IssueParticipant!]! @goField(forceResolver: true)
+    followedBy: [IssueParticipant!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!

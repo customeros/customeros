@@ -368,17 +368,21 @@ type ComplexityRoot struct {
 
 	Issue struct {
 		AppSource         func(childComplexity int) int
+		AssignedTo        func(childComplexity int) int
 		CreatedAt         func(childComplexity int) int
 		Description       func(childComplexity int) int
 		ExternalLinks     func(childComplexity int) int
+		FollowedBy        func(childComplexity int) int
 		ID                func(childComplexity int) int
 		InteractionEvents func(childComplexity int) int
 		MentionedByNotes  func(childComplexity int) int
 		Priority          func(childComplexity int) int
+		ReportedBy        func(childComplexity int) int
 		Source            func(childComplexity int) int
 		SourceOfTruth     func(childComplexity int) int
 		Status            func(childComplexity int) int
 		Subject           func(childComplexity int) int
+		SubmittedBy       func(childComplexity int) int
 		Tags              func(childComplexity int) int
 		UpdatedAt         func(childComplexity int) int
 	}
@@ -979,6 +983,10 @@ type IssueResolver interface {
 	MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error)
 	InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error)
 	ExternalLinks(ctx context.Context, obj *model.Issue) ([]*model.ExternalSystem, error)
+	SubmittedBy(ctx context.Context, obj *model.Issue) (model.IssueParticipant, error)
+	ReportedBy(ctx context.Context, obj *model.Issue) (model.IssueParticipant, error)
+	AssignedTo(ctx context.Context, obj *model.Issue) ([]model.IssueParticipant, error)
+	FollowedBy(ctx context.Context, obj *model.Issue) ([]model.IssueParticipant, error)
 }
 type JobRoleResolver interface {
 	Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error)
@@ -2761,6 +2769,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Issue.AppSource(childComplexity), true
 
+	case "Issue.assignedTo":
+		if e.complexity.Issue.AssignedTo == nil {
+			break
+		}
+
+		return e.complexity.Issue.AssignedTo(childComplexity), true
+
 	case "Issue.createdAt":
 		if e.complexity.Issue.CreatedAt == nil {
 			break
@@ -2781,6 +2796,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Issue.ExternalLinks(childComplexity), true
+
+	case "Issue.followedBy":
+		if e.complexity.Issue.FollowedBy == nil {
+			break
+		}
+
+		return e.complexity.Issue.FollowedBy(childComplexity), true
 
 	case "Issue.id":
 		if e.complexity.Issue.ID == nil {
@@ -2810,6 +2832,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Issue.Priority(childComplexity), true
 
+	case "Issue.reportedBy":
+		if e.complexity.Issue.ReportedBy == nil {
+			break
+		}
+
+		return e.complexity.Issue.ReportedBy(childComplexity), true
+
 	case "Issue.source":
 		if e.complexity.Issue.Source == nil {
 			break
@@ -2837,6 +2866,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Issue.Subject(childComplexity), true
+
+	case "Issue.submittedBy":
+		if e.complexity.Issue.SubmittedBy == nil {
+			break
+		}
+
+		return e.complexity.Issue.SubmittedBy(childComplexity), true
 
 	case "Issue.tags":
 		if e.complexity.Issue.Tags == nil {
@@ -7967,6 +8003,8 @@ interface ExtensibleEntity implements Node {
     issue(id: ID!): Issue! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
+union IssueParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
+
 type Issue implements SourceFields & Node {
     id: ID!
     createdAt: Time!
@@ -7976,9 +8014,13 @@ type Issue implements SourceFields & Node {
     priority: String
     description: String
     tags: [Tag] @goField(forceResolver: true)
-    mentionedByNotes: [Note!]! @goField(forceResolver: true)
+    mentionedByNotes: [Note!]! @goField(forceResolver: true) @deprecated(reason: "Will be removed in a future release")
     interactionEvents: [InteractionEvent!]! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+    submittedBy: IssueParticipant @goField(forceResolver: true)
+    reportedBy: IssueParticipant @goField(forceResolver: true)
+    assignedTo: [IssueParticipant!]! @goField(forceResolver: true)
+    followedBy: [IssueParticipant!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -8297,7 +8339,7 @@ type Note {
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     noted: [NotedEntity!]! @goField(forceResolver: true)
-    mentioned: [MentionedEntity!]! @goField(forceResolver: true)
+    mentioned: [MentionedEntity!]! @goField(forceResolver: true) @deprecated(reason: "will be removed in future versions")
     includes: [Attachment!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -21548,6 +21590,14 @@ func (ec *executionContext) fieldContext_InteractionEvent_issue(ctx context.Cont
 				return ec.fieldContext_Issue_interactionEvents(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Issue_externalLinks(ctx, field)
+			case "submittedBy":
+				return ec.fieldContext_Issue_submittedBy(ctx, field)
+			case "reportedBy":
+				return ec.fieldContext_Issue_reportedBy(ctx, field)
+			case "assignedTo":
+				return ec.fieldContext_Issue_assignedTo(ctx, field)
+			case "followedBy":
+				return ec.fieldContext_Issue_followedBy(ctx, field)
 			case "source":
 				return ec.fieldContext_Issue_source(ctx, field)
 			case "sourceOfTruth":
@@ -23652,6 +23702,176 @@ func (ec *executionContext) fieldContext_Issue_externalLinks(ctx context.Context
 				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_submittedBy(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_submittedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Issue().SubmittedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.IssueParticipant)
+	fc.Result = res
+	return ec.marshalOIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueParticipant(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_submittedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type IssueParticipant does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_reportedBy(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_reportedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Issue().ReportedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.IssueParticipant)
+	fc.Result = res
+	return ec.marshalOIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueParticipant(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_reportedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type IssueParticipant does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_assignedTo(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_assignedTo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Issue().AssignedTo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.IssueParticipant)
+	fc.Result = res
+	return ec.marshalNIssueParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_assignedTo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type IssueParticipant does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Issue_followedBy(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_followedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Issue().FollowedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.IssueParticipant)
+	fc.Result = res
+	return ec.marshalNIssueParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_followedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type IssueParticipant does not have child fields")
 		},
 	}
 	return fc, nil
@@ -48165,6 +48385,14 @@ func (ec *executionContext) fieldContext_Query_issue(ctx context.Context, field 
 				return ec.fieldContext_Issue_interactionEvents(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Issue_externalLinks(ctx, field)
+			case "submittedBy":
+				return ec.fieldContext_Issue_submittedBy(ctx, field)
+			case "reportedBy":
+				return ec.fieldContext_Issue_reportedBy(ctx, field)
+			case "assignedTo":
+				return ec.fieldContext_Issue_assignedTo(ctx, field)
+			case "followedBy":
+				return ec.fieldContext_Issue_followedBy(ctx, field)
 			case "source":
 				return ec.fieldContext_Issue_source(ctx, field)
 			case "sourceOfTruth":
@@ -59267,6 +59495,36 @@ func (ec *executionContext) _InteractionSessionParticipant(ctx context.Context, 
 	}
 }
 
+func (ec *executionContext) _IssueParticipant(ctx context.Context, sel ast.SelectionSet, obj model.IssueParticipant) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.ContactParticipant:
+		return ec._ContactParticipant(ctx, sel, &obj)
+	case *model.ContactParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ContactParticipant(ctx, sel, obj)
+	case model.UserParticipant:
+		return ec._UserParticipant(ctx, sel, &obj)
+	case *model.UserParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserParticipant(ctx, sel, obj)
+	case model.OrganizationParticipant:
+		return ec._OrganizationParticipant(ctx, sel, &obj)
+	case *model.OrganizationParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._OrganizationParticipant(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _MeetingParticipant(ctx context.Context, sel ast.SelectionSet, obj model.MeetingParticipant) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -60658,7 +60916,7 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var contactParticipantImplementors = []string{"ContactParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "MeetingParticipant"}
+var contactParticipantImplementors = []string{"ContactParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "IssueParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _ContactParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.ContactParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactParticipantImplementors)
@@ -62790,6 +63048,144 @@ func (ec *executionContext) _Issue(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Issue_externalLinks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "submittedBy":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Issue_submittedBy(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "reportedBy":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Issue_reportedBy(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "assignedTo":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Issue_assignedTo(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "followedBy":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Issue_followedBy(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -66011,7 +66407,7 @@ func (ec *executionContext) _OrganizationPage(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var organizationParticipantImplementors = []string{"OrganizationParticipant", "InteractionEventParticipant", "MeetingParticipant"}
+var organizationParticipantImplementors = []string{"OrganizationParticipant", "InteractionEventParticipant", "IssueParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _OrganizationParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, organizationParticipantImplementors)
@@ -68207,7 +68603,7 @@ func (ec *executionContext) _UserPage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var userParticipantImplementors = []string{"UserParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "MeetingParticipant"}
+var userParticipantImplementors = []string{"UserParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "IssueParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _UserParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.UserParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, userParticipantImplementors)
@@ -70052,6 +70448,60 @@ func (ec *executionContext) marshalNIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopen
 		return graphql.Null
 	}
 	return ec._Issue(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueParticipant(ctx context.Context, sel ast.SelectionSet, v model.IssueParticipant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._IssueParticipant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNIssueParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.IssueParticipant) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueParticipant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueSummaryByStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IssueSummaryByStatus) graphql.Marshaler {
@@ -72362,6 +72812,13 @@ func (ec *executionContext) marshalOIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopen
 		return graphql.Null
 	}
 	return ec._Issue(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssueParticipant(ctx context.Context, sel ast.SelectionSet, v model.IssueParticipant) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._IssueParticipant(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleInputᚄ(ctx context.Context, v interface{}) ([]*model.JobRoleInput, error) {

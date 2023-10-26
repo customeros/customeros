@@ -9,7 +9,7 @@ import (
 )
 
 func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntity *entity.InteractionSessionParticipant) any {
-	switch (*interactionSessionParticipantEntity).InteractionSessionParticipantLabel() {
+	switch (*interactionSessionParticipantEntity).ParticipantLabel() {
 	case entity.NodeLabel_Email:
 		emailEntity := (*interactionSessionParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{

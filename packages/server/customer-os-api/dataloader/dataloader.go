@@ -73,6 +73,10 @@ type Loaders struct {
 	MeetingForInteractionEvent                  *dataloader.Loader
 	CountryForPhoneNumber                       *dataloader.Loader
 	ActionItemsForInteractionEvent              *dataloader.Loader
+	SubmitterParticipantsForIssue               *dataloader.Loader
+	ReporterParticipantsForIssue                *dataloader.Loader
+	AssigneeParticipantsForIssue                *dataloader.Loader
+	FollowerParticipantsForIssue                *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -156,6 +160,9 @@ type countryBatcher struct {
 type actionItemBatcher struct {
 	actionItemService service.ActionItemService
 }
+type issueParticipantBatcher struct {
+	issueService service.IssueService
+}
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
@@ -188,6 +195,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	}
 	interactionEventParticipantBatcher := &interactionEventParticipantBatcher{
 		interactionEventService: services.InteractionEventService,
+	}
+	issueParticipantBatcher := &issueParticipantBatcher{
+		issueService: services.IssueService,
 	}
 	interactionSessionParticipantBatcher := &interactionSessionParticipantBatcher{
 		interactionSessionService: services.InteractionSessionService,
@@ -299,6 +309,10 @@ func NewDataLoader(services *service.Services) *Loaders {
 		MeetingForInteractionEvent:                  dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		CountryForPhoneNumber:                       dataloader.NewBatchedLoader(countryBatcher.getCountriesForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ActionItemsForInteractionEvent:              dataloader.NewBatchedLoader(actionItemBatcher.getActionItemsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		SubmitterParticipantsForIssue:               dataloader.NewBatchedLoader(issueParticipantBatcher.getSubmitterParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ReporterParticipantsForIssue:                dataloader.NewBatchedLoader(issueParticipantBatcher.getReporterParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		AssigneeParticipantsForIssue:                dataloader.NewBatchedLoader(issueParticipantBatcher.getAssigneeParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FollowerParticipantsForIssue:                dataloader.NewBatchedLoader(issueParticipantBatcher.getFollowerParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

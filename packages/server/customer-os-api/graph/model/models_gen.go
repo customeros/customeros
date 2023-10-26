@@ -28,6 +28,10 @@ type InteractionSessionParticipant interface {
 	IsInteractionSessionParticipant()
 }
 
+type IssueParticipant interface {
+	IsIssueParticipant()
+}
+
 type MeetingParticipant interface {
 	IsMeetingParticipant()
 }
@@ -282,6 +286,8 @@ type ContactParticipant struct {
 func (ContactParticipant) IsInteractionEventParticipant() {}
 
 func (ContactParticipant) IsInteractionSessionParticipant() {}
+
+func (ContactParticipant) IsIssueParticipant() {}
 
 func (ContactParticipant) IsMeetingParticipant() {}
 
@@ -769,6 +775,10 @@ type Issue struct {
 	MentionedByNotes  []*Note             `json:"mentionedByNotes"`
 	InteractionEvents []*InteractionEvent `json:"interactionEvents"`
 	ExternalLinks     []*ExternalSystem   `json:"externalLinks"`
+	SubmittedBy       IssueParticipant    `json:"submittedBy,omitempty"`
+	ReportedBy        IssueParticipant    `json:"reportedBy,omitempty"`
+	AssignedTo        []IssueParticipant  `json:"assignedTo"`
+	FollowedBy        []IssueParticipant  `json:"followedBy"`
 	Source            DataSource          `json:"source"`
 	SourceOfTruth     DataSource          `json:"sourceOfTruth"`
 	AppSource         string              `json:"appSource"`
@@ -1195,6 +1205,8 @@ type OrganizationParticipant struct {
 
 func (OrganizationParticipant) IsInteractionEventParticipant() {}
 
+func (OrganizationParticipant) IsIssueParticipant() {}
+
 func (OrganizationParticipant) IsMeetingParticipant() {}
 
 type OrganizationRelationshipStage struct {
@@ -1580,6 +1592,8 @@ type UserParticipant struct {
 func (UserParticipant) IsInteractionEventParticipant() {}
 
 func (UserParticipant) IsInteractionSessionParticipant() {}
+
+func (UserParticipant) IsIssueParticipant() {}
 
 func (UserParticipant) IsMeetingParticipant() {}
 

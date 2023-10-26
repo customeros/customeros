@@ -35,13 +35,11 @@ type ContactEntities []ContactEntity
 
 func (ContactEntity) IsInteractionEventParticipant() {}
 
-func (ContactEntity) InteractionEventParticipantLabel() string {
-	return NodeLabel_Contact
-}
-
 func (ContactEntity) IsInteractionSessionParticipant() {}
 
-func (ContactEntity) InteractionSessionParticipantLabel() string {
+func (ContactEntity) IsIssueParticipant() {}
+
+func (ContactEntity) ParticipantLabel() string {
 	return NodeLabel_Contact
 }
 
