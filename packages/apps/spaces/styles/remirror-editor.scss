@@ -3948,3 +3948,14 @@ a {
     background: var(--chakra-colors-gray-100);
   }
 }
+
+.remirror-editor.ProseMirror::selection {
+  background: transparent;
+}
+
+.remirror-positioner {
+  padding: 1px 0 ;
+  background: #B4D5FE;
+}
+
+
