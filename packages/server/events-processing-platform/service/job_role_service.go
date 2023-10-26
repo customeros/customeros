@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -15,13 +15,13 @@ import (
 )
 
 type jobRoleService struct {
-	job_role_grpc_service.UnimplementedJobRoleGrpcServiceServer
+	jobrolepb.UnimplementedJobRoleGrpcServiceServer
 	log             logger.Logger
 	repositories    *repository.Repositories
-	jobRoleCommands *commands.JobRoleCommands
+	jobRoleCommands *commands.JobRoleCommandHandlers
 }
 
-func NewJobRoleService(log logger.Logger, repositories *repository.Repositories, jobRoleCommands *commands.JobRoleCommands) *jobRoleService {
+func NewJobRoleService(log logger.Logger, repositories *repository.Repositories, jobRoleCommands *commands.JobRoleCommandHandlers) *jobRoleService {
 	return &jobRoleService{
 		log:             log,
 		repositories:    repositories,
@@ -29,7 +29,7 @@ func NewJobRoleService(log logger.Logger, repositories *repository.Repositories,
 	}
 }
 
-func (jobRoleService *jobRoleService) CreateJobRole(ctx context.Context, request *job_role_grpc_service.CreateJobRoleGrpcRequest) (*job_role_grpc_service.JobRoleIdGrpcResponse, error) {
+func (jobRoleService *jobRoleService) CreateJobRole(ctx context.Context, request *jobrolepb.CreateJobRoleGrpcRequest) (*jobrolepb.JobRoleIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "JobRoleService.CreateJobRole")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "") // TODO enhance request with LoggedInUserId
@@ -51,7 +51,7 @@ func (jobRoleService *jobRoleService) CreateJobRole(ctx context.Context, request
 	}
 
 	jobRoleService.log.Infof("(Created New Job Role): {%s}", objectID)
-	return &job_role_grpc_service.JobRoleIdGrpcResponse{
+	return &jobrolepb.JobRoleIdGrpcResponse{
 		Id: objectID,
 	}, nil
 }

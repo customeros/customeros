@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
@@ -16,19 +16,19 @@ import (
 )
 
 type userService struct {
-	pb.UnimplementedUserGrpcServiceServer
+	userpb.UnimplementedUserGrpcServiceServer
 	log          logger.Logger
-	userCommands *command_handler.UserCommands
+	userCommands *command_handler.UserCommandHandlers
 }
 
-func NewUserService(log logger.Logger, userCommands *command_handler.UserCommands) *userService {
+func NewUserService(log logger.Logger, userCommands *command_handler.UserCommandHandlers) *userService {
 	return &userService{
 		log:          log,
 		userCommands: userCommands,
 	}
 }
 
-func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+func (s *userService) UpsertUser(ctx context.Context, request *userpb.UpsertUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.UpsertUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -44,12 +44,12 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
 		Timezone:        request.Timezone,
 	}
-	sourceFields := cmnmod.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
 	sourceFields.SourceOfTruth = utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
 	sourceFields.AppSource = utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
-	externalSystem := cmnmod.ExternalSystem{}
+	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	cmd := command.NewUpsertUserCommand(userInputId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem,
@@ -62,16 +62,16 @@ func (s *userService) UpsertUser(ctx context.Context, request *pb.UpsertUserGrpc
 
 	s.log.Infof("Upserted user {%s}", userInputId)
 
-	return &pb.UserIdGrpcResponse{Id: userInputId}, nil
+	return &userpb.UserIdGrpcResponse{Id: userInputId}, nil
 }
 
-func (s *userService) AddPlayerInfo(ctx context.Context, request *pb.AddPlayerInfoGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+func (s *userService) AddPlayerInfo(ctx context.Context, request *userpb.AddPlayerInfoGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddPlayerInfo")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
-	sourceFields := cmnmod.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	cmd := command.NewAddPlayerInfoCommand(request.UserId, request.Tenant, request.LoggedInUserId, sourceFields,
@@ -84,10 +84,10 @@ func (s *userService) AddPlayerInfo(ctx context.Context, request *pb.AddPlayerIn
 
 	s.log.Infof("Added player info to user {%s}", request.UserId)
 
-	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
+	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
 
-func (s *userService) LinkJobRoleToUser(ctx context.Context, request *pb.LinkJobRoleToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+func (s *userService) LinkJobRoleToUser(ctx context.Context, request *userpb.LinkJobRoleToUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddPlayerInfo")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, "")
@@ -103,10 +103,10 @@ func (s *userService) LinkJobRoleToUser(ctx context.Context, request *pb.LinkJob
 
 	s.log.Infof("Linked job role {%s} to user {%s}", request.JobRoleId, aggregateID)
 
-	return &pb.UserIdGrpcResponse{Id: aggregateID}, nil
+	return &userpb.UserIdGrpcResponse{Id: aggregateID}, nil
 }
 
-func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *pb.LinkPhoneNumberToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *userpb.LinkPhoneNumberToUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -120,10 +120,10 @@ func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *pb.Lin
 
 	s.log.Infof("Linked phone number {%s} to user {%s}", request.PhoneNumberId, request.UserId)
 
-	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
+	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
 
-func (s *userService) LinkEmailToUser(ctx context.Context, request *pb.LinkEmailToUserGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+func (s *userService) LinkEmailToUser(ctx context.Context, request *userpb.LinkEmailToUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -137,10 +137,10 @@ func (s *userService) LinkEmailToUser(ctx context.Context, request *pb.LinkEmail
 
 	s.log.Infof("Linked email {%s} to user {%s}", request.EmailId, request.UserId)
 
-	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
+	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
 
-func (s *userService) AddRole(ctx context.Context, request *pb.AddRoleGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+func (s *userService) AddRole(ctx context.Context, request *userpb.AddRoleGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddRole")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -155,10 +155,10 @@ func (s *userService) AddRole(ctx context.Context, request *pb.AddRoleGrpcReques
 
 	s.log.Infof("Added role {%s} for user {%s}", request.Role, request.UserId)
 
-	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
+	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
 
-func (s *userService) RemoveRole(ctx context.Context, request *pb.RemoveRoleGrpcRequest) (*pb.UserIdGrpcResponse, error) {
+func (s *userService) RemoveRole(ctx context.Context, request *userpb.RemoveRoleGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.RemoveRole")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -173,7 +173,7 @@ func (s *userService) RemoveRole(ctx context.Context, request *pb.RemoveRoleGrpc
 
 	s.log.Infof("Removed role {%s} from user {%s}", request.Role, request.UserId)
 
-	return &pb.UserIdGrpcResponse{Id: request.UserId}, nil
+	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }
 
 func (s *userService) errResponse(err error) error {

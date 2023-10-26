@@ -26,7 +26,7 @@ import (
 
 type LocationEventHandler struct {
 	repositories     *repository.Repositories
-	locationCommands *command_handler.LocationCommands
+	locationCommands *command_handler.LocationCommandHandlers
 	log              logger.Logger
 	cfg              *config.Config
 }

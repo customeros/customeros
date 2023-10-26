@@ -2,7 +2,7 @@ package servicet
 
 import (
 	"context"
-	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -21,12 +21,12 @@ func TestJobRoleService_CreateJobRole(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to events processing platform: %v", err)
 	}
-	jobRoleClient := job_role_grpc_service.NewJobRoleGrpcServiceClient(grpcConnection)
+	jobRoleClient := jobrolepb.NewJobRoleGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
 	timeStarted := time.Now().UTC().AddDate(0, -6, 0)
 	timeEnded := time.Now().UTC().AddDate(0, 6, 0)
 	description := "I clean things"
-	response, err := jobRoleClient.CreateJobRole(ctx, &job_role_grpc_service.CreateJobRoleGrpcRequest{
+	response, err := jobRoleClient.CreateJobRole(ctx, &jobrolepb.CreateJobRoleGrpcRequest{
 		Tenant:        "ziggy",
 		JobTitle:      "Chief Janitor",
 		Description:   &description,

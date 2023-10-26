@@ -19,7 +19,7 @@ import (
 
 type GraphIssueEventHandler struct {
 	log                  logger.Logger
-	organizationCommands *orgcmdhnd.OrganizationCommands
+	organizationCommands *orgcmdhnd.OrganizationCommandHandlers
 	Repositories         *repository.Repositories
 }
 

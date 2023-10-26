@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
-	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -24,11 +24,11 @@ func TestUserService_UpsertUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to events processing platform: %v", err)
 	}
-	userClient := user_grpc_service.NewUserGrpcServiceClient(grpcConnection)
+	userClient := userpb.NewUserGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
 	userId, _ := uuid.NewUUID()
 
-	response, err := userClient.UpsertUser(ctx, &user_grpc_service.UpsertUserGrpcRequest{
+	response, err := userClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
 		Id:              userId.String(),
 		Tenant:          "ziggy",
 		FirstName:       "Bob",
@@ -81,13 +81,13 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to events processing platform: %v", err)
 	}
-	userClient := user_grpc_service.NewUserGrpcServiceClient(grpcConnection)
-	jobRoleClient := job_role_grpc_service.NewJobRoleGrpcServiceClient(grpcConnection)
+	userClient := userpb.NewUserGrpcServiceClient(grpcConnection)
+	jobRoleClient := jobrolepb.NewJobRoleGrpcServiceClient(grpcConnection)
 
 	timeNow := time.Now().UTC()
 	userId, _ := uuid.NewUUID()
 
-	createUserResponse, err := userClient.UpsertUser(ctx, &user_grpc_service.UpsertUserGrpcRequest{
+	createUserResponse, err := userClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
 		Id:            userId.String(),
 		Tenant:        "ziggy",
 		FirstName:     "Bob",
@@ -107,7 +107,7 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 	timeStarted := time.Now().UTC().AddDate(0, -6, 0)
 	timeEnded := time.Now().UTC().AddDate(0, 6, 0)
 	description := "I clean things"
-	createJobRoleResponse, err := jobRoleClient.CreateJobRole(ctx, &job_role_grpc_service.CreateJobRoleGrpcRequest{
+	createJobRoleResponse, err := jobRoleClient.CreateJobRole(ctx, &jobrolepb.CreateJobRoleGrpcRequest{
 		Tenant:        "ziggy",
 		JobTitle:      "Chief Janitor",
 		Description:   &description,
@@ -124,7 +124,7 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, createJobRoleResponse)
 
-	linkJobRoleResponse, err := userClient.LinkJobRoleToUser(ctx, &user_grpc_service.LinkJobRoleToUserGrpcRequest{
+	linkJobRoleResponse, err := userClient.LinkJobRoleToUser(ctx, &userpb.LinkJobRoleToUserGrpcRequest{
 		UserId:    createUserResponse.Id,
 		JobRoleId: createJobRoleResponse.Id,
 		Tenant:    "ziggy",

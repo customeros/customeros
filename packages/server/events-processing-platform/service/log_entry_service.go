@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
-	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
+	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
+	logentrycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -18,19 +18,19 @@ import (
 )
 
 type logEntryService struct {
-	pb.UnimplementedLogEntryGrpcServiceServer
+	logentrypb.UnimplementedLogEntryGrpcServiceServer
 	log              logger.Logger
-	logEntryCommands *cmdhnd.LogEntryCommandHandlers
+	logEntryCommands *logentrycmdhandler.LogEntryCommandHandlers
 }
 
-func NewLogEntryService(log logger.Logger, logEntryCommands *cmdhnd.LogEntryCommandHandlers) *logEntryService {
+func NewLogEntryService(log logger.Logger, logEntryCommands *logentrycmdhandler.LogEntryCommandHandlers) *logEntryService {
 	return &logEntryService{
 		log:              log,
 		logEntryCommands: logEntryCommands,
 	}
 }
 
-func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *pb.UpsertLogEntryGrpcRequest) (*pb.LogEntryIdGrpcResponse, error) {
+func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *logentrypb.UpsertLogEntryGrpcRequest) (*logentrypb.LogEntryIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.UpsertLogEntry")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
@@ -41,20 +41,20 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *pb.Upsert
 		logEntryId = uuid.New().String()
 	}
 
-	dataFields := models.LogEntryDataFields{
+	dataFields := model.LogEntryDataFields{
 		Content:              request.Content,
 		ContentType:          request.ContentType,
 		StartedAt:            utils.TimestampProtoToTime(request.StartedAt),
 		AuthorUserId:         request.AuthorUserId,
 		LoggedOrganizationId: request.LoggedOrganizationId,
 	}
-	source := cmnmod.Source{}
+	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
-	externalSystem := cmnmod.ExternalSystem{}
+	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	command := cmd.NewUpsertLogEntryCommand(logEntryId, request.Tenant, request.UserId, source, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
-	if err := s.logEntryCommands.UpsertLogEntry.Handle(ctx, command); err != nil {
+	cmd := command.NewUpsertLogEntryCommand(logEntryId, request.Tenant, request.UserId, source, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	if err := s.logEntryCommands.UpsertLogEntry.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertLogEntryCommand.Handle) tenant:{%s}, logEntryId:{%s} , err: %s", request.Tenant, request.Id, err.Error())
 		return nil, s.errResponse(err)
@@ -62,39 +62,39 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *pb.Upsert
 
 	s.log.Infof("Upserted logEntry %s", logEntryId)
 
-	return &pb.LogEntryIdGrpcResponse{Id: logEntryId}, nil
+	return &logentrypb.LogEntryIdGrpcResponse{Id: logEntryId}, nil
 }
 
-func (s *logEntryService) AddTag(ctx context.Context, request *pb.AddTagGrpcRequest) (*pb.LogEntryIdGrpcResponse, error) {
+func (s *logEntryService) AddTag(ctx context.Context, request *logentrypb.AddTagGrpcRequest) (*logentrypb.LogEntryIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.Addtag")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
-	command := cmd.NewAddTagCommand(request.Id, request.Tenant, request.UserId, request.TagId, utils.TimePtr(utils.Now()))
-	if err := s.logEntryCommands.AddTag.Handle(ctx, command); err != nil {
+	cmd := command.NewAddTagCommand(request.Id, request.Tenant, request.UserId, request.TagId, utils.TimePtr(utils.Now()))
+	if err := s.logEntryCommands.AddTag.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddTag.Handle) tenant:%s, logEntryId: %s, tagId , err: %s", request.Tenant, request.Id, request.TagId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.LogEntryIdGrpcResponse{Id: request.Id}, nil
+	return &logentrypb.LogEntryIdGrpcResponse{Id: request.Id}, nil
 }
 
-func (s *logEntryService) RemoveTag(ctx context.Context, request *pb.RemoveTagGrpcRequest) (*pb.LogEntryIdGrpcResponse, error) {
+func (s *logEntryService) RemoveTag(ctx context.Context, request *logentrypb.RemoveTagGrpcRequest) (*logentrypb.LogEntryIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.RemoveTag")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
-	command := cmd.NewRemoveTagCommand(request.Id, request.Tenant, request.UserId, request.TagId)
-	if err := s.logEntryCommands.RemoveTag.Handle(ctx, command); err != nil {
+	cmd := command.NewRemoveTagCommand(request.Id, request.Tenant, request.UserId, request.TagId)
+	if err := s.logEntryCommands.RemoveTag.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(RemoveTag.Handle) tenant:%s, logEntryId: %s, tagId , err: %s", request.Tenant, request.Id, request.TagId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	return &pb.LogEntryIdGrpcResponse{Id: request.Id}, nil
+	return &logentrypb.LogEntryIdGrpcResponse{Id: request.Id}, nil
 }
 
 func (s *logEntryService) errResponse(err error) error {

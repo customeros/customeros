@@ -4,13 +4,14 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
+	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
 	contactevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
+	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -42,24 +43,26 @@ type GraphSubscriber struct {
 	interactionEventHandler  *GraphInteractionEventHandler
 	logEntryEventHandler     *GraphLogEntryEventHandler
 	issueEventHandler        *GraphIssueEventHandler
+	commentEventHandler      *GraphCommentEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commands *domain.Commands, cfg *config.Config) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commands *domain.CommandHandlers, cfg *config.Config) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                      log,
 		db:                       db,
 		repositories:             repositories,
 		cfg:                      cfg,
 		contactEventHandler:      &ContactEventHandler{repositories: repositories},
-		organizationEventHandler: &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.OrganizationCommands},
+		organizationEventHandler: &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.Organization},
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
 		userEventHandler:         &GraphUserEventHandler{repositories: repositories, log: log},
 		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
-		interactionEventHandler:  &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
-		logEntryEventHandler:     &GraphLogEntryEventHandler{Repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
-		issueEventHandler:        &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commands.OrganizationCommands, log: log},
+		interactionEventHandler:  &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commands.Organization, log: log},
+		logEntryEventHandler:     &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commands.Organization, log: log},
+		issueEventHandler:        &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commands.Organization, log: log},
+		commentEventHandler:      &GraphCommentEventHandler{repositories: repositories, log: log},
 	}
 }
 
@@ -262,6 +265,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.logEntryEventHandler.OnAddTag(ctx, evt)
 	case logentryevents.LogEntryRemoveTagV1:
 		return s.logEntryEventHandler.OnRemoveTag(ctx, evt)
+
+	case commentevent.CommentCreateV1:
+		return s.commentEventHandler.OnCreate(ctx, evt)
+	case commentevent.CommentUpdateV1:
+		return s.commentEventHandler.OnUpdate(ctx, evt)
 
 	case issueevent.IssueCreateV1:
 		return s.issueEventHandler.OnCreate(ctx, evt)

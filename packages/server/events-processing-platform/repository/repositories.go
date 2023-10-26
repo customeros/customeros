@@ -37,6 +37,7 @@ type Repositories struct {
 	ExternalSystemRepository   ExternalSystemRepository
 	TimelineEventRepository    TimelineEventRepository
 	CustomFieldRepository      CustomFieldRepository
+	CommentRepository          CommentRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB, log logger.Logger) *Repositories {
@@ -64,6 +65,7 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		ExternalSystemRepository:   NewExternalSystemRepository(driver),
 		TimelineEventRepository:    NewTimelineEventRepository(driver, log),
 		CustomFieldRepository:      NewCustomFieldRepository(driver),
+		CommentRepository:          NewCommentRepository(driver, neo4jDatabase),
 	}
 
 	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})

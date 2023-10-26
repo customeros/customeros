@@ -7,7 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
-type OrganizationCommands struct {
+type OrganizationCommandHandlers struct {
 	UpsertOrganization             UpsertOrganizationCommandHandler
 	UpdateOrganization             UpdateOrganizationCommandHandler
 	LinkPhoneNumberCommand         LinkPhoneNumberCommandHandler
@@ -28,8 +28,8 @@ type OrganizationCommands struct {
 	RemoveParentCommand            RemoveParentCommandHandler
 }
 
-func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *OrganizationCommands {
-	return &OrganizationCommands{
+func NewOrganizationCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *OrganizationCommandHandlers {
+	return &OrganizationCommandHandlers{
 		UpsertOrganization:             NewUpsertOrganizationCommandHandler(log, es),
 		UpdateOrganization:             NewUpdateOrganizationCommandHandler(log, es),
 		LinkPhoneNumberCommand:         NewLinkPhoneNumberCommandHandler(log, es),

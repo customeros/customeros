@@ -4,13 +4,13 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	log_entry_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
-	teventstore "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
+	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -21,20 +21,20 @@ func TestLogEntryService_UpsertLogEntry_CreateLogEntry(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := teventstore.NewTestAggregateStore()
+	aggregateStore := eventstoret.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err, "Failed to connect to processing platform")
-	logEntryClient := log_entry_grpc_service.NewLogEntryGrpcServiceClient(grpcConnection)
+	logEntryClient := logentrypb.NewLogEntryGrpcServiceClient(grpcConnection)
 	timeNow := utils.Now()
 	startedAt := timeNow.Add(-1 * time.Hour)
 	tenant := "ziggy"
-	response, err := logEntryClient.UpsertLogEntry(ctx, &log_entry_grpc_service.UpsertLogEntryGrpcRequest{
+	response, err := logEntryClient.UpsertLogEntry(ctx, &logentrypb.UpsertLogEntryGrpcRequest{
 		Tenant:      tenant,
 		Content:     "This is a log entry",
 		ContentType: "text/plain",
 		StartedAt:   timestamppb.New(startedAt),
 		CreatedAt:   timestamppb.New(timeNow),
-		SourceFields: &common_grpc_service.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:        "openline",
 			SourceOfTruth: "openline",
 			AppSource:     "unit-test",
@@ -52,10 +52,10 @@ func TestLogEntryService_UpsertLogEntry_CreateLogEntry(t *testing.T) {
 	eventList := eventsMap[logEntryAggregate.ID]
 	require.Equal(t, 1, len(eventList))
 
-	require.Equal(t, events.LogEntryCreateV1, eventList[0].GetEventType())
+	require.Equal(t, event.LogEntryCreateV1, eventList[0].GetEventType())
 	require.Equal(t, string(aggregate.LogEntryAggregateType)+"-"+tenant+"-"+logEntryId, eventList[0].GetAggregateID())
 
-	var eventData events.LogEntryCreateEvent
+	var eventData event.LogEntryCreateEvent
 	err = eventList[0].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
@@ -76,11 +76,11 @@ func TestLogEntryService_UpsertLogEntry_UpdateLogEntry(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := teventstore.NewTestAggregateStore()
+	aggregateStore := eventstoret.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err)
 
-	logEntryClient := log_entry_grpc_service.NewLogEntryGrpcServiceClient(grpcConnection)
+	logEntryClient := logentrypb.NewLogEntryGrpcServiceClient(grpcConnection)
 
 	timeNow := utils.Now()
 	logEntryId := uuid.New().String()
@@ -89,20 +89,20 @@ func TestLogEntryService_UpsertLogEntry_UpdateLogEntry(t *testing.T) {
 
 	// prepare aggregate
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenant, logEntryId)
-	event := eventstore.NewBaseEvent(logEntryAggregate, events.LogEntryCreateV1)
-	preconfiguredEventData := events.LogEntryCreateEvent{
+	createEvent := eventstore.NewBaseEvent(logEntryAggregate, event.LogEntryCreateV1)
+	preconfiguredEventData := event.LogEntryCreateEvent{
 		StartedAt:     utils.Now(),
 		SourceOfTruth: "openline",
 	}
-	err = event.SetJsonData(&preconfiguredEventData)
+	err = createEvent.SetJsonData(&preconfiguredEventData)
 	require.Nil(t, err)
 	logEntryAggregate.UncommittedEvents = []eventstore.Event{
-		event,
+		createEvent,
 	}
 	err = aggregateStore.Save(ctx, logEntryAggregate)
 	require.Nil(t, err)
 
-	response, err := logEntryClient.UpsertLogEntry(ctx, &log_entry_grpc_service.UpsertLogEntryGrpcRequest{
+	response, err := logEntryClient.UpsertLogEntry(ctx, &logentrypb.UpsertLogEntryGrpcRequest{
 		Tenant:               tenant,
 		Id:                   logEntryId,
 		Content:              "This is a log entry",
@@ -122,11 +122,11 @@ func TestLogEntryService_UpsertLogEntry_UpdateLogEntry(t *testing.T) {
 	eventList := eventsMap[aggregate.NewLogEntryAggregateWithTenantAndID(tenant, response.Id).ID]
 	require.Equal(t, 2, len(eventList))
 
-	require.Equal(t, events.LogEntryCreateV1, eventList[0].GetEventType())
-	require.Equal(t, events.LogEntryUpdateV1, eventList[1].GetEventType())
+	require.Equal(t, event.LogEntryCreateV1, eventList[0].GetEventType())
+	require.Equal(t, event.LogEntryUpdateV1, eventList[1].GetEventType())
 	require.Equal(t, string(aggregate.LogEntryAggregateType)+"-"+tenant+"-"+logEntryId, eventList[1].GetAggregateID())
 
-	var eventData events.LogEntryUpdateEvent
+	var eventData event.LogEntryUpdateEvent
 	err = eventList[1].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
@@ -142,11 +142,11 @@ func TestLogEntryService_AddTag(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := teventstore.NewTestAggregateStore()
+	aggregateStore := eventstoret.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err)
 
-	logEntryClient := log_entry_grpc_service.NewLogEntryGrpcServiceClient(grpcConnection)
+	logEntryClient := logentrypb.NewLogEntryGrpcServiceClient(grpcConnection)
 
 	logEntryId := uuid.New().String()
 	tagId := uuid.New().String()
@@ -154,20 +154,20 @@ func TestLogEntryService_AddTag(t *testing.T) {
 
 	// prepare aggregate
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenant, logEntryId)
-	event := eventstore.NewBaseEvent(logEntryAggregate, events.LogEntryCreateV1)
-	preconfiguredEventData := events.LogEntryCreateEvent{
+	createEvent := eventstore.NewBaseEvent(logEntryAggregate, event.LogEntryCreateV1)
+	preconfiguredEventData := event.LogEntryCreateEvent{
 		StartedAt:     utils.Now(),
 		SourceOfTruth: "openline",
 	}
-	err = event.SetJsonData(&preconfiguredEventData)
+	err = createEvent.SetJsonData(&preconfiguredEventData)
 	require.Nil(t, err)
 	logEntryAggregate.UncommittedEvents = []eventstore.Event{
-		event,
+		createEvent,
 	}
 	err = aggregateStore.Save(ctx, logEntryAggregate)
 	require.Nil(t, err)
 
-	response, err := logEntryClient.AddTag(ctx, &log_entry_grpc_service.AddTagGrpcRequest{
+	response, err := logEntryClient.AddTag(ctx, &logentrypb.AddTagGrpcRequest{
 		Tenant: tenant,
 		Id:     logEntryId,
 		TagId:  tagId,
@@ -182,11 +182,11 @@ func TestLogEntryService_AddTag(t *testing.T) {
 	eventList := eventsMap[aggregate.NewLogEntryAggregateWithTenantAndID(tenant, response.Id).ID]
 	require.Equal(t, 2, len(eventList))
 
-	require.Equal(t, events.LogEntryCreateV1, eventList[0].GetEventType())
-	require.Equal(t, events.LogEntryAddTagV1, eventList[1].GetEventType())
+	require.Equal(t, event.LogEntryCreateV1, eventList[0].GetEventType())
+	require.Equal(t, event.LogEntryAddTagV1, eventList[1].GetEventType())
 	require.Equal(t, string(aggregate.LogEntryAggregateType)+"-"+tenant+"-"+logEntryId, eventList[1].GetAggregateID())
 
-	var eventData events.LogEntryAddTagEvent
+	var eventData event.LogEntryAddTagEvent
 	err = eventList[1].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
@@ -199,11 +199,11 @@ func TestLogEntryService_RemoveTag(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	aggregateStore := teventstore.NewTestAggregateStore()
+	aggregateStore := eventstoret.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	require.Nil(t, err)
 
-	logEntryClient := log_entry_grpc_service.NewLogEntryGrpcServiceClient(grpcConnection)
+	logEntryClient := logentrypb.NewLogEntryGrpcServiceClient(grpcConnection)
 
 	logEntryId := uuid.New().String()
 	tagId := uuid.New().String()
@@ -211,20 +211,20 @@ func TestLogEntryService_RemoveTag(t *testing.T) {
 
 	// prepare aggregate
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenant, logEntryId)
-	event := eventstore.NewBaseEvent(logEntryAggregate, events.LogEntryCreateV1)
-	preconfiguredEventData := events.LogEntryCreateEvent{
+	createEvent := eventstore.NewBaseEvent(logEntryAggregate, event.LogEntryCreateV1)
+	preconfiguredEventData := event.LogEntryCreateEvent{
 		StartedAt:     utils.Now(),
 		SourceOfTruth: "openline",
 	}
-	err = event.SetJsonData(&preconfiguredEventData)
+	err = createEvent.SetJsonData(&preconfiguredEventData)
 	require.Nil(t, err)
 	logEntryAggregate.UncommittedEvents = []eventstore.Event{
-		event,
+		createEvent,
 	}
 	err = aggregateStore.Save(ctx, logEntryAggregate)
 	require.Nil(t, err)
 
-	response, err := logEntryClient.RemoveTag(ctx, &log_entry_grpc_service.RemoveTagGrpcRequest{
+	response, err := logEntryClient.RemoveTag(ctx, &logentrypb.RemoveTagGrpcRequest{
 		Tenant: tenant,
 		Id:     logEntryId,
 		TagId:  tagId,
@@ -239,11 +239,11 @@ func TestLogEntryService_RemoveTag(t *testing.T) {
 	eventList := eventsMap[aggregate.NewLogEntryAggregateWithTenantAndID(tenant, response.Id).ID]
 	require.Equal(t, 2, len(eventList))
 
-	require.Equal(t, events.LogEntryCreateV1, eventList[0].GetEventType())
-	require.Equal(t, events.LogEntryRemoveTagV1, eventList[1].GetEventType())
+	require.Equal(t, event.LogEntryCreateV1, eventList[0].GetEventType())
+	require.Equal(t, event.LogEntryRemoveTagV1, eventList[1].GetEventType())
 	require.Equal(t, string(aggregate.LogEntryAggregateType)+"-"+tenant+"-"+logEntryId, eventList[1].GetAggregateID())
 
-	var eventData events.LogEntryRemoveTagEvent
+	var eventData event.LogEntryRemoveTagEvent
 	err = eventList[1].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 

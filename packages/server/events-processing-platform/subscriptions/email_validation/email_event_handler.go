@@ -23,7 +23,7 @@ import (
 )
 
 type emailEventHandler struct {
-	emailCommands *command_handler.EmailCommands
+	emailCommands *command_handler.EmailCommandHandlers
 	log           logger.Logger
 	cfg           *config.Config
 }

@@ -3,7 +3,7 @@ package servicet
 import (
 	"context"
 	"github.com/google/uuid"
-	iegrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
+	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -20,10 +20,10 @@ func TestInteractionEventService_RequestSummary(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
 	}
-	client := iegrpc.NewInteractionEventGrpcServiceClient(grpcConnection)
+	client := iepb.NewInteractionEventGrpcServiceClient(grpcConnection)
 	interactionEventId := uuid.New().String()
 	tenant := "ziggy"
-	response, err := client.RequestGenerateSummary(ctx, &iegrpc.RequestGenerateSummaryGrpcRequest{
+	response, err := client.RequestGenerateSummary(ctx, &iepb.RequestGenerateSummaryGrpcRequest{
 		Tenant:             tenant,
 		InteractionEventId: interactionEventId,
 	})

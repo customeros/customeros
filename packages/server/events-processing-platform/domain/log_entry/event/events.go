@@ -1,9 +1,9 @@
-package events
+package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/models"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
@@ -17,21 +17,21 @@ const (
 )
 
 type LogEntryCreateEvent struct {
-	Tenant               string                `json:"tenant" validate:"required"`
-	Content              string                `json:"content"`
-	ContentType          string                `json:"contentType"`
-	StartedAt            time.Time             `json:"startedAt" validate:"required"`
-	AuthorUserId         string                `json:"authorUserId"`
-	LoggedOrganizationId string                `json:"loggedOrganizationId"`
-	Source               string                `json:"source"`
-	SourceOfTruth        string                `json:"sourceOfTruth"`
-	AppSource            string                `json:"appSource"`
-	CreatedAt            time.Time             `json:"createdAt"`
-	UpdatedAt            time.Time             `json:"updatedAt"`
-	ExternalSystem       cmnmod.ExternalSystem `json:"externalSystem"`
+	Tenant               string                     `json:"tenant" validate:"required"`
+	Content              string                     `json:"content"`
+	ContentType          string                     `json:"contentType"`
+	StartedAt            time.Time                  `json:"startedAt" validate:"required"`
+	AuthorUserId         string                     `json:"authorUserId"`
+	LoggedOrganizationId string                     `json:"loggedOrganizationId"`
+	Source               string                     `json:"source"`
+	SourceOfTruth        string                     `json:"sourceOfTruth"`
+	AppSource            string                     `json:"appSource"`
+	CreatedAt            time.Time                  `json:"createdAt"`
+	UpdatedAt            time.Time                  `json:"updatedAt"`
+	ExternalSystem       commonmodel.ExternalSystem `json:"externalSystem"`
 }
 
-func NewLogEntryCreateEvent(aggregate eventstore.Aggregate, dataFields models.LogEntryDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt, startedAt time.Time) (eventstore.Event, error) {
+func NewLogEntryCreateEvent(aggregate eventstore.Aggregate, dataFields model.LogEntryDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt, startedAt time.Time) (eventstore.Event, error) {
 	eventData := LogEntryCreateEvent{
 		Tenant:               aggregate.GetTenant(),
 		Content:              dataFields.Content,

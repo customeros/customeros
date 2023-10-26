@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -13,8 +13,8 @@ import (
 )
 
 type LogEntryRepository interface {
-	Create(ctx context.Context, tenant, logEntryId string, event events.LogEntryCreateEvent) error
-	Update(ctx context.Context, tenant, logEntryId string, event events.LogEntryUpdateEvent) error
+	Create(ctx context.Context, tenant, logEntryId string, evt event.LogEntryCreateEvent) error
+	Update(ctx context.Context, tenant, logEntryId string, evt event.LogEntryUpdateEvent) error
 }
 
 type logEntryRepository struct {
@@ -27,11 +27,11 @@ func NewLogEntryRepository(driver *neo4j.DriverWithContext) LogEntryRepository {
 	}
 }
 
-func (r *logEntryRepository) Create(ctx context.Context, tenant, logEntryId string, event events.LogEntryCreateEvent) error {
+func (r *logEntryRepository) Create(ctx context.Context, tenant, logEntryId string, evt event.LogEntryCreateEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryRepository.Create")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("logEntryId", logEntryId), log.Object("event", event))
+	span.LogFields(log.String("logEntryId", logEntryId), log.Object("event", evt))
 
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$orgId})
 							MERGE (l:LogEntry {id:$logEntryId})<-[:LOGGED]-(o)
@@ -58,24 +58,24 @@ func (r *logEntryRepository) Create(ctx context.Context, tenant, logEntryId stri
 	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
 		"tenant":        tenant,
 		"logEntryId":    logEntryId,
-		"orgId":         event.LoggedOrganizationId,
-		"createdAt":     event.CreatedAt,
-		"updatedAt":     event.UpdatedAt,
-		"startedAt":     event.StartedAt,
-		"source":        helper.GetSource(event.Source),
-		"sourceOfTruth": helper.GetSourceOfTruth(event.SourceOfTruth),
-		"appSource":     helper.GetAppSource(event.AppSource),
-		"content":       event.Content,
-		"contentType":   event.ContentType,
-		"authorUserId":  event.AuthorUserId,
+		"orgId":         evt.LoggedOrganizationId,
+		"createdAt":     evt.CreatedAt,
+		"updatedAt":     evt.UpdatedAt,
+		"startedAt":     evt.StartedAt,
+		"source":        helper.GetSource(evt.Source),
+		"sourceOfTruth": helper.GetSourceOfTruth(evt.SourceOfTruth),
+		"appSource":     helper.GetAppSource(evt.AppSource),
+		"content":       evt.Content,
+		"contentType":   evt.ContentType,
+		"authorUserId":  evt.AuthorUserId,
 	})
 }
 
-func (r *logEntryRepository) Update(ctx context.Context, tenant, logEntryId string, event events.LogEntryUpdateEvent) error {
+func (r *logEntryRepository) Update(ctx context.Context, tenant, logEntryId string, evt event.LogEntryUpdateEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryRepository.Update")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("logEntryId", logEntryId), log.Object("event", event))
+	span.LogFields(log.String("logEntryId", logEntryId), log.Object("event", evt))
 
 	query := fmt.Sprintf(`MATCH (l:LogEntry_%s {id:$logEntryId})
 								SET 
@@ -92,12 +92,12 @@ func (r *logEntryRepository) Update(ctx context.Context, tenant, logEntryId stri
 	params := map[string]any{
 		"tenant":        tenant,
 		"logEntryId":    logEntryId,
-		"updatedAt":     event.UpdatedAt,
-		"startedAt":     event.StartedAt,
-		"sourceOfTruth": helper.GetSourceOfTruth(event.SourceOfTruth),
-		"content":       event.Content,
-		"contentType":   event.ContentType,
-		"orgId":         event.LoggedOrganizationId,
+		"updatedAt":     evt.UpdatedAt,
+		"startedAt":     evt.StartedAt,
+		"sourceOfTruth": helper.GetSourceOfTruth(evt.SourceOfTruth),
+		"content":       evt.Content,
+		"contentType":   evt.ContentType,
+		"orgId":         evt.LoggedOrganizationId,
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
 

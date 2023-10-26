@@ -186,6 +186,26 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	})
 	return issueId
 }
+
+func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, comment entity.CommentEntity) string {
+	commentId := utils.NewUUIDIfEmpty(comment.Id)
+	query := fmt.Sprintf(`MERGE (c:Comment:Comment_%s {id:$id})
+				SET c.content=$content,
+					c.contentType=$contentType,
+					c.source=$source,
+					c.sourceOfTruth=$sourceOfTruth
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":            commentId,
+		"content":       comment.Content,
+		"contentType":   comment.ContentType,
+		"source":        comment.Source,
+		"sourceOfTruth": comment.SourceOfTruth,
+	})
+	return commentId
+}
+
 func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
 	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
