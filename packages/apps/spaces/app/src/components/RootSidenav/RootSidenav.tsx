@@ -174,6 +174,8 @@ export const RootSidenav = () => {
           icon={() => <LogOut01 boxSize='6' color='gray.500' />}
         />
       </VStack>
+
+      <Flex h='64px' />
     </GridItem>
   );
 };

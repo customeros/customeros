@@ -86,7 +86,8 @@ export default async function RootLayout({
           api_base: "https://api-iam.intercom.io",
           app_id: "pqerb2dx",
           alignment: "left",
-          vertical_padding: 132,
+          horizontal_padding: 28,
+          vertical_padding: 28,
           name: "${session?.user.name}",
           email: "${session?.user.email}",
           created_at: ${new Date().valueOf()} // Signup date as a Unix timestamp
