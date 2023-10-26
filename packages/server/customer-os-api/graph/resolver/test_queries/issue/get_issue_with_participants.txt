@@ -1,0 +1,83 @@
+query GetIssue($issueId: ID!){
+  issue(id: $issueId) {
+    id
+    createdAt
+    updatedAt
+    subject
+    status
+    priority
+    description
+    submittedBy {
+      __typename
+      ... on UserParticipant {
+        userParticipant {
+          id
+        }
+      }
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+        }
+      }
+      ... on OrganizationParticipant {
+        organizationParticipant {
+          id
+        }
+      }
+    }
+    reportedBy {
+      __typename
+      ... on UserParticipant {
+        userParticipant {
+          id
+        }
+      }
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+        }
+      }
+      ... on OrganizationParticipant {
+        organizationParticipant {
+          id
+        }
+      }
+    }
+    assignedTo {
+      __typename
+      ... on UserParticipant {
+        userParticipant {
+          id
+        }
+      }
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+        }
+      }
+      ... on OrganizationParticipant {
+        organizationParticipant {
+          id
+        }
+      }
+    }
+    followedBy {
+      __typename
+      ... on UserParticipant {
+        userParticipant {
+          id
+        }
+      }
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+        }
+      }
+      ... on OrganizationParticipant {
+        organizationParticipant {
+          id
+        }
+      }
+    }
+  }
+}

@@ -72,7 +72,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		LocationService:                 NewLocationService(log, repositories),
 		TagService:                      NewTagService(log, repositories),
 		DomainService:                   NewDomainService(log, repositories),
-		IssueService:                    NewIssueService(log, repositories),
 		PageViewService:                 NewPageViewService(log, repositories),
 		AttachmentService:               NewAttachmentService(log, repositories),
 		TenantService:                   NewTenantService(log, repositories),
@@ -86,6 +85,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		BillableService:                 NewBillableService(log, repositories),
 		LogEntryService:                 NewLogEntryService(log, repositories),
 	}
+	services.IssueService = NewIssueService(log, repositories, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
 	services.JobRoleService = NewJobRoleService(log, repositories, &services)
 	services.CalendarService = NewCalendarService(log, repositories, &services)

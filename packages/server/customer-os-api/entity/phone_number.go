@@ -31,13 +31,9 @@ type PhoneNumberEntities []PhoneNumberEntity
 
 func (PhoneNumberEntity) IsInteractionEventParticipant() {}
 
-func (PhoneNumberEntity) InteractionEventParticipantLabel() string {
-	return NodeLabel_PhoneNumber
-}
-
 func (PhoneNumberEntity) IsInteractionSessionParticipant() {}
 
-func (PhoneNumberEntity) InteractionSessionParticipantLabel() string {
+func (PhoneNumberEntity) ParticipantLabel() string {
 	return NodeLabel_PhoneNumber
 }
 

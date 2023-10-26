@@ -494,7 +494,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
 	neo4jt.TagIssue(ctx, driver, issueId1, tagId1)
 	neo4jt.TagIssue(ctx, driver, issueId1, tagId2)
-	neo4jt.IssueReportedByOrganization(ctx, driver, organizationId, issueId1)
+	neo4jt.IssueReportedBy(ctx, driver, issueId1, organizationId)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
@@ -654,7 +654,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 		Status:      "OPEN",
 		Description: "description 1",
 	})
-	neo4jt.IssueReportedByOrganization(ctx, driver, organizationId, issueId1)
+	neo4jt.IssueReportedBy(ctx, driver, issueId1, organizationId)
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
@@ -1129,7 +1129,7 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 		CreatedAt: secAgo60,
 	})
 
-	neo4jt.IssueReportedByOrganization(ctx, driver, mergedOrgId1, issueId1)
+	neo4jt.IssueReportedBy(ctx, driver, issueId1, mergedOrgId1)
 
 	callGraphQL(t, "organization/merge_organizations", map[string]interface{}{
 		"parentOrganizationId":  parentOrgId,

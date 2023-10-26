@@ -167,7 +167,9 @@ func (OrganizationEntity) NotedEntityLabel() string {
 
 func (OrganizationEntity) IsInteractionEventParticipant() {}
 
-func (OrganizationEntity) InteractionEventParticipantLabel() string {
+func (OrganizationEntity) IsIssueParticipant() {}
+
+func (OrganizationEntity) ParticipantLabel() string {
 	return NodeLabel_Organization
 }
 

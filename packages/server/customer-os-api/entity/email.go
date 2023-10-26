@@ -41,13 +41,9 @@ type EmailEntities []EmailEntity
 
 func (EmailEntity) IsInteractionEventParticipant() {}
 
-func (EmailEntity) InteractionEventParticipantLabel() string {
-	return NodeLabel_Email
-}
-
 func (EmailEntity) IsInteractionSessionParticipant() {}
 
-func (EmailEntity) InteractionSessionParticipantLabel() string {
+func (EmailEntity) ParticipantLabel() string {
 	return NodeLabel_Email
 }
 

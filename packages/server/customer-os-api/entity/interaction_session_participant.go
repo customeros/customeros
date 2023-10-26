@@ -6,7 +6,7 @@ type InteractionSessionParticipantDetails struct {
 
 type InteractionSessionParticipant interface {
 	IsInteractionSessionParticipant()
-	InteractionSessionParticipantLabel() string
+	ParticipantLabel() string
 	GetDataloaderKey() string
 }
 

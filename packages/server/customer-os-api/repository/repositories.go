@@ -73,7 +73,7 @@ func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 	repositories.SearchRepository = NewSearchRepository(driver)
 	repositories.QueryRepository = NewDashboardRepository(driver)
 	repositories.DomainRepository = NewDomainRepository(driver, database)
-	repositories.IssueRepository = NewIssueRepository(driver)
+	repositories.IssueRepository = NewIssueRepository(driver, database)
 	repositories.InteractionEventRepository = NewInteractionEventRepository(driver)
 	repositories.InteractionSessionRepository = NewInteractionSessionRepository(driver)
 	repositories.AnalysisRepository = NewAnalysisRepository(driver)
