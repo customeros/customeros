@@ -68,7 +68,12 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
               }
               src={profilePhotoUrl || undefined}
             />
-            <Flex direction='column' flex={1} position='relative'>
+            <Flex
+              direction='column'
+              flex={1}
+              position='relative'
+              maxWidth={showDateOnHover ? 470 : 408}
+            >
               <Flex justifyContent='space-between' flex={1}>
                 <Flex align='baseline'>
                   <Text color='gray.700' fontWeight={600}>
