@@ -96,6 +96,7 @@ func (a *InteractionEventAggregate) onInteractionEventCreate(evt eventstore.Even
 	if eventData.ExternalSystem.Available() {
 		a.InteractionEvent.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
 	}
+	a.InteractionEvent.Hide = eventData.Hide
 	return nil
 }
 
@@ -133,6 +134,7 @@ func (a *InteractionEventAggregate) onInteractionEventUpdate(evt eventstore.Even
 		a.InteractionEvent.ChannelData = eventData.ChannelData
 		a.InteractionEvent.Identifier = eventData.Identifier
 		a.InteractionEvent.EventType = eventData.EventType
+		a.InteractionEvent.Hide = eventData.Hide
 	}
 	a.InteractionEvent.UpdatedAt = eventData.UpdatedAt
 	return nil

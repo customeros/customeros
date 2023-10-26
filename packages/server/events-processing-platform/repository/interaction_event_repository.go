@@ -56,14 +56,16 @@ func (r *interactionEventRepository) Create(ctx context.Context, tenant, interac
 								i.channel=$channel,
 								i.channelData=$channelData,
 								i.identifier=$identifier,
-								i.eventType=$eventType
+								i.eventType=$eventType,
+								i.hide=$hide
 							ON MATCH SET 	
-								i.content= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.content is null OR i.content = '' THEN $content ELSE i.content END,
-								i.contentType= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.contentType is null OR i.contentType = '' THEN $contentType ELSE i.contentType END,
-								i.channel= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channel is null OR i.channel = '' THEN $channel ELSE i.channel END,
-								i.channelData= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channelData is null OR i.channelData = '' THEN $channelData ELSE i.channelData END,
-								i.identifier= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
-								i.eventType= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
+								i.content = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.content is null OR i.content = '' THEN $content ELSE i.content END,
+								i.contentType = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.contentType is null OR i.contentType = '' THEN $contentType ELSE i.contentType END,
+								i.channel = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channel is null OR i.channel = '' THEN $channel ELSE i.channel END,
+								i.channelData = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channelData is null OR i.channelData = '' THEN $channelData ELSE i.channelData END,
+								i.identifier = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
+								i.eventType = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
+								i.hide = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $hide ELSE i.hide END,
 								i.updatedAt = $updatedAt,
 								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
 								i.syncedWithEventStore = true
@@ -94,6 +96,7 @@ func (r *interactionEventRepository) Create(ctx context.Context, tenant, interac
 		"eventType":          evt.EventType,
 		"partOfIssueId":      evt.PartOfIssueId,
 		"partOfSessionId":    evt.PartOfSessionId,
+		"hide":               evt.Hide,
 		"overwrite":          helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("query", query), log.Object("params", params))
@@ -115,6 +118,7 @@ func (r *interactionEventRepository) Update(ctx context.Context, tenant, interac
 				i.channelData= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channelData is null OR i.channelData = '' THEN $channelData ELSE i.channelData END,	
 				i.identifier= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
 				i.eventType= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
+				i.hide= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $hide ELSE i.hide END,
 				i.updatedAt = $updatedAt,
 				i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
 				i.syncedWithEventStore = true`, tenant)
@@ -128,6 +132,7 @@ func (r *interactionEventRepository) Update(ctx context.Context, tenant, interac
 		"channelData":        evt.ChannelData,
 		"identifier":         evt.Identifier,
 		"eventType":          evt.EventType,
+		"hide":               evt.Hide,
 		"sourceOfTruth":      helper.GetSourceOfTruth(evt.Source),
 		"overwrite":          helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
 	}

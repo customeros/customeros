@@ -46,6 +46,7 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 		Identifier:      request.Identifier,
 		PartOfIssueId:   request.PartOfIssueId,
 		PartOfSessionId: request.PartOfSessionId,
+		Hide:            request.Hide,
 	}
 
 	source := cmnmod.Source{}

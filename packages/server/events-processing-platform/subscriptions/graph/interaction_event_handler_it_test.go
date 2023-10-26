@@ -54,6 +54,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 		ChannelData:   "test channel data",
 		Identifier:    "test identifier",
 		EventType:     "test event type",
+		Hide:          true,
 		PartOfIssueId: utils.StringPtr(issueId),
 	}, cmnmod.Source{
 		Source:        constants.SourceOpenline,
@@ -96,6 +97,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, "test channel data", interactionEvent.ChannelData)
 	require.Equal(t, "test identifier", interactionEvent.Identifier)
 	require.Equal(t, "test event type", interactionEvent.EventType)
+	require.Equal(t, true, interactionEvent.Hide)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.Source)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, interactionEvent.AppSource)
@@ -186,6 +188,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 		EventType:     "test event type",
 		ContentType:   "test content type",
 		ChannelData:   "test channel data",
+		Hide:          false,
 		SourceOfTruth: constants.SourceOpenline,
 	})
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
@@ -198,12 +201,13 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 	now := utils.Now()
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
 	updateEvent, err := event.NewInteractionEventUpdateEvent(interactionEventAggregate, model.InteractionEventDataFields{
-		Content:     "test content",
-		Channel:     "test channel",
-		Identifier:  "test identifier",
-		EventType:   "test event type",
-		ContentType: "test content type",
-		ChannelData: "test channel data",
+		Content:     "test content updated",
+		Channel:     "test channel updated",
+		Identifier:  "test identifier updated",
+		EventType:   "test event type updated",
+		ContentType: "test content type updated",
+		ChannelData: "test channel data updated",
+		Hide:        true,
 	}, "hubspot", cmnmod.ExternalSystem{}, now)
 	require.Nil(t, err, "failed to create event")
 
@@ -228,6 +232,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 	require.Equal(t, "test channel data", interactionEvent.ChannelData)
 	require.Equal(t, "test identifier", interactionEvent.Identifier)
 	require.Equal(t, "test event type", interactionEvent.EventType)
+	require.Equal(t, false, interactionEvent.Hide)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, now, interactionEvent.UpdatedAt)
 }

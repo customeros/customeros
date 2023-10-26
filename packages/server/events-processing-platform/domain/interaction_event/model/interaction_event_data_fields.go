@@ -9,4 +9,5 @@ type InteractionEventDataFields struct {
 	ChannelData     string
 	PartOfIssueId   *string
 	PartOfSessionId *string
+	Hide            bool
 }
