@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.46.5
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.13.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803140613-a833e4f9761b
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/robfig/cron v1.2.0
