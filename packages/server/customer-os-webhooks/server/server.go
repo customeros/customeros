@@ -107,6 +107,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	route.AddLogEntryRoutes(ctx, r, serviceContainer, server.log)
 	route.AddContactRoutes(ctx, r, serviceContainer, server.log)
 	route.AddIssueRoutes(ctx, r, serviceContainer, server.log)
+	route.AddInteractionEventRoutes(ctx, r, serviceContainer, server.log)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)

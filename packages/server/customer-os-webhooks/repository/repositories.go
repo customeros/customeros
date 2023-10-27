@@ -12,18 +12,20 @@ type Repositories struct {
 	Drivers       Drivers
 	neo4jDatabase string
 
-	CommonRepositories       *commonRepository.Repositories
-	SyncRunWebhookRepository repository.SyncRunWebhookRepository
-	ExternalSystemRepository ExternalSystemRepository
-	UserRepository           UserRepository
-	LocationRepository       LocationRepository
-	OrganizationRepository   OrganizationRepository
-	ContactRepository        ContactRepository
-	IssueRepository          IssueRepository
-	TenantRepository         TenantRepository
-	EmailRepository          EmailRepository
-	PhoneNumberRepository    PhoneNumberRepository
-	LogEntryRepository       LogEntryRepository
+	CommonRepositories           *commonRepository.Repositories
+	SyncRunWebhookRepository     repository.SyncRunWebhookRepository
+	ExternalSystemRepository     ExternalSystemRepository
+	UserRepository               UserRepository
+	LocationRepository           LocationRepository
+	OrganizationRepository       OrganizationRepository
+	ContactRepository            ContactRepository
+	IssueRepository              IssueRepository
+	TenantRepository             TenantRepository
+	EmailRepository              EmailRepository
+	PhoneNumberRepository        PhoneNumberRepository
+	LogEntryRepository           LogEntryRepository
+	InteractionSessionRepository InteractionSessionRepository
+	InteractionEventRepository   InteractionEventRepository
 }
 
 type Drivers struct {
@@ -43,12 +45,14 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 	repositories.UserRepository = NewUserRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)
-	repositories.ContactRepository = NewContactRepository(driver)
+	repositories.ContactRepository = NewContactRepository(driver, neo4jDatabase)
 	repositories.IssueRepository = NewIssueRepository(driver, neo4jDatabase)
 	repositories.TenantRepository = NewTenantRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
 	repositories.LogEntryRepository = NewLogEntryRepository(driver)
+	repositories.InteractionSessionRepository = NewInteractionSessionRepository(driver, neo4jDatabase)
+	repositories.InteractionEventRepository = NewInteractionEventRepository(driver, neo4jDatabase)
 
 	err := gormDb.AutoMigrate(&postgresentity.SyncRunWebhook{})
 	if err != nil {

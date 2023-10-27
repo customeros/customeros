@@ -19,8 +19,8 @@ message UpsertInteractionEventGrpcRequest {
   bool hide = 10;
   google.protobuf.Timestamp createdAt = 11;
   google.protobuf.Timestamp updatedAt = 12;
-  optional string partOfIssueId = 13;
-  optional string partOfSessionId = 14;
+  optional string belongsToIssueId = 13;
+  optional string belongsToSessionId = 14;
   SourceFields sourceFields = 15;
   ExternalSystemFields externalSystemFields = 16;
 }

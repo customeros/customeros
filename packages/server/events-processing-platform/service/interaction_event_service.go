@@ -38,15 +38,15 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 	interactionEventId := strings.TrimSpace(utils.NewUUIDIfEmpty(request.Id))
 
 	dataFields := model.InteractionEventDataFields{
-		Content:         request.Content,
-		ContentType:     request.ContentType,
-		Channel:         request.Channel,
-		ChannelData:     request.ChannelData,
-		EventType:       request.EventType,
-		Identifier:      request.Identifier,
-		PartOfIssueId:   request.PartOfIssueId,
-		PartOfSessionId: request.PartOfSessionId,
-		Hide:            request.Hide,
+		Content:            request.Content,
+		ContentType:        request.ContentType,
+		Channel:            request.Channel,
+		ChannelData:        request.ChannelData,
+		EventType:          request.EventType,
+		Identifier:         request.Identifier,
+		BelongsToIssueId:   request.BelongsToIssueId,
+		BelongsToSessionId: request.BelongsToSessionId,
+		Hide:               request.Hide,
 	}
 
 	source := commonmodel.Source{}

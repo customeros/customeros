@@ -19,39 +19,39 @@ const (
 )
 
 type InteractionEventCreateEvent struct {
-	Tenant          string                `json:"tenant" validate:"required"`
-	Content         string                `json:"content"`
-	ContentType     string                `json:"contentType"`
-	Channel         string                `json:"channel"`
-	ChannelData     string                `json:"channelData"`
-	EventType       string                `json:"eventType"`
-	Identifier      string                `json:"identifier"`
-	PartOfIssueId   string                `json:"partOfIssueId,omitempty" validate:"required_without=PartOfSessionId"`
-	PartOfSessionId string                `json:"partOfSessionId,omitempty" validate:"required_without=PartOfIssueId"`
-	Source          string                `json:"source"`
-	AppSource       string                `json:"appSource"`
-	CreatedAt       time.Time             `json:"createdAt"`
-	UpdatedAt       time.Time             `json:"updatedAt"`
-	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
-	Hide            bool                  `json:"hide"`
+	Tenant             string                `json:"tenant" validate:"required"`
+	Content            string                `json:"content"`
+	ContentType        string                `json:"contentType"`
+	Channel            string                `json:"channel"`
+	ChannelData        string                `json:"channelData"`
+	EventType          string                `json:"eventType"`
+	Identifier         string                `json:"identifier"`
+	BelongsToIssueId   string                `json:"belongsToIssueId,omitempty" validate:"required_without=BelongsToSessionId"`
+	BelongsToSessionId string                `json:"belongsToSessionId,omitempty" validate:"required_without=BelongsToIssueId"`
+	Source             string                `json:"source"`
+	AppSource          string                `json:"appSource"`
+	CreatedAt          time.Time             `json:"createdAt"`
+	UpdatedAt          time.Time             `json:"updatedAt"`
+	ExternalSystem     cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
+	Hide               bool                  `json:"hide"`
 }
 
 func NewInteractionEventCreateEvent(aggregate eventstore.Aggregate, dataFields model.InteractionEventDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := InteractionEventCreateEvent{
-		Tenant:          aggregate.GetTenant(),
-		Content:         dataFields.Content,
-		ContentType:     dataFields.ContentType,
-		Channel:         dataFields.Channel,
-		ChannelData:     dataFields.ChannelData,
-		EventType:       dataFields.EventType,
-		Identifier:      dataFields.Identifier,
-		Hide:            dataFields.Hide,
-		PartOfIssueId:   utils.IfNotNilString(dataFields.PartOfIssueId),
-		PartOfSessionId: utils.IfNotNilString(dataFields.PartOfSessionId),
-		Source:          source.Source,
-		AppSource:       source.AppSource,
-		CreatedAt:       createdAt,
-		UpdatedAt:       updatedAt,
+		Tenant:             aggregate.GetTenant(),
+		Content:            dataFields.Content,
+		ContentType:        dataFields.ContentType,
+		Channel:            dataFields.Channel,
+		ChannelData:        dataFields.ChannelData,
+		EventType:          dataFields.EventType,
+		Identifier:         dataFields.Identifier,
+		Hide:               dataFields.Hide,
+		BelongsToIssueId:   utils.IfNotNilString(dataFields.BelongsToIssueId),
+		BelongsToSessionId: utils.IfNotNilString(dataFields.BelongsToSessionId),
+		Source:             source.Source,
+		AppSource:          source.AppSource,
+		CreatedAt:          createdAt,
+		UpdatedAt:          updatedAt,
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem

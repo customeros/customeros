@@ -18,18 +18,20 @@ type Services struct {
 	CommonServices     *commonService.Services
 	CommonAuthServices *commonAuthService.Services
 
-	TenantService         TenantService
-	EmailService          EmailService
-	LocationService       LocationService
-	PhoneNumberService    PhoneNumberService
-	UserService           UserService
-	LogEntryService       LogEntryService
-	OrganizationService   OrganizationService
-	ContactService        ContactService
-	IssueService          IssueService
-	SyncStatusService     SyncStatusService
-	ExternalSystemService ExternalSystemService
-	FinderService         FinderService
+	TenantService             TenantService
+	EmailService              EmailService
+	LocationService           LocationService
+	PhoneNumberService        PhoneNumberService
+	UserService               UserService
+	LogEntryService           LogEntryService
+	OrganizationService       OrganizationService
+	ContactService            ContactService
+	IssueService              IssueService
+	SyncStatusService         SyncStatusService
+	ExternalSystemService     ExternalSystemService
+	FinderService             FinderService
+	InteractionEventService   InteractionEventService
+	InteractionSessionService InteractionSessionService
 }
 
 func InitServices(log logger.Logger,
@@ -43,14 +45,15 @@ func InitServices(log logger.Logger,
 	repositories := repository.InitRepos(driver, gormDB, cfg.Neo4j.Database)
 
 	services := Services{
-		CommonServices:        commonServices,
-		CommonAuthServices:    commonAuthServices,
-		TenantService:         NewTenantService(log, repositories, caches),
-		EmailService:          NewEmailService(log, repositories, grpcClients),
-		LocationService:       NewLocationService(log, repositories, grpcClients),
-		PhoneNumberService:    NewPhoneNumberService(log, repositories, grpcClients),
-		SyncStatusService:     NewSyncStatusService(log, repositories),
-		ExternalSystemService: NewExternalSystemService(log, repositories, caches),
+		CommonServices:            commonServices,
+		CommonAuthServices:        commonAuthServices,
+		TenantService:             NewTenantService(log, repositories, caches),
+		EmailService:              NewEmailService(log, repositories, grpcClients),
+		LocationService:           NewLocationService(log, repositories, grpcClients),
+		PhoneNumberService:        NewPhoneNumberService(log, repositories, grpcClients),
+		SyncStatusService:         NewSyncStatusService(log, repositories),
+		ExternalSystemService:     NewExternalSystemService(log, repositories, caches),
+		InteractionSessionService: NewInteractionSessionService(log, repositories),
 	}
 
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)
@@ -58,7 +61,8 @@ func InitServices(log logger.Logger,
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
 	services.LogEntryService = NewLogEntryService(log, repositories, grpcClients, &services)
 	services.IssueService = NewIssueService(log, repositories, grpcClients, &services)
-	services.FinderService = NewFinderService(log, &services)
+	services.FinderService = NewFinderService(log, repositories, &services)
+	services.InteractionEventService = NewInteractionEventService(log, repositories, grpcClients, &services)
 	services.cfg = cfg
 	return &services
 }
