@@ -34,6 +34,8 @@ import {
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
 import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
+import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
+import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -128,7 +130,10 @@ export const AboutPanel = () => {
       },
     );
   };
-
+  console.log(
+    '🏷️ ----- data?.organization?.subsidiaryOf: ',
+    data?.organization?.subsidiaryOf,
+  );
   return (
     <Flex
       pt='4'
@@ -295,9 +300,26 @@ export const AboutPanel = () => {
             placeholder='Social link'
             leftElement={<Icons.Share7 color='gray.500' />}
           />
+          {!data?.organization?.subsidiaries?.length && (
+            <ParentOrgInput
+              id={id}
+              parentOrg={
+                {
+                  label:
+                    data?.organization?.subsidiaryOf?.[0]?.organization?.name,
+                  value:
+                    data?.organization?.subsidiaryOf?.[0]?.organization?.id,
+                } || null
+              }
+            />
+          )}
         </VStack>
 
         <Flex flex='1' />
+        {data?.organization?.subsidiaries?.length && (
+          <Branches branches={data?.organization?.subsidiaries} />
+        )}
+
         {data?.organization?.customerOsId && (
           <Tooltip label='Copy ID'>
             <Text
