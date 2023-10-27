@@ -84,8 +84,8 @@ func (a *InteractionEventAggregate) onInteractionEventCreate(evt eventstore.Even
 	a.InteractionEvent.ChannelData = eventData.ChannelData
 	a.InteractionEvent.EventType = eventData.EventType
 	a.InteractionEvent.Identifier = eventData.Identifier
-	a.InteractionEvent.PartOfSessionId = eventData.PartOfSessionId
-	a.InteractionEvent.PartOfIssueId = eventData.PartOfIssueId
+	a.InteractionEvent.BelongsToSessionId = eventData.BelongsToSessionId
+	a.InteractionEvent.BelongsToIssueId = eventData.BelongsToIssueId
 	a.InteractionEvent.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,

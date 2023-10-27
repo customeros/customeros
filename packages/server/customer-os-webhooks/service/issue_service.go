@@ -27,6 +27,7 @@ const maxWorkersIssueSync = 5
 
 type IssueService interface {
 	SyncIssues(ctx context.Context, contacts []model.IssueData) error
+	GetIdForReferencedIssue(ctx context.Context, tenant, externalSystemId string, issue model.ReferencedIssue) (string, error)
 }
 
 type issueService struct {
@@ -347,4 +348,15 @@ func (s *issueService) mapDbNodeToIssueEntity(dbNode dbtype.Node) *entity.IssueE
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &output
+}
+
+func (s *issueService) GetIdForReferencedIssue(ctx context.Context, tenant, externalSystemId string, issue model.ReferencedIssue) (string, error) {
+	if !issue.Available() {
+		return "", nil
+	}
+
+	if issue.ReferencedByExternalId() {
+		return s.repositories.IssueRepository.GetIssueIdByExternalId(ctx, tenant, issue.ExternalId, externalSystemId)
+	}
+	return "", nil
 }

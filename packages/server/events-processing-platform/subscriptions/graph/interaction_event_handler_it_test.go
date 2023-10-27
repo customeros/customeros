@@ -48,14 +48,14 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	interactionEventId := uuid.New().String()
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
 	createEvent, err := event.NewInteractionEventCreateEvent(interactionEventAggregate, model.InteractionEventDataFields{
-		Content:       "test content",
-		ContentType:   "test content type",
-		Channel:       "test channel",
-		ChannelData:   "test channel data",
-		Identifier:    "test identifier",
-		EventType:     "test event type",
-		Hide:          true,
-		PartOfIssueId: utils.StringPtr(issueId),
+		Content:          "test content",
+		ContentType:      "test content type",
+		Channel:          "test channel",
+		ChannelData:      "test channel data",
+		Identifier:       "test identifier",
+		EventType:        "test event type",
+		Hide:             true,
+		BelongsToIssueId: utils.StringPtr(issueId),
 	}, cmnmod.Source{
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatform,

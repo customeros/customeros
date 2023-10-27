@@ -70,13 +70,13 @@ func (r *interactionEventRepository) Create(ctx context.Context, tenant, interac
 								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
 								i.syncedWithEventStore = true
 							WITH i
-							OPTIONAL MATCH (is:Issue:Issue_%s {id:$partOfIssueId}) 
-							WHERE $partOfIssueId <> ""
+							OPTIONAL MATCH (is:Issue:Issue_%s {id:$belongsToIssueId}) 
+							WHERE $belongsToIssueId <> ""
 							FOREACH (ignore IN CASE WHEN is IS NOT NULL THEN [1] ELSE [] END |
     							MERGE (i)-[:PART_OF]->(is))
 							WITH i
-							OPTIONAL MATCH (is:InteractionSession:InteractionSession_%s {id:$partOfSessionId}) 
-							WHERE $partOfSessionId <> ""
+							OPTIONAL MATCH (is:InteractionSession:InteractionSession_%s {id:$belongsToSessionId}) 
+							WHERE $belongsToSessionId <> ""
 							FOREACH (ignore IN CASE WHEN is IS NOT NULL THEN [1] ELSE [] END |
     							MERGE (i)-[:PART_OF]->(is))
 							`, tenant, tenant, tenant, tenant)
@@ -94,8 +94,8 @@ func (r *interactionEventRepository) Create(ctx context.Context, tenant, interac
 		"channelData":        evt.ChannelData,
 		"identifier":         evt.Identifier,
 		"eventType":          evt.EventType,
-		"partOfIssueId":      evt.PartOfIssueId,
-		"partOfSessionId":    evt.PartOfSessionId,
+		"belongsToIssueId":   evt.BelongsToIssueId,
+		"belongsToSessionId": evt.BelongsToSessionId,
 		"hide":               evt.Hide,
 		"overwrite":          helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
 	}
