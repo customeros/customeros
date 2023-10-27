@@ -216,7 +216,7 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 }
 
 func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
-	phoneNumberId := utils.NewUUIDIfEmpty(location.Id)
+	locationId := utils.NewUUIDIfEmpty(location.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)<-[:LOCATION_BELONGS_TO_TENANT]-(i:Location {id:$id})
 				SET i:Location_%s,
@@ -248,7 +248,7 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":        tenant,
-		"id":            phoneNumberId,
+		"id":            locationId,
 		"name":          location.Name,
 		"createdAt":     location.CreatedAt,
 		"updatedAt":     location.UpdatedAt,
@@ -275,7 +275,7 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"source":        location.Source,
 		"appSource":     location.AppSource,
 	})
-	return phoneNumberId
+	return locationId
 
 }
 
