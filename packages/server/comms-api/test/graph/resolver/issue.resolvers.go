@@ -32,6 +32,26 @@ func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]
 	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
 }
 
+// SubmittedBy is the resolver for the submittedBy field.
+func (r *issueResolver) SubmittedBy(ctx context.Context, obj *model.Issue) (model.IssueParticipant, error) {
+	panic(fmt.Errorf("not implemented: SubmittedBy - submittedBy"))
+}
+
+// ReportedBy is the resolver for the reportedBy field.
+func (r *issueResolver) ReportedBy(ctx context.Context, obj *model.Issue) (model.IssueParticipant, error) {
+	panic(fmt.Errorf("not implemented: ReportedBy - reportedBy"))
+}
+
+// AssignedTo is the resolver for the assignedTo field.
+func (r *issueResolver) AssignedTo(ctx context.Context, obj *model.Issue) ([]model.IssueParticipant, error) {
+	panic(fmt.Errorf("not implemented: AssignedTo - assignedTo"))
+}
+
+// FollowedBy is the resolver for the followedBy field.
+func (r *issueResolver) FollowedBy(ctx context.Context, obj *model.Issue) ([]model.IssueParticipant, error) {
+	panic(fmt.Errorf("not implemented: FollowedBy - followedBy"))
+}
+
 // Issue is the resolver for the issue field.
 func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, error) {
 	panic(fmt.Errorf("not implemented: Issue - issue"))

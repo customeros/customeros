@@ -23,6 +23,21 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	panic(fmt.Errorf("not implemented: OrganizationUpdate - organization_Update"))
 }
 
+// OrganizationUpdateRenewalLikelihood is the resolver for the organization_UpdateRenewalLikelihood field.
+func (r *mutationResolver) OrganizationUpdateRenewalLikelihood(ctx context.Context, input model.RenewalLikelihoodInput) (string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalLikelihood - organization_UpdateRenewalLikelihood"))
+}
+
+// OrganizationUpdateRenewalForecast is the resolver for the organization_UpdateRenewalForecast field.
+func (r *mutationResolver) OrganizationUpdateRenewalForecast(ctx context.Context, input model.RenewalForecastInput) (string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalForecast - organization_UpdateRenewalForecast"))
+}
+
+// OrganizationUpdateBillingDetails is the resolver for the organization_UpdateBillingDetails field.
+func (r *mutationResolver) OrganizationUpdateBillingDetails(ctx context.Context, input model.BillingDetailsInput) (string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdateBillingDetails - organization_UpdateBillingDetails"))
+}
+
 // OrganizationUpdateRenewalLikelihoodAsync is the resolver for the organization_UpdateRenewalLikelihoodAsync field.
 func (r *mutationResolver) OrganizationUpdateRenewalLikelihoodAsync(ctx context.Context, input model.RenewalLikelihoodInput) (string, error) {
 	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalLikelihoodAsync - organization_UpdateRenewalLikelihoodAsync"))
@@ -46,6 +61,26 @@ func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (
 // OrganizationArchiveAll is the resolver for the organization_ArchiveAll field.
 func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: OrganizationArchiveAll - organization_ArchiveAll"))
+}
+
+// OrganizationHide is the resolver for the organization_Hide field.
+func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationHide - organization_Hide"))
+}
+
+// OrganizationHideAll is the resolver for the organization_HideAll field.
+func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: OrganizationHideAll - organization_HideAll"))
+}
+
+// OrganizationShow is the resolver for the organization_Show field.
+func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationShow - organization_Show"))
+}
+
+// OrganizationShowAll is the resolver for the organization_ShowAll field.
+func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: OrganizationShowAll - organization_ShowAll"))
 }
 
 // OrganizationMerge is the resolver for the organization_Merge field.

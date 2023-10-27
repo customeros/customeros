@@ -17,11 +17,6 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	panic(fmt.Errorf("not implemented: UserCreate - user_Create"))
 }
 
-// UserCreateInTenant is the resolver for the user_CreateInTenant field.
-func (r *mutationResolver) UserCreateInTenant(ctx context.Context, input model.UserInput, tenant string) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UserCreateInTenant - user_CreateInTenant"))
-}
-
 // UserUpdate is the resolver for the user_Update field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: UserUpdate - user_Update"))
