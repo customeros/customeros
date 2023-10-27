@@ -700,8 +700,9 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	organizationName := "test_org_name"
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+
+	organizationName := "test_org_name"
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
 		Name: organizationName,
 	})
