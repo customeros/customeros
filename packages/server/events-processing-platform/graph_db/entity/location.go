@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -33,16 +32,6 @@ type LocationEntity struct {
 	SourceOfTruth DataSource
 	Source        DataSource
 	AppSource     string
-
-	DataloaderKey string
-}
-
-func (location LocationEntity) ToString() string {
-	return fmt.Sprintf("id: %s name: %s", location.Id, location.Name)
 }
 
 type LocationEntities []LocationEntity
-
-func (location LocationEntity) Labels(tenant string) []string {
-	return []string{"Location", "Location_" + tenant}
-}
