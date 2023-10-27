@@ -695,3 +695,46 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	require.Equal(t, socialUrl, social.Url)
 	require.Equal(t, platformName, social.PlatformName)
 }
+
+func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+
+	organizationName := "test_org_name"
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{
+		Name: organizationName,
+	})
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
+	dbNodeAfterOrganizationCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNodeAfterOrganizationCreate)
+	propsAfterOrganizationCreate := utils.GetPropsFromNode(*dbNodeAfterOrganizationCreate)
+	require.Equal(t, organizationName, utils.GetStringPropOrEmpty(propsAfterOrganizationCreate, "name"))
+
+	locationName := "test_location_name"
+	locationId := neo4jt.CreateLocation(ctx, testDatabase.Driver, tenantName, entity.LocationEntity{
+		Name: locationName,
+	})
+
+	dbNodeAfterLocationCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNodeAfterLocationCreate)
+	propsAfterLocationCreate := utils.GetPropsFromNode(*dbNodeAfterLocationCreate)
+	require.Equal(t, locationName, utils.GetStringPropOrEmpty(propsAfterLocationCreate, "name"))
+
+	orgEventHandler := &OrganizationEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+	now := utils.Now()
+	event, err := events.NewOrganizationLinkLocationEvent(orgAggregate, locationId, now)
+	require.Nil(t, err)
+	err = orgEventHandler.OnLocationLinkedToOrganization(context.Background(), event)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "ASSOCIATED_WITH"), "Incorrect number of ASSOCIATED_WITH relationships in Neo4j")
+	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "ASSOCIATED_WITH", locationId)
+}

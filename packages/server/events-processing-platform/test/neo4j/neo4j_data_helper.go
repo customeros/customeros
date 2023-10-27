@@ -235,6 +235,70 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	return phoneNumberId
 }
 
+func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
+	locationId := utils.NewUUIDIfEmpty(location.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)<-[:LOCATION_BELONGS_TO_TENANT]-(i:Location {id:$id})
+				SET i:Location_%s,
+					i.name=$name,
+					i.createdAt=$createdAt,
+					i.updatedAt=$updatedAt,
+					i.country=$country,
+					i.region=$region,    
+					i.locality=$locality,    
+					i.address=$address,    
+					i.address2=$address2,    
+					i.zip=$zip,    
+					i.addressType=$addressType,    
+					i.houseNumber=$houseNumber,    
+					i.postalCode=$postalCode,    
+					i.plusFour=$plusFour,    
+					i.commercial=$commercial,    
+					i.predirection=$predirection,    
+					i.district=$district,    
+					i.street=$street,    
+					i.rawAddress=$rawAddress,    
+					i.latitude=$latitude,    
+					i.longitude=$longitude,    
+					i.timeZone=$timeZone,    
+					i.utcOffset=$utcOffset,    
+					i.sourceOfTruth=$sourceOfTruth,
+					i.source=$source,
+					i.appSource=$appSource`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":        tenant,
+		"id":            locationId,
+		"name":          location.Name,
+		"createdAt":     location.CreatedAt,
+		"updatedAt":     location.UpdatedAt,
+		"country":       location.Country,
+		"region":        location.Region,
+		"locality":      location.Locality,
+		"address":       location.Address,
+		"address2":      location.Address2,
+		"zip":           location.Zip,
+		"addressType":   location.AddressType,
+		"houseNumber":   location.HouseNumber,
+		"postalCode":    location.PostalCode,
+		"plusFour":      location.PlusFour,
+		"commercial":    location.Commercial,
+		"predirection":  location.Predirection,
+		"district":      location.District,
+		"street":        location.Street,
+		"rawAddress":    location.RawAddress,
+		"latitude":      location.Latitude,
+		"longitude":     location.Longitude,
+		"timeZone":      location.TimeZone,
+		"utcOffset":     location.UtcOffset,
+		"sourceOfTruth": location.SourceOfTruth,
+		"source":        location.Source,
+		"appSource":     location.AppSource,
+	})
+	return locationId
+
+}
+
 func LinkIssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
 	query := `MATCH (e {id:$entityId})
 				MATCH (i:Issue {id:$issueId})
