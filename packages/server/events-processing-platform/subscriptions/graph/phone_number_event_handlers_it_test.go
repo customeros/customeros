@@ -125,7 +125,8 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T
 
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId)
 	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
-	event, err := events.NewPhoneNumberFailedValidationEvent(phoneNumberAggregate, tenantName, e164, "US", "Validation failed with this custom message!")
+	validationError := "Phone validation failed with this custom message!"
+	event, err := events.NewPhoneNumberFailedValidationEvent(phoneNumberAggregate, tenantName, e164, "US", validationError)
 	require.Nil(t, err)
 
 	phoneNumberEventHandler := &GraphPhoneNumberEventHandler{
@@ -141,7 +142,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T
 
 	require.Equal(t, e164, utils.GetStringPropOrEmpty(props, "e164"))
 	require.Equal(t, false, utils.GetBoolPropOrFalse(props, "validated"))
-	require.Equal(t, "Validation failed with this custom message!", utils.GetStringPropOrEmpty(props, "validationError"))
+	require.Equal(t, validationError, utils.GetStringPropOrEmpty(props, "validationError"))
 	require.NotEqual(t, &creationTime, utils.GetTimePropOrNil(props, "updatedAt"))
 	require.Equal(t, e164, utils.GetStringPropOrEmpty(props, "rawPhoneNumber"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "source"))
