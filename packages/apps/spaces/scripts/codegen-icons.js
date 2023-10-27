@@ -18,7 +18,7 @@ const prettierConfig = JSON.parse(
 
 function getSvgViewBox(svgString) {
   const match = svgString.match(/viewBox="([^"]*)"/);
-  return match ? match[1] : '0 0 24 24';  // return matched viewBox value or null if not found
+  return match ? match[1] : '0 0 24 24'; // return matched viewBox value or null if not found
 }
 
 files.forEach((name) => {
@@ -44,11 +44,13 @@ files.forEach((name) => {
     const componentName = camelize(name.split('.')[0]);
     const outFileName = `${componentName}.tsx`;
 
+    const viewBox = getSvgViewBox(file);
 
-
-    const viewBox= getSvgViewBox(file)
-
-    const outContent = makeIconComponent(componentName, svgInnerContent, viewBox);
+    const outContent = makeIconComponent(
+      componentName,
+      svgInnerContent,
+      viewBox,
+    );
 
     const formattedOutContent = format(outContent, {
       ...prettierConfig,
