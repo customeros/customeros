@@ -15,7 +15,7 @@ require (
 	github.com/h2non/filetype v1.1.3
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
-	github.com/neo4j/neo4j-go-driver/v5 v5.13.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230214195550-054499130c38
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
