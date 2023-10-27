@@ -1,11 +1,8 @@
-import { captureException } from '@sentry/nextjs';
-
 export const getMetadata = (metadataString?: string | null) => {
   let metadata;
   try {
     metadata = metadataString && JSON.parse(metadataString);
   } catch (error) {
-    captureException(error);
     metadata = '';
   }
   return metadata;

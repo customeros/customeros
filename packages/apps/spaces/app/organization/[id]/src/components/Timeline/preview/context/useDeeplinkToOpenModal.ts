@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/nextjs';
 import { useSearchParams } from 'next/navigation';
 import { Dispatch, SetStateAction, useEffect } from 'react';
 import {
@@ -56,7 +55,6 @@ export const useDeepLinkToOpenModal = ({
       }
       return result.timelineEvents[0] as TimelineEvent;
     } catch (error) {
-      Sentry.captureException(`Event not found: ${error}`);
       handleDeleteParams();
       toastError(
         "We couldn't find this event",

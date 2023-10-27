@@ -5,7 +5,6 @@ import { Mail01 } from '@ui/media/icons/Mail01';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button';
 import { signIn } from 'next-auth/react';
-import * as Sentry from '@sentry/nextjs';
 import { toastError } from '@ui/presentation/Toast';
 import { Box } from '@chakra-ui/react';
 import { Google } from '@ui/media/logos/Google';
@@ -33,7 +32,6 @@ export const MissingPermissionsPrompt: FC<{
         },
       );
     } catch (error) {
-      Sentry.captureException(`Unable to sign in with scopes: ${error}`);
       toastError('Something went wrong!', `unable-to-sign-in-with-scopes`);
     }
   };

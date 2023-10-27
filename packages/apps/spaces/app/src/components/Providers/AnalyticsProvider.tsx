@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { H } from '@highlight-run/next/client';
+
 declare const heap: any;
 
 export const AnalyticsProvider = ({
@@ -12,10 +14,18 @@ export const AnalyticsProvider = ({
   const { data: session } = useSession();
 
   useEffect(() => {
-    if (heap && session) {
+    if (!session) return;
+    if (heap) {
       heap.identify(session.user?.email);
       heap.addUserProperties({
         name: session?.user?.name,
+      });
+    }
+
+    if (session?.user?.email) {
+      H.identify(session?.user?.email, {
+        name: session?.user?.name ?? 'Unknown',
+        playerIdentityId: session.user.playerIdentityId,
       });
     }
   }, [session]);
