@@ -3530,6 +3530,7 @@ span.slack_code {
  * Styles extracted from: packages/remirror__theme/src/extension-node-formatting-theme.ts
  */
 .remirror-editor.ProseMirror {
+  overflow-x: visible;
 }
 
 /**
@@ -3543,12 +3544,7 @@ span.slack_code {
   content: attr(data-placeholder);
 }
 
-/**
- * Styles extracted from: packages/remirror__theme/src/extension-positioner-theme.ts
- */
-.remirror-editor.ProseMirror {
-  position: relative;
-}
+
 
 .remirror-positioner {
   position: absolute;
@@ -3749,6 +3745,7 @@ span.slack_code {
   border-radius: var(--rmr-radius-border);
   outline: none;
   margin-bottom: 4px;
+  overflow-x: hidden;
 }
 
 .remirror-editor-wrapper {
@@ -3835,9 +3832,11 @@ span.slack_code {
 }
 
 a {
-  color: var(--chakra-colors-primary-700);
+  color: var(--chakra-colors-primary-600);
+  text-decoration: underline;
   cursor: pointer;
   word-break: break-all;
+  display: inline-block;
 
   &:hover {
     text-decoration: underline;
@@ -3954,8 +3953,5 @@ a {
 }
 
 .remirror-positioner {
-  padding: 1px 0 ;
   background: #B4D5FE;
 }
-
-

@@ -4,7 +4,7 @@ import {
   useChainedCommands,
   useCurrentSelection,
 } from '@remirror/react';
-import { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { ShortcutHandlerProps } from '@remirror/extension-link';
 import { Input } from '@ui/form/Input';
 import { Flex } from '@ui/layout/Flex';
@@ -16,6 +16,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 
 export const FloatingLinkToolbar = () => {
+  const ref = useRef<HTMLDivElement>(null);
   const [linkShortcut] = useState<ShortcutHandlerProps | undefined>();
   const [isEditing, setIsEditing] = useState(false);
   const chain = useChainedCommands();
@@ -56,17 +57,56 @@ export const FloatingLinkToolbar = () => {
 
     chain.focus(range?.to ?? to).run();
   }, [href, chain, setIsEditing, linkShortcut, to]);
+  useEffect(() => {
+    const el = ref.current;
+    const parentEl = el?.parentElement?.parentElement?.parentElement;
 
+    if (el && parentEl) {
+      let elRect = el.getBoundingClientRect();
+      const parentElRect = parentEl.getBoundingClientRect();
+      let xValue = 0;
+      let yValue = 0;
+
+      // check and fix overflow at the top
+      while (elRect.top < parentElRect.top) {
+        yValue++;
+        el.style.transform = `translateY(${yValue}px)`;
+        elRect = el.getBoundingClientRect();
+      }
+
+      // check and fix overflow at the bottom
+      while (elRect.bottom > parentElRect.bottom) {
+        yValue--;
+        el.style.transform = `translateY(${yValue}px)`;
+        elRect = el.getBoundingClientRect();
+      }
+
+      // check and fix overflow on the left
+      while (elRect.left < parentElRect.left) {
+        xValue++;
+        el.style.transform = `translateX(${xValue}px)`;
+        elRect = el.getBoundingClientRect();
+      }
+
+      // check and fix overflow on the right
+      while (elRect.right > parentElRect.right) {
+        xValue--;
+        el.style.transform = `translateX(${xValue}px)`;
+        elRect = el.getBoundingClientRect();
+      }
+    }
+  }, [isEditing, ref, from, to]);
   return (
     <>
       <FloatingWrapper
         positioner='selection'
-        placement='bottom-start'
+        placement='auto'
         enabled={isEditing}
       >
         {isEditing && (
           <Flex
-            style={{ zIndex: 999, position: 'absolute' }}
+            ref={ref}
+            className='test'
             alignItems='center'
             sx={{
               '&': {
@@ -75,22 +115,6 @@ export const FloatingLinkToolbar = () => {
                 paddingX: 3,
                 borderRadius: '8px',
                 bg: 'gray.700',
-              },
-
-              '&:before': {
-                content: "''",
-                width: 0,
-                height: 0,
-                borderStyle: 'solid',
-                borderWidth: '9px 10px 9px 0',
-                borderColor: 'transparent #344054 transparent transparent',
-                display: 'inline-block',
-                verticalAlign: 'middle',
-                marginRight: '5px',
-                position: 'absolute',
-                top: '-10px',
-                transform: 'rotate(91deg)',
-                left: '25px',
               },
             }}
           >
@@ -152,7 +176,8 @@ export const FloatingLinkToolbar = () => {
                   variant='ghost'
                   aria-label='Save'
                   onClick={submitHref}
-                  icon={<Check color='gray.400' />}
+                  color='gray.400'
+                  icon={<Check color='inherit' />}
                   mr={2}
                   ml={2}
                   borderRadius='sm'
@@ -176,7 +201,8 @@ export const FloatingLinkToolbar = () => {
                     onRemove();
                     cancelHref();
                   }}
-                  icon={<Trash01 color='gray.400' />}
+                  color='gray.400'
+                  icon={<Trash01 color='inherit' />}
                   _hover={{ background: 'gray.600', color: 'gray.25' }}
                 />
               </Flex>
