@@ -1,0 +1,15 @@
+mutation removeSubsidiaryToOrganization($organizationId: ID!, $subsidiaryId: ID!) {
+  organization_RemoveSubsidiary(organizationId: $organizationId, subsidiaryId: $subsidiaryId ) {
+    id
+    subsidiaries {
+      organization {
+        id
+        name
+        locations {
+          id
+          address
+        }
+      }
+    }
+  }
+}

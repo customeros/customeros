@@ -130,10 +130,7 @@ export const AboutPanel = () => {
       },
     );
   };
-  console.log(
-    '🏷️ ----- data?.organization?.subsidiaryOf: ',
-    data?.organization?.subsidiaryOf,
-  );
+
   return (
     <Flex
       pt='4'
@@ -304,12 +301,15 @@ export const AboutPanel = () => {
             <ParentOrgInput
               id={id}
               parentOrg={
-                {
-                  label:
-                    data?.organization?.subsidiaryOf?.[0]?.organization?.name,
-                  value:
-                    data?.organization?.subsidiaryOf?.[0]?.organization?.id,
-                } || null
+                data?.organization?.subsidiaryOf?.[0]?.organization?.id
+                  ? {
+                      label:
+                        data?.organization?.subsidiaryOf?.[0]?.organization
+                          ?.name,
+                      value:
+                        data?.organization?.subsidiaryOf?.[0]?.organization?.id,
+                    }
+                  : null
               }
             />
           )}

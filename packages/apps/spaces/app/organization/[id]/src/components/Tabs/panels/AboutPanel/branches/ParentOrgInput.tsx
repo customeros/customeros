@@ -1,11 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
-import { FormSelect } from '@ui/form/SyncSelect';
+import { Select } from '@ui/form/SyncSelect';
 import { useAddSubsidiaryToOrganizationMutation } from '@organization/src/graphql/addSubsidiaryToOrganization.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useRemoveSubsidiaryToOrganizationMutation } from '@organization/src/graphql/removeSubsidiaryToOrganization.generated';
+import {
+  OrganizationQuery,
+  useOrganizationQuery,
+} from '@organization/src/graphql/organization.generated';
+import { InfiniteData, useQueryClient } from '@tanstack/react-query';
+import {
+  GetOrganizationsQuery,
+  useInfiniteGetOrganizationsQuery,
+} from '@organizations/graphql/getOrganizations.generated';
+import { produce } from 'immer';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { ComparisonOperator } from '@graphql/types';
+import { useGetOrganizationOptionsQuery } from '@organization/src/graphql/getOrganizationOptions.generated';
 
 interface ParentOrgInputProps {
-  parentOrg: any;
+  parentOrg: { label: string; value: string } | null;
   id: string;
 }
 
@@ -14,22 +28,182 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
   id,
 }) => {
   const client = getGraphQLClient();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [organizationsMeta] = useOrganizationsMeta();
+  const { data, isLoading } = useGetOrganizationOptionsQuery(client, {
+    pagination: {
+      page: 1,
+      limit: 30,
+    },
+    sort: undefined,
+    where: {
+      filter: {
+        property: 'ORGANIZATION',
+        value: searchTerm,
+        operation: ComparisonOperator.Contains,
+        caseSensitive: false,
+      },
+    },
+  });
+  const queryKey = useOrganizationQuery.getKey({ id });
+  const organizationsQueryKey = useInfiniteGetOrganizationsQuery.getKey(
+    organizationsMeta.getOrganization,
+  );
+  const invalidateQuery = () => queryClient.invalidateQueries(queryKey);
+
   const addSubsidiaryToOrganizationMutation =
     useAddSubsidiaryToOrganizationMutation(client, {
-      onSuccess: (data, variables, context) => {
-        console.log('🏷️ ----- data: ', data);
-        console.log('🏷️ ----- variables: ', variables);
+      onMutate: ({ input }) => {
+        const selectedOrganization =
+          data?.dashboardView_Organizations?.content?.find(
+            (e) => e.value === input.organizationId,
+          );
+
+        const subsidiaryOf = {
+          organization: {
+            id: input.organizationId,
+            name: `${selectedOrganization?.label}`,
+          },
+        };
+        queryClient.cancelQueries({ queryKey });
+
+        queryClient.setQueryData<OrganizationQuery>(
+          queryKey,
+          (currentCache) => {
+            return produce(currentCache, (draft) => {
+              if (draft?.['organization']?.['subsidiaryOf']) {
+                draft['organization']['subsidiaryOf'] = [subsidiaryOf];
+              }
+            });
+          },
+        );
+        const previousEntries =
+          queryClient.getQueryData<OrganizationQuery>(queryKey);
+        const previousOrganizationsEntries = queryClient.getQueryData<
+          InfiniteData<GetOrganizationsQuery>
+        >(organizationsQueryKey);
+
+        queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
+          organizationsQueryKey,
+          (currentCache) => {
+            return produce(currentCache, (draft) => {
+              const pageIndex =
+                organizationsMeta.getOrganization.pagination.page - 1;
+              const foundIndex = draft?.pages?.[
+                pageIndex
+              ]?.dashboardView_Organizations?.content?.findIndex(
+                (o) => o.id === id,
+              );
+
+              if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
+
+              if (
+                draft?.pages?.[pageIndex]?.dashboardView_Organizations
+                  ?.content?.[foundIndex]?.subsidiaryOf
+              ) {
+                draft.pages[pageIndex].dashboardView_Organizations.content[
+                  foundIndex
+                ].subsidiaryOf = [subsidiaryOf];
+              }
+            });
+          },
+        );
+
+        return { previousEntries, previousOrganizationsEntries };
+      },
+      onError: (_, __, context) => {
+        queryClient.setQueryData(queryKey, context?.previousEntries);
+        queryClient.setQueryData(
+          organizationsQueryKey,
+          context?.previousOrganizationsEntries,
+        );
+      },
+      onSettled: () => {
+        invalidateQuery();
+        queryClient.invalidateQueries(organizationsQueryKey);
+      },
+    });
+  const removeSubsidiaryToOrganizationMutation =
+    useRemoveSubsidiaryToOrganizationMutation(client, {
+      onMutate: (input) => {
+        queryClient.cancelQueries({ queryKey });
+
+        queryClient.setQueryData<OrganizationQuery>(
+          queryKey,
+          (currentCache) => {
+            return produce(currentCache, (draft) => {
+              if (draft?.['organization']?.['subsidiaryOf']) {
+                draft['organization']['subsidiaryOf'] = [];
+              }
+            });
+          },
+        );
+        const previousEntries =
+          queryClient.getQueryData<OrganizationQuery>(queryKey);
+        const previousOrganizationsEntries = queryClient.getQueryData<
+          InfiniteData<GetOrganizationsQuery>
+        >(organizationsQueryKey);
+        queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
+          organizationsQueryKey,
+          (currentCache) => {
+            return produce(currentCache, (draft) => {
+              const pageIndex =
+                organizationsMeta.getOrganization.pagination.page - 1;
+              const foundIndex = draft?.pages?.[
+                pageIndex
+              ]?.dashboardView_Organizations?.content?.findIndex(
+                (o) => o.id === id,
+              );
+
+              if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
+
+              if (
+                draft?.pages?.[pageIndex]?.dashboardView_Organizations
+                  ?.content?.[foundIndex] !== undefined
+              ) {
+                draft.pages[pageIndex].dashboardView_Organizations.content[
+                  foundIndex
+                ].subsidiaryOf = [];
+              }
+            });
+          },
+        );
+        return { previousEntries, previousOrganizationsEntries };
+      },
+
+      onError: (_, __, context) => {
+        queryClient.setQueryData(queryKey, context?.previousEntries);
+        queryClient.setQueryData(
+          organizationsQueryKey,
+          context?.previousOrganizationsEntries,
+        );
+      },
+      onSettled: () => {
+        invalidateQuery();
+        queryClient.invalidateQueries(organizationsQueryKey);
       },
     });
 
-  console.log('🏷️ ----- parentOrg: ', parentOrg);
+  const options =
+    data?.dashboardView_Organizations?.content
+      ?.filter((e) => !e.subsidiaryOf?.length)
+      .map((e) => ({
+        label: e.label,
+        value: e?.value,
+      })) || null;
+
   return (
-    <FormSelect
+    <Select
       isClearable
-      name='subsidiaryOf'
-      value={parentOrg}
+      value={parentOrg || null}
       onChange={(e) => {
-        console.log('🏷️ ----- e: ', e);
+        if (!e && parentOrg) {
+          removeSubsidiaryToOrganizationMutation.mutate({
+            organizationId: parentOrg.value,
+            subsidiaryId: id,
+          });
+        }
         addSubsidiaryToOrganizationMutation.mutate({
           input: {
             organizationId: e.value,
@@ -37,17 +211,9 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
           },
         });
       }}
-      options={[
-        {
-          value: '09176502-a2cb-4f77-8291-e42c0708a985',
-          label: 'Steyn org',
-        },
-        {
-          value: 'b1dcb956-df32-466f-a985-9273cb972506',
-          label: 'Silviu org',
-        },
-      ]}
-      formId='organization-parent'
+      onInputChange={(inputValue) => setSearchTerm(inputValue)}
+      isLoading={isLoading}
+      options={options || []}
       placeholder='Parent organization'
       leftElement={<ArrowCircleBrokenUpLeft color='gray.500' mr='3' />}
     />
