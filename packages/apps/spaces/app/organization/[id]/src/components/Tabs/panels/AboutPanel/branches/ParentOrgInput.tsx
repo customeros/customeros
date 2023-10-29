@@ -97,14 +97,12 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
               );
 
               if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
+              const dashboardContent =
+                draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
+              const item = dashboardContent?.[foundIndex];
 
-              if (
-                draft?.pages?.[pageIndex]?.dashboardView_Organizations
-                  ?.content?.[foundIndex]?.subsidiaryOf
-              ) {
-                draft.pages[pageIndex].dashboardView_Organizations.content[
-                  foundIndex
-                ].subsidiaryOf = [subsidiaryOf];
+              if (item && 'subsidiaryOf' in item) {
+                item.subsidiaryOf = [subsidiaryOf];
               }
             });
           },
@@ -158,13 +156,16 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
 
               if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
 
+              const dashboardContent =
+                draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
               if (
-                draft?.pages?.[pageIndex]?.dashboardView_Organizations
-                  ?.content?.[foundIndex] !== undefined
+                dashboardContent &&
+                dashboardContent[foundIndex] !== undefined
               ) {
-                draft.pages[pageIndex].dashboardView_Organizations.content[
-                  foundIndex
-                ].subsidiaryOf = [];
+                dashboardContent[foundIndex] = {
+                  ...dashboardContent[foundIndex],
+                  subsidiaryOf: [],
+                };
               }
             });
           },

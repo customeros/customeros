@@ -36,6 +36,7 @@ import { FormUrlInput } from './FormUrlInput';
 import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
 import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
+import { Organization } from '@graphql/types';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -313,12 +314,15 @@ export const AboutPanel = () => {
               }
             />
           )}
+          {!!data?.organization?.subsidiaries?.length && (
+            <Branches
+              branches={
+                (data?.organization
+                  ?.subsidiaries as Organization['subsidiaries']) ?? null
+              }
+            />
+          )}
         </VStack>
-
-        <Flex flex='1' />
-        {data?.organization?.subsidiaries?.length && (
-          <Branches branches={data?.organization?.subsidiaries} />
-        )}
 
         {data?.organization?.customerOsId && (
           <Tooltip label='Copy ID'>

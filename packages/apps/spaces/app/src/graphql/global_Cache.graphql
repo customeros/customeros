@@ -10,8 +10,8 @@ query global_Cache {
       firstName
       lastName
     }
-#    isGoogleActive
-#    isGoogleTokenExpired
+    isGoogleActive
+    isGoogleTokenExpired
     isOwner
     gCliCache {
       id
