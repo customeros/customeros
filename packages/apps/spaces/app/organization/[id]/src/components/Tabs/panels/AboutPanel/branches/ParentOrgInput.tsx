@@ -189,7 +189,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
   const options = React.useMemo(() => {
     return (
       data?.dashboardView_Organizations?.content
-        ?.filter((e) => !e.subsidiaryOf?.length)
+        ?.filter((e) => !e.subsidiaryOf?.length && e.value !== id)
         .map((e) => ({
           label: e.label,
           value: e?.value,
