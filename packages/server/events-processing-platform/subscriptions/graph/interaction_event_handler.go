@@ -36,27 +36,44 @@ func (h *GraphInteractionEventHandler) OnCreate(ctx context.Context, evt eventst
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
-	ieId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.InteractionEventRepository.Create(ctx, eventData.Tenant, ieId, eventData)
+	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
+	err := h.repositories.InteractionEventRepository.Create(ctx, eventData.Tenant, interactionEventId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving interaction event %s: %s", ieId, err.Error())
+		h.log.Errorf("Error while saving interaction event %s: %s", interactionEventId, err.Error())
 		return err
 	}
 
 	if eventData.ExternalSystem.Available() {
-		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, ieId, constants.NodeLabel_InteractionEvent, eventData.ExternalSystem)
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, interactionEventId, constants.NodeLabel_InteractionEvent, eventData.ExternalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while link interaction event %s with external system %s: %s", ieId, eventData.ExternalSystem.ExternalSystemId, err.Error())
+			h.log.Errorf("Error while link interaction event %s with external system %s: %s", interactionEventId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 			return err
 		}
 	}
 
-	organizationIds, orgsErr := h.repositories.OrganizationRepository.GetOrganizationIdsConnectedToInteractionEvent(ctx, eventData.Tenant, ieId)
+	if eventData.Sender.Available() {
+		err = h.repositories.InteractionEventRepository.LinkInteractionEventWithSenderById(ctx, eventData.Tenant, interactionEventId, eventData.Sender.Participant.ID, eventData.Sender.Participant.NodeLabel(), eventData.Sender.RelationType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while link interaction event %s with sender %s: %s", interactionEventId, eventData.Sender.Participant.ID, err.Error())
+		}
+	}
+	for _, receiver := range eventData.Receivers {
+		if receiver.Available() {
+			err = h.repositories.InteractionEventRepository.LinkInteractionEventWithReceiverById(ctx, eventData.Tenant, interactionEventId, receiver.Participant.ID, receiver.Participant.NodeLabel(), receiver.RelationType)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error while link interaction event %s with receiver %s: %s", interactionEventId, eventData.Sender.Participant.ID, err.Error())
+			}
+		}
+	}
+
+	organizationIds, orgsErr := h.repositories.OrganizationRepository.GetOrganizationIdsConnectedToInteractionEvent(ctx, eventData.Tenant, interactionEventId)
 	if orgsErr != nil {
 		tracing.TraceErr(span, orgsErr)
-		h.log.Errorf("Error while getting organization ids connected to interaction event %s: %s", ieId, orgsErr.Error())
+		h.log.Errorf("Error while getting organization ids connected to interaction event %s: %s", interactionEventId, orgsErr.Error())
 	}
 	for _, organizationId := range organizationIds {
 		err = h.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, cmd.NewRefreshLastTouchpointCommand(eventData.Tenant, organizationId, "", constants.AppSourceEventProcessingPlatform))

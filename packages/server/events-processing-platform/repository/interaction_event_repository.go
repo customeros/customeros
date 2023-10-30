@@ -22,6 +22,8 @@ type InteractionEventRepository interface {
 	RemoveAllActionItemsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) error
 	AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string, updatedAt time.Time) error
 	GetInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error)
+	LinkInteractionEventWithSenderById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error
+	LinkInteractionEventWithReceiverById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error
 }
 
 type interactionEventRepository struct {
@@ -272,6 +274,64 @@ func (r *interactionEventRepository) RemoveAllActionItemsForInteractionEvent(ctx
 	span.LogFields(log.String("query", query), log.Object("params", params))
 
 	return r.executeWriteQuery(ctx, query, params)
+}
+
+func (r *interactionEventRepository) LinkInteractionEventWithSenderById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithSenderById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId), log.String("entityId", entityId), log.String("label", label), log.String("relationType", relationType))
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
+		MATCH (:Tenant {name:$tenant})-[*1..2]-(sender:Contact|User|Organization|JobRole|Email|PhoneNumber {id:$entityId}) 
+		WHERE $label IN labels(sender)
+		MERGE (ie)-[rel:SENT_BY]->(sender)
+		ON CREATE SET rel.type=$relationType`, tenant)
+	params := map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+		"entityId":           entityId,
+		"relationType":       relationType,
+		"label":              label,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+	return err
+}
+
+func (r *interactionEventRepository) LinkInteractionEventWithReceiverById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithReceiverById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId), log.String("entityId", entityId), log.String("label", label), log.String("relationType", relationType))
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
+		MATCH (:Tenant {name:$tenant})--(sender:Contact|User|Organization|JobRole|Email|PhoneNumber {id:$entityId}) 
+		WHERE $label IN labels(sender)
+		MERGE (ie)-[rel:SENT_TO]->(sender)
+		ON CREATE SET rel.type=$relationType`, tenant)
+	params := map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+		"entityId":           entityId,
+		"label":              label,
+		"relationType":       relationType,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+	return err
 }
 
 func (r *interactionEventRepository) executeWriteQuery(ctx context.Context, query string, params map[string]any) error {

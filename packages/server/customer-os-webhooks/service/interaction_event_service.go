@@ -113,6 +113,7 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 	return nil
 }
 
+// TODO optimize to not send sender and receiver in case matching interaction event exists. Currently it is not possible to update sender and receiver in interaction event
 func (s *interactionEventService) syncInteractionEvent(ctx context.Context, syncMutex *sync.Mutex, interactionEventInput model.InteractionEventData, syncDate time.Time) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.syncInteractionEvent")
 	defer span.Finish()
