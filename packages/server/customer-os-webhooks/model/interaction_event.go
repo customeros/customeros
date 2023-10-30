@@ -39,8 +39,7 @@ type InteractionEventData struct {
 	SentBy      InteractionEventParticipant   `json:"sentBy,omitempty"`
 	SentTo      []InteractionEventParticipant `json:"sentTo,omitempty"`
 	// in sent to or sent by at least 1 contact should be available in the system
-	ContactRequired bool `json:"contactRequired,omitempty"` // TODO not yet supported
-	SessionRequired bool `json:"sessionRequired,omitempty"` // TODO not supported, deprecated in favor of ParentRequired
+	ContactRequired bool `json:"contactRequired,omitempty"`
 	ParentRequired  bool `json:"parentRequired,omitempty"`
 	//SessionDetails InteractionSession            `json:"sessionDetails,omitempty"` // TODO not yet supported
 }
