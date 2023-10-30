@@ -442,7 +442,7 @@ func (r *interactionEventRepository) LinkInteractionEventWithSenderById(ctx cont
 }
 
 func (r *interactionEventRepository) LinkInteractionEventWithRecipientById(ctx context.Context, tenant, eventId, id, label, relationType string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithRecipientById")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithReceiverById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 

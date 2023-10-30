@@ -23,6 +23,39 @@ message UpsertInteractionEventGrpcRequest {
   optional string belongsToSessionId = 14;
   SourceFields sourceFields = 15;
   ExternalSystemFields externalSystemFields = 16;
+  Sender sender = 17;
+  repeated Receiver receivers = 18;
+}
+
+message Participant {
+  string id = 1;
+  oneof participantType {
+    User user = 2;
+    Contact contact = 3;
+    Organization organization = 4;
+  }
+}
+
+message User {
+  // Fields specific to User, if any.
+}
+
+message Contact {
+  // Fields specific to Contact, if any.
+}
+
+message Organization {
+  // Fields specific to Organization, if any.
+}
+
+message Sender {
+  Participant participant = 1;
+  string relationType = 2;
+}
+
+message Receiver {
+  Participant participant = 1;
+  string relationType = 2;
 }
 
 message RequestGenerateSummaryGrpcRequest {

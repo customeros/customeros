@@ -6,12 +6,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	orgcmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
+	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -34,14 +34,16 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
 	issueId := neo4jt.CreateIssue(ctx, testDatabase.Driver, tenantName, entity.IssueEntity{})
 	neo4jt.LinkIssueReportedBy(ctx, testDatabase.Driver, issueId, orgId)
+	userId := neo4jt.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{})
+	contactId := neo4jt.CreateContact(ctx, testDatabase.Driver, tenantName, entity.ContactEntity{})
 
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		"Organization": 1, "ExternalSystem": 1, "Issue": 1, "TimelineEvent": 1, "InteractionEvent": 0})
+		"User": 1, "Contact": 1, "Organization": 1, "ExternalSystem": 1, "Issue": 1, "TimelineEvent": 1, "InteractionEvent": 0})
 
 	// prepare event handler
 	interactionEventHandler := &GraphInteractionEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: orgcmdhnd.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: organizationcmdhandler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -56,11 +58,34 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 		EventType:        "test event type",
 		Hide:             true,
 		BelongsToIssueId: utils.StringPtr(issueId),
-	}, cmnmod.Source{
+		Sender: model.Sender{
+			Participant: commonmodel.Participant{
+				ID:              userId,
+				ParticipantType: commonmodel.UserType,
+			},
+			RelationType: "FROM",
+		},
+		Receivers: []model.Receiver{
+			{
+				Participant: commonmodel.Participant{
+					ID:              contactId,
+					ParticipantType: commonmodel.ContactType,
+				},
+				RelationType: "TO",
+			},
+			{
+				Participant: commonmodel.Participant{
+					ID:              orgId,
+					ParticipantType: commonmodel.OrganizationType,
+				},
+				RelationType: "CC",
+			},
+		},
+	}, commonmodel.Source{
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatform,
 		SourceOfTruth: constants.SourceOpenline,
-	}, cmnmod.ExternalSystem{
+	}, commonmodel.ExternalSystem{
 		ExternalSystemId: "sf",
 		ExternalId:       "123",
 	}, now, now)
@@ -71,6 +96,8 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err, "failed to execute event handler")
 
 	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"User": 1, "User_" + tenantName: 1,
+		"Contact": 1, "Contact_" + tenantName: 1,
 		"Organization": 1, "Organization_" + tenantName: 1,
 		"ExternalSystem": 1, "ExternalSystem_" + tenantName: 1,
 		"Issue": 1, "Issue_" + tenantName: 1,
@@ -83,6 +110,9 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	})
 	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, interactionEventId, "PART_OF", issueId)
 	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, interactionEventId, "IS_LINKED_WITH", externalSystemId)
+	neo4jt.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_BY", userId, map[string]interface{}{"type": "FROM"})
+	neo4jt.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_TO", contactId, map[string]interface{}{"type": "TO"})
+	neo4jt.AssertRelationshipWithProperties(ctx, t, testDatabase.Driver, interactionEventId, "SENT_TO", orgId, map[string]interface{}{"type": "CC"})
 
 	interactionEventDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName, interactionEventId)
 	require.Nil(t, err)
@@ -147,7 +177,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 		ChannelData: "test channel data updated",
 		Identifier:  "test identifier updated",
 		EventType:   "test event type updated",
-	}, constants.SourceOpenline, cmnmod.ExternalSystem{}, now)
+	}, constants.SourceOpenline, commonmodel.ExternalSystem{}, now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -208,7 +238,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 		ContentType: "test content type updated",
 		ChannelData: "test channel data updated",
 		Hide:        true,
-	}, "hubspot", cmnmod.ExternalSystem{}, now)
+	}, "hubspot", commonmodel.ExternalSystem{}, now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE

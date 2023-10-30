@@ -571,6 +571,16 @@ func AssertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverW
 	require.Equal(t, relationshipType, rel.Type)
 }
 
+func AssertRelationshipWithProperties(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string, expectedProperties map[string]any) {
+	rel, err := GetRelationship(ctx, driver, fromNodeId, toNodeId)
+	require.Nil(t, err)
+	require.NotNil(t, rel)
+	require.Equal(t, relationshipType, rel.Type)
+	for k, v := range expectedProperties {
+		require.Equal(t, v, rel.Props[k])
+	}
+}
+
 func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, codeA2, codeA3, name, phoneCode string) {
 	query := `MERGE (c:Country{codeA3: $codeA3}) 
 				ON CREATE SET 

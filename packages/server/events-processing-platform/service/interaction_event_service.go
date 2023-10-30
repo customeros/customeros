@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
+	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
@@ -17,7 +17,7 @@ import (
 )
 
 type interactionEventService struct {
-	iepb.UnimplementedInteractionEventGrpcServiceServer
+	interactioneventpb.UnimplementedInteractionEventGrpcServiceServer
 	log                              logger.Logger
 	interactionEventsCommandHandlers *cmdhnd.InteractionEventCommandHandlers
 }
@@ -29,7 +29,7 @@ func NewInteractionEventService(log logger.Logger, commands *cmdhnd.InteractionE
 	}
 }
 
-func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, request *iepb.UpsertInteractionEventGrpcRequest) (*iepb.InteractionEventIdGrpcResponse, error) {
+func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, request *interactioneventpb.UpsertInteractionEventGrpcRequest) (*interactioneventpb.InteractionEventIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.UpsertInteractionEvent")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -47,6 +47,23 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 		BelongsToIssueId:   request.BelongsToIssueId,
 		BelongsToSessionId: request.BelongsToSessionId,
 		Hide:               request.Hide,
+		Sender: model.Sender{
+			Participant: commonmodel.Participant{
+				ID:              request.Sender.Participant.Id,
+				ParticipantType: GetParticipantTypeFromPB(request.Sender.Participant),
+			},
+			RelationType: request.Sender.RelationType,
+		},
+	}
+	dataFields.Receivers = make([]model.Receiver, len(request.Receivers))
+	for _, receiver := range request.Receivers {
+		dataFields.Receivers = append(dataFields.Receivers, model.Receiver{
+			Participant: commonmodel.Participant{
+				ID:              receiver.Participant.Id,
+				ParticipantType: GetParticipantTypeFromPB(receiver.Participant),
+			},
+			RelationType: receiver.RelationType,
+		})
 	}
 
 	source := commonmodel.Source{}
@@ -62,10 +79,10 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 		return nil, s.errResponse(err)
 	}
 
-	return &iepb.InteractionEventIdGrpcResponse{Id: interactionEventId}, nil
+	return &interactioneventpb.InteractionEventIdGrpcResponse{Id: interactionEventId}, nil
 }
 
-func (s *interactionEventService) RequestGenerateSummary(ctx context.Context, request *iepb.RequestGenerateSummaryGrpcRequest) (*iepb.InteractionEventIdGrpcResponse, error) {
+func (s *interactionEventService) RequestGenerateSummary(ctx context.Context, request *interactioneventpb.RequestGenerateSummaryGrpcRequest) (*interactioneventpb.InteractionEventIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestGenerateSummary")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -78,10 +95,10 @@ func (s *interactionEventService) RequestGenerateSummary(ctx context.Context, re
 		return nil, s.errResponse(err)
 	}
 
-	return &iepb.InteractionEventIdGrpcResponse{Id: request.InteractionEventId}, nil
+	return &interactioneventpb.InteractionEventIdGrpcResponse{Id: request.InteractionEventId}, nil
 }
 
-func (s *interactionEventService) RequestGenerateActionItems(ctx context.Context, request *iepb.RequestGenerateActionItemsGrpcRequest) (*iepb.InteractionEventIdGrpcResponse, error) {
+func (s *interactionEventService) RequestGenerateActionItems(ctx context.Context, request *interactioneventpb.RequestGenerateActionItemsGrpcRequest) (*interactioneventpb.InteractionEventIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestGenerateActionItems")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -94,9 +111,25 @@ func (s *interactionEventService) RequestGenerateActionItems(ctx context.Context
 		return nil, s.errResponse(err)
 	}
 
-	return &iepb.InteractionEventIdGrpcResponse{Id: request.InteractionEventId}, nil
+	return &interactioneventpb.InteractionEventIdGrpcResponse{Id: request.InteractionEventId}, nil
 }
 
 func (s *interactionEventService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
+}
+
+func GetParticipantTypeFromPB(participant *interactioneventpb.Participant) commonmodel.ParticipantType {
+	if participant == nil {
+		return ""
+	}
+	switch participant.ParticipantType.(type) {
+	case *interactioneventpb.Participant_User:
+		return commonmodel.UserType
+	case *interactioneventpb.Participant_Contact:
+		return commonmodel.ContactType
+	case *interactioneventpb.Participant_Organization:
+		return commonmodel.OrganizationType
+	default:
+		return ""
+	}
 }

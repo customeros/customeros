@@ -10,4 +10,6 @@ type InteractionEventDataFields struct {
 	BelongsToIssueId   *string
 	BelongsToSessionId *string
 	Hide               bool
+	Sender             Sender
+	Receivers          []Receiver
 }

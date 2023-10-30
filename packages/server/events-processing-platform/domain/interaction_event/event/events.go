@@ -34,6 +34,8 @@ type InteractionEventCreateEvent struct {
 	UpdatedAt          time.Time             `json:"updatedAt"`
 	ExternalSystem     cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 	Hide               bool                  `json:"hide"`
+	Sender             model.Sender          `json:"sender"`
+	Receivers          []model.Receiver      `json:"receivers"`
 }
 
 func NewInteractionEventCreateEvent(aggregate eventstore.Aggregate, dataFields model.InteractionEventDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
@@ -55,6 +57,14 @@ func NewInteractionEventCreateEvent(aggregate eventstore.Aggregate, dataFields m
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem
+	}
+	if dataFields.Sender.Available() {
+		eventData.Sender = dataFields.Sender
+	}
+	for _, receiver := range dataFields.Receivers {
+		if receiver.Available() {
+			eventData.Receivers = append(eventData.Receivers, receiver)
+		}
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
