@@ -186,18 +186,21 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
       },
     });
 
-  const options =
-    data?.dashboardView_Organizations?.content
-      ?.filter((e) => !e.subsidiaryOf?.length)
-      .map((e) => ({
-        label: e.label,
-        value: e?.value,
-      })) || null;
+  const options = React.useMemo(() => {
+    return (
+      data?.dashboardView_Organizations?.content
+        ?.filter((e) => !e.subsidiaryOf?.length)
+        .map((e) => ({
+          label: e.label,
+          value: e?.value,
+        })) || []
+    );
+  }, [data?.dashboardView_Organizations?.content]);
 
   return (
     <Select
       isClearable
-      value={parentOrg || null}
+      value={parentOrg || ''}
       onChange={(e) => {
         if (!e && parentOrg) {
           removeSubsidiaryToOrganizationMutation.mutate({
@@ -205,12 +208,14 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
             subsidiaryId: id,
           });
         }
-        addSubsidiaryToOrganizationMutation.mutate({
-          input: {
-            organizationId: e.value,
-            subOrganizationId: id,
-          },
-        });
+        if (e?.value) {
+          addSubsidiaryToOrganizationMutation.mutate({
+            input: {
+              organizationId: e.value,
+              subOrganizationId: id,
+            },
+          });
+        }
       }}
       onInputChange={(inputValue) => setSearchTerm(inputValue)}
       isLoading={isLoading}

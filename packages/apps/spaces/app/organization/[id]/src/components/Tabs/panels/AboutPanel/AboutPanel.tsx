@@ -316,9 +316,10 @@ export const AboutPanel = () => {
           )}
           {!!data?.organization?.subsidiaries?.length && (
             <Branches
+              id={id}
               branches={
                 (data?.organization
-                  ?.subsidiaries as Organization['subsidiaries']) ?? null
+                  ?.subsidiaries as Organization['subsidiaries']) ?? []
               }
             />
           )}
