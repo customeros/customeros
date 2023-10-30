@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import jwt, {SignOptions} from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 const WORKSPACE_KEY = process.env.INTEGRATION_APP_WORKSPACE_KEY;
 const WORKSPACE_SECRET = process.env.INTEGRATION_APP_WORKSPACE_SECRET;
