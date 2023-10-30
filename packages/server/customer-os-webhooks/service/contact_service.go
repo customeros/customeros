@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-const maxWorkersContactSync = 5
+const maxWorkersContactSync = 1
 
 type ContactService interface {
 	SyncContacts(ctx context.Context, contacts []model.ContactData) error

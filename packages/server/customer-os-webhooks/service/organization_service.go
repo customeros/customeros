@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const maxWorkersOrganizationSync = 4
+const maxWorkersOrganizationSync = 1
 
 type domains struct {
 	whitelistDomains       []comentity.WhitelistDomain

@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-const maxWorkersIssueSync = 5
+const maxWorkersIssueSync = 1
 
 type IssueService interface {
 	SyncIssues(ctx context.Context, contacts []model.IssueData) error
