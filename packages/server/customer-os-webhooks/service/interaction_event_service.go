@@ -113,7 +113,6 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 	return nil
 }
 
-// TODO optimize to not send sender and receiver in case matching interaction event exists. Currently it is not possible to update sender and receiver in interaction event
 func (s *interactionEventService) syncInteractionEvent(ctx context.Context, syncMutex *sync.Mutex, interactionEventInput model.InteractionEventData, syncDate time.Time) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.syncInteractionEvent")
 	defer span.Finish()
@@ -155,9 +154,10 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		return syncStatus
 	}
 
-	// TODO set senderId when to be used in events
-	_, senderLabel := s.getSenderIdAndLabel(ctx, interactionEventInput, span)
-	receiversIdAndLabel := s.getReceiversIdAndLabel(ctx, interactionEventInput, span)
+	senderId, senderLabel := s.getSenderIdAndLabel(ctx, interactionEventInput, span)
+	receiversIdAndRelationType := make(map[string]string)
+	receiversIdAndLabel := make(map[string]string)
+	s.getReceiversIdAndLabel(ctx, interactionEventInput, span, receiversIdAndLabel, receiversIdAndRelationType)
 	syncStatus, done = s.checkRequiredContact(interactionEventInput, senderLabel, receiversIdAndLabel, tenant, span)
 	if done {
 		return syncStatus
@@ -217,6 +217,28 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 				interactionEventGrpcRequest.BelongsToSessionId = &parentId
 			}
 		}
+		if !matchingInteractionEventExists {
+			if senderId != "" {
+				participant := interactioneventpb.Participant{
+					Id: senderId,
+				}
+				s.setParticipantTypeForGrpcRequest(senderLabel, &participant)
+				interactionEventGrpcRequest.Sender = &interactioneventpb.Sender{
+					Participant:  &participant,
+					RelationType: interactionEventInput.SentBy.RelationType,
+				}
+			}
+			for receiverId, receiverLabel := range receiversIdAndLabel {
+				participant := interactioneventpb.Participant{
+					Id: receiverId,
+				}
+				s.setParticipantTypeForGrpcRequest(receiverLabel, &participant)
+				interactionEventGrpcRequest.Receivers = append(interactionEventGrpcRequest.Receivers, &interactioneventpb.Receiver{
+					Participant:  &participant,
+					RelationType: receiversIdAndRelationType[receiverId],
+				})
+			}
+		}
 		_, err = s.grpcClients.InteractionEventClient.UpsertInteractionEvent(ctx, &interactionEventGrpcRequest)
 		if err != nil {
 			failedSync = true
@@ -237,9 +259,6 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 	}
 	syncMutex.Unlock()
 
-	// TODO add events to link sender and receivers to interaction event
-	// Sender to be part of upsert event like comment and log entry
-
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {
 		span.LogFields(log.String("output", "failed"))
@@ -247,22 +266,6 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 	}
 	span.LogFields(log.String("output", "success"))
 	return NewSuccessfulSyncStatus()
-}
-
-func (s *interactionEventService) getReceiversIdAndLabel(ctx context.Context, interactionEventInput model.InteractionEventData, span opentracing.Span) map[string]string {
-	receiversIdAndLabel := make(map[string]string)
-
-	for _, receiver := range interactionEventInput.SentTo {
-		receiverId, receiverLabel, err := s.getParticipantIdAndLabel(ctx, interactionEventInput.ExternalSystem, receiver)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Error(fmt.Sprintf("failed finding receiver for interaction event %s for tenant %s :%s", interactionEventInput.ExternalId, common.GetTenantFromContext(ctx), err.Error()))
-		}
-		if receiverId != "" {
-			receiversIdAndLabel[receiverId] = receiverLabel
-		}
-	}
-	return receiversIdAndLabel
 }
 
 func (s *interactionEventService) mapDbNodeToInteractionEventEntity(dbNode dbtype.Node) *entity.InteractionEventEntity {
@@ -340,6 +343,20 @@ func (s *interactionEventService) getSenderIdAndLabel(ctx context.Context, inter
 	return "", ""
 }
 
+func (s *interactionEventService) getReceiversIdAndLabel(ctx context.Context, interactionEventInput model.InteractionEventData, span opentracing.Span, idAndLabel map[string]string, idAndRelationType map[string]string) {
+	for _, receiver := range interactionEventInput.SentTo {
+		receiverId, receiverLabel, err := s.getParticipantIdAndLabel(ctx, interactionEventInput.ExternalSystem, receiver)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Error(fmt.Sprintf("failed finding receiver for interaction event %s for tenant %s :%s", interactionEventInput.ExternalId, common.GetTenantFromContext(ctx), err.Error()))
+		}
+		if receiverId != "" {
+			idAndLabel[receiverId] = receiverLabel
+			idAndRelationType[receiverId] = receiver.RelationType
+		}
+	}
+}
+
 func (s *interactionEventService) checkRequiredContact(interactionEventInput model.InteractionEventData, senderLabel string, receiversIdAndLabel map[string]string, tenant string, span opentracing.Span) (SyncStatus, bool) {
 	if interactionEventInput.ContactRequired {
 		found := false
@@ -370,4 +387,21 @@ func (s *interactionEventService) checkRequiredParent(interactionEventInput mode
 		return NewSkippedSyncStatus(reason), true
 	}
 	return SyncStatus{}, false
+}
+
+func (s *interactionEventService) setParticipantTypeForGrpcRequest(participantLabel string, participant *interactioneventpb.Participant) {
+	switch participantLabel {
+	case entity.NodeLabel_Contact:
+		participant.ParticipantType = &interactioneventpb.Participant_Contact{
+			Contact: &interactioneventpb.Contact{},
+		}
+	case entity.NodeLabel_Organization:
+		participant.ParticipantType = &interactioneventpb.Participant_Organization{
+			Organization: &interactioneventpb.Organization{},
+		}
+	case entity.NodeLabel_User:
+		participant.ParticipantType = &interactioneventpb.Participant_User{
+			User: &interactioneventpb.User{},
+		}
+	}
 }
