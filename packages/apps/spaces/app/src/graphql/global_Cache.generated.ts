@@ -29,6 +29,8 @@ export type GlobalCacheQuery = {
   __typename?: 'Query';
   global_Cache: {
     __typename?: 'GlobalCache';
+    isGoogleActive: boolean;
+    isGoogleTokenExpired: boolean;
     isOwner: boolean;
     user: {
       __typename?: 'User';
@@ -70,6 +72,8 @@ export const GlobalCacheDocument = `
       firstName
       lastName
     }
+    isGoogleActive
+    isGoogleTokenExpired
     isOwner
     gCliCache {
       id
