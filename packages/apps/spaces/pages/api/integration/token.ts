@@ -15,11 +15,6 @@ export default async function handler(
   res: NextApiResponse<ResponseData>,
 ) {
   const tenant = req.query.tenant;
-  const options = {
-    issuer: WORKSPACE_KEY,
-    expiresIn: 7200,
-    algorithm: 'ES256'
-  } as SignOptions;
 
   if (!tenant) {
     return res.status(500).json({ message: 'Missing tenant query param' });
@@ -37,7 +32,9 @@ export default async function handler(
   }
 
   const token = jwt.sign(tokenData, WORKSPACE_SECRET, {
-    ...options,
+    issuer: WORKSPACE_KEY,
+    expiresIn: 7200,
+    algorithm: 'ES256'
   });
 
   res.status(200).json({ token });
