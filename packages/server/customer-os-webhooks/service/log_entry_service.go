@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const maxWorkersLogEntrySync = 10
+const maxWorkersLogEntrySync = 1
 
 type LogEntryService interface {
 	SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) error

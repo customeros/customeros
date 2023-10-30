@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-const maxWorkersInteractionEventSync = 5
+const maxWorkersInteractionEventSync = 1
 
 type InteractionEventService interface {
 	SyncInteractionEvents(ctx context.Context, contacts []model.InteractionEventData) error

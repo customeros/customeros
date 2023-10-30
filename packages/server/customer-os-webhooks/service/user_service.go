@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-const maxWorkersUserSync = 4
+const maxWorkersUserSync = 1
 
 type UserService interface {
 	SyncUsers(ctx context.Context, users []model.UserData) error
