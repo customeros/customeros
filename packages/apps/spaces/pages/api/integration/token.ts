@@ -34,7 +34,7 @@ export default async function handler(
   const token = jwt.sign(tokenData, WORKSPACE_SECRET, {
     issuer: WORKSPACE_KEY,
     expiresIn: 7200,
-    algorithm: 'HS256'
+    algorithm: 'ES256'
   });
 
   res.status(200).json({ token });
