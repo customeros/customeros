@@ -38,6 +38,11 @@ export default async function RootLayout({
   return (
     <>
       <HighlightInit
+        environment={
+          process.env.NEXT_PUBLIC_PRODUCTION === 'true'
+            ? 'production'
+            : 'development'
+        }
         projectId={'ldwno7wd'}
         serviceName='customer-os'
         tracingOrigins
