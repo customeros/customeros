@@ -26,7 +26,7 @@ func (repo *rawEmailRepositoryImpl) CountForUsername(externalSystem, tenant, use
 	err := repo.gormDb.Model(entity.RawEmail{}).Where("external_system = ? AND tenant = ? AND username = ?", externalSystem, tenant, username).Count(&result).Error
 
 	if err != nil {
-		logrus.Errorf("Failed getting rawEmail: %s; %s; %s", externalSystem, tenant)
+		logrus.Errorf("RawEmailRepository.CountForUsername - failed: %s; %s; %s", externalSystem, tenant, username)
 		return 0, err
 	}
 
@@ -38,7 +38,7 @@ func (repo *rawEmailRepositoryImpl) EmailExistsByMessageId(externalSystem, tenan
 	err := repo.gormDb.Model(entity.RawEmail{}).Where("external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).Count(&result).Error
 
 	if err != nil {
-		logrus.Errorf("Failed getting rawEmail: %s; %s; %s", externalSystem, tenant, messageId)
+		logrus.Errorf("RawEmailRepository.EmailExistsByMessageId - failed: %s; %s; %s", externalSystem, tenant, messageId)
 		return false, err
 	}
 
@@ -50,7 +50,7 @@ func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenant, username, prov
 	err := repo.gormDb.Find(&result, "external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).Error
 
 	if err != nil {
-		logrus.Errorf("Failed retrieving rawEmail: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
+		logrus.Errorf("RawEmailRepository.Store - failed retrieving rawEmail: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
 		return err
 	}
 
@@ -73,7 +73,7 @@ func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenant, username, prov
 
 	err = repo.gormDb.Save(&result).Error
 	if err != nil {
-		logrus.Errorf("Failed storing rawEmail: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
+		logrus.Errorf("RawEmailRepository.Store - failed storing rawEmail: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
 		return err
 	}
 

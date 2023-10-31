@@ -64,7 +64,7 @@ func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(externalSystem, t
 	err := repo.gormDb.Where("external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, usernameSource, messageId).Find(&result).Error
 
 	if err != nil {
-		logrus.Errorf("Failed getting rawEmail: %s; %s; %s", externalSystem, tenant, messageId)
+		logrus.Errorf("GetEmailForSyncByMessageId - failed: %s; %s; %s", externalSystem, tenant, messageId)
 		return nil, err
 	}
 
