@@ -41,7 +41,12 @@ export const PreviewEditor: React.FC<{
 
   return (
     <>
-      <Text sx={{ '& .remirror-theme': { fontSize: 'sm' } }}>
+      <Text
+        position='relative'
+        sx={{
+          '& .remirror-theme': { fontSize: 'sm' },
+        }}
+      >
         <RichTextEditor
           {...remirrorProps}
           placeholder='Log a conversation you had with a customer'
