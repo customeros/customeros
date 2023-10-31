@@ -203,6 +203,22 @@ export const AboutPanel = () => {
           placeholder={placeholders.valueProposition}
         />
 
+        {!data?.organization?.subsidiaries?.length && (
+          <ParentOrgInput
+            id={id}
+            parentOrg={
+              data?.organization?.subsidiaryOf?.[0]?.organization?.id
+                ? {
+                    label:
+                      data?.organization?.subsidiaryOf?.[0]?.organization?.name,
+                    value:
+                      data?.organization?.subsidiaryOf?.[0]?.organization?.id,
+                  }
+                : null
+            }
+          />
+        )}
+
         <VStack
           flex='1'
           align='flex-start'
@@ -298,22 +314,7 @@ export const AboutPanel = () => {
             placeholder='Social link'
             leftElement={<Icons.Share7 color='gray.500' />}
           />
-          {!data?.organization?.subsidiaries?.length && (
-            <ParentOrgInput
-              id={id}
-              parentOrg={
-                data?.organization?.subsidiaryOf?.[0]?.organization?.id
-                  ? {
-                      label:
-                        data?.organization?.subsidiaryOf?.[0]?.organization
-                          ?.name,
-                      value:
-                        data?.organization?.subsidiaryOf?.[0]?.organization?.id,
-                    }
-                  : null
-              }
-            />
-          )}
+
           {!!data?.organization?.subsidiaries?.length && (
             <Branches
               id={id}
