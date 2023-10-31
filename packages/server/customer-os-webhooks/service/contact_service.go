@@ -210,7 +210,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		})
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertContact"))
+			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertContact"))
 			reason = fmt.Sprintf("failed sending event to upsert contact  with external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
@@ -244,7 +244,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			})
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToContact"))
+				tracing.TraceErr(span, err, log.String("grpcMethod", "LinkEmailToContact"))
 				reason = fmt.Sprintf("Failed to link email address %s with contact %s: %s", contactInput.Email, contactId, err.Error())
 				s.log.Error(reason)
 			}
@@ -270,7 +270,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				})
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToContact"))
+					tracing.TraceErr(span, err, log.String("grpcMethod", "LinkEmailToContact"))
 					reason = fmt.Sprintf("Failed to link email address %s with contact %s: %s", email, contactId, err.Error())
 					s.log.Error(reason)
 				}
@@ -293,7 +293,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			})
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err, log.String("grpcFunction", "LinkWithOrganization"))
+				tracing.TraceErr(span, err, log.String("grpcMethod", "LinkWithOrganization"))
 				reason = fmt.Sprintf("Failed to link contact %s with organization %s: %s", contactId, orgId, err.Error())
 				s.log.Error(reason)
 			}
@@ -322,7 +322,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 					})
 					if err != nil {
 						failedSync = true
-						tracing.TraceErr(span, err, log.String("grpcFunction", "LinkPhoneNumberToContact"))
+						tracing.TraceErr(span, err, log.String("grpcMethod", "LinkPhoneNumberToContact"))
 						reason = fmt.Sprintf("Failed to link phone number %s with contact %s: %s", phoneNumberDtls.Number, contactId, err.Error())
 						s.log.Error(reason)
 					}
@@ -358,7 +358,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				})
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkLocationToContact"))
+					tracing.TraceErr(span, err, log.String("grpcMethod", "LinkLocationToContact"))
 					reason = fmt.Sprintf("Failed to link location %s with contact %s: %s", locationId, contactId, err.Error())
 					s.log.Error(reason)
 				}

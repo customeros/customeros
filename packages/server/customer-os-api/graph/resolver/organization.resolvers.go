@@ -18,8 +18,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	orggrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -57,7 +57,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	}
 
 	var err error
-	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
+	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		Name:           input.Name,
@@ -71,7 +71,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		IsCustomer:     utils.IfNotNilBool(input.IsCustomer),
 		Market:         mapper.MapMarketFromModel(input.Market),
 		Employees:      utils.IfNotNilInt64(input.Employees),
-		SourceFields: &commongrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    string(entity.DataSourceOpenline),
 			AppSource: utils.IfNotNilString(input.AppSource),
 		},
@@ -100,7 +100,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	if len(input.Domains) > 0 {
 		for _, domain := range input.Domains {
 			if domain != "" {
-				_, err = r.Clients.OrganizationClient.LinkDomainToOrganization(ctx, &orggrpc.LinkDomainToOrganizationGrpcRequest{
+				_, err = r.Clients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
 					Tenant:         common.GetTenantFromContext(ctx),
 					LoggedInUserId: common.GetUserIdFromContext(ctx),
 					OrganizationId: response.Id,
@@ -116,7 +116,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	if len(input.CustomFields) > 0 {
 		for _, field := range input.CustomFields {
 			customFieldEntity := mapper.MapCustomFieldInputToEntity(field)
-			var customFieldValue orggrpc.CustomFieldValue
+			var customFieldValue organizationpb.CustomFieldValue
 			customFieldValue.StringValue = customFieldEntity.Value.Str
 			customFieldValue.BoolValue = customFieldEntity.Value.Bool
 			if customFieldEntity.Value.Time != nil {
@@ -125,22 +125,22 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			customFieldValue.IntegerValue = customFieldEntity.Value.Int
 			customFieldValue.DecimalValue = customFieldEntity.Value.Float
 
-			var customFieldDataType = orggrpc.CustomFieldDataType_TEXT
+			var customFieldDataType = organizationpb.CustomFieldDataType_TEXT
 			if field.Datatype != nil {
 				switch *field.Datatype {
 				case model.CustomFieldDataTypeText:
-					customFieldDataType = orggrpc.CustomFieldDataType_TEXT
+					customFieldDataType = organizationpb.CustomFieldDataType_TEXT
 				case model.CustomFieldDataTypeBool:
-					customFieldDataType = orggrpc.CustomFieldDataType_BOOL
+					customFieldDataType = organizationpb.CustomFieldDataType_BOOL
 				case model.CustomFieldDataTypeDatetime:
-					customFieldDataType = orggrpc.CustomFieldDataType_DATETIME
+					customFieldDataType = organizationpb.CustomFieldDataType_DATETIME
 				case model.CustomFieldDataTypeInteger:
-					customFieldDataType = orggrpc.CustomFieldDataType_INTEGER
+					customFieldDataType = organizationpb.CustomFieldDataType_INTEGER
 				case model.CustomFieldDataTypeDecimal:
-					customFieldDataType = orggrpc.CustomFieldDataType_DECIMAL
+					customFieldDataType = organizationpb.CustomFieldDataType_DECIMAL
 				}
 			}
-			_, err = r.Clients.OrganizationClient.UpsertCustomFieldToOrganization(ctx, &orggrpc.CustomFieldForOrganizationGrpcRequest{
+			_, err = r.Clients.OrganizationClient.UpsertCustomFieldToOrganization(ctx, &organizationpb.CustomFieldForOrganizationGrpcRequest{
 				Tenant:                common.GetTenantFromContext(ctx),
 				OrganizationId:        response.Id,
 				UserId:                common.GetUserIdFromContext(ctx),
@@ -148,7 +148,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 				CustomFieldDataType:   customFieldDataType,
 				CustomFieldTemplateId: customFieldEntity.TemplateId,
 				CustomFieldValue:      &customFieldValue,
-				SourceFields: &commongrpc.SourceFields{
+				SourceFields: &commonpb.SourceFields{
 					Source:        string(entity.DataSourceOpenline),
 					SourceOfTruth: string(entity.DataSourceOpenline),
 					AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
@@ -181,7 +181,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		}, nil
 	}
 
-	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
+	response, err := r.Clients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:            common.GetTenantFromContext(ctx),
 		LoggedInUserId:    common.GetUserIdFromContext(ctx),
 		Id:                input.ID,
@@ -202,7 +202,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		LastFundingAmount: utils.IfNotNilString(input.LastFundingAmount),
 		LastFundingRound:  mapper.MapFundingRoundFromModel(input.LastFundingRound),
 		Note:              utils.IfNotNilString(input.Note),
-		SourceFields: &commongrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source: string(entity.DataSourceOpenline),
 		},
 	})
@@ -232,20 +232,20 @@ func (r *mutationResolver) OrganizationUpdateRenewalLikelihood(ctx context.Conte
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	var likelihood = orggrpc.Likelihood_NONE_LIKELIHOOD
+	var likelihood = organizationpb.Likelihood_NONE_LIKELIHOOD
 	if input.Probability != nil {
 		switch *input.Probability {
 		case model.RenewalLikelihoodProbabilityHigh:
-			likelihood = orggrpc.Likelihood_HIGH
+			likelihood = organizationpb.Likelihood_HIGH
 		case model.RenewalLikelihoodProbabilityMedium:
-			likelihood = orggrpc.Likelihood_MEDIUM
+			likelihood = organizationpb.Likelihood_MEDIUM
 		case model.RenewalLikelihoodProbabilityLow:
-			likelihood = orggrpc.Likelihood_LOW
+			likelihood = organizationpb.Likelihood_LOW
 		case model.RenewalLikelihoodProbabilityZero:
-			likelihood = orggrpc.Likelihood_ZERO
+			likelihood = organizationpb.Likelihood_ZERO
 		}
 	}
-	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalLikelihood(ctx, &orggrpc.OrganizationRenewalLikelihoodRequest{
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalLikelihood(ctx, &organizationpb.OrganizationRenewalLikelihoodRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		Comment:        input.Comment,
@@ -268,7 +268,7 @@ func (r *mutationResolver) OrganizationUpdateRenewalForecast(ctx context.Context
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalForecast(ctx, &orggrpc.OrganizationRenewalForecastRequest{
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalForecast(ctx, &organizationpb.OrganizationRenewalForecastRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		Comment:        input.Comment,
@@ -291,7 +291,7 @@ func (r *mutationResolver) OrganizationUpdateBillingDetails(ctx context.Context,
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	requestObj := orggrpc.OrganizationBillingDetailsRequest{
+	requestObj := organizationpb.OrganizationBillingDetailsRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		UserId:         common.GetUserIdFromContext(ctx),
@@ -318,20 +318,20 @@ func (r *mutationResolver) OrganizationUpdateRenewalLikelihoodAsync(ctx context.
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	var likelihood = orggrpc.Likelihood_NONE_LIKELIHOOD
+	var likelihood = organizationpb.Likelihood_NONE_LIKELIHOOD
 	if input.Probability != nil {
 		switch *input.Probability {
 		case model.RenewalLikelihoodProbabilityHigh:
-			likelihood = orggrpc.Likelihood_HIGH
+			likelihood = organizationpb.Likelihood_HIGH
 		case model.RenewalLikelihoodProbabilityMedium:
-			likelihood = orggrpc.Likelihood_MEDIUM
+			likelihood = organizationpb.Likelihood_MEDIUM
 		case model.RenewalLikelihoodProbabilityLow:
-			likelihood = orggrpc.Likelihood_LOW
+			likelihood = organizationpb.Likelihood_LOW
 		case model.RenewalLikelihoodProbabilityZero:
-			likelihood = orggrpc.Likelihood_ZERO
+			likelihood = organizationpb.Likelihood_ZERO
 		}
 	}
-	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalLikelihood(ctx, &orggrpc.OrganizationRenewalLikelihoodRequest{
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalLikelihood(ctx, &organizationpb.OrganizationRenewalLikelihoodRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		Comment:        input.Comment,
@@ -354,7 +354,7 @@ func (r *mutationResolver) OrganizationUpdateRenewalForecastAsync(ctx context.Co
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalForecast(ctx, &orggrpc.OrganizationRenewalForecastRequest{
+	response, err := r.Clients.OrganizationClient.UpdateOrganizationRenewalForecast(ctx, &organizationpb.OrganizationRenewalForecastRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		Comment:        input.Comment,
@@ -377,7 +377,7 @@ func (r *mutationResolver) OrganizationUpdateBillingDetailsAsync(ctx context.Con
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
-	requestObj := orggrpc.OrganizationBillingDetailsRequest{
+	requestObj := organizationpb.OrganizationBillingDetailsRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: input.ID,
 		UserId:         common.GetUserIdFromContext(ctx),
@@ -446,7 +446,7 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationId", id))
 
-	response, err := r.Clients.OrganizationClient.HideOrganization(ctx, &orggrpc.OrganizationIdGrpcRequest{
+	response, err := r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: id,
 		UserId:         common.GetUserIdFromContext(ctx),
@@ -468,7 +468,7 @@ func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string
 	span.LogFields(log.Object("organizationIds", ids))
 
 	for _, orgId := range ids {
-		_, err := r.Clients.OrganizationClient.HideOrganization(ctx, &orggrpc.OrganizationIdGrpcRequest{
+		_, err := r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			OrganizationId: orgId,
 			UserId:         common.GetUserIdFromContext(ctx),
@@ -491,7 +491,7 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationId", id))
 
-	response, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &orggrpc.OrganizationIdGrpcRequest{
+	response, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: id,
 		UserId:         common.GetUserIdFromContext(ctx),
@@ -513,7 +513,7 @@ func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string
 	span.LogFields(log.Object("organizationIds", ids))
 
 	for _, orgId := range ids {
-		_, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &orggrpc.OrganizationIdGrpcRequest{
+		_, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			OrganizationId: orgId,
 			UserId:         common.GetUserIdFromContext(ctx),
@@ -559,19 +559,22 @@ func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSubsidiary", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", input.OrganizationID), log.String("request.subOrganizationID", input.SubOrganizationID), log.String("request.type", utils.IfNotNilString(input.Type)))
+	span.LogFields(
+		log.String("request.organizationID", input.OrganizationID),
+		log.String("request.subOrganizationID", input.SubOrganizationID),
+		log.String("request.type", utils.IfNotNilString(input.Type)))
 
 	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubOrganizationID, utils.IfNotNilString(input.Type))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add subsidiary %s to organization %s", input.SubOrganizationID, input.OrganizationID)
-		return nil, err
+		graphql.AddErrorf(ctx, "failed to add subsidiary %s to organization %s", input.SubOrganizationID, input.OrganizationID)
+		return nil, nil
 	}
 	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch organization %s", input.OrganizationID)
-		return nil, err
+		graphql.AddErrorf(ctx, "failed to fetch organization details: %s", input.OrganizationID)
+		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }

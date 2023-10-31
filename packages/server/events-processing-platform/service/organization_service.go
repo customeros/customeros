@@ -356,8 +356,8 @@ func (s *organizationService) AddParentOrganization(ctx context.Context, request
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
-	command := command.NewAddParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId, request.Type)
-	if err := s.organizationCommands.AddParentCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewAddParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId, request.Type, request.AppSource)
+	if err := s.organizationCommands.AddParentCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddParentCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
@@ -372,8 +372,8 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, requ
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
-	command := command.NewRemoveParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId)
-	if err := s.organizationCommands.RemoveParentCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewRemoveParentCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.ParentOrganizationId, request.AppSource)
+	if err := s.organizationCommands.RemoveParentCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(RemoveParentCommand.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)

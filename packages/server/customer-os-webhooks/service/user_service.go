@@ -190,7 +190,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		})
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertUser"))
+			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertUser"))
 			reason = fmt.Sprintf("failed sending event to upsert user with external reference %s for tenant %s :%s", userInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
@@ -224,7 +224,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			})
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToUser"))
+				tracing.TraceErr(span, err, log.String("grpcMethod", "LinkEmailToUser"))
 				reason = fmt.Sprintf("Failed to link email address %s for user %s: %s", userInput.Email, userId, err.Error())
 				s.log.Error(reason)
 			}
@@ -252,7 +252,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 				})
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkPhoneNumberToUser"))
+					tracing.TraceErr(span, err, log.String("grpcMethod", "LinkPhoneNumberToUser"))
 					reason = fmt.Sprintf("Failed to link phone number %s for user %s: %s", phoneNumberDtls.Number, userId, err.Error())
 					s.log.Error(reason)
 				}

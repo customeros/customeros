@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -1595,6 +1596,30 @@ func GetCountOfRelationshipsForNodeWithId(ctx context.Context, driver *neo4j.Dri
 		"id": id,
 	})
 	return int(result.(*db.Record).Values[0].(int64))
+}
+
+func GetRelationship(ctx context.Context, driver *neo4j.DriverWithContext, fromNodeId, toNodeId string) (*dbtype.Relationship, error) {
+	session := utils.NewNeo4jReadSession(ctx, *driver)
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, `MATCH (n {id:$fromNodeId})-[rel]->(m {id:$toNodeId}) RETURN rel limit 1`,
+			map[string]interface{}{
+				"fromNodeId": fromNodeId,
+				"toNodeId":   toNodeId,
+			})
+		record, err := result.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	node := queryResult.(dbtype.Relationship)
+	return &node, nil
 }
 
 func GetTotalCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext) int {

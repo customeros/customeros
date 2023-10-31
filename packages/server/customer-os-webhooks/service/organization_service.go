@@ -143,6 +143,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	span.LogFields(log.Object("syncDate", syncDate), log.Object("orgInput", orgInput))
 
 	tenant := common.GetTenantFromContext(ctx)
+	appSource := utils.StringFirstNonEmpty(orgInput.AppSource, constants.AppSourceCustomerOsWebhooks)
 	var failedSync = false
 	var reason = ""
 	orgInput.Normalize()
@@ -246,7 +247,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			IgnoreEmptyFields: false,
 			SourceFields: &commonpb.SourceFields{
 				Source:    orgInput.ExternalSystem,
-				AppSource: utils.StringFirstNonEmpty(orgInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+				AppSource: appSource,
 			},
 			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: orgInput.ExternalSystem,
@@ -295,6 +296,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				OrganizationId:       organizationId,
 				ParentOrganizationId: parentOrganizationId,
 				Type:                 orgInput.ParentOrganization.Type,
+				AppSource:            appSource,
 			})
 			if err != nil {
 				failedSync = true
