@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/opentracing/opentracing-go/log"
 	"net/http"
 )
 
@@ -65,8 +66,8 @@ func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName stri
 	return opentracing.ContextWithSpan(ctx, serverSpan), serverSpan
 }
 
-func TraceErr(span opentracing.Span, err error) {
-	tracing.TraceErr(span, err)
+func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
+	tracing.TraceErr(span, err, fields...)
 }
 
 func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {

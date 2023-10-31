@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -54,12 +55,12 @@ func NewJobRoleCreateEvent(aggregate eventstore.Aggregate, command *model.Create
 		UpdatedAt:     createdAt,
 	}
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate JobRoleCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, JobRoleCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for JobRoleCreateEvent")
 	}
 	return event, nil
 }

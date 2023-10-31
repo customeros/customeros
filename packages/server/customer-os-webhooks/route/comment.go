@@ -19,20 +19,20 @@ import (
 	"time"
 )
 
-func AddUserRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger) {
-	route.POST("/sync/users",
-		cosHandler.TracingEnhancer(ctx, "/sync/users"),
+func AddCommentRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger) {
+	route.POST("/sync/comments",
+		cosHandler.TracingEnhancer(ctx, "/sync/comments"),
 		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		syncUsersHandler(services, log))
-	route.POST("/sync/user",
-		cosHandler.TracingEnhancer(ctx, "/sync/user"),
+		syncCommentsHandler(services, log))
+	route.POST("/sync/comment",
+		cosHandler.TracingEnhancer(ctx, "/sync/comment"),
 		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
-		syncUserHandler(services, log))
+		syncCommentHandler(services, log))
 }
 
-func syncUsersHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func syncCommentsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncUsers", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncComments", c.Request.Header)
 		defer span.Finish()
 
 		// Read the tenant header
@@ -44,45 +44,45 @@ func syncUsersHandler(services *service.Services, log logger.Logger) gin.Handler
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
 
 		// Limit the size of the request body
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncUsers) error reading request body: %s", err.Error())
+			log.Errorf("(SyncLogEntries) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
 
 		// Parse the JSON request body
-		var users []model.UserData
-		if err = json.Unmarshal(requestBody, &users); err != nil {
+		var comments []model.CommentData
+		if err = json.Unmarshal(requestBody, &comments); err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncUsers) Failed unmarshalling body request: %s", err.Error())
+			log.Errorf("(SyncLogEntries) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
 
-		if len(users) == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing users in request"})
+		if len(comments) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing comments in request"})
 			return
 		}
 
-		// Context timeout, allocate per user
-		timeout := time.Duration(len(users)) * utils.LongDuration
+		// Context timeout, allocate per comment
+		timeout := time.Duration(len(comments)) * utils.LongDuration
 		if timeout > constants.RequestMaxTimeout {
 			timeout = constants.RequestMaxTimeout
 		}
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.UserService.SyncUsers(ctx, users)
+		err = services.CommentService.SyncComments(ctx, comments)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncUsers) error in sync users: %s", err.Error())
+			log.Errorf("(SyncLogEntries) error in sync comments: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing users"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entries"})
 			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
@@ -90,9 +90,9 @@ func syncUsersHandler(services *service.Services, log logger.Logger) gin.Handler
 	}
 }
 
-func syncUserHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func syncCommentHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncUser", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncComment", c.Request.Header)
 		defer span.Finish()
 
 		// Read the tenant header
@@ -104,37 +104,37 @@ func syncUserHandler(services *service.Services, log logger.Logger) gin.HandlerF
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
 
 		// Limit the size of the request body
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncUser) error reading request body: %s", err.Error())
+			log.Errorf("(SyncComment) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
 
 		// Parse the JSON request body
-		var user model.UserData
-		if err = json.Unmarshal(requestBody, &user); err != nil {
+		var comment model.CommentData
+		if err = json.Unmarshal(requestBody, &comment); err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncUsers) Failed unmarshalling body request: %s", err.Error())
+			log.Errorf("(SyncLogEntries) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
 		}
 
-		// Context timeout, allocate per user
+		// Context timeout, allocate per comment
 		timeout := utils.LongDuration
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.UserService.SyncUsers(ctx, []model.UserData{user})
+		err = services.CommentService.SyncComments(ctx, []model.CommentData{comment})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			log.Errorf("(SyncUser) error in sync user: %s", err.Error())
+			log.Errorf("(SyncComment) error in sync comment: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing user"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entry"})
 			}
 		} else {
 			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})

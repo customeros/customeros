@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -50,12 +51,12 @@ func NewLogEntryCreateEvent(aggregate eventstore.Aggregate, dataFields model.Log
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LogEntryCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LogEntryCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LogEntryCreateEvent")
 	}
 	return event, nil
 }
@@ -82,12 +83,12 @@ func NewLogEntryUpdateEvent(aggregate eventstore.Aggregate, content, contentType
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LogEntryUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LogEntryUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LogEntryUpdateEvent")
 	}
 	return event, nil
 }
@@ -106,12 +107,12 @@ func NewLogEntryAddTagEvent(aggregate eventstore.Aggregate, tagId string, tagged
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LogEntryAddTagEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LogEntryAddTagV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LogEntryAddTagEvent")
 	}
 	return event, nil
 }
@@ -128,12 +129,12 @@ func NewLogEntryRemoveTagEvent(aggregate eventstore.Aggregate, tagId string) (ev
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LogEntryRemoveTagEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LogEntryRemoveTagV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LogEntryRemoveTagEvent")
 	}
 	return event, nil
 }

@@ -47,6 +47,7 @@ func syncLogEntriesHandler(services *service.Services, log logger.Logger) gin.Ha
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntries) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -55,6 +56,7 @@ func syncLogEntriesHandler(services *service.Services, log logger.Logger) gin.Ha
 		// Parse the JSON request body
 		var logEntries []model.LogEntryData
 		if err = json.Unmarshal(requestBody, &logEntries); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntries) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -75,6 +77,7 @@ func syncLogEntriesHandler(services *service.Services, log logger.Logger) gin.Ha
 
 		err = services.LogEntryService.SyncLogEntries(ctx, logEntries)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntries) error in sync logEntries: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -104,6 +107,7 @@ func syncLogEntryHandler(services *service.Services, log logger.Logger) gin.Hand
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntry) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -112,6 +116,7 @@ func syncLogEntryHandler(services *service.Services, log logger.Logger) gin.Hand
 		// Parse the JSON request body
 		var logEntry model.LogEntryData
 		if err = json.Unmarshal(requestBody, &logEntry); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntries) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -124,6 +129,7 @@ func syncLogEntryHandler(services *service.Services, log logger.Logger) gin.Hand
 
 		err = services.LogEntryService.SyncLogEntries(ctx, []model.LogEntryData{logEntry})
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntry) error in sync logEntry: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

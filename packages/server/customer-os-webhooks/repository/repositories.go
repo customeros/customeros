@@ -26,6 +26,7 @@ type Repositories struct {
 	LogEntryRepository           LogEntryRepository
 	InteractionSessionRepository InteractionSessionRepository
 	InteractionEventRepository   InteractionEventRepository
+	CommentRepository            CommentRepository
 }
 
 type Drivers struct {
@@ -53,6 +54,7 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 	repositories.LogEntryRepository = NewLogEntryRepository(driver)
 	repositories.InteractionSessionRepository = NewInteractionSessionRepository(driver, neo4jDatabase)
 	repositories.InteractionEventRepository = NewInteractionEventRepository(driver, neo4jDatabase)
+	repositories.CommentRepository = NewCommentRepository(driver, neo4jDatabase)
 
 	err := gormDb.AutoMigrate(&postgresentity.SyncRunWebhook{})
 	if err != nil {

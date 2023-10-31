@@ -45,12 +45,12 @@ func NewCommentCreateEvent(aggregate eventstore.Aggregate, dataFields model.Comm
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error validating comment create event")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate CommentCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, CommentCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for comment create event")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for CommentCreateEvent")
 	}
 	return event, nil
 }
@@ -77,12 +77,12 @@ func NewCommentUpdateEvent(aggregate eventstore.Aggregate, content, contentType,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error validating comment update event")
+		return eventstore.Event{}, errors.Wrap(err, "error validating CommentUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, CommentUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for comment update event")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for CommentUpdateEvent")
 	}
 	return event, nil
 }

@@ -47,6 +47,7 @@ func syncInteractionEventsHandler(services *service.Services, log logger.Logger)
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvents) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -55,6 +56,7 @@ func syncInteractionEventsHandler(services *service.Services, log logger.Logger)
 		// Parse the JSON request body
 		var interactionEvents []model.InteractionEventData
 		if err = json.Unmarshal(requestBody, &interactionEvents); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvents) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -75,6 +77,7 @@ func syncInteractionEventsHandler(services *service.Services, log logger.Logger)
 
 		err = services.InteractionEventService.SyncInteractionEvents(ctx, interactionEvents)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvents) error in sync interactionEvents: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -104,6 +107,7 @@ func syncInteractionEventHandler(services *service.Services, log logger.Logger) 
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -112,6 +116,7 @@ func syncInteractionEventHandler(services *service.Services, log logger.Logger) 
 		// Parse the JSON request body
 		var interactionEvent model.InteractionEventData
 		if err = json.Unmarshal(requestBody, &interactionEvent); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvents) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -124,6 +129,7 @@ func syncInteractionEventHandler(services *service.Services, log logger.Logger) 
 
 		err = services.InteractionEventService.SyncInteractionEvents(ctx, []model.InteractionEventData{interactionEvent})
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error in sync interactionEvent: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

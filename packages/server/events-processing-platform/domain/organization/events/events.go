@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -90,12 +91,12 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationCreateEvent")
 	}
 	return event, nil
 }
@@ -154,12 +155,12 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateEvent")
 	}
 	return event, nil
 }
@@ -182,12 +183,12 @@ func NewOrganizationLinkPhoneNumberEvent(aggregate eventstore.Aggregate, phoneNu
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationLinkPhoneNumberEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkPhoneNumberEvent")
 	}
 	return event, nil
 }
@@ -210,12 +211,12 @@ func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, emailId, labe
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationLinkEmailEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationEmailLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkEmailEvent")
 	}
 	return event, nil
 }
@@ -234,12 +235,12 @@ func NewOrganizationLinkLocationEvent(aggregate eventstore.Aggregate, locationId
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationLinkLocationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkLocationEvent")
 	}
 	return event, nil
 }
@@ -256,12 +257,12 @@ func NewOrganizationLinkDomainEvent(aggregate eventstore.Aggregate, domain strin
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationLinkDomainEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationLinkDomainV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkDomainEvent")
 	}
 	return event, nil
 }
@@ -292,12 +293,12 @@ func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, pla
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationAddSocialEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationAddSocialV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationAddSocialEvent")
 	}
 	return event, nil
 }
@@ -326,12 +327,12 @@ func NewOrganizationUpdateRenewalLikelihoodEvent(aggregate eventstore.Aggregate,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateRenewalLikelihoodEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateRenewalLikelihoodV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateRenewalLikelihoodEvent")
 	}
 	return event, nil
 }
@@ -360,12 +361,12 @@ func NewOrganizationUpdateRenewalForecastEvent(aggregate eventstore.Aggregate, a
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateRenewalForecastEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateRenewalForecastV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateRenewalForecastEvent")
 	}
 	return event, nil
 }
@@ -382,12 +383,12 @@ func NewOrganizationRequestRenewalForecastEvent(aggregate eventstore.Aggregate) 
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRequestRenewalForecastEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestRenewalForecastV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRequestRenewalForecastEvent")
 	}
 	return event, nil
 }
@@ -414,12 +415,12 @@ func NewOrganizationUpdateBillingDetailsEvent(aggregate eventstore.Aggregate, am
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpdateBillingDetailsEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateBillingDetailsV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpdateBillingDetailsEvent")
 	}
 	return event, nil
 }
@@ -436,12 +437,12 @@ func NewOrganizationRequestNextCycleDateEvent(aggregate eventstore.Aggregate) (e
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRequestNextCycleDateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestNextCycleDateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRequestNextCycleDateEvent")
 	}
 	return event, nil
 }
@@ -460,12 +461,12 @@ func NewOrganizationRequestScrapeByWebsite(aggregate eventstore.Aggregate, websi
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRequestScrapeByWebsite")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestScrapeByWebsiteV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRequestScrapeByWebsite")
 	}
 	return event, nil
 }
@@ -480,12 +481,12 @@ func NewHideOrganizationEventEvent(aggregate eventstore.Aggregate) (eventstore.E
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate HideOrganizationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationHideV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for HideOrganizationEvent")
 	}
 	return event, nil
 }
@@ -500,12 +501,12 @@ func NewShowOrganizationEventEvent(aggregate eventstore.Aggregate) (eventstore.E
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate ShowOrganizationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationShowV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ShowOrganizationEvent")
 	}
 	return event, nil
 }
@@ -520,12 +521,12 @@ func NewOrganizationRefreshLastTouchpointEvent(aggregate eventstore.Aggregate) (
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRefreshLastTouchpointEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshLastTouchpointV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRefreshLastTouchpointEvent")
 	}
 	return event, nil
 }
@@ -562,12 +563,12 @@ func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFiel
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpsertCustomField")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpsertCustomFieldV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpsertCustomField")
 	}
 	return event, nil
 }
@@ -586,12 +587,12 @@ func NewOrganizationAddParentEvent(aggregate eventstore.Aggregate, parentOrganiz
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationAddParentEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationAddParentV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationAddParentEvent")
 	}
 	return event, nil
 }
@@ -608,12 +609,12 @@ func NewOrganizationRemoveParentEvent(aggregate eventstore.Aggregate, parentOrga
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRemoveParentEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRemoveParentV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRemoveParentEvent")
 	}
 	return event, nil
 }

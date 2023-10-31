@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -68,12 +69,12 @@ func NewInteractionEventCreateEvent(aggregate eventstore.Aggregate, dataFields m
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InteractionEventCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, InteractionEventCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InteractionEventCreateEvent")
 	}
 	return event, nil
 }
@@ -110,12 +111,12 @@ func NewInteractionEventUpdateEvent(aggregate eventstore.Aggregate, dataFields m
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InteractionEventUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, InteractionEventUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InteractionEventUpdateEvent")
 	}
 	return event, nil
 }
@@ -132,12 +133,12 @@ func NewInteractionEventRequestSummaryEvent(aggregate eventstore.Aggregate, tena
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InteractionEventRequestSummaryEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, InteractionEventRequestSummaryV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InteractionEventRequestSummaryEvent")
 	}
 	return event, nil
 }
@@ -158,12 +159,12 @@ func NewInteractionEventReplaceSummaryEvent(aggregate eventstore.Aggregate, tena
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InteractionEventReplaceSummaryEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, InteractionEventReplaceSummaryV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InteractionEventReplaceSummaryEvent")
 	}
 	return event, nil
 }
@@ -180,12 +181,12 @@ func NewInteractionEventRequestActionItemsEvent(aggregate eventstore.Aggregate, 
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InteractionEventRequestActionItemsEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, InteractionEventRequestActionItemsV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InteractionEventRequestActionItemsEvent")
 	}
 	return event, nil
 }
@@ -204,12 +205,12 @@ func NewInteractionEventReplaceActionItemsEvent(aggregate eventstore.Aggregate, 
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate InteractionEventReplaceActionItemsEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, InteractionEventReplaceActionItemsV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for InteractionEventReplaceActionItemsEvent")
 	}
 	return event, nil
 }

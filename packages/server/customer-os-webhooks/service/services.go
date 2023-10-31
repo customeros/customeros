@@ -32,6 +32,7 @@ type Services struct {
 	FinderService             FinderService
 	InteractionEventService   InteractionEventService
 	InteractionSessionService InteractionSessionService
+	CommentService            CommentService
 }
 
 func InitServices(log logger.Logger,
@@ -55,7 +56,7 @@ func InitServices(log logger.Logger,
 		ExternalSystemService:     NewExternalSystemService(log, repositories, caches),
 		InteractionSessionService: NewInteractionSessionService(log, repositories),
 	}
-
+	services.cfg = cfg
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)
 	services.OrganizationService = NewOrganizationService(log, repositories, grpcClients, &services)
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
@@ -63,6 +64,6 @@ func InitServices(log logger.Logger,
 	services.IssueService = NewIssueService(log, repositories, grpcClients, &services)
 	services.FinderService = NewFinderService(log, repositories, &services)
 	services.InteractionEventService = NewInteractionEventService(log, repositories, grpcClients, &services)
-	services.cfg = cfg
+	services.CommentService = NewCommentService(log, repositories, grpcClients, &services)
 	return &services
 }

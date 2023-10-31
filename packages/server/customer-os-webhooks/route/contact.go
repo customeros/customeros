@@ -47,6 +47,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncContacts) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -55,6 +56,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		// Parse the JSON request body
 		var contacts []model.ContactData
 		if err = json.Unmarshal(requestBody, &contacts); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncContacts) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -75,6 +77,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 
 		err = services.ContactService.SyncContacts(ctx, contacts)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncContacts) error in sync contacts: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -104,6 +107,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncContact) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -112,6 +116,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 		// Parse the JSON request body
 		var contact model.ContactData
 		if err = json.Unmarshal(requestBody, &contact); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncContact) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -124,6 +129,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 
 		err = services.ContactService.SyncContacts(ctx, []model.ContactData{contact})
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncContact) error in sync contact: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

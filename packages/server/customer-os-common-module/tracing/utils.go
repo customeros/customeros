@@ -1,8 +1,12 @@
 package tracing
 
-import "github.com/opentracing/opentracing-go"
+import (
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+	"github.com/opentracing/opentracing-go/log"
+)
 
-func TraceErr(span opentracing.Span, err error) {
-	span.SetTag("error", true)
-	span.LogKV("error_msg", err.Error())
+func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
+	// Log the error with the fields
+	ext.LogError(span, err, fields...)
 }

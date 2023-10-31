@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -54,12 +55,12 @@ func NewIssueCreateEvent(aggregate eventstore.Aggregate, dataFields model.IssueD
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate IssueCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, IssueCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for IssueCreateEvent")
 	}
 	return event, nil
 }
@@ -90,12 +91,12 @@ func NewIssueUpdateEvent(aggregate eventstore.Aggregate, dataFields model.IssueD
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate IssueUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, IssueUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for IssueUpdateEvent")
 	}
 	return event, nil
 }
@@ -114,12 +115,12 @@ func NewIssueAddUserAssigneeEvent(aggregate eventstore.Aggregate, userId string,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate IssueAddUserAssigneeEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, IssueAddUserAssigneeV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for IssueAddUserAssigneeEvent")
 	}
 	return event, nil
 }
@@ -138,12 +139,12 @@ func NewIssueRemoveUserAssigneeEvent(aggregate eventstore.Aggregate, userId stri
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate IssueRemoveUserAssigneeEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, IssueRemoveUserAssigneeV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for IssueRemoveUserAssigneeEvent")
 	}
 	return event, nil
 }
@@ -162,12 +163,12 @@ func NewIssueAddUserFollowerEvent(aggregate eventstore.Aggregate, userId string,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate IssueAddUserFollowerEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, IssueAddUserFollowerV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for IssueAddUserFollowerEvent")
 	}
 	return event, nil
 }
@@ -186,12 +187,12 @@ func NewIssueRemoveUserFollowerEvent(aggregate eventstore.Aggregate, userId stri
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate IssueRemoveUserFollowerEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, IssueRemoveUserFollowerV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for IssueRemoveUserFollowerEvent")
 	}
 	return event, nil
 }

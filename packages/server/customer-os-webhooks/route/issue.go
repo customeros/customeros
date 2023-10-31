@@ -47,6 +47,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncIssues) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -55,6 +56,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 		// Parse the JSON request body
 		var issues []model.IssueData
 		if err = json.Unmarshal(requestBody, &issues); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncIssues) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -75,6 +77,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 
 		err = services.IssueService.SyncIssues(ctx, issues)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncIssues) error in sync issues: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -104,6 +107,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncIssue) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -112,6 +116,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 		// Parse the JSON request body
 		var issue model.IssueData
 		if err = json.Unmarshal(requestBody, &issue); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncIssue) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -124,6 +129,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 
 		err = services.IssueService.SyncIssues(ctx, []model.IssueData{issue})
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncIssue) error in sync issue: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
