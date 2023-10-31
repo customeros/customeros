@@ -12,6 +12,7 @@ type UserGmailImportStateRepository interface {
 	GetGmailImportState(tenantName, username string, state entity.GmailImportState) (*entity.UserGmailImportState, error)
 	CreateGmailImportState(tenantName, username string, state entity.GmailImportState, startDate, stopDate *time.Time, active bool, cursor string) (*entity.UserGmailImportState, error)
 	UpdateGmailImportState(tenantName, username string, state entity.GmailImportState, cursor string) (*entity.UserGmailImportState, error)
+	ActivateGmailImportState(tenantName, username string, state entity.GmailImportState) error
 	DeactivateGmailImportState(tenantName, username string, state entity.GmailImportState) error
 }
 
@@ -89,6 +90,26 @@ func (repo *userGmailImportStateImpl) UpdateGmailImportState(tenantName, usernam
 	}
 
 	return repo.GetGmailImportState(tenantName, username, state)
+}
+
+func (repo *userGmailImportStateImpl) ActivateGmailImportState(tenantName, username string, state entity.GmailImportState) error {
+	gmailImportState, err := repo.GetGmailImportState(tenantName, username, state)
+	if gmailImportState == nil {
+		return nil
+	}
+
+	gmailImportState.Active = true
+	err = repo.gormDb.Save(&gmailImportState).Error
+	if err != nil {
+		return fmt.Errorf("DeactivateGmailImportState - update: %s", err.Error())
+	}
+
+	err = repo.InsertHistoryRecord(gmailImportState)
+	if err != nil {
+		return fmt.Errorf("DeactivateGmailImportState - insert history: %s", err.Error())
+	}
+
+	return nil
 }
 
 func (repo *userGmailImportStateImpl) DeactivateGmailImportState(tenantName, username string, state entity.GmailImportState) error {
