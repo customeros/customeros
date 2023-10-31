@@ -149,7 +149,7 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 								}
 
 								if importedEmails > config.SyncData.BatchSize {
-									err = services.Repositories.UserGmailImportPageTokenRepository.ActivateGmailImportState(tenant.Name, emailForUser.RawEmail, gmailImportState.State)
+									err = services.Repositories.UserGmailImportPageTokenRepository.ActivateGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
 									if err != nil {
 										logrus.Errorf("failed to update gmail import state: %v", err)
 										return
@@ -160,6 +160,9 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 										logrus.Errorf("failed to get gmail import state: %v", err)
 										return
 									}
+								} else {
+									logrus.Infof("gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant.Name, emailForUser.RawEmail)
+									return
 								}
 							} else {
 								logrus.Infof("gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant.Name, emailForUser.RawEmail)
