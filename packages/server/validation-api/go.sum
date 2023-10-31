@@ -98,8 +98,8 @@ github.com/smarty/assertions v1.15.1 h1:812oFiXI+G55vxsFf+8bIZ1ux30qtkdqzKbEFwyX
 github.com/smarty/assertions v1.15.1/go.mod h1:yABtdzeQs6l1brC900WlRNwj6ZR55d7B+E8C6HtKdec=
 github.com/smarty/gunit v1.5.0 h1:OmG6a/rgi7qCjlQis6VjXbvx/WqZ8I6xSlbfN4YB5MY=
 github.com/smarty/gunit v1.5.0/go.mod h1:uAeNibUD292KZRcg5OTy7lb6WR5++UC0BQOzNuiRzpU=
-github.com/smartystreets/smartystreets-go-sdk v1.17.2 h1:ULiv0ySEcsftilFs3oZOk3z1d43dijWpVsnJTGUAiQg=
-github.com/smartystreets/smartystreets-go-sdk v1.17.2/go.mod h1:v1HNUVO4FQybjbZycqxp86vhmQIebQdJ+sZrk3JZNkQ=
+github.com/smartystreets/smartystreets-go-sdk v1.17.3 h1:U2ql8VUoFCiOViSXr3iskWKykt9uqddR4VsJpluZCpY=
+github.com/smartystreets/smartystreets-go-sdk v1.17.3/go.mod h1:v1HNUVO4FQybjbZycqxp86vhmQIebQdJ+sZrk3JZNkQ=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=

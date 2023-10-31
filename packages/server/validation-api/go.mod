@@ -13,7 +13,7 @@ require (
 	github.com/nyaruka/phonenumbers v1.1.8
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230203114552-e5ca0d992aff
 	github.com/sirupsen/logrus v1.9.3
-	github.com/smartystreets/smartystreets-go-sdk v1.17.2
+	github.com/smartystreets/smartystreets-go-sdk v1.17.3
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
 )
