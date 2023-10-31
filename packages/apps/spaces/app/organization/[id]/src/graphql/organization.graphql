@@ -28,6 +28,12 @@ query Organization($id: ID!) {
         name
       }
     }
+    subsidiaries {
+      organization {
+        id
+        name
+      }
+    }
     owner {
       id
       firstName

@@ -54,6 +54,10 @@ export type OrganizationQuery = {
       __typename?: 'LinkedOrganization';
       organization: { __typename?: 'Organization'; id: string; name: string };
     }>;
+    subsidiaries: Array<{
+      __typename?: 'LinkedOrganization';
+      organization: { __typename?: 'Organization'; id: string; name: string };
+    }>;
     owner?: {
       __typename?: 'User';
       id: string;
@@ -89,6 +93,12 @@ export const OrganizationDocument = `
       url
     }
     subsidiaryOf {
+      organization {
+        id
+        name
+      }
+    }
+    subsidiaries {
       organization {
         id
         name

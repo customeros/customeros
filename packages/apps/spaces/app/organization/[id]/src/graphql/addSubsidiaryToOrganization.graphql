@@ -1,0 +1,15 @@
+mutation addSubsidiaryToOrganization($input: LinkOrganizationsInput!) {
+  organization_AddSubsidiary(input: $input) {
+    id
+    subsidiaries {
+      organization {
+        id
+        name
+        locations {
+          id
+          address
+        }
+      }
+    }
+  }
+}

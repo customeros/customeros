@@ -277,13 +277,12 @@ export type ContactInput = {
    */
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   description?: InputMaybe<Scalars['String']>;
-  /** An email addresses associted with the contact. */
+  /** An email addresses associated with the contact. */
   email?: InputMaybe<EmailInput>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   /** The first name of the contact. */
   firstName?: InputMaybe<Scalars['String']>;
-  label?: InputMaybe<Scalars['String']>;
   /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
@@ -807,7 +806,8 @@ export enum GCliSearchResultType {
 export type GlobalCache = {
   __typename?: 'GlobalCache';
   gCliCache: Array<GCliItem>;
-  gmailOauthTokenNeedsManualRefresh: Scalars['Boolean'];
+  isGoogleActive: Scalars['Boolean'];
+  isGoogleTokenExpired: Scalars['Boolean'];
   isOwner: Scalars['Boolean'];
   user: User;
 };
@@ -846,6 +846,8 @@ export type InteractionEventInput = {
   createdAt?: InputMaybe<Scalars['Time']>;
   eventIdentifier?: InputMaybe<Scalars['String']>;
   eventType?: InputMaybe<Scalars['String']>;
+  externalId?: InputMaybe<Scalars['String']>;
+  externalSystemId?: InputMaybe<Scalars['String']>;
   interactionSession?: InputMaybe<Scalars['ID']>;
   meetingId?: InputMaybe<Scalars['ID']>;
   repliesTo?: InputMaybe<Scalars['ID']>;
@@ -922,20 +924,30 @@ export type Issue = Node &
   SourceFields & {
     __typename?: 'Issue';
     appSource: Scalars['String'];
+    assignedTo: Array<IssueParticipant>;
     createdAt: Scalars['Time'];
     description?: Maybe<Scalars['String']>;
     externalLinks: Array<ExternalSystem>;
+    followedBy: Array<IssueParticipant>;
     id: Scalars['ID'];
     interactionEvents: Array<InteractionEvent>;
+    /** @deprecated Will be removed in a future release */
     mentionedByNotes: Array<Note>;
     priority?: Maybe<Scalars['String']>;
+    reportedBy?: Maybe<IssueParticipant>;
     source: DataSource;
     sourceOfTruth: DataSource;
     status: Scalars['String'];
     subject?: Maybe<Scalars['String']>;
+    submittedBy?: Maybe<IssueParticipant>;
     tags?: Maybe<Array<Maybe<Tag>>>;
     updatedAt: Scalars['Time'];
   };
+
+export type IssueParticipant =
+  | ContactParticipant
+  | OrganizationParticipant
+  | UserParticipant;
 
 export type IssueSummaryByStatus = {
   __typename?: 'IssueSummaryByStatus';
@@ -1325,9 +1337,7 @@ export type Mutation = {
   phoneNumberUpdateInContact: PhoneNumber;
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
-  player_Merge: Player;
-  player_SetDefaultUser: Player;
-  player_Update: Player;
+  player_Merge: Result;
   social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
@@ -1868,16 +1878,7 @@ export type MutationPhoneNumberUpdateInUserArgs = {
 
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
-};
-
-export type MutationPlayer_SetDefaultUserArgs = {
-  id: Scalars['ID'];
   userId: Scalars['ID'];
-};
-
-export type MutationPlayer_UpdateArgs = {
-  id: Scalars['ID'];
-  update: PlayerUpdate;
 };
 
 export type MutationSocial_RemoveArgs = {
@@ -1965,6 +1966,7 @@ export type Note = {
   createdBy?: Maybe<User>;
   id: Scalars['ID'];
   includes: Array<Attachment>;
+  /** @deprecated will be removed in future versions */
   mentioned: Array<MentionedEntity>;
   noted: Array<NotedEntity>;
   source: DataSource;
@@ -2390,9 +2392,9 @@ export type Query = {
    * - CREATED_AT
    */
   contacts: ContactsPage;
-  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE */
+  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
   dashboardView_Contacts?: Maybe<ContactsPage>;
-  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
@@ -2411,7 +2413,6 @@ export type Query = {
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
   player_ByAuthIdProvider: Player;
-  player_GetUsers: Array<PlayerUser>;
   tags: Array<Tag>;
   tenant: Scalars['String'];
   tenant_ByEmail?: Maybe<Scalars['String']>;
