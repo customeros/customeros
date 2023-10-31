@@ -32,8 +32,6 @@ type OrganizationRepository interface {
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
 	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
-	LinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, subOrganizationType, relationName string) error
-	UnlinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, relationName string) error
 	ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
 	RemoveOwner(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	AddRelationship(ctx context.Context, tenant, organizationId, relationship string) (*dbtype.Node, error)
@@ -651,66 +649,6 @@ func (r *organizationRepository) GetLinkedParentOrganizations(ctx context.Contex
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
-}
-
-func (r *organizationRepository) LinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, subOrganizationType, relationName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.LinkSubOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$organizationId})," +
-		" (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization {id:$subOrganizationId}) " +
-		" MERGE (parent)<-[rel:%s]-(sub) " +
-		" ON CREATE SET rel.type=$type " +
-		" ON MATCH SET rel.type=$type " +
-		" return parent.id"
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, relationName),
-			map[string]interface{}{
-				"tenant":            tenant,
-				"organizationId":    organizationId,
-				"subOrganizationId": subOrganizationId,
-				"type":              subOrganizationType,
-				"now":               utils.Now(),
-			})
-		if err != nil {
-			return nil, err
-		}
-		_, err = queryResult.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
-	})
-	return err
-}
-
-func (r *organizationRepository) UnlinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, relationName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UnlinkSubOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$organizationId})<-[rel:%s]-(sub:Organization {id:$subOrganizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)" +
-		" DELETE rel "
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, relationName),
-			map[string]interface{}{
-				"tenant":            tenant,
-				"organizationId":    organizationId,
-				"subOrganizationId": subOrganizationId,
-				"now":               utils.Now(),
-			})
-		return nil, err
-	})
-	return err
 }
 
 func (r *organizationRepository) GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {

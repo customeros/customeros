@@ -8,9 +8,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -1159,16 +1161,35 @@ func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main")
+	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "parent")
 	subOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub")
+	subsidiaryType := "shop"
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+
+	calledAddParent := false
+
+	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+		AddParent: func(context context.Context, org *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, subsidiaryType, org.Type)
+			require.Equal(t, subOrgId, org.OrganizationId)
+			require.Equal(t, parentOrgId, org.ParentOrganizationId)
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, testUserId, org.LoggedInUserId)
+			calledAddParent = true
+			neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, subOrgId, subsidiaryType)
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: subOrgId,
+			}, nil
+		},
+	}
+	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("organization/add_subsidiary"),
 		client.Var("organizationId", parentOrgId),
 		client.Var("subsidiaryId", subOrgId),
-		client.Var("type", "shop"),
+		client.Var("type", subsidiaryType),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
@@ -1178,14 +1199,15 @@ func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	organization := organizationStruct.Organization_AddSubsidiary
 	require.NotNil(t, organization)
-
 	require.Equal(t, parentOrgId, organization.ID)
+	require.True(t, calledAddParent)
+
+	// below changes were done directly in DB, checking for returned data consistency
 	require.Equal(t, 1, len(organization.Subsidiaries))
 	require.Equal(t, subOrgId, organization.Subsidiaries[0].Organization.ID)
 	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
-
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+	assertRelationship(ctx, t, driver, subOrgId, "SUBSIDIARY_OF", parentOrgId)
 }
 
 func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
@@ -1195,11 +1217,26 @@ func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 
 	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main")
 	subOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub")
-
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, subOrgId, "shop")
 
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+
+	calledRemoveParent := false
+
+	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+		RemoveParent: func(context context.Context, org *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, subOrgId, org.OrganizationId)
+			require.Equal(t, parentOrgId, org.ParentOrganizationId)
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, testUserId, org.LoggedInUserId)
+			calledRemoveParent = true
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: subOrgId,
+			}, nil
+		},
+	}
+	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("organization/remove_subsidiary"),
 		client.Var("organizationId", parentOrgId),
@@ -1213,12 +1250,9 @@ func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	organization := organizationStruct.Organization_RemoveSubsidiary
 	require.NotNil(t, organization)
-
 	require.Equal(t, parentOrgId, organization.ID)
-	require.Equal(t, 0, len(organization.Subsidiaries))
-
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
+	require.True(t, calledRemoveParent)
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
 }
 
 func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {

@@ -177,6 +177,13 @@ func assertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.D
 	}
 }
 
+func assertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string) {
+	rel, err := neo4jt.GetRelationship(ctx, driver, fromNodeId, toNodeId)
+	require.Nil(t, err)
+	require.NotNil(t, rel)
+	require.Equal(t, relationshipType, rel.Type)
+}
+
 func callGraphQL(t *testing.T, queryLocation string, vars map[string]interface{}) (rawResponse *client.Response) {
 	// Transform map into var args of options
 	options := make([]client.Option, 0, len(vars))

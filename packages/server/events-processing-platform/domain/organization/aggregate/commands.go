@@ -498,7 +498,11 @@ func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *
 		return errors.Wrap(err, "NewOrganizationAddParentEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.Metadata{
+		Tenant: cmd.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
 
 	return a.Apply(event)
 }
@@ -516,7 +520,11 @@ func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cm
 		return errors.Wrap(err, "NewOrganizationRemoveParentEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.Metadata{
+		Tenant: cmd.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
 
 	return a.Apply(event)
 }

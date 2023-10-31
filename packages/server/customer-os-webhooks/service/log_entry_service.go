@@ -236,7 +236,7 @@ func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx cont
 	response, err := s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, request)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertLogEntry"))
+		tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertLogEntry"))
 		reason = fmt.Sprintf("failed sending event to upsert log entry with external reference %s for tenant %s :%s", externalId, common.GetTenantFromContext(ctx), err.Error())
 		s.log.Error(reason)
 	} else {

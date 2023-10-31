@@ -201,7 +201,7 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 		response, err := s.grpcClients.CommentClient.UpsertComment(ctx, &request)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertComment"))
+			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertComment"))
 			reason = fmt.Sprintf("failed sending event to upsert comment with external reference %s for tenant %s :%s", commentInput.ExternalId, tenant, err.Error())
 			s.log.Error(reason)
 		} else {

@@ -231,7 +231,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		_, err = s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertIssue"))
+			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertIssue"))
 			reason = fmt.Sprintf("failed sending event to upsert issue with external reference %s for tenant %s :%s", issueInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
@@ -267,7 +267,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				})
 				processedFollowerUserIds = append(processedFollowerUserIds, followerId)
 				if err != nil {
-					tracing.TraceErr(span, err, log.String("grpcFunction", "AddUserFollower"))
+					tracing.TraceErr(span, err, log.String("grpcMethod", "AddUserFollower"))
 					reason = fmt.Sprintf("failed sending event to add follower %s to issue %s for tenant %s :%s", followerId, issueId, tenant, err.Error())
 					s.log.Error(reason)
 				}
@@ -294,7 +294,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				})
 				processedFollowerUserIds = append(processedFollowerUserIds, collaboratorId)
 				if err != nil {
-					tracing.TraceErr(span, err, log.String("grpcFunction", "AddUserFollower"))
+					tracing.TraceErr(span, err, log.String("grpcMethod", "AddUserFollower"))
 					reason = fmt.Sprintf("failed sending event to add follower %s to issue %s for tenant %s :%s", collaboratorId, issueId, tenant, err.Error())
 					s.log.Error(reason)
 				}
@@ -319,7 +319,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 			})
 			if err != nil {
-				tracing.TraceErr(span, err, log.String("grpcFunction", "AddUserAssignee"))
+				tracing.TraceErr(span, err, log.String("grpcMethod", "AddUserAssignee"))
 				reason = fmt.Sprintf("failed sending event to add assignee %s to issue %s for tenant %s :%s", assigneeId, issueId, tenant, err.Error())
 				s.log.Error(reason)
 			}

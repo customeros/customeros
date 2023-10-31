@@ -60,7 +60,7 @@ func main() {
 	//testContactLinkWithOrganization()
 	//testCreateIssue()
 	//testUpdateIssue()
-	testCreateComment()
+	//testCreateComment()
 }
 
 func InitClients() {
@@ -242,13 +242,16 @@ func testCreatePhoneNumber() {
 func testAddParentOrganization() {
 	tenant := "openline"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	parentOrgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
+	parentOrgId := "not-found-1"
 	relType := "store"
+	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	result, err := clients.OrganizationClient.AddParentOrganization(context.TODO(), &organizationpb.AddParentOrganizationGrpcRequest{
 		Tenant:               tenant,
 		OrganizationId:       orgId,
 		ParentOrganizationId: parentOrgId,
 		Type:                 relType,
+		AppSource:            appSource,
+		LoggedInUserId:       userId,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())

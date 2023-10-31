@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -32,8 +32,8 @@ type OrganizationService interface {
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
 	GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*entity.OrganizationEntities, error)
 	GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
-	AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error
-	RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error
+	AddSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId, subsidiaryType string) error
+	RemoveSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId string) error
 	ReplaceOwner(ctx context.Context, organizationId, userId string) (*entity.OrganizationEntity, error)
 	RemoveOwner(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	AddRelationship(ctx context.Context, organizationId string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
@@ -294,30 +294,95 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error {
+func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId, subsidiaryType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.String("subsidiaryId", subsidiaryId), log.String("subsidiaryType", subsidiaryType))
+	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId), log.String("subsidiaryType", subsidiaryType))
 
-	err := s.repositories.OrganizationRepository.LinkSubOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, subsidiaryId, subsidiaryType, repository.Relationship_Subsidiary)
+	parentExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, entity.NodeLabel_Organization)
 	if err != nil {
-		s.log.Errorf("(organizationService.AddSubsidiary) Error adding subsidiary: {%v}", err.Error())
+		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
+		return err
+	}
+	if !parentExists {
+		err = fmt.Errorf("Parent organization with id {%s} not found", parentOrganizationId)
+		s.log.Errorf("%v", err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	subExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, entity.NodeLabel_Organization)
+	if err != nil {
+		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !subExists {
+		err = fmt.Errorf("sub organization with id {%s} not found", subOrganizationId)
+		s.log.Errorf("%v", err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
+		Tenant:               common.GetTenantFromContext(ctx),
+		OrganizationId:       subOrganizationId,
+		ParentOrganizationId: parentOrganizationId,
+		Type:                 subsidiaryType,
+		LoggedInUserId:       common.GetUserIdFromContext(ctx),
+		AppSource:            constants.AppSourceCustomerOsApi,
+	})
+	if err != nil {
+		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
+		tracing.TraceErr(span, err, log.String("grpcMethod", "AddParentOrganization"))
 	}
 	return err
 }
 
-func (s *organizationService) RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error {
+func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId), log.String("subsidiaryId", subsidiaryId))
+	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId))
 
-	err := s.repositories.OrganizationRepository.UnlinkSubOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, subsidiaryId, repository.Relationship_Subsidiary)
+	parentExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, entity.NodeLabel_Organization)
 	if err != nil {
-		s.log.Errorf("(organizationService.RemoveSubsidiary) Error removing subsidiary: {%v}", err.Error())
+		s.log.Errorf("error checking if parent organization exists: {%v}", err.Error())
 		tracing.TraceErr(span, err)
+		return err
+	}
+	if !parentExists {
+		err = fmt.Errorf("Parent organization with id {%s} not found", parentOrganizationId)
+		s.log.Errorf("%v", err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	subExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), subOrganizationId, entity.NodeLabel_Organization)
+	if err != nil {
+		s.log.Errorf("error checking if sub organization exists: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !subExists {
+		err = fmt.Errorf("sub organization with id {%s} not found", subOrganizationId)
+		s.log.Errorf("%v", err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
+		Tenant:               common.GetTenantFromContext(ctx),
+		OrganizationId:       subOrganizationId,
+		ParentOrganizationId: parentOrganizationId,
+		LoggedInUserId:       common.GetUserIdFromContext(ctx),
+		AppSource:            constants.AppSourceCustomerOsApi,
+	})
+	if err != nil {
+		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
+		tracing.TraceErr(span, err, log.String("grpcMethod", "RemoveParentOrganization"))
 	}
 	return err
 }
@@ -464,7 +529,7 @@ func (s *organizationService) UpsertPhoneNumberRelationInEventStore(ctx context.
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &organization_grpc_service.LinkPhoneNumberToOrganizationGrpcRequest{
+			_, err := s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
 				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
 				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
 				OrganizationId: v.Values[1].(string),
@@ -502,7 +567,7 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 			return 0, 0, err
 		}
 		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.LinkEmailToOrganization(context.Background(), &organization_grpc_service.LinkEmailToOrganizationGrpcRequest{
+			_, err := s.grpcClients.OrganizationClient.LinkEmailToOrganization(context.Background(), &organizationpb.LinkEmailToOrganizationGrpcRequest{
 				Primary:        utils.GetBoolPropOrFalse(v.Values[0].(neo4j.Relationship).Props, "primary"),
 				Label:          utils.GetStringPropOrEmpty(v.Values[0].(neo4j.Relationship).Props, "label"),
 				OrganizationId: v.Values[1].(string),

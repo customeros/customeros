@@ -245,7 +245,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		_, err = s.grpcClients.InteractionEventClient.UpsertInteractionEvent(ctx, &interactionEventGrpcRequest)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertInteractionEvent"))
+			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertInteractionEvent"))
 			reason = fmt.Sprintf("failed sending event to upsert interaction event with external reference %s for tenant %s :%s", interactionEventInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}

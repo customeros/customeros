@@ -3,11 +3,12 @@ package events_paltform
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
-	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
-	jobrolegrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
-	phonenumbergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
-	usergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"log"
@@ -33,11 +34,12 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientCo
 
 	server := grpc.NewServer()
 
-	contactgrpc.RegisterContactGrpcServiceServer(server, &MockContactService{})
-	emailgrpc.RegisterEmailGrpcServiceServer(server, &MockEmailService{})
-	phonenumbergrpc.RegisterPhoneNumberGrpcServiceServer(server, &MockPhoneNumberService{})
-	jobrolegrpc.RegisterJobRoleGrpcServiceServer(server, &MockJobRoleService{})
-	usergrpc.RegisterUserGrpcServiceServer(server, &MockUserService{})
+	contactpb.RegisterContactGrpcServiceServer(server, &MockContactService{})
+	emailpb.RegisterEmailGrpcServiceServer(server, &MockEmailService{})
+	phonenumberpb.RegisterPhoneNumberGrpcServiceServer(server, &MockPhoneNumberService{})
+	jobrolepb.RegisterJobRoleGrpcServiceServer(server, &MockJobRoleService{})
+	userpb.RegisterUserGrpcServiceServer(server, &MockUserService{})
+	organizationpb.RegisterOrganizationGrpcServiceServer(server, &MockOrganizationService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {
