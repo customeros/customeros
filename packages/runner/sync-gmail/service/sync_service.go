@@ -64,23 +64,18 @@ func (s *syncService) ConvertToUTC(datetimeStr string) (time.Time, error) {
 
 	layouts := []string{
 		"2006-01-02T15:04:05Z07:00",
+
 		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
-		"Mon, 02 Jan 2006 15:04:05 -0700 (MST)",
+
+		"Mon, 2 Jan 2006 15:04:05 MST",
 
 		"Mon, 2 Jan 2006 15:04:05 -0700",
-		"Mon, 02 Jan 2006 15:04:05 -0700",
 
 		"Mon, 2 Jan 2006 15:04:05 +0000 (GMT)",
-		"Mon, 02 Jan 2006 15:04:05 +0000 (GMT)",
 
-		"Thu, 2 Jun 2023 03:53:38 -0700 (PDT)",
-		"Thu, 02 Jun 2023 03:53:38 -0700 (PDT)",
-
-		"Wed, 2 Sep 2021 13:02:25 GMT",
-		"Wed, 02 Sep 2021 13:02:25 GMT",
+		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
 
 		"2 Jan 2006 15:04:05 -0700",
-		"02 Jan 2006 15:04:05 -0700",
 	}
 	var parsedTime time.Time
 

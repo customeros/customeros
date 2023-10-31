@@ -25,7 +25,7 @@ func NewRawEmailRepository(gormDb *gorm.DB) RawEmailRepository {
 
 func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error) {
 	result := []entity.RawEmail{}
-	err := repo.gormDb.Select("id").Limit(25).Find(&result, "external_system = ? AND tenant_name = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenantName).Error
+	err := repo.gormDb.Order("sent_at desc").Select([]string{"id"}).Limit(25).Find(&result, "external_system = ? AND tenant = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenantName).Error
 
 	if err != nil {
 		logrus.Errorf("Failed getting rawEmails: %s; %s", externalSystem, tenantName)
@@ -37,7 +37,7 @@ func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(externalSystem, tenantNa
 
 func (repo *rawEmailRepositoryImpl) GetEmailsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawEmail, error) {
 	result := []entity.RawEmail{}
-	err := repo.gormDb.Select("id").Limit(25).Find(&result, "external_system = ? AND tenant_name = ? AND username_source = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenantName, userSource).Error
+	err := repo.gormDb.Order("sent_at desc").Select([]string{"id"}).Limit(25).Find(&result, "external_system = ? AND tenant = ? AND username = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenantName, userSource).Error
 
 	if err != nil {
 		logrus.Errorf("Failed getting rawEmails: %s; %s", externalSystem, tenantName)
@@ -61,7 +61,7 @@ func (repo *rawEmailRepositoryImpl) GetEmailForSync(id uuid.UUID) (*entity.RawEm
 
 func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(externalSystem, tenant, usernameSource, messageId string) (*entity.RawEmail, error) {
 	var result entity.RawEmail
-	err := repo.gormDb.Where("external_system = ? AND tenant_name = ? AND username_source = ? AND message_id = ?", externalSystem, tenant, usernameSource, messageId).Find(&result).Error
+	err := repo.gormDb.Where("external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, usernameSource, messageId).Find(&result).Error
 
 	if err != nil {
 		logrus.Errorf("Failed getting rawEmail: %s; %s; %s", externalSystem, tenant, messageId)

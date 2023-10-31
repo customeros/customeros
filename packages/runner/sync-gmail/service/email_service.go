@@ -170,7 +170,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		references := extractLines(rawEmailData.Reference)
 		inReplyTo := extractLines(rawEmailData.InReplyTo)
 
-		allEmailsString, err := s.services.SyncService.BuildEmailsListExcludingPersonalEmails(personalEmailProviderList, rawEmail.UsernameSource, from, to, cc, bcc)
+		allEmailsString, err := s.services.SyncService.BuildEmailsListExcludingPersonalEmails(personalEmailProviderList, rawEmail.Username, from, to, cc, bcc)
 		if err != nil {
 			logrus.Errorf("failed to build emails list: %v", err)
 			return entity.ERROR, nil, err

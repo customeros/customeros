@@ -8,8 +8,8 @@ import (
 )
 
 type RawEmailRepository interface {
-	EmailExistsByMessageId(externalSystem, tenant, usernameSource, messageId string) (bool, error)
-	Store(externalSystem, tenantName, usernameSource, providerMessageId, messageId, rawEmail string) error
+	EmailExistsByMessageId(externalSystem, tenant, username, messageId string) (bool, error)
+	Store(externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.GmailImportState) error
 }
 
 type rawEmailRepositoryImpl struct {
@@ -20,9 +20,9 @@ func NewRawEmailRepository(gormDb *gorm.DB) RawEmailRepository {
 	return &rawEmailRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *rawEmailRepositoryImpl) EmailExistsByMessageId(externalSystem, tenant, usernameSource, messageId string) (bool, error) {
+func (repo *rawEmailRepositoryImpl) EmailExistsByMessageId(externalSystem, tenant, username, messageId string) (bool, error) {
 	var result int64
-	err := repo.gormDb.Model(entity.RawEmail{}).Where("external_system = ? AND tenant_name = ? AND username_source = ? AND message_id = ?", externalSystem, tenant, usernameSource, messageId).Count(&result).Error
+	err := repo.gormDb.Model(entity.RawEmail{}).Where("external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).Count(&result).Error
 
 	if err != nil {
 		logrus.Errorf("Failed getting rawEmail: %s; %s; %s", externalSystem, tenant, messageId)
@@ -32,17 +32,17 @@ func (repo *rawEmailRepositoryImpl) EmailExistsByMessageId(externalSystem, tenan
 	return result > 0, nil
 }
 
-func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenantName, usernameSource, providerMessageId, messageId, rawEmail string) error {
+func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.GmailImportState) error {
 	result := entity.RawEmail{}
-	err := repo.gormDb.Find(&result, "external_system = ? AND tenant_name = ? AND username_source = ? AND message_id = ?", externalSystem, tenantName, usernameSource, messageId).Error
+	err := repo.gormDb.Find(&result, "external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).Error
 
 	if err != nil {
-		logrus.Errorf("Failed retrieving rawEmail: %s; %s; %s; %s", externalSystem, tenantName, usernameSource, messageId)
+		logrus.Errorf("Failed retrieving rawEmail: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
 		return err
 	}
 
-	if result.TenantName != "" {
-		logrus.Infof("RawEmailRepository.Store - already exists: %s; %s; %s; %s", externalSystem, tenantName, usernameSource, messageId)
+	if result.Tenant != "" {
+		logrus.Infof("RawEmailRepository.Store - already exists: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
 		return nil
 	}
 
@@ -50,15 +50,17 @@ func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenantName, usernameSo
 	result.MessageId = messageId
 
 	result.CreatedAt = time.Now().UTC()
+	result.SentAt = sentAt
+	result.State = state
 	result.ExternalSystem = externalSystem
-	result.TenantName = tenantName
-	result.UsernameSource = usernameSource
+	result.Tenant = tenant
+	result.Username = username
 	result.Data = rawEmail
 	result.SentToEventStoreState = "PENDING"
 
 	err = repo.gormDb.Save(&result).Error
 	if err != nil {
-		logrus.Errorf("Failed storing rawEmail: %s; %s; %s; %s", externalSystem, tenantName, usernameSource, messageId)
+		logrus.Errorf("Failed storing rawEmail: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
 		return err
 	}
 
