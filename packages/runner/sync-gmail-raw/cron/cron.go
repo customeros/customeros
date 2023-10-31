@@ -164,9 +164,6 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 									logrus.Infof("gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant.Name, emailForUser.RawEmail)
 									return
 								}
-							} else {
-								logrus.Infof("gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant.Name, emailForUser.RawEmail)
-								return
 							}
 						} else {
 							gmailImportState, err = getHistoryImportGmailImportState(services, tenant.Name, emailForUser.RawEmail, entity.LAST_WEEK)
