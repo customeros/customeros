@@ -14,16 +14,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"sync"
 	"time"
 )
-
-const maxWorkersContactSync = 1
 
 type ContactService interface {
 	SyncContacts(ctx context.Context, contacts []model.ContactData) error
@@ -35,6 +33,7 @@ type contactService struct {
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 	services     *Services
+	maxWorkers   int
 }
 
 func NewContactService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) ContactService {
@@ -43,6 +42,7 @@ func NewContactService(log logger.Logger, repositories *repository.Repositories,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
+		maxWorkers:   services.cfg.ConcurrencyConfig.ContactSyncConcurrency,
 	}
 }
 
@@ -61,9 +61,11 @@ func (s *contactService) SyncContacts(ctx context.Context, contacts []model.Cont
 	// pre-validate contact input before syncing
 	for _, contact := range contacts {
 		if contact.ExternalSystem == "" {
+			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(contact.ExternalSystem)) {
+			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", contact.ExternalSystem))
 			return errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -71,7 +73,7 @@ func (s *contactService) SyncContacts(ctx context.Context, contacts []model.Cont
 	// Create a wait group to wait for all workers to finish
 	var wg sync.WaitGroup
 	// Create a channel to control the number of concurrent workers
-	workerLimit := make(chan struct{}, maxWorkersContactSync)
+	workerLimit := make(chan struct{}, s.maxWorkers)
 
 	syncMutex := &sync.Mutex{}
 	statusesMutex := &sync.Mutex{}
@@ -85,7 +87,6 @@ func (s *contactService) SyncContacts(ctx context.Context, contacts []model.Cont
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			// Continue with Slack sync
 		}
 
 		// Acquire a worker slot
@@ -118,7 +119,8 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.syncContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", contactInput.ExternalSystem), log.Object("contactInput", contactInput))
+	span.SetTag("externalSystem", contactInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate), log.Object("contactInput", contactInput))
 
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false
@@ -163,6 +165,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 
 	// Lock contact creation
 	syncMutex.Lock()
+	defer syncMutex.Unlock()
 	// Check if contact already exists
 	contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, contactInput.ExternalSystem, contactInput.ExternalId, contactInput.EmailsForUnicity())
 	if err != nil {
@@ -181,7 +184,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		span.LogFields(log.String("contactId", contactId))
 
 		// Create or update contact
-		_, err = s.grpcClients.ContactClient.UpsertContact(ctx, &contactgrpc.UpsertContactGrpcRequest{
+		_, err = s.grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
 			Tenant:          tenant,
 			Id:              contactId,
 			Name:            contactInput.Name,
@@ -192,11 +195,11 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
 			CreatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.CreatedAt),
 			UpdatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.UpdatedAt),
-			SourceFields: &commongrpc.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:    contactInput.ExternalSystem,
 				AppSource: utils.StringFirstNonEmpty(contactInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 			},
-			ExternalSystemFields: &commongrpc.ExternalSystemFields{
+			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: contactInput.ExternalSystem,
 				ExternalId:       contactInput.ExternalId,
 				ExternalUrl:      contactInput.ExternalUrl,
@@ -207,7 +210,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		})
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertContact"))
 			reason = fmt.Sprintf("failed sending event to upsert contact  with external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
@@ -233,7 +236,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		}
 		// Link email to contact
 		if !failedSync {
-			_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactgrpc.LinkEmailToContactGrpcRequest{
+			_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
 				Tenant:    common.GetTenantFromContext(ctx),
 				ContactId: contactId,
 				EmailId:   emailId,
@@ -241,7 +244,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			})
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToContact"))
 				reason = fmt.Sprintf("Failed to link email address %s with contact %s: %s", contactInput.Email, contactId, err.Error())
 				s.log.Error(reason)
 			}
@@ -259,7 +262,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			}
 			// Link email to contact
 			if !failedSync {
-				_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactgrpc.LinkEmailToContactGrpcRequest{
+				_, err = s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					ContactId: contactId,
 					EmailId:   emailId,
@@ -267,31 +270,30 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				})
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToContact"))
 					reason = fmt.Sprintf("Failed to link email address %s with contact %s: %s", email, contactId, err.Error())
 					s.log.Error(reason)
 				}
 			}
 		}
 	}
-	syncMutex.Unlock()
 
 	if !failedSync {
 		for orgId, referencedOrganization := range identifiedOrganizations {
 			// Link contact to organization
-			_, err = s.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactgrpc.LinkWithOrganizationGrpcRequest{
+			_, err = s.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
 				Tenant:         common.GetTenantFromContext(ctx),
 				ContactId:      contactId,
 				OrganizationId: orgId,
 				JobTitle:       referencedOrganization.JobTitle,
-				SourceFields: &commongrpc.SourceFields{
+				SourceFields: &commonpb.SourceFields{
 					Source:    contactInput.ExternalSystem,
 					AppSource: contactInput.AppSource,
 				},
 			})
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, err, log.String("grpcFunction", "LinkWithOrganization"))
 				reason = fmt.Sprintf("Failed to link contact %s with organization %s: %s", contactId, orgId, err.Error())
 				s.log.Error(reason)
 			}
@@ -311,7 +313,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				}
 				// Link phone number to contact
 				if phoneNumberId != "" {
-					_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactgrpc.LinkPhoneNumberToContactGrpcRequest{
+					_, err = s.grpcClients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
 						Tenant:        common.GetTenantFromContext(ctx),
 						ContactId:     contactId,
 						PhoneNumberId: phoneNumberId,
@@ -320,7 +322,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 					})
 					if err != nil {
 						failedSync = true
-						tracing.TraceErr(span, err)
+						tracing.TraceErr(span, err, log.String("grpcFunction", "LinkPhoneNumberToContact"))
 						reason = fmt.Sprintf("Failed to link phone number %s with contact %s: %s", phoneNumberDtls.Number, contactId, err.Error())
 						s.log.Error(reason)
 					}
@@ -349,14 +351,14 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 
 			// Link location to contact
 			if locationId != "" {
-				_, err = s.grpcClients.ContactClient.LinkLocationToContact(ctx, &contactgrpc.LinkLocationToContactGrpcRequest{
+				_, err = s.grpcClients.ContactClient.LinkLocationToContact(ctx, &contactpb.LinkLocationToContactGrpcRequest{
 					Tenant:     common.GetTenantFromContext(ctx),
 					ContactId:  contactId,
 					LocationId: locationId,
 				})
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkLocationToContact"))
 					reason = fmt.Sprintf("Failed to link location %s with contact %s: %s", locationId, contactId, err.Error())
 					s.log.Error(reason)
 				}

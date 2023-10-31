@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -56,12 +57,12 @@ func NewContactCreateEvent(aggregate eventstore.Aggregate, dataFields models.Con
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactCreateEvent")
 	}
 	return event, nil
 }
@@ -98,12 +99,12 @@ func NewContactUpdateEvent(aggregate eventstore.Aggregate, source string, dataFi
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactUpdateEvent")
 	}
 	return event, nil
 }
@@ -126,12 +127,12 @@ func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, phoneNumberI
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactLinkPhoneNumberEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactLinkPhoneNumberEvent")
 	}
 	return event, nil
 }
@@ -154,12 +155,12 @@ func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, emailId, label str
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactLinkEmailEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactLinkEmailEvent")
 	}
 	return event, nil
 }
@@ -178,12 +179,12 @@ func NewContactLinkLocationEvent(aggregate eventstore.Aggregate, locationId stri
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactLinkLocationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactLinkLocationEvent")
 	}
 	return event, nil
 }
@@ -217,12 +218,12 @@ func NewContactLinkWithOrganizationEvent(aggregate eventstore.Aggregate, organiz
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactLinkWithOrganizationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactOrganizationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactLinkWithOrganizationEvent")
 	}
 	return event, nil
 }

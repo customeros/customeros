@@ -64,7 +64,7 @@ func (s *locationService) CreateLocation(ctx context.Context, locationId, extern
 		PostalCode:   postalCode,
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertLocation"))
 		s.log.Errorf("Error from events processing %s", err.Error())
 		return "", err
 	}

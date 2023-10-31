@@ -60,7 +60,7 @@ func (s *emailService) CreateEmail(ctx context.Context, email, source, appSource
 			},
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertEmail"))
 			s.log.Errorf("Error from events processing %s", err.Error())
 			return "", err
 		}

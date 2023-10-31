@@ -73,7 +73,7 @@ func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx conte
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 					MATCH (ie:InteractionEvent_%s)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
-					RETURN ie.id ORDER BY is.createdAt`, tenant)
+					RETURN ie.id ORDER BY ie.createdAt`, tenant)
 	params := map[string]any{
 		"tenant":           tenant,
 		"externalId":       externalId,

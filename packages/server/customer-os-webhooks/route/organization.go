@@ -47,6 +47,7 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncOrganizations) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -55,6 +56,7 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 		// Parse the JSON request body
 		var organizations []model.OrganizationData
 		if err = json.Unmarshal(requestBody, &organizations); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncOrganizations) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -75,6 +77,7 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 
 		err = services.OrganizationService.SyncOrganizations(ctx, organizations)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncOrganizations) error in sync organizations: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -104,6 +107,7 @@ func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
 		requestBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncOrganization) error reading request body: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
@@ -112,6 +116,7 @@ func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 		// Parse the JSON request body
 		var organization model.OrganizationData
 		if err = json.Unmarshal(requestBody, &organization); err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncOrganization) Failed unmarshalling body request: %s", err.Error())
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
 			return
@@ -124,6 +129,7 @@ func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 
 		err = services.OrganizationService.SyncOrganizations(ctx, []model.OrganizationData{organization})
 		if err != nil {
+			tracing.TraceErr(span, err)
 			log.Errorf("(SyncOrganization) error in sync organization: %s", err.Error())
 			if errors.IsBadRequest(err) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

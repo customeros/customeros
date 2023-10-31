@@ -14,8 +14,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	logentrygrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -23,8 +23,6 @@ import (
 	"sync"
 	"time"
 )
-
-const maxWorkersLogEntrySync = 1
 
 type LogEntryService interface {
 	SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) error
@@ -35,6 +33,7 @@ type logEntryService struct {
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 	services     *Services
+	maxWorkers   int
 }
 
 func NewLogEntryService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) LogEntryService {
@@ -43,6 +42,7 @@ func NewLogEntryService(log logger.Logger, repositories *repository.Repositories
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
+		maxWorkers:   services.cfg.ConcurrencyConfig.LogEntrySyncConcurrency,
 	}
 }
 
@@ -60,9 +60,11 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 	// pre-validate log entry input before syncing
 	for _, logEntry := range logEntries {
 		if logEntry.ExternalSystem == "" {
+			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(logEntry.ExternalSystem)) {
+			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", logEntry.ExternalSystem))
 			return errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -70,7 +72,7 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 	// Create a wait group to wait for all workers to finish
 	var wg sync.WaitGroup
 	// Create a channel to control the number of concurrent workers
-	workerLimit := make(chan struct{}, maxWorkersLogEntrySync)
+	workerLimit := make(chan struct{}, s.maxWorkers)
 
 	syncMutex := &sync.Mutex{}
 	statusesMutex := &sync.Mutex{}
@@ -84,7 +86,6 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			// Continue with Slack sync
 		}
 
 		// Acquire a worker slot
@@ -117,7 +118,8 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.syncLogEntry")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", logEntryInput.ExternalSystem), log.Object("logEntryInput", logEntryInput), log.String("tenant", tenant))
+	span.SetTag("externalSystem", logEntryInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate), log.Object("logEntryInput", logEntryInput))
 
 	var failedSync = false
 	var reason = ""
@@ -165,6 +167,7 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 
 	// Lock log entry creation
 	syncMutex.Lock()
+	defer syncMutex.Unlock()
 	// Check if log entry already exists
 	logEntryId, err := s.repositories.LogEntryRepository.GetMatchedLogEntryId(ctx, tenant, logEntryInput.ExternalSystem, logEntryInput.ExternalId)
 	if err != nil {
@@ -179,7 +182,7 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 		span.LogFields(log.Bool("found matching log entry", matchingLogEntryExists))
 		span.LogFields(log.String("logEntryId", logEntryId))
 
-		request := logentrygrpc.UpsertLogEntryGrpcRequest{
+		request := logentrypb.UpsertLogEntryGrpcRequest{
 			Id:          logEntryId,
 			Tenant:      tenant,
 			Content:     logEntryInput.Content,
@@ -187,11 +190,11 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 			CreatedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.CreatedAt, utils.NowAsPtr()).(time.Time)),
 			UpdatedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.UpdatedAt, utils.NowAsPtr()).(time.Time)),
 			StartedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.StartedAt, utils.NowAsPtr()).(time.Time)),
-			SourceFields: &commongrpc.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:    logEntryInput.ExternalSystem,
 				AppSource: utils.StringFirstNonEmpty(logEntryInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 			},
-			ExternalSystemFields: &commongrpc.ExternalSystemFields{
+			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: logEntryInput.ExternalSystem,
 				ExternalId:       logEntryInput.ExternalId,
 				ExternalSource:   logEntryInput.ExternalSourceEntity,
@@ -214,7 +217,6 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 			}
 		}
 	}
-	syncMutex.Unlock()
 
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {
@@ -225,7 +227,7 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	return NewSuccessfulSyncStatus()
 }
 
-func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx context.Context, logEntryId, externalId, organizationId string, request *logentrygrpc.UpsertLogEntryGrpcRequest, span opentracing.Span, matchingLogEntryExists bool) (bool, string) {
+func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx context.Context, logEntryId, externalId, organizationId string, request *logentrypb.UpsertLogEntryGrpcRequest, span opentracing.Span, matchingLogEntryExists bool) (bool, string) {
 	if organizationId != "" {
 		request.LoggedOrganizationId = utils.StringPtr(organizationId)
 	}
@@ -234,7 +236,7 @@ func (s *logEntryService) sendLogEntryToEventStoreForLoggedOrganization(ctx cont
 	response, err := s.grpcClients.LogEntryClient.UpsertLogEntry(ctx, request)
 	if err != nil {
 		failedSync = true
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertLogEntry"))
 		reason = fmt.Sprintf("failed sending event to upsert log entry with external reference %s for tenant %s :%s", externalId, common.GetTenantFromContext(ctx), err.Error())
 		s.log.Error(reason)
 	} else {

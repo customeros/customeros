@@ -99,7 +99,7 @@ func (r *issueRepository) GetIssueIdByExternalId(ctx context.Context, tenant, ex
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
 					MATCH (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue_%s)-[:IS_LINKED_WITH {externalId:$externalId}]->(e)
-					RETURN i.id ORDER BY is.createdAt`, tenant)
+					RETURN i.id ORDER BY i.createdAt`, tenant)
 	params := map[string]any{
 		"tenant":           tenant,
 		"externalId":       externalId,

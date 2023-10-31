@@ -15,16 +15,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	orggrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"sync"
 	"time"
 )
-
-const maxWorkersOrganizationSync = 1
 
 type domains struct {
 	whitelistDomains       []comentity.WhitelistDomain
@@ -41,6 +39,7 @@ type organizationService struct {
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 	services     *Services
+	maxWorkers   int
 }
 
 func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) OrganizationService {
@@ -49,6 +48,7 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
+		maxWorkers:   services.cfg.ConcurrencyConfig.OrganizationSyncConcurrency,
 	}
 }
 
@@ -66,9 +66,11 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	// pre-validate organization input before syncing
 	for _, org := range organizations {
 		if org.ExternalSystem == "" {
+			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
+			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", org.ExternalSystem))
 			return errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -76,7 +78,7 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	// Create a wait group to wait for all workers to finish
 	var wg sync.WaitGroup
 	// Create a channel to control the number of concurrent workers
-	workerLimit := make(chan struct{}, maxWorkersOrganizationSync)
+	workerLimit := make(chan struct{}, s.maxWorkers)
 
 	syncMutex := &sync.Mutex{}
 	statusesMutex := &sync.Mutex{}
@@ -105,7 +107,6 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			// Continue with Slack sync
 		}
 
 		// Acquire a worker slot
@@ -138,7 +139,8 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.syncOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", orgInput.ExternalSystem), log.Object("orgInput", orgInput))
+	span.SetTag("externalSystem", orgInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate), log.Object("orgInput", orgInput))
 
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false
@@ -194,6 +196,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 	// Lock organization creation
 	syncMutex.Lock()
+	defer syncMutex.Unlock()
 	// Check if organization already exists
 	organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput.ExternalSystem, orgInput.ExternalId, orgInput.CustomerOsId, orgInput.Domains)
 	if err != nil {
@@ -207,7 +210,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		span.LogFields(log.Bool("found matching organization", matchingOrganizationExists))
 
 		if orgInput.UpdateOnly && !matchingOrganizationExists {
-			syncMutex.Unlock()
 			span.LogFields(log.String("output", "skipped"))
 			return NewSkippedSyncStatus("Update only flag enabled and no matching organization found")
 		}
@@ -218,7 +220,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		span.LogFields(log.String("organizationId", organizationId))
 
 		// Create or update organization
-		_, err = s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &orggrpc.UpsertOrganizationGrpcRequest{
+		_, err = s.grpcClients.OrganizationClient.UpsertOrganization(ctx, &organizationpb.UpsertOrganizationGrpcRequest{
 			Tenant:            tenant,
 			Id:                organizationId,
 			LoggedInUserId:    "",
@@ -242,11 +244,11 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			Note:              orgInput.Note,
 			ReferenceId:       orgInput.ReferenceId,
 			IgnoreEmptyFields: false,
-			SourceFields: &commongrpc.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:    orgInput.ExternalSystem,
 				AppSource: utils.StringFirstNonEmpty(orgInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 			},
-			ExternalSystemFields: &commongrpc.ExternalSystemFields{
+			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: orgInput.ExternalSystem,
 				ExternalId:       orgInput.ExternalId,
 				ExternalUrl:      orgInput.ExternalUrl,
@@ -257,7 +259,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		})
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertOrganization"))
 			reason = fmt.Sprintf("failed sending event to upsert organization  with external reference %s for tenant %s :%s", orgInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
@@ -274,23 +276,21 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	if !failedSync && orgInput.HasDomains() {
 		for _, domain := range orgInput.Domains {
-			_, err = s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &orggrpc.LinkDomainToOrganizationGrpcRequest{
+			_, err = s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
 				Tenant:         common.GetTenantFromContext(ctx),
 				LoggedInUserId: "",
 				OrganizationId: organizationId,
 				Domain:         domain,
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, err, log.String("grpcFunction", "LinkDomainToOrganization"))
 			}
 		}
 	}
-	syncMutex.Unlock()
-
 	if !failedSync && orgInput.IsSubOrg() {
 		parentOrganizationId, _ := s.GetIdForReferencedOrganization(ctx, tenant, orgInput.ExternalSystem, orgInput.ParentOrganization.Organization)
 		if parentOrganizationId != "" {
-			_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &orggrpc.AddParentOrganizationGrpcRequest{
+			_, err = s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
 				Tenant:               common.GetTenantFromContext(ctx),
 				OrganizationId:       organizationId,
 				ParentOrganizationId: parentOrganizationId,
@@ -298,13 +298,12 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			})
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, err, log.String("grpcFunction", "AddParentOrganization"))
 				reason = fmt.Sprintf("Failed to link with parent for organization %s: %s", organizationId, err.Error())
 				s.log.Error(reason)
 			}
 		}
 	}
-
 	if !failedSync {
 		if orgInput.HasEmail() {
 			// Create or update email
@@ -317,13 +316,13 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			}
 			// Link email to organization
 			if emailId != "" {
-				_, err = s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &orggrpc.LinkEmailToOrganizationGrpcRequest{
+				_, err = s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
 					Tenant:         common.GetTenantFromContext(ctx),
 					OrganizationId: organizationId,
 					EmailId:        emailId,
 				})
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToOrganization"))
 					failedSync = true
 					reason = fmt.Sprintf("Failed to link email address %s with organization %s: %s", orgInput.Email, organizationId, err.Error())
 					s.log.Error(reason)
@@ -343,7 +342,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				}
 				// Link phone number to organization
 				if phoneNumberId != "" {
-					_, err = s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &orggrpc.LinkPhoneNumberToOrganizationGrpcRequest{
+					_, err = s.grpcClients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
 						Tenant:         common.GetTenantFromContext(ctx),
 						OrganizationId: organizationId,
 						PhoneNumberId:  phoneNumberId,
@@ -352,7 +351,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 					})
 					if err != nil {
 						failedSync = true
-						tracing.TraceErr(span, err)
+						tracing.TraceErr(span, err, log.String("grpcFunction", "LinkPhoneNumberToOrganization"))
 						reason = fmt.Sprintf("Failed to link phone number %s for organization %s: %s", phoneNumberDtls.Number, organizationId, err.Error())
 						s.log.Error(reason)
 					}
@@ -382,14 +381,14 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 			// Link location to organization
 			if locationId != "" {
-				_, err = s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &orggrpc.LinkLocationToOrganizationGrpcRequest{
+				_, err = s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &organizationpb.LinkLocationToOrganizationGrpcRequest{
 					Tenant:         common.GetTenantFromContext(ctx),
 					OrganizationId: organizationId,
 					LocationId:     locationId,
 				})
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkLocationToOrganization"))
 					reason = fmt.Sprintf("Failed to link location %s with organization %s: %s", locationId, organizationId, err.Error())
 					s.log.Error(reason)
 				}

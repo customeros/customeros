@@ -47,13 +47,15 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 		BelongsToIssueId:   request.BelongsToIssueId,
 		BelongsToSessionId: request.BelongsToSessionId,
 		Hide:               request.Hide,
-		Sender: model.Sender{
+	}
+	if request.Sender != nil {
+		dataFields.Sender = model.Sender{
 			Participant: commonmodel.Participant{
 				ID:              request.Sender.Participant.Id,
 				ParticipantType: GetParticipantTypeFromPB(request.Sender.Participant),
 			},
 			RelationType: request.Sender.RelationType,
-		},
+		}
 	}
 	dataFields.Receivers = make([]model.Receiver, len(request.Receivers))
 	for _, receiver := range request.Receivers {

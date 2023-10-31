@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -42,12 +43,12 @@ func NewLocationCreateEvent(aggregate eventstore.Aggregate, name, rawAddress str
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LocationCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LocationCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LocationCreateEvent")
 	}
 	return event, nil
 }
@@ -72,12 +73,12 @@ func NewLocationUpdateEvent(aggregate eventstore.Aggregate, name, rawAddress, so
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LocationUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LocationUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LocationUpdateEvent")
 	}
 	return event, nil
 }
@@ -100,12 +101,12 @@ func NewLocationFailedValidationEvent(aggregate eventstore.Aggregate, rawAddress
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LocationFailedValidationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LocationValidationFailedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LocationFailedValidationEvent")
 	}
 	return event, nil
 }
@@ -126,12 +127,12 @@ func NewLocationSkippedValidationEvent(aggregate eventstore.Aggregate, rawAddres
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LocationSkippedValidationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LocationValidationSkippedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LocationSkippedValidationEvent")
 	}
 	return event, nil
 }
@@ -154,12 +155,12 @@ func NewLocationValidatedEvent(aggregate eventstore.Aggregate, rawAddress, count
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate LocationValidatedEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, LocationValidatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LocationValidatedEvent")
 	}
 	return event, nil
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -83,8 +84,8 @@ func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapC
 	return textMapCarrier
 }
 
-func TraceErr(span opentracing.Span, err error) {
-	tracing.TraceErr(span, err)
+func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
+	tracing.TraceErr(span, err, fields...)
 }
 
 func SetNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span, tenant string) {

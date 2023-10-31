@@ -42,7 +42,7 @@ func (a *InteractionEventAggregate) createInteractionEvent(ctx context.Context, 
 	createEvent, err := event.NewInteractionEventCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewInteractionCreateEvent")
+		return err
 	}
 	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.Metadata{
 		Tenant: a.Tenant,

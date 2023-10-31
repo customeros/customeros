@@ -5,6 +5,7 @@ import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -37,12 +38,12 @@ func NewPhoneNumberCreateEvent(aggregate eventstore.Aggregate, tenant, rawPhoneN
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate PhoneNumberCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, PhoneNumberCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for PhoneNumberCreateEvent")
 	}
 	return event, nil
 }
@@ -61,12 +62,12 @@ func NewPhoneNumberUpdateEvent(aggregate eventstore.Aggregate, tenant, source st
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate PhoneNumberUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, PhoneNumberUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for PhoneNumberUpdateEvent")
 	}
 	return event, nil
 }
@@ -89,12 +90,12 @@ func NewPhoneNumberFailedValidationEvent(aggregate eventstore.Aggregate, tenant,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate PhoneNumberFailedValidationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, PhoneNumberValidationFailedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for PhoneNumberFailedValidationEvent")
 	}
 	return event, nil
 }
@@ -115,12 +116,12 @@ func NewPhoneNumberSkippedValidationEvent(aggregate eventstore.Aggregate, tenant
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate PhoneNumberSkippedValidationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, PhoneNumberValidationSkippedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for PhoneNumberSkippedValidationEvent")
 	}
 	return event, nil
 }
@@ -143,12 +144,12 @@ func NewPhoneNumberValidatedEvent(aggregate eventstore.Aggregate, tenant, rawPho
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate PhoneNumberValidatedEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, PhoneNumberValidatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for PhoneNumberValidatedEvent")
 	}
 	return event, nil
 }

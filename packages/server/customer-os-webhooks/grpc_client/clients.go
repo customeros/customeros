@@ -1,6 +1,7 @@
 package grpc_client
 
 import (
+	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/comment"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
@@ -25,6 +26,7 @@ type Clients struct {
 	LocationClient         locationpb.LocationGrpcServiceClient
 	IssueClient            issuepb.IssueGrpcServiceClient
 	InteractionEventClient interactioneventpb.InteractionEventGrpcServiceClient
+	CommentClient          commentpb.CommentGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -42,6 +44,7 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		LocationClient:         locationpb.NewLocationGrpcServiceClient(conn),
 		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
 		InteractionEventClient: interactioneventpb.NewInteractionEventGrpcServiceClient(conn),
+		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
 	}
 	return &clients
 }

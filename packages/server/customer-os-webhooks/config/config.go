@@ -14,15 +14,16 @@ import (
 type Config struct {
 	ApiPort     string `env:"PORT" envDefault:"10004" validate:"required"`
 	MetricsPort string `env:"PORT_METRICS" envDefault:"10004" validate:"required"`
-	Logger      logger.Config
 	Service     struct {
 		EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
 		EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
 	}
-	Postgres config.PostgresConfig
-	Neo4j    config.Neo4jConfig
-	Jaeger   tracing.JaegerConfig
-	Metrics  metrics.Config
+	ConcurrencyConfig ConcurrencyConfig
+	Logger            logger.Config
+	Postgres          config.PostgresConfig
+	Neo4j             config.Neo4jConfig
+	Jaeger            tracing.JaegerConfig
+	Metrics           metrics.Config
 }
 
 func InitConfig() (*Config, error) {

@@ -14,16 +14,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	issuegrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"sync"
 	"time"
 )
-
-const maxWorkersIssueSync = 1
 
 type IssueService interface {
 	SyncIssues(ctx context.Context, contacts []model.IssueData) error
@@ -35,6 +33,7 @@ type issueService struct {
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 	services     *Services
+	maxWorkers   int
 }
 
 func NewIssueService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) IssueService {
@@ -43,6 +42,7 @@ func NewIssueService(log logger.Logger, repositories *repository.Repositories, g
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
+		maxWorkers:   services.cfg.ConcurrencyConfig.IssueSyncConcurrency,
 	}
 }
 
@@ -61,9 +61,11 @@ func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData)
 	// pre-validate issues input before syncing
 	for _, issue := range issues {
 		if issue.ExternalSystem == "" {
+			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(issue.ExternalSystem)) {
+			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", issue.ExternalSystem))
 			return errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -71,7 +73,7 @@ func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData)
 	// Create a wait group to wait for all workers to finish
 	var wg sync.WaitGroup
 	// Create a channel to control the number of concurrent workers
-	workerLimit := make(chan struct{}, maxWorkersIssueSync)
+	workerLimit := make(chan struct{}, s.maxWorkers)
 
 	syncMutex := &sync.Mutex{}
 	statusesMutex := &sync.Mutex{}
@@ -85,7 +87,6 @@ func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData)
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			// Continue with Slack sync
 		}
 
 		// Acquire a worker slot
@@ -118,7 +119,8 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.syncIssue")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", issueInput.ExternalSystem), log.Object("issueInput", issueInput))
+	span.SetTag("externalSystem", issueInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate), log.Object("issueInput", issueInput))
 
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false
@@ -174,6 +176,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 
 	// Lock issue creation
 	syncMutex.Lock()
+	defer syncMutex.Unlock()
 	// Check if issue already exists
 	issueId, err := s.repositories.IssueRepository.GetMatchedIssueId(ctx, tenant, issueInput.ExternalSystem, issueInput.ExternalId)
 	if err != nil {
@@ -192,7 +195,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		span.LogFields(log.String("issueId", issueId))
 
 		// Create or update issue
-		issueGrpcRequest := issuegrpc.UpsertIssueGrpcRequest{
+		issueGrpcRequest := issuepb.UpsertIssueGrpcRequest{
 			Tenant:      tenant,
 			Id:          issueId,
 			Subject:     issueInput.Subject,
@@ -201,11 +204,11 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			Description: issueInput.Description,
 			CreatedAt:   utils.ConvertTimeToTimestampPtr(issueInput.CreatedAt),
 			UpdatedAt:   utils.ConvertTimeToTimestampPtr(issueInput.UpdatedAt),
-			SourceFields: &commongrpc.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:    issueInput.ExternalSystem,
 				AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 			},
-			ExternalSystemFields: &commongrpc.ExternalSystemFields{
+			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: issueInput.ExternalSystem,
 				ExternalId:       issueInput.ExternalId,
 				ExternalUrl:      issueInput.ExternalUrl,
@@ -228,7 +231,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 		_, err = s.grpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertIssue"))
 			reason = fmt.Sprintf("failed sending event to upsert issue with external reference %s for tenant %s :%s", issueInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
@@ -243,7 +246,6 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			}
 		}
 	}
-	syncMutex.Unlock()
 
 	processedFollowerUserIds := make([]string, 0)
 	// add user followers
@@ -257,7 +259,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				s.log.Error(reason)
 			}
 			if followerId != "" && followerLabel == entity.NodeLabel_User && !utils.Contains(processedFollowerUserIds, followerId) {
-				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuegrpc.AddUserFollowerToIssueGrpcRequest{
+				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					IssueId:   issueId,
 					UserId:    followerId,
@@ -265,7 +267,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				})
 				processedFollowerUserIds = append(processedFollowerUserIds, followerId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, err, log.String("grpcFunction", "AddUserFollower"))
 					reason = fmt.Sprintf("failed sending event to add follower %s to issue %s for tenant %s :%s", followerId, issueId, tenant, err.Error())
 					s.log.Error(reason)
 				}
@@ -284,7 +286,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				s.log.Error(reason)
 			}
 			if collaboratorId != "" && collaboratorLabel == entity.NodeLabel_User && !utils.Contains(processedFollowerUserIds, collaboratorId) {
-				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuegrpc.AddUserFollowerToIssueGrpcRequest{
+				_, err = s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					IssueId:   issueId,
 					UserId:    collaboratorId,
@@ -292,7 +294,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				})
 				processedFollowerUserIds = append(processedFollowerUserIds, collaboratorId)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, err, log.String("grpcFunction", "AddUserFollower"))
 					reason = fmt.Sprintf("failed sending event to add follower %s to issue %s for tenant %s :%s", collaboratorId, issueId, tenant, err.Error())
 					s.log.Error(reason)
 				}
@@ -310,14 +312,14 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			s.log.Error(reason)
 		}
 		if assigneeId != "" {
-			_, err = s.grpcClients.IssueClient.AddUserAssignee(ctx, &issuegrpc.AddUserAssigneeToIssueGrpcRequest{
+			_, err = s.grpcClients.IssueClient.AddUserAssignee(ctx, &issuepb.AddUserAssigneeToIssueGrpcRequest{
 				Tenant:    common.GetTenantFromContext(ctx),
 				IssueId:   issueId,
 				UserId:    assigneeId,
 				AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, err, log.String("grpcFunction", "AddUserAssignee"))
 				reason = fmt.Sprintf("failed sending event to add assignee %s to issue %s for tenant %s :%s", assigneeId, issueId, tenant, err.Error())
 				s.log.Error(reason)
 			}

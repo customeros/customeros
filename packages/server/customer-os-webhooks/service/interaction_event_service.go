@@ -23,8 +23,6 @@ import (
 	"time"
 )
 
-const maxWorkersInteractionEventSync = 1
-
 type InteractionEventService interface {
 	SyncInteractionEvents(ctx context.Context, contacts []model.InteractionEventData) error
 }
@@ -34,6 +32,7 @@ type interactionEventService struct {
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 	services     *Services
+	maxWorkers   int
 }
 
 func NewInteractionEventService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) InteractionEventService {
@@ -42,11 +41,12 @@ func NewInteractionEventService(log logger.Logger, repositories *repository.Repo
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
+		maxWorkers:   services.cfg.ConcurrencyConfig.InteractionEventSyncConcurrency,
 	}
 }
 
 func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, interactionEvents []model.InteractionEventData) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.SyncInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("num of interaction events", len(interactionEvents)))
@@ -60,9 +60,11 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 	// pre-validate intraction events input before syncing
 	for _, interactionEvent := range interactionEvents {
 		if interactionEvent.ExternalSystem == "" {
+			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(interactionEvent.ExternalSystem)) {
+			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", interactionEvent.ExternalSystem))
 			return errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -70,7 +72,7 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 	// Create a wait group to wait for all workers to finish
 	var wg sync.WaitGroup
 	// Create a channel to control the number of concurrent workers
-	workerLimit := make(chan struct{}, maxWorkersInteractionEventSync)
+	workerLimit := make(chan struct{}, s.maxWorkers)
 
 	syncMutex := &sync.Mutex{}
 	statusesMutex := &sync.Mutex{}
@@ -84,7 +86,6 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			// Continue with Slack sync
 		}
 
 		// Acquire a worker slot
@@ -117,7 +118,8 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.syncInteractionEvent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", interactionEventInput.ExternalSystem), log.Object("interactionEventInput", interactionEventInput))
+	span.SetTag("externalSystem", interactionEventInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate), log.Object("interactionEventInput", interactionEventInput))
 
 	tenant := common.GetTenantFromContext(ctx)
 	var failedSync = false
@@ -165,6 +167,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 
 	// Lock interaction event creation
 	syncMutex.Lock()
+	defer syncMutex.Unlock()
 	// Check if interaction event already exists
 	interactionEventId, err := s.repositories.InteractionEventRepository.GetMatchedInteractionEventId(ctx, tenant, interactionEventInput.ExternalId, interactionEventInput.ExternalSystem)
 	if err != nil {
@@ -242,7 +245,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 		_, err = s.grpcClients.InteractionEventClient.UpsertInteractionEvent(ctx, &interactionEventGrpcRequest)
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertInteractionEvent"))
 			reason = fmt.Sprintf("failed sending event to upsert interaction event with external reference %s for tenant %s :%s", interactionEventInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
@@ -257,7 +260,6 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 			}
 		}
 	}
-	syncMutex.Unlock()
 
 	span.LogFields(log.Bool("failedSync", failedSync))
 	if failedSync {

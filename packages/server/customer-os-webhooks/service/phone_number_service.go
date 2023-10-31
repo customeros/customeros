@@ -60,7 +60,7 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, phoneNumber,
 			},
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertPhoneNumber"))
 			s.log.Errorf("Error from events processing %s", err.Error())
 			return "", err
 		}

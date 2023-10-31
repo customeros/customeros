@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -51,12 +52,12 @@ func NewUserCreateEvent(aggregate eventstore.Aggregate, dataFields models.UserDa
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserCreateEvent")
 	}
 	return event, nil
 }
@@ -91,12 +92,12 @@ func NewUserUpdateEvent(aggregate eventstore.Aggregate, dataFields models.UserDa
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserUpdateEvent")
 	}
 	return event, nil
 }
@@ -115,12 +116,12 @@ func NewUserLinkJobRoleEvent(aggregate eventstore.Aggregate, tenant, jobRoleId s
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserLinkJobRoleEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserJobRoleLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserLinkJobRoleEvent")
 	}
 	return event, nil
 }
@@ -143,12 +144,12 @@ func NewUserLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phoneNu
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserLinkPhoneNumberEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserLinkPhoneNumberEvent")
 	}
 	return event, nil
 }
@@ -171,12 +172,12 @@ func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, labe
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserLinkEmailEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserEmailLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserLinkEmailEvent")
 	}
 	return event, nil
 }
@@ -201,12 +202,12 @@ func NewUserAddPlayerInfoEvent(aggregate eventstore.Aggregate, dataFields models
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserAddPlayerInfoEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserAddPlayerV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserAddPlayerInfoEvent")
 	}
 	return event, nil
 }
@@ -225,12 +226,12 @@ func NewUserAddRoleEvent(aggregate eventstore.Aggregate, role string, at time.Ti
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserAddRoleEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserAddRoleV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserAddRoleEvent")
 	}
 	return event, nil
 }
@@ -249,12 +250,12 @@ func NewUserRemoveRoleEvent(aggregate eventstore.Aggregate, role string, at time
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserRemoveRoleEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserRemoveRoleV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserRemoveRoleEvent")
 	}
 	return event, nil
 }

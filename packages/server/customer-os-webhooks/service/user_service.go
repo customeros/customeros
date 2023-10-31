@@ -14,16 +14,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	usergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"sync"
 	"time"
 )
-
-const maxWorkersUserSync = 1
 
 type UserService interface {
 	SyncUsers(ctx context.Context, users []model.UserData) error
@@ -35,6 +33,7 @@ type userService struct {
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 	services     *Services
+	maxWorkers   int
 }
 
 func NewUserService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) UserService {
@@ -43,6 +42,7 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, gr
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
+		maxWorkers:   services.cfg.ConcurrencyConfig.UserSyncConcurrency,
 	}
 }
 
@@ -60,9 +60,11 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	// pre-validate user input before syncing
 	for _, user := range users {
 		if user.ExternalSystem == "" {
+			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
 			return errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(user.ExternalSystem)) {
+			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", user.ExternalSystem))
 			return errors.ErrExternalSystemNotAccepted
 		}
 	}
@@ -70,7 +72,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	// Create a wait group to wait for all workers to finish
 	var wg sync.WaitGroup
 	// Create a channel to control the number of concurrent workers
-	workerLimit := make(chan struct{}, maxWorkersUserSync)
+	workerLimit := make(chan struct{}, s.maxWorkers)
 
 	syncMutex := &sync.Mutex{}
 	statusesMutex := &sync.Mutex{}
@@ -84,7 +86,6 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			// Continue with Slack sync
 		}
 
 		// Acquire a worker slot
@@ -98,7 +99,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 				<-workerLimit
 			}()
 
-			result := s.syncUser(ctx, syncMutex, userData, syncDate, common.GetTenantFromContext(ctx))
+			result := s.syncUser(ctx, syncMutex, userData, syncDate)
 			statusesMutex.Lock()
 			statuses = append(statuses, result)
 			statusesMutex.Unlock()
@@ -113,12 +114,14 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	return nil
 }
 
-func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userInput model.UserData, syncDate time.Time, tenant string) SyncStatus {
+func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userInput model.UserData, syncDate time.Time) SyncStatus {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.syncUser")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("externalSystem", userInput.ExternalSystem), log.Object("userInput", userInput), log.String("tenant", tenant))
+	span.SetTag("externalSystem", userInput.ExternalSystem)
+	span.LogFields(log.Object("syncDate", syncDate), log.Object("userInput", userInput))
 
+	var tenant = common.GetTenantFromContext(ctx)
 	var failedSync = false
 	var reason = ""
 	userInput.Normalize()
@@ -140,6 +143,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 
 	// Lock user and email creation
 	syncMutex.Lock()
+	defer syncMutex.Unlock()
 	// Check if user already exists
 	userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, userInput.ExternalSystem, userInput.ExternalId, userInput.Email)
 	if err != nil {
@@ -159,7 +163,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		span.LogFields(log.String("userId", userId))
 
 		// Create or update user
-		_, err = s.grpcClients.UserClient.UpsertUser(ctx, &usergrpc.UpsertUserGrpcRequest{
+		_, err = s.grpcClients.UserClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
 			Tenant:          tenant,
 			Id:              userId,
 			LoggedInUserId:  "",
@@ -171,11 +175,11 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			Internal:        false,
 			ProfilePhotoUrl: userInput.ProfilePhotoUrl,
 			Timezone:        userInput.Timezone,
-			SourceFields: &commongrpc.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:    userInput.ExternalSystem,
 				AppSource: utils.StringFirstNonEmpty(userInput.AppSource, constants.AppSourceCustomerOsWebhooks),
 			},
-			ExternalSystemFields: &commongrpc.ExternalSystemFields{
+			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: userInput.ExternalSystem,
 				ExternalId:       userInput.ExternalId,
 				ExternalUrl:      userInput.ExternalUrl,
@@ -186,7 +190,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		})
 		if err != nil {
 			failedSync = true
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, err, log.String("grpcFunction", "UpsertUser"))
 			reason = fmt.Sprintf("failed sending event to upsert user with external reference %s for tenant %s :%s", userInput.ExternalId, tenant, err)
 			s.log.Error(reason)
 		}
@@ -212,7 +216,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		}
 		// Link email to user
 		if !failedSync {
-			_, err = s.grpcClients.UserClient.LinkEmailToUser(ctx, &usergrpc.LinkEmailToUserGrpcRequest{
+			_, err = s.grpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
 				Tenant:  common.GetTenantFromContext(ctx),
 				UserId:  userId,
 				EmailId: emailId,
@@ -220,13 +224,12 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			})
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToUser"))
 				reason = fmt.Sprintf("Failed to link email address %s for user %s: %s", userInput.Email, userId, err.Error())
 				s.log.Error(reason)
 			}
 		}
 	}
-	syncMutex.Unlock()
 
 	if !failedSync && userInput.HasPhoneNumbers() {
 		for _, phoneNumberDtls := range userInput.PhoneNumbers {
@@ -240,7 +243,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			}
 			// Link phone number to user
 			if !failedSync {
-				_, err = s.grpcClients.UserClient.LinkPhoneNumberToUser(ctx, &usergrpc.LinkPhoneNumberToUserGrpcRequest{
+				_, err = s.grpcClients.UserClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
 					Tenant:        common.GetTenantFromContext(ctx),
 					UserId:        userId,
 					PhoneNumberId: phoneNumberId,
@@ -249,7 +252,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 				})
 				if err != nil {
 					failedSync = true
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkPhoneNumberToUser"))
 					reason = fmt.Sprintf("Failed to link phone number %s for user %s: %s", phoneNumberDtls.Number, userId, err.Error())
 					s.log.Error(reason)
 				}

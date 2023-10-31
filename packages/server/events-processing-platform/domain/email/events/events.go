@@ -2,9 +2,10 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -16,17 +17,17 @@ const (
 )
 
 type EmailCreateEvent struct {
-	Tenant        string        `json:"tenant" validate:"required"`
-	RawEmail      string        `json:"rawEmail" validate:"required"`
-	Source        string        `json:"source"`        //Deprecated
-	SourceOfTruth string        `json:"sourceOfTruth"` //Deprecated
-	AppSource     string        `json:"appSource"`     //Deprecated
-	SourceFields  cmnmod.Source `json:"sourceFields"`
-	CreatedAt     time.Time     `json:"createdAt"`
-	UpdatedAt     time.Time     `json:"updatedAt"`
+	Tenant        string             `json:"tenant" validate:"required"`
+	RawEmail      string             `json:"rawEmail" validate:"required"`
+	Source        string             `json:"source"`        //Deprecated
+	SourceOfTruth string             `json:"sourceOfTruth"` //Deprecated
+	AppSource     string             `json:"appSource"`     //Deprecated
+	SourceFields  commonmodel.Source `json:"sourceFields"`
+	CreatedAt     time.Time          `json:"createdAt"`
+	UpdatedAt     time.Time          `json:"updatedAt"`
 }
 
-func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source cmnmod.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := EmailCreateEvent{
 		Tenant:       tenant,
 		RawEmail:     rawEmail,
@@ -36,12 +37,12 @@ func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate EmailCreateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, EmailCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for EmailCreateEvent")
 	}
 	return event, nil
 }
@@ -62,12 +63,12 @@ func NewEmailUpdateEvent(aggregate eventstore.Aggregate, rawEmail, tenant, sourc
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate EmailUpdateEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, EmailUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for EmailUpdateEvent")
 	}
 	return event, nil
 }
@@ -86,12 +87,12 @@ func NewEmailFailedValidationEvent(aggregate eventstore.Aggregate, tenant, valid
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate EmailFailedValidationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, EmailValidationFailedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for EmailFailedValidationEvent")
 	}
 	return event, nil
 }
@@ -135,12 +136,12 @@ func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, is
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate EmailValidatedEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, EmailValidatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, err
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for EmailValidatedEvent")
 	}
 	return event, nil
 }
