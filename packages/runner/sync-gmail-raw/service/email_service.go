@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"google.golang.org/api/gmail/v1"
 	"strings"
+	"time"
 )
 
 type emailService struct {
@@ -24,7 +25,7 @@ type emailService struct {
 type EmailService interface {
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 	ReadEmailFromGoogle(gmailService *gmail.Service, userId, providerMessageId string) (*EmailRawData, error)
-	ReadNewEmailsForUsername(gmailService *gmail.Service, tenant, username string) error
+	ReadEmailsForUsername(gmailService *gmail.Service, gmailImportState *entity.UserGmailImportState) (*entity.UserGmailImportState, error)
 }
 
 func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error) {
@@ -51,7 +52,7 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 	emailSubject := ""
 	emailHtml := ""
 	emailText := ""
-	emailSentDate := ""
+	emailSentDate := time.Time{}
 
 	from := ""
 	to := ""
@@ -89,7 +90,10 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 		} else if headerName == "in-reply-to" {
 			inReplyTo = email.Payload.Headers[i].Value
 		} else if headerName == "date" {
-			emailSentDate = email.Payload.Headers[i].Value
+			emailSentDate, err = convertToUTC(email.Payload.Headers[i].Value)
+			if err != nil {
+				return nil, fmt.Errorf("unable to parse email sent date: %v", err)
+			}
 		}
 	}
 
@@ -141,81 +145,85 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 	return rawEmailData, nil
 }
 
-func (s *emailService) ReadNewEmailsForUsername(gmailService *gmail.Service, tenant, username string) error {
-	forUsername, err := s.repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant, username)
-	if err != nil {
-		return fmt.Errorf("unable to retrieve history id for username: %v", err)
-	}
-
-	if forUsername == nil {
-		emptyString := ""
-		forUsername = &emptyString
-	}
-
+func (s *emailService) ReadEmailsForUsername(gmailService *gmail.Service, gmailImportState *entity.UserGmailImportState) (*entity.UserGmailImportState, error) {
 	countEmailsExists := int64(0)
 
-	userMessages, err := gmailService.Users.Messages.List(username).MaxResults(s.cfg.SyncData.BatchSize).PageToken(*forUsername).Do()
+	userMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
 	if err != nil {
-		return fmt.Errorf("unable to retrieve emails for user: %v", err)
+		return nil, fmt.Errorf("unable to retrieve emails for user: %v", err)
 	}
 
 	if userMessages != nil && len(userMessages.Messages) > 0 {
 		for _, message := range userMessages.Messages {
 
-			emailRawData, err := s.ReadEmailFromGoogle(gmailService, username, message.Id)
+			emailRawData, err := s.ReadEmailFromGoogle(gmailService, gmailImportState.Username, message.Id)
 			if err != nil {
-				return fmt.Errorf("unable to read email from google: %v", err)
+				return nil, fmt.Errorf("unable to read email from google: %v", err)
 			}
 
 			if emailRawData.MessageId == "" {
 				continue
 			}
 
-			emailExists, err := s.repositories.RawEmailRepository.EmailExistsByMessageId("gmail", tenant, username, emailRawData.MessageId)
+			emailExists, err := s.repositories.RawEmailRepository.EmailExistsByMessageId("gmail", gmailImportState.Tenant, gmailImportState.Username, emailRawData.MessageId)
 			if err != nil {
-				return fmt.Errorf("unable to check if email exists: %v", err)
+				return nil, fmt.Errorf("unable to check if email exists: %v", err)
 			}
 
 			//counting emails that are already imported based on the batch size
 			//if the job is stopped in the middle of execution and we haven't saved the latest token
 			//we are going to loose the history
 			if emailExists {
-				countEmailsExists = countEmailsExists + 1
 
-				if countEmailsExists >= s.cfg.SyncData.BatchSize {
-					err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(tenant, username, "")
-					if err != nil {
-						return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+				if gmailImportState.State == entity.REAL_TIME {
+					countEmailsExists = countEmailsExists + 1
+
+					if countEmailsExists >= s.cfg.SyncData.BatchSize {
+						gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, "")
+						if err != nil {
+							return nil, fmt.Errorf("unable to update the gmail page token for username: %v", err)
+						}
+						return gmailImportState, nil
 					}
 				}
 
 				continue
+			} else {
+
+				if gmailImportState.StopDate != nil && emailRawData.Sent.Before(*gmailImportState.StopDate) {
+					gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, "")
+					if err != nil {
+						return nil, fmt.Errorf("unable to update the gmail page token for username: %v", err)
+					}
+					return gmailImportState, nil
+				}
+
 			}
 
 			jsonContent, err := JSONMarshal(emailRawData)
 			if err != nil {
-				return fmt.Errorf("failed to marshal email content: %v", err)
+				return nil, fmt.Errorf("failed to marshal email content: %v", err)
 			}
 
-			err = s.repositories.RawEmailRepository.Store("gmail", tenant, username, emailRawData.ProviderMessageId, emailRawData.MessageId, string(jsonContent))
+			err = s.repositories.RawEmailRepository.Store("gmail", gmailImportState.Tenant, gmailImportState.Username, emailRawData.ProviderMessageId, emailRawData.MessageId, string(jsonContent), emailRawData.Sent, gmailImportState.State)
 			if err != nil {
-				return fmt.Errorf("failed to store email content: %v", err)
+				return nil, fmt.Errorf("failed to store email content: %v", err)
 			}
 		}
 	}
 
-	err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(tenant, username, userMessages.NextPageToken)
+	gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, userMessages.NextPageToken)
 	if err != nil {
-		return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+		return nil, fmt.Errorf("unable to update the gmail page token for username: %v", err)
 	}
 
-	return nil
+	return gmailImportState, nil
 }
 
 type EmailRawData struct {
 	ProviderMessageId string            `json:"ProviderMessageId"`
 	MessageId         string            `json:"MessageId"`
-	Sent              string            `json:"Sent"`
+	Sent              time.Time         `json:"Sent"`
 	Subject           string            `json:"Subject"`
 	From              string            `json:"From"`
 	To                string            `json:"To"`
@@ -245,6 +253,41 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 		RawEmail: utils.GetStringPropOrEmpty(props, "rawEmail"),
 	}
 	return &result
+}
+
+func convertToUTC(datetimeStr string) (time.Time, error) {
+	var err error
+
+	layouts := []string{
+		"2006-01-02T15:04:05Z07:00",
+
+		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
+
+		"Mon, 2 Jan 2006 15:04:05 MST",
+
+		"Mon, 2 Jan 2006 15:04:05 -0700",
+
+		"Mon, 2 Jan 2006 15:04:05 +0000 (GMT)",
+
+		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
+
+		"2 Jan 2006 15:04:05 -0700",
+	}
+	var parsedTime time.Time
+
+	// Try parsing with each layout until successful
+	for _, layout := range layouts {
+		parsedTime, err = time.Parse(layout, datetimeStr)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return time.Time{}, fmt.Errorf("unable to parse datetime string: %s", datetimeStr)
+	}
+
+	return parsedTime.UTC(), nil
 }
 
 func NewEmailService(cfg *config.Config, repositories *repository.Repositories, services *Services) EmailService {
