@@ -144,12 +144,12 @@ A massive thank you goes out to all these wonderful people ([emoji key][emoji]):
 
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
 [call]: https://meetings-eu1.hubspot.com/matt2/customer-demos
-[cli]: https://www.openline.ai/docs
+[cli]: https://docs.customeros.ai/en/cli/getting-started
 [contributions]: https://github.com/openline-ai/community/blob/main/README.md
 [customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
-[docs]: https://openline.ai
+[docs]: https://docs.customeros.ai/
 [emoji]: https://allcontributors.org/docs/en/emoji-key
 [oasis]: https://github.com/openline-ai/openline-oasis
-[pricing]: https://openline.ai/pricing
+[pricing]: https://www.customeros.ai/pricing
 [slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
 [twitter]: https://twitter.com/OpenlineAI
