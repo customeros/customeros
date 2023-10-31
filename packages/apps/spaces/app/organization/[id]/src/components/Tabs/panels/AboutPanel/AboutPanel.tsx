@@ -1,5 +1,5 @@
 'use client';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
@@ -37,6 +37,8 @@ import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
 import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
 import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
 import { Organization } from '@graphql/types';
+import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
+import * as process from 'process';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -50,7 +52,14 @@ export const AboutPanel = () => {
   const { data } = useOrganizationQuery(client, { id });
   const { updateOrganization, addSocial, invalidateQuery } =
     useAboutPanelMethods({ id });
+  const { data: tenantNameQueryData } = useTenantNameQuery(client);
 
+  const showSubOrgData = useMemo(() => {
+    return (
+      tenantNameQueryData?.tenant ===
+      process.env.NEXT_PUBLIC_SHOW_RELATED_ORGANIZATION_TENANT
+    );
+  }, [tenantNameQueryData]);
   const defaultValues: OrganizationAboutForm = new OrganizationAboutFormDto(
     data?.organization,
   );
@@ -63,7 +72,6 @@ export const AboutPanel = () => {
       }),
     });
   };
-
   const { state } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
     defaultValues,
@@ -203,7 +211,7 @@ export const AboutPanel = () => {
           placeholder={placeholders.valueProposition}
         />
 
-        {!data?.organization?.subsidiaries?.length && (
+        {!data?.organization?.subsidiaries?.length && showSubOrgData && (
           <ParentOrgInput
             id={id}
             parentOrg={
@@ -315,7 +323,7 @@ export const AboutPanel = () => {
             leftElement={<Icons.Share7 color='gray.500' />}
           />
 
-          {!!data?.organization?.subsidiaries?.length && (
+          {!!data?.organization?.subsidiaries?.length && showSubOrgData && (
             <Branches
               id={id}
               branches={
