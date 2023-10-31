@@ -13,8 +13,8 @@ type UserGmailImportStateHistory struct {
 	Tenant    string           `gorm:"size:255;not null"`
 	Username  string           `gorm:"size:255;not null"`
 	State     GmailImportState `gorm:"size:50;not null"`
-	StartDate *time.Time       `gorm:"not null"`
-	StopDate  *time.Time       `gorm:"not null"`
+	StartDate *time.Time       `gorm:""`
+	StopDate  *time.Time       `gorm:""`
 	Active    bool             `gorm:"not null"`
 	Cursor    string           `gorm:"size:255;not null"`
 }
