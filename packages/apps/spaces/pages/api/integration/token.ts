@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 
 const WORKSPACE_KEY = process.env.INTEGRATION_APP_WORKSPACE_KEY;
-const WORKSPACE_SECRET = process.env.INTEGRATION_APP_WORKSPACE_SECRET;
+const PRIVATE_KEY_VALUE = process.env.INTEGRATION_APP_PRIVATE_KEY_VALUE;
 
 type ResponseData =
   | {
@@ -25,17 +25,19 @@ export default async function handler(
     name: tenant,
   };
 
-  if (!WORKSPACE_KEY || !WORKSPACE_SECRET) {
+  if (!WORKSPACE_KEY || !PRIVATE_KEY_VALUE) {
     return res
       .status(500)
       .json({ message: 'Missing integration app credentials' });
   }
 
-  const token = jwt.sign(tokenData, WORKSPACE_SECRET, {
+  const token = jwt.sign(tokenData, PRIVATE_KEY_VALUE, {
     issuer: WORKSPACE_KEY,
     expiresIn: 3600,
-    algorithm: 'HS256'
+    algorithm: 'ES256'
   });
+
+  console.log(token);
 
   res.status(200).json({ token });
 }
