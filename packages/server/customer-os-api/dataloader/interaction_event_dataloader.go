@@ -166,7 +166,6 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			tracing.TraceErr(span, err)
 			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
