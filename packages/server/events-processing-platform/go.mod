@@ -7,7 +7,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
-	github.com/EventStore/EventStore-Client-Go/v3 v3.1.0
+	github.com/EventStore/EventStore-Client-Go/v3 v3.2.0
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
@@ -60,7 +60,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/gofrs/uuid v4.2.0+incompatible // indirect
+	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
-	github.com/prometheus/client_model v0.3.0 // indirect
+	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.9 // indirect
@@ -110,10 +110,10 @@ require (
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
-	golang.org/x/mod v0.9.0 // indirect
+	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/tools v0.7.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
+	golang.org/x/tools v0.10.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
