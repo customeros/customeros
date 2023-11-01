@@ -277,6 +277,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	if !failedSync && orgInput.HasDomains() {
 		for _, domain := range orgInput.Domains {
+
 			_, err = s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
 				Tenant:         common.GetTenantFromContext(ctx),
 				LoggedInUserId: "",

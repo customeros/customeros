@@ -36,10 +36,6 @@ type MeetingParticipant interface {
 	IsMeetingParticipant()
 }
 
-type MentionedEntity interface {
-	IsMentionedEntity()
-}
-
 type Node interface {
 	IsNode()
 	GetID() string
@@ -177,6 +173,19 @@ type Calendar struct {
 	Source        DataSource   `json:"source"`
 	SourceOfTruth DataSource   `json:"sourceOfTruth"`
 	AppSource     string       `json:"appSource"`
+}
+
+type Comment struct {
+	ID            string            `json:"id"`
+	Content       *string           `json:"content,omitempty"`
+	ContentType   *string           `json:"contentType,omitempty"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	CreatedBy     *User             `json:"createdBy,omitempty"`
+	Source        DataSource        `json:"source"`
+	SourceOfTruth DataSource        `json:"sourceOfTruth"`
+	AppSource     string            `json:"appSource"`
+	ExternalLinks []*ExternalSystem `json:"externalLinks"`
 }
 
 // A contact represents an individual in customerOS.
@@ -773,6 +782,7 @@ type Issue struct {
 	Description       *string             `json:"description,omitempty"`
 	Tags              []*Tag              `json:"tags,omitempty"`
 	InteractionEvents []*InteractionEvent `json:"interactionEvents"`
+	Comments          []*Comment          `json:"comments"`
 	ExternalLinks     []*ExternalSystem   `json:"externalLinks"`
 	SubmittedBy       IssueParticipant    `json:"submittedBy,omitempty"`
 	ReportedBy        IssueParticipant    `json:"reportedBy,omitempty"`
@@ -790,8 +800,6 @@ func (this Issue) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
 func (this Issue) GetAppSource() string         { return this.AppSource }
 
 func (Issue) IsNode() {}
-
-func (Issue) IsMentionedEntity() {}
 
 func (Issue) IsTimelineEvent() {}
 
@@ -1052,18 +1060,17 @@ func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
 func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Note struct {
-	ID            string            `json:"id"`
-	Content       *string           `json:"content,omitempty"`
-	ContentType   *string           `json:"contentType,omitempty"`
-	CreatedAt     time.Time         `json:"createdAt"`
-	UpdatedAt     time.Time         `json:"updatedAt"`
-	CreatedBy     *User             `json:"createdBy,omitempty"`
-	Noted         []NotedEntity     `json:"noted"`
-	Mentioned     []MentionedEntity `json:"mentioned"`
-	Includes      []*Attachment     `json:"includes"`
-	Source        DataSource        `json:"source"`
-	SourceOfTruth DataSource        `json:"sourceOfTruth"`
-	AppSource     string            `json:"appSource"`
+	ID            string        `json:"id"`
+	Content       *string       `json:"content,omitempty"`
+	ContentType   *string       `json:"contentType,omitempty"`
+	CreatedAt     time.Time     `json:"createdAt"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
+	CreatedBy     *User         `json:"createdBy,omitempty"`
+	Noted         []NotedEntity `json:"noted"`
+	Includes      []*Attachment `json:"includes"`
+	Source        DataSource    `json:"source"`
+	SourceOfTruth DataSource    `json:"sourceOfTruth"`
+	AppSource     string        `json:"appSource"`
 }
 
 func (Note) IsTimelineEvent() {}

@@ -39,6 +39,7 @@ type UserService interface {
 	GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error)
 	GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error)
 	GetUserAuthorsForLogEntries(ctx context.Context, logEntryIDs []string) (*entity.UserEntities, error)
+	GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*entity.UserEntities, error)
 	GetUsers(ctx context.Context, userIds []string) (*entity.UserEntities, error)
 	GetDistinctOrganizationOwners(ctx context.Context) (*entity.UserEntities, error)
 	AddRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
@@ -483,6 +484,27 @@ func (s *userService) GetUserAuthorsForLogEntries(parentCtx context.Context, log
 
 	users, err := s.repositories.UserRepository.GetAllAuthorsForLogEntries(ctx, common.GetTenantFromContext(ctx), logEntryIDs)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserAuthorsForComments")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("commentIds", commentIds))
+
+	users, err := s.repositories.UserRepository.GetAllAuthorsForComments(ctx, common.GetTenantFromContext(ctx), commentIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	userEntities := make(entity.UserEntities, 0, len(users))

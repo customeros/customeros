@@ -16,26 +16,38 @@ import (
 )
 
 type ContactRepository interface {
+	// Deprecated, use events-platform
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) error
+	// Deprecated, use events-platform
 	SetOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, userId string) error
+	// Deprecated, use events-platform
 	RemoveOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) error
-	// TODO be moved to events-platform
+	// Deprecated, use events-platform
 	LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entityTemplateId string) error
 	GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
 	GetContactsForEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
+	// Deprecated, use events-platform
 	AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
+	// Deprecated, use events-platform
 	RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
+	// Deprecated, use events-platform
 	AddOrganization(ctx context.Context, tenant, contactId, organizationId, source, appSource string) (*dbtype.Node, error)
+	// Deprecated, use events-platform
 	RemoveOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
+	// Deprecated, use events-platform
 	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth entity.DataSource) error
+	// Deprecated, use events-platform
 	MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error
+	// Deprecated, use events-platform
 	UpdateMergedContactLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedContactId string) error
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
+	// Deprecated, use events-platform
 	Archive(ctx context.Context, tenant, contactId string) error
+	// Deprecated, use events-platform
 	RestoreFromArchive(ctx context.Context, tenant, contactId string) error
 	GetById(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
 

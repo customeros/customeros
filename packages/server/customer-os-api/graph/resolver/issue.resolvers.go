@@ -35,11 +35,24 @@ func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue)
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForIssue(ctx, obj.ID)
 	if err != nil {
-		r.log.Errorf("Failed to get interaction events for issue %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get interaction events for issue %s", obj.ID)
+		r.log.Errorf("failed to get interaction events for issue %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "failed to get interaction events for issue %s", obj.ID)
 		return nil, nil
 	}
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
+}
+
+// Comments is the resolver for the comments field.
+func (r *issueResolver) Comments(ctx context.Context, obj *model.Issue) ([]*model.Comment, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	commentEntities, err := dataloader.For(ctx).GetCommentsForIssue(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("failed to get comments for issue %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "failed to get comments for issue %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToComments(commentEntities), nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.

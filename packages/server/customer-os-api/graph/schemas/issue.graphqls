@@ -14,6 +14,7 @@ type Issue implements SourceFields & Node {
     description: String
     tags: [Tag] @goField(forceResolver: true)
     interactionEvents: [InteractionEvent!]! @goField(forceResolver: true)
+    comments: [Comment!]! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
     submittedBy: IssueParticipant @goField(forceResolver: true)
     reportedBy: IssueParticipant @goField(forceResolver: true)

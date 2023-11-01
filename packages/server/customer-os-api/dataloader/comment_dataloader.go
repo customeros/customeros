@@ -12,18 +12,18 @@ import (
 	"reflect"
 )
 
-func (i *Loaders) GetCalendarsForUser(ctx context.Context, userId string) (*entity.CalendarEntities, error) {
-	thunk := i.CalendarsForUser.Load(ctx, dataloader.StringKey(userId))
+func (i *Loaders) GetCommentsForIssue(ctx context.Context, issueId string) (*entity.CommentEntities, error) {
+	thunk := i.CommentsForIssue.Load(ctx, dataloader.StringKey(issueId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.CalendarEntities)
+	resultObj := result.(entity.CommentEntities)
 	return &resultObj, nil
 }
 
-func (b *calendarBatcher) getCalendarsForUsers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CalendarDataLoader.getCalendarsForUsers", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+func (b *commentBatcher) getCommentsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentDataLoader.getCommentsForIssues", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -33,7 +33,7 @@ func (b *calendarBatcher) getCalendarsForUsers(ctx context.Context, keys dataloa
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	calendarEntitiesPtr, err := b.calendarService.GetAllForUsers(ctx, ids)
+	commentEntitiesPtr, err := b.commentService.GetCommentsForIssues(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -43,34 +43,33 @@ func (b *calendarBatcher) getCalendarsForUsers(ctx context.Context, keys dataloa
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	calendarEntitiesGroupedByUserId := make(map[string]entity.CalendarEntities)
-	for _, val := range *calendarEntitiesPtr {
-		if list, ok := calendarEntitiesGroupedByUserId[val.DataloaderKey]; ok {
-			calendarEntitiesGroupedByUserId[val.DataloaderKey] = append(list, val)
+	commentEntitiesByMeetingId := make(map[string]entity.CommentEntities)
+	for _, val := range *commentEntitiesPtr {
+		if list, ok := commentEntitiesByMeetingId[val.DataloaderKey]; ok {
+			commentEntitiesByMeetingId[val.DataloaderKey] = append(list, val)
 		} else {
-			calendarEntitiesGroupedByUserId[val.DataloaderKey] = entity.CalendarEntities{val}
+			commentEntitiesByMeetingId[val.DataloaderKey] = entity.CommentEntities{val}
 		}
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for userId, record := range calendarEntitiesGroupedByUserId {
-		ix, ok := keyOrder[userId]
-		if ok {
+	for meetingsId, record := range commentEntitiesByMeetingId {
+		if ix, ok := keyOrder[meetingsId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
-			delete(keyOrder, userId)
+			delete(keyOrder, meetingsId)
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.CalendarEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: entity.CommentEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.CalendarEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.CommentEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
 
-	span.LogFields(log.Int("output - results_length", len(results)))
+	span.LogFields(log.Int("results_length", len(results)))
 
 	return results
 }
