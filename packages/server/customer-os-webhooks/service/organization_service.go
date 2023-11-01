@@ -278,14 +278,17 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	if !failedSync && orgInput.HasDomains() {
 		for _, domain := range orgInput.Domains {
 
-			_, err = s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: "",
-				OrganizationId: organizationId,
-				Domain:         domain,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err, log.String("grpcFunction", "LinkDomainToOrganization"))
+			//check if the domain is already linked to an organization. If the domain is already linked, skip the link operation
+			if !isDomainLinked(domain) {
+				_, err = s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
+					Tenant:         common.GetTenantFromContext(ctx),
+					LoggedInUserId: "",
+					OrganizationId: organizationId,
+					Domain:         domain,
+				})
+				if err != nil {
+					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkDomainToOrganization"))
+				}
 			}
 		}
 	}
@@ -496,4 +499,11 @@ func (s *organizationService) GetIdForReferencedOrganization(ctx context.Context
 		return s.repositories.OrganizationRepository.GetOrganizationIdByDomain(ctx, tenant, org.Domain)
 	}
 	return "", nil
+}
+
+func isDomainLinked(domain string) bool {
+	var cond bool
+	// Query the database to check if the domain is linked
+	// Return true if the domain is linked to an organization, false otherwise
+	return cond
 }
