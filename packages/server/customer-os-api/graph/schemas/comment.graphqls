@@ -1,0 +1,12 @@
+type Comment {
+    id: ID!
+    content: String
+    contentType: String
+    createdAt: Time!
+    updatedAt: Time!
+    createdBy: User @goField(forceResolver: true)
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+}

@@ -43,6 +43,7 @@ type Loaders struct {
 	UsersForPlayer                              *dataloader.Loader
 	UserOwnerForOrganization                    *dataloader.Loader
 	UserAuthorForLogEntry                       *dataloader.Loader
+	UserAuthorForComment                        *dataloader.Loader
 	User                                        *dataloader.Loader
 	ContactsForEmail                            *dataloader.Loader
 	ContactsForPhoneNumber                      *dataloader.Loader
@@ -57,6 +58,7 @@ type Loaders struct {
 	AttendedByParticipantsForMeeting            *dataloader.Loader
 	InteractionEventsForMeeting                 *dataloader.Loader
 	InteractionEventsForIssue                   *dataloader.Loader
+	CommentsForIssue                            *dataloader.Loader
 	NotesForMeeting                             *dataloader.Loader
 	AttachmentsForInteractionEvent              *dataloader.Loader
 	AttachmentsForInteractionSession            *dataloader.Loader
@@ -163,6 +165,9 @@ type actionItemBatcher struct {
 type issueParticipantBatcher struct {
 	issueService service.IssueService
 }
+type commentBatcher struct {
+	commentService service.CommentService
+}
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
@@ -189,6 +194,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	}
 	interactionEventBatcher := &interactionEventBatcher{
 		interactionEventService: services.InteractionEventService,
+	}
+	commentBatcher := &commentBatcher{
+		commentService: services.CommentService,
 	}
 	interactionSessionBatcher := &interactionSessionBatcher{
 		interactionSessionService: services.InteractionSessionService,
@@ -283,6 +291,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		UsersForPlayer:                              dataloader.NewBatchedLoader(userBatcher.getUsersForPlayers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserOwnerForOrganization:                    dataloader.NewBatchedLoader(userBatcher.getUserOwnersForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserAuthorForLogEntry:                       dataloader.NewBatchedLoader(userBatcher.getUserAuthorsForLogEntries, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UserAuthorForComment:                        dataloader.NewBatchedLoader(userBatcher.getUserAuthorsForComments, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		User:                                        dataloader.NewBatchedLoader(userBatcher.getUsers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactsForEmail:                            dataloader.NewBatchedLoader(contactBatcher.getContactsForEmails, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactsForPhoneNumber:                      dataloader.NewBatchedLoader(contactBatcher.getContactsForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -313,6 +322,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ReporterParticipantsForIssue:                dataloader.NewBatchedLoader(issueParticipantBatcher.getReporterParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		AssigneeParticipantsForIssue:                dataloader.NewBatchedLoader(issueParticipantBatcher.getAssigneeParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FollowerParticipantsForIssue:                dataloader.NewBatchedLoader(issueParticipantBatcher.getFollowerParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		CommentsForIssue:                            dataloader.NewBatchedLoader(commentBatcher.getCommentsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

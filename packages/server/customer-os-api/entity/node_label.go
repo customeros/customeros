@@ -23,4 +23,5 @@ const (
 	NodeLabel_Player             = "Player"
 	NodeLabel_Country            = "Country"
 	NodeLabel_ActionItem         = "ActionItem"
+	NodeLabel_Comment            = "Comment"
 )

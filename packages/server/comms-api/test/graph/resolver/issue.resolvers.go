@@ -17,14 +17,14 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 	panic(fmt.Errorf("not implemented: Tags - tags"))
 }
 
-// MentionedByNotes is the resolver for the mentionedByNotes field.
-func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
-	panic(fmt.Errorf("not implemented: MentionedByNotes - mentionedByNotes"))
-}
-
 // InteractionEvents is the resolver for the interactionEvents field.
 func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
 	panic(fmt.Errorf("not implemented: InteractionEvents - interactionEvents"))
+}
+
+// Comments is the resolver for the comments field.
+func (r *issueResolver) Comments(ctx context.Context, obj *model.Issue) ([]*model.Comment, error) {
+	panic(fmt.Errorf("not implemented: Comments - comments"))
 }
 
 // ExternalLinks is the resolver for the externalLinks field.

@@ -39,11 +39,17 @@ func TestQueryResolver_Issue(t *testing.T) {
 	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, utils.Now())
 	neo4jt.InteractionEventPartOfIssue(ctx, driver, interactionEventId, issueId)
 
+	yesterday := utils.Now().AddDate(0, 0, -1)
+	today := utils.Now()
+	todayCommentId := neo4jt.CreateCommentForIssue(ctx, driver, tenantName, issueId, entity.CommentEntity{CreatedAt: today})
+	yesterdayCommentId := neo4jt.CreateCommentForIssue(ctx, driver, tenantName, issueId, entity.CommentEntity{CreatedAt: yesterday})
+
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Issue":            1,
 		"Tag":              2,
 		"InteractionEvent": 1,
 		"ExternalSystem":   1,
+		"Comment":          2,
 	})
 	assertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(entity.Hubspot))
 
@@ -68,8 +74,14 @@ func TestQueryResolver_Issue(t *testing.T) {
 	require.Equal(t, 2, len(issue.Tags))
 	require.ElementsMatch(t, []string{tagId1, tagId2}, []string{issue.Tags[0].ID, issue.Tags[1].ID})
 	require.ElementsMatch(t, []string{"critical", "issue-tag"}, []string{issue.Tags[0].Name, issue.Tags[1].Name})
+	// check interaction events
 	require.Equal(t, 1, len(issue.InteractionEvents))
 	require.Equal(t, interactionEventId, issue.InteractionEvents[0].ID)
+	//check comments
+	require.Equal(t, 2, len(issue.Comments))
+	require.Equal(t, yesterdayCommentId, issue.Comments[0].ID)
+	require.Equal(t, todayCommentId, issue.Comments[1].ID)
+	// check external systems
 	require.Equal(t, 1, len(issue.ExternalLinks))
 	require.Equal(t, "1234567890", *issue.ExternalLinks[0].ExternalID)
 	require.Equal(t, "www.external.com", *issue.ExternalLinks[0].ExternalURL)

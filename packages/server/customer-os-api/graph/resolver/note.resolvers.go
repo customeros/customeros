@@ -143,11 +143,6 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 	return mapper.MapEntitiesToNotedEntities(entities), nil
 }
 
-// Mentioned is the resolver for the mentioned field.
-func (r *noteResolver) Mentioned(ctx context.Context, obj *model.Note) ([]model.MentionedEntity, error) {
-	return nil, nil
-}
-
 // Includes is the resolver for the includes field.
 func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Includes", graphql.GetOperationContext(ctx))

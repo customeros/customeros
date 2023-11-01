@@ -1085,10 +1085,7 @@ func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithCont
 }
 
 func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
-	logEntryId := logEntry.Id
-	if logEntryId == "" {
-		logEntryId = uuid.New().String()
-	}
+	logEntryId := utils.NewUUIDIfEmpty(logEntry.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$orgId})
 			  MERGE (o)-[:LOGGED]->(l:LogEntry {id:$id})
 				ON CREATE SET l:LogEntry_%s,
@@ -1108,6 +1105,27 @@ func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"startedAt":   logEntry.StartedAt,
 	})
 	return logEntryId
+}
+
+func CreateCommentForIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant, issueId string, comment entity.CommentEntity) string {
+	commentId := utils.NewUUIDIfEmpty(comment.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})
+			  MERGE (i)<-[:COMMENTED]-(c:Comment {id:$id})
+				ON CREATE SET c:Comment_%s,
+					c.content=$content,
+					c.contentType=$contentType,
+					c.createdAt=$createdAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":      tenant,
+		"issueId":     issueId,
+		"id":          commentId,
+		"content":     comment.Content,
+		"contentType": comment.ContentType,
+		"createdAt":   comment.CreatedAt,
+	})
+	return commentId
 }
 
 func LogEntryCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext, logEntryId, userId string) {
