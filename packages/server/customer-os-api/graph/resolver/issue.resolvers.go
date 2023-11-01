@@ -29,11 +29,6 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
-// MentionedByNotes is the resolver for the mentionedByNotes field.
-func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
-	return nil, nil
-}
-
 // InteractionEvents is the resolver for the interactionEvents field.
 func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -138,3 +133,13 @@ func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, err
 func (r *Resolver) Issue() generated.IssueResolver { return &issueResolver{r} }
 
 type issueResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
+	return nil, nil
+}

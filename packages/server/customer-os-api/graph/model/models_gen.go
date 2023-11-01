@@ -772,7 +772,6 @@ type Issue struct {
 	Priority          *string             `json:"priority,omitempty"`
 	Description       *string             `json:"description,omitempty"`
 	Tags              []*Tag              `json:"tags,omitempty"`
-	MentionedByNotes  []*Note             `json:"mentionedByNotes"`
 	InteractionEvents []*InteractionEvent `json:"interactionEvents"`
 	ExternalLinks     []*ExternalSystem   `json:"externalLinks"`
 	SubmittedBy       IssueParticipant    `json:"submittedBy,omitempty"`

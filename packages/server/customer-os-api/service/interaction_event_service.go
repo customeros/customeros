@@ -22,7 +22,7 @@ type InteractionEventService interface {
 	InteractionEventLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionEventEntity, error)
 	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
 	GetInteractionEventsForMeetings(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
-	GetInteractionEventsForIssues(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
+	GetInteractionEventsForIssues(ctx context.Context, issueIds []string) (*entity.InteractionEventEntities, error)
 	GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
 	GetInteractionEventById(ctx context.Context, id string) (*entity.InteractionEventEntity, error)
@@ -282,9 +282,15 @@ func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Co
 	return &interactionEventEntities, nil
 }
 
-func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error) {
-	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), ids)
+func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Context, issueIds []string) (*entity.InteractionEventEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForIssues")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("issueIds", issueIds))
+
+	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	interactionEventEntities := entity.InteractionEventEntities{}
@@ -293,6 +299,7 @@ func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Cont
 		interactionEventEntity.DataloaderKey = v.LinkedNodeId
 		interactionEventEntities = append(interactionEventEntities, *interactionEventEntity)
 	}
+	span.LogFields(log.Int("result count", len(interactionEventEntities)))
 	return &interactionEventEntities, nil
 }
 

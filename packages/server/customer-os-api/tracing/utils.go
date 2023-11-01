@@ -71,11 +71,13 @@ func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 }
 
 func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
-	if common.GetTenantFromContext(ctx) != "" {
-		span.SetTag(SpanTagTenant, common.GetTenantFromContext(ctx))
+	tenant := common.GetTenantFromContext(ctx)
+	loggedInUserId := common.GetUserIdFromContext(ctx)
+	if tenant != "" {
+		span.SetTag(SpanTagTenant, tenant)
 	}
-	if common.GetUserIdFromContext(ctx) != "" {
-		span.SetTag(SpanTagUserId, common.GetUserIdFromContext(ctx))
+	if loggedInUserId != "" {
+		span.SetTag(SpanTagUserId, loggedInUserId)
 	}
 }
 
