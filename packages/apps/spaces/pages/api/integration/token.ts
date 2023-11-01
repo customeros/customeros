@@ -37,7 +37,5 @@ export default async function handler(
     algorithm: 'ES256'
   });
 
-  console.log(token);
-
   res.status(200).json({ token });
 }
