@@ -2,12 +2,13 @@ package dataloader
 
 import (
 	"context"
-	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"reflect"
 )
 
@@ -157,12 +158,16 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 
 	ids, keyOrder := sortKeys(keys)
 
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForIssues(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
-		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction events for meetings")}}
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			tracing.TraceErr(span, err)
+			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}

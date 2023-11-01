@@ -52,7 +52,7 @@ func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithCo
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
-		"externalSystemId": "hubspot",
+		"externalSystemId": string(entity.Hubspot),
 	})
 }
 
@@ -62,7 +62,7 @@ func CreateSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithCont
 			SET e.externalSource=$externalSource`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":           tenant,
-		"externalSystemId": "slack",
+		"externalSystemId": string(entity.Slack),
 		"externalSource":   "Slack",
 	})
 }
@@ -77,11 +77,11 @@ func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithCon
 }
 
 func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
-	LinkWithExternalSystem(ctx, driver, entityId, externalId, "hubspot", externalUrl, externalSource, syncDate)
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(entity.Hubspot), externalUrl, externalSource, syncDate)
 }
 
 func LinkWithSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
-	LinkWithExternalSystem(ctx, driver, entityId, externalId, "slack", externalUrl, externalSource, syncDate)
+	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(entity.Slack), externalUrl, externalSource, syncDate)
 }
 
 func LinkWithExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId, externalSystemId string, externalUrl, externalSource *string, syncDate time.Time) {

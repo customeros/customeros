@@ -39,11 +39,13 @@ func TestQueryResolver_Issue(t *testing.T) {
 	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, utils.Now())
 	neo4jt.InteractionEventPartOfIssue(ctx, driver, interactionEventId, issueId)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ExternalSystem"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS_LINKED_WITH"))
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Issue":            1,
+		"Tag":              2,
+		"InteractionEvent": 1,
+		"ExternalSystem":   1,
+	})
+	assertRelationship(ctx, t, driver, issueId, "IS_LINKED_WITH", string(entity.Hubspot))
 
 	rawResponse, err := c.RawPost(getQuery("issue/get_issue"),
 		client.Var("issueId", issueId))

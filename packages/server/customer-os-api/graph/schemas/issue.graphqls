@@ -13,7 +13,6 @@ type Issue implements SourceFields & Node {
     priority: String
     description: String
     tags: [Tag] @goField(forceResolver: true)
-    mentionedByNotes: [Note!]! @goField(forceResolver: true) @deprecated(reason: "Will be removed in a future release")
     interactionEvents: [InteractionEvent!]! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
     submittedBy: IssueParticipant @goField(forceResolver: true)
