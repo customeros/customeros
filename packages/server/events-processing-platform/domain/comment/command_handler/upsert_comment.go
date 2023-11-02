@@ -2,7 +2,6 @@ package command_handler
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -11,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type UpsertCommentCommandHandler interface {
@@ -31,16 +29,15 @@ func (c *upsertCommentCommandHandler) Handle(ctx context.Context, cmd *command.U
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertCommentCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
-	span.LogFields(log.String("command", fmt.Sprintf("%+v", cmd)))
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(cmd); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "failed validation for UpsertCommentCommand")
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
 	commentAggregate, err := aggregate.LoadCommentAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return err
 	}
 

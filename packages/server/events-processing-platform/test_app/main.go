@@ -47,7 +47,7 @@ func main() {
 	//testAddCustomField()
 	//testCreateEmail()
 	//testCreatePhoneNumber()
-	//testAddParentOrganization()
+	testAddParentOrganization()
 	//testRemoveParentOrganization()
 	//testCreateContact()
 	//testUpdateContact()
@@ -242,7 +242,7 @@ func testCreatePhoneNumber() {
 func testAddParentOrganization() {
 	tenant := "openline"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	parentOrgId := "not-found-1"
+	parentOrgId := ""
 	relType := "store"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	result, err := clients.OrganizationClient.AddParentOrganization(context.TODO(), &organizationpb.AddParentOrganizationGrpcRequest{

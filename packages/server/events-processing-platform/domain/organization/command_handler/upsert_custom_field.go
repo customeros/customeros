@@ -25,20 +25,19 @@ func NewUpsertCustomFieldCommandHandler(log logger.Logger, es eventstore.Aggrega
 	return &upsertCustomFieldCommandHandler{log: log, es: es}
 }
 
-func (c *upsertCustomFieldCommandHandler) Handle(ctx context.Context, command *command.UpsertCustomFieldCommand) error {
+func (c *upsertCustomFieldCommandHandler) Handle(ctx context.Context, cmd *command.UpsertCustomFieldCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpsertCustomFieldCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(command); err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -46,7 +45,7 @@ func (c *upsertCustomFieldCommandHandler) Handle(ctx context.Context, command *c
 		tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
 		return eventstore.ErrAggregateNotFound
 	} else {
-		if err = organizationAggregate.HandleCommand(ctx, command); err != nil {
+		if err = organizationAggregate.HandleCommand(ctx, cmd); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

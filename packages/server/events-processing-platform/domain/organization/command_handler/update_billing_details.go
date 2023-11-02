@@ -29,24 +29,23 @@ func NewUpdateBillingDetailsCommandHandler(log logger.Logger, es eventstore.Aggr
 	return &updateBillingDetailsCommandHandler{log: log, es: es, repositories: repositories}
 }
 
-func (h *updateBillingDetailsCommandHandler) Handle(ctx context.Context, command *cmd.UpdateBillingDetailsCommand) error {
+func (h *updateBillingDetailsCommandHandler) Handle(ctx context.Context, cmd *cmd.UpdateBillingDetailsCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateBillingDetailsCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
-	span.LogFields(log.Object("command", command))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(command); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "Invalid command")
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, command.Tenant, command.ObjectID)
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return err
 	}
 
-	orgDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, command.Tenant, command.ObjectID)
+	orgDbNode, err := h.repositories.OrganizationRepository.GetOrganization(ctx, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
 		err = errors.Wrap(err, "Organization not found")
 		tracing.TraceErr(span, err)
@@ -60,16 +59,16 @@ func (h *updateBillingDetailsCommandHandler) Handle(ctx context.Context, command
 
 	if aggregate.IsAggregateNotFound(organizationAggregate) {
 		if err = organizationAggregate.CreateOrganization(ctx, &models.OrganizationFields{
-			ID:     command.ObjectID,
-			Tenant: command.Tenant,
-		}, command.LoggedInUserId); err != nil {
+			ID:     cmd.ObjectID,
+			Tenant: cmd.Tenant,
+		}, cmd.LoggedInUserId); err != nil {
 			err := errors.Wrap(err, "Error while creating organization")
 			tracing.TraceErr(span, err)
 			return err
 		}
 	}
 
-	if err = organizationAggregate.HandleCommand(ctx, command); err != nil {
+	if err = organizationAggregate.HandleCommand(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}

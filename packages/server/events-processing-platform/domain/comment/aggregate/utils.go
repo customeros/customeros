@@ -39,6 +39,7 @@ func LoadCommentAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 	err := eventStore.Exists(ctx, commentAggregate.GetID())
 	if err != nil {
 		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			tracing.TraceErr(span, err)
 			return nil, err
 		} else {
 			return commentAggregate, nil
@@ -46,6 +47,7 @@ func LoadCommentAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 	}
 
 	if err = eventStore.Load(ctx, commentAggregate); err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 

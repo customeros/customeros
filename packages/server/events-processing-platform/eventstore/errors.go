@@ -8,7 +8,6 @@ import (
 
 var (
 	ErrInvalidEventType    = InvalidEventTypeError{}
-	ErrAlreadyExists       = errors.New("already exists")
 	ErrAggregateNotFound   = errors.New("aggregate not found")
 	ErrInvalidCommandType  = errors.New("invalid command type")
 	ErrInvalidAggregate    = errors.New("invalid aggregate")
@@ -44,6 +43,18 @@ func IsEventStoreErrorCodeResourceAlreadyExists(err error) bool {
 	}
 	errorCode := esdbErr.Code()
 	if errorCode == esdb.ErrorCodeResourceAlreadyExists {
+		return true
+	}
+	return false
+}
+
+func IsEventStoreErrorCodeWrongExpectedVersion(err error) bool {
+	esdbErr, ok := esdb.FromError(err)
+	if ok {
+		return false
+	}
+	errorCode := esdbErr.Code()
+	if errorCode == esdb.ErrorCodeWrongExpectedVersion {
 		return true
 	}
 	return false

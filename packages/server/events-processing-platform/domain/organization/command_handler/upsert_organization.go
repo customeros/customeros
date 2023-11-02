@@ -3,7 +3,7 @@ package command_handler
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -13,7 +13,7 @@ import (
 )
 
 type UpsertOrganizationCommandHandler interface {
-	Handle(ctx context.Context, command *cmd.UpsertOrganizationCommand) error
+	Handle(ctx context.Context, cmd *command.UpsertOrganizationCommand) error
 }
 
 type upsertOrganizationCommandHandler struct {
@@ -25,33 +25,32 @@ func NewUpsertOrganizationCommandHandler(log logger.Logger, es eventstore.Aggreg
 	return &upsertOrganizationCommandHandler{log: log, es: es}
 }
 
-func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *cmd.UpsertOrganizationCommand) error {
+func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, cmd *command.UpsertOrganizationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertOrganizationCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(command); err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return err
 	}
 
-	orgFields := cmd.UpsertOrganizationCommandToOrganizationFieldsStruct(command)
+	orgFields := command.UpsertOrganizationCommandToOrganizationFieldsStruct(cmd)
 
 	if aggregate.IsAggregateNotFound(organizationAggregate) {
-		command.IsCreateCommand = true
-		if err = organizationAggregate.CreateOrganization(ctx, orgFields, command.LoggedInUserId); err != nil {
+		cmd.IsCreateCommand = true
+		if err = organizationAggregate.CreateOrganization(ctx, orgFields, cmd.LoggedInUserId); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 	} else {
-		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, command.LoggedInUserId); err != nil {
+		if err = organizationAggregate.UpdateOrganization(ctx, orgFields, cmd.LoggedInUserId); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

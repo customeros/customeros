@@ -39,6 +39,7 @@ func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.Aggreg
 	err := eventStore.Exists(ctx, organizationAggregate.GetID())
 	if err != nil {
 		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			tracing.TraceErr(span, err)
 			return nil, err
 		} else {
 			return organizationAggregate, nil
@@ -46,6 +47,7 @@ func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.Aggreg
 	}
 
 	if err = eventStore.Load(ctx, organizationAggregate); err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
