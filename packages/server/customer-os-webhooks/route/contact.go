@@ -75,7 +75,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.ContactService.SyncContacts(ctx, contacts)
+		syncResult, err := services.ContactService.SyncContacts(ctx, contacts)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncContacts) error in sync contacts: %s", err.Error())
@@ -85,7 +85,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing contacts"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }
@@ -127,7 +127,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.ContactService.SyncContacts(ctx, []model.ContactData{contact})
+		syncResult, err := services.ContactService.SyncContacts(ctx, []model.ContactData{contact})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncContact) error in sync contact: %s", err.Error())
@@ -137,7 +137,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing contact"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }

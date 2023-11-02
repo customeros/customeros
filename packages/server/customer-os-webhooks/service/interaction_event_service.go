@@ -24,7 +24,7 @@ import (
 )
 
 type InteractionEventService interface {
-	SyncInteractionEvents(ctx context.Context, contacts []model.InteractionEventData) error
+	SyncInteractionEvents(ctx context.Context, contacts []model.InteractionEventData) (SyncResult, error)
 }
 
 type interactionEventService struct {
@@ -45,7 +45,7 @@ func NewInteractionEventService(log logger.Logger, repositories *repository.Repo
 	}
 }
 
-func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, interactionEvents []model.InteractionEventData) error {
+func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, interactionEvents []model.InteractionEventData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.SyncInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -54,18 +54,18 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
 		tracing.TraceErr(span, errors.ErrTenantNotValid)
-		return errors.ErrTenantNotValid
+		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate intraction events input before syncing
 	for _, interactionEvent := range interactionEvents {
 		if interactionEvent.ExternalSystem == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
-			return errors.ErrMissingExternalSystem
+			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(interactionEvent.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", interactionEvent.ExternalSystem))
-			return errors.ErrExternalSystemNotAccepted
+			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
 
@@ -84,7 +84,7 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return SyncResult{}, ctx.Err()
 		default:
 		}
 
@@ -111,7 +111,7 @@ func (s *interactionEventService) SyncInteractionEvents(ctx context.Context, int
 	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), interactionEvents[0].ExternalSystem,
 		interactionEvents[0].AppSource, "interaction event", syncDate, statuses)
 
-	return nil
+	return s.services.SyncStatusService.PrepareSyncResult(statuses), nil
 }
 
 func (s *interactionEventService) syncInteractionEvent(ctx context.Context, syncMutex *sync.Mutex, interactionEventInput model.InteractionEventData, syncDate time.Time) SyncStatus {

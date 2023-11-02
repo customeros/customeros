@@ -75,7 +75,7 @@ func syncLogEntriesHandler(services *service.Services, log logger.Logger) gin.Ha
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.LogEntryService.SyncLogEntries(ctx, logEntries)
+		syncResult, err := services.LogEntryService.SyncLogEntries(ctx, logEntries)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntries) error in sync logEntries: %s", err.Error())
@@ -85,7 +85,7 @@ func syncLogEntriesHandler(services *service.Services, log logger.Logger) gin.Ha
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entries"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }
@@ -127,7 +127,7 @@ func syncLogEntryHandler(services *service.Services, log logger.Logger) gin.Hand
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.LogEntryService.SyncLogEntries(ctx, []model.LogEntryData{logEntry})
+		syncResult, err := services.LogEntryService.SyncLogEntries(ctx, []model.LogEntryData{logEntry})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntry) error in sync logEntry: %s", err.Error())
@@ -137,7 +137,7 @@ func syncLogEntryHandler(services *service.Services, log logger.Logger) gin.Hand
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entry"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }

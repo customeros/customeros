@@ -75,7 +75,7 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.OrganizationService.SyncOrganizations(ctx, organizations)
+		syncResult, err := services.OrganizationService.SyncOrganizations(ctx, organizations)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncOrganizations) error in sync organizations: %s", err.Error())
@@ -85,7 +85,7 @@ func syncOrganizationsHandler(services *service.Services, log logger.Logger) gin
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing organizations"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }
@@ -127,7 +127,7 @@ func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.OrganizationService.SyncOrganizations(ctx, []model.OrganizationData{organization})
+		syncResult, err := services.OrganizationService.SyncOrganizations(ctx, []model.OrganizationData{organization})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncOrganization) error in sync organization: %s", err.Error())
@@ -137,7 +137,7 @@ func syncOrganizationHandler(services *service.Services, log logger.Logger) gin.
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing organization"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }

@@ -26,7 +26,7 @@ import (
 )
 
 type CommentService interface {
-	SyncComments(ctx context.Context, comments []model.CommentData) error
+	SyncComments(ctx context.Context, comments []model.CommentData) (SyncResult, error)
 }
 
 type commentService struct {
@@ -47,7 +47,7 @@ func NewCommentService(log logger.Logger, repositories *repository.Repositories,
 	}
 }
 
-func (s *commentService) SyncComments(ctx context.Context, comments []model.CommentData) error {
+func (s *commentService) SyncComments(ctx context.Context, comments []model.CommentData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentService.SyncComments")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -55,18 +55,18 @@ func (s *commentService) SyncComments(ctx context.Context, comments []model.Comm
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
 		tracing.TraceErr(span, errors.ErrTenantNotValid)
-		return errors.ErrTenantNotValid
+		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate comment input before syncing
 	for _, comment := range comments {
 		if comment.ExternalSystem == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
-			return errors.ErrMissingExternalSystem
+			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(comment.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", comment.ExternalSystem))
-			return errors.ErrExternalSystemNotAccepted
+			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
 
@@ -85,7 +85,7 @@ func (s *commentService) SyncComments(ctx context.Context, comments []model.Comm
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return SyncResult{}, ctx.Err()
 		default:
 		}
 
@@ -112,7 +112,7 @@ func (s *commentService) SyncComments(ctx context.Context, comments []model.Comm
 	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), comments[0].ExternalSystem,
 		comments[0].AppSource, "comment", syncDate, statuses)
 
-	return nil
+	return s.services.SyncStatusService.PrepareSyncResult(statuses), nil
 }
 
 func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex, commentInput model.CommentData, syncDate time.Time) SyncStatus {

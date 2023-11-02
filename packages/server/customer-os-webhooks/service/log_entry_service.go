@@ -25,7 +25,7 @@ import (
 )
 
 type LogEntryService interface {
-	SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) error
+	SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) (SyncResult, error)
 }
 
 type logEntryService struct {
@@ -46,7 +46,7 @@ func NewLogEntryService(log logger.Logger, repositories *repository.Repositories
 	}
 }
 
-func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) error {
+func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model.LogEntryData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.SyncLogEntries")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -54,18 +54,18 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
 		tracing.TraceErr(span, errors.ErrTenantNotValid)
-		return errors.ErrTenantNotValid
+		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate log entry input before syncing
 	for _, logEntry := range logEntries {
 		if logEntry.ExternalSystem == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
-			return errors.ErrMissingExternalSystem
+			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(logEntry.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", logEntry.ExternalSystem))
-			return errors.ErrExternalSystemNotAccepted
+			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
 
@@ -84,7 +84,7 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return SyncResult{}, ctx.Err()
 		default:
 		}
 
@@ -111,7 +111,7 @@ func (s *logEntryService) SyncLogEntries(ctx context.Context, logEntries []model
 	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), logEntries[0].ExternalSystem,
 		logEntries[0].AppSource, "logEntry", syncDate, statuses)
 
-	return nil
+	return s.services.SyncStatusService.PrepareSyncResult(statuses), nil
 }
 
 func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mutex, logEntryInput model.LogEntryData, syncDate time.Time, tenant string) SyncStatus {

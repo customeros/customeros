@@ -75,7 +75,7 @@ func syncCommentsHandler(services *service.Services, log logger.Logger) gin.Hand
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.CommentService.SyncComments(ctx, comments)
+		syncResult, err := services.CommentService.SyncComments(ctx, comments)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncLogEntries) error in sync comments: %s", err.Error())
@@ -85,7 +85,7 @@ func syncCommentsHandler(services *service.Services, log logger.Logger) gin.Hand
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entries"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }
@@ -127,7 +127,7 @@ func syncCommentHandler(services *service.Services, log logger.Logger) gin.Handl
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.CommentService.SyncComments(ctx, []model.CommentData{comment})
+		syncResult, err := services.CommentService.SyncComments(ctx, []model.CommentData{comment})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncComment) error in sync comment: %s", err.Error())
@@ -137,7 +137,7 @@ func syncCommentHandler(services *service.Services, log logger.Logger) gin.Handl
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entry"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }

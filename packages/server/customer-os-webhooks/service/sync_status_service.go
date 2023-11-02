@@ -16,6 +16,12 @@ type SyncStatus struct {
 	Reason     string
 }
 
+type SyncResult struct {
+	Skipped   int `json:"skipped"`
+	Failed    int `json:"failed"`
+	Completed int `json:"completed"`
+}
+
 func NewFailedSyncStatus(reason string) SyncStatus {
 	return SyncStatus{
 		FailedSync: true,
@@ -36,6 +42,7 @@ func NewSuccessfulSyncStatus() SyncStatus {
 
 type SyncStatusService interface {
 	SaveSyncResults(ctx context.Context, tenant, externalSystem, appSource, entityType string, syncDate time.Time, statuses []SyncStatus)
+	PrepareSyncResult(statuses []SyncStatus) SyncResult
 }
 
 type syncStatusService struct {
@@ -50,7 +57,7 @@ func NewSyncStatusService(log logger.Logger, repositories *repository.Repositori
 	}
 }
 
-func (s syncStatusService) SaveSyncResults(ctx context.Context, tenant, externalSystem, appSource, entityType string, syncDate time.Time, statuses []SyncStatus) {
+func (s *syncStatusService) SaveSyncResults(ctx context.Context, tenant, externalSystem, appSource, entityType string, syncDate time.Time, statuses []SyncStatus) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncStatusService.SaveSyncResults")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -91,4 +98,22 @@ func (s syncStatusService) SaveSyncResults(ctx context.Context, tenant, external
 		Skipped:        skipped,
 		Reason:         reason,
 	})
+}
+
+func (s *syncStatusService) PrepareSyncResult(statuses []SyncStatus) SyncResult {
+	completed, failed, skipped := 0, 0, 0
+	for _, status := range statuses {
+		if status.FailedSync {
+			failed++
+		} else if status.Skipped {
+			skipped++
+		} else {
+			completed++
+		}
+	}
+	return SyncResult{
+		Completed: completed,
+		Failed:    failed,
+		Skipped:   skipped,
+	}
 }
