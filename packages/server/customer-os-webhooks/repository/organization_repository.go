@@ -17,6 +17,7 @@ type OrganizationRepository interface {
 	GetOrganizationIdById(ctx context.Context, tenant, id string) (string, error)
 	GetOrganizationIdByExternalId(ctx context.Context, tenant, externalId, externalSystemId string) (string, error)
 	GetOrganizationIdByDomain(ctx context.Context, tenant, domain string) (string, error)
+	IsDomainUsedByOrganization(ctx context.Context, tenant, domain, skipOrganizationIds string) (bool, error)
 }
 
 type organizationRepository struct {
@@ -180,4 +181,34 @@ func (r *organizationRepository) GetOrganizationIdByDomain(ctx context.Context, 
 		return "", nil
 	}
 	return records.([]string)[0], nil
+}
+
+func (r *organizationRepository) IsDomainUsedByOrganization(ctx context.Context, tenant, domain, skipOrganizationId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.IsDomainUsedByOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
+				WHERE org.id <> $skipOrganizationId
+				return org.id limit 1`
+	params := map[string]any{
+		"tenant":             tenant,
+		"domain":             domain,
+		"skipOrganizationId": skipOrganizationId,
+	}
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return false, err
+		} else {
+			return queryResult.Next(ctx), nil
+		}
+	})
+	if err != nil {
+		return false, err
+	}
+	return result.(bool), err
 }
