@@ -287,9 +287,13 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
-		s.addLinkedOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
-		organizationEntity.DataloaderKey = v.LinkedNodeId
-		organizationEntities = append(organizationEntities, *organizationEntity)
+
+		//check if the hide bool is false and only then append the sub org to the parent org
+		if !organizationEntity.Hide {
+			s.addLinkedOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+			organizationEntity.DataloaderKey = v.LinkedNodeId
+			organizationEntities = append(organizationEntities, *organizationEntity)
+		}
 	}
 	return &organizationEntities, nil
 }
