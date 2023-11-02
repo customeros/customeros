@@ -148,7 +148,7 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 		s.log.Error(reason)
 	}
 	if commentedIssueId == "" {
-		reason = fmt.Sprintf("no commented parent entity identified for comment  %s , tenant %s :%s", commentInput.ExternalId, tenant, err.Error())
+		reason = fmt.Sprintf("no commented parent entity identified for comment %v , tenant %v", commentInput.ExternalId, tenant)
 		tracing.TraceErr(span, _e.New(reason))
 		s.log.Error(reason)
 		span.LogFields(log.String("output", "failed"))
