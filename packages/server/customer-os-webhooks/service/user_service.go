@@ -24,7 +24,7 @@ import (
 )
 
 type UserService interface {
-	SyncUsers(ctx context.Context, users []model.UserData) error
+	SyncUsers(ctx context.Context, users []model.UserData) (SyncResult, error)
 	GetIdForReferencedUser(ctx context.Context, tenant, externalSystemId string, user model.ReferencedUser) (string, error)
 }
 
@@ -46,7 +46,7 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, gr
 	}
 }
 
-func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) error {
+func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.SyncUsers")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -54,18 +54,18 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
 		tracing.TraceErr(span, errors.ErrTenantNotValid)
-		return errors.ErrTenantNotValid
+		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate user input before syncing
 	for _, user := range users {
 		if user.ExternalSystem == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
-			return errors.ErrMissingExternalSystem
+			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(user.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", user.ExternalSystem))
-			return errors.ErrExternalSystemNotAccepted
+			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
 
@@ -84,7 +84,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return SyncResult{}, ctx.Err()
 		default:
 		}
 
@@ -111,7 +111,7 @@ func (s *userService) SyncUsers(ctx context.Context, users []model.UserData) err
 	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), users[0].ExternalSystem,
 		users[0].AppSource, "user", syncDate, statuses)
 
-	return nil
+	return s.services.SyncStatusService.PrepareSyncResult(statuses), nil
 }
 
 func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userInput model.UserData, syncDate time.Time) SyncStatus {

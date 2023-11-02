@@ -75,7 +75,7 @@ func syncUsersHandler(services *service.Services, log logger.Logger) gin.Handler
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.UserService.SyncUsers(ctx, users)
+		syncResult, err := services.UserService.SyncUsers(ctx, users)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncUsers) error in sync users: %s", err.Error())
@@ -85,7 +85,7 @@ func syncUsersHandler(services *service.Services, log logger.Logger) gin.Handler
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing users"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }
@@ -127,7 +127,7 @@ func syncUserHandler(services *service.Services, log logger.Logger) gin.HandlerF
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.UserService.SyncUsers(ctx, []model.UserData{user})
+		syncResult, err := services.UserService.SyncUsers(ctx, []model.UserData{user})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncUser) error in sync user: %s", err.Error())
@@ -137,7 +137,7 @@ func syncUserHandler(services *service.Services, log logger.Logger) gin.HandlerF
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing user"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }

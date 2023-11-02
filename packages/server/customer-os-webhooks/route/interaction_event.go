@@ -75,7 +75,7 @@ func syncInteractionEventsHandler(services *service.Services, log logger.Logger)
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.InteractionEventService.SyncInteractionEvents(ctx, interactionEvents)
+		syncResult, err := services.InteractionEventService.SyncInteractionEvents(ctx, interactionEvents)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvents) error in sync interactionEvents: %s", err.Error())
@@ -85,7 +85,7 @@ func syncInteractionEventsHandler(services *service.Services, log logger.Logger)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entries"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }
@@ -127,7 +127,7 @@ func syncInteractionEventHandler(services *service.Services, log logger.Logger) 
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.InteractionEventService.SyncInteractionEvents(ctx, []model.InteractionEventData{interactionEvent})
+		syncResult, err := services.InteractionEventService.SyncInteractionEvents(ctx, []model.InteractionEventData{interactionEvent})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error in sync interactionEvent: %s", err.Error())
@@ -137,7 +137,7 @@ func syncInteractionEventHandler(services *service.Services, log logger.Logger) 
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entry"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }

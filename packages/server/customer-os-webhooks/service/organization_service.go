@@ -30,7 +30,7 @@ type domains struct {
 }
 
 type OrganizationService interface {
-	SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) error
+	SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) (SyncResult, error)
 	GetIdForReferencedOrganization(ctx context.Context, tenant, externalSystem string, org model.ReferencedOrganization) (string, error)
 }
 
@@ -52,7 +52,7 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 	}
 }
 
-func (s *organizationService) SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) error {
+func (s *organizationService) SyncOrganizations(ctx context.Context, organizations []model.OrganizationData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.SyncOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -60,18 +60,18 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
 		tracing.TraceErr(span, errors.ErrTenantNotValid)
-		return errors.ErrTenantNotValid
+		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate organization input before syncing
 	for _, org := range organizations {
 		if org.ExternalSystem == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
-			return errors.ErrMissingExternalSystem
+			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(org.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", org.ExternalSystem))
-			return errors.ErrExternalSystemNotAccepted
+			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
 
@@ -105,7 +105,7 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return SyncResult{}, ctx.Err()
 		default:
 		}
 
@@ -132,7 +132,7 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), organizations[0].ExternalSystem,
 		organizations[0].AppSource, "organization", syncDate, statuses)
 
-	return nil
+	return s.services.SyncStatusService.PrepareSyncResult(statuses), nil
 }
 
 func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *sync.Mutex, orgInput model.OrganizationData, syncDate time.Time, controlDomains *domains) SyncStatus {

@@ -24,7 +24,7 @@ import (
 )
 
 type IssueService interface {
-	SyncIssues(ctx context.Context, contacts []model.IssueData) error
+	SyncIssues(ctx context.Context, contacts []model.IssueData) (SyncResult, error)
 	GetIdForReferencedIssue(ctx context.Context, tenant, externalSystemId string, issue model.ReferencedIssue) (string, error)
 }
 
@@ -46,7 +46,7 @@ func NewIssueService(log logger.Logger, repositories *repository.Repositories, g
 	}
 }
 
-func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData) error {
+func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.SyncIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -55,18 +55,18 @@ func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData)
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
 		tracing.TraceErr(span, errors.ErrTenantNotValid)
-		return errors.ErrTenantNotValid
+		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate issues input before syncing
 	for _, issue := range issues {
 		if issue.ExternalSystem == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
-			return errors.ErrMissingExternalSystem
+			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(issue.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", issue.ExternalSystem))
-			return errors.ErrExternalSystemNotAccepted
+			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
 
@@ -85,7 +85,7 @@ func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData)
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return SyncResult{}, ctx.Err()
 		default:
 		}
 
@@ -112,7 +112,7 @@ func (s *issueService) SyncIssues(ctx context.Context, issues []model.IssueData)
 	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), issues[0].ExternalSystem,
 		issues[0].AppSource, "issue", syncDate, statuses)
 
-	return nil
+	return s.services.SyncStatusService.PrepareSyncResult(statuses), nil
 }
 
 func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, issueInput model.IssueData, syncDate time.Time) SyncStatus {

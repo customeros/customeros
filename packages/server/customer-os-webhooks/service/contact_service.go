@@ -24,7 +24,7 @@ import (
 )
 
 type ContactService interface {
-	SyncContacts(ctx context.Context, contacts []model.ContactData) error
+	SyncContacts(ctx context.Context, contacts []model.ContactData) (SyncResult, error)
 	GetIdForReferencedContact(ctx context.Context, tenant, externalSystem string, contact model.ReferencedContact) (string, error)
 }
 
@@ -46,7 +46,7 @@ func NewContactService(log logger.Logger, repositories *repository.Repositories,
 	}
 }
 
-func (s *contactService) SyncContacts(ctx context.Context, contacts []model.ContactData) error {
+func (s *contactService) SyncContacts(ctx context.Context, contacts []model.ContactData) (SyncResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.SyncContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -55,18 +55,18 @@ func (s *contactService) SyncContacts(ctx context.Context, contacts []model.Cont
 	if !s.services.TenantService.Exists(ctx, common.GetTenantFromContext(ctx)) {
 		s.log.Errorf("tenant {%s} does not exist", common.GetTenantFromContext(ctx))
 		tracing.TraceErr(span, errors.ErrTenantNotValid)
-		return errors.ErrTenantNotValid
+		return SyncResult{}, errors.ErrTenantNotValid
 	}
 
 	// pre-validate contact input before syncing
 	for _, contact := range contacts {
 		if contact.ExternalSystem == "" {
 			tracing.TraceErr(span, errors.ErrMissingExternalSystem)
-			return errors.ErrMissingExternalSystem
+			return SyncResult{}, errors.ErrMissingExternalSystem
 		}
 		if !entity.IsValidDataSource(strings.ToLower(contact.ExternalSystem)) {
 			tracing.TraceErr(span, errors.ErrExternalSystemNotAccepted, log.String("externalSystem", contact.ExternalSystem))
-			return errors.ErrExternalSystemNotAccepted
+			return SyncResult{}, errors.ErrExternalSystemNotAccepted
 		}
 	}
 
@@ -85,7 +85,7 @@ func (s *contactService) SyncContacts(ctx context.Context, contacts []model.Cont
 		// Check if context is cancelled
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return SyncResult{}, ctx.Err()
 		default:
 		}
 
@@ -112,7 +112,7 @@ func (s *contactService) SyncContacts(ctx context.Context, contacts []model.Cont
 	s.services.SyncStatusService.SaveSyncResults(ctx, common.GetTenantFromContext(ctx), contacts[0].ExternalSystem,
 		contacts[0].AppSource, "contact", syncDate, statuses)
 
-	return nil
+	return s.services.SyncStatusService.PrepareSyncResult(statuses), nil
 }
 
 func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex, contactInput model.ContactData, syncDate time.Time) SyncStatus {

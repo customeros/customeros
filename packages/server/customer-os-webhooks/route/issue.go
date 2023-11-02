@@ -75,7 +75,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.IssueService.SyncIssues(ctx, issues)
+		syncResult, err := services.IssueService.SyncIssues(ctx, issues)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncIssues) error in sync issues: %s", err.Error())
@@ -85,7 +85,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing issues"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }
@@ -127,7 +127,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		err = services.IssueService.SyncIssues(ctx, []model.IssueData{issue})
+		syncResult, err := services.IssueService.SyncIssues(ctx, []model.IssueData{issue})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncIssue) error in sync issue: %s", err.Error())
@@ -137,7 +137,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing issue"})
 			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "Message received successfully"})
+			c.JSON(http.StatusOK, syncResult)
 		}
 	}
 }
