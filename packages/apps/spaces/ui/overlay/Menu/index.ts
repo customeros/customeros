@@ -16,4 +16,5 @@ export {
   MenuGroup,
   MenuOptionGroup,
   MenuDivider,
+  useMenuContext,
 } from '@chakra-ui/react';

@@ -7,6 +7,7 @@ import { Skeleton } from '@ui/presentation/Skeleton';
 import { THead, createColumnHelper } from '@ui/presentation/Table';
 
 import { OwnerCell } from './Cells/owner/OwnerCell';
+import { AvatarCell } from './Cells/avatar/AvatarCell';
 import { WebsiteCell } from './Cells/website/WebsiteCell';
 import { TimeToRenewalCell } from './Cells/renewal/TimeToRenewalCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
@@ -26,7 +27,48 @@ interface GetColumnsOptions {
 
 export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor((row) => row, {
+    id: 'AVATAR',
+    minSize: 42,
+    maxSize: 70,
+    fixWidth: true,
+    enableColumnFilter: false,
+    cell: (props) => {
+      return (
+        <AvatarCell
+          organization={props.getValue()}
+          lastPositionParams={options?.tabs?.[props.getValue()?.id]}
+        />
+      );
+    },
+    header: (props) => {
+      return (
+        <Flex w='42px' align='center' justify='center'>
+          <Tooltip label='Create an organization'>
+            <IconButton
+              size='sm'
+              variant='ghost'
+              aria-label='create organization'
+              isLoading={options?.createIsLoading}
+              onClick={options?.onCreateOrganization}
+              icon={<Plus color='gray.400' boxSize='5' />}
+            />
+          </Tooltip>
+        </Flex>
+      );
+    },
+    skeleton: () => (
+      <Skeleton
+        width='42px'
+        height='42px'
+        startColor='gray.300'
+        endColor='gray.300'
+      />
+    ),
+  }),
+  columnHelper.accessor((row) => row, {
     id: 'ORGANIZATION',
+    minSize: 200,
+    enableColumnFilter: false,
     cell: (props) => {
       return (
         <OrganizationCell
@@ -36,50 +78,21 @@ export const getColumns = (options: GetColumnsOptions) => [
         />
       );
     },
-    minSize: 200,
-    header: (props) => (
-      <THead<Organization>
-        title='Organization'
-        icon={
-          <Flex w='10' h='10' align='center' justify='center' mr='3'>
-            <Tooltip label='Create an organization'>
-              <IconButton
-                size='sm'
-                variant='ghost'
-                aria-label='create organization'
-                isLoading={options?.createIsLoading}
-                onClick={options?.onCreateOrganization}
-                icon={<Plus color='gray.400' boxSize='5' />}
-              />
-            </Tooltip>
-          </Flex>
-        }
-        {...props}
-      />
-    ),
+    header: (props) => <THead<Organization> title='Organization' {...props} />,
     skeleton: () => (
-      <Flex align='center' h='full'>
+      <Flex flexDir='column' h='42px' align='flex-start' gap='1'>
         <Skeleton
-          borderRadius='lg'
-          w='40px'
-          h='40px'
+          width='100px'
+          height='18px'
           startColor='gray.300'
           endColor='gray.300'
         />
-        <Flex ml='3' flexDir='column' h='42px' align='center' gap='1'>
-          <Skeleton
-            width='100px'
-            height='18px'
-            startColor='gray.300'
-            endColor='gray.300'
-          />
-          <Skeleton
-            width='100px'
-            height='18px'
-            startColor='gray.300'
-            endColor='gray.300'
-          />
-        </Flex>
+        <Skeleton
+          width='100px'
+          height='18px'
+          startColor='gray.300'
+          endColor='gray.300'
+        />
       </Flex>
     ),
   }),
@@ -87,6 +100,7 @@ export const getColumns = (options: GetColumnsOptions) => [
     id: 'WEBSITE',
     minSize: 200,
     enableSorting: false,
+    enableColumnFilter: false,
     cell: (props) => <WebsiteCell website={props.getValue()} />,
     header: (props) => <THead<Organization> title='Website' {...props} />,
     skeleton: () => (
@@ -100,8 +114,17 @@ export const getColumns = (options: GetColumnsOptions) => [
   }),
   columnHelper.accessor('isCustomer', {
     id: 'RELATIONSHIP',
-    header: (props) => <THead<Organization> title='Relationship' {...props} />,
     minSize: 200,
+    filterFn: 'equalsString',
+    header: (props) => (
+      <THead<Organization>
+        title='Relationship'
+        renderFilter={(column) => {
+          return <p>Hello World</p>;
+        }}
+        {...props}
+      />
+    ),
     cell: (props) => {
       const organization = props.row.original;
 
@@ -119,6 +142,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_LIKELIHOOD',
     minSize: 200,
+    enableColumnFilter: false,
     cell: (props) => {
       const organizationId = props.row.original.id;
       const value = props.getValue()?.renewalLikelihood;
@@ -158,6 +182,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_CYCLE_NEXT',
     minSize: 200,
+    enableColumnFilter: false,
     cell: (props) => {
       const values = props.getValue()?.billingDetails;
       const renewalDate = values?.renewalCycleNext;
@@ -185,6 +210,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('accountDetails', {
     id: 'FORECAST_AMOUNT',
     minSize: 200,
+    enableColumnFilter: false,
     cell: (props) => {
       const value = props.getValue()?.renewalForecast;
       const amount = value?.amount;
@@ -219,6 +245,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('owner', {
     id: 'OWNER',
     minSize: 200,
+    enableColumnFilter: false,
     cell: (props) => (
       <OwnerCell id={props.row.original.id} owner={props.getValue()} />
     ),
@@ -235,6 +262,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('market', {
     id: 'LAST_TOUCHPOINT',
     minSize: 250,
+    enableColumnFilter: false,
     cell: (props) => (
       <LastTouchpointCell
         lastTouchPointAt={props.row.original.lastTouchPointAt}

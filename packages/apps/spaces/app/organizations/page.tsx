@@ -95,6 +95,9 @@ export default function OrganizationsPage() {
     };
   }, [sorting]);
 
+  // const { data: tableState } = useTableState();
+  // const filters = tableState?.columnFilters;
+
   const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
     useGetOrganizationsInfiniteQuery(
       client,

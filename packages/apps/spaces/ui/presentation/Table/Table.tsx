@@ -4,10 +4,11 @@ import type {
   OnChangeFn,
   SortingState,
   RowSelectionState,
+  ColumnFiltersState,
   Table as TableInstance,
 } from '@tanstack/react-table';
 
-import { useRef, useMemo, useState, useEffect, forwardRef } from 'react';
+import { memo, useRef, useMemo, useState, useEffect, forwardRef } from 'react';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
@@ -16,6 +17,7 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
 } from '@tanstack/react-table';
 
 import { Center } from '@ui/layout/Center';
@@ -26,6 +28,8 @@ declare module '@tanstack/table-core' {
   // REASON: TData & TValue are not used in this interface but need to be defined
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnDefBase<TData, TValue = unknown> {
+    fixWidth?: boolean;
+    maxW?: number | string;
     skeleton: () => React.ReactNode;
   }
 }
@@ -40,9 +44,11 @@ interface TableProps<T extends object> {
   onFetchMore?: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: ColumnDef<T, any>[];
+  filters?: ColumnFiltersState;
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
   onSortingChange?: OnChangeFn<SortingState>;
+  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
 
@@ -54,10 +60,11 @@ export const Table = <T extends object>({
   canFetchMore,
   totalItems = 40,
   onSortingChange,
+  sorting: _sorting,
   renderTableActions,
   enableRowSelection,
   enableTableActions,
-  sorting: _sorting,
+  onColumnFiltersChange,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -70,8 +77,10 @@ export const Table = <T extends object>({
     },
     manualSorting: true,
     enableRowSelection,
+    enableColumnFilters: true,
     getCoreRowModel: getCoreRowModel<T>(),
     getSortedRowModel: getSortedRowModel<T>(),
+    getFilteredRowModel: getFilteredRowModel<T>(),
     onSortingChange: onSortingChange ?? setSorting,
   });
 
@@ -124,8 +133,23 @@ export const Table = <T extends object>({
                 <THeaderCell
                   key={header.id}
                   flex={header.colSpan ?? '1'}
-                  minWidth={`${header.getSize()}`}
-                  pl={index === 0 ? '2' : '6'}
+                  minWidth={`${header.getSize()}px`}
+                  maxWidth={
+                    header.column.columnDef.fixWidth
+                      ? `${header.getSize()}px`
+                      : 'none'
+                  }
+                  pr={index === 0 ? '0' : undefined}
+                  pl={(() => {
+                    switch (index) {
+                      case 0:
+                        return '2';
+                      case 1:
+                        return '0';
+                      default:
+                        return '6';
+                    }
+                  })()}
                 >
                   {header.isPlaceholder
                     ? null
@@ -166,40 +190,53 @@ export const Table = <T extends object>({
                 {enableRowSelection && (
                   <TCell maxW='fit-content' pl='2' pr='0'>
                     <Flex align='center' flexDir='row' h='full'>
-                      <Checkbox
-                        size='lg'
-                        className='row-select-checkbox'
-                        isChecked={row?.getIsSelected()}
+                      <MemoizedCheckbox
                         key={`checkbox-${virtualRow.index}`}
-                        disabled={!row || !row?.getCanSelect()}
+                        isSelected={row?.getIsSelected()}
+                        isDisabled={!row || !row?.getCanSelect()}
                         onChange={row?.getToggleSelectedHandler()}
-                        opacity={row?.getIsSelected() ? '1' : '0'}
-                        visibility={row?.getIsSelected() ? 'visible' : 'hidden'}
                       />
                     </Flex>
                   </TCell>
                 )}
-                {(row ?? skeletonRow).getAllCells().map((cell, index) => (
-                  <TCell
-                    key={cell.id}
-                    data-index={cell.row.index}
-                    pl={index === 0 ? '2' : '6'}
-                    minW={`${cell.column.getSize()}px`}
-                    flex={
-                      table
-                        .getFlatHeaders()
-                        .find((h) => h.id === cell.column.columnDef.id)
-                        ?.colSpan ?? '1'
-                    }
-                  >
-                    {row
-                      ? flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )
-                      : cell.column.columnDef?.skeleton?.()}
-                  </TCell>
-                ))}
+                {(row ?? skeletonRow).getAllCells()?.map((cell, index) => {
+                  return (
+                    <TCell
+                      key={cell.id}
+                      data-index={cell.row.index}
+                      pr={index === 0 ? '0' : undefined}
+                      pl={(() => {
+                        switch (index) {
+                          case 0:
+                            return '2';
+                          case 1:
+                            return '0';
+                          default:
+                            return '6';
+                        }
+                      })()}
+                      minW={`${cell.column.getSize()}px`}
+                      maxW={
+                        cell.column.columnDef.fixWidth
+                          ? `${cell.column.getSize()}px`
+                          : 'none'
+                      }
+                      flex={
+                        table
+                          .getFlatHeaders()
+                          .find((h) => h.id === cell.column.columnDef.id)
+                          ?.colSpan ?? '1'
+                      }
+                    >
+                      {row
+                        ? flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )
+                        : cell.column.columnDef?.skeleton?.()}
+                    </TCell>
+                  );
+                })}
               </TRow>
             );
           })}
@@ -327,5 +364,32 @@ const TActions = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
   );
 });
 
-export type { RowSelectionState, SortingState, TableInstance };
+interface MemoizedCheckboxProps {
+  isSelected: boolean;
+  isDisabled: boolean;
+  onChange: (event: unknown) => void;
+}
+
+const MemoizedCheckbox = memo<MemoizedCheckboxProps>(
+  ({ isDisabled, isSelected, onChange }) => {
+    return (
+      <Checkbox
+        size='lg'
+        className='row-select-checkbox'
+        isChecked={isSelected}
+        disabled={isDisabled}
+        onChange={onChange}
+        opacity={isSelected ? '1' : '0'}
+        visibility={isSelected ? 'visible' : 'hidden'}
+      />
+    );
+  },
+);
+
+export type {
+  RowSelectionState,
+  SortingState,
+  TableInstance,
+  ColumnFiltersState,
+};
 export { createColumnHelper } from '@tanstack/react-table';
