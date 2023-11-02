@@ -99,7 +99,10 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 			eventsData...,
 		)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			// skip tracing error if wrong expected version, retry will be done
+			if !es.IsEventStoreErrorCodeWrongExpectedVersion(err) {
+				tracing.TraceErr(span, err)
+			}
 			as.log.Errorf("(Save) esdbClient.AppendToStream: {%+v}", err)
 			return errors.Wrap(err, "esdbClient.AppendToStream")
 		}

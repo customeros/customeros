@@ -25,24 +25,23 @@ func NewRequestRenewalForecastCommandHandler(log logger.Logger, es eventstore.Ag
 	return &requestRenewalForecastCommandHandler{log: log, es: es}
 }
 
-func (h *requestRenewalForecastCommandHandler) Handle(ctx context.Context, command *command.RequestRenewalForecastCommand) error {
+func (h *requestRenewalForecastCommandHandler) Handle(ctx context.Context, cmd *command.RequestRenewalForecastCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestRenewalForecastCommandHandler.Handle")
 	defer span.Finish()
-	tracing.SetCommandHandlerSpanTags(ctx, span, command.Tenant, command.LoggedInUserId)
-	span.LogFields(log.Object("command", command))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(command); err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
-	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, command.Tenant, command.ObjectID)
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if err = organizationAggregate.HandleCommand(ctx, command); err != nil {
+	if err = organizationAggregate.HandleCommand(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
