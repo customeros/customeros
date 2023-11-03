@@ -75,6 +75,7 @@ export type InteractionEventParticipantFragmentUserParticipantFragment = {
   userParticipant: {
     __typename?: 'User';
     id: string;
+    name?: string | null;
     firstName: string;
     lastName: string;
     profilePhotoUrl?: string | null;
@@ -218,6 +219,7 @@ export const InteractionEventParticipantFragmentFragmentDoc = `
     __typename
     userParticipant {
       id
+      name
       firstName
       lastName
       profilePhotoUrl

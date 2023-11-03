@@ -47,7 +47,6 @@ query getTimelineEvents($ids: [ID!]!) {
         __typename
         ...InteractionEventParticipantFragment
       }
-
     }
     ... on Issue {
       __typename
@@ -63,13 +62,38 @@ query getTimelineEvents($ids: [ID!]!) {
         externalId
         externalUrl
       }
+      submittedBy {
+        ...InteractionEventParticipantFragment
+      }
+      followedBy {
+        ...InteractionEventParticipantFragment
+      }
+      assignedTo {
+        ...InteractionEventParticipantFragment
+      }
+      reportedBy {
+        ...InteractionEventParticipantFragment
+      }
       interactionEvents {
-        id
+        __typename
+        content
+        contentType
+        createdAt
         sentBy {
           ...InteractionEventParticipantFragment
         }
+      }
+      comments {
+        __typename
         content
-
+        contentType
+        createdAt
+        createdBy {
+          id
+          name
+          firstName
+          lastName
+        }
       }
 
       issueTags: tags {
@@ -145,6 +169,5 @@ query getTimelineEvents($ids: [ID!]!) {
         externalSource
       }
     }
-
   }
 }
