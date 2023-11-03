@@ -5,10 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -27,25 +27,24 @@ func NewLinkJobRoleCommandHandler(log logger.Logger, cfg *config.Config, es even
 	return &linkJobRoleCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkJobRoleCommandHandler) Handle(ctx context.Context, command *command.LinkJobRoleCommand) error {
+func (c *linkJobRoleCommandHandler) Handle(ctx context.Context, cmd *command.LinkJobRoleCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkJobRoleCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	span.LogFields(log.Object("command", cmd))
 
-	if len(command.Tenant) == 0 {
-		return eventstore.ErrMissingTenant
-	}
-	if len(command.JobRoleId) == 0 {
-		return errors.ErrMissingEmailId
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
-	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.ObjectID)
+	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if err = userAggregate.LinkJobRole(ctx, command.Tenant, command.JobRoleId, command.LoggedInUserId); err != nil {
+	if err = userAggregate.LinkJobRole(ctx, cmd.Tenant, cmd.JobRoleId, cmd.LoggedInUserId); err != nil {
 		return err
 	}
 

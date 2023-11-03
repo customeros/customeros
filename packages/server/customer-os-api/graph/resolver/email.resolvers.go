@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -156,6 +157,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 		Primary:        utils.IfNotNilBool(input.Primary),
 		Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

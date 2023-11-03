@@ -1,15 +1,16 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 )
 
-type Metadata struct {
-	Tenant string
-	UserId string
-	App    string
+type EventMetadata struct {
+	Tenant string `json:"tenant"`
+	UserId string `json:"user-id"`
+	App    string `json:"app"`
 }
 
 // Deprecated, use EnrichEventWithMetadataExtended instead
@@ -24,7 +25,7 @@ func EnrichEventWithMetadata(event *eventstore.Event, span *opentracing.Span, te
 	}
 }
 
-func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.Span, mtd Metadata) {
+func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.Span, mtd EventMetadata) {
 	metadata := tracing.ExtractTextMapCarrier(span.Context())
 	metadata["tenant"] = mtd.Tenant
 	if mtd.UserId != "" {
@@ -36,4 +37,8 @@ func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.S
 	if err := event.SetMetadata(metadata); err != nil {
 		tracing.TraceErr(span, err)
 	}
+}
+
+func AllowCheckIfEventIsRedundant(appSource, loggedInUserId string) bool {
+	return (appSource == constants.AppSourceIntegrationApp || appSource == constants.AppSourceSyncCustomerOsData) && loggedInUserId == ""
 }

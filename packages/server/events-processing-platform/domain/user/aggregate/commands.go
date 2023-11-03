@@ -190,7 +190,14 @@ func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCom
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	if aggregate.AllowCheckIfEventIsRedundant(cmd.AppSource, cmd.LoggedInUserId) {
+		if a.User.HasEmail(cmd.EmailId, cmd.Label, cmd.Primary) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
 
 	updatedAtNotNil := utils.Now()
 
@@ -200,7 +207,11 @@ func (a *UserAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCom
 		return errors.Wrap(err, "NewUserLinkEmailEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: cmd.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
 
 	err = a.Apply(event)
 	if err != nil {

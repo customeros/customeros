@@ -105,6 +105,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 					LoggedInUserId: common.GetUserIdFromContext(ctx),
 					OrganizationId: response.Id,
 					Domain:         domain,
+					AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 				})
 				if err != nil {
 					tracing.TraceErr(span, err)

@@ -58,6 +58,7 @@ message LinkEmailToUserGrpcRequest {
   bool primary = 4;
   string label = 5;
   string loggedInUserId = 6;
+  string appSource = 7;
 }
 
 message AddRoleGrpcRequest {

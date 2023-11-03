@@ -165,13 +165,15 @@ func NewUpdateBillingDetailsCommand(tenant, orgId, userId string, fields models.
 
 type LinkDomainCommand struct {
 	eventstore.BaseCommand
-	Domain string
+	Domain    string
+	AppSource string
 }
 
-func NewLinkDomainCommand(objectID, tenant, domain, userId string) *LinkDomainCommand {
+func NewLinkDomainCommand(objectID, tenant, domain, loggedInUserId, appSource string) *LinkDomainCommand {
 	return &LinkDomainCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, loggedInUserId),
 		Domain:      domain,
+		AppSource:   appSource,
 	}
 }
 

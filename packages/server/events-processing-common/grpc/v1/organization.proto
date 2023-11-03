@@ -75,6 +75,7 @@ message LinkDomainToOrganizationGrpcRequest {
   string domain = 3;
   string userId = 4 [deprecated = true];
   string loggedInUserId = 5;
+  string appSource = 6;
 }
 
 enum CustomFieldDataType {

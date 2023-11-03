@@ -30,11 +30,12 @@ func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es 
 func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, cmd *command.LinkPhoneNumberCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", cmd.Tenant), log.String("ObjectID", cmd.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(cmd); err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
 	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)

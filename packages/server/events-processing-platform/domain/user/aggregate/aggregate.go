@@ -17,7 +17,8 @@ const (
 
 type UserAggregate struct {
 	*aggregate.CommonTenantIdAggregate
-	User *models.User
+	User        *models.User
+	EventHashes map[string]map[string]string
 }
 
 func NewUserAggregateWithTenantAndID(tenant, id string) *UserAggregate {
@@ -26,6 +27,7 @@ func NewUserAggregateWithTenantAndID(tenant, id string) *UserAggregate {
 	userAggregate.SetWhen(userAggregate.When)
 	userAggregate.User = &models.User{}
 	userAggregate.Tenant = tenant
+	userAggregate.EventHashes = make(map[string]map[string]string)
 	return &userAggregate
 }
 

@@ -2,6 +2,8 @@ package constants
 
 const (
 	AppSourceEventProcessingPlatform = "event-processing-platform"
+	AppSourceIntegrationApp          = "integration.app"
+	AppSourceSyncCustomerOsData      = "sync-customer-os-data"
 
 	ComponentNeo4jRepository = "neo4jRepository"
 	ComponentService         = "service"
