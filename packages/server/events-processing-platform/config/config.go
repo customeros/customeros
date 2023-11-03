@@ -136,6 +136,10 @@ type Services struct {
 	}
 }
 
+type Utils struct {
+	RetriesOnOptimisticLockException int `env:"UTILS_RETRIES_ON_OPTIMISTIC_LOCK" envDefault:"5"`
+}
+
 type Config struct {
 	ServiceName      string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
 	Logger           logger.Config
@@ -146,6 +150,7 @@ type Config struct {
 	Postgres         config.PostgresConfig
 	Jaeger           tracing.JaegerConfig
 	Services         Services
+	Utils            Utils
 }
 
 func InitConfig() (*Config, error) {

@@ -28,16 +28,16 @@ func NewRemoveParentCommandHandler(log logger.Logger, es eventstore.AggregateSto
 func (c *removeParentCommandHandler) Handle(ctx context.Context, cmd *command.RemoveParentCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "removeParentCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", cmd.Tenant), log.String("ObjectID", cmd.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(cmd); err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
 	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return err
 	}
 
