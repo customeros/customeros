@@ -28,11 +28,12 @@ func NewLinkLocationCommandHandler(log logger.Logger, es eventstore.AggregateSto
 func (h *linkLocationCommandHandler) Handle(ctx context.Context, cmd *command.LinkLocationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkLocationCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", cmd.Tenant), log.String("ObjectID", cmd.ObjectID))
+	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(cmd); err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
 	contactAggregate, err := aggregate.LoadContactAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)

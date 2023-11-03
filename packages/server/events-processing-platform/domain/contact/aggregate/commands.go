@@ -67,6 +67,13 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
+	if aggregate.AllowCheckIfEventIsRedundant(cmd.Source.AppSource, cmd.LoggedInUserId) {
+		if a.Contact.SameData(cmd.DataFields, cmd.ExternalSystem) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
+
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
 	updateEvent, err := events.NewContactUpdateEvent(a, cmd.Source.Source, cmd.DataFields, cmd.ExternalSystem, updatedAtNotNil)
@@ -245,6 +252,13 @@ func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLo
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
+	if aggregate.AllowCheckIfEventIsRedundant(cmd.AppSource, cmd.LoggedInUserId) {
+		if a.Contact.HasLocation(cmd.LocationId) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
+
 	updatedAtNotNil := utils.Now()
 
 	event, err := events.NewContactLinkLocationEvent(a, cmd.LocationId, updatedAtNotNil)
@@ -268,6 +282,13 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	if aggregate.AllowCheckIfEventIsRedundant(cmd.Source.AppSource, cmd.LoggedInUserId) {
+		if a.Contact.HasJobRoleInOrganization(cmd.OrganizationId, cmd.JobRoleFields) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())

@@ -137,6 +137,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 		EmailId:   responseEmail.Id,
 		Primary:   true,
 		Label:     "WORK",
+		AppSource: "unit-test",
 	})
 	if err != nil {
 		t.Errorf("Failed to link email to contact: %v", err)
