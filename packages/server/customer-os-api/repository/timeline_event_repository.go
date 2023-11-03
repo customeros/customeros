@@ -15,9 +15,9 @@ import (
 )
 
 var (
-	relationshipsWithOrganization           = []string{"LOGGED", "NOTED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
+	relationshipsWithOrganization           = []string{"LOGGED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
 	relationshipsWithOrganizationProperties = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
-	relationshipsWithContact                = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "NOTED", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
+	relationshipsWithContact                = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
 	relationshipsWithContactProperties      = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
 )
 
@@ -54,6 +54,7 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		"contactId":    contactId,
 		"startingDate": startingDate,
 		"size":         size,
+		"skipDeleted":  "deleted",
 	}
 	filterByTypeCypherFragment := ""
 	if len(labels) > 0 {
@@ -65,9 +66,10 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (a.status IS NULL OR a.status <> $skipDeleted) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -115,8 +117,9 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 	defer session.Close(ctx)
 
 	params := map[string]any{
-		"tenant":    tenant,
-		"contactId": contactId,
+		"tenant":      tenant,
+		"contactId":   contactId,
+		"skipDeleted": "deleted",
 	}
 	filterByTypeCypherFragment := ""
 	if len(labels) > 0 {
@@ -128,8 +131,9 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY']) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['WORKS_AS','HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY']) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (a.status IS NULL OR a.status <> $skipDeleted) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -178,6 +182,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		"relationshipsWithOrganizationProperties": relationshipsWithOrganizationProperties,
 		"relationshipsWithContact":                relationshipsWithContact,
 		"relationshipsWithContactProperties":      relationshipsWithContactProperties,
+		"skipStatus":                              "deleted",
 	}
 	filterByTypeCypherFragment := ""
 	if len(labels) > 0 {
@@ -192,6 +197,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (a.status IS NULL OR a.status <> $skipStatus) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -201,6 +207,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganization)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		" AND (a.status IS NULL OR a.status <> $skipStatus) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -264,6 +271,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		"relationshipsWithOrganizationProperties": relationshipsWithOrganizationProperties,
 		"relationshipsWithContact":                relationshipsWithContact,
 		"relationshipsWithContactProperties":      relationshipsWithContactProperties,
+		"skipStatus":                              "deleted",
 	}
 	filterByTypeCypherFragment := ""
 	if len(labels) > 0 {
@@ -277,6 +285,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		//" AND (a.status IS NULL OR a.status <> $skipStatus) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -285,6 +294,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" p = (o)-[*1]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganization)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
+		//" AND (a.status IS NULL OR a.status <> $skipStatus) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
