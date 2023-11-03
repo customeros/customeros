@@ -35,42 +35,48 @@ type LinkPhoneNumberCommand struct {
 	PhoneNumberId string `json:"phoneNumberId" validate:"required"`
 	Primary       bool
 	Label         string
+	AppSource     string
 }
 
-func NewLinkPhoneNumberCommand(contactId, tenant, userId, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
+func NewLinkPhoneNumberCommand(contactId, tenant, userId, phoneNumberId, label, appSource string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
 		BaseCommand:   eventstore.NewBaseCommand(contactId, tenant, userId),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
+		AppSource:     appSource,
 	}
 }
 
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
-	EmailId string `json:"emailId" validate:"required"`
-	Primary bool
-	Label   string
+	EmailId   string `json:"emailId" validate:"required"`
+	Primary   bool
+	Label     string
+	AppSource string
 }
 
-func NewLinkEmailCommand(contactId, tenant, userId, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(contactId, tenant, userId, emailId, label, appSource string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
 		BaseCommand: eventstore.NewBaseCommand(contactId, tenant, userId),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
+		AppSource:   appSource,
 	}
 }
 
 type LinkLocationCommand struct {
 	eventstore.BaseCommand
 	LocationId string `json:"locationId" validate:"required"`
+	AppSource  string
 }
 
-func NewLinkLocationCommand(contactId, tenant, userId, locationId string) *LinkLocationCommand {
+func NewLinkLocationCommand(contactId, tenant, userId, locationId, appSource string) *LinkLocationCommand {
 	return &LinkLocationCommand{
 		BaseCommand: eventstore.NewBaseCommand(contactId, tenant, userId),
 		LocationId:  locationId,
+		AppSource:   appSource,
 	}
 }
 
