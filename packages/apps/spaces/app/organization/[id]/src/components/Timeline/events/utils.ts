@@ -10,6 +10,7 @@ import {
 import { getName } from '@spaces/utils/getParticipantsName';
 
 type Participant =
+  | Contact
   | ContactParticipant
   | UserParticipant
   | JobRoleParticipant

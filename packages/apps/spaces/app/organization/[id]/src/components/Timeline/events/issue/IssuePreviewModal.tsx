@@ -1,21 +1,28 @@
-import { CardBody } from '@ui/presentation/Card';
-import { Text } from '@ui/typography/Text';
+import { Fragment } from 'react';
+import { match } from 'ts-pattern';
+
 import { Flex } from '@ui/layout/Flex';
-import {
-  useTimelineEventPreviewMethodsContext,
-  useTimelineEventPreviewStateContext,
-} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import React from 'react';
-import { Tag, TagLabel } from '@ui/presentation/Tag';
-// import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
+import { Link } from '@ui/navigation/Link';
+import { Text } from '@ui/typography/Text';
+import { Zendesk } from '@ui/media/logos/Zendesk';
+import { VStack, HStack } from '@ui/layout/Stack';
+import { Divider } from '@ui/presentation/Divider';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Tag, TagLabel } from '@ui/presentation/Tag';
+import { Comment, InteractionEvent } from '@graphql/types';
+import { getName } from '@spaces/utils/getParticipantsName';
+import { CardBody, CardFooter } from '@ui/presentation/Card';
+import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import {
   Priority,
   PriorityBadge,
 } from '@organization/src/components/Timeline/events/issue/PriorityBadge';
-import { Divider, HStack } from '@chakra-ui/react';
-import { getExternalUrl } from '@spaces/utils/getExternalLink';
-import { toastError } from '@ui/presentation/Toast';
+import { IssueWithAliases } from '@organization/src/components/Timeline/types';
+import {
+  useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
 import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 
@@ -29,41 +36,83 @@ function getStatusColor(status: string) {
 export const IssuePreviewModal: React.FC = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
-  const issue = modalContent as any;
+  const issue = modalContent as IssueWithAliases;
   const statusColorScheme = getStatusColor(issue.issueStatus);
 
-  const handleOpenInExternalApp = () => {
-    if (issue?.externalLinks?.[0]?.externalUrl) {
-      // replacing this https://gasposhelp.zendesk.com/api/v2/tickets/24.json -> https://gasposhelp.zendesk.com/agent/tickets/24
-      const replacedUrl = issue?.externalLinks?.[0]?.externalUrl
-        .replace('api/v2', 'agent')
-        .replace('.json', '');
+  const reportedBy = match(issue.reportedBy)
+    .with({ __typename: 'ContactParticipant' }, ({ contactParticipant }) =>
+      getName(contactParticipant),
+    )
+    .with(
+      { __typename: 'OrganizationParticipant' },
+      ({ organizationParticipant }) => getName(organizationParticipant),
+    )
+    .with({ __typename: 'UserParticipant' }, ({ userParticipant }) =>
+      getName(userParticipant),
+    )
+    .otherwise(() => '');
 
-      window.open(getExternalUrl(replacedUrl), '_blank', 'noreferrer noopener');
-      return;
-    }
-    toastError(
-      'This issue is not connected to external source',
-      `${issue.id}-stub-open-in-external-app-error`,
-    );
-  };
+  const submittedBy = match(issue.submittedBy)
+    .with({ __typename: 'ContactParticipant' }, ({ contactParticipant }) =>
+      getName(contactParticipant),
+    )
+    .with(
+      { __typename: 'OrganizationParticipant' },
+      ({ organizationParticipant }) => getName(organizationParticipant),
+    )
+    .with({ __typename: 'UserParticipant' }, ({ userParticipant }) =>
+      getName(userParticipant),
+    )
+    .otherwise(() => '');
+
+  const commentsByDay = [...issue.comments, ...issue.interactionEvents]
+    .sort((a, b) =>
+      new Date(a.createdAt).valueOf() > new Date(b.createdAt).valueOf()
+        ? 1
+        : -1,
+    )
+    .reduce((acc, curr) => {
+      const day = curr.createdAt.split('T')[0];
+
+      if (acc[day]) {
+        acc[day].push(curr);
+      } else {
+        acc[day] = [curr];
+      }
+
+      return acc;
+    }, {} as Record<string, (Comment | InteractionEvent)[]>);
+
+  const externalUrl = (() => {
+    const url = issue?.externalLinks?.[0]?.externalUrl;
+    if (!url) return null;
+    return url.replace('api/v2', 'agent').replace('.json', '');
+  })();
 
   return (
     <>
       <TimelineEventPreviewHeader
         name={issue.subject ?? ''}
         onClose={closeModal}
-        copyLabel='Copy link to this issue'
+        copyLabel='Copy link'
       />
 
       <CardBody
         mt={0}
-        maxHeight='calc(100vh - 9rem)'
+        maxH='calc(100vh - 4rem - 56px - 51px - 16px - 8px);'
         p={6}
         pt={0}
         overflow='auto'
       >
-        <HStack gap={2} mb={2} position='relative'>
+        <HStack
+          gap={2}
+          mb={2}
+          position='sticky'
+          top='0'
+          bg='white'
+          pb='2'
+          zIndex='10'
+        >
           {issue?.priority && (
             <PriorityBadge
               priority={issue.priority.toLowerCase() as Priority}
@@ -96,8 +145,6 @@ export const IssuePreviewModal: React.FC = () => {
             boxShadow='none'
             fontWeight='normal'
             minHeight={6}
-            cursor='pointer'
-            onClick={handleOpenInExternalApp}
           >
             <TagLabel>#{issue?.externalLinks?.[0]?.externalId}</TagLabel>
           </Tag>
@@ -108,56 +155,96 @@ export const IssuePreviewModal: React.FC = () => {
 
         {issue?.tags?.length && (
           <Text color='gray.500' fontSize='sm' mb={6}>
-            {issue.tags.map((e: { name: string }) => e.name).join(' • ')}
+            {issue.tags.map((t) => t?.name).join(' • ')}
           </Text>
         )}
 
-        <Flex mb={2} alignItems='center'>
-          <Text fontSize='sm' whiteSpace='nowrap'>
-            Issue requested on
-          </Text>
-          {/*<Text mx={1} fontSize='sm' whiteSpace='nowrap'>*/}
-          {/*  {issue?.requestedBy}*/}
-          {/*</Text>*/}
-          <Text
-            color='gray.400'
-            fontSize='sm'
-            whiteSpace='nowrap'
-            ml={1}
-            mr={2}
-          >
-            {DateTimeUtils.format(issue?.createdAt, DateTimeUtils.dateWithHour)}
-          </Text>
-          <Divider orientation='horizontal' borderBottomColor='gray.200' />
+        <Flex align='center' mb='2'>
+          <Flex alignItems='baseline'>
+            <Text fontSize='sm' whiteSpace='nowrap'>
+              {`Issue ${submittedBy ? 'submitted' : 'reported'} by`}
+            </Text>
+            <Text mx={1} fontSize='sm' whiteSpace='nowrap' fontWeight='medium'>
+              {submittedBy || reportedBy}
+            </Text>
+            <Text
+              color='gray.400'
+              fontSize='sm'
+              whiteSpace='nowrap'
+              ml={1}
+              mr={2}
+            >
+              {DateTimeUtils.format(
+                issue?.createdAt,
+                DateTimeUtils.dateWithHour,
+              )}
+            </Text>
+          </Flex>
+          <Divider
+            orientation='horizontal'
+            borderBottomColor='gray.200'
+            h='full'
+          />
         </Flex>
-        {/* todo uncomment when data is available to query*/}
-        {/*<VStack*/}
-        {/*  gap={2}*/}
-        {/*  w='full'*/}
-        {/*  justifyContent='flex-start'*/}
-        {/*  alignItems='flex-start'*/}
-        {/*>*/}
-        {/*  {Object.entries(xyz)?.map((values) => (*/}
-        {/*    <React.Fragment key={values[0]}>*/}
-        {/*      <Flex mb={2} alignItems='center' w='full'>*/}
-        {/*        <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>*/}
-        {/*          {DateTimeUtils.format(values[0], DateTimeUtils.dateWithHour)}*/}
-        {/*        </Text>*/}
-        {/*        <Divider orientation='horizontal' />*/}
-        {/*      </Flex>*/}
-        {/*      {values[1]?.map((e) => (*/}
-        {/*        <IssueCommentCard*/}
-        {/*          key={e.id}*/}
-        {/*          name={e.createdBy?.name}*/}
-        {/*          content={e.content}*/}
-        {/*          date={e.createdAt}*/}
-        {/*        />*/}
-        {/*      ))}*/}
-        {/*    </React.Fragment>*/}
-        {/*  ))}*/}
-        {/*</VStack>*/}
 
-        {['solved', 'closed'].includes(issue.issueStatus?.toLowerCase) && (
+        <VStack
+          gap={2}
+          w='full'
+          justifyContent='flex-start'
+          alignItems='flex-start'
+        >
+          {Object.entries(commentsByDay)?.map(([date, comments]) => (
+            <Fragment key={date}>
+              <Flex mb={2} alignItems='center' w='full'>
+                <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
+                  {DateTimeUtils.format(date, DateTimeUtils.date)}
+                </Text>
+                <Divider orientation='horizontal' />
+              </Flex>
+              {comments?.map((c) => {
+                const name = match(c)
+                  .with({ __typename: 'Comment' }, (c) => {
+                    return !c.createdBy ? '' : getName(c.createdBy);
+                  })
+                  .with({ __typename: 'InteractionEvent' }, (c) => {
+                    return match(c.sentBy?.[0])
+                      .with(
+                        { __typename: 'UserParticipant' },
+                        ({ userParticipant }) => {
+                          return getName(userParticipant);
+                        },
+                      )
+                      .otherwise(() => '');
+                  })
+                  .otherwise(() => '');
+
+                const isCustomer = match(c)
+                  .with({ __typename: 'InteractionEvent' }, (e) =>
+                    match(e.sentBy?.[0])
+                      .with(
+                        { __typename: 'OrganizationParticipant' },
+                        () => true,
+                      )
+                      .otherwise(() => false),
+                  )
+                  .otherwise(() => false);
+
+                return (
+                  <IssueCommentCard
+                    key={c.id}
+                    name={name}
+                    date={c.createdAt}
+                    content={c.content ?? ''}
+                    iscustomer={isCustomer}
+                    isPrivate={c.__typename === 'Comment'}
+                  />
+                );
+              })}
+            </Fragment>
+          ))}
+        </VStack>
+
+        {['solved', 'closed'].includes(issue.issueStatus?.toLowerCase()) && (
           <Text>
             Issue closed
             <Text color='gray.400' as='span' ml={1}>
@@ -169,6 +256,24 @@ export const IssuePreviewModal: React.FC = () => {
           </Text>
         )}
       </CardBody>
+
+      {externalUrl && (
+        <CardFooter p='6' pt='0' pb='5'>
+          <Flex pt='4' align='center'>
+            <Link
+              display='inline-flex'
+              href={getExternalUrl(externalUrl)}
+              fontSize='sm'
+              color='primary.700'
+              target='_blank'
+              alignItems='center'
+            >
+              <Zendesk boxSize='4' mr='2' />
+              View in Zendesk
+            </Link>
+          </Flex>
+        </CardFooter>
+      )}
     </>
   );
 };

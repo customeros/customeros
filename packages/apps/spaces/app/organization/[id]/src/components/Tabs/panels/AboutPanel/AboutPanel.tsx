@@ -38,7 +38,6 @@ import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/br
 import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
 import { Organization } from '@graphql/types';
 import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
-import * as process from 'process';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -54,12 +53,11 @@ export const AboutPanel = () => {
     useAboutPanelMethods({ id });
   const { data: tenantNameQueryData } = useTenantNameQuery(client);
 
-  const showSubOrgData = useMemo(() => {
-    return (
-      tenantNameQueryData?.tenant ===
-      process.env.NEXT_PUBLIC_SHOW_RELATED_ORGANIZATION_TENANT
-    );
-  }, [tenantNameQueryData]);
+  const showSubOrgData = (() =>
+    tenantNameQueryData?.tenant
+      ? ['gasposco', 'openlineai'].includes(tenantNameQueryData.tenant)
+      : false)();
+
   const defaultValues: OrganizationAboutForm = new OrganizationAboutFormDto(
     data?.organization,
   );

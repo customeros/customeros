@@ -164,6 +164,7 @@ export type GetTimelineEventsQuery = {
               userParticipant: {
                 __typename?: 'User';
                 id: string;
+                name?: string | null;
                 firstName: string;
                 lastName: string;
                 profilePhotoUrl?: string | null;
@@ -238,6 +239,7 @@ export type GetTimelineEventsQuery = {
               userParticipant: {
                 __typename?: 'User';
                 id: string;
+                name?: string | null;
                 firstName: string;
                 lastName: string;
                 profilePhotoUrl?: string | null;
@@ -260,10 +262,139 @@ export type GetTimelineEventsQuery = {
           externalId?: string | null;
           externalUrl?: string | null;
         }>;
+        submittedBy?:
+          | {
+              __typename: 'ContactParticipant';
+              contactParticipant: {
+                __typename?: 'Contact';
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                profilePhotoUrl?: string | null;
+              };
+            }
+          | {
+              __typename: 'OrganizationParticipant';
+              organizationParticipant: {
+                __typename?: 'Organization';
+                id: string;
+                name: string;
+              };
+            }
+          | {
+              __typename: 'UserParticipant';
+              userParticipant: {
+                __typename?: 'User';
+                id: string;
+                name?: string | null;
+                firstName: string;
+                lastName: string;
+                profilePhotoUrl?: string | null;
+              };
+            }
+          | null;
+        followedBy: Array<
+          | {
+              __typename: 'ContactParticipant';
+              contactParticipant: {
+                __typename?: 'Contact';
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                profilePhotoUrl?: string | null;
+              };
+            }
+          | {
+              __typename: 'OrganizationParticipant';
+              organizationParticipant: {
+                __typename?: 'Organization';
+                id: string;
+                name: string;
+              };
+            }
+          | {
+              __typename: 'UserParticipant';
+              userParticipant: {
+                __typename?: 'User';
+                id: string;
+                name?: string | null;
+                firstName: string;
+                lastName: string;
+                profilePhotoUrl?: string | null;
+              };
+            }
+        >;
+        assignedTo: Array<
+          | {
+              __typename: 'ContactParticipant';
+              contactParticipant: {
+                __typename?: 'Contact';
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                profilePhotoUrl?: string | null;
+              };
+            }
+          | {
+              __typename: 'OrganizationParticipant';
+              organizationParticipant: {
+                __typename?: 'Organization';
+                id: string;
+                name: string;
+              };
+            }
+          | {
+              __typename: 'UserParticipant';
+              userParticipant: {
+                __typename?: 'User';
+                id: string;
+                name?: string | null;
+                firstName: string;
+                lastName: string;
+                profilePhotoUrl?: string | null;
+              };
+            }
+        >;
+        reportedBy?:
+          | {
+              __typename: 'ContactParticipant';
+              contactParticipant: {
+                __typename?: 'Contact';
+                id: string;
+                name?: string | null;
+                firstName?: string | null;
+                lastName?: string | null;
+                profilePhotoUrl?: string | null;
+              };
+            }
+          | {
+              __typename: 'OrganizationParticipant';
+              organizationParticipant: {
+                __typename?: 'Organization';
+                id: string;
+                name: string;
+              };
+            }
+          | {
+              __typename: 'UserParticipant';
+              userParticipant: {
+                __typename?: 'User';
+                id: string;
+                name?: string | null;
+                firstName: string;
+                lastName: string;
+                profilePhotoUrl?: string | null;
+              };
+            }
+          | null;
         interactionEvents: Array<{
-          __typename?: 'InteractionEvent';
-          id: string;
+          __typename: 'InteractionEvent';
           content?: string | null;
+          contentType?: string | null;
+          createdAt: any;
           sentBy: Array<
             | {
                 __typename: 'ContactParticipant';
@@ -332,12 +463,26 @@ export type GetTimelineEventsQuery = {
                 userParticipant: {
                   __typename?: 'User';
                   id: string;
+                  name?: string | null;
                   firstName: string;
                   lastName: string;
                   profilePhotoUrl?: string | null;
                 };
               }
           >;
+        }>;
+        comments: Array<{
+          __typename: 'Comment';
+          content?: string | null;
+          contentType?: string | null;
+          createdAt: any;
+          createdBy?: {
+            __typename?: 'User';
+            id: string;
+            name?: string | null;
+            firstName: string;
+            lastName: string;
+          } | null;
         }>;
         issueTags?: Array<{
           __typename?: 'Tag';
@@ -604,12 +749,38 @@ export const GetTimelineEventsDocument = `
         externalId
         externalUrl
       }
+      submittedBy {
+        ...InteractionEventParticipantFragment
+      }
+      followedBy {
+        ...InteractionEventParticipantFragment
+      }
+      assignedTo {
+        ...InteractionEventParticipantFragment
+      }
+      reportedBy {
+        ...InteractionEventParticipantFragment
+      }
       interactionEvents {
-        id
+        __typename
+        content
+        contentType
+        createdAt
         sentBy {
           ...InteractionEventParticipantFragment
         }
+      }
+      comments {
+        __typename
         content
+        contentType
+        createdAt
+        createdBy {
+          id
+          name
+          firstName
+          lastName
+        }
       }
       issueTags: tags {
         id

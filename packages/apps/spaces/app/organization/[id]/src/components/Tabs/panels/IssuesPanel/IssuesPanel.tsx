@@ -19,8 +19,6 @@ import { EmptyIssueMessage } from '@organization/src/components/Tabs/panels/Issu
 
 export const NEW_DATE = new Date(new Date().setDate(new Date().getDate() + 1));
 
-// TODO uncomment commented out code as soon as COS-464 is merged
-
 function filterIssues(issues: Array<Issue>): {
   open: Array<Issue>;
   closed: Array<Issue>;
@@ -91,7 +89,7 @@ export const IssuesPanel = () => {
                 in
                 style={{ width: '100%' }}
               >
-                <IssueCard issue={issue as any} />
+                <IssueCard issue={issue} />
               </Fade>
             ))}
         </VStack>
@@ -142,10 +140,7 @@ export const IssuesPanel = () => {
               {!!closedIssues?.length && (
                 <VStack>
                   {closedIssues.map((issue, index) => (
-                    <IssueCard
-                      issue={issue as any}
-                      key={`issue-panel-${issue.id}`}
-                    />
+                    <IssueCard issue={issue} key={`issue-panel-${issue.id}`} />
                   ))}
                 </VStack>
               )}
