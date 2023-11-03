@@ -13,6 +13,7 @@ import (
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
@@ -30,6 +31,7 @@ type Clients struct {
 	LogEntryClient         logentrypb.LogEntryGrpcServiceClient
 	IssueClient            issuepb.IssueGrpcServiceClient
 	CommentClient          commentpb.CommentGrpcServiceClient
+	UserClient             userpb.UserGrpcServiceClient
 }
 
 var clients *Clients
@@ -47,7 +49,7 @@ func main() {
 	//testAddCustomField()
 	//testCreateEmail()
 	//testCreatePhoneNumber()
-	testAddParentOrganization()
+	//testAddParentOrganization()
 	//testRemoveParentOrganization()
 	//testCreateContact()
 	//testUpdateContact()
@@ -61,6 +63,7 @@ func main() {
 	//testCreateIssue()
 	//testUpdateIssue()
 	//testCreateComment()
+	testUserLinkWithEmail()
 }
 
 func InitClients() {
@@ -77,6 +80,7 @@ func InitClients() {
 		PhoneNumberClient:      phonenumberpb.NewPhoneNumberGrpcServiceClient(conn),
 		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
 		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
+		UserClient:             userpb.NewUserGrpcServiceClient(conn),
 	}
 }
 
@@ -496,4 +500,26 @@ func testCreateComment() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 	log.Printf("Created comment id: %v", result.Id)
+}
+
+func testUserLinkWithEmail() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
+	appSource := "integration.app"
+	loggedInUserid := ""
+
+	result, err := clients.UserClient.LinkEmailToUser(context.TODO(), &userpb.LinkEmailToUserGrpcRequest{
+		Tenant:         tenant,
+		UserId:         userId,
+		LoggedInUserId: loggedInUserid,
+		EmailId:        emailId,
+		Primary:        true,
+		Label:          "work",
+		AppSource:      appSource,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
 }

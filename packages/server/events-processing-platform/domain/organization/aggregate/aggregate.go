@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -294,8 +295,8 @@ func (a *OrganizationAggregate) onDomainLink(event eventstore.Event) error {
 	if a.Organization.Domains == nil {
 		a.Organization.Domains = []string{}
 	}
-	if !utils.Contains(a.Organization.Domains, eventData.Domain) {
-		a.Organization.Domains = append(a.Organization.Domains, eventData.Domain)
+	if !utils.Contains(a.Organization.Domains, strings.TrimSpace(eventData.Domain)) {
+		a.Organization.Domains = append(a.Organization.Domains, strings.TrimSpace(eventData.Domain))
 	}
 	return nil
 }

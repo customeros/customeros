@@ -122,6 +122,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	span.LogFields(log.Object("syncDate", syncDate), log.Object("userInput", userInput))
 
 	var tenant = common.GetTenantFromContext(ctx)
+	var appSource = utils.StringFirstNonEmpty(userInput.AppSource, constants.AppSourceCustomerOsWebhooks)
 	var failedSync = false
 	var reason = ""
 	userInput.Normalize()
@@ -177,7 +178,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			Timezone:        userInput.Timezone,
 			SourceFields: &commonpb.SourceFields{
 				Source:    userInput.ExternalSystem,
-				AppSource: utils.StringFirstNonEmpty(userInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+				AppSource: appSource,
 			},
 			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: userInput.ExternalSystem,
@@ -207,7 +208,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	}
 	if !failedSync && userInput.HasEmail() {
 		// Create or update email
-		emailId, err := s.services.EmailService.CreateEmail(ctx, userInput.Email, userInput.ExternalSystem, userInput.AppSource)
+		emailId, err := s.services.EmailService.CreateEmail(ctx, userInput.Email, userInput.ExternalSystem, appSource)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
@@ -217,10 +218,11 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		// Link email to user
 		if !failedSync {
 			_, err = s.grpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-				Tenant:  common.GetTenantFromContext(ctx),
-				UserId:  userId,
-				EmailId: emailId,
-				Primary: true,
+				Tenant:    common.GetTenantFromContext(ctx),
+				UserId:    userId,
+				EmailId:   emailId,
+				Primary:   true,
+				AppSource: appSource,
 			})
 			if err != nil {
 				failedSync = true

@@ -16,6 +16,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
@@ -260,7 +261,16 @@ func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, emailId,
 func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.LinkDomainCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.linkDomain")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", a.Tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	if aggregate.AllowCheckIfEventIsRedundant(cmd.AppSource, cmd.LoggedInUserId) {
+		if utils.Contains(a.Organization.Domains, strings.TrimSpace(cmd.Domain)) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
 
 	event, err := events.NewOrganizationLinkDomainEvent(a, cmd.Domain)
 	if err != nil {
@@ -268,7 +278,11 @@ func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.Lin
 		return errors.Wrap(err, "NewOrganizationLinkDomainEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
 
 	return a.Apply(event)
 }
@@ -498,7 +512,7 @@ func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *
 		return errors.Wrap(err, "NewOrganizationAddParentEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
 		Tenant: cmd.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -520,7 +534,7 @@ func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cm
 		return errors.Wrap(err, "NewOrganizationRemoveParentEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
 		Tenant: cmd.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,

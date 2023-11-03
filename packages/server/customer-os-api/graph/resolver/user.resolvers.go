@@ -70,6 +70,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 				EmailId:        emailId,
 				Primary:        utils.IfNotNilBool(input.Email.Primary),
 				Label:          utils.IfNotNilString(input.Email.Label, func() string { return input.Email.Label.String() }),
+				AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)

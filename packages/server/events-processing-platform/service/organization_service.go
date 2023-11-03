@@ -144,14 +144,12 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
-	command := command.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
-	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, command); err != nil {
+	cmd := command.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), request.AppSource)
+	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
 	}
-
-	s.log.Infof("Linked domain {%s} to organization {%s}", request.Domain, request.OrganizationId)
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }

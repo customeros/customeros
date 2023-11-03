@@ -44,7 +44,7 @@ func (a *InteractionEventAggregate) createInteractionEvent(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return err
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -71,7 +71,7 @@ func (a *InteractionEventAggregate) updateInteractionEvent(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewInteractionEventUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,

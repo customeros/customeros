@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	SpanTagTenant      = "tenant"
-	SpanTagUserId      = "user-id"
-	SpanTagComponent   = "component"
-	SpanTagAggregateId = "aggregateID"
+	SpanTagTenant                = "tenant"
+	SpanTagUserId                = "user-id"
+	SpanTagComponent             = "component"
+	SpanTagAggregateId           = "aggregateID"
+	SpanTagRedundantEventSkipped = "redundantEventSkipped"
 )
 
 func StartGrpcServerTracerSpan(ctx context.Context, operationName string) (context.Context, opentracing.Span) {

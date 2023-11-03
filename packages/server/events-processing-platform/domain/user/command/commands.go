@@ -79,17 +79,19 @@ func NewLinkPhoneNumberCommand(objectID, tenant, userId, phoneNumberId, label st
 
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
-	EmailId string `json:"emailId" validate:"required"`
-	Primary bool
-	Label   string
+	EmailId   string `json:"emailId" validate:"required"`
+	Primary   bool
+	Label     string
+	AppSource string
 }
 
-func NewLinkEmailCommand(objectID, tenant, userId, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(objectID, tenant, loggedInUserId, emailId, label, appSource string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, loggedInUserId),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
+		AppSource:   appSource,
 	}
 }
 

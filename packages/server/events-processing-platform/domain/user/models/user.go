@@ -45,6 +45,12 @@ func (u *User) String() string {
 	return fmt.Sprintf("User{ID: %s, Name: %s, FirstName: %s, LastName: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s, PhoneNumbers: %v, Emails: %v}", u.ID, u.Name, u.FirstName, u.LastName, u.Source, u.CreatedAt, u.UpdatedAt, u.PhoneNumbers, u.Emails)
 }
 
-func NewUser() *User {
-	return &User{}
+func (u *User) HasEmail(emailId, label string, primary bool) bool {
+	if len(u.Emails) == 0 {
+		return false
+	}
+	if email, ok := u.Emails[emailId]; ok {
+		return email.Label == label && email.Primary == primary
+	}
+	return false
 }

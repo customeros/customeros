@@ -31,11 +31,11 @@ func (c *addPlayerInfoCommandHandler) Handle(ctx context.Context, cmd *command.A
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AddPlayerInfoCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
-	span.LogFields(log.String("ObjectID", cmd.ObjectID))
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(cmd); err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
 	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, cmd.Tenant, cmd.ObjectID)

@@ -51,7 +51,7 @@ func (a *IssueAggregate) createIssue(ctx context.Context, cmd *command.UpsertIss
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -78,7 +78,7 @@ func (a *IssueAggregate) updateIssue(ctx context.Context, cmd *command.UpsertIss
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -101,7 +101,7 @@ func (a *IssueAggregate) addUserAssignee(ctx context.Context, cmd *command.AddUs
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueAddUserAssigneeEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&addUserAssigneeEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&addUserAssigneeEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -124,7 +124,7 @@ func (a *IssueAggregate) removeUserAssignee(ctx context.Context, cmd *command.Re
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueRemoveUserAssigneeEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&removeUserAssigneeEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&removeUserAssigneeEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -147,7 +147,7 @@ func (a *IssueAggregate) addUserFollower(ctx context.Context, cmd *command.AddUs
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueAddUserFollowerEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&addUserFollowerEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&addUserFollowerEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -170,7 +170,7 @@ func (a *IssueAggregate) removeUserFollower(ctx context.Context, cmd *command.Re
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueRemoveUserFollowerEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&removeUserFollowerEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&removeUserFollowerEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,

@@ -42,7 +42,7 @@ func (a *CommentAggregate) createComment(ctx context.Context, cmd *command.Upser
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewCommentCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -69,7 +69,7 @@ func (a *CommentAggregate) updateComment(ctx context.Context, cmd *command.Upser
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewCommentUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.Metadata{
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,

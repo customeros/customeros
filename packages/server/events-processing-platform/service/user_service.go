@@ -127,9 +127,9 @@ func (s *userService) LinkEmailToUser(ctx context.Context, request *userpb.LinkE
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+	span.LogFields(log.Object("request", request))
 
-	cmd := command.NewLinkEmailCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.Primary)
+	cmd := command.NewLinkEmailCommand(request.UserId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.AppSource, request.Primary)
 	if err := s.userCommands.LinkEmailCommand.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(LinkEmailToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, request.UserId, err)
 		return nil, s.errResponse(err)

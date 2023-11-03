@@ -288,9 +288,9 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			if !domainInUse {
 				_, err = s.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
 					Tenant:         common.GetTenantFromContext(ctx),
-					LoggedInUserId: "",
 					OrganizationId: organizationId,
 					Domain:         domain,
+					AppSource:      appSource,
 				})
 				if err != nil {
 					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkDomainToOrganization"))
