@@ -13,7 +13,8 @@
     "preatify": "yarn prettier --write .",
     "test:graphql": "graphql-codegen --require dotenv/config --config scripts/test-graphql-contract.ts && rm -rf scripts/temp",
     "test": "jest",
-    "postinstall": "cp ./scripts/pre-commit ../../../.git/hooks"
+    "lint": "eslint",
+    "postinstall": "cp ./scripts/pre-commit ../../../.git/hooks && chmod +x ../../../.git/hooks/pre-commit"
   },
   "dependencies": {
     "@chakra-ui/next-js": "^2.1.4",
@@ -105,5 +106,9 @@
     "got": "^11.8.5",
     "semver": "^7.5.2"
   },
-  "peerDependencies": {}
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "yarn lint"
+    ]
+  }
 }
