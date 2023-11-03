@@ -33,6 +33,7 @@ message LinkPhoneNumberToContactGrpcRequest {
   bool primary = 4;
   string label = 5;
   string loggedInUserId = 6;
+  string appSource = 7;
 }
 
 message LinkEmailToContactGrpcRequest {
@@ -42,6 +43,7 @@ message LinkEmailToContactGrpcRequest {
   bool primary = 4;
   string label = 5;
   string loggedInUserId = 6;
+  string appSource = 7;
 }
 
 message LinkLocationToContactGrpcRequest {
@@ -49,6 +51,7 @@ message LinkLocationToContactGrpcRequest {
   string contactId = 2;
   string locationId = 3;
   string loggedInUserId = 4;
+  string appSource = 5;
 }
 
 message LinkWithOrganizationGrpcRequest {
@@ -64,6 +67,7 @@ message LinkWithOrganizationGrpcRequest {
   string description = 10;
   google.protobuf.Timestamp  createdAt = 11;
   google.protobuf.Timestamp  updatedAt = 12;
+  string appSource = 13;
 }
 
 message ContactIdGrpcResponse {

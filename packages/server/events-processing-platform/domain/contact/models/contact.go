@@ -45,10 +45,26 @@ type ContactEmail struct {
 	Label   string `json:"label"`
 }
 
-func (contact *Contact) String() string {
-	return fmt.Sprintf("Contact{ID: %s, FirstName: %s, LastName: %s, Prefix: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s}", contact.ID, contact.FirstName, contact.LastName, contact.Prefix, contact.Source, contact.CreatedAt, contact.UpdatedAt)
+func (c *Contact) String() string {
+	return fmt.Sprintf("Contact{ID: %s, FirstName: %s, LastName: %s, Prefix: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s}", c.ID, c.FirstName, c.LastName, c.Prefix, c.Source, c.CreatedAt, c.UpdatedAt)
 }
 
-func NewContact() *Contact {
-	return &Contact{}
+func (c *Contact) HasEmail(emailId, label string, primary bool) bool {
+	if len(c.Emails) == 0 {
+		return false
+	}
+	if email, ok := c.Emails[emailId]; ok {
+		return email.Label == label && email.Primary == primary
+	}
+	return false
+}
+
+func (c *Contact) HasPhoneNumber(phoneNumberId, label string, primary bool) bool {
+	if len(c.Emails) == 0 {
+		return false
+	}
+	if email, ok := c.PhoneNumbers[phoneNumberId]; ok {
+		return email.Label == label && email.Primary == primary
+	}
+	return false
 }
