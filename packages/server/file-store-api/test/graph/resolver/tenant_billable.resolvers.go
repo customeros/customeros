@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
 )
 
-// TimelineEvents is the resolver for the timelineEvents field.
-func (r *queryResolver) TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error) {
-	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))
+// BillableInfo is the resolver for the billableInfo field.
+func (r *queryResolver) BillableInfo(ctx context.Context) (*model.TenantBillableInfo, error) {
+	panic(fmt.Errorf("not implemented: BillableInfo - billableInfo"))
 }

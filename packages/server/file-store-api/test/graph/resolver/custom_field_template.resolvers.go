@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
 )
 
-// TimelineEvents is the resolver for the timelineEvents field.
-func (r *queryResolver) TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error) {
-	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))
+// CustomFieldTemplateCreate is the resolver for the customFieldTemplate_Create field.
+func (r *mutationResolver) CustomFieldTemplateCreate(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error) {
+	panic(fmt.Errorf("not implemented: CustomFieldTemplateCreate - customFieldTemplate_Create"))
 }
