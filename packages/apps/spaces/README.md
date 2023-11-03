@@ -25,7 +25,6 @@
 [![twitter](https://img.shields.io/twitter/follow/openlineAI?style=social)][twitter]
 [![slack](https://img.shields.io/badge/slack-community-blueviolet.svg?logo=slack)][slack]
 
-
   </p>
   <p>
     <sub>
