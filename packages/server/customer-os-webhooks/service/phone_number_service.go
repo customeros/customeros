@@ -11,8 +11,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	phonenumbergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -51,10 +51,10 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, phoneNumber,
 	phoneNumberEntity, _ = s.GetByPhoneNumber(ctx, phoneNumber)
 	if phoneNumberEntity == nil {
 		// phone number not exist, create new one
-		response, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumbergrpc.UpsertPhoneNumberGrpcRequest{
+		response, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(ctx, &phonenumberpb.UpsertPhoneNumberGrpcRequest{
 			Tenant:      common.GetTenantFromContext(ctx),
 			PhoneNumber: phoneNumber,
-			SourceFields: &commongrpc.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:    source,
 				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsWebhooks),
 			},

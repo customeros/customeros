@@ -14,10 +14,10 @@ var dialFactory *grpc.TestDialFactoryImpl
 
 func TestMain(m *testing.M) {
 	myDatabase, shutdown := test.SetupTestDatabase()
-	testDatabase = &myDatabase
-
-	dialFactory = &grpc.TestDialFactoryImpl{}
 	defer shutdown()
+
+	testDatabase = &myDatabase
+	dialFactory = &grpc.TestDialFactoryImpl{}
 
 	os.Exit(m.Run())
 }

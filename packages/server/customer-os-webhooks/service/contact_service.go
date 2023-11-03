@@ -123,6 +123,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	span.LogFields(log.Object("syncDate", syncDate), log.Object("contactInput", contactInput))
 
 	tenant := common.GetTenantFromContext(ctx)
+	var appSource = utils.StringFirstNonEmpty(contactInput.AppSource, constants.AppSourceCustomerOsWebhooks)
 	var failedSync = false
 	var reason = ""
 
@@ -197,7 +198,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			UpdatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.UpdatedAt),
 			SourceFields: &commonpb.SourceFields{
 				Source:    contactInput.ExternalSystem,
-				AppSource: utils.StringFirstNonEmpty(contactInput.AppSource, constants.AppSourceCustomerOsWebhooks),
+				AppSource: appSource,
 			},
 			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: contactInput.ExternalSystem,
@@ -227,7 +228,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	}
 	if !failedSync && contactInput.HasPrimaryEmail() {
 		// Create or update email
-		emailId, err := s.services.EmailService.CreateEmail(ctx, contactInput.Email, contactInput.ExternalSystem, contactInput.AppSource)
+		emailId, err := s.services.EmailService.CreateEmail(ctx, contactInput.Email, contactInput.ExternalSystem, appSource)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
@@ -241,6 +242,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				ContactId: contactId,
 				EmailId:   emailId,
 				Primary:   true,
+				AppSource: appSource,
 			})
 			if err != nil {
 				failedSync = true
@@ -253,7 +255,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	if !failedSync && contactInput.HasAdditionalEmails() {
 		for _, email := range contactInput.AdditionalEmails {
 			// Create or update email
-			emailId, err := s.services.EmailService.CreateEmail(ctx, email, contactInput.ExternalSystem, contactInput.AppSource)
+			emailId, err := s.services.EmailService.CreateEmail(ctx, email, contactInput.ExternalSystem, appSource)
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
@@ -267,6 +269,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 					ContactId: contactId,
 					EmailId:   emailId,
 					Primary:   false,
+					AppSource: appSource,
 				})
 				if err != nil {
 					failedSync = true
@@ -288,7 +291,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				JobTitle:       referencedOrganization.JobTitle,
 				SourceFields: &commonpb.SourceFields{
 					Source:    contactInput.ExternalSystem,
-					AppSource: contactInput.AppSource,
+					AppSource: appSource,
 				},
 			})
 			if err != nil {
@@ -319,6 +322,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 						PhoneNumberId: phoneNumberId,
 						Primary:       phoneNumberDtls.Primary,
 						Label:         phoneNumberDtls.Label,
+						AppSource:     appSource,
 					})
 					if err != nil {
 						failedSync = true
@@ -355,6 +359,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 					Tenant:     common.GetTenantFromContext(ctx),
 					ContactId:  contactId,
 					LocationId: locationId,
+					AppSource:  appSource,
 				})
 				if err != nil {
 					failedSync = true

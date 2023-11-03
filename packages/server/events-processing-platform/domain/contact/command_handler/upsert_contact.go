@@ -29,11 +29,11 @@ func (h *upsertContactCommandHandler) Handle(ctx context.Context, cmd *command.U
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertContactCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
-	span.LogFields(log.String("ObjectID", cmd.ObjectID))
+	span.LogFields(log.Object("command", cmd))
 
-	if err := validator.GetValidator().Struct(cmd); err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	validationError, done := validator.Validate(cmd, span)
+	if done {
+		return validationError
 	}
 
 	var contactAggregate *aggregate.ContactAggregate

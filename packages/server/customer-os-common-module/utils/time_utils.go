@@ -84,3 +84,17 @@ func TimestampProtoToTime(pbTime *timestamppb.Timestamp) *time.Time {
 	t := pbTime.AsTime()
 	return &t
 }
+
+// IsEqualTimePtr compares two *time.Time values and returns true if both are nil or if both point to the same time.
+func IsEqualTimePtr(t1, t2 *time.Time) bool {
+	// if both are nil, return true
+	if t1 == nil && t2 == nil {
+		return true
+	}
+	// if one is nil, return false
+	if t1 == nil || t2 == nil {
+		return false
+	}
+	// if both are not nil, compare the time values they point to
+	return (*t1).Equal(*t2)
+}

@@ -14,9 +14,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -122,7 +122,7 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 func (s *contactService) createContactWithEvents(ctx context.Context, contactDetails *ContactCreateData) (string, error) {
 	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
-		SourceFields: &commongrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    string(contactDetails.Source),
 			AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
 		},
@@ -139,7 +139,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		upsertContactRequest.CreatedAt = timestamppb.New(*contactDetails.ContactEntity.CreatedAt)
 	}
 	if contactDetails.ExternalReference != nil && contactDetails.ExternalReference.ExternalSystemId != "" {
-		upsertContactRequest.ExternalSystemFields = &commongrpc.ExternalSystemFields{
+		upsertContactRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
 			ExternalSystemId: string(contactDetails.ExternalReference.ExternalSystemId),
 			ExternalId:       contactDetails.ExternalReference.Relationship.ExternalId,
 			ExternalUrl:      utils.IfNotNilString(contactDetails.ExternalReference.Relationship.ExternalUrl),
@@ -177,6 +177,7 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 			EmailId:        emailId,
 			Primary:        emailEntity.Primary,
 			Label:          emailEntity.Label,
+			AppSource:      appSource,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -202,6 +203,7 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 			PhoneNumberId:  phoneNumberId,
 			Primary:        phoneNumberEntity.Primary,
 			Label:          phoneNumberEntity.Label,
+			AppSource:      appSource,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -239,7 +241,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 
 	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
-		SourceFields: &commongrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    string(entity.DataSourceOpenline),
 			AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
 		},
@@ -579,7 +581,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		LastName:    data.ContactEntity.LastName,
 		Prefix:      data.ContactEntity.Prefix,
 		Description: data.ContactEntity.Description,
-		SourceFields: &commongrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    string(data.ContactEntity.Source),
 			AppSource: data.ContactEntity.AppSource,
 		},
@@ -599,10 +601,10 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	result.ID = contactId.Id
 
 	if data.EmailEntity != nil {
-		emailCreate := &emailgrpc.UpsertEmailGrpcRequest{
+		emailCreate := &emailpb.UpsertEmailGrpcRequest{
 			Tenant:   common.GetTenantFromContext(ctx),
 			RawEmail: data.EmailEntity.RawEmail,
-			SourceFields: &commongrpc.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:    string(data.EmailEntity.Source),
 				AppSource: data.EmailEntity.AppSource,
 			},
@@ -626,6 +628,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 			ContactId: contactId.Id,
 			EmailId:   emailId.Id,
 			Tenant:    common.GetTenantFromContext(ctx),
+			AppSource: data.ContactEntity.AppSource,
 		})
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
