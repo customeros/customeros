@@ -148,19 +148,14 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 func (s *emailService) ReadEmailsForUsername(gmailService *gmail.Service, gmailImportState *entity.UserGmailImportState) (*entity.UserGmailImportState, error) {
 	countEmailsExists := int64(0)
 
-	userInboxMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).Q("in:inbox").MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
+	userMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).Q("in:anywhere -label:draft").MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
 	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve inbox emails for user: %v", err)
+		return nil, fmt.Errorf("unable to retrieve emails for user: %v", err)
 	}
-	userSentMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).Q("in:sent").MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve sent emails for user: %v", err)
-	}
-	//create a slice that contains inbox and sent emails for user
-	userMessages := append(userInboxMessages.Messages, userSentMessages.Messages...)
 
-	if userMessages != nil && len(userMessages) > 0 {
-		for _, message := range userMessages {
+	if userMessages != nil && len(userMessages.Messages) > 0 {
+		for _, message := range userMessages.Messages {
+
 			emailRawData, err := s.ReadEmailFromGoogle(gmailService, gmailImportState.Username, message.Id)
 			if err != nil {
 				return nil, fmt.Errorf("unable to read email from google: %v", err)
@@ -216,15 +211,8 @@ func (s *emailService) ReadEmailsForUsername(gmailService *gmail.Service, gmailI
 			}
 		}
 	}
-	//next page token value assigned from sent or inbox
-	var nextPageToken string
-	if userInboxMessages.NextPageToken == "" {
-		nextPageToken = userSentMessages.NextPageToken
-	}
-	if userSentMessages.NextPageToken == "" {
-		nextPageToken = userInboxMessages.NextPageToken
-	}
-	gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, nextPageToken)
+
+	gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, userMessages.NextPageToken)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update the gmail page token for username: %v", err)
 	}
