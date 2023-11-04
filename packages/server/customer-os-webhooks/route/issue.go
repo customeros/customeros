@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
-	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
@@ -19,14 +20,14 @@ import (
 	"time"
 )
 
-func AddIssueRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger) {
+func AddIssueRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/issues",
-		cosHandler.TracingEnhancer(ctx, "/sync/issues"),
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		handler.TracingEnhancer(ctx, "/sync/issues"),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncIssuesHandler(services, log))
 	route.POST("/sync/issue",
-		cosHandler.TracingEnhancer(ctx, "/sync/issue"),
-		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_WEBHOOKS),
+		handler.TracingEnhancer(ctx, "/sync/issue"),
+		commonservice.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_WEBHOOKS, commonservice.WithCache(cache)),
 		syncIssueHandler(services, log))
 }
 
