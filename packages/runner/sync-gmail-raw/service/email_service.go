@@ -148,14 +148,19 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 func (s *emailService) ReadEmailsForUsername(gmailService *gmail.Service, gmailImportState *entity.UserGmailImportState) (*entity.UserGmailImportState, error) {
 	countEmailsExists := int64(0)
 
-	userMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
+	userInboxMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).Q("in:inbox").MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
 	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve emails for user: %v", err)
+		return nil, fmt.Errorf("unable to retrieve inbox emails for user: %v", err)
 	}
+	userSentMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).Q("in:sent").MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve sent emails for user: %v", err)
+	}
+	//create a slice that contains inbox and sent emails for user
+	userMessages := append(userInboxMessages.Messages, userSentMessages.Messages...)
 
-	if userMessages != nil && len(userMessages.Messages) > 0 {
-		for _, message := range userMessages.Messages {
-
+	if userMessages != nil && len(userMessages) > 0 {
+		for _, message := range userMessages {
 			emailRawData, err := s.ReadEmailFromGoogle(gmailService, gmailImportState.Username, message.Id)
 			if err != nil {
 				return nil, fmt.Errorf("unable to read email from google: %v", err)
@@ -211,8 +216,14 @@ func (s *emailService) ReadEmailsForUsername(gmailService *gmail.Service, gmailI
 			}
 		}
 	}
-
-	gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, userMessages.NextPageToken)
+	//next page token value assigned from sent or inbox
+	var nextPageToken string
+	if userInboxMessages.NextPageToken == "" {
+		nextPageToken = userSentMessages.NextPageToken
+	} else {
+		nextPageToken = userInboxMessages.NextPageToken
+	}
+	gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, nextPageToken)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update the gmail page token for username: %v", err)
 	}
@@ -235,6 +246,7 @@ type EmailRawData struct {
 	InReplyTo         string            `json:"InReplyTo"`
 	Reference         string            `json:"Reference"`
 	Headers           map[string]string `json:"Headers"`
+	Label             string            `json:"Label"`
 }
 
 func JSONMarshal(t interface{}) ([]byte, error) {
