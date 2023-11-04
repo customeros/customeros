@@ -40,6 +40,8 @@ message LinkJobRoleToUserGrpcRequest {
   string tenant = 1;
   string userId = 2;
   string jobRoleId = 3;
+  string loggedInUserId = 4;
+  string appSource = 5;
 }
 
 message LinkPhoneNumberToUserGrpcRequest {
@@ -49,6 +51,7 @@ message LinkPhoneNumberToUserGrpcRequest {
   bool primary = 4;
   string label = 5;
   string loggedInUserId = 6;
+  string appSource = 7;
 }
 
 message LinkEmailToUserGrpcRequest {
@@ -66,6 +69,7 @@ message AddRoleGrpcRequest {
   string tenant = 2;
   string loggedInUserId = 3;
   string role = 4;
+  string appSource = 5;
 }
 
 message RemoveRoleGrpcRequest {
@@ -73,6 +77,7 @@ message RemoveRoleGrpcRequest {
   string tenant = 2;
   string loggedInUserId = 3;
   string role = 4;
+  string appSource = 5;
 }
 
 message UserIdGrpcResponse {

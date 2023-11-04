@@ -2,27 +2,27 @@ package models
 
 import (
 	"fmt"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"time"
 )
 
 type User struct {
-	ID              string                     `json:"id"`
-	Name            string                     `json:"name"`
-	FirstName       string                     `json:"firstName"`
-	LastName        string                     `json:"lastName"`
-	Internal        bool                       `json:"internal"`
-	ProfilePhotoUrl string                     `json:"profilePhotoUrl"`
-	Timezone        string                     `json:"timezone"`
-	CreatedAt       time.Time                  `json:"createdAt"`
-	UpdatedAt       time.Time                  `json:"updatedAt"`
-	PhoneNumbers    map[string]UserPhoneNumber `json:"phoneNumbers"`
-	Emails          map[string]UserEmail       `json:"emails"`
-	JobRoles        map[string]bool            `json:"jobRoles"`
-	Source          cmnmod.Source              `json:"source"`
-	ExternalSystems []cmnmod.ExternalSystem    `json:"externalSystems"`
-	Players         []PlayerInfo               `json:"players"`
-	Roles           []string                   `json:"roles"`
+	ID              string                       `json:"id"`
+	Name            string                       `json:"name"`
+	FirstName       string                       `json:"firstName"`
+	LastName        string                       `json:"lastName"`
+	Internal        bool                         `json:"internal"`
+	ProfilePhotoUrl string                       `json:"profilePhotoUrl"`
+	Timezone        string                       `json:"timezone"`
+	CreatedAt       time.Time                    `json:"createdAt"`
+	UpdatedAt       time.Time                    `json:"updatedAt"`
+	PhoneNumbers    map[string]UserPhoneNumber   `json:"phoneNumbers"`
+	Emails          map[string]UserEmail         `json:"emails"`
+	JobRoles        map[string]bool              `json:"jobRoles"`
+	Source          commonmodel.Source           `json:"source"`
+	ExternalSystems []commonmodel.ExternalSystem `json:"externalSystems"`
+	Players         []PlayerInfo                 `json:"players"`
+	Roles           []string                     `json:"roles"`
 }
 
 type PlayerInfo struct {
@@ -51,6 +51,34 @@ func (u *User) HasEmail(emailId, label string, primary bool) bool {
 	}
 	if email, ok := u.Emails[emailId]; ok {
 		return email.Label == label && email.Primary == primary
+	}
+	return false
+}
+
+func (u *User) SameData(fields UserDataFields, externalSystem commonmodel.ExternalSystem) bool {
+	if externalSystem.Available() && !u.HasExternalSystem(externalSystem) {
+		return false
+	}
+	if u.Name == fields.Name &&
+		u.FirstName == fields.FirstName &&
+		u.LastName == fields.LastName &&
+		u.Internal == fields.Internal &&
+		u.Timezone == fields.Timezone &&
+		u.ProfilePhotoUrl == fields.ProfilePhotoUrl {
+		return true
+	}
+	return false
+}
+
+func (u *User) HasExternalSystem(externalSystem commonmodel.ExternalSystem) bool {
+	for _, es := range u.ExternalSystems {
+		if es.ExternalSystemId == externalSystem.ExternalSystemId &&
+			es.ExternalId == externalSystem.ExternalId &&
+			es.ExternalSource == externalSystem.ExternalSource &&
+			es.ExternalUrl == externalSystem.ExternalUrl &&
+			es.ExternalIdSecond == externalSystem.ExternalIdSecond {
+			return true
+		}
 	}
 	return false
 }
