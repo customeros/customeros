@@ -220,7 +220,8 @@ func (s *emailService) ReadEmailsForUsername(gmailService *gmail.Service, gmailI
 	var nextPageToken string
 	if userInboxMessages.NextPageToken == "" {
 		nextPageToken = userSentMessages.NextPageToken
-	} else {
+	}
+	if userSentMessages.NextPageToken == "" {
 		nextPageToken = userInboxMessages.NextPageToken
 	}
 	gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, nextPageToken)
