@@ -246,7 +246,6 @@ type EmailRawData struct {
 	InReplyTo         string            `json:"InReplyTo"`
 	Reference         string            `json:"Reference"`
 	Headers           map[string]string `json:"Headers"`
-	Label             string            `json:"Label"`
 }
 
 func JSONMarshal(t interface{}) ([]byte, error) {
