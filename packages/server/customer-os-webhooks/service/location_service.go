@@ -11,8 +11,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	locationgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -43,11 +43,11 @@ func (s *locationService) CreateLocation(ctx context.Context, locationId, extern
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	response, err := s.grpcClients.LocationClient.UpsertLocation(ctx, &locationgrpc.UpsertLocationGrpcRequest{
+	response, err := s.grpcClients.LocationClient.UpsertLocation(ctx, &locationpb.UpsertLocationGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		Id:     locationId,
 		Name:   locationName,
-		SourceFields: &commongrpc.SourceFields{
+		SourceFields: &commonpb.SourceFields{
 			Source:    externalSystem,
 			AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsWebhooks),
 		},

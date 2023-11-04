@@ -49,6 +49,7 @@ fragment InteractionEventParticipantFragment on InteractionEventParticipant {
     __typename
     userParticipant {
       id
+      name
       firstName
       lastName
       profilePhotoUrl

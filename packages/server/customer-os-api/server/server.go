@@ -25,9 +25,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/validator"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -90,7 +91,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up Postgres repositories
-	commonServices := commonService.InitServices(db.GormDB, &neo4jDriver)
+	commonServices := commonservice.InitServices(db.GormDB, &neo4jDriver)
 	commonAuthServices := commonAuthService.InitServices(nil, db.GormDB)
 
 	// Setting up gRPC client
@@ -120,17 +121,19 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)
 
+	commonCache := caches.NewCommonCache()
+
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonServices.CommonRepositories),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
+		commonservice.TenantUserContextEnhancer(ctx, commonservice.USERNAME_OR_TENANT, commonServices.CommonRepositories, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}
 	r.GET("/whoami",
 		cosHandler.TracingEnhancer(ctx, "/whoami"),
-		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
+		commonservice.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
 		rest.WhoamiHandler(serviceContainer))
 	r.POST("/admin/query",
 		cosHandler.TracingEnhancer(ctx, "/admin/query"),
@@ -214,20 +217,20 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{}
-		if c.Keys[commonService.KEY_TENANT_NAME] != nil {
-			customCtx.Tenant = c.Keys[commonService.KEY_TENANT_NAME].(string)
+		if c.Keys[commonservice.KEY_TENANT_NAME] != nil {
+			customCtx.Tenant = c.Keys[commonservice.KEY_TENANT_NAME].(string)
 		}
-		if c.Keys[commonService.KEY_USER_ROLES] != nil {
-			customCtx.Roles = mapper.MapRolesToModel(c.Keys[commonService.KEY_USER_ROLES].([]string))
+		if c.Keys[commonservice.KEY_USER_ROLES] != nil {
+			customCtx.Roles = mapper.MapRolesToModel(c.Keys[commonservice.KEY_USER_ROLES].([]string))
 		}
-		if c.Keys[commonService.KEY_USER_ID] != nil {
-			customCtx.UserId = c.Keys[commonService.KEY_USER_ID].(string)
+		if c.Keys[commonservice.KEY_USER_ID] != nil {
+			customCtx.UserId = c.Keys[commonservice.KEY_USER_ID].(string)
 		}
-		if c.Keys[commonService.KEY_USER_EMAIL] != nil {
-			customCtx.UserEmail = c.Keys[commonService.KEY_USER_EMAIL].(string)
+		if c.Keys[commonservice.KEY_USER_EMAIL] != nil {
+			customCtx.UserEmail = c.Keys[commonservice.KEY_USER_EMAIL].(string)
 		}
-		if c.Keys[commonService.KEY_IDENTITY_ID] != nil {
-			customCtx.IdentityId = c.Keys[commonService.KEY_IDENTITY_ID].(string)
+		if c.Keys[commonservice.KEY_IDENTITY_ID] != nil {
+			customCtx.IdentityId = c.Keys[commonservice.KEY_IDENTITY_ID].(string)
 		}
 
 		graphqlOperationName := extractGraphQLMethodName(c.Request)

@@ -20,8 +20,8 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230928134243-77b704310d37
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231027051718-9fe4388d8539
-	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231101154400-643c7c93f3bf
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231104113442-72f126ddb811
+	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231104122705-6b76a1af1686
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/sirupsen/logrus v1.9.3
@@ -41,6 +41,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
+	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594 // indirect

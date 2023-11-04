@@ -397,7 +397,7 @@ func (r *interactionEventRepository) MergeInteractionSessionForEvent(ctx context
 		WITH is, ie
 		MERGE (ie)-[r:PART_OF]->(is)`, tenant, tenant)
 
-	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{
+	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]interface{}{
 		"tenant":             tenant,
 		"interactionEventId": eventId,
 		"externalId":         session.ExternalId,

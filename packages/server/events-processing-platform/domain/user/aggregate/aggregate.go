@@ -121,8 +121,8 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 				externalSystem.ExternalId == eventData.ExternalSystem.ExternalId {
 				found = true
 				externalSystem.ExternalUrl = eventData.ExternalSystem.ExternalUrl
-				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
 				externalSystem.ExternalSource = eventData.ExternalSystem.ExternalSource
+				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
 				if eventData.ExternalSystem.ExternalIdSecond != "" {
 					externalSystem.ExternalIdSecond = eventData.ExternalSystem.ExternalIdSecond
 				}

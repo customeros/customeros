@@ -251,6 +251,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 					PhoneNumberId: phoneNumberId,
 					Primary:       phoneNumberDtls.Primary,
 					Label:         phoneNumberDtls.Label,
+					AppSource:     appSource,
 				})
 				if err != nil {
 					failedSync = true

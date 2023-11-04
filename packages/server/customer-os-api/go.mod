@@ -21,7 +21,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230919071321-b1ec8acfb667
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230908110301-4b9a72102d0b
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231104113442-72f126ddb811
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230908115816-4b79e6756c66
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
@@ -54,6 +54,7 @@ require (
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/containerd/containerd v1.7.7 // indirect
 	github.com/containerd/log v0.1.0 // indirect
+	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

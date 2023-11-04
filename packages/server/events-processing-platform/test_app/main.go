@@ -321,6 +321,7 @@ func testContactLinkWithLocation() {
 		Tenant:     tenant,
 		ContactId:  contactId,
 		LocationId: locationId,
+		AppSource:  appSource,
 	})
 	print(result)
 }
@@ -336,6 +337,7 @@ func testContactLinkWithPhoneNumber() {
 		PhoneNumberId: phoneNumberId,
 		Primary:       true,
 		Label:         "work",
+		AppSource:     appSource,
 	})
 	print(result)
 }
@@ -351,6 +353,7 @@ func testContactLinkWithEmail() {
 		EmailId:   emailId,
 		Primary:   true,
 		Label:     "work",
+		AppSource: appSource,
 	})
 	print(result)
 }

@@ -14,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/pipedrive"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/salesforce"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/slack"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support"
 	localutils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -132,9 +131,6 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 	dataServiceMap := map[string]func() source.SourceDataService{
 		string(entity.AirbyteSourceHubspot): func() source.SourceDataService {
 			return hubspot.NewHubspotDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
-		},
-		string(entity.AirbyteSourceZendeskSupport): func() source.SourceDataService {
-			return zendesk_support.NewZendeskSupportDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
 		},
 		string(entity.AirbyteSourcePipedrive): func() source.SourceDataService {
 			return pipedrive.NewPipedriveDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)

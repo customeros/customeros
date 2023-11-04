@@ -41,7 +41,7 @@ func (h *addSocialCommandHandler) Handle(ctx context.Context, cmd *command.AddSo
 		return validationError
 	}
 
-	for attempt := 0; attempt <= h.cfg.RetriesOnOptimisticLockException; attempt++ {
+	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
 		organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
 		if err != nil {
 			return err
@@ -58,6 +58,7 @@ func (h *addSocialCommandHandler) Handle(ctx context.Context, cmd *command.AddSo
 
 		if eventstore.IsEventStoreErrorCodeWrongExpectedVersion(err) {
 			// Handle concurrency error
+			span.LogFields(log.Int("retryAttempt", attempt+1))
 			time.Sleep(helper.BackoffDelay(attempt)) // backoffDelay is a function that increases the delay with each attempt
 			continue                                 // Retry
 		} else {

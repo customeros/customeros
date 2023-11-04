@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	cr "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc/metadata"
 	"net/http"
 )
@@ -31,10 +34,29 @@ const UsernameHeader = "X-Openline-USERNAME"
 const TenantHeader = "X-Openline-TENANT"
 const IdentityIdHeader = "X-Openline-IDENTITY-ID"
 
-func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowance, cr *cr.Repositories) func(c *gin.Context) {
+func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowance, cr *cr.Repositories, opts ...CommonServiceOption) func(c *gin.Context) {
+	// Apply the options to configure the middleware
+	config := &Options{}
+	for _, opt := range opts {
+		opt(config)
+	}
+
 	return func(c *gin.Context) {
+		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "TenantUserContextEnhancer")
+		spanFinished := false
+		defer func() {
+			if !spanFinished {
+				span.Finish()
+			}
+		}()
+
 		tenantHeader := c.GetHeader(TenantHeader)
 		usernameHeader := c.GetHeader(UsernameHeader)
+		span.LogFields(
+			log.String("header.tenant", tenantHeader),
+			log.String("header.username", usernameHeader),
+			log.String("headerAllowance", string(headerAllowance)))
+
 		var (
 			tenantExists bool
 			userId       string
@@ -46,14 +68,14 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 
 		switch headerAllowance {
 		case TENANT:
-			tenantExists, err = checkTenantHeader(c, tenantHeader, cr, ctx)
+			tenantExists, err = checkTenantHeader(c, tenantHeader, cr, ctx, config.cache)
 			if err != nil {
 				return
 			}
 			c.Set(KEY_TENANT_NAME, tenantHeader)
 
 		case USERNAME:
-			userId, tenantName, roles, err = checkUsernameHeader(c, usernameHeader, cr, ctx)
+			userId, tenantName, roles, err = checkUsernameHeader(c, usernameHeader, cr, ctx, config.cache)
 			if err != nil {
 				return
 			}
@@ -72,7 +94,7 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 			}
 
 			if tenantHeader != "" {
-				tenantExists, err = checkTenantHeader(c, tenantHeader, cr, ctx)
+				tenantExists, err = checkTenantHeader(c, tenantHeader, cr, ctx, config.cache)
 				if err != nil {
 					return
 				}
@@ -81,7 +103,7 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 				}
 			}
 			if usernameHeader != "" {
-				userId, tenantName, roles, err = checkUsernameHeader(c, usernameHeader, cr, ctx)
+				userId, tenantName, roles, err = checkUsernameHeader(c, usernameHeader, cr, ctx, config.cache)
 				if err != nil {
 					return
 				}
@@ -89,6 +111,10 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 				c.Set(KEY_USER_ID, userId)
 				c.Set(KEY_USER_EMAIL, usernameHeader)
 				c.Set(KEY_USER_ROLES, roles)
+			}
+			if !spanFinished {
+				span.Finish()
+				spanFinished = true
 			}
 			c.Next()
 			return
@@ -100,11 +126,15 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 			return
 		}
 
+		if !spanFinished {
+			span.Finish()
+			spanFinished = true
+		}
 		c.Next()
 	}
 }
 
-func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories, ctx context.Context) (bool, error) {
+func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories, ctx context.Context, cache *caches.Cache) (bool, error) {
 	if tenantHeader == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": "missing tenant header"}},
@@ -113,6 +143,9 @@ func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories,
 		return false, fmt.Errorf("missing tenant header")
 	}
 
+	if cache != nil && cache.CheckTenant(tenantHeader) {
+		return true, nil
+	}
 	exists, err := cr.TenantRepository.TenantExists(ctx, tenantHeader)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -129,10 +162,13 @@ func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories,
 		return false, fmt.Errorf("tenant does not exist")
 	}
 
+	if cache != nil {
+		cache.AddTenant(tenantHeader)
+	}
 	return true, nil
 }
 
-func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *cr.Repositories, ctx context.Context) (string, string, []string, error) {
+func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *cr.Repositories, ctx context.Context, cache *caches.Cache) (string, string, []string, error) {
 	if usernameHeader == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": "missing username header"}},
@@ -141,6 +177,12 @@ func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *cr.Repositor
 		return "", "", []string{}, fmt.Errorf("missing username header")
 	}
 
+	if cache != nil {
+		userId, tenantName, roles, found := cache.GetUserDetailsFromCache(usernameHeader)
+		if found {
+			return userId, tenantName, roles, nil
+		}
+	}
 	userId, tenantName, roles, err := cr.UserRepository.FindUserByEmail(ctx, usernameHeader)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -155,6 +197,10 @@ func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *cr.Repositor
 		})
 		c.Abort()
 		return "", "", []string{}, fmt.Errorf("user has no associated tenant")
+	}
+
+	if cache != nil {
+		cache.AddUserDetailsToCache(usernameHeader, userId, tenantName, roles)
 	}
 
 	return userId, tenantName, roles, nil

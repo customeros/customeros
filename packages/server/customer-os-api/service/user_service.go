@@ -94,7 +94,8 @@ func (s *userService) Update(ctx context.Context, userId, firstName, lastName st
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		Id:             userId,
 		SourceFields: &commongrpc.SourceFields{
-			Source: string(entity.DataSourceOpenline),
+			Source:    string(entity.DataSourceOpenline),
+			AppSource: constants.AppSourceCustomerOsApi,
 		},
 		FirstName:       firstName,
 		LastName:        lastName,
@@ -160,6 +161,7 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		UserId:         userId,
 		Role:           mapper.MapRoleToEntity(role),
+		AppSource:      constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
 		return nil, err
@@ -200,6 +202,7 @@ func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAd
 		UserId:    entity.UserId,
 		JobRoleId: jobRole.Id,
 		Tenant:    common.GetTenantFromContext(ctx),
+		AppSource: utils.StringFirstNonEmpty(entity.JobRoleEntity.AppSource, constants.AppSourceCustomerOsApi),
 	})
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
@@ -224,6 +227,7 @@ func (s *userService) AddRoleInTenant(parentCtx context.Context, userId, tenant 
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		UserId:         userId,
 		Role:           mapper.MapRoleToEntity(role),
+		AppSource:      constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
 		return nil, err
@@ -247,6 +251,7 @@ func (s *userService) RemoveRole(parentCtx context.Context, userId string, role 
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		UserId:         userId,
 		Role:           mapper.MapRoleToEntity(role),
+		AppSource:      constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
 		return nil, err
@@ -270,6 +275,7 @@ func (s *userService) RemoveRoleInTenant(parentCtx context.Context, userId strin
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		UserId:         userId,
 		Role:           mapper.MapRoleToEntity(role),
+		AppSource:      constants.AppSourceCustomerOsApi,
 	})
 	if err != nil {
 		return nil, err

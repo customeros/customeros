@@ -56,7 +56,11 @@ func (a *UserAggregate) createUser(ctx context.Context, cmd *command.UpsertUserC
 		return errors.Wrap(err, "NewUserCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&createEvent, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.Source.AppSource,
+	})
 
 	return a.Apply(createEvent)
 }
@@ -66,7 +70,14 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	if aggregate.AllowCheckIfEventIsRedundant(cmd.Source.AppSource, cmd.LoggedInUserId) {
+		if a.User.SameData(cmd.DataFields, cmd.ExternalSystem) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
@@ -76,7 +87,11 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 		return errors.Wrap(err, "NewUserUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.Source.AppSource,
+	})
 
 	return a.Apply(event)
 }

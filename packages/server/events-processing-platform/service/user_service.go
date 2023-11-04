@@ -124,7 +124,7 @@ func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *userpb
 }
 
 func (s *userService) LinkEmailToUser(ctx context.Context, request *userpb.LinkEmailToUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkPhoneNumberToUser")
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.LinkEmailToUser")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.Object("request", request))

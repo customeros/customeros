@@ -135,6 +135,20 @@ export enum CalendarType {
   Google = 'GOOGLE',
 }
 
+export type Comment = {
+  __typename?: 'Comment';
+  appSource: Scalars['String'];
+  content?: Maybe<Scalars['String']>;
+  contentType?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  externalLinks: Array<ExternalSystem>;
+  id: Scalars['ID'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time'];
+};
+
 export enum ComparisonOperator {
   Contains = 'CONTAINS',
   Eq = 'EQ',
@@ -925,14 +939,13 @@ export type Issue = Node &
     __typename?: 'Issue';
     appSource: Scalars['String'];
     assignedTo: Array<IssueParticipant>;
+    comments: Array<Comment>;
     createdAt: Scalars['Time'];
     description?: Maybe<Scalars['String']>;
     externalLinks: Array<ExternalSystem>;
     followedBy: Array<IssueParticipant>;
     id: Scalars['ID'];
     interactionEvents: Array<InteractionEvent>;
-    /** @deprecated Will be removed in a future release */
-    mentionedByNotes: Array<Note>;
     priority?: Maybe<Scalars['String']>;
     reportedBy?: Maybe<IssueParticipant>;
     source: DataSource;
@@ -1218,8 +1231,6 @@ export type MeetingsPage = Pages & {
    */
   totalPages: Scalars['Int'];
 };
-
-export type MentionedEntity = Issue;
 
 export type Mutation = {
   __typename?: 'Mutation';
@@ -1966,8 +1977,6 @@ export type Note = {
   createdBy?: Maybe<User>;
   id: Scalars['ID'];
   includes: Array<Attachment>;
-  /** @deprecated will be removed in future versions */
-  mentioned: Array<MentionedEntity>;
   noted: Array<NotedEntity>;
   source: DataSource;
   sourceOfTruth: DataSource;

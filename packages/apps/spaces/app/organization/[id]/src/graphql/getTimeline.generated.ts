@@ -166,6 +166,7 @@ export type GetTimelineQuery = {
                 userParticipant: {
                   __typename?: 'User';
                   id: string;
+                  name?: string | null;
                   firstName: string;
                   lastName: string;
                   profilePhotoUrl?: string | null;
@@ -240,6 +241,7 @@ export type GetTimelineQuery = {
                 userParticipant: {
                   __typename?: 'User';
                   id: string;
+                  name?: string | null;
                   firstName: string;
                   lastName: string;
                   profilePhotoUrl?: string | null;
@@ -322,6 +324,7 @@ export type GetTimelineQuery = {
                     userParticipant: {
                       __typename?: 'User';
                       id: string;
+                      name?: string | null;
                       firstName: string;
                       lastName: string;
                       profilePhotoUrl?: string | null;
@@ -346,10 +349,139 @@ export type GetTimelineQuery = {
             externalId?: string | null;
             externalUrl?: string | null;
           }>;
+          submittedBy?:
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  name?: string | null;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | null;
+          followedBy: Array<
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  name?: string | null;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+          >;
+          assignedTo: Array<
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  name?: string | null;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+          >;
+          reportedBy?:
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  name?: string | null;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | null;
           interactionEvents: Array<{
             __typename?: 'InteractionEvent';
-            id: string;
             content?: string | null;
+            contentType?: string | null;
+            createdAt: any;
             sentBy: Array<
               | {
                   __typename: 'ContactParticipant';
@@ -418,12 +550,26 @@ export type GetTimelineQuery = {
                   userParticipant: {
                     __typename?: 'User';
                     id: string;
+                    name?: string | null;
                     firstName: string;
                     lastName: string;
                     profilePhotoUrl?: string | null;
                   };
                 }
             >;
+          }>;
+          comments: Array<{
+            __typename?: 'Comment';
+            content?: string | null;
+            contentType?: string | null;
+            createdAt: any;
+            createdBy?: {
+              __typename?: 'User';
+              id: string;
+              name?: string | null;
+              firstName: string;
+              lastName: string;
+            } | null;
           }>;
           issueTags?: Array<{
             __typename?: 'Tag';
@@ -781,12 +927,36 @@ export const GetTimelineDocument = `
           externalId
           externalUrl
         }
+        submittedBy {
+          ...InteractionEventParticipantFragment
+        }
+        followedBy {
+          ...InteractionEventParticipantFragment
+        }
+        assignedTo {
+          ...InteractionEventParticipantFragment
+        }
+        reportedBy {
+          ...InteractionEventParticipantFragment
+        }
         interactionEvents {
-          id
+          content
+          contentType
+          createdAt
           sentBy {
             ...InteractionEventParticipantFragment
           }
+        }
+        comments {
           content
+          contentType
+          createdAt
+          createdBy {
+            id
+            name
+            firstName
+            lastName
+          }
         }
         issueTags: tags {
           id

@@ -154,15 +154,37 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           externalId
           externalUrl
         }
+        submittedBy {
+          ...InteractionEventParticipantFragment
+        }
+        followedBy {
+          ...InteractionEventParticipantFragment
+        }
+        assignedTo {
+          ...InteractionEventParticipantFragment
+        }
+        reportedBy {
+          ...InteractionEventParticipantFragment
+        }
         interactionEvents {
-          id
+          content
+          contentType
+          createdAt
           sentBy {
             ...InteractionEventParticipantFragment
           }
-          content
-
         }
-
+        comments {
+          content
+          contentType
+          createdAt
+          createdBy {
+            id
+            name
+            firstName
+            lastName
+          }
+        }
         issueTags: tags {
           id
           name

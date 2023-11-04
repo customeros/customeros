@@ -7,9 +7,10 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
@@ -60,14 +61,14 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer postgresDb.SqlDB.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
+	neo4jDriver, err := commonconf.NewNeo4jDriver(server.cfg.Neo4j)
 	if err != nil {
 		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up Postgres repositories
-	commonServices := commonService.InitServices(postgresDb.GormDB, &neo4jDriver)
+	commonServices := commonservice.InitServices(postgresDb.GormDB, &neo4jDriver)
 	commonAuthServices := commonAuthService.InitServices(nil, postgresDb.GormDB)
 
 	// Setting up gRPC client
@@ -102,13 +103,15 @@ func (server *server) Run(parentCtx context.Context) error {
 	// Setting up services
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb.GormDB, server.cfg, commonServices, commonAuthServices, grpcContainer, appCache)
 
-	route.AddUserRoutes(ctx, r, serviceContainer, server.log)
-	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log)
-	route.AddLogEntryRoutes(ctx, r, serviceContainer, server.log)
-	route.AddContactRoutes(ctx, r, serviceContainer, server.log)
-	route.AddIssueRoutes(ctx, r, serviceContainer, server.log)
-	route.AddInteractionEventRoutes(ctx, r, serviceContainer, server.log)
-	route.AddCommentRoutes(ctx, r, serviceContainer, server.log)
+	commonCache := commoncaches.NewCommonCache()
+
+	route.AddUserRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddLogEntryRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddContactRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddIssueRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddInteractionEventRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddCommentRoutes(ctx, r, serviceContainer, server.log, commonCache)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)
@@ -133,8 +136,8 @@ func (server *server) Run(parentCtx context.Context) error {
 	return nil
 }
 
-func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, err error) {
-	if db, err = commonConfig.NewPostgresDBConn(cfg.Postgres); err != nil {
+func InitDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, err error) {
+	if db, err = commonconf.NewPostgresDBConn(cfg.Postgres); err != nil {
 		log.Fatalf("Could not open db connection: %s", err.Error())
 	}
 	return
