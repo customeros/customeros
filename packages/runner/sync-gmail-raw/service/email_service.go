@@ -148,7 +148,7 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 func (s *emailService) ReadEmailsForUsername(gmailService *gmail.Service, gmailImportState *entity.UserGmailImportState) (*entity.UserGmailImportState, error) {
 	countEmailsExists := int64(0)
 
-	userMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
+	userMessages, err := gmailService.Users.Messages.List(gmailImportState.Username).Q("in:anywhere -label:draft").MaxResults(s.cfg.SyncData.BatchSize).PageToken(gmailImportState.Cursor).Do()
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve emails for user: %v", err)
 	}
