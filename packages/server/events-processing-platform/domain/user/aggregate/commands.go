@@ -72,6 +72,13 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
+	if aggregate.AllowCheckIfEventIsRedundant(cmd.Source.AppSource, cmd.LoggedInUserId) {
+		if a.User.SameData(cmd.DataFields, cmd.ExternalSystem) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return nil
+		}
+	}
+
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
 	event, err := events.NewUserUpdateEvent(a, cmd.DataFields, cmd.Source.Source, updatedAtNotNil, cmd.ExternalSystem)

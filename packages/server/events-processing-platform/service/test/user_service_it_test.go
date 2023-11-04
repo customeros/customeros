@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
@@ -34,14 +35,15 @@ func TestUserService_UpsertUser(t *testing.T) {
 		FirstName:       "Bob",
 		LastName:        "Dole",
 		Name:            "Bob Dole",
-		AppSource:       "unit-test",
-		Source:          "N/A",
-		SourceOfTruth:   "N/A",
 		Internal:        true,
 		ProfilePhotoUrl: "https://www.google.com",
 		Timezone:        "America/Los_Angeles",
 		CreatedAt:       timestamppb.New(timeNow),
 		UpdatedAt:       timestamppb.New(timeNow),
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "unit-test",
+			Source:    "N/A",
+		},
 	})
 
 	require.Nil(t, err)
@@ -88,16 +90,17 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 	userId, _ := uuid.NewUUID()
 
 	createUserResponse, err := userClient.UpsertUser(ctx, &userpb.UpsertUserGrpcRequest{
-		Id:            userId.String(),
-		Tenant:        "ziggy",
-		FirstName:     "Bob",
-		LastName:      "Dole",
-		Name:          "Bob Dole",
-		AppSource:     "unit-test",
-		Source:        "N/A",
-		SourceOfTruth: "N/A",
-		CreatedAt:     timestamppb.New(timeNow),
-		UpdatedAt:     timestamppb.New(timeNow),
+		Id:        userId.String(),
+		Tenant:    "ziggy",
+		FirstName: "Bob",
+		LastName:  "Dole",
+		Name:      "Bob Dole",
+		CreatedAt: timestamppb.New(timeNow),
+		UpdatedAt: timestamppb.New(timeNow),
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "unit-test",
+			Source:    "N/A",
+		},
 	})
 
 	require.Nil(t, err)
@@ -128,6 +131,7 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 		UserId:    createUserResponse.Id,
 		JobRoleId: createJobRoleResponse.Id,
 		Tenant:    "ziggy",
+		AppSource: "unit-test",
 	})
 
 	if err != nil {
