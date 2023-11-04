@@ -3,6 +3,7 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-c
 go 1.20
 
 require (
+	github.com/coocood/freecache v1.2.4
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.4.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
@@ -22,6 +23,7 @@ require (
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect

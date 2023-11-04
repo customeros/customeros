@@ -6,6 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 	"net/http"
 )
@@ -24,11 +28,37 @@ const (
 
 const ApiKeyHeader = "X-Openline-API-KEY"
 
-func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App) func(c *gin.Context) {
+func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App, opts ...CommonServiceOption) func(c *gin.Context) {
+	// Apply the options to configure the middleware
+	config := &Options{}
+	for _, opt := range opts {
+		opt(config)
+	}
+
 	return func(c *gin.Context) {
+		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "ApiKeyCheckerHTTP")
+		spanFinished := false
+		defer func() {
+			if !spanFinished {
+				span.Finish()
+			}
+		}()
+		span.LogFields(log.String("app", string(app)))
+
 		kh := c.GetHeader(ApiKeyHeader)
 		if kh != "" {
-
+			// Check if the API key matches the cached value
+			if config.cache != nil && config.cache.CheckApiKey(string(app), kh) {
+				// Valid API key found in cache
+				span.LogFields(log.Bool("cached", true))
+				if !spanFinished {
+					spanFinished = true
+					span.Finish()
+				}
+				c.Next()
+				return
+			}
+			span.LogFields(log.Bool("cached", false))
 			keyResult := appKeyRepo.FindByKey(c, string(app), kh)
 
 			if keyResult.Error != nil {
@@ -49,16 +79,25 @@ func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App) func(c *
 				return
 			}
 
+			// If the API key is valid after database check, cache it
+			if config.cache != nil && keyResult.Result != nil {
+				config.cache.SetApiKey(string(app), kh)
+			}
+
+			if !spanFinished {
+				spanFinished = true
+				span.Finish()
+			}
 			c.Next()
 			// illegal request, terminate the current process
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"errors": []gin.H{{"message": "Api key is required"}},
 			})
+			tracing.TraceErr(span, errors.New("Api key is required"))
 			c.Abort()
 			return
 		}
-
 	}
 }
 
