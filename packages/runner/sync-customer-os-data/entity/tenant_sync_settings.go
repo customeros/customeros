@@ -8,12 +8,11 @@ import (
 type RawDataSource string
 
 const (
-	AirbyteSourceHubspot        RawDataSource = "hubspot"
-	AirbyteSourceZendeskSupport RawDataSource = "zendesk_support"
-	AirbyteSourcePipedrive      RawDataSource = "pipedrive"
-	AirbyteSourceIntercom       RawDataSource = "intercom"
-	AirbyteSourceSalesforce     RawDataSource = "salesforce"
-	OpenlineSourceSlack         RawDataSource = "slack"
+	AirbyteSourceHubspot    RawDataSource = "hubspot"
+	AirbyteSourcePipedrive  RawDataSource = "pipedrive"
+	AirbyteSourceIntercom   RawDataSource = "intercom"
+	AirbyteSourceSalesforce RawDataSource = "salesforce"
+	OpenlineSourceSlack     RawDataSource = "slack"
 )
 
 type TenantSyncSettings struct {
