@@ -3,15 +3,16 @@ import Script from 'next/script';
 import localFont from 'next/font/local';
 import { getServerSession } from 'next-auth';
 import { ToastContainer } from 'react-toastify';
+
 import { HighlightInit } from '@highlight-run/next/client';
 
 import { Providers } from './src/components/Providers/Providers';
 import { ThemeProvider } from './src/components/Providers/ThemeProvider';
 
-import 'react-toastify/dist/ReactToastify.css';
 import './../styles/globals.scss';
 import './../styles/date-picker.scss';
 import './../styles/remirror-editor.scss';
+import 'react-toastify/dist/ReactToastify.css';
 
 const barlow = localFont({
   src: [

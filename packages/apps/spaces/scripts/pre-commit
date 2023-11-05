@@ -1,7 +1,6 @@
 #!/bin/bash
 
 cd packages/apps/spaces
-echo "HELLO PRECOMMIT"
 yarn lint-staged
 
 if [ $? -ne 0 ]; then

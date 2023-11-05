@@ -33,9 +33,8 @@ function getAuthor(user: User | Contact) {
 }
 
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
-    const { openModal } = useTimelineEventPreviewMethodsContext();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
   const isTemporary = !data?.updatedAt;
-
 
   const fullName = getAuthor(data?.logEntryCreatedBy);
   const getLogEntryIcon = useCallback((type: string | null) => {

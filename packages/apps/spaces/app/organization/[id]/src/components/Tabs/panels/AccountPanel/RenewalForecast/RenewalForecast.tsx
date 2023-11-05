@@ -2,34 +2,35 @@
 import { useIsMutating, useIsRestoring } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
+import { UseDisclosureReturn } from '@ui/utils';
+import { Heading } from '@ui/typography/Heading';
 import { IconButton } from '@ui/form/IconButton';
 import { Divider } from '@ui/presentation/Divider';
-import { Icons, FeaturedIcon } from '@ui/media/Icon';
-import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
-import { RenewalForecastModal } from './RenewalForecastModal';
-import {
-  RenewalForecast as RenewalForecastT,
-  RenewalLikelihoodProbability,
-} from '@graphql/types';
-import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
+import { getUserDisplayData } from '@spaces/utils/getUserEmail';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { UseDisclosureReturn } from '@chakra-ui/hooks/dist/use-disclosure';
+import {
+  RenewalLikelihoodProbability,
+  RenewalForecast as RenewalForecastT,
+} from '@graphql/types';
 import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
+
+import { RenewalForecastModal } from './RenewalForecastModal';
 
 export type RenewalForecastType = RenewalForecastT & { amount?: string | null };
 
 interface RenewalForecastProps {
   name: string;
   isInitialLoading?: boolean;
-  renewalForecast: RenewalForecastType;
-  renewalProbability?: RenewalLikelihoodProbability | null;
   infoModal: UseDisclosureReturn;
   updateModal: UseDisclosureReturn;
+  renewalForecast: RenewalForecastType;
+  renewalProbability?: RenewalLikelihoodProbability | null;
 }
 
 export const RenewalForecast = ({

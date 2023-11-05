@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
@@ -10,6 +10,7 @@ import { Tag } from '@ui/presentation/Tag';
 import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
 import { Tooltip } from '@ui/overlay/Tooltip';
+import { Organization } from '@graphql/types';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { VStack, HStack } from '@ui/layout/Stack';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
@@ -17,10 +18,19 @@ import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
+import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/src/components/Tabs/panels/AboutPanel/owner/OwnerInput';
+import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
 
+import { FormUrlInput } from './FormUrlInput';
 import { FormSocialInput } from '../../shared/FormSocialInput';
+import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
+import {
+  OrganizationAboutForm,
+  OrganizationAboutFormDto,
+} from './OrganizationAbout.dto';
 import {
   industryOptions,
   employeesOptions,
@@ -28,16 +38,6 @@ import {
   businessTypeOptions,
   lastFundingRoundOptions,
 } from './util';
-import {
-  OrganizationAboutForm,
-  OrganizationAboutFormDto,
-} from './OrganizationAbout.dto';
-import { FormUrlInput } from './FormUrlInput';
-import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
-import { Branches } from '@organization/src/components/Tabs/panels/AboutPanel/branches/Branches';
-import { ParentOrgInput } from '@organization/src/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
-import { Organization } from '@graphql/types';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,

@@ -1,12 +1,13 @@
-import React, { FC, ReactElement, useState } from 'react';
+import React, { FC, useState, ReactElement } from 'react';
+
 import { Tooltip } from '@ui/overlay/Tooltip';
+import { Link03 } from '@ui/media/icons/Link03';
 import { IconButton } from '@ui/form/IconButton';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
-import { Link03 } from '@ui/media/icons/Link03';
 
 export const ViewInExternalAppButton: FC<{
-  url?: string | null;
   icon: ReactElement;
+  url?: string | null;
 }> = ({ url, icon }) => {
   const [hovered, setHovered] = useState(false);
 

@@ -58,7 +58,9 @@ files.forEach((name) => {
     const filePath = process.cwd() + '/ui/media/logos/' + outFileName;
 
     writeFileSync(filePath, formattedOutContent);
-  } catch (e) {}
+  } catch (e) {
+    // handle error
+  }
 });
 
 function camelize(str) {

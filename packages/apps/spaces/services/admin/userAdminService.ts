@@ -37,19 +37,18 @@ export function UserSignIn(data: SignInRequest): Promise<any> {
 }
 
 export function RevokeAccess(provider: string, data?: any): Promise<any> {
-    return new Promise((resolve, reject) =>
-        axios
-            .post(`/ua/${provider}/revoke`, data)
-            .then((response: any) => {
-                if (response.data) {
-                    resolve(response.data);
-                } else {
-                    reject(response.error);
-                }
-            })
-            .catch((reason) => {
-                reject(reason);
-            }),
-    );
+  return new Promise((resolve, reject) =>
+    axios
+      .post(`/ua/${provider}/revoke`, data)
+      .then((response: any) => {
+        if (response.data) {
+          resolve(response.data);
+        } else {
+          reject(response.error);
+        }
+      })
+      .catch((reason) => {
+        reject(reason);
+      }),
+  );
 }
-
