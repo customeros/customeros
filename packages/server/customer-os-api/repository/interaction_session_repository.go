@@ -189,19 +189,19 @@ func (r *interactionSessionRepository) GetAllForInteractionEvents(ctx context.Co
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.Object("ids", ids))
 
+	cypher := fmt.Sprintf(`MATCH (e:InteractionEvent)-[:PART_OF]->(s:InteractionSession_%s) 
+		 WHERE e.id IN $ids AND e:InteractionEvent_%s
+		 RETURN s, e.id`, tenant, tenant)
+	params := map[string]any{
+		"ids": ids,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (e:InteractionEvent_%s)-[:PART_OF]->(s:InteractionSession) " +
-		" WHERE e.id IN $ids " +
-		" RETURN s, e.id"
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"tenant": tenant,
-				"ids":    ids,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)

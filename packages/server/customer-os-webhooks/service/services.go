@@ -42,23 +42,23 @@ func InitServices(log logger.Logger,
 	commonServices *commonService.Services,
 	commonAuthServices *commonAuthService.Services,
 	grpcClients *grpc_client.Clients,
-	caches *caches.Cache) *Services {
+	cache *caches.Cache) *Services {
 	repositories := repository.InitRepos(driver, gormDB, cfg.Neo4j.Database)
 
 	services := Services{
 		CommonServices:            commonServices,
 		CommonAuthServices:        commonAuthServices,
-		TenantService:             NewTenantService(log, repositories, caches),
+		TenantService:             NewTenantService(log, repositories, cache),
 		EmailService:              NewEmailService(log, repositories, grpcClients),
 		LocationService:           NewLocationService(log, repositories, grpcClients),
 		PhoneNumberService:        NewPhoneNumberService(log, repositories, grpcClients),
 		SyncStatusService:         NewSyncStatusService(log, repositories),
-		ExternalSystemService:     NewExternalSystemService(log, repositories, caches),
+		ExternalSystemService:     NewExternalSystemService(log, repositories, cache),
 		InteractionSessionService: NewInteractionSessionService(log, repositories),
 	}
 	services.cfg = cfg
 	services.UserService = NewUserService(log, repositories, grpcClients, &services)
-	services.OrganizationService = NewOrganizationService(log, repositories, grpcClients, &services)
+	services.OrganizationService = NewOrganizationService(log, repositories, grpcClients, &services, cache)
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
 	services.LogEntryService = NewLogEntryService(log, repositories, grpcClients, &services)
 	services.IssueService = NewIssueService(log, repositories, grpcClients, &services)

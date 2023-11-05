@@ -34,7 +34,7 @@ const UsernameHeader = "X-Openline-USERNAME"
 const TenantHeader = "X-Openline-TENANT"
 const IdentityIdHeader = "X-Openline-IDENTITY-ID"
 
-func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowance, cr *cr.Repositories, opts ...CommonServiceOption) func(c *gin.Context) {
+func TenantUserContextEnhancer(headerAllowance HeaderAllowance, cr *cr.Repositories, opts ...CommonServiceOption) func(c *gin.Context) {
 	// Apply the options to configure the middleware
 	config := &Options{}
 	for _, opt := range opts {

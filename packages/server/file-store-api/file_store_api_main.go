@@ -8,8 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/dto"
@@ -79,10 +80,12 @@ func main() {
 
 	r.Use(cors.New(corsConfig))
 
+	commonCache := caches.NewCommonCache()
+
 	r.POST("/file",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -103,8 +106,8 @@ func main() {
 		})
 	r.GET("/file/:id",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -123,8 +126,8 @@ func main() {
 		})
 	r.GET("/file/:id/download",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -144,8 +147,8 @@ func main() {
 		})
 	r.GET("/file/:id/base64",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)
 			userEmail, _ := ctx.Keys["UserEmail"].(string)
@@ -168,8 +171,8 @@ func main() {
 	r.GET("/readiness", healthCheckHandler)
 
 	r.GET("/jwt",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME, commonRepositoryContainer, commonservice.WithCache(commonCache)),
+		commonservice.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonservice.FILE_STORE_API, commonservice.WithCache(commonCache)),
 		func(ctx *gin.Context) {
 			jwtTennantUserService.MakeJWT(ctx)
 		})

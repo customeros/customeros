@@ -30,26 +30,28 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	user, err := r.Services.UserService.GetById(ctx, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed GlobalCache - find user by id")
-		return nil, err
+		graphql.AddErrorf(ctx, "failed GlobalCache - find user by id")
+		return nil, nil
 	}
 	response.User = mapper.MapEntityToUser(user)
 
 	isOwner, err := r.Services.UserService.IsOwner(ctx, user.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed GlobalCache - is owner")
-		return nil, err
+		graphql.AddErrorf(ctx, "failed GlobalCache - is owner")
+		return nil, nil
 	}
 	response.IsOwner = *isOwner
 
 	if userEmail != "" {
 		privateKey, err := r.Services.CommonAuthServices.CommonAuthRepositories.ApiKeyRepository.GetApiKeyByTenantService(tenantName, authEntity.GSUITE_SERVICE_PRIVATE_KEY)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, err
 		}
 		serviceEmail, err := r.Services.CommonAuthServices.CommonAuthRepositories.ApiKeyRepository.GetApiKeyByTenantService(tenantName, authEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
@@ -61,7 +63,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
-				return nil, err
+				return nil, nil
 			}
 			if userGoogleOauthToken != nil {
 				response.IsGoogleActive = userGoogleOauthToken.GmailSyncEnabled

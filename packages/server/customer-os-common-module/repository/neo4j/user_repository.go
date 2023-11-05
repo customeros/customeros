@@ -3,7 +3,10 @@ package repository
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type userRepository struct {
@@ -28,6 +31,11 @@ func (u *userRepository) toStringList(values []interface{}) []string {
 }
 
 func (u *userRepository) FindUserByEmail(ctx context.Context, email string) (string, string, []string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindUserByEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, "neo4jRepository")
+	span.LogFields(log.String("email", email))
+
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
 

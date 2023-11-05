@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	comentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
@@ -26,7 +27,7 @@ import (
 
 type domains struct {
 	whitelistDomains       []comentity.WhitelistDomain
-	personalEmailProviders []comentity.PersonalEmailProvider
+	personalEmailProviders []string
 }
 
 type OrganizationService interface {
@@ -39,16 +40,18 @@ type organizationService struct {
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 	services     *Services
+	cache        *caches.Cache
 	maxWorkers   int
 }
 
-func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) OrganizationService {
+func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services, cache *caches.Cache) OrganizationService {
 	return &organizationService{
 		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
 		maxWorkers:   services.cfg.ConcurrencyConfig.OrganizationSyncConcurrency,
+		cache:        cache,
 	}
 }
 
@@ -90,11 +93,20 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 		s.log.Errorf("error while getting whitelist domains: %v", err)
 		whitelistDomains = make([]comentity.WhitelistDomain, 0)
 	}
-	personalEmailProviders, err := s.repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-	if err != nil {
-		s.log.Errorf("error while getting personal email providers: %v", err)
-		personalEmailProviders = make([]comentity.PersonalEmailProvider, 0)
+
+	personalEmailProviders := s.cache.GetPersonalEmailProviders()
+	if len(personalEmailProviders) == 0 {
+		personalEmailProviderEntities, err := s.repositories.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+		if err != nil {
+			s.log.Errorf("error while getting personal email providers: %v", err)
+		}
+		personalEmailProviders = make([]string, 0)
+		for _, personalEmailProvider := range personalEmailProviderEntities {
+			personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
+		}
+		s.cache.SetPersonalEmailProviders(personalEmailProviders)
 	}
+
 	controlDomains := &domains{
 		whitelistDomains:       whitelistDomains,
 		personalEmailProviders: personalEmailProviders,
@@ -473,7 +485,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(dbNode dbtype.Node) 
 
 func (d domains) isPersonalEmailProvider(domain string) bool {
 	for _, v := range d.personalEmailProviders {
-		if strings.ToLower(domain) == strings.ToLower(v.ProviderDomain) {
+		if strings.ToLower(domain) == strings.ToLower(v) {
 			return true
 		}
 	}

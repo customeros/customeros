@@ -40,7 +40,7 @@ func NewCommonCache() *Cache {
 	}
 }
 
-// Method to add an API key to the cache
+// SetApiKey Method to add an API key to the cache
 func (c *Cache) SetApiKey(app, apiKey string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -51,7 +51,7 @@ func (c *Cache) SetApiKey(app, apiKey string) {
 	_ = c.apiKeyCache.Set(keyBytes, valueBytes, expire5Min)
 }
 
-// Method to check if an API key is in the cache
+// CheckApiKey Method to check if an API key is in the cache
 func (c *Cache) CheckApiKey(app, apiKey string) bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
