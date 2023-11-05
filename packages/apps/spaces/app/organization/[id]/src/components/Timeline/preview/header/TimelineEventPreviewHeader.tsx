@@ -1,25 +1,27 @@
 import React from 'react';
-import { CardHeader } from '@ui/presentation/Card';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { IconButton } from '@ui/form/IconButton';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
+import { IconButton } from '@ui/form/IconButton';
+import { CardHeader } from '@ui/presentation/Card';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { Tooltip } from '@ui/presentation/Tooltip';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
 interface TimelineEventPreviewHeaderProps {
-  date?: string;
   name: string;
-  onClose: () => void;
+  date?: string;
   copyLabel: string;
+  onClose: () => void;
 }
 
 export const TimelineEventPreviewHeader: React.FC<
   TimelineEventPreviewHeaderProps
 > = ({ date, name, onClose, copyLabel }) => {
   const [_, copy] = useCopyToClipboard();
+
   return (
     <CardHeader
       py='4'

@@ -1,19 +1,20 @@
+import { useRouter } from 'next/navigation';
+
 import set from 'lodash/set';
 import { produce } from 'immer';
-import { useRouter } from 'next/navigation';
-import { useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
-import {
-  GetOrganizationsQuery,
-  useInfiniteGetOrganizationsQuery,
-} from '../graphql/getOrganizations.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { toastSuccess, toastError } from '@ui/presentation/Toast';
+import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 
 import { useHideOrganizationsMutation } from '../graphql/hideOrganizations.generated';
 import { useCreateOrganizationMutation } from '../graphql/createOrganization.generated';
 import { useMergeOrganizationsMutation } from '../graphql/mergeOrganizations.generated';
+import {
+  GetOrganizationsQuery,
+  useInfiniteGetOrganizationsQuery,
+} from '../graphql/getOrganizations.generated';
 
 export const useOrganizationsPageMethods = () => {
   const { push } = useRouter();

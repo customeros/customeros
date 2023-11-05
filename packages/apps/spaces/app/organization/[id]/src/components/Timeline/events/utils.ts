@@ -1,13 +1,13 @@
+import { getName } from '@spaces/utils/getParticipantsName';
 import {
+  Meeting,
+  Contact,
+  UserParticipant,
+  EmailParticipant,
   ContactParticipant,
   JobRoleParticipant,
-  Meeting,
   OrganizationParticipant,
-  EmailParticipant,
-  UserParticipant,
-  Contact,
 } from '@graphql/types';
-import { getName } from '@spaces/utils/getParticipantsName';
 
 type Participant =
   | Contact
@@ -76,6 +76,7 @@ export const getParticipants = (
       )
       .split(' + ');
   }
+
   return [];
 };
 

@@ -1,22 +1,24 @@
 import React from 'react';
-import styles from './simple-validation-indicator.module.scss';
-import { InlineLoader } from '@ui/presentation/inline-loader';
-import {
-  Popover,
-  PopoverArrow,
-  PopoverBody,
-  PopoverContent,
-  PopoverTrigger,
-  Portal,
-} from '@ui/overlay/Popover';
+
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
+import { InlineLoader } from '@ui/presentation/inline-loader';
+import {
+  Portal,
+  Popover,
+  PopoverBody,
+  PopoverArrow,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ui/overlay/Popover';
 
 import CheckCircle from './assets/CheckCircle';
+
+import styles from './simple-validation-indicator.module.scss';
 interface Props {
-  showValidationMessage: boolean;
   isLoading: boolean;
   errorMessages?: Array<string>;
+  showValidationMessage: boolean;
 }
 
 export const SimpleValidationIndicator = ({

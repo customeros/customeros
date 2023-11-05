@@ -1,21 +1,20 @@
-import { Contact, Social } from '@graphql/types';
+import { Social, Contact } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
-
 import { UpdateContactMutationVariables } from '@organization/src/graphql/updateContact.generated';
 
 export interface ContactForm {
   id: string;
   name: string;
-  title: string;
-  role: SelectOption<string>[];
-  roleId: string;
   note: string;
+  title: string;
   email: string;
   phone: string;
+  roleId: string;
   phoneId: string;
+  startedAt: string;
+  role: SelectOption<string>[];
   timezone: SelectOption<string> | null;
   socials: Pick<Social, 'id' | 'url'>[];
-  startedAt: string;
 }
 
 export class ContactFormDto implements ContactForm {
@@ -41,6 +40,7 @@ export class ContactFormDto implements ContactForm {
     this.role = (() => {
       const _role = data?.jobRoles?.[0]?.description;
       if (!_role?.length) return [];
+
       return _role?.split(',').map((v) => ({ value: v, label: v })) || [];
     })();
     this.note = data?.description || '';

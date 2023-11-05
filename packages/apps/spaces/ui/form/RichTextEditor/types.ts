@@ -1,22 +1,22 @@
+import { AnyExtension } from 'remirror';
 import { ReactExtensions, UseRemirrorReturn } from '@remirror/react';
 import {
-  BlockquoteExtension,
   BoldExtension,
+  LinkExtension,
+  EmojiExtension,
+  ItalicExtension,
+  StrikeExtension,
+  HeadingExtension,
+  FontSizeExtension,
+  MarkdownExtension,
+  UnderlineExtension,
+  BlockquoteExtension,
   BulletListExtension,
   FontFamilyExtension,
-  FontSizeExtension,
-  HeadingExtension,
-  ItalicExtension,
-  NodeFormattingExtension,
   OrderedListExtension,
-  StrikeExtension,
-  UnderlineExtension,
-  LinkExtension,
   MentionAtomExtension,
-  EmojiExtension,
-  MarkdownExtension,
+  NodeFormattingExtension,
 } from 'remirror/extensions';
-import { AnyExtension } from 'remirror';
 
 export type BasicEditorExtentions =
   | ItalicExtension

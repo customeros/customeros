@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+
 import { Flex } from '@ui/layout/Flex';
 
 export const TabsContainer = ({ children }: { children?: React.ReactNode }) => {

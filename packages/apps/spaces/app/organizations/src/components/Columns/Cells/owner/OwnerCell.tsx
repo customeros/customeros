@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState, useRef } from 'react';
+import { useRef, useMemo, useState, useCallback } from 'react';
+
 import { produce } from 'immer';
-import { useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
 import { User } from '@graphql/types';
 import { Flex } from '@ui/layout/Flex';
@@ -15,8 +16,8 @@ import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
 import { useSetOrganizationOwnerMutation } from '@organizations/graphql/setOrganizationOwner.generated';
 import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';
 import {
-  useInfiniteGetOrganizationsQuery,
   GetOrganizationsQuery,
+  useInfiniteGetOrganizationsQuery,
 } from '@organizations/graphql/getOrganizations.generated';
 
 type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;

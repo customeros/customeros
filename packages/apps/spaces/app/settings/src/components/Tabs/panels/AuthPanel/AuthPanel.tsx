@@ -1,33 +1,33 @@
 'use client';
-import React, { ChangeEvent, useEffect, useState } from 'react';
-import axios from 'axios';
 import { GetServerSidePropsContext } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 
-import { Card, CardBody, CardHeader } from '@ui/layout/Card';
+import axios from 'axios';
+import { getServerSession } from 'next-auth/next';
 import { signIn, useSession } from 'next-auth/react';
-import { Divider } from '@ui/presentation/Divider';
-import { Text } from '@ui/typography/Text';
-import { Heading } from '@ui/typography/Heading';
-import { Switch } from '@ui/form/Switch';
-import { Flex } from '@ui/layout/Flex';
-import { HStack, VStack } from '@ui/layout/Stack';
-import { Spinner } from '@ui/feedback/Spinner';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-
-import { FormLabel } from '@ui/form/FormElement';
-import { Icons } from '@ui/media/Icon';
-import {
-  GetGoogleSettings,
-  GetSlackSettings,
-  OAuthUserSettingsInterface,
-  SlackSettingsInterface,
-} from 'services/settings/settingsService';
+import { useQueryClient } from '@tanstack/react-query';
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { RevokeAccess } from 'services/admin/userAdminService';
+import {
+  GetSlackSettings,
+  GetGoogleSettings,
+  SlackSettingsInterface,
+  OAuthUserSettingsInterface,
+} from 'services/settings/settingsService';
+
+import { Flex } from '@ui/layout/Flex';
+import { Icons } from '@ui/media/Icon';
+import { Switch } from '@ui/form/Switch';
+import { Text } from '@ui/typography/Text';
+import { Spinner } from '@ui/feedback/Spinner';
+import { Heading } from '@ui/typography/Heading';
+import { FormLabel } from '@ui/form/FormElement';
+import { HStack, VStack } from '@ui/layout/Stack';
+import { Divider } from '@ui/presentation/Divider';
+import { Card, CardBody, CardHeader } from '@ui/layout/Card';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 export const AuthPanel = () => {
   const router = useRouter();
@@ -291,5 +291,6 @@ export const AuthPanel = () => {
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const session = await getServerSession(context.req, context.res, authOptions);
+
   return { props: { session } };
 }

@@ -1,9 +1,10 @@
 import React from 'react';
+
 import { Button } from '@ui/form/Button';
 
 interface TagButtonProps {
-  onTagSet: () => void;
   tag: string;
+  onTagSet: () => void;
 }
 
 export const TagButton: React.FC<TagButtonProps> = ({ onTagSet, tag }) => (

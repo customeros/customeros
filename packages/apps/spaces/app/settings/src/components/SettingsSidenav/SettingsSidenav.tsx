@@ -1,16 +1,16 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { useLocalStorage } from 'usehooks-ts';
+
 import { Flex } from '@ui/layout/Flex';
-import { VStack } from '@ui/layout/Stack';
 import { Icons } from '@ui/media/Icon';
+import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Receipt } from '@ui/media/icons/Receipt';
-
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
-import { useLocalStorage } from 'usehooks-ts';
 
 export const SettingsSidenav = () => {
   const router = useRouter();

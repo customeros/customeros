@@ -1,9 +1,10 @@
 import NextAuth from 'next-auth';
+
 import Google from 'next-auth/providers/google';
 import {
   OAuthToken,
-  SignInRequest,
   UserSignIn,
+  SignInRequest,
 } from 'services/admin/userAdminService';
 
 // This file persists in the pages router, as shown in example in documentation.
@@ -51,6 +52,7 @@ const callbacks = {
 
       await UserSignIn(signInRequest);
     }
+
     return token;
   },
   async session({ session, token }: any) {
@@ -60,6 +62,7 @@ const callbacks = {
       session.user.name = token.name;
       session.user.playerIdentityId = token.playerIdentityId;
     }
+
     return session;
   },
 };

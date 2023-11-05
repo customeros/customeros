@@ -1,24 +1,24 @@
 import React, { useRef, MouseEventHandler } from 'react';
 
-import {
-  AlertDialog,
-  AlertDialogOverlay,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-} from '@ui/overlay/AlertDialog';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import {
+  AlertDialog,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogOverlay,
+  AlertDialogContent,
+} from '@ui/overlay/AlertDialog';
 
 interface InfoDialogProps {
+  label?: string;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: MouseEventHandler<HTMLButtonElement>;
-  label?: string;
   description?: string;
   confirmButtonLabel: string;
   children?: React.ReactNode;
+  onConfirm: MouseEventHandler<HTMLButtonElement>;
 }
 
 export const InfoDialog = ({

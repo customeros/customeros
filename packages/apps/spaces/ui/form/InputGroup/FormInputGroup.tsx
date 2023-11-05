@@ -3,6 +3,8 @@
 import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
 
+import { FormLabel, FormControl, VisuallyHidden } from '@chakra-ui/react';
+
 import { Input } from '../Input';
 import {
   InputGroup,
@@ -10,15 +12,14 @@ import {
   InputLeftElement,
   InputRightElement,
 } from './InputGroup';
-import { FormControl, FormLabel, VisuallyHidden } from '@chakra-ui/react';
 
 interface FormInputGroupProps extends InputGroupProps {
   name: string;
   formId: string;
-  leftElement?: React.ReactNode;
-  rightElement?: React.ReactNode;
   label?: string;
   isLabelVisible?: boolean;
+  leftElement?: React.ReactNode;
+  rightElement?: React.ReactNode;
 }
 
 export const FormInputGroup = forwardRef((props: FormInputGroupProps, ref) => {

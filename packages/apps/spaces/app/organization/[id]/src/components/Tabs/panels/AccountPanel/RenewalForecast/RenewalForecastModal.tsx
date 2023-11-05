@@ -1,12 +1,25 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useRef, useState, useEffect } from 'react';
 
+import { useSession } from 'next-auth/react';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-import { AutoresizeTextarea } from '@ui/form/Textarea';
+import { Heading } from '@ui/typography/Heading';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { AutoresizeTextarea } from '@ui/form/Textarea';
+import { CurrencyInput } from '@ui/form/CurrencyInput';
+import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { User, RenewalLikelihoodProbability } from '@graphql/types';
+import { NEW_DATE } from '@organization/src/components/Timeline/OrganizationTimeline';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { invalidateAccountDetailsQuery } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { useUpdateRenewalForecastMutation } from '@organization/src/graphql/updateRenewalForecast.generated';
 import {
   Modal,
   ModalBody,
@@ -16,18 +29,6 @@ import {
   ModalOverlay,
   ModalCloseButton,
 } from '@ui/overlay/Modal';
-import { CurrencyInput } from '@ui/form/CurrencyInput';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useQueryClient } from '@tanstack/react-query';
-import { invalidateAccountDetailsQuery } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { useParams } from 'next/navigation';
-import { useUpdateRenewalForecastMutation } from '@organization/src/graphql/updateRenewalForecast.generated';
-import { Box } from '@ui/layout/Box';
-import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
-import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
-import { NEW_DATE } from '@organization/src/components/Timeline/OrganizationTimeline';
-import { useSession } from 'next-auth/react';
-import { RenewalLikelihoodProbability, User } from '@graphql/types';
 import {
   OrganizationAccountDetailsQuery,
   useOrganizationAccountDetailsQuery,
@@ -39,11 +40,11 @@ export type RenewalForecastValue = {
 };
 
 interface RenewalForecastModalProps {
+  name: string;
   isOpen: boolean;
   onClose: () => void;
   renewalForecast: RenewalForecastValue;
   renewalProbability?: RenewalLikelihoodProbability | null;
-  name: string;
 }
 
 export const RenewalForecastModal = ({
@@ -72,6 +73,7 @@ export const RenewalForecastModal = ({
         useOrganizationAccountDetailsQuery.getKey({ id }),
         (oldData) => {
           if (!oldData || !oldData?.organization) return;
+
           return {
             organization: {
               ...(oldData?.organization ?? {}),

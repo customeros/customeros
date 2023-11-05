@@ -1,4 +1,5 @@
 import { Contact } from '@graphql/types';
+
 import { getContactDisplayName } from './getContactName';
 
 export const getContactPageTitle = (contact: Partial<Contact>): string => {
@@ -14,6 +15,7 @@ export const getContactPageTitle = (contact: Partial<Contact>): string => {
       const phoneNumber =
         contact.phoneNumbers[0]?.e164 ||
         contact.phoneNumbers[0]?.rawPhoneNumber;
+
       return `${phoneNumber} (Unnamed contact)`;
     } else {
       return 'Unnamed';

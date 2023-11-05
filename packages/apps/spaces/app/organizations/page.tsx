@@ -1,11 +1,17 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+
 import { produce } from 'immer';
 import { useLocalStorage } from 'usehooks-ts';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useIsRestoring } from '@tanstack/react-query';
 
+import { GridItem } from '@ui/layout/Grid';
+import { Table, SortingState } from '@ui/presentation/Table';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import {
   Filter,
   SortBy,
@@ -13,17 +19,12 @@ import {
   SortingDirection,
   ComparisonOperator,
 } from '@graphql/types';
-import { GridItem } from '@ui/layout/Grid';
-import { Table, SortingState } from '@ui/presentation/Table';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { Search } from './src/components/Search';
 import { TableActions } from './src/components/Actions';
 import { useOrganizationsPageMethods } from './src/hooks';
 import { getColumns } from './src/components/Columns/Columns';
 import EmptyState from './src/components/EmptyState/EmptyState';
-import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGetOrganizationsInfiniteQuery } from './src/hooks/useGetOrganizationsInfiniteQuery';
 
 export default function OrganizationsPage() {
@@ -67,8 +68,10 @@ export default function OrganizationsPage() {
           }
           if (preset === 'portfolio') {
             const userId = globalCache?.global_Cache?.user.id;
+
             return ['OWNER_ID', userId];
           }
+
           return [];
         })();
         if (!property || !value) return;
@@ -84,6 +87,7 @@ export default function OrganizationsPage() {
   }, [searchParams?.toString(), globalCache?.global_Cache?.user.id]);
   const sortBy: SortBy | undefined = useMemo(() => {
     if (!sorting.length) return;
+
     return {
       by: sorting[0].id,
       direction: sorting[0].desc ? SortingDirection.Desc : SortingDirection.Asc,

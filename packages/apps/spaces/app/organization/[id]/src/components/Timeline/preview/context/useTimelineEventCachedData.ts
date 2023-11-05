@@ -1,11 +1,12 @@
+import { QueryKey, useQueryClient } from '@tanstack/react-query';
+
+import { TimelineEvent } from '@graphql/types';
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import {
   GetTimelineEventsQuery,
   useGetTimelineEventsQuery,
 } from '@organization/src/graphql/getTimelineEvents.generated';
-import { QueryKey, useQueryClient } from '@tanstack/react-query';
-import { TimelineEvent } from '@graphql/types';
 
 export const useTimelineEventCachedData = () => {
   const [timelineMeta, _] = useTimelineMeta();

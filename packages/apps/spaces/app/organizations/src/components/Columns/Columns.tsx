@@ -19,9 +19,9 @@ const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
 
 interface GetColumnsOptions {
-  tabs?: { [key: string]: string } | null;
   createIsLoading?: boolean;
   onCreateOrganization?: () => void;
+  tabs?: { [key: string]: string } | null;
 }
 
 export const getColumns = (options: GetColumnsOptions) => [
@@ -104,6 +104,7 @@ export const getColumns = (options: GetColumnsOptions) => [
     minSize: 200,
     cell: (props) => {
       const organization = props.row.original;
+
       return <OrganizationRelationship organization={organization} />;
     },
     skeleton: () => (

@@ -1,4 +1,5 @@
 import type { CodegenConfig } from '@graphql-codegen/cli';
+
 import path from 'path';
 import dotenv from 'dotenv';
 

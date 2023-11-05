@@ -1,8 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
+
 import { produce } from 'immer';
 import capitalize from 'lodash/capitalize';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
-import { useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -12,14 +13,12 @@ import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { RenewalLikelihoodProbability } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-
-import {
-  useInfiniteGetOrganizationsQuery,
-  GetOrganizationsQuery,
-} from '@organizations/graphql/getOrganizations.generated';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
-
 import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
+import {
+  GetOrganizationsQuery,
+  useInfiniteGetOrganizationsQuery,
+} from '@organizations/graphql/getOrganizations.generated';
 
 import {
   getLikelihoodColor,
@@ -28,8 +27,8 @@ import {
 } from './utils';
 
 interface RenewalLikelihoodCellProps {
-  updatedAt: string | null;
   organizationId: string;
+  updatedAt: string | null;
   currentProbability?: RenewalLikelihoodProbability | null;
   previousProbability?: RenewalLikelihoodProbability | null;
 }
@@ -75,6 +74,7 @@ export const RenewalLikelihoodCell = ({
           });
         },
       );
+
       return { previousEntries };
     },
     onError: (_, __, context) => {

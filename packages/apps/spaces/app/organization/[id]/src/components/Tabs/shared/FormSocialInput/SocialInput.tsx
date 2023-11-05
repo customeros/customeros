@@ -1,4 +1,4 @@
-import { useState, useRef, memo } from 'react';
+import { memo, useRef, useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -8,12 +8,12 @@ import { IconButton } from '@ui/form/IconButton';
 import { Input, InputProps } from '@ui/form/Input';
 import { InputGroup, InputLeftElement } from '@ui/form/InputGroup';
 
-import { SocialIcon } from './SocialIcons';
 import { formatSocialUrl } from '../util';
+import { SocialIcon } from './SocialIcons';
 
 interface SocialInputGroupProps extends InputProps {
-  index?: number;
   value: string;
+  index?: number;
   leftElement?: React.ReactNode;
 }
 

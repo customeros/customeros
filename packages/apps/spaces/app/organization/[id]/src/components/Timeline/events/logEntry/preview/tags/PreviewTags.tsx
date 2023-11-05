@@ -1,20 +1,22 @@
-import React, { useEffect, useRef } from 'react';
-import { Text } from '@ui/typography/Text';
-import { TagsSelect } from '@organization/src/components/Timeline/TimelineActions/logger/components/TagSelect';
 import { useForm } from 'react-inverted-form';
+import React, { useRef, useEffect } from 'react';
+
+import { useQueryClient } from '@tanstack/react-query';
+
+import { Tag } from '@graphql/types';
+import { Text } from '@ui/typography/Text';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useResetLogEntryTagsMutation } from '@organization/src/graphql/resetLogEntryTags.generated';
+import { TagsSelect } from '@organization/src/components/Timeline/TimelineActions/logger/components/TagSelect';
 import {
   LogEntryTagsDto,
   LogEntryTagsFormDtoI,
 } from '@organization/src/components/Timeline/events/logEntry/preview/tags/LogEntryTagsDto';
-import { Tag } from '@graphql/types';
-import { useQueryClient } from '@tanstack/react-query';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useResetLogEntryTagsMutation } from '@organization/src/graphql/resetLogEntryTags.generated';
 
 export const PreviewTags: React.FC<{
+  id: string;
   isAuthor: boolean;
   tags?: Array<Tag>;
-  id: string;
   tagOptions?: Array<{ label: string; value: string }>;
 }> = ({ isAuthor, tags = [], id, tagOptions }) => {
   const logEntryStartedAtValues = new LogEntryTagsDto({ tags });
@@ -45,6 +47,7 @@ export const PreviewTags: React.FC<{
           ],
         });
       }
+
       return next;
     },
   });

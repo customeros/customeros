@@ -3,11 +3,11 @@ type Option = {
   label: string;
 };
 export interface ComposeEmailDtoI {
+  subject: string;
+  content: string;
   to: Array<Option>;
   cc: Array<Option>;
   bcc: Array<Option>;
-  subject: string;
-  content: string;
   // files: Array<any>;
 }
 

@@ -1,15 +1,18 @@
 'use client';
-import React, { FC } from 'react';
-import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { Text } from '@ui/typography/Text';
-import { VStack } from '@ui/layout/Stack';
-import { convert } from 'html-to-text';
-import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
-import { EmailParticipant } from '@graphql/types';
-import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
 import Image from 'next/image';
-import { InteractionEventWithDate } from '../../types';
+import React, { FC } from 'react';
+
+import { convert } from 'html-to-text';
+
+import { VStack } from '@ui/layout/Stack';
+import { Text } from '@ui/typography/Text';
+import { EmailParticipant } from '@graphql/types';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
+import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
+import { InteractionEventWithDate } from '../../types';
 
 export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
   email,

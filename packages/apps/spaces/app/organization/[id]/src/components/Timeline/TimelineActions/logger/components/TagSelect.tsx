@@ -1,20 +1,23 @@
 'use client';
-import React, { FC, KeyboardEvent, useEffect, useRef, useState } from 'react';
-import { Text } from '@ui/typography/Text';
-import { Flex } from '@ui/layout/Flex';
 import { OptionsOrGroups } from 'react-select';
-import { AnimatePresence } from 'framer-motion';
-import { chakraComponents } from '@ui/form/SyncSelect';
-import { MultiCreatableSelect } from '@ui/form/MultiCreatableSelect';
-import { tagsSelectStyles } from './tagSelectStyles';
-import { TagButton } from './TagButton';
-import { useTagButtonSlideAnimation } from './useTagButtonSlideAnimation';
 import { useField } from 'react-inverted-form';
+import React, { FC, useRef, useState, useEffect, KeyboardEvent } from 'react';
+
+import { AnimatePresence } from 'framer-motion';
 import { OptionProps } from 'chakra-react-select';
 
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { chakraComponents } from '@ui/form/SyncSelect';
+import { MultiCreatableSelect } from '@ui/form/MultiCreatableSelect';
+
+import { TagButton } from './TagButton';
+import { tagsSelectStyles } from './tagSelectStyles';
+import { useTagButtonSlideAnimation } from './useTagButtonSlideAnimation';
+
 interface EmailParticipantSelect {
-  formId: string;
   name: string;
+  formId: string;
   tags?: Array<{ value: string; label: string }>;
 }
 
@@ -48,6 +51,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
   ) => {
     if (!filterString.slice(1).length) {
       callback(tags);
+
       return;
     }
 
@@ -108,6 +112,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       </div>
     );
   };
+
   return (
     <>
       <AnimatePresence initial={false}>
@@ -181,6 +186,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                     label: input.slice(1),
                   };
                 }
+
                 return {
                   value: input,
                   label: input,
@@ -193,6 +199,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                     label: input.slice(1),
                   };
                 }
+
                 return {
                   value: input,
                   label: input,

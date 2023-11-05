@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
+import ResizeTextarea, { TextareaAutosizeProps } from 'react-textarea-autosize';
 
 import { Textarea, TextareaProps } from '@chakra-ui/react';
-import ResizeTextarea, { TextareaAutosizeProps } from 'react-textarea-autosize';
 
 import { InputGroup, InputLeftElement } from '../InputGroup';
 

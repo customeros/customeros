@@ -1,11 +1,11 @@
-import { useState, useEffect, PropsWithChildren, useRef } from 'react';
+import { useRef, useState, useEffect, PropsWithChildren } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Card } from '@ui/presentation/Card';
 import { ScaleFade } from '@ui/transitions/ScaleFade';
 import {
-  useTimelineEventPreviewMethodsContext,
   useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface TimelinePreviewBackdropProps extends PropsWithChildren {

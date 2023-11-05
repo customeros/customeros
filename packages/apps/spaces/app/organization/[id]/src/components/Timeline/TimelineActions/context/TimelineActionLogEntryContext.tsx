@@ -1,45 +1,49 @@
+import { useForm } from 'react-inverted-form';
+import { VirtuosoHandle } from 'react-virtuoso';
 import {
+  useRef,
   useEffect,
   useContext,
   createContext,
   PropsWithChildren,
-  useRef,
 } from 'react';
-import { useForm } from 'react-inverted-form';
-import { VirtuosoHandle } from 'react-virtuoso';
-import { useRemirror } from '@remirror/react';
+
 import { useSession } from 'next-auth/react';
+import { useRemirror } from '@remirror/react';
 import {
-  UseMutationOptions,
-  useQueryClient,
   InfiniteData,
+  useQueryClient,
+  UseMutationOptions,
 } from '@tanstack/react-query';
 
 import { useDisclosure } from '@ui/utils';
-import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
+import { LogEntry, DataSource } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import {
   LogEntryFormDto,
   LogEntryFormDtoI,
 } from '@organization/src/components/Timeline/TimelineActions/logger/LogEntryFormDto';
 import {
   CreateLogEntryMutation,
-  CreateLogEntryMutationVariables,
   useCreateLogEntryMutation,
+  CreateLogEntryMutationVariables,
 } from '@organization/src/graphql/createLogEntry.generated';
-import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
-import { DataSource, LogEntry } from '@graphql/types';
 
-import { logEntryEditorExtensions } from './extensions';
 import { useTimelineMeta } from '../../shared/state';
-import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
-import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
+import { logEntryEditorExtensions } from './extensions';
 
 export const noop = () => undefined;
 
 interface TimelineActionLogEntryContextContextMethods {
+  isSaving: boolean;
+  remirrorProps: any;
   checkCanExitSafely: () => boolean;
   closeConfirmationDialog: () => void;
+  showLogEntryConfirmationDialog: boolean;
   handleExitEditorAndCleanData: () => void;
   onCreateLogEntry: (
     options?: UseMutationOptions<
@@ -49,9 +53,6 @@ interface TimelineActionLogEntryContextContextMethods {
       unknown
     >,
   ) => void;
-  remirrorProps: any;
-  isSaving: boolean;
-  showLogEntryConfirmationDialog: boolean;
 }
 
 const TimelineActionLogEntryContextContext =
@@ -74,8 +75,8 @@ export const TimelineActionLogEntryContextContextProvider = ({
   invalidateQuery,
   id = '',
 }: PropsWithChildren<{
-  invalidateQuery: () => void;
   id: string;
+  invalidateQuery: () => void;
 }>) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [timelineMeta] = useTimelineMeta();
@@ -125,6 +126,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
         queryKey,
       );
       handleResetEditor();
+
       return { prevTimelineEvents };
     },
     onError: (_, __, context) => {
@@ -182,10 +184,12 @@ export const TimelineActionLogEntryContextContextProvider = ({
     const showLogEntryEditorConfirmationDialog = !isContentEmpty;
     if (showLogEntryEditorConfirmationDialog) {
       onOpen();
+
       return false;
     } else {
       handleResetEditor();
       onClose();
+
       return true;
     }
   };
@@ -212,6 +216,7 @@ function makeEmptyLogEntryWithAliases(
   data: LogEntryFormDto,
 ): LogEntryWithAliases {
   const { tags, ...rest } = data;
+
   return {
     __typename: 'LogEntry',
     id: Math.random().toString(),

@@ -1,5 +1,5 @@
-import { OrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 import { UpdateOrganizationMutationVariables } from '@shared/graphql/updateOrganization.generated';
+import { OrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
 export interface NotesForm {
   id: string;

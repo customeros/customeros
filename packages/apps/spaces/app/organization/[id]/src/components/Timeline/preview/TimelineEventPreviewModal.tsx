@@ -1,24 +1,24 @@
+import { VirtuosoHandle } from 'react-virtuoso';
+
+import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import {
-  Action,
-  InteractionEvent,
-  Meeting,
-  ExternalSystemType,
   Issue,
+  Action,
+  Meeting,
+  InteractionEvent,
+  ExternalSystemType,
 } from '@graphql/types';
+import { IssuePreviewModal } from '@organization/src/components/Timeline/events/issue/IssuePreviewModal';
+import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
+import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
+import { IntercomThreadPreviewModal } from '@organization/src/components/Timeline/events/intercom/IntercomThreadPreviewModal';
+import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { LogEntryUpdateModalContextProvider } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
 
 import { EmailPreviewModal } from '../events/email/EmailPreviewModal';
+import { ActionPreviewModal } from '../events/action/ActionPreviewModal';
 import { MeetingPreviewModal } from '../events/meeting/MeetingPreviewModal';
 import { SlackThreadPreviewModal } from '../events/slack/SlackThreadPreviewModal';
-import { ActionPreviewModal } from '../events/action/ActionPreviewModal';
-
-import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
-import { IntercomThreadPreviewModal } from '@organization/src/components/Timeline/events/intercom/IntercomThreadPreviewModal';
-import { LogEntryPreviewModal } from '@organization/src/components/Timeline/events/logEntry/LogEntryPreviewModal';
-import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
-import { LogEntryUpdateModalContextProvider } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
-import { VirtuosoHandle } from 'react-virtuoso';
-import { IssuePreviewModal } from '@organization/src/components/Timeline/events/issue/IssuePreviewModal';
-import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 interface TimelineEventPreviewModalProps {
   invalidateQuery: () => void;

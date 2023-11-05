@@ -1,3 +1,4 @@
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   useState,
   useEffect,
@@ -5,8 +6,9 @@ import {
   createContext,
   PropsWithChildren,
 } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+
 import { useLocalStorage } from 'usehooks-ts';
+
 import { TimelineEvent } from '../../types';
 import { useDeepLinkToOpenModal } from './useDeeplinkToOpenModal';
 import { useTimelineEventCachedData } from './useTimelineEventCachedData';
@@ -14,8 +16,8 @@ import { useTimelineEventCachedData } from './useTimelineEventCachedData';
 export const noop = () => undefined;
 
 interface TimelineEventPreviewContextMethods {
-  openModal: (id: string) => void;
   closeModal: () => void;
+  openModal: (id: string) => void;
 }
 interface TimelineEventPreviewState {
   isModalOpen: boolean;
@@ -115,6 +117,7 @@ export const TimelineEventPreviewContextContextProvider = ({
     if (!isModalOpen && !isEmail) {
       document.removeEventListener('keydown', handleCloseOnEsc);
     }
+
     return () => {
       document.removeEventListener('keydown', handleCloseOnEsc);
     };

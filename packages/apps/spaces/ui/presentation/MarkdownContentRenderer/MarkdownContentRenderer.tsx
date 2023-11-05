@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
-import { Flex } from '@ui/layout/Flex';
+import ReactMarkdown from 'react-markdown';
+
 import { ChakraProps } from '@chakra-ui/react';
 import { InteractivityProps } from '@chakra-ui/styled-system';
-import ReactMarkdown from 'react-markdown';
+
+import { Flex } from '@ui/layout/Flex';
 import { getTextRendererStyles } from '@ui/theme/textRendererStyles';
 
 interface MarkdownContentRendererProps extends InteractivityProps, ChakraProps {
@@ -23,6 +25,7 @@ export const MarkdownContentRenderer: React.FC<
     () => getTextRendererStyles(showAsInlineText),
     [showAsInlineText],
   );
+
   return (
     <Flex
       as={ReactMarkdown}

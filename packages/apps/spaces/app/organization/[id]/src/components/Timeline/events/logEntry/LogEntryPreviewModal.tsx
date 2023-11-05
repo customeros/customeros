@@ -1,32 +1,35 @@
-import { CardHeader, CardBody } from '@ui/presentation/Card';
-import { Heading } from '@ui/typography/Heading';
-import { Text } from '@ui/typography/Text';
+import React from 'react';
+
+import copy from 'copy-to-clipboard';
+import { useSession } from 'next-auth/react';
+import noteImg from 'public/images/note-img-preview.png';
+
+import { Box } from '@ui/layout/Box';
+import { User } from '@graphql/types';
 import { Flex } from '@ui/layout/Flex';
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { IconButton } from '@ui/form/IconButton';
-import {
-  useTimelineEventPreviewMethodsContext,
-  useTimelineEventPreviewStateContext,
-} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+import { Image } from '@ui/media/Image';
+import { VStack } from '@ui/layout/Stack';
+import { Text } from '@ui/typography/Text';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import copy from 'copy-to-clipboard';
-import { VStack } from '@ui/layout/Stack';
-import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
-import { User } from '@graphql/types';
-import { Box } from '@ui/layout/Box';
-import noteImg from 'public/images/note-img-preview.png';
-import { LogEntryDatePicker } from './preview/LogEntryDatePicker';
-import { Image } from '@ui/media/Image';
-import { LogEntryExternalLink } from './preview/LogEntryExternalLink';
+import { Heading } from '@ui/typography/Heading';
+import { IconButton } from '@ui/form/IconButton';
+import { Tooltip } from '@ui/presentation/Tooltip';
+import { CardBody, CardHeader } from '@ui/presentation/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useSession } from 'next-auth/react';
-import { PreviewTags } from './preview/tags/PreviewTags';
-import { PreviewEditor } from './preview/PreviewEditor';
 import { useGetTagsQuery } from '@organization/src/graphql/getTags.generated';
-import { useLogEntryUpdateContext } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
+import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
-import React from 'react';
+import { useLogEntryUpdateContext } from '@organization/src/components/Timeline/events/logEntry/context/LogEntryUpdateModalContext';
+import {
+  useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
+import { PreviewEditor } from './preview/PreviewEditor';
+import { PreviewTags } from './preview/tags/PreviewTags';
+import { LogEntryDatePicker } from './preview/LogEntryDatePicker';
+import { LogEntryExternalLink } from './preview/LogEntryExternalLink';
 
 const getAuthor = (user: User) => {
   if (!user?.firstName && !user?.lastName) {

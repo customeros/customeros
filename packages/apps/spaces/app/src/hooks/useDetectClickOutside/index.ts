@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useRef } from 'react';
+import { useRef, RefObject, useEffect } from 'react';
 
 export const useDetectClickOutside = <T extends HTMLElement>(
   ref: RefObject<T>,

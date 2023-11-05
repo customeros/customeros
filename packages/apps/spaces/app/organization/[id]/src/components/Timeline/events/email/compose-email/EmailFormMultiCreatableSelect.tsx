@@ -1,17 +1,17 @@
 import React, { forwardRef } from 'react';
-
-import { SelectInstance } from '@ui/form/SyncSelect/Select';
 import { useField } from 'react-inverted-form';
+
 import { AsyncCreatableProps } from '@ui/form/SyncSelect';
-import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
+import { SelectInstance } from '@ui/form/SyncSelect/Select';
 import { MultiCreatableSelect } from '@ui/form/MultiCreatableSelect';
+import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
 
 interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   name: string;
+  Option?: any;
   formId: string;
   customStyles?: any;
   withTooltip?: boolean;
-  Option?: any;
 }
 
 export const EmailFormMultiCreatableSelect = forwardRef<
@@ -23,6 +23,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
   const handleBlur = (stringVal: string) => {
     if (stringVal && emailRegex.test(stringVal)) {
       onBlur([...value, { label: stringVal, value: stringVal }]);
+
       return;
     }
     onBlur(value);

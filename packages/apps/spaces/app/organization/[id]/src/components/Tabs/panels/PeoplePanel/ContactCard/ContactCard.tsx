@@ -1,46 +1,46 @@
 'use client';
-import { MouseEvent, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
+import { useRef, useState, MouseEvent } from 'react';
+
 import { useQueryClient } from '@tanstack/react-query';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import differenceInCalendarMonths from 'date-fns/differenceInCalendarMonths';
 
 import { Flex } from '@ui/layout/Flex';
-import { IconButton } from '@ui/form/IconButton';
-import { Avatar } from '@ui/media/Avatar';
 import { Icons } from '@ui/media/Icon';
+import { Contact } from '@graphql/types';
+import { Avatar } from '@ui/media/Avatar';
+import { useDisclosure } from '@ui/utils';
 import { FormInput } from '@ui/form/Input';
 import { Text } from '@ui/typography/Text';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-import { FormInputGroup } from '@ui/form/InputGroup';
-import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { useOutsideClick } from '@ui/utils';
+import { Fade } from '@ui/transitions/Fade';
+import { User01 } from '@ui/media/icons/User01';
+import { IconButton } from '@ui/form/IconButton';
 import { Collapse } from '@ui/transitions/Collapse';
-import { useDisclosure } from '@ui/utils';
+import { FormInputGroup } from '@ui/form/InputGroup';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useUpdateContactMutation } from '@organization/src/graphql/updateContact.generated';
-import { useUpdateContactRoleMutation } from '@organization/src/graphql/updateContactJobRole.generated';
 import { useDeleteContactMutation } from '@organization/src/graphql/deleteContact.generated';
 import { useAddContactEmailMutation } from '@organization/src/graphql/addContactEmail.generated';
+import { useAddContactSocialMutation } from '@organization/src/graphql/addContactSocial.generated';
 import { useRemoveContactEmailMutation } from '@organization/src/graphql/removeContactEmail.generated';
+import { useUpdateContactRoleMutation } from '@organization/src/graphql/updateContactJobRole.generated';
 import { useAddContactPhoneNumberMutation } from '@organization/src/graphql/addContactPhoneNumber.generated';
 import { useUpdateContactPhoneNumberMutation } from '@organization/src/graphql/updateContactPhoneNumber.generated';
 import { useRemoveContactPhoneNumberMutation } from '@organization/src/graphql/removeContactPhoneNumber.generated';
-
-import { ContactFormDto, ContactForm } from './Contact.dto';
-import { invalidateQuery, timezoneOptions } from '../util';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import { User01 } from '@ui/media/icons/User01';
 import { EmailValidationMessage } from '@organization/src/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
-import { Contact } from '@graphql/types';
-import { Fade } from '@ui/transitions/Fade';
 
-import { FormSocialInput } from '../../../shared/FormSocialInput';
-import { SelectOption } from '@shared/types/SelectOptions';
 import { FormRoleSelect } from './FormRoleSelect';
 import { FormTimezoneSelect } from './FormTimezoneSelect';
-import { useAddContactSocialMutation } from '@organization/src/graphql/addContactSocial.generated';
+import { invalidateQuery, timezoneOptions } from '../util';
+import { ContactForm, ContactFormDto } from './Contact.dto';
+import { FormSocialInput } from '../../../shared/FormSocialInput';
 
 interface ContactCardProps {
   contact: Contact;
@@ -100,6 +100,7 @@ export const ContactCard = ({
   const toggle = (e: MouseEvent<HTMLDivElement>) => {
     if (['name', 'role', 'title'].includes((e.target as any)?.id)) {
       setIsExpanded(true);
+
       return;
     }
     setIsExpanded((prev) => !prev);
@@ -143,6 +144,7 @@ export const ContactCard = ({
               const { name } = action.payload;
               if (name === 'role') return 'description';
               if (name === 'title') return 'jobTitle';
+
               return name;
             })();
 
@@ -152,6 +154,7 @@ export const ContactCard = ({
                   .map((v) => v.value)
                   .join(',');
               }
+
               return action.payload.value;
             })();
 

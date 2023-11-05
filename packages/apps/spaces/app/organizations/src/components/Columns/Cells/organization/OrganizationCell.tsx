@@ -1,10 +1,10 @@
 import { useRouter } from 'next/navigation';
 
-import { Organization } from '@graphql/types';
+import { Flex } from '@ui/layout/Flex';
 import { Avatar } from '@ui/media/Avatar';
 import { Link } from '@ui/navigation/Link';
-import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { Organization } from '@graphql/types';
 import { Tooltip } from '@ui/overlay/Tooltip';
 
 interface OrganizationCellProps {

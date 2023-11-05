@@ -1,20 +1,22 @@
 import React from 'react';
-import { FormControl, FormLabel } from '@chakra-ui/react';
-import { Flex } from '@ui/layout/Flex';
-import { Box } from '@ui/layout/Box';
-import { Calendar } from '@ui/media/icons/Calendar';
-import { Text } from '@ui/typography/Text';
+import { useField } from 'react-inverted-form';
 import {
   DatePicker as ReactDatePicker,
   DatePickerProps as ReactDatePickerProps,
 } from 'react-date-picker';
-import { DateTimeUtils } from '@spaces/utils/date';
+
+import { FormLabel, FormControl } from '@chakra-ui/react';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
 import { Delete } from '@ui/media/icons/Delete';
-import { useField } from 'react-inverted-form';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { Calendar } from '@ui/media/icons/Calendar';
 
 interface DatePickerProps extends ReactDatePickerProps {
-  label: string;
   name: string;
+  label: string;
   formId: string;
 }
 

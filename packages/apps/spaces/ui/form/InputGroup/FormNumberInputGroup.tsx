@@ -1,25 +1,28 @@
 'use client';
 import { FC } from 'react';
 import { useField } from 'react-inverted-form';
-import { InputGroup, InputLeftElement, InputRightElement } from './InputGroup';
+
+import {
+  FormLabel,
+  FormControl,
+  VisuallyHidden,
+  NumberInputProps,
+} from '@chakra-ui/react';
+
 import {
   NumberInput,
   NumberInputField,
 } from '@ui/form/NumberInput/NumberInput';
-import {
-  FormControl,
-  FormLabel,
-  NumberInputProps,
-  VisuallyHidden,
-} from '@chakra-ui/react';
+
+import { InputGroup, InputLeftElement, InputRightElement } from './InputGroup';
 
 interface FormNumberInputGroupProps extends NumberInputProps {
   name: string;
   formId: string;
-  leftElement?: React.ReactNode;
-  rightElement?: React.ReactNode;
   label?: string;
   isLabelVisible?: boolean;
+  leftElement?: React.ReactNode;
+  rightElement?: React.ReactNode;
 }
 
 export const FormNumberInputGroup: FC<FormNumberInputGroupProps> = ({

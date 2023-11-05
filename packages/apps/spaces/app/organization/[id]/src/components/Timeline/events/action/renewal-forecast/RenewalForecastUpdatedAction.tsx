@@ -1,12 +1,13 @@
 import React from 'react';
+
 import { Flex } from '@ui/layout/Flex';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { Text } from '@ui/typography/Text';
 import { Action } from '@graphql/types';
+import { Text } from '@ui/typography/Text';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
-  getCurrencyString,
   getMetadata,
+  getCurrencyString,
 } from '@organization/src/components/Timeline/events/action/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 const DEFAULT_COLOR_SCHEME = 'gray';

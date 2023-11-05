@@ -1,21 +1,23 @@
 'use client';
 import React from 'react';
-import { ClientSafeProvider, LiteralUnion, signIn } from 'next-auth/react';
-import { GridItem } from '@ui/layout/Grid';
-import { Flex } from '@ui/layout/Flex';
-import { Box } from '@ui/layout/Box';
-import { Heading } from '@ui/typography/Heading';
-import { Text } from '@ui/typography/Text';
-import { Button } from '@ui/form/Button';
-import { Center } from '@ui/layout/Center';
-import { Image } from '@ui/media/Image';
-import { Link } from '@ui/navigation/Link';
-import BackgroundGridDot from '../../../public/backgrounds/grid/backgroundGridDot.png';
-import { Google } from '@ui/media/logos/Google';
 
-import CustomOsLogo from './CustomerOS-logo.png';
-import Background from './login-bg.png';
 import { BuiltInProviderType } from 'next-auth/providers';
+import { signIn, LiteralUnion, ClientSafeProvider } from 'next-auth/react';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Image } from '@ui/media/Image';
+import { Button } from '@ui/form/Button';
+import { GridItem } from '@ui/layout/Grid';
+import { Text } from '@ui/typography/Text';
+import { Center } from '@ui/layout/Center';
+import { Link } from '@ui/navigation/Link';
+import { Google } from '@ui/media/logos/Google';
+import { Heading } from '@ui/typography/Heading';
+
+import Background from './login-bg.png';
+import CustomOsLogo from './CustomerOS-logo.png';
+import BackgroundGridDot from '../../../public/backgrounds/grid/backgroundGridDot.png';
 
 export default function SignIn({
   providers,

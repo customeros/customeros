@@ -1,23 +1,24 @@
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { useMemo, forwardRef, useCallback } from 'react';
 
-import { SelectInstance } from '@ui/form/SyncSelect/Select';
 import { OptionProps } from 'chakra-react-select';
+
+import { Tooltip } from '@ui/presentation/Tooltip';
+import { SelectInstance } from '@ui/form/SyncSelect/Select';
+import { multiCreatableSelectStyles } from '@ui/form/MultiCreatableSelect/styles';
 import {
-  AsyncCreatableSelect,
+  ControlProps,
   chakraComponents,
   AsyncCreatableProps,
-  ControlProps,
+  AsyncCreatableSelect,
   MultiValueGenericProps,
 } from '@ui/form/SyncSelect';
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { multiCreatableSelectStyles } from '@ui/form/MultiCreatableSelect/styles';
 
 interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   name: string;
+  Option?: any;
   formId: string;
   customStyles?: any;
   withTooltip?: boolean;
-  Option?: any;
 }
 
 export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
@@ -42,6 +43,7 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
           </chakraComponents.MultiValueLabel>
         );
       }
+
       return (
         <chakraComponents.MultiValueLabel {...rest}>
           {rest.data.label || rest.data.value}

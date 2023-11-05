@@ -1,17 +1,19 @@
 import React, { useMemo } from 'react';
-import parse, {
-  HTMLReactParserOptions,
-  domToReact,
-  Element,
-} from 'html-react-parser';
-import linkifyHtml from 'linkify-html';
 
-import { Flex } from '@ui/layout/Flex';
-import { ImageAttachment } from './ImageAttachment';
+import linkifyHtml from 'linkify-html';
+import sanitizeHtml from 'sanitize-html';
 import { ChakraProps } from '@chakra-ui/react';
 import { InteractivityProps } from '@chakra-ui/styled-system';
-import sanitizeHtml from 'sanitize-html';
+import parse, {
+  Element,
+  domToReact,
+  HTMLReactParserOptions,
+} from 'html-react-parser';
+
+import { Flex } from '@ui/layout/Flex';
 import { getTextRendererStyles } from '@ui/theme/textRendererStyles';
+
+import { ImageAttachment } from './ImageAttachment';
 
 interface HtmlContentRendererProps extends InteractivityProps, ChakraProps {
   htmlContent: string;
@@ -67,6 +69,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
               if (key !== 'style') {
                 result[key] = domNode.attribs[key];
               }
+
               return result;
             },
             {},
@@ -95,6 +98,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
     [showAsInlineText],
   );
   const parsedContent = parse(linkifiedContent, parseOptions);
+
   return (
     <Flex
       flexDir='column'

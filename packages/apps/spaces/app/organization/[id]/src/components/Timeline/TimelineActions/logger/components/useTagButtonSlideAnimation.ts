@@ -1,5 +1,6 @@
-import { useAnimate } from 'framer-motion';
 import { useEffect } from 'react';
+
+import { useAnimate } from 'framer-motion';
 
 export function useTagButtonSlideAnimation(isOpen: boolean) {
   const [scope, animate] = useAnimate();

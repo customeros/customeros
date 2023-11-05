@@ -1,6 +1,6 @@
 'use client';
-import { CardHeader, Card, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
+import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 
 export const MainSection = ({ children }: { children?: React.ReactNode }) => {
   return (

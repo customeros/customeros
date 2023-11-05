@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import { EmailValidationDetails } from '@graphql/types';
 
 interface Props {
@@ -22,14 +23,15 @@ export const validateEmail = ({ email, tenant }: Props) => {
     })
     .catch((e) => {
       console.error('Validation error', e);
+
       return;
     });
 };
 
 export interface MappedObject {
   [key: string]: {
-    condition: boolean | Array<string>;
     message: string;
+    condition: boolean | Array<string>;
   };
 }
 

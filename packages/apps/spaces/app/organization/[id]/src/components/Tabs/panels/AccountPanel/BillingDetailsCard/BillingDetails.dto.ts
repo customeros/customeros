@@ -1,10 +1,11 @@
+import { SelectOption } from '@shared/types/SelectOptions';
 import {
   RenewalCycle,
   BillingDetails,
   BillingDetailsInput,
 } from '@graphql/types';
+
 import { frequencyOptions } from '../utils';
-import { SelectOption } from '@shared/types/SelectOptions';
 
 export interface BillingDetailsForm {
   amount: string | null;

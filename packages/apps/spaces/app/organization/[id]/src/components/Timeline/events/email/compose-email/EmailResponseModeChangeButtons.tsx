@@ -1,12 +1,12 @@
 'use client';
-import { FC, MouseEventHandler, ReactElement } from 'react';
+import { FC, ReactElement, MouseEventHandler } from 'react';
 
-import { CornerUpLeft2 } from '@ui/media/icons/CornerUpLeft2';
-import { CornerUpLeft } from '@ui/media/icons/CornerUpLeft';
-import { CornerUpRight } from '@ui/media/icons/CornerUpRight';
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { IconButton } from '@ui/form/IconButton';
 import { Flex } from '@ui/layout/Flex';
+import { IconButton } from '@ui/form/IconButton';
+import { Tooltip } from '@ui/presentation/Tooltip';
+import { CornerUpLeft } from '@ui/media/icons/CornerUpLeft';
+import { CornerUpLeft2 } from '@ui/media/icons/CornerUpLeft2';
+import { CornerUpRight } from '@ui/media/icons/CornerUpRight';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -14,8 +14,8 @@ const FORWARD_MODE = 'forward';
 
 const TooltipButton: FC<{
   label: string;
-  onClick: MouseEventHandler<HTMLButtonElement>;
   children: ReactElement;
+  onClick: MouseEventHandler<HTMLButtonElement>;
 }> = ({ label, children, onClick }) => (
   <Tooltip label={label}>
     <IconButton

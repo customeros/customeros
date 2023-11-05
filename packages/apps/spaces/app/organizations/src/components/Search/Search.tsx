@@ -1,4 +1,5 @@
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+
 import debounce from 'lodash/debounce';
 
 import { Input } from '@ui/form/Input';

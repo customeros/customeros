@@ -8,9 +8,9 @@ import React, {
 export const noop = () => undefined;
 export type EditorType = 'email' | 'log-entry' | null;
 interface TimelineActionContextContextMethods {
-  showEditor: (editorType: EditorType) => void;
   closeEditor: () => void;
   openedEditor: EditorType;
+  showEditor: (editorType: EditorType) => void;
 }
 
 const TimelineActionContextContext =

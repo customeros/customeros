@@ -1,8 +1,9 @@
 import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
 
-import { Select, SelectInstance, SelectProps } from './Select';
-import { FormControl, FormLabel, VisuallyHidden } from '@chakra-ui/react';
+import { FormLabel, FormControl, VisuallyHidden } from '@chakra-ui/react';
+
+import { Select, SelectProps, SelectInstance } from './Select';
 
 interface FormSelectProps extends SelectProps {
   name: string;

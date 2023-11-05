@@ -5,6 +5,7 @@ export const getMetadata = (metadataString?: string | null) => {
   } catch (error) {
     metadata = '';
   }
+
   return metadata;
 };
 
@@ -27,5 +28,6 @@ export const getCurrencyString = (text: string) => {
     .split(/(\$[\d,]+(\.\d{2})?)/)
     .filter(Boolean)
     .map((item) => (item.endsWith(',') ? item.slice(0, -1) : item));
+
   return match?.[1];
 };

@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+
 import jwt from 'jsonwebtoken';
 
 const WORKSPACE_KEY = process.env.INTEGRATION_APP_WORKSPACE_KEY;

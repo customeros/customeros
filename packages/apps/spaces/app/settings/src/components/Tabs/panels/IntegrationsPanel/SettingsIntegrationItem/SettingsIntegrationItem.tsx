@@ -1,18 +1,20 @@
 import React from 'react';
-import { Button } from '@ui/form/Button';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
+
 import { DeleteIntegrationSettings, UpdateIntegrationSettings } from 'services';
 import {
   Box,
-  Collapse,
   Fade,
   Flex,
-  SlideFade,
   Text,
+  Collapse,
   Textarea,
+  SlideFade,
 } from '@chakra-ui/react';
+
 import { Input } from '@ui/form/Input';
 import { Image } from '@ui/media/Image';
+import { Button } from '@ui/form/Button';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 interface FieldDefinition {
@@ -23,13 +25,13 @@ interface FieldDefinition {
 
 interface Props {
   icon: string;
-  identifier: string;
   name: string;
   state: string;
-  fields?: FieldDefinition[];
+  identifier: string;
   onCancel?: () => void;
   onEnable?: () => void;
   onDisable?: () => void;
+  fields?: FieldDefinition[];
   settingsChanged?: () => void;
 }
 

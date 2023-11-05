@@ -53,5 +53,6 @@ export const getTableFiltersMapped = (fitlers: any) => {
       }
     }
   }
+
   return where;
 };

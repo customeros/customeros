@@ -1,26 +1,26 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { useRef, useState, useEffect, useCallback } from 'react';
+
 import { produce } from 'immer';
+import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Select } from '@ui/form/SyncSelect/Select';
-
+import { SelectOption } from '@shared/types/SelectOptions';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import {
   OrganizationRowDTO,
   GetOrganizationRowResult,
 } from '@organizations/util/Organization.dto';
-import { SelectOption } from '@shared/types/SelectOptions';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
   GetOrganizationsQuery,
   useInfiniteGetOrganizationsQuery,
 } from '@organizations/graphql/getOrganizations.generated';
-import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
-import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
-import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 
 import { relationshipOptions } from './util';
 
@@ -49,6 +49,7 @@ export const OrganizationRelationship = ({
         (old) => {
           const pageIndex =
             organizationsMeta.getOrganization.pagination.page - 1;
+
           return produce(old, (draft) => {
             const content =
               draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;

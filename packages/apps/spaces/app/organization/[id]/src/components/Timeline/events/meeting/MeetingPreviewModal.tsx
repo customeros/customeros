@@ -1,7 +1,8 @@
 'use client';
 
-import { convert } from 'html-to-text';
 import { useForm } from 'react-inverted-form';
+
+import { convert } from 'html-to-text';
 
 import { Icons } from '@ui/media/Icon';
 import { Flex } from '@ui/layout/Flex';
@@ -12,20 +13,20 @@ import { Link } from '@ui/navigation/Link';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { ExternalSystemType, Meeting } from '@graphql/types';
+import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { CardBody, CardHeader, CardFooter } from '@ui/presentation/Card';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { useUpdateMeetingMutation } from '@organization/src/graphql/updateMeeting.generated';
 import { useAddMeetingNoteMutation } from '@organization/src/graphql/addMeetingNote.generated';
-
 import {
-  useTimelineEventPreviewMethodsContext,
   useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
 import { getParticipantEmail } from '../utils';
-import { MeetingIcon, HubspotIcon, CalcomIcon } from './icons';
+import { CalcomIcon, MeetingIcon, HubspotIcon } from './icons';
 
 interface MeetingPreviewModalProps {
   invalidateQuery: () => void;
@@ -129,6 +130,7 @@ export const MeetingPreviewModal = ({
           }
         }
       }
+
       return next;
     },
   });

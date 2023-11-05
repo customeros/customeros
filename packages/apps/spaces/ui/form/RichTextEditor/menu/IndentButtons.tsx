@@ -1,12 +1,16 @@
-import { useCommands } from '@remirror/react';
-import { Flex } from '@chakra-ui/react';
-import { RightIndent } from '@ui/media/icons/RightIndent';
-import { LeftIndent } from '@ui/media/icons/LeftIndent';
 import React from 'react';
+
+import { Flex } from '@chakra-ui/react';
+import { useCommands } from '@remirror/react';
+
+import { LeftIndent } from '@ui/media/icons/LeftIndent';
+import { RightIndent } from '@ui/media/icons/RightIndent';
+
 import { ToolbarButton } from './ToolbarButton';
 
 export const IndentButtons = () => {
   const commands = useCommands();
+
   return (
     <Flex gap={2}>
       <ToolbarButton

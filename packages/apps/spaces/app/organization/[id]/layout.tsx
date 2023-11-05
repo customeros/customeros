@@ -12,8 +12,8 @@ export default async function OrganizationLayout({
   children,
   params: { id },
 }: {
-  children: React.ReactNode;
   params: { id: string };
+  children: React.ReactNode;
 }) {
   const dehydratedState = await getDehydratedState(useOrganizationQuery, {
     id,

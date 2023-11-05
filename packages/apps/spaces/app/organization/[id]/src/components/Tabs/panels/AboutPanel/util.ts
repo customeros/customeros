@@ -1,5 +1,5 @@
-import { GroupedOption, SelectOption } from '@shared/types/SelectOptions';
 import { FundingRound } from '@graphql/types';
+import { SelectOption, GroupedOption } from '@shared/types/SelectOptions';
 
 export const relationshipOptions: SelectOption<boolean>[] = [
   {

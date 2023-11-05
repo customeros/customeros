@@ -1,11 +1,11 @@
+import { VirtuosoHandle } from 'react-virtuoso';
 import {
+  useRef,
+  RefObject,
   useContext,
   createContext,
   PropsWithChildren,
-  useRef,
-  RefObject,
 } from 'react';
-import { VirtuosoHandle } from 'react-virtuoso';
 
 interface TimelineRefContextMethods {
   virtuosoRef: RefObject<VirtuosoHandle> | null;

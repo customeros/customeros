@@ -1,8 +1,9 @@
 import { FC } from 'react';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { Inbox01 } from '@ui/media/icons/Inbox01';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { Inbox01 } from '@ui/media/icons/Inbox01';
 export const EmptyIssueMessage: FC<{
   title?: string;
   description: string;

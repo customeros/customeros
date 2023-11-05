@@ -1,16 +1,16 @@
 'use client';
-import { ReactNode, useEffect, useState } from 'react';
+import { useState, ReactNode, useEffect } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
-import { Box, BoxProps } from '@ui/layout/Box';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
+import { Box, BoxProps } from '@ui/layout/Box';
 
 interface OrganizationPanelProps extends BoxProps {
   title: string;
   bgImage?: string;
-  actionItem?: ReactNode;
   withFade?: boolean;
+  actionItem?: ReactNode;
   shouldBlockPanelScroll?: boolean; // fix for https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
 }
 export const OrganizationPanel = ({

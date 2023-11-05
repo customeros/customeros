@@ -1,15 +1,18 @@
 import { useSearchParams } from 'next/navigation';
-import { Dispatch, SetStateAction, useEffect } from 'react';
-import {
-  GetTimelineEventsDocument,
-  GetTimelineEventsQuery,
-  useGetTimelineEventsQuery,
-} from '@organization/src/graphql/getTimelineEvents.generated';
-import { OrganizationQuery } from '@organization/src/graphql/organization.generated';
+import { Dispatch, useEffect, SetStateAction } from 'react';
+
+import { useQueryClient } from '@tanstack/react-query';
+
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useQueryClient } from '@tanstack/react-query';
+import { OrganizationQuery } from '@organization/src/graphql/organization.generated';
 import { useTimelineEventCachedData } from '@organization/src/components/Timeline/preview/context/useTimelineEventCachedData';
+import {
+  GetTimelineEventsQuery,
+  GetTimelineEventsDocument,
+  useGetTimelineEventsQuery,
+} from '@organization/src/graphql/getTimelineEvents.generated';
+
 import { TimelineEvent } from '../../types';
 
 export const useDeepLinkToOpenModal = ({
@@ -18,10 +21,10 @@ export const useDeepLinkToOpenModal = ({
   setIsModalOpen,
   handleDeleteParams,
 }: {
-  modalContent: TimelineEvent | null;
-  setModalContent: Dispatch<SetStateAction<TimelineEvent | null>>;
-  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
   handleDeleteParams: () => void;
+  modalContent: TimelineEvent | null;
+  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+  setModalContent: Dispatch<SetStateAction<TimelineEvent | null>>;
 }) => {
   const abortController = new AbortController();
 
@@ -53,6 +56,7 @@ export const useDeepLinkToOpenModal = ({
           `timeline-event-not-found-${id}`,
         );
       }
+
       return result.timelineEvents[0] as TimelineEvent;
     } catch (error) {
       handleDeleteParams();
@@ -60,6 +64,7 @@ export const useDeepLinkToOpenModal = ({
         "We couldn't find this event",
         `timeline-event-not-found-${id}`,
       );
+
       return null;
     }
   };
@@ -76,6 +81,7 @@ export const useDeepLinkToOpenModal = ({
             setIsModalOpen(true);
           }
         });
+
         return;
       }
       setModalContent(selectedEvent as TimelineEvent);

@@ -1,28 +1,31 @@
 import React, {
-  ChangeEvent,
-  useCallback,
-  useEffect,
   useRef,
   useState,
+  useEffect,
+  ChangeEvent,
+  useCallback,
 } from 'react';
-import { Input } from '@ui/form/Input';
-import { Flex } from '@ui/layout/Flex';
-import { Divider } from '@ui/presentation/Divider';
-import { Link01 } from '@ui/media/icons/Link01';
-import { Trash01 } from '@ui/media/icons/Trash01';
-import { Check } from '@ui/media/icons/Check';
-import { IconButton } from '@ui/form/IconButton';
-import { getExternalUrl } from '@spaces/utils/getExternalLink';
+
+import { ShortcutHandlerProps } from '@remirror/extension-link';
 import {
   useAttrs,
   useChainedCommands,
   useCurrentSelection,
 } from '@remirror/react';
-import { ShortcutHandlerProps } from '@remirror/extension-link';
+
+import { Input } from '@ui/form/Input';
+import { Flex } from '@ui/layout/Flex';
+import { Check } from '@ui/media/icons/Check';
+import { Link01 } from '@ui/media/icons/Link01';
+import { IconButton } from '@ui/form/IconButton';
+import { Trash01 } from '@ui/media/icons/Trash01';
+import { Divider } from '@ui/presentation/Divider';
+import { getExternalUrl } from '@spaces/utils/getExternalLink';
 
 function getTransformValues(transformStyle: string) {
   if (!transformStyle) return [0, 0];
   const match = transformStyle.match(/translate\((.*)px, (.*)px\)/);
+
   return match ? [Number(match[1]), Number(match[2])] : [0, 0];
 }
 interface LinkComponentProps {
@@ -86,6 +89,7 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
       }
     }
   }, [isEditing, ref, from, to]);
+
   return (
     <Flex
       ref={ref}

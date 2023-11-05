@@ -1,4 +1,4 @@
-import { ComparisonOperator, Filter } from '@graphql/types';
+import { Filter, ComparisonOperator } from '@graphql/types';
 
 export const mapGCliSearchTermsToFilterList = (
   searchTerms: any[],
@@ -31,5 +31,6 @@ export const mapGCliSearchTermsToFilterList = (
       });
     }
   });
+
   return filters;
 };

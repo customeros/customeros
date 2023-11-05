@@ -1,23 +1,23 @@
-import {
-  BlockquoteExtension,
-  BoldExtension,
-  BulletListExtension,
-  FontFamilyExtension,
-  FontSizeExtension,
-  HeadingExtension,
-  ItalicExtension,
-  LinkExtension,
-  NodeFormattingExtension,
-  OrderedListExtension,
-  StrikeExtension,
-  UnderlineExtension,
-  MentionAtomExtension,
-  EmojiExtension,
-  MarkdownExtension,
-  EventsExtension,
-} from 'remirror/extensions';
 import data from 'svgmoji/emoji-slack.json';
 import { IdentifierSchemaAttributes } from 'remirror';
+import {
+  BoldExtension,
+  LinkExtension,
+  EmojiExtension,
+  ItalicExtension,
+  StrikeExtension,
+  EventsExtension,
+  HeadingExtension,
+  FontSizeExtension,
+  MarkdownExtension,
+  UnderlineExtension,
+  BlockquoteExtension,
+  BulletListExtension,
+  FontFamilyExtension,
+  OrderedListExtension,
+  MentionAtomExtension,
+  NodeFormattingExtension,
+} from 'remirror/extensions';
 
 export const basicEditorExtensions = () => [
   new ItalicExtension(),

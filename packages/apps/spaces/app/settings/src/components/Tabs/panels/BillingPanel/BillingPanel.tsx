@@ -2,8 +2,8 @@
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { Heading } from '@ui/typography/Heading';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { Heading } from '@ui/typography/Heading';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Divider } from '@ui/presentation/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';

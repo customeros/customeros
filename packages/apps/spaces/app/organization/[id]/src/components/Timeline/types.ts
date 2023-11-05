@@ -1,16 +1,16 @@
 import {
-  Action,
-  InteractionEvent,
-  Issue,
-  LogEntry,
-  Meeting,
   User,
+  Issue,
+  Action,
+  Meeting,
+  LogEntry,
+  InteractionEvent,
 } from '@graphql/types';
 
 export type InteractionEventWithDate = InteractionEvent & { date: string };
 export type LogEntryWithAliases = LogEntry & {
-  logEntryStartedAt: string;
   logEntryCreatedBy: User;
+  logEntryStartedAt: string;
 };
 
 export type IssueWithAliases = Issue & {

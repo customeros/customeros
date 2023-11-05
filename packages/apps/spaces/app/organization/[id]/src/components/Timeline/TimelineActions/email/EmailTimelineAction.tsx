@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
+
 import { Box } from '@ui/layout/Box';
-import { ComposeEmailContainer } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmailContainer';
-import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
-import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
+import { ComposeEmailContainer } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmailContainer';
+import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
+import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
 
 export const EmailTimelineAction: React.FC = () => {
   const {

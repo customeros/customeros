@@ -1,12 +1,12 @@
 'use client';
 
 import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
 import { Icons } from '@ui/media/Icon';
-import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
-import { CardHeader } from '@ui/presentation/Card';
 import { Card } from '@ui/layout/Card';
+import { Button } from '@ui/form/Button';
+import { CardHeader } from '@ui/presentation/Card';
 import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
+import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
 export const PeoplePanelSkeleton = () => {
   return (

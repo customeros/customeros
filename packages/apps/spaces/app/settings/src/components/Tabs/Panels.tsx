@@ -1,5 +1,5 @@
-import { BillingPanel } from './panels/BillingPanel';
 import { AuthPanel } from './panels/AuthPanel';
+import { BillingPanel } from './panels/BillingPanel';
 import { IntegrationsPanel } from './panels/IntegrationsPanel';
 
 interface PanelsProps {

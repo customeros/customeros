@@ -1,4 +1,4 @@
-import { useState, useRef, memo } from 'react';
+import { memo, useRef, useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';

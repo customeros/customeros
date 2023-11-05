@@ -1,6 +1,7 @@
 import omit from 'lodash/omit';
-import { StylesConfig, GroupBase, OptionProps } from 'chakra-react-select';
 import { CSSWithMultiValues } from '@chakra-ui/react';
+import { GroupBase, OptionProps, StylesConfig } from 'chakra-react-select';
+
 import { suggestedTags } from './TagSelect';
 
 type ChakraStylesConfig<
@@ -84,7 +85,7 @@ export const tagsSelectStyles = (
   },
   option: (
     props: CSSWithMultiValues,
-    { isSelected, isFocused }: { isSelected: boolean; isFocused: boolean },
+    { isSelected, isFocused }: { isFocused: boolean; isSelected: boolean },
   ) => ({
     ...props,
     my: '2px',

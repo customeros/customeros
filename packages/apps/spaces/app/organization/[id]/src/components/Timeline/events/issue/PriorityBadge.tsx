@@ -1,10 +1,11 @@
 import React, { ReactNode } from 'react';
+
 import { Flex } from '@ui/layout/Flex';
-import { AlertSquare } from '@ui/media/icons/AlertSquare';
 import { Tooltip } from '@ui/overlay/Tooltip';
+import { AlertSquare } from '@ui/media/icons/AlertSquare';
+import { PriorityLow } from '@ui/media/icons/PriorityLow';
 import { PriorityHigh } from '@ui/media/icons/PriorityHigh';
 import { PriorityMedium } from '@ui/media/icons/PriorityMedium';
-import { PriorityLow } from '@ui/media/icons/PriorityLow';
 import { DotsHorizontal } from '@ui/media/icons/DotsHorizontal';
 
 export type Priority = 'low' | 'medium' | 'high' | 'normal' | 'urgent';

@@ -1,5 +1,6 @@
-import { GraphQLClient } from 'graphql-request';
 import { headers } from 'next/headers';
+
+import { GraphQLClient } from 'graphql-request';
 
 export const getServerGraphQLClient = () => {
   return new GraphQLClient(

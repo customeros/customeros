@@ -1,4 +1,5 @@
-import { InfiniteData, QueryKey, useQueryClient } from '@tanstack/react-query';
+import { QueryKey, InfiniteData, useQueryClient } from '@tanstack/react-query';
+
 import { GetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 type EventWithId = { id: string; [key: string]: any };
 
@@ -19,6 +20,7 @@ export function useUpdateCacheWithExistingEvent() {
               if (event.id === updatedEvent?.id) {
                 return { ...event, ...updatedEvent };
               }
+
               return event;
             },
           );

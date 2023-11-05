@@ -1,11 +1,11 @@
 import { QueryClient } from '@tanstack/react-query';
 
+import { SelectOption } from '@shared/types/SelectOptions';
 import {
   Maybe,
-  RenewalLikelihoodProbability,
   RenewalCycle,
+  RenewalLikelihoodProbability,
 } from '@graphql/types';
-import { SelectOption } from '@shared/types/SelectOptions';
 import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
 export const invalidateAccountDetailsQuery = (

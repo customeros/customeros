@@ -1,18 +1,21 @@
 'use client';
 import React, { FC } from 'react';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { CardBody, CardHeader, CardFooter, Card } from '@ui/layout/Card';
-import { IssueBgPattern } from '@ui/media/logos/IssueBgPattern';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
-import { CustomTicketTearStyle } from './styles';
+import { IssueBgPattern } from '@ui/media/logos/IssueBgPattern';
+import { Card, CardBody, CardHeader, CardFooter } from '@ui/layout/Card';
 import { IssueWithAliases } from '@organization/src/components/Timeline/types';
-import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
+import { CustomTicketTearStyle } from './styles';
 function getStatusColor(status: string) {
   if (status === 'solved' || status === 'closed') {
     return 'gray';
   }
+
   return 'blue';
 }
 

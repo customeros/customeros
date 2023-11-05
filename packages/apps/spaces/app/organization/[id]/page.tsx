@@ -1,8 +1,9 @@
+import { TimelineContextsProvider } from '@organization/src/components/TimelineContextsProvider';
+
 import { SideSection } from './src/components/SideSection';
 import { MainSection } from './src/components/MainSection';
 import { Panels, TabsContainer } from './src/components/Tabs';
 import { OrganizationTimelineWithActionsContext } from './src/components/Timeline/OrganizationTimelineWithActionsContext';
-import { TimelineContextsProvider } from '@organization/src/components/TimelineContextsProvider';
 
 interface OrganizationPageProps {
   params: { id: string };

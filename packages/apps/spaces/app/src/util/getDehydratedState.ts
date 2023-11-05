@@ -1,5 +1,7 @@
 import { dehydrate } from '@tanstack/react-query';
+
 import getQueryClient from '@shared/util/getQueryClient';
+
 import { getServerGraphQLClient } from './getServerGraphQLClient';
 
 // eslint-disable-next-line

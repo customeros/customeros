@@ -1,13 +1,14 @@
 'use client';
 import { ReactElement, MouseEventHandler } from 'react';
+
 import { Button } from '@ui/form/Button';
 
 interface SidenavItemProps {
   href?: string;
   label: string;
   isActive?: boolean;
-  icon: ((isActive: boolean) => ReactElement) | ReactElement;
   onClick?: () => void;
+  icon: ((isActive: boolean) => ReactElement) | ReactElement;
 }
 
 export const SidenavItem = ({

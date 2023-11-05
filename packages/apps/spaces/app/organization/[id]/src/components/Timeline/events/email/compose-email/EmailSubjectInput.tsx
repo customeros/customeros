@@ -1,13 +1,14 @@
 'use client';
 import React, { FC } from 'react';
-import { Text } from '@ui/typography/Text';
+
 import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
 import { FormInput } from '@ui/form/Input';
 
 interface EmailSubjectInput {
-  fieldName: string;
-  formId: string;
   mt?: number;
+  formId: string;
+  fieldName: string;
 }
 
 export const EmailSubjectInput: FC<EmailSubjectInput> = ({

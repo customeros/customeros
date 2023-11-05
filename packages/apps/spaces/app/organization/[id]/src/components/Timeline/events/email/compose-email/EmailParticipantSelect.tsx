@@ -1,18 +1,19 @@
 'use client';
 import React, { FC } from 'react';
-import { Text } from '@ui/typography/Text';
-import { Flex } from '@ui/layout/Flex';
-import { ComparisonOperator, Contact } from '@graphql/types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { GetContactsEmailListDocument } from '@organization/src/graphql/getContactsEmailList.generated';
-import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
 import { OptionsOrGroups } from 'react-select';
+
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { Contact, ComparisonOperator } from '@graphql/types';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
+import { GetContactsEmailListDocument } from '@organization/src/graphql/getContactsEmailList.generated';
 import { EmailFormMultiCreatableSelect } from '@organization/src/components/Timeline/events/email/compose-email/EmailFormMultiCreatableSelect';
 
 interface EmailParticipantSelect {
+  formId: string;
   entryType: string;
   fieldName: string;
-  formId: string;
   autofocus: boolean;
 }
 
@@ -106,6 +107,7 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           if (d?.__isNew__) {
             return `${d.label}`;
           }
+
           return `${d.label} - ${d.value}`;
         }}
       />

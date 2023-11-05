@@ -1,18 +1,18 @@
-import { LogEntryUpdateInput } from '@graphql/types';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { LogEntryUpdateInput } from '@graphql/types';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 
 export interface LogEntryUpdateFormDtoI {
-  date: Date | string;
   time: string;
   content: string;
+  date: Date | string;
   contentType: string;
 }
 
 export interface LogEntryUpdateForm {
-  date: Date | string;
   time: string;
   content: string;
+  date: Date | string;
   contentType: string;
 }
 
@@ -39,6 +39,7 @@ export class LogEntryUpdateFormDto implements LogEntryUpdateForm {
     const newDate = new Date(date); // Create a new Date object to maintain immutability
     newDate.setHours(Number(timeArray?.[0] ?? '00'));
     newDate.setMinutes(Number(timeArray?.[1] ?? '00'));
+
     return newDate;
   }
   static toPayload(

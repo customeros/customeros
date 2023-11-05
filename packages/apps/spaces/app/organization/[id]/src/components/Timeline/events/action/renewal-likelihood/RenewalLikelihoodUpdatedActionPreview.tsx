@@ -1,18 +1,21 @@
 import React from 'react';
-import { Card, CardFooter } from '@ui/presentation/Card';
+
+import { CardBody } from '@chakra-ui/card';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { Divider } from '@ui/presentation/Divider';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { Card, CardFooter } from '@ui/presentation/Card';
+import { Maybe, Action, RenewalLikelihoodProbability } from '@graphql/types';
+import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import {
-  useTimelineEventPreviewMethodsContext,
   useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import { CardBody } from '@chakra-ui/card';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { Divider } from '@ui/presentation/Divider';
-import { Action, Maybe, RenewalLikelihoodProbability } from '@graphql/types';
-import { getLikelihoodDisplayData, getMetadata } from '../utils';
+
+import { getMetadata, getLikelihoodDisplayData } from '../utils';
 
 export const RenewalLikelihoodUpdatedActionPreview = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();

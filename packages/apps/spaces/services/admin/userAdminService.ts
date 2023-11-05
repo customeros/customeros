@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 export interface OAuthToken {
+  scope: string;
+  expiresAt: Date;
+  idToken: string;
   accessToken: string;
   refreshToken: string;
-  expiresAt: Date;
-  scope: string;
   providerAccountId: string;
-  idToken: string;
 }
 
 export interface SignInRequest {

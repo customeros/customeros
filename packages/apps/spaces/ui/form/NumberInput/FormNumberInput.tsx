@@ -3,11 +3,11 @@
 import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
 
-import { NumberInputProps, NumberInput } from './NumberInput';
+import { NumberInput, NumberInputProps } from './NumberInput';
 
 interface FormNumberInputProps extends NumberInputProps {
-  formId: string;
   name: string;
+  formId: string;
 }
 
 export const FormNumberInput = forwardRef(

@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
+
 import { Box } from '@ui/layout/Box';
-import { Logger } from './components/Logger';
-import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
 import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
+import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
+
+import { Logger } from './components/Logger';
 
 export const LogEntryTimelineAction: React.FC = () => {
   const { virtuosoRef } = useTimelineRefContext();
