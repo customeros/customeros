@@ -36,7 +36,7 @@ func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App, opts ...
 	}
 
 	return func(c *gin.Context) {
-		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "ApiKeyCheckerHTTP")
+		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "ApiKeyCheckerHTTP")
 		spanFinished := false
 		defer func() {
 			if !spanFinished {
@@ -59,7 +59,7 @@ func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App, opts ...
 				return
 			}
 			span.LogFields(log.Bool("cached", false))
-			keyResult := appKeyRepo.FindByKey(c, string(app), kh)
+			keyResult := appKeyRepo.FindByKey(ctx, string(app), kh)
 
 			if keyResult.Error != nil {
 				c.JSON(http.StatusUnauthorized, gin.H{

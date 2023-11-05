@@ -241,19 +241,19 @@ func (r *interactionEventRepository) GetAllForInteractionSessions(ctx context.Co
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := fmt.Sprintf(`MATCH (s:InteractionSession)<-[:PART_OF]-(e:InteractionEvent_%s) 
+		 WHERE s.id IN $ids AND s:InteractionSession_%s
+		 RETURN e, s.id ORDER BY e.createdAt ASC`, tenant, tenant)
+	params := map[string]any{
+		"ids": ids,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (s:InteractionSession_%s)<-[:PART_OF]-(e:InteractionEvent) " +
-		" WHERE s.id IN $ids " +
-		" RETURN e, s.id ORDER BY e.createdAt ASC"
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"tenant": tenant,
-				"ids":    ids,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
@@ -329,19 +329,19 @@ func (r *interactionEventRepository) GetSentByParticipantsForInteractionEvents(c
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent)-[rel:SENT_BY]->(p:Email|PhoneNumber|User|Contact|Organization|JobRole) 
+		WHERE ie.id IN $ids AND ie:InteractionEvent_%s
+		RETURN p, rel, ie.id`, tenant)
+	params := map[string]any{
+		"ids": ids,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (ie:InteractionEvent_%s)-[rel:SENT_BY]->(p:Email|PhoneNumber|User|Contact|Organization|JobRole) " +
-		" WHERE ie.id IN $ids " +
-		" RETURN p, rel, ie.id"
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"tenant": tenant,
-				"ids":    ids,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
@@ -405,19 +405,17 @@ func (r *interactionEventRepository) GetReplyToInteractionEventsForInteractionEv
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent)-[rel:REPLIES_TO]->(rie:InteractionEvent_%s) 
+		 WHERE ie.id IN $ids AND ie:InteractionEvent_%s RETURN rie, ie.id`, tenant, tenant)
+	params := map[string]any{
+		"ids": ids,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
-	query := "MATCH (ie:InteractionEvent_%s)-[rel:REPLIES_TO]->(rie:InteractionEvent_%s) " +
-		" WHERE ie.id IN $ids " +
-		" RETURN rie, ie.id"
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
-			map[string]any{
-				"tenant": tenant,
-				"ids":    ids,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
@@ -434,19 +432,17 @@ func (r *interactionEventRepository) GetSentToParticipantsForInteractionEvents(c
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent)-[rel:SENT_TO]->(p:Email|PhoneNumber|User|Contact|Organization|JobRole) 
+		 WHERE ie.id IN $ids AND ie:InteractionEvent_%s RETURN p, rel, ie.id`, tenant)
+	params := map[string]any{
+		"ids": ids,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
-	query := "MATCH (ie:InteractionEvent_%s)-[rel:SENT_TO]->(p:Email|PhoneNumber|User|Contact|Organization|JobRole) " +
-		" WHERE ie.id IN $ids " +
-		" RETURN p, rel, ie.id"
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"tenant": tenant,
-				"ids":    ids,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)

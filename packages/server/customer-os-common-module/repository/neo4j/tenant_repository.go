@@ -3,6 +3,9 @@ package repository
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type tenantRepository struct {
@@ -19,7 +22,12 @@ func NewTenantRepository(driver *neo4j.DriverWithContext) TenantRepository {
 	}
 }
 
-func (u *tenantRepository) TenantExists(ctx context.Context, name string) (bool, error) {
+func (u *tenantRepository) TenantExists(ctx context.Context, tenantName string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.TenantExists")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, "neo4jRepository")
+	span.LogFields(log.String("tenantName", tenantName))
+
 	session := (*u.driver).NewSession(
 		ctx,
 		neo4j.SessionConfig{
@@ -34,7 +42,7 @@ func (u *tenantRepository) TenantExists(ctx context.Context, name string) (bool,
 			MATCH (t:Tenant {name:$name})
 			RETURN t.id`,
 			map[string]interface{}{
-				"name": name,
+				"name": tenantName,
 			})
 		if err != nil {
 			return nil, err

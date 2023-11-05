@@ -4,7 +4,10 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type StateRepository interface {
@@ -22,6 +25,11 @@ func NewStateRepository(driver *neo4j.DriverWithContext) StateRepository {
 }
 
 func (r *stateRepository) GetStatesByCountryId(ctx context.Context, countryId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindUserByEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, "neo4jRepository")
+	span.LogFields(log.String("countryId", countryId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

@@ -12,15 +12,14 @@ import (
 	"net/http"
 )
 
+const (
+	SpanTagTenant    = tracing.SpanTagTenant
+	SpanTagComponent = tracing.SpanTagComponent
+)
+
 type spanCtxKey struct{}
 
 var activeSpanCtxKey = spanCtxKey{}
-
-const (
-	SpanTagTenant    = "tenant"
-	SpanTagUserId    = "user-id"
-	SpanTagComponent = "component"
-)
 
 func ExtractSpanCtx(ctx context.Context) opentracing.SpanContext {
 	if ctx.Value(activeSpanCtxKey) != nil {
@@ -74,24 +73,24 @@ func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
 	tenant := common.GetTenantFromContext(ctx)
 	loggedInUserId := common.GetUserIdFromContext(ctx)
 	if tenant != "" {
-		span.SetTag(SpanTagTenant, tenant)
+		span.SetTag(tracing.SpanTagTenant, tenant)
 	}
 	if loggedInUserId != "" {
-		span.SetTag(SpanTagUserId, loggedInUserId)
+		span.SetTag(tracing.SpanTagUserId, loggedInUserId)
 	}
 }
 
 func SetDefaultResolverSpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
-	span.SetTag(SpanTagComponent, constants.ComponentResolver)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 }
 
 func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
-	span.SetTag(SpanTagComponent, constants.ComponentService)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 }
 
 func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
-	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
 }

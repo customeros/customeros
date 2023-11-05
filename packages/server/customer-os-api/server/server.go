@@ -125,8 +125,8 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
-		commonservice.TenantUserContextEnhancer(ctx, commonservice.USERNAME_OR_TENANT, commonServices.CommonRepositories, commonservice.WithCache(commonCache)),
 		commonservice.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonservice.CUSTOMER_OS_API, commonservice.WithCache(commonCache)),
+		commonservice.TenantUserContextEnhancer(commonservice.USERNAME_OR_TENANT, commonServices.CommonRepositories, commonservice.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())

@@ -5,7 +5,10 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type StateService interface {
@@ -24,6 +27,11 @@ func NewStateService(repository *repository.Repositories) StateService {
 }
 
 func (s *stateService) GetStatesByCountryId(ctx context.Context, countryId string) ([]*entity.StateEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "StateService.GetStatesByCountryId")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, "service")
+	span.LogFields(log.String("countryId", countryId))
+
 	nodes, err := s.repositories.StateRepository.GetStatesByCountryId(ctx, countryId)
 	if err != nil {
 		return nil, err
