@@ -42,7 +42,7 @@ func (i *Loaders) GetJobRolesForUser(ctx context.Context, userId string) (*entit
 }
 
 func (b *jobRoleBatcher) getJobRolesForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleDataLoader.getJobRolesForContacts", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleDataLoader.getJobRolesForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -92,7 +92,7 @@ func (b *jobRoleBatcher) getJobRolesForContacts(ctx context.Context, keys datalo
 }
 
 func (b *jobRoleBatcher) getJobRolesForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleDataLoader.getJobRolesForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleDataLoader.getJobRolesForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -142,7 +142,7 @@ func (b *jobRoleBatcher) getJobRolesForOrganizations(ctx context.Context, keys d
 }
 
 func (b *jobRoleBatcher) getJobRolesForUsers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleDataLoader.getJobRolesForUsers", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleDataLoader.getJobRolesForUsers")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

@@ -262,19 +262,20 @@ func (r *tagRepository) GetForLogEntries(ctx context.Context, tenant string, log
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := fmt.Sprintf(`MATCH (l:LogEntry_%s)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			WHERE l.id IN $logEntryIds
+	cypher := fmt.Sprintf(`MATCH (l:LogEntry)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			WHERE l.id IN $logEntryIds AND l:LogEntry_%s
 			RETURN tag, rel, l.id ORDER BY rel.taggedAt, tag.name`, tenant)
+	params := map[string]any{
+		"tenant":      tenant,
+		"logEntryIds": logEntryIds,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":      tenant,
-				"logEntryIds": logEntryIds,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)

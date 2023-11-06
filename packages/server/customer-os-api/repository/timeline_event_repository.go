@@ -337,24 +337,22 @@ func (r *timelineEventRepository) GetTimelineEventsWithIds(ctx context.Context, 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsWithIds")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
+	cypher := fmt.Sprintf(`MATCH (a:TimelineEvent) WHERE a.id in $ids AND a:TimelineEvent_%s RETURN a`, tenant)
 	params := map[string]any{
 		"ids": ids,
 	}
-	query := fmt.Sprintf(`MATCH (a:TimelineEvent_%s) WHERE a.id in $ids RETURN a`, tenant)
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
 
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
-	span.LogFields(log.String("query", query))
 	return records.([]*dbtype.Node), err
 }
 

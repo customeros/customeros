@@ -32,7 +32,7 @@ func (i *Loaders) GetAttendedByParticipantsForMeeting(ctx context.Context, conta
 }
 
 func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingParticipantDataLoader.getCreatedByParticipantsForMeeting", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingParticipantDataLoader.getCreatedByParticipantsForMeeting")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -82,7 +82,7 @@ func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx conte
 }
 
 func (b *meetingParticipantBatcher) getAttendedByParticipantsForMeeting(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingParticipantDataLoader.getAttendedByParticipantsForMeeting", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingParticipantDataLoader.getAttendedByParticipantsForMeeting")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

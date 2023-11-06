@@ -27,12 +27,12 @@ func NewDomainService(log logger.Logger, repository *repository.Repositories) Do
 }
 
 func (s *domainService) GetDomainsForOrganizations(ctx context.Context, organizationIds []string) (*entity.DomainEntities, error) {
-	tags, err := s.repositories.DomainRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+	domains, err := s.repositories.DomainRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
 	if err != nil {
 		return nil, err
 	}
 	domainEntities := entity.DomainEntities{}
-	for _, v := range tags {
+	for _, v := range domains {
 		domainEntity := s.mapDbNodeToDomainEntity(*v.Node)
 		domainEntity.DataloaderKey = v.LinkedNodeId
 		domainEntities = append(domainEntities, *domainEntity)

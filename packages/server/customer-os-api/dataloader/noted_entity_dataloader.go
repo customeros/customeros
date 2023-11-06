@@ -22,7 +22,7 @@ func (i *Loaders) GetNotedEntitiesForNote(ctx context.Context, noteId string) (*
 }
 
 func (b *notedEntityBatcher) getNotedEntitiesForNotes(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NotedEntityDataLoader.getNotedEntitiesForNotes", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NotedEntityDataLoader.getNotedEntitiesForNotes")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

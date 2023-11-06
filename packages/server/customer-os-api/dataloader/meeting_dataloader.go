@@ -25,7 +25,7 @@ func (i *Loaders) GetMeetingForInteractionEvent(ctx context.Context, interaction
 }
 
 func (b *meetingBatcher) getMeetingsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingDataLoader.getMeetingsForInteractionEvents", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingDataLoader.getMeetingsForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
