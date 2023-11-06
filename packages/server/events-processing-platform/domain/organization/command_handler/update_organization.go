@@ -2,13 +2,13 @@ package command_handler
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -72,8 +72,8 @@ func (h *updateOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 		if eventstore.IsEventStoreErrorCodeWrongExpectedVersion(err) {
 			// Handle concurrency error
 			span.LogFields(log.Int("retryAttempt", attempt+1))
-			time.Sleep(helper.BackoffDelay(attempt)) // backoffDelay is a function that increases the delay with each attempt
-			continue                                 // Retry
+			time.Sleep(utils.BackOffExponentialDelay(attempt)) // backoffDelay is a function that increases the delay with each attempt
+			continue                                           // Retry
 		} else {
 			// Some other error occurred
 			tracing.TraceErr(span, err)

@@ -6,12 +6,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	common_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	emailgrpcservice "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
-	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
-	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	phonenumbergrpcservice "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 )
 
 type SyncToEventStoreService interface {
@@ -55,11 +55,11 @@ func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context
 		return 0, 0, err
 	}
 	for _, v := range records {
-		_, err := s.grpcClients.EmailClient.UpsertEmail(context.Background(), &emailgrpcservice.UpsertEmailGrpcRequest{
+		_, err := s.grpcClients.EmailClient.UpsertEmail(context.Background(), &emailpb.UpsertEmailGrpcRequest{
 			Id:       utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 			Tenant:   v.LinkedNodeId,
 			RawEmail: utils.GetStringPropOrEmpty(v.Node.Props, "rawEmail"),
-			SourceFields: &common_grpc_service.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
 				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
 				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
@@ -94,11 +94,11 @@ func (s *syncToEventStoreService) upsertPhoneNumbersIntoEventStore(ctx context.C
 		return 0, 0, err
 	}
 	for _, v := range records {
-		_, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phonenumbergrpcservice.UpsertPhoneNumberGrpcRequest{
+		_, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phonenumberpb.UpsertPhoneNumberGrpcRequest{
 			Id:          utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 			Tenant:      v.LinkedNodeId,
 			PhoneNumber: utils.GetStringPropOrEmpty(v.Node.Props, "rawPhoneNumber"),
-			SourceFields: &common_grpc_service.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
 				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
 				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
@@ -133,10 +133,10 @@ func (s *syncToEventStoreService) upsertLocationsIntoEventStore(ctx context.Cont
 		return 0, 0, err
 	}
 	for _, v := range records {
-		_, err := s.grpcClients.LocationClient.UpsertLocation(context.Background(), &location_grpc_service.UpsertLocationGrpcRequest{
+		_, err := s.grpcClients.LocationClient.UpsertLocation(context.Background(), &locationpb.UpsertLocationGrpcRequest{
 			Id:     utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 			Tenant: v.LinkedNodeId,
-			SourceFields: &common_grpc_service.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
 				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
 				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
@@ -189,7 +189,7 @@ func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Conte
 		return 0, 0, err
 	}
 	for _, v := range records {
-		_, err := s.grpcClients.ContactClient.UpsertContact(context.Background(), &contact_grpc_service.UpsertContactGrpcRequest{
+		_, err := s.grpcClients.ContactClient.UpsertContact(context.Background(), &contactpb.UpsertContactGrpcRequest{
 			Id:              utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 			Tenant:          v.LinkedNodeId,
 			FirstName:       utils.GetStringPropOrEmpty(v.Node.Props, "firstName"),
@@ -232,7 +232,7 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 		return 0, 0, err
 	}
 	for _, v := range records {
-		_, err := s.grpcClients.OrganizationClient.UpsertOrganization(context.Background(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
+		_, err := s.grpcClients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
 			Id:                utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 			Tenant:            v.LinkedNodeId,
 			Name:              utils.GetStringPropOrEmpty(v.Node.Props, "name"),
@@ -252,7 +252,7 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 			Note:              utils.GetStringPropOrEmpty(v.Node.Props, "note"),
 			ReferenceId:       utils.GetStringPropOrEmpty(v.Node.Props, "referenceId"),
 			IsCustomer:        utils.GetBoolPropOrFalse(v.Node.Props, "isCustomer"),
-			SourceFields: &common_grpc_service.SourceFields{
+			SourceFields: &commonpb.SourceFields{
 				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
 				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
 				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
@@ -278,7 +278,7 @@ func (s *syncToEventStoreService) SyncOrganizationsLinksWithDomains(ctx context.
 
 	records, _ := s.repositories.OrganizationRepository.GetAllDomainLinksCrossTenantsNotSynced(ctx, batchSize)
 	for _, v := range records {
-		_, err := s.grpcClients.OrganizationClient.LinkDomainToOrganization(context.Background(), &organization_grpc_service.LinkDomainToOrganizationGrpcRequest{
+		_, err := s.grpcClients.OrganizationClient.LinkDomainToOrganization(context.Background(), &organizationpb.LinkDomainToOrganizationGrpcRequest{
 			OrganizationId: v.Values[0].(string),
 			Tenant:         v.Values[1].(string),
 			Domain:         v.Values[2].(string),

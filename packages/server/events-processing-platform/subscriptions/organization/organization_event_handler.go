@@ -240,6 +240,9 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 
 	if eventData.Market != market || eventData.Industry != industry {
 		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
 		return err
 	} else {
 		h.log.Infof("No need to update organization %s", organizationId)

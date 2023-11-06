@@ -319,12 +319,13 @@ func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email, ap
 			s.log.Errorf("Error from events processing %s", err.Error())
 			return "", err
 		}
-		for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+		for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
 			emailEntity, findEmailErr := s.GetById(ctx, response.Id)
 			if emailEntity != nil && findEmailErr == nil {
+				span.LogFields(log.Bool("emailSavedInGraphDb", true))
 				break
 			}
-			time.Sleep(time.Duration(i*100) * time.Millisecond)
+			time.Sleep(utils.BackOffIncrementalDelay(i))
 		}
 		span.LogFields(log.String("createdEmailId", response.Id))
 		return response.Id, nil

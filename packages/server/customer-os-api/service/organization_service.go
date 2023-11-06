@@ -24,6 +24,7 @@ import (
 type OrganizationService interface {
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
 	GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
+	ExistsById(ctx context.Context, organizationId string) (bool, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Archive(ctx context.Context, organizationId string) error
@@ -81,6 +82,15 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 		repositories: repositories,
 		grpcClients:  grpcClients,
 	}
+}
+
+func (s *organizationService) ExistsById(ctx context.Context, organizationId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ExistsById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
+
+	return s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, entity.NodeLabel_Organization)
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
