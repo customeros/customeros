@@ -1,5 +1,5 @@
 /* eslint no-console: off */
-const { copyFileSync, chmod, constants } = require('fs');
+const { copyFileSync, chmod } = require('fs');
 const isCI = require('is-ci');
 
 if (!isCI) {
@@ -12,14 +12,10 @@ if (!isCI) {
 
   console.log('pre-commit installed succesfully');
 
-  chmod(
-    process.cwd() + '/../../../.git/hooks/pre-commit',
-    constants.X_OK,
-    (err) => {
-      if (err) throw err;
-      console.log('permissions for pre-commit have changed successfully!');
-    },
-  );
+  chmod(process.cwd() + '/../../../.git/hooks/pre-commit', 0o755, (err) => {
+    if (err) throw err;
+    console.log('permissions for pre-commit have changed successfully!');
+  });
 } else {
   console.log('CI env detected. Skipping setup of pre-commit-hook');
 }
