@@ -32,7 +32,7 @@ func (r *commentResolver) CreatedBy(ctx context.Context, obj *model.Comment) (*m
 func (r *commentResolver) ExternalLinks(ctx context.Context, obj *model.Comment) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetExternalSystemsForComment(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("failed to get external system for comment %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "failed to get external system for comment %s", obj.ID)

@@ -59,11 +59,11 @@ func (r *issueResolver) Comments(ctx context.Context, obj *model.Issue) ([]*mode
 func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetExternalSystemsForIssue(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external system for issue %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for issue %s", obj.ID)
-		return nil, err
+		return nil, nil
 	}
 	return mapper.MapEntitiesToExternalSystems(entities), nil
 }

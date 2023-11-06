@@ -11,8 +11,8 @@ import (
 	"reflect"
 )
 
-func (i *Loaders) GetExternalSystemsForEntity(ctx context.Context, entityId string) (*entity.ExternalSystemEntities, error) {
-	thunk := i.ExternalSystemsForEntity.Load(ctx, dataloader.StringKey(entityId))
+func (i *Loaders) GetExternalSystemsForComment(ctx context.Context, commentId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForComment.Load(ctx, dataloader.StringKey(commentId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -21,19 +21,118 @@ func (i *Loaders) GetExternalSystemsForEntity(ctx context.Context, entityId stri
 	return &resultObj, nil
 }
 
-func (b *externalSystemBatcher) getExternalSystemsForEntities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForEntities")
+func (i *Loaders) GetExternalSystemsForIssue(ctx context.Context, issueId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForIssue.Load(ctx, dataloader.StringKey(issueId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.ExternalSystemEntities)
+	return &resultObj, nil
+}
+
+func (i *Loaders) GetExternalSystemsForOrganization(ctx context.Context, organizationId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.ExternalSystemEntities)
+	return &resultObj, nil
+}
+
+func (i *Loaders) GetExternalSystemsForLogEntry(ctx context.Context, logEntryId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForLogEntry.Load(ctx, dataloader.StringKey(logEntryId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.ExternalSystemEntities)
+	return &resultObj, nil
+}
+
+func (i *Loaders) GetExternalSystemsForMeeting(ctx context.Context, meetingId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForMeeting.Load(ctx, dataloader.StringKey(meetingId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.ExternalSystemEntities)
+	return &resultObj, nil
+}
+
+func (i *Loaders) GetExternalSystemsForInteractionEvent(ctx context.Context, ieId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForInteractionEvent.Load(ctx, dataloader.StringKey(ieId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.ExternalSystemEntities)
+	return &resultObj, nil
+}
+
+func (b *externalSystemBatcher) getExternalSystemsForComments(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForComments")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
+	return b.getExternalSystemsFor(ctx, keys, entity.COMMENT, span)
+}
+
+func (b *externalSystemBatcher) getExternalSystemsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForIssues")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	return b.getExternalSystemsFor(ctx, keys, entity.ISSUE, span)
+}
+
+func (b *externalSystemBatcher) getExternalSystemsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	return b.getExternalSystemsFor(ctx, keys, entity.ORGANIZATION, span)
+}
+
+func (b *externalSystemBatcher) getExternalSystemsForLogEntries(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForLogEntries")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	return b.getExternalSystemsFor(ctx, keys, entity.LOG_ENTRY, span)
+}
+
+func (b *externalSystemBatcher) getExternalSystemsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForMeetings")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	return b.getExternalSystemsFor(ctx, keys, entity.MEETING, span)
+}
+
+func (b *externalSystemBatcher) getExternalSystemsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	return b.getExternalSystemsFor(ctx, keys, entity.INTERACTION_EVENT, span)
+}
+
+func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys dataloader.Keys, entityType entity.EntityType, span opentracing.Span) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ExternalSystemsPtr, err := b.externalSystemService.GetExternalSystemsForEntities(ctx, ids)
+	ExternalSystemsPtr, err := b.externalSystemService.GetExternalSystemsFor(ctx, ids, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
-		if ctx.Err() == context.DeadlineExceeded {
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get external systems for entities")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}

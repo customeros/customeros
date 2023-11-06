@@ -54,7 +54,7 @@ func (r *logEntryResolver) Tags(ctx context.Context, obj *model.LogEntry) ([]*mo
 func (r *logEntryResolver) ExternalLinks(ctx context.Context, obj *model.LogEntry) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetExternalSystemsForLogEntry(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external systems for log entry %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external systems for log entry %s", obj.ID)
