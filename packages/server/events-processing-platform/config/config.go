@@ -105,7 +105,7 @@ type Services struct {
                            industry: Industry per the Global Industry Classification Standard (GISB),
                            industryGroup: Industry Group per the Global Industry Classification Standard (GISB),
                            subIndustry: Sub-industry per the Global Industry Classification Standard (GISB),
-                           targetAudience: analysis of the company'1s target audience,
+                           targetAudience: analysis of the company's target audience,
                            valueProposition: analysis of the company's core value proposition,
                          }"`
 		ScrapeDataPrompt string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"The following is data scraped from a website:  Please combine and format the data into a clean json response
