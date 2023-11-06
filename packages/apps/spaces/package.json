@@ -15,7 +15,7 @@
     "test": "jest",
     "lint": "eslint '**/*.{js,ts,jsx,tsx}'",
     "fix:lint": "eslint '**/*.{js,ts,jsx,tsx}' --fix",
-    "postinstall": "is-ci || echo 'copying pre-commit hook...' && cp ./scripts/pre-commit ../../../.git/hooks && chmod +x ../../../.git/hooks/pre-commit"
+    "postinstall": "node scripts/setup-precommit-hook"
   },
   "dependencies": {
     "@chakra-ui/next-js": "^2.1.4",
