@@ -32,7 +32,7 @@ func (i *Loaders) GetLocationsForOrganization(ctx context.Context, organizationI
 }
 
 func (b *locationBatcher) getLocationsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationDataLoader.getLocationsForContacts", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationDataLoader.getLocationsForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -82,7 +82,7 @@ func (b *locationBatcher) getLocationsForContacts(ctx context.Context, keys data
 }
 
 func (b *locationBatcher) getLocationsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationDataLoader.getLocationsForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationDataLoader.getLocationsForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

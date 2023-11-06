@@ -23,7 +23,7 @@ func (i *Loaders) GetCommentsForIssue(ctx context.Context, issueId string) (*ent
 }
 
 func (b *commentBatcher) getCommentsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentDataLoader.getCommentsForIssues", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentDataLoader.getCommentsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

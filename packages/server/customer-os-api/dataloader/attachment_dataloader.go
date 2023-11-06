@@ -43,7 +43,7 @@ func (i *Loaders) GetAttachmentsForMeeting(ctx context.Context, meetingId string
 }
 
 func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForInteractionEvents", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -92,7 +92,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 }
 
 func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForInteractionSessions", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForInteractionSessions")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -141,7 +141,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Con
 }
 
 func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForMeetings", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentDataLoader.getAttachmentsForMeetings")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

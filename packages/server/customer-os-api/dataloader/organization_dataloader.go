@@ -74,7 +74,7 @@ func (i *Loaders) GetSuggestedMergeToForOrganization(ctx context.Context, organi
 }
 
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForEmails", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForEmails")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -123,7 +123,7 @@ func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, key
 }
 
 func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForPhoneNumbers", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForPhoneNumbers")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -172,7 +172,7 @@ func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Contex
 }
 
 func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSubsidiariesForOrganization", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSubsidiariesForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -221,7 +221,7 @@ func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context
 }
 
 func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSubsidiariesOfForOrganization", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSubsidiariesOfForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -270,7 +270,7 @@ func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Conte
 }
 
 func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForJobRoles", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForJobRoles")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -316,7 +316,7 @@ func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, k
 }
 
 func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSuggestedMergeToForOrganization", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getSuggestedMergeToForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

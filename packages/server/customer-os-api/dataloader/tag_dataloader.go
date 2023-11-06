@@ -52,7 +52,7 @@ func (i *Loaders) GetTagsForLogEntry(ctx context.Context, logEntryId string) (*e
 }
 
 func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -101,7 +101,7 @@ func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloade
 }
 
 func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForContacts", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -150,7 +150,7 @@ func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Key
 }
 
 func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForIssues", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -199,7 +199,7 @@ func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys)
 }
 
 func (b *tagBatcher) getTagsForLogEntries(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForLogEntries", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagDataLoader.getTagsForLogEntries")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

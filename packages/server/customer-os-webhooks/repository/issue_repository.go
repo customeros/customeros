@@ -30,11 +30,10 @@ func NewIssueRepository(driver *neo4j.DriverWithContext, database string) IssueR
 	}
 }
 
-func (r *issueRepository) GetById(parentCtx context.Context, tenant, issueId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "IssueRepository.GetById")
+func (r *issueRepository) GetById(ctx context.Context, tenant, issueId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("issueId", issueId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}) RETURN i`
 	params := map[string]any{

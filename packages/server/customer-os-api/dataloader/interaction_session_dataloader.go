@@ -25,7 +25,7 @@ func (i *Loaders) GetInteractionSessionForInteractionEvent(ctx context.Context, 
 }
 
 func (b *interactionSessionBatcher) getInteractionSessionsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionDataLoader.getInteractionSessionsForInteractionEvents", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionDataLoader.getInteractionSessionsForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

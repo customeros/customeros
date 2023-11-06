@@ -32,7 +32,7 @@ func (i *Loaders) GetEmailsForOrganization(ctx context.Context, organizationId s
 }
 
 func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailDataLoader.getEmailsForContacts", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailDataLoader.getEmailsForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -82,7 +82,7 @@ func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader
 }
 
 func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailDataLoader.getEmailsForOrganizations", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailDataLoader.getEmailsForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

@@ -53,7 +53,7 @@ func (i *Loaders) GetFollowerParticipantsForIssue(ctx context.Context, issueId s
 }
 
 func (b *issueParticipantBatcher) getSubmitterParticipantsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getSubmitterParticipantsForIssues", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getSubmitterParticipantsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -106,7 +106,7 @@ func (b *issueParticipantBatcher) getSubmitterParticipantsForIssues(ctx context.
 }
 
 func (b *issueParticipantBatcher) getReporterParticipantsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getReporterParticipantsForIssues", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getReporterParticipantsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -159,7 +159,7 @@ func (b *issueParticipantBatcher) getReporterParticipantsForIssues(ctx context.C
 }
 
 func (b *issueParticipantBatcher) getAssigneeParticipantsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getAssigneeParticipantsForIssues", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getAssigneeParticipantsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -212,7 +212,7 @@ func (b *issueParticipantBatcher) getAssigneeParticipantsForIssues(ctx context.C
 }
 
 func (b *issueParticipantBatcher) getFollowerParticipantsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getFollowerParticipantsForIssues", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueParticipantDataLoader.getFollowerParticipantsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

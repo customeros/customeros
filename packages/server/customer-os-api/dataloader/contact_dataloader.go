@@ -44,7 +44,7 @@ func (i *Loaders) GetContactForJobRole(ctx context.Context, jobRoleId string) (*
 }
 
 func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForEmails", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForEmails")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -93,7 +93,7 @@ func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataload
 }
 
 func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForPhoneNumbers", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForPhoneNumbers")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -142,7 +142,7 @@ func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys da
 }
 
 func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForJobRoles", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactsForJobRoles")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

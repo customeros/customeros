@@ -22,7 +22,7 @@ func (i *Loaders) GetAttendedByParticipantsForInteractionSession(ctx context.Con
 }
 
 func (b *interactionSessionParticipantBatcher) getAttendedByParticipantsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionParticipantDataLoader.getAttendedByParticipantsForInteractionSessions", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionParticipantDataLoader.getAttendedByParticipantsForInteractionSessions")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

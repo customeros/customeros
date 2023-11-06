@@ -75,16 +75,16 @@ func (r *issueRepository) GetById(ctx context.Context, tenant, issueId string) (
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	cypher := fmt.Sprintf(`MATCH (i:Issue:Issue_%s {id:$issueId}) RETURN i`, tenant)
+	params := map[string]any{
+		"issueId": issueId,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
-
-	query := `MATCH (i:Issue_%s {id:$issueId}) RETURN i`
-
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"issueId": issueId,
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (r *issueRepository) GetById(ctx context.Context, tenant, issueId string) (
 }
 
 func (r *issueRepository) GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetById")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetAllForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 

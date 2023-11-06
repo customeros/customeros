@@ -23,7 +23,7 @@ func (i *Loaders) GetCalendarsForUser(ctx context.Context, userId string) (*enti
 }
 
 func (b *calendarBatcher) getCalendarsForUsers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CalendarDataLoader.getCalendarsForUsers", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CalendarDataLoader.getCalendarsForUsers")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

@@ -22,7 +22,7 @@ func (i *Loaders) GetDescribesForAnalysis(ctx context.Context, analysisId string
 }
 
 func (b *analysisBatcher) getDescribesForAnalysis(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisDataLoader.getDescribesForAnalysis", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisDataLoader.getDescribesForAnalysis")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))

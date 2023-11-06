@@ -22,7 +22,7 @@ func (i *Loaders) GetExternalSystemsForEntity(ctx context.Context, entityId stri
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForEntities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForEntities", opentracing.ChildOf(tracing.ExtractSpanCtx(ctx)))
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForEntities")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
