@@ -1,18 +1,18 @@
 import omit from 'lodash/omit';
-import { CSSWithMultiValues } from '@chakra-ui/react';
-import { GroupBase, OptionProps, StylesConfig } from 'chakra-react-select';
+import {
+  GroupBase,
+  OptionProps,
+  ChakraStylesConfig,
+} from 'chakra-react-select';
+
+import { CSSWithMultiValues } from '@ui/utils';
 
 import { suggestedTags } from './TagSelect';
 
-type ChakraStylesConfig<
-  OptionType = unknown,
-  GroupType extends GroupBase<OptionType> = GroupBase<OptionType>,
-> = Partial<StylesConfig<OptionType, true, GroupType>> & {
-  [key: string]: ((...args: any[]) => CSSWithMultiValues) | undefined;
-};
-
+// TODO: Pass the return values directly to `chakraStyles` instead of wrapping it in a function
 export const tagsSelectStyles = (
-  chakraStyles: ChakraStylesConfig<unknown, GroupBase<unknown>> | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  chakraStyles: ChakraStylesConfig<any, any, any> | undefined,
 ) => ({
   multiValue: (base: CSSWithMultiValues) => ({
     ...base,
@@ -117,15 +117,18 @@ export const tagsSelectStyles = (
     overflowY: 'auto',
     fontSize: 'inherit',
   }),
-  ...omit<ChakraStylesConfig<unknown, GroupBase<unknown>>>(chakraStyles, [
-    'container',
-    'multiValueRemove',
-    'multiValue',
-    'clearIndicator',
-    'menuList',
-    'option',
-    'groupHeading',
-    'input',
-    'valueContainer',
-  ]),
+  ...omit<ChakraStylesConfig<unknown, false, GroupBase<unknown>>>(
+    chakraStyles,
+    [
+      'container',
+      'multiValueRemove',
+      'multiValue',
+      'clearIndicator',
+      'menuList',
+      'option',
+      'groupHeading',
+      'input',
+      'valueContainer',
+    ],
+  ),
 });

@@ -4,7 +4,7 @@ import { useField } from 'react-inverted-form';
 import React, { FC, useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 import { AnimatePresence } from 'framer-motion';
-import { OptionProps } from 'chakra-react-select';
+import { GroupBase, OptionProps } from 'chakra-react-select';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -47,7 +47,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
   const getFilteredSuggestions = (
     filterString: string,
-    callback: (options: OptionsOrGroups<any, any>) => void,
+    callback: (options: OptionsOrGroups<unknown, GroupBase<unknown>>) => void,
   ) => {
     if (!filterString.slice(1).length) {
       callback(tags);
@@ -55,8 +55,9 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       return;
     }
 
-    const options: OptionsOrGroups<string, any> = tags.filter((e) =>
-      e.label.toLowerCase().includes(filterString.slice(1)?.toLowerCase()),
+    const options: OptionsOrGroups<unknown, GroupBase<unknown>> = tags.filter(
+      (e) =>
+        e.label.toLowerCase().includes(filterString.slice(1)?.toLowerCase()),
     );
 
     callback(options);
@@ -205,6 +206,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                   label: input,
                 };
               }}
+              // @ts-expect-error remove this in favour of chakraStyles
               customStyles={tagsSelectStyles}
             />
           )}

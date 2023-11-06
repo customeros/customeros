@@ -1,13 +1,10 @@
 'use client';
-import { GetServerSidePropsContext } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState, useEffect, ChangeEvent } from 'react';
 
 import axios from 'axios';
-import { getServerSession } from 'next-auth/next';
 import { signIn, useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { RevokeAccess } from 'services/admin/userAdminService';
 import {
   GetSlackSettings,
@@ -288,9 +285,3 @@ export const AuthPanel = () => {
     </>
   );
 };
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const session = await getServerSession(context.req, context.res, authOptions);
-
-  return { props: { session } };
-}

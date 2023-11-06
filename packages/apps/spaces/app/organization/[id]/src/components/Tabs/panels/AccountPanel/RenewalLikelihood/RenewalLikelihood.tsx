@@ -1,8 +1,7 @@
 'use client';
-import { UseDisclosureReturn } from '@chakra-ui/hooks/dist/use-disclosure';
-
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { UseDisclosureReturn } from '@ui/utils';
 import { Heading } from '@ui/typography/Heading';
 import { IconButton } from '@ui/form/IconButton';
 import { Divider } from '@ui/presentation/Divider';

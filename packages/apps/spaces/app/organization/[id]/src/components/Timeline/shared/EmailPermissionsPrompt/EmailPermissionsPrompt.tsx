@@ -1,8 +1,8 @@
 import { FC } from 'react';
 
-import { Box } from '@chakra-ui/react';
 import { signIn } from 'next-auth/react';
 
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';

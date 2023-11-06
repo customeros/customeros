@@ -1,13 +1,11 @@
 import React from 'react';
 
-import { CardBody } from '@chakra-ui/card';
-
 import { Flex } from '@ui/layout/Flex';
 import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { Divider } from '@ui/presentation/Divider';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
-import { Card, CardFooter } from '@ui/presentation/Card';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
   getMetadata,

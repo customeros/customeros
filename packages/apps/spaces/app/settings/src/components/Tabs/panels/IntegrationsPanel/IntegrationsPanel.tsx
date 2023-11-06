@@ -2,7 +2,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 
 import Fuse from 'fuse.js';
-import { Text, VStack } from '@chakra-ui/react';
 import { GetIntegrationsSettings } from 'services';
 import {
   useConnections,
@@ -11,6 +10,8 @@ import {
 } from '@integration-app/react';
 
 import { Input } from '@ui/form/Input';
+import { VStack } from '@ui/layout/Stack';
+import { Text } from '@ui/typography/Text';
 import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { Skeleton } from '@ui/presentation/Skeleton';
@@ -41,7 +42,9 @@ export const IntegrationsPanel = () => {
         const map = integrations.map((integration) => {
           return {
             ...integration,
-            state: data[integration.key]?.state ?? 'INACTIVE',
+            state:
+              (data as Record<string, IntegrationItem>)[integration.key]
+                ?.state ?? 'INACTIVE',
           };
         });
 

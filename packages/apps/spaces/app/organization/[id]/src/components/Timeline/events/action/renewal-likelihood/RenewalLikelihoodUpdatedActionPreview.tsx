@@ -1,13 +1,11 @@
 import React from 'react';
 
-import { CardBody } from '@chakra-ui/card';
-
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Divider } from '@ui/presentation/Divider';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
-import { Card, CardFooter } from '@ui/presentation/Card';
-import { Maybe, Action, RenewalLikelihoodProbability } from '@graphql/types';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { Action, RenewalLikelihoodProbability } from '@graphql/types';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import {
@@ -83,19 +81,3 @@ export const RenewalLikelihoodUpdatedActionPreview = () => {
     </>
   );
 };
-function getRenewalColor(
-  data?: Maybe<RenewalLikelihoodProbability> | undefined,
-) {
-  switch (data) {
-    case 'HIGH':
-      return 'success.500';
-    case 'MEDIUM':
-      return 'warning.500';
-    case 'LOW':
-      return 'error.500';
-    case 'ZERO':
-      return 'gray.700';
-    default:
-      return 'gray.400';
-  }
-}

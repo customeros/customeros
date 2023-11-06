@@ -61,7 +61,9 @@ files.forEach((name) => {
     const filePath = process.cwd() + '/ui/media/icons/' + outFileName;
 
     writeFileSync(filePath, formattedOutContent);
-  } catch (e) {}
+  } catch (e) {
+    // handle error here
+  }
 });
 
 function camelize(str) {

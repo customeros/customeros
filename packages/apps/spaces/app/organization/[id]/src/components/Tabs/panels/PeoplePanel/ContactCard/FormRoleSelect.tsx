@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 
-import { Flex } from '@chakra-ui/react';
-
+import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
 import { FormSelect } from '@ui/form/SyncSelect';

@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import React, { FC } from 'react';
 
 import { Box } from '@ui/layout/Box';

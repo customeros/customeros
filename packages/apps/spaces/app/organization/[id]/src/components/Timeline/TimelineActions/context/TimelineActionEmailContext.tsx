@@ -29,9 +29,12 @@ import { useTimelineActionContext } from './TimelineActionContext';
 
 export const noop = () => undefined;
 
+// TODO: type those any props accordingly
 interface TimelineActionEmailContextContextMethods {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   state: any;
   formId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remirrorProps: any;
   isSending: boolean;
   onCreateEmail: () => void;
@@ -108,7 +111,7 @@ export const TimelineActionEmailContextContextProvider = ({
     reset();
   };
 
-  const handleEmailSendSuccess = async (response: any) => {
+  const handleEmailSendSuccess = async (response: unknown) => {
     await updateTimelineCache(response, queryKey);
 
     // no timeout needed is this case as the event id is created when this is called

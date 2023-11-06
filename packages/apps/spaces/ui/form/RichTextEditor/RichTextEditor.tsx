@@ -18,6 +18,8 @@ export const RichTextEditor: FC<
     formId: string;
     placeholder?: string;
     showToolbar: boolean;
+    // exhaustively typing this is not really necessary for us at the moment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } & RemirrorProps<any> &
     PropsWithChildren
 > = forwardRef(

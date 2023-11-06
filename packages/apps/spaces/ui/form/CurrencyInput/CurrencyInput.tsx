@@ -1,4 +1,4 @@
-import React, { ForwardedRef } from 'react';
+import React from 'react';
 
 import {
   FormLabel,
@@ -29,7 +29,10 @@ export interface CurrencyInputProps
   formatValue?: (val: string) => string;
 }
 
-export const CurrencyInput = React.forwardRef(
+export const CurrencyInput = React.forwardRef<
+  HTMLInputElement,
+  CurrencyInputProps
+>(
   (
     {
       isLabelVisible,
@@ -41,8 +44,8 @@ export const CurrencyInput = React.forwardRef(
       formatValue,
       parseValue,
       ...rest
-    }: CurrencyInputProps,
-    ref: ForwardedRef<any>,
+    },
+    ref,
   ) => {
     const handleValueChange = (valueString: string) => {
       // handle weird case of blurring the field with an empty value

@@ -15,13 +15,13 @@ import {
 } from '@ui/overlay/AlertDialog';
 
 interface ConfirmDeleteDialogProps {
-  icon?: any;
   label: string;
   isOpen: boolean;
   isLoading?: boolean;
   onClose: () => void;
   description?: string;
   colorScheme?: string;
+  icon?: React.ReactNode;
   body?: React.ReactNode;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;

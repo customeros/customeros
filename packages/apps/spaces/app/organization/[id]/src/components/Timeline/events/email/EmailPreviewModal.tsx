@@ -118,7 +118,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     }
   };
 
-  const handleEmailSendSuccess = async (response: any) => {
+  const handleEmailSendSuccess = async (response: unknown) => {
     await updateTimelineCache(response, queryKey);
 
     setDefaultValues(defaultValues);

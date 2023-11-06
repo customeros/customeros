@@ -33,6 +33,8 @@ import {
   InteractionEventWithDate,
 } from './types';
 
+// TODO: type this context accordingly
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
     <Button

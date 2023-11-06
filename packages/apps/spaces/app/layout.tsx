@@ -6,8 +6,9 @@ import { ToastContainer } from 'react-toastify';
 
 import { HighlightInit } from '@highlight-run/next/client';
 
+import { ThemeProvider } from '@ui/theme/ThemeProvider';
+
 import { Providers } from './src/components/Providers/Providers';
-import { ThemeProvider } from './src/components/Providers/ThemeProvider';
 
 import './../styles/globals.scss';
 import './../styles/date-picker.scss';

@@ -1,7 +1,6 @@
 import React, { FC, useRef, useState, useEffect } from 'react';
 
-import { Box } from '@chakra-ui/react';
-
+import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { ButtonGroup } from '@ui/form/ButtonGroup';

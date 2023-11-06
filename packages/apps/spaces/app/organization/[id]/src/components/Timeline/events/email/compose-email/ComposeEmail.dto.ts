@@ -19,6 +19,8 @@ export class ComposeEmailDto implements ComposeEmailDtoI {
   content: string;
   // files: Array<any>;
 
+  // TODO: type this correctly
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(data?: any) {
     this.to = data?.to || [];
     this.cc = data?.cc || [];
@@ -28,6 +30,8 @@ export class ComposeEmailDto implements ComposeEmailDtoI {
     // this.files = data?.files || [];
   }
 
+  // TODO: type this correctly
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static toForm(data: any) {
     return new ComposeEmailDto(data);
   }
@@ -40,6 +44,8 @@ export class ComposeEmailDto implements ComposeEmailDtoI {
       subject: data.subject,
       content: data.content,
       // files: data.files,
+      // TODO: type this correctly
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
   }
 }

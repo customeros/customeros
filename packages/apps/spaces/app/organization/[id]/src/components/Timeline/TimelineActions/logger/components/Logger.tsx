@@ -4,9 +4,10 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useField } from 'react-inverted-form';
 
-import { Box, Flex } from '@chakra-ui/react';
 import noteIcon from 'public/images/event-ill-log.png';
 
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Contact } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';

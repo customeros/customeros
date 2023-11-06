@@ -2,16 +2,17 @@ import React, { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { produce } from 'immer';
-import { CardBody } from '@chakra-ui/card';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
-import { VStack, Heading, CardHeader, IconButton } from '@chakra-ui/react';
 
-import { Card } from '@ui/layout/Card';
+import { VStack } from '@ui/layout/Stack';
 import { Link } from '@ui/navigation/Link';
 import { Plus } from '@ui/media/icons/Plus';
 import { Organization } from '@graphql/types';
+import { IconButton } from '@ui/form/IconButton';
+import { Heading } from '@ui/typography/Heading';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useCreateOrganizationMutation } from '@organizations/graphql/createOrganization.generated';
 import {

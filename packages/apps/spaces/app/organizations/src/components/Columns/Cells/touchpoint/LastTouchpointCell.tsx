@@ -24,7 +24,7 @@ export const LastTouchpointCell = ({
   lastTouchPointAt,
   lastTouchPointTimelineEvent,
 }: {
-  lastTouchPointAt: any;
+  lastTouchPointAt: string;
   lastTouchPointTimelineEvent: Maybe<TimelineEvent> | undefined;
 }) => {
   const [label, Icon] = match(lastTouchPointTimelineEvent)

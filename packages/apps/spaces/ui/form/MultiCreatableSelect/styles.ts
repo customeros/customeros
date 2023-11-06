@@ -1,6 +1,8 @@
 import omit from 'lodash/omit';
-import { CSSWithMultiValues } from '@chakra-ui/react';
 import { GroupBase, ChakraStylesConfig } from 'chakra-react-select';
+
+import { CSSWithMultiValues } from '@ui/utils';
+
 export const multiCreatableSelectStyles = (
   chakraStyles:
     | ChakraStylesConfig<unknown, boolean, GroupBase<unknown>>

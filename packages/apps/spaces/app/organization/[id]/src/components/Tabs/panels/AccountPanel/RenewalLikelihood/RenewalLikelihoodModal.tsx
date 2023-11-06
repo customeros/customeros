@@ -96,7 +96,7 @@ export const RenewalLikelihoodModal = ({
           from: NEW_DATE,
           size: 50,
         }),
-        (oldData: any) => {
+        (oldData) => {
           const newEvent = {
             __typename: 'Action',
             id: `timeline-event-action-new-id-${new Date()}`,
@@ -111,6 +111,7 @@ export const RenewalLikelihoodModal = ({
             content: `Renewal likelihood set to ${probability} by ${session?.user?.name}`,
           };
 
+          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
           if (!oldData || !oldData.pages?.length) {
             return {
               pages: [
@@ -125,7 +126,9 @@ export const RenewalLikelihoodModal = ({
             };
           }
 
+          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
           const firstPage = oldData.pages[0] ?? {};
+          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
           const pages = oldData.pages?.slice(1);
 
           const firstPageWithEvent = {

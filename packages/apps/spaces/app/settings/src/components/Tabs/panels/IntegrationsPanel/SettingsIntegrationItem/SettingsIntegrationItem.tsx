@@ -2,19 +2,17 @@ import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
 import { DeleteIntegrationSettings, UpdateIntegrationSettings } from 'services';
-import {
-  Box,
-  Fade,
-  Flex,
-  Text,
-  Collapse,
-  Textarea,
-  SlideFade,
-} from '@chakra-ui/react';
 
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
 import { Image } from '@ui/media/Image';
 import { Button } from '@ui/form/Button';
+import { Text } from '@ui/typography/Text';
+import { Fade } from '@ui/transitions/Fade';
+import { Textarea } from '@ui/form/Textarea';
+import { Collapse } from '@ui/transitions/Collapse';
+import { SlideFade } from '@ui/transitions/SlideFade';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 interface FieldDefinition {
@@ -237,7 +235,8 @@ export const SettingsIntegrationItem = ({
                     </Text>
 
                     <Controller
-                      name={`${fieldDefinition.name}` as any}
+                      // @ts-expect-error TODO: react-inverted-form should be used instead of hook-form
+                      name={`${fieldDefinition.name}`}
                       control={control}
                       render={({ field }) => {
                         if (fieldDefinition.textarea) {
@@ -247,7 +246,7 @@ export const SettingsIntegrationItem = ({
                               value={
                                 state === 'ACTIVE'
                                   ? '******************'
-                                  : (field.value as any)
+                                  : (field.value as string)
                               }
                               disabled={state === 'ACTIVE'}
                               rows={1}
@@ -267,7 +266,7 @@ export const SettingsIntegrationItem = ({
                               value={
                                 state === 'ACTIVE'
                                   ? '******************'
-                                  : (field.value as any)
+                                  : (field.value as string)
                               }
                               disabled={state === 'ACTIVE'}
                               onChange={({ target: { value } }) => {

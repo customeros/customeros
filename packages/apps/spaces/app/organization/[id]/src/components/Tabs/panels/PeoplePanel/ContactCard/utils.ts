@@ -21,9 +21,7 @@ export const validateEmail = ({ email, tenant }: Props) => {
     .then((response: { data: EmailValidationDetails | null | undefined }) => {
       return response?.data ?? null;
     })
-    .catch((e) => {
-      console.error('Validation error', e);
-
+    .catch((_) => {
       return;
     });
 };

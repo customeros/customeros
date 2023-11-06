@@ -92,7 +92,7 @@ export const handleSendEmail = (
   bcc: Array<string> = [],
   replyTo: null | string,
   subject: null | string,
-  onSuccess: (res: any) => void,
+  onSuccess: (res: unknown) => void,
   onError: () => void,
   user?: DefaultSession['user'],
 ) => {

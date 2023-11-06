@@ -2,6 +2,8 @@
 import React, { FC } from 'react';
 import { OptionsOrGroups } from 'react-select';
 
+import { GroupBase } from 'chakra-react-select';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Contact, ComparisonOperator } from '@graphql/types';
@@ -27,10 +29,12 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
 
   const getFilteredSuggestions = async (
     filterString: string,
-    callback: (options: OptionsOrGroups<any, any>) => void,
+    callback: (options: OptionsOrGroups<unknown, GroupBase<unknown>>) => void,
   ) => {
     try {
-      const results = await client.request<any>(GetContactsEmailListDocument, {
+      const results = await client.request<{
+        contacts: { content: Contact[] };
+      }>(GetContactsEmailListDocument, {
         pagination: {
           page: 1,
           limit: 5,
@@ -61,7 +65,8 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           ],
         },
       });
-      const options: OptionsOrGroups<string, any> = (
+
+      const options: OptionsOrGroups<unknown, GroupBase<unknown>> = (
         results?.contacts?.content || []
       )
         .filter((e: Contact) => e.emails.length)
@@ -72,6 +77,7 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           })),
         )
         .flat();
+
       callback(options);
     } catch (error) {
       callback([]);

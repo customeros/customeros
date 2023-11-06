@@ -98,7 +98,7 @@ export const ContactCard = ({
   });
 
   const toggle = (e: MouseEvent<HTMLDivElement>) => {
-    if (['name', 'role', 'title'].includes((e.target as any)?.id)) {
+    if (['name', 'role', 'title'].includes((e.target as HTMLDivElement)?.id)) {
       setIsExpanded(true);
 
       return;

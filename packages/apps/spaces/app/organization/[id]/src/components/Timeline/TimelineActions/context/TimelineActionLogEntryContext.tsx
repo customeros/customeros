@@ -1,5 +1,4 @@
 import { useForm } from 'react-inverted-form';
-import { VirtuosoHandle } from 'react-virtuoso';
 import {
   useRef,
   useEffect,
@@ -10,11 +9,7 @@ import {
 
 import { useSession } from 'next-auth/react';
 import { useRemirror } from '@remirror/react';
-import {
-  InfiniteData,
-  useQueryClient,
-  UseMutationOptions,
-} from '@tanstack/react-query';
+import { useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 
 import { useDisclosure } from '@ui/utils';
 import { LogEntry, DataSource } from '@graphql/types';
@@ -40,6 +35,8 @@ export const noop = () => undefined;
 
 interface TimelineActionLogEntryContextContextMethods {
   isSaving: boolean;
+  // TODO: type this correctly
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remirrorProps: any;
   checkCanExitSafely: () => boolean;
   closeConfirmationDialog: () => void;
@@ -118,6 +115,8 @@ export const TimelineActionLogEntryContextContextProvider = ({
     onMutate: async (payload) => {
       const newLogEntry = makeEmptyLogEntryWithAliases(
         session.data?.user?.name,
+        // TODO: type this correctly
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload.logEntry as any,
       );
 
@@ -229,6 +228,9 @@ function makeEmptyLogEntryWithAliases(
     logEntryCreatedBy: {
       firstName: userName,
       lastName: '',
+      // TODO: this object should contain defaults for all required properties of User
+      // this will in exchange solve the type issues
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
     tags: tags.map((t) => ({
       name: t.label,

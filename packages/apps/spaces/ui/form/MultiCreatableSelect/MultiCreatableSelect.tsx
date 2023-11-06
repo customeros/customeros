@@ -1,8 +1,9 @@
-import React, { useMemo, forwardRef, useCallback } from 'react';
+import React, { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 
-import { OptionProps } from 'chakra-react-select';
+import { OptionProps, ChakraStylesConfig } from 'chakra-react-select';
 
 import { Tooltip } from '@ui/presentation/Tooltip';
+import { SelectOption, chakraStyles } from '@ui/utils';
 import { SelectInstance } from '@ui/form/SyncSelect/Select';
 import { multiCreatableSelectStyles } from '@ui/form/MultiCreatableSelect/styles';
 import {
@@ -13,12 +14,22 @@ import {
   MultiValueGenericProps,
 } from '@ui/form/SyncSelect';
 
-interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
+// TODO: to be removed
+export type CustomStylesFn = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  props: ChakraStylesConfig<any, any, any> | undefined,
+) => chakraStyles;
+
+// Exhaustively typing this Props interface does not offer any benefit at this moment
+// TODO: Revisit this interface - naming is wrong and props need re-work
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   name: string;
-  Option?: any;
   formId: string;
-  customStyles?: any;
   withTooltip?: boolean;
+  // TODO: discard customStyles in favour of existing chakraStyles
+  customStyles?: CustomStylesFn;
+  Option?: ComponentType<OptionProps<SelectOption>>;
 }
 
 export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
@@ -30,45 +41,45 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         </chakraComponents.Control>
       );
     }, []);
-    const MultiValueLabel = useCallback((rest: MultiValueGenericProps<any>) => {
-      if (props?.withTooltip) {
+    const MultiValueLabel = useCallback(
+      (rest: MultiValueGenericProps<SelectOption>) => {
+        if (props?.withTooltip) {
+          return (
+            <chakraComponents.MultiValueLabel {...rest}>
+              <Tooltip
+                label={rest.data.label.length > 0 ? rest.data.value : ''}
+                placement='top'
+              >
+                {rest.data.label || rest.data.value}
+              </Tooltip>
+            </chakraComponents.MultiValueLabel>
+          );
+        }
+
         return (
           <chakraComponents.MultiValueLabel {...rest}>
-            <Tooltip
-              label={rest.data.label.length > 0 ? rest.data.value : ''}
-              placement='top'
-            >
-              {rest.data.label || rest.data.value}
-            </Tooltip>
-          </chakraComponents.MultiValueLabel>
-        );
-      }
-
-      return (
-        <chakraComponents.MultiValueLabel {...rest}>
-          {rest.data.label || rest.data.value}
-        </chakraComponents.MultiValueLabel>
-      );
-    }, []);
-
-    const Option = useCallback(
-      (rest: OptionProps<{ label: string; value: string }>) => {
-        return (
-          <chakraComponents.Option {...rest}>
             {rest.data.label || rest.data.value}
-          </chakraComponents.Option>
+          </chakraComponents.MultiValueLabel>
         );
       },
       [],
     );
 
+    const Option = useCallback((rest: OptionProps<SelectOption>) => {
+      return (
+        <chakraComponents.Option {...rest}>
+          {rest.data.label || rest.data.value}
+        </chakraComponents.Option>
+      );
+    }, []);
+
     const components = useMemo(
       () => ({
         Control,
         MultiValueLabel,
-        Option: props?.Option || Option,
-        DropdownIndicator: () => null,
         ClearIndicator: () => null,
+        DropdownIndicator: () => null,
+        Option: (props?.Option || Option) as ComponentType<OptionProps>,
       }),
       [Control, MultiValueLabel],
     );

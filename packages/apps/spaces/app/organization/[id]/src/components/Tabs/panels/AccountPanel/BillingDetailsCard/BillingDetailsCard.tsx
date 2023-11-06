@@ -3,7 +3,6 @@ import { useRef, useState, useEffect } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { FormSelect } from '@ui/form/SyncSelect';

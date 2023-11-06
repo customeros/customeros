@@ -15,6 +15,8 @@ import {
 
 import { Icons } from '@ui/media/Icon';
 
+// Exhaustively typing this Props interface does not offer any benefit at this moment
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface SelectProps extends Props<any, any, any> {
   leftElement?: React.ReactNode;
 }

@@ -51,7 +51,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
       overflow='visible'
       maxHeight={modal ? '50vh' : 'auto'}
       pt={1}
-      onSubmit={(e: any) => {
+      onSubmit={(e) => {
         e.preventDefault();
       }}
     >

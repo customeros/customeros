@@ -1,1 +1,1 @@
-export { MultiCreatableSelect } from './MultiCreatableSelect';
+export * from './MultiCreatableSelect';
