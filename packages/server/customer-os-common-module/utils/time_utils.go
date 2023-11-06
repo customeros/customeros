@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"math"
 	"strings"
 	"time"
 )
@@ -97,4 +98,33 @@ func IsEqualTimePtr(t1, t2 *time.Time) bool {
 	}
 	// if both are not nil, compare the time values they point to
 	return (*t1).Equal(*t2)
+}
+
+// Implement a backoffDelay function that calculates the delay before the next retry.
+func BackOffExponentialDelay(attempt int) time.Duration {
+	if attempt <= 0 {
+		attempt = 1
+	}
+	// Calculate the delay with a simple exponential backoff formula
+	delay := time.Duration(math.Pow(2, float64(attempt))) * time.Millisecond * 50
+	// Cap the delay at 5 seconds
+	maxDelay := 5 * time.Second
+	if delay > maxDelay {
+		return maxDelay
+	}
+	return delay
+}
+
+func BackOffIncrementalDelay(attempt int) time.Duration {
+	if attempt <= 0 {
+		attempt = 1
+	}
+	// Calculate the delay with a simple exponential backoff formula
+	delay := time.Duration(attempt) * time.Millisecond * 50
+	// Cap the delay at 2 seconds
+	maxDelay := 2 * time.Second
+	if delay > maxDelay {
+		return maxDelay
+	}
+	return delay
 }

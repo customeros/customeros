@@ -29,6 +29,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("input", input))
 
 	// Check and prepare custom fields
 	for _, field := range input.CustomFields {
@@ -84,17 +85,18 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		return nil, nil
 	}
 
-	if len(input.CustomFields) > 0 || len(input.Domains) > 0 {
-		maxRetry := 10 // 5 seconds
-		var findOrgErr error
-		var organizationEntity *entity.OrganizationEntity
-		for i := 0; i < maxRetry; i++ {
-			organizationEntity, findOrgErr = r.Services.OrganizationService.GetById(ctx, response.Id)
-			if organizationEntity != nil && findOrgErr == nil {
-				break
-			}
-			time.Sleep(500 * time.Millisecond)
+	var findOrgErr error
+	var organizationCreated = false
+	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
+		organizationCreated, findOrgErr = r.Services.OrganizationService.ExistsById(ctx, response.Id)
+		if organizationCreated && findOrgErr == nil {
+			span.LogFields(log.Bool("organizationSavedInGraphDB", true))
+			break
 		}
+		time.Sleep(utils.BackOffIncrementalDelay(i))
+	}
+	if !organizationCreated {
+		span.LogFields(log.Bool("organizationSavedInGraphDB", false))
 	}
 
 	if len(input.Domains) > 0 {
@@ -144,15 +146,14 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			_, err = r.Clients.OrganizationClient.UpsertCustomFieldToOrganization(ctx, &organizationpb.CustomFieldForOrganizationGrpcRequest{
 				Tenant:                common.GetTenantFromContext(ctx),
 				OrganizationId:        response.Id,
-				UserId:                common.GetUserIdFromContext(ctx),
+				LoggedInUserId:        common.GetUserIdFromContext(ctx),
 				CustomFieldName:       customFieldEntity.Name,
 				CustomFieldDataType:   customFieldDataType,
 				CustomFieldTemplateId: customFieldEntity.TemplateId,
 				CustomFieldValue:      &customFieldValue,
 				SourceFields: &commonpb.SourceFields{
-					Source:        string(entity.DataSourceOpenline),
-					SourceOfTruth: string(entity.DataSourceOpenline),
-					AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+					Source:    string(entity.DataSourceOpenline),
+					AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 				},
 			})
 			if err != nil {
@@ -172,6 +173,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("input", input))
 
 	_, err := r.Services.OrganizationService.GetById(ctx, input.ID)
 	if err != nil {

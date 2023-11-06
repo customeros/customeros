@@ -120,6 +120,10 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 }
 
 func (s *contactService) createContactWithEvents(ctx context.Context, contactDetails *ContactCreateData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Create")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	upsertContactRequest := contactgrpc.UpsertContactGrpcRequest{
 		Tenant: common.GetTenantFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
@@ -150,12 +154,13 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		}
 	}
 	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
-	for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
 		user, findErr := s.GetById(ctx, response.Id)
 		if user != nil && findErr == nil {
+			span.LogFields(log.Bool("contactSavedInGraphDb", true))
 			break
 		}
-		time.Sleep(time.Duration(i*100) * time.Millisecond)
+		time.Sleep(utils.BackOffIncrementalDelay(i))
 	}
 	return response.Id, err
 }

@@ -32,7 +32,7 @@ func (r *commonRepository) ExistsById(ctx context.Context, tenant, id, label str
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("id", id), log.String("label", label))
 
-	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$id}) RETURN n.id LIMIT 1`, label, tenant)
+	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id:$id}) RETURN n.id LIMIT 1`, label, label, tenant)
 	params := map[string]any{
 		"id": id,
 	}

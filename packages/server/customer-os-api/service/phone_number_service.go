@@ -79,12 +79,13 @@ func (s *phoneNumberService) CreatePhoneNumberByEvents(ctx context.Context, phon
 			s.log.Errorf("Error from events processing %s", err.Error())
 			return "", err
 		}
-		for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+		for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
 			phoneNumberEntity, findPhoneNumberErr := s.GetById(ctx, response.Id)
 			if phoneNumberEntity != nil && findPhoneNumberErr == nil {
+				span.LogFields(log.Bool("phoneNumberSavedInGraphDb", true))
 				break
 			}
-			time.Sleep(time.Duration(i*100) * time.Millisecond)
+			time.Sleep(utils.BackOffIncrementalDelay(i))
 		}
 		span.LogFields(log.String("output - createdPhoneNumberId", response.Id))
 		return response.Id, nil

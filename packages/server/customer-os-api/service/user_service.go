@@ -582,12 +582,13 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 		s.log.Errorf("Error from events processing %s", err.Error())
 		return "", err
 	}
-	for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
+	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
 		user, findErr := s.GetById(ctx, response.Id)
 		if user != nil && findErr == nil {
+			span.LogFields(log.Bool("userSavedInGraphDb", true))
 			break
 		}
-		time.Sleep(time.Duration(i*100) * time.Millisecond)
+		time.Sleep(utils.BackOffIncrementalDelay(i))
 	}
 	span.LogFields(log.String("createdUserId", response.Id))
 	return response.Id, nil

@@ -8,5 +8,5 @@ const (
 	ComponentService         = "service"
 	ComponentNeo4jRepository = "neo4jRepository"
 
-	MaxRetryCheckDataInNeo4jAfterEventRequest int = 5
+	MaxRetriesCheckDataInNeo4jAfterEventRequest int = 5
 )
