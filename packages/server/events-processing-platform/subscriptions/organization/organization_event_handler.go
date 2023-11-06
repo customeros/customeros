@@ -149,7 +149,7 @@ func (h *organizationEventHandler) webscrapeOrganization(ctx context.Context, te
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
 		cmd.NewUpdateOrganizationCommand(organizationId, tenant, constants.SourceWebscrape,
 			models.OrganizationDataFields{
-				Name:             h.prepareOrgName(result.CompanyName, currentOrgName),
+				Name:             utils.StringFirstNonEmpty(currentOrgName, result.CompanyName),
 				Market:           result.Market,
 				Industry:         result.Industry,
 				IndustryGroup:    result.IndustryGroup,
@@ -196,14 +196,6 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error adding %s social: %v", platform, err)
-	}
-}
-
-func (h *organizationEventHandler) prepareOrgName(webscrabedOrgName, currentOrgName string) string {
-	if currentOrgName == "" {
-		return webscrabedOrgName
-	} else {
-		return currentOrgName
 	}
 }
 

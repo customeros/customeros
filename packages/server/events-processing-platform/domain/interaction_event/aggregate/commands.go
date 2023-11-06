@@ -16,6 +16,9 @@ import (
 )
 
 func (a *InteractionEventAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertInteractionEventCommand:
 		if c.IsCreateCommand {
@@ -24,6 +27,7 @@ func (a *InteractionEventAggregate) HandleCommand(ctx context.Context, cmd event
 			return a.updateInteractionEvent(ctx, c)
 		}
 	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
 }

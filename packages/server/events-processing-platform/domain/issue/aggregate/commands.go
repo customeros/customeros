@@ -15,6 +15,9 @@ import (
 )
 
 func (a *IssueAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertIssueCommand:
 		if c.IsCreateCommand {
@@ -31,6 +34,7 @@ func (a *IssueAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comma
 	case *command.RemoveUserFollowerCommand:
 		return a.removeUserFollower(ctx, c)
 	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
 }

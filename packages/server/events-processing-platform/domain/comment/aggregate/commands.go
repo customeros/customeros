@@ -15,6 +15,9 @@ import (
 )
 
 func (a *CommentAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertCommentCommand:
 		if c.IsCreateCommand {
@@ -23,6 +26,7 @@ func (a *CommentAggregate) HandleCommand(ctx context.Context, cmd eventstore.Com
 			return a.updateComment(ctx, c)
 		}
 	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
 }

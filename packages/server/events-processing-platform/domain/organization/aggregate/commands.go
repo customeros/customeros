@@ -20,6 +20,9 @@ import (
 )
 
 func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.RequestNextCycleDateCommand:
 		return a.requestNextCycleDate(ctx, c)
@@ -54,7 +57,8 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	case *command.RemoveParentCommand:
 		return a.removeParentOrganization(ctx, c)
 	default:
-		return errors.New("invalid command type")
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
+		return eventstore.ErrInvalidCommandType
 	}
 }
 
