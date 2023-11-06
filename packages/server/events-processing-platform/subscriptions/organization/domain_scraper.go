@@ -287,6 +287,13 @@ func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructu
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal response")
 	}
+	//TODO check if we need a validation on fields
+	//if strings.Contains(scrapeResponse.ValueProposition, "Unable error") {
+	//	scrapeResponse.ValueProposition = ""
+	//}
+	//if strings.Contains(scrapeResponse.TargetAudience, "Unable error") {
+	//	scrapeResponse.TargetAudience = ""
+	//}
 
 	return &scrapeResponse, nil
 }
