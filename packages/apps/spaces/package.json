@@ -15,7 +15,7 @@
     "test": "jest",
     "lint": "eslint '**/*.{js,ts,jsx,tsx}'",
     "fix:lint": "eslint '**/*.{js,ts,jsx,tsx}' --fix",
-    "postinstall": "cp ./scripts/pre-commit ../../../.git/hooks && chmod +x ../../../.git/hooks/pre-commit"
+    "postinstall": "is-ci || echo 'copying pre-commit hook...' && cp ./scripts/pre-commit ../../../.git/hooks && chmod +x ../../../.git/hooks/pre-commit"
   },
   "dependencies": {
     "@chakra-ui/next-js": "^2.1.4",
@@ -96,6 +96,7 @@
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-perfectionist": "^2.2.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "is-ci": "^3.0.1",
     "jest": "^29.7.0",
     "lint-staged": "^13.1.1",
     "msw": "^1.2.1",
