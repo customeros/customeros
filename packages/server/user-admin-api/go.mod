@@ -15,7 +15,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231010053057-7f0277709731
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/oauth2 v0.13.0
-	golang.org/x/text v0.13.0
+	golang.org/x/text v0.14.0
 	google.golang.org/api v0.149.0
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
