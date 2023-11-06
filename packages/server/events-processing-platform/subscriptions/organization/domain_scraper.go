@@ -288,9 +288,11 @@ func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructu
 		return nil, errors.Wrap(err, "failed to unmarshal response")
 	}
 	if strings.Contains(scrapeResponse.ValueProposition, "Unable error") {
+		ds.log.Printf("Error to obtain value for ValueProposition: %s", scrapeResponse.ValueProposition)
 		scrapeResponse.ValueProposition = ""
 	}
 	if strings.Contains(scrapeResponse.TargetAudience, "Unable error") {
+		ds.log.Printf("Error to obtain value for TargetAudience: %s", scrapeResponse.ValueProposition)
 		scrapeResponse.TargetAudience = ""
 	}
 
