@@ -67,7 +67,12 @@ type Loaders struct {
 	SocialsForOrganization                      *dataloader.Loader
 	RelationshipsForOrganization                *dataloader.Loader
 	RelationshipStagesForOrganization           *dataloader.Loader
-	ExternalSystemsForEntity                    *dataloader.Loader
+	ExternalSystemsForComment                   *dataloader.Loader
+	ExternalSystemsForIssue                     *dataloader.Loader
+	ExternalSystemsForOrganization              *dataloader.Loader
+	ExternalSystemsForLogEntry                  *dataloader.Loader
+	ExternalSystemsForMeeting                   *dataloader.Loader
+	ExternalSystemsForInteractionEvent          *dataloader.Loader
 	TimelineEventForTimelineEventId             *dataloader.Loader
 	OrganizationForJobRole                      *dataloader.Loader
 	ContactForJobRole                           *dataloader.Loader
@@ -310,7 +315,12 @@ func NewDataLoader(services *service.Services) *Loaders {
 		SocialsForOrganization:                      dataloader.NewBatchedLoader(socialBatcher.getSocialsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		RelationshipsForOrganization:                dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		RelationshipStagesForOrganization:           dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipStagesForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		ExternalSystemsForEntity:                    dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForEntities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForComment:                   dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForComments, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForIssue:                     dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForOrganization:              dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForLogEntry:                  dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForLogEntries, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForMeeting:                   dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForMeetings, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForInteractionEvent:          dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TimelineEventForTimelineEventId:             dataloader.NewBatchedLoader(timelineEventBatcher.getTimelineEventsForTimelineEventIds, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForJobRole:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactForJobRole:                           dataloader.NewBatchedLoader(contactBatcher.getContactsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

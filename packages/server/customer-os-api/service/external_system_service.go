@@ -14,7 +14,7 @@ import (
 )
 
 type ExternalSystemService interface {
-	GetExternalSystemsForEntities(ctx context.Context, ids []string) (*entity.ExternalSystemEntities, error)
+	GetExternalSystemsFor(ctx context.Context, ids []string, entityType entity.EntityType) (*entity.ExternalSystemEntities, error)
 }
 
 type externalSystemService struct {
@@ -29,13 +29,13 @@ func NewExternalSystemService(log logger.Logger, repositories *repository.Reposi
 	}
 }
 
-func (s *externalSystemService) GetExternalSystemsForEntities(ctx context.Context, ids []string) (*entity.ExternalSystemEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.GetExternalSystemsForEntities")
+func (s *externalSystemService) GetExternalSystemsFor(ctx context.Context, ids []string, entityType entity.EntityType) (*entity.ExternalSystemEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.GetExternalSystemsFor")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("ids", ids))
 
-	dbRecords, err := s.repositories.ExternalSystemRepository.GetForEntities(ctx, common.GetTenantFromContext(ctx), ids)
+	dbRecords, err := s.repositories.ExternalSystemRepository.GetFor(ctx, common.GetTenantFromContext(ctx), ids, entityType.Neo4jLabel())
 	if err != nil {
 		return nil, err
 	}

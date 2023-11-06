@@ -1051,7 +1051,7 @@ func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *mode
 func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetExternalSystemsForOrganization(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external system for organization %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for organization %s", obj.ID)

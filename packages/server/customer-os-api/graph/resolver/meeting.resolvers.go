@@ -125,7 +125,7 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 func (r *meetingResolver) ExternalSystem(ctx context.Context, obj *model.Meeting) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	externalSystemForMeeting, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	externalSystemForMeeting, err := dataloader.For(ctx).GetExternalSystemsForMeeting(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external systems for meeting %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get notes for meeting %s", obj.ID)

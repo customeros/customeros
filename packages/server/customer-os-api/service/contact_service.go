@@ -388,7 +388,7 @@ func (s *contactService) GetContactsForJobRoles(ctx context.Context, jobRoleIds 
 func (s *contactService) GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForOrganization")
 	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId), log.Int("page", page), log.Int("limit", limit))
 	if filter != nil {
 		span.LogFields(log.Object("filter", filter))

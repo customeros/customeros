@@ -146,7 +146,7 @@ func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.I
 func (r *interactionEventResolver) ExternalLinks(ctx context.Context, obj *model.InteractionEvent) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetExternalSystemsForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external system for interaction event %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external systems for interaction event %s", obj.ID)
