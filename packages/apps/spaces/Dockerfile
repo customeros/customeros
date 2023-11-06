@@ -6,7 +6,9 @@ RUN apk add --no-cache libc6-compat
 RUN apk add --no-cache g++ make py3-pip
 WORKDIR /app
 
-COPY package.json yarn.lock* /scripts ./
+COPY package.json yarn.lock* ./
+RUN mkdir ./scripts
+COPY scripts/. ./scripts/.
 ARG GITHUB_ACTIONS=GITHUB_ACTIONS
 RUN yarn install --frozen-lockfile
 
