@@ -15,6 +15,9 @@ import (
 )
 
 func (a *LogEntryAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertLogEntryCommand:
 		if c.IsCreateCommand {
@@ -27,6 +30,7 @@ func (a *LogEntryAggregate) HandleCommand(ctx context.Context, cmd eventstore.Co
 	case *command.RemoveTagCommand:
 		return a.removeTag(ctx, c)
 	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
 }

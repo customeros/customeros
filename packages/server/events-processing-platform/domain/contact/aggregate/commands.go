@@ -14,6 +14,9 @@ import (
 )
 
 func (a *ContactAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertContactCommand:
 		if c.IsCreateCommand {
@@ -30,7 +33,8 @@ func (a *ContactAggregate) HandleCommand(ctx context.Context, cmd eventstore.Com
 	case *command.LinkOrganizationCommand:
 		return a.linkOrganization(ctx, c)
 	default:
-		return errors.New("invalid contact command type")
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
+		return eventstore.ErrInvalidCommandType
 	}
 }
 

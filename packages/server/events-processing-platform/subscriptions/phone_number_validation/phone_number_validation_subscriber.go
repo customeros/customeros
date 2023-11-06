@@ -13,7 +13,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"strings"
 
-	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )

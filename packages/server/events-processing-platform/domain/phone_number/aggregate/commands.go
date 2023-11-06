@@ -16,6 +16,9 @@ import (
 )
 
 func (a *PhoneNumberAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertPhoneNumberCommand:
 		if c.IsCreateCommand {
@@ -23,8 +26,15 @@ func (a *PhoneNumberAggregate) HandleCommand(ctx context.Context, cmd eventstore
 		} else {
 			return a.updatePhoneNumber(ctx, c)
 		}
+	case *command.FailedPhoneNumberValidationCommand:
+		return a.failPhoneNumberValidation(ctx, c)
+	case *command.SkippedPhoneNumberValidationCommand:
+		return a.skipPhoneNumberValidation(ctx, c)
+	case *command.PhoneNumberValidatedCommand:
+		return a.phoneNumberValidated(ctx, c)
 	default:
-		return errors.New("invalid command type")
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
+		return eventstore.ErrInvalidCommandType
 	}
 }
 
@@ -33,7 +43,7 @@ func (a *PhoneNumberAggregate) createPhoneNumber(ctx context.Context, cmd *comma
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
@@ -45,7 +55,11 @@ func (a *PhoneNumberAggregate) createPhoneNumber(ctx context.Context, cmd *comma
 		return errors.Wrap(err, "NewPhoneNumberCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.Source.AppSource,
+	})
 
 	return a.Apply(event)
 }
@@ -68,59 +82,71 @@ func (a *PhoneNumberAggregate) updatePhoneNumber(ctx context.Context, cmd *comma
 		return errors.Wrap(err, "NewPhoneNumberUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.Source.AppSource,
+	})
 
 	return a.Apply(event)
 }
 
-func (a *PhoneNumberAggregate) FailedPhoneNumberValidation(ctx context.Context, tenant, rawPhoneNumber, countryCodeA2, validationError string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.FailedPhoneNumberValidation")
+func (a *PhoneNumberAggregate) failPhoneNumberValidation(ctx context.Context, cmd *command.FailedPhoneNumberValidationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.failPhoneNumberValidation")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.String("rawPhoneNumber", rawPhoneNumber), log.String("countryCodeA2", countryCodeA2), log.String("validationError", validationError))
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	event, err := events.NewPhoneNumberFailedValidationEvent(a, tenant, rawPhoneNumber, countryCodeA2, validationError)
+	event, err := events.NewPhoneNumberFailedValidationEvent(a, cmd.Tenant, cmd.RawPhoneNumber, cmd.CountryCodeA2, cmd.ValidationError)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewPhoneNumberFailedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+	})
 
 	return a.Apply(event)
 }
 
-func (a *PhoneNumberAggregate) SkippedPhoneNumberValidation(ctx context.Context, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.SkippedPhoneNumberValidation")
+func (a *PhoneNumberAggregate) skipPhoneNumberValidation(ctx context.Context, cmd *command.SkippedPhoneNumberValidationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.skipPhoneNumberValidation")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	event, err := events.NewPhoneNumberSkippedValidationEvent(a, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason)
+	event, err := events.NewPhoneNumberSkippedValidationEvent(a, cmd.Tenant, cmd.RawPhoneNumber, cmd.CountryCodeA2, cmd.ValidationSkipReason)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewPhoneNumberSkippedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+	})
 
 	return a.Apply(event)
 }
 
-func (a *PhoneNumberAggregate) PhoneNumberValidated(ctx context.Context, tenant, rawPhoneNumber, e164, countryCodeA2 string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.PhoneNumberValidated")
+func (a *PhoneNumberAggregate) phoneNumberValidated(ctx context.Context, cmd *command.PhoneNumberValidatedCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.phoneNumberValidated")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	event, err := events.NewPhoneNumberValidatedEvent(a, tenant, rawPhoneNumber, e164, countryCodeA2)
+	event, err := events.NewPhoneNumberValidatedEvent(a, cmd.Tenant, cmd.RawPhoneNumber, cmd.E164, cmd.CountryCodeA2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewPhoneNumberValidatedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, "")
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+	})
 
 	return a.Apply(event)
 }

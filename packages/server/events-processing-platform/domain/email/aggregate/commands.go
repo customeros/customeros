@@ -16,6 +16,9 @@ import (
 )
 
 func (a *EmailAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertEmailCommand:
 		if c.IsCreateCommand {
@@ -28,7 +31,8 @@ func (a *EmailAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comma
 	case *command.FailedEmailValidationCommand:
 		return a.failEmailValidation(ctx, c)
 	default:
-		return errors.New("invalid command type")
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
+		return eventstore.ErrInvalidCommandType
 	}
 }
 

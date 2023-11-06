@@ -17,6 +17,9 @@ import (
 )
 
 func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertUserCommand:
 		if c.IsCreateCommand {
@@ -35,7 +38,8 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comman
 	case *command.RemoveRoleCommand:
 		return a.removeRole(ctx, c)
 	default:
-		return errors.New("invalid command type")
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
+		return eventstore.ErrInvalidCommandType
 	}
 }
 

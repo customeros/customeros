@@ -17,6 +17,9 @@ import (
 )
 
 func (a *LocationAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationAggregate.HandleCommand")
+	defer span.Finish()
+
 	switch c := cmd.(type) {
 	case *command.UpsertLocationCommand:
 		if c.IsCreateCommand {
@@ -31,7 +34,8 @@ func (a *LocationAggregate) HandleCommand(ctx context.Context, cmd eventstore.Co
 	case *command.LocationValidatedCommand:
 		return a.locationValidated(ctx, c)
 	default:
-		return errors.New("invalid command type")
+		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
+		return eventstore.ErrInvalidCommandType
 	}
 }
 

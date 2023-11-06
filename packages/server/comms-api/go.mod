@@ -20,8 +20,8 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230928134243-77b704310d37
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231104113442-72f126ddb811
-	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231104122705-6b76a1af1686
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231104122705-6b76a1af1686
+	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231106090636-403e29ac5866
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/sirupsen/logrus v1.9.3
@@ -49,7 +49,7 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.15.5 // indirect
+	github.com/go-playground/validator/v10 v10.16.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
