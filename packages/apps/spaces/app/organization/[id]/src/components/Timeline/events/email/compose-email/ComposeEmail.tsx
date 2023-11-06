@@ -1,27 +1,27 @@
 'use client';
-import React, { FC, PropsWithChildren, useRef } from 'react';
+import React, { FC, useRef, PropsWithChildren } from 'react';
 
-import { ModeChangeButtons } from '@organization/src/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
 import { Box } from '@ui/layout/Box';
-import { ParticipantsSelectGroup } from '@organization/src/components/Timeline/events/email/compose-email/ParticipantsSelectGroup';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { BasicEditorToolbar } from '@ui/form/RichTextEditor/menu/BasicEditorToolbar';
 import {
-  BasicEditorExtentions,
   RemirrorProps,
+  BasicEditorExtentions,
 } from '@ui/form/RichTextEditor/types';
 import { KeymapperCreate } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperCreate';
+import { ParticipantsSelectGroup } from '@organization/src/components/Timeline/events/email/compose-email/ParticipantsSelectGroup';
+import { ModeChangeButtons } from '@organization/src/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
 
 export interface ComposeEmailProps extends PropsWithChildren {
-  onModeChange?: (status: 'reply' | 'reply-all' | 'forward') => void;
-  onSubmit: () => void;
   formId: string;
   modal: boolean;
   isSending: boolean;
+  onSubmit: () => void;
   to: Array<{ label: string; value: string }>;
   cc: Array<{ label: string; value: string }>;
   bcc: Array<{ label: string; value: string }>;
   remirrorProps: RemirrorProps<BasicEditorExtentions>;
+  onModeChange?: (status: 'reply' | 'reply-all' | 'forward') => void;
 }
 
 export const ComposeEmail: FC<ComposeEmailProps> = ({
@@ -51,7 +51,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
       overflow='visible'
       maxHeight={modal ? '50vh' : 'auto'}
       pt={1}
-      onSubmit={(e: any) => {
+      onSubmit={(e) => {
         e.preventDefault();
       }}
     >

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 
 interface RoleTagProps {
@@ -26,6 +27,7 @@ export const getTagColorScheme = (label: string) => {
 
 export const RoleTag: React.FC<RoleTagProps> = ({ label }) => {
   const colorScheme = (() => getTagColorScheme(label))();
+
   return (
     <Tag
       size='sm'

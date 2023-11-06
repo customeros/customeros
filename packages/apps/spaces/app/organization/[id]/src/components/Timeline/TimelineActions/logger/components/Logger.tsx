@@ -1,25 +1,27 @@
 'use client';
 import React from 'react';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import { useField } from 'react-inverted-form';
 
+import noteIcon from 'public/images/event-ill-log.png';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
-import { Box, Flex } from '@chakra-ui/react';
+import { Contact } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { FloatingReferenceSuggestions } from '@ui/form/RichTextEditor/FloatingReferenceSuggestions';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
 import { useGetTagsQuery } from '@organization/src/graphql/getTags.generated';
+import { getMentionOptionLabel } from '@organization/src/components/Timeline/events/utils';
+import { useGetMentionOptionsQuery } from '@organization/src/graphql/getMentionOptions.generated';
+import { FloatingReferenceSuggestions } from '@ui/form/RichTextEditor/FloatingReferenceSuggestions';
+import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
+import { KeymapperCreate } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperCreate';
+import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
 import { useTimelineActionLogEntryContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
 
 import { TagsSelect } from './TagSelect';
-import noteIcon from 'public/images/event-ill-log.png';
-import { useGetMentionOptionsQuery } from '@organization/src/graphql/getMentionOptions.generated';
-import { useParams } from 'next/navigation';
-import { getMentionOptionLabel } from '@organization/src/components/Timeline/events/utils';
-import { Contact } from '@graphql/types';
-import { KeymapperCreate } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperCreate';
-import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
-import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
 
 export const Logger = () => {
   const id = useParams()?.id as string;
@@ -49,7 +51,7 @@ export const Logger = () => {
 
   const mentionOptions = (mentionData?.organization?.contacts?.content ?? [])
     .map((e) => ({ label: getMentionOptionLabel(e as Contact), id: e.id }))
-    .filter((e) => Boolean(e.label)) as { label: string; id: string }[];
+    .filter((e) => Boolean(e.label)) as { id: string; label: string }[];
 
   return (
     <Flex

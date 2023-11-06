@@ -1,14 +1,15 @@
-import { Center } from '@ui/layout/Center';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
+import { Center } from '@ui/layout/Center';
 import { Text } from '@ui/typography/Text';
 import { EmptyTable } from '@ui/media/logos/EmptyTable';
+
 import HalfCirclePattern from '../../../../src/assets/HalfCirclePattern';
 
 interface EmptyStateProps {
+  title: string;
   onClick: () => void;
   buttonLabel: string;
-  title: string;
   description: string;
 }
 

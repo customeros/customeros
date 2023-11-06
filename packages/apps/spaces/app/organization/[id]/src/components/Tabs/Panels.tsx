@@ -1,9 +1,9 @@
 import { AboutPanel } from './panels/AboutPanel';
 import { UpNextPanel } from './panels/UpNextPanel';
-import { AccountPanel } from './panels/AccountPanel';
-import { SuccessPanel } from './panels/SuccessPanel';
 import { PeoplePanel } from './panels/PeoplePanel';
 import { IssuesPanel } from './panels/IssuesPanel';
+import { AccountPanel } from './panels/AccountPanel';
+import { SuccessPanel } from './panels/SuccessPanel';
 
 interface PanelsProps {
   tab: string;

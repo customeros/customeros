@@ -13,6 +13,7 @@ import HalfCirclePattern from './src/assets/HalfCirclePattern';
 
 export default function NotFound() {
   const router = useRouter();
+
   return (
     <Box
       p={0}

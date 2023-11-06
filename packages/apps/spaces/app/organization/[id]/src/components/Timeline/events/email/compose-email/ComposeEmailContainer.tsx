@@ -1,12 +1,12 @@
 import React from 'react';
 
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import {
   ComposeEmail,
   ComposeEmailProps,
 } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { MissingPermissionsPrompt } from '@organization/src/components/Timeline/shared/EmailPermissionsPrompt/EmailPermissionsPrompt';
 
 interface ComposeEmailContainerProps extends ComposeEmailProps {

@@ -1,6 +1,6 @@
 export type SelectOption<T = string> = {
-  label: string;
   value: T;
+  label: string;
 };
 
 export type GroupedOption<T = string> = {

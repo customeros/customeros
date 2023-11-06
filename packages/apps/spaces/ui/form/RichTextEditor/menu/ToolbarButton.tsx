@@ -1,12 +1,13 @@
 import React, { ReactElement } from 'react';
-import { IconButton } from '@ui/form/IconButton';
+
 import { Tooltip } from '@ui/overlay/Tooltip';
+import { IconButton } from '@ui/form/IconButton';
 
 interface ToolbarButtonProps {
-  onClick: () => void;
+  label: string;
   isActive?: boolean;
   icon: ReactElement;
-  label: string;
+  onClick: () => void;
 }
 export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
   onClick,

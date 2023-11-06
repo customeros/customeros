@@ -1,11 +1,11 @@
+import { format, utcToZonedTime } from 'date-fns-tz';
 import {
+  isBefore,
   differenceInMinutes,
   formatDistanceToNow,
-  formatDuration as formatDurationDateFns,
-  isBefore,
   isSameDay as isSameDayDateFns,
+  formatDuration as formatDurationDateFns,
 } from 'date-fns';
-import { format, utcToZonedTime } from 'date-fns-tz';
 
 export class DateTimeUtils {
   private static defaultFormatString = "EEE dd MMM - HH'h' mm zzz"; // Output: "Wed 08 Mar - 14h30CET"
@@ -44,7 +44,7 @@ export class DateTimeUtils {
 
   public static timeAgo(
     date: string | number,
-    options?: { includeSeconds?: boolean; addSuffix?: boolean },
+    options?: { addSuffix?: boolean; includeSeconds?: boolean },
   ): string {
     return formatDistanceToNow(this.getDate(date), options);
   }
@@ -72,6 +72,7 @@ export class DateTimeUtils {
     }
 
     const duration = this.toHoursAndMinutes(seconds);
+
     return formatDurationDateFns(duration, options);
   }
 

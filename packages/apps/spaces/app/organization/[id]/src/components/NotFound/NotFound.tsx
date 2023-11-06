@@ -5,6 +5,7 @@ import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { SearchSm } from '@ui/media/icons/SearchSm';
+
 import HalfCirclePattern from '../../../../../src/assets/HalfCirclePattern';
 
 export default function NotFound() {

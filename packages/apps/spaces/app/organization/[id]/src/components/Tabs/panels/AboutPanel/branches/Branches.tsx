@@ -1,31 +1,33 @@
 import React, { useCallback } from 'react';
-import { Card } from '@ui/layout/Card';
-import { CardHeader, Heading, IconButton, VStack } from '@chakra-ui/react';
-import { Plus } from '@ui/media/icons/Plus';
-import { CardBody } from '@chakra-ui/card';
-import { Link } from '@ui/navigation/Link';
+import { useRouter } from 'next/navigation';
 
+import { produce } from 'immer';
+import { InfiniteData, useQueryClient } from '@tanstack/react-query';
+
+import { VStack } from '@ui/layout/Stack';
+import { Link } from '@ui/navigation/Link';
+import { Plus } from '@ui/media/icons/Plus';
 import { Organization } from '@graphql/types';
-import { useAddSubsidiaryToOrganizationMutation } from '@organization/src/graphql/addSubsidiaryToOrganization.generated';
+import { IconButton } from '@ui/form/IconButton';
+import { Heading } from '@ui/typography/Heading';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { useCreateOrganizationMutation } from '@organizations/graphql/createOrganization.generated';
 import {
   OrganizationQuery,
   useOrganizationQuery,
 } from '@organization/src/graphql/organization.generated';
-import { produce } from 'immer';
-import { InfiniteData, useQueryClient } from '@tanstack/react-query';
+import { useAddSubsidiaryToOrganizationMutation } from '@organization/src/graphql/addSubsidiaryToOrganization.generated';
 import {
   GetOrganizationsQuery,
   useInfiniteGetOrganizationsQuery,
 } from '@organizations/graphql/getOrganizations.generated';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
-import { useCreateOrganizationMutation } from '@organizations/graphql/createOrganization.generated';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { useRouter } from 'next/navigation';
 
 interface BranchesProps {
-  branches?: Organization['subsidiaries'];
   id: string;
+  branches?: Organization['subsidiaries'];
 }
 
 export const Branches: React.FC<BranchesProps> = ({ id, branches = [] }) => {

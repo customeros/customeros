@@ -1,5 +1,9 @@
-import { InfiniteData, QueryKey, useQueryClient } from '@tanstack/react-query';
+import { QueryKey, InfiniteData, useQueryClient } from '@tanstack/react-query';
+
 import { GetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+
+// TODO: replace this type with something explicit or remove it.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type EventWithId = { id: string; [key: string]: any };
 
 export function useUpdateCacheWithExistingEvent() {
@@ -15,10 +19,14 @@ export function useUpdateCacheWithExistingEvent() {
       (currentCache): InfiniteData<GetTimelineQuery> => {
         const updatedPages = currentCache?.pages?.map((page) => {
           const updatedEvents = page?.organization?.timelineEvents?.map(
-            (event: Record<string, any>) => {
+            (event) => {
+              // this code should exhaustively match agains all possible types of Events
+              // __typename: "Analysis" does not have "id" which will cause this check to fail
+              // @ts-expect-error TODO: match(event).with(***) for all cases.
               if (event.id === updatedEvent?.id) {
                 return { ...event, ...updatedEvent };
               }
+
               return event;
             },
           );

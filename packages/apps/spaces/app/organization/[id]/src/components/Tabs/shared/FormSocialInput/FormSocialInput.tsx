@@ -1,13 +1,14 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
 import { useField } from 'react-inverted-form';
+import { useRef, useMemo, useState, useCallback } from 'react';
+
+import { Input } from '@ui/form/Input';
+import { Social } from '@graphql/types';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
   InputGroup,
   InputGroupProps,
   InputLeftElement,
 } from '@ui/form/InputGroup';
-import { Input } from '@ui/form/Input';
-import { Social } from '@graphql/types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useUpdateSocialMutation } from '@organization/src/graphql/updateSocial.generated';
 import { useRemoveSocialMutation } from '@organization/src/graphql/removeSocial.generated';
 
@@ -21,13 +22,13 @@ interface FormSocialInputProps extends InputGroupProps {
   formId: string;
   isReadOnly?: boolean;
   organizationId: string;
+  invalidateQuery: () => void;
   leftElement?: React.ReactNode;
   defaultValues: Array<SocialInputValue>;
   addSocial: (props: {
     newValue: string;
     onSuccess: ({ id, url }: { id: string; url: string }) => void;
   }) => void;
-  invalidateQuery: () => void;
 }
 
 export const FormSocialInput = ({

@@ -4,8 +4,8 @@ export const getEmailParticipantsByType = (
   sentTo: InteractionEventParticipant[],
 ): {
   cc: EmailParticipant[];
-  bcc: EmailParticipant[];
   to: EmailParticipant[];
+  bcc: EmailParticipant[];
 } => {
   const cc = (sentTo || []).filter(
     (e: InteractionEventParticipant): e is EmailParticipant =>

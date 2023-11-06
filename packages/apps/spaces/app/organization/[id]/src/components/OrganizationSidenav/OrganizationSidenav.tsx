@@ -1,5 +1,6 @@
 'use client';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
+
 import { useLocalStorage } from 'usehooks-ts';
 
 import { Flex } from '@ui/layout/Flex';
@@ -10,11 +11,10 @@ import { GridItem } from '@ui/layout/Grid';
 import { Text } from '@ui/typography/Text';
 import { Tooltip } from '@ui/overlay/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
-
+import { Ticket02 } from '@ui/media/icons/Ticket02';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { useOrganizationQuery } from '@organization/src/graphql/organization.generated';
-import { Ticket02 } from '@ui/media/icons/Ticket02';
 
 export const OrganizationSidenav = () => {
   const router = useRouter();

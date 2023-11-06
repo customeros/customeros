@@ -1,11 +1,13 @@
 import React from 'react';
+
 import { Flex } from '@ui/layout/Flex';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { Text } from '@ui/typography/Text';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Action, RenewalLikelihoodProbability } from '@graphql/types';
-import { getLikelihoodDisplayData } from '../utils';
+import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
+import { getLikelihoodDisplayData } from '../utils';
 
 interface RenewalForecastUpdatedActionProps {
   data: Action;
@@ -19,6 +21,7 @@ export const RenewalLikelihoodUpdatedAction: React.FC<
   const { preText, likelihood, author } = getLikelihoodDisplayData(
     data.content,
   );
+
   return (
     <Flex
       alignItems='center'

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd packages/apps/spaces
+yarn lint-staged
+
+if [ $? -ne 0 ]; then
+    echo "Pre-commit hook failed. Aborting the commit."
+    exit 1
+fi
+
+exit 0 

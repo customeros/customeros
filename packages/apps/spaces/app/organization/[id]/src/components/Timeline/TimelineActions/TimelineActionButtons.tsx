@@ -1,16 +1,17 @@
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useRef, useState, useEffect } from 'react';
+
+import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
+import { Mail01 } from '@ui/media/icons/Mail01';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
-import { Mail01 } from '@ui/media/icons/Mail01';
-import { useTimelineActionLogEntryContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
-import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import { useTimelineActionEmailContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionEmailContext';
+import { useTimelineActionLogEntryContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionLogEntryContext';
 import {
   EditorType,
   useTimelineActionContext,
 } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
-import { Box } from '@chakra-ui/react';
 
 export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   invalidateQuery,
@@ -44,6 +45,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
   const handleToggleEditor = (targetEditor: 'email' | 'log-entry') => {
     if (openedEditor === null) {
       showEditor(targetEditor);
+
       return;
     }
 
@@ -53,6 +55,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
           ? checkCanExitEmailSafely()
           : checkCanExitSafely();
       if (canClose) showEditor(null);
+
       return;
     }
 
@@ -93,6 +96,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
 
   const handleCloseConfirmationModal = () => {
     setOpenOnConfirm(null);
+
     return showEmailConfirmationDialog
       ? closeEmailConfirmationDialog()
       : closeLogEntryConfirmationDialog();

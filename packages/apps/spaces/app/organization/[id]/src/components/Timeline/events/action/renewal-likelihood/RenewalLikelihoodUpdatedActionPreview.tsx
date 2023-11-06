@@ -1,18 +1,19 @@
 import React from 'react';
-import { Card, CardFooter } from '@ui/presentation/Card';
+
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { Divider } from '@ui/presentation/Divider';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { Action, RenewalLikelihoodProbability } from '@graphql/types';
+import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import {
-  useTimelineEventPreviewMethodsContext,
   useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import { CardBody } from '@chakra-ui/card';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { Divider } from '@ui/presentation/Divider';
-import { Action, Maybe, RenewalLikelihoodProbability } from '@graphql/types';
-import { getLikelihoodDisplayData, getMetadata } from '../utils';
+
+import { getMetadata, getLikelihoodDisplayData } from '../utils';
 
 export const RenewalLikelihoodUpdatedActionPreview = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();
@@ -80,19 +81,3 @@ export const RenewalLikelihoodUpdatedActionPreview = () => {
     </>
   );
 };
-function getRenewalColor(
-  data?: Maybe<RenewalLikelihoodProbability> | undefined,
-) {
-  switch (data) {
-    case 'HIGH':
-      return 'success.500';
-    case 'MEDIUM':
-      return 'warning.500';
-    case 'LOW':
-      return 'error.500';
-    case 'ZERO':
-      return 'gray.700';
-    default:
-      return 'gray.400';
-  }
-}

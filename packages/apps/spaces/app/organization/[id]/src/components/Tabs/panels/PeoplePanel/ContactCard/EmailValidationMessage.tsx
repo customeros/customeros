@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import { EmailValidationDetails } from '@graphql/types';
-import { SimpleValidationIndicator } from '@ui/presentation/validation/simple-validation-indicator';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
+import { SimpleValidationIndicator } from '@ui/presentation/validation/simple-validation-indicator';
 import {
   validateEmail,
   VALIDATION_MESSAGES,
@@ -62,6 +63,7 @@ export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
     ) {
       messages.push(VALIDATION_MESSAGES.isReachable.message);
     }
+
     return messages;
   };
 

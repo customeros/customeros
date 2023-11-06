@@ -1,12 +1,7 @@
 import React from 'react';
+
 import { match } from 'ts-pattern';
 
-import {
-  Maybe,
-  ActionType,
-  TimelineEvent,
-  ExternalSystemType,
-} from '@graphql/types';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { IconProps } from '@ui/media/Icon';
@@ -18,12 +13,18 @@ import { Ticket02 } from '@ui/media/icons/Ticket02';
 import { Building07 } from '@ui/media/icons/Building07';
 import { PhoneOutgoing02 } from '@ui/media/icons/PhoneOutgoing02';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
+import {
+  Maybe,
+  ActionType,
+  TimelineEvent,
+  ExternalSystemType,
+} from '@graphql/types';
 
 export const LastTouchpointCell = ({
   lastTouchPointAt,
   lastTouchPointTimelineEvent,
 }: {
-  lastTouchPointAt: any;
+  lastTouchPointAt: string;
   lastTouchPointTimelineEvent: Maybe<TimelineEvent> | undefined;
 }) => {
   const [label, Icon] = match(lastTouchPointTimelineEvent)

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { createIcon, IconProps } from '@chakra-ui/react';
+import { IconProps, createIcon } from '@chakra-ui/react';
 
 import { customIcons } from './customIcons';
 

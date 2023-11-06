@@ -1,24 +1,27 @@
+import { useForm } from 'react-inverted-form';
 import {
+  useRef,
+  useState,
   useEffect,
   useContext,
   createContext,
   PropsWithChildren,
-  useRef,
-  useState,
 } from 'react';
+
+import { useSession } from 'next-auth/react';
+
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useForm } from 'react-inverted-form';
+import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useUpdateLogEntryMutation } from '@organization/src/graphql/updateLogEntry.generated';
+import { useUpdateCacheWithExistingEvent } from '@organization/src/components/Timeline/hooks/useCacheExistingEvent';
+import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
 import {
   LogEntryUpdateFormDto,
   LogEntryUpdateFormDtoI,
 } from './LogEntryUpdateFormDto';
-import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
-import { useTimelineEventPreviewStateContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import { useSession } from 'next-auth/react';
-import { useUpdateCacheWithExistingEvent } from '@organization/src/components/Timeline/hooks/useCacheExistingEvent';
-import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
-import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 
 interface LogEntryUpdateModalContextMethods {
   formId: string;
@@ -83,6 +86,7 @@ export const LogEntryUpdateModalContextProvider = ({
           },
         });
       }
+
       return next;
     },
   });

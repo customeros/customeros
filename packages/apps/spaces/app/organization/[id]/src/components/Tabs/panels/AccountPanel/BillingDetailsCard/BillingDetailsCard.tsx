@@ -1,24 +1,24 @@
-import { useRef, useEffect, useState } from 'react';
 import { useForm } from 'react-inverted-form';
+import { useRef, useState, useEffect } from 'react';
 
-import { Box } from '@ui/layout/Box';
+import { useQueryClient } from '@tanstack/react-query';
+
 import { Flex } from '@ui/layout/Flex';
-import { Divider } from '@ui/presentation/Divider';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
-import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { Coins01 } from '@ui/media/icons/Coins01';
+import { Divider } from '@ui/presentation/Divider';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody, CardFooter } from '@ui/layout/Card';
-import { FormCurrencyInput } from '@ui/form/CurrencyInput/FormCurrencyInput';
-import { BillingDetailsForm, BillingDetailsDTO } from './BillingDetails.dto';
+import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { invalidateAccountDetailsQuery } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { useQueryClient } from '@tanstack/react-query';
-import { useUpdateBillingDetailsMutation } from '@organization/src/graphql/updateBillingDetails.generated';
 import { BillingDetails as BillingDetails } from '@graphql/types';
+import { FormCurrencyInput } from '@ui/form/CurrencyInput/FormCurrencyInput';
+import { useUpdateBillingDetailsMutation } from '@organization/src/graphql/updateBillingDetails.generated';
+import { invalidateAccountDetailsQuery } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 import { frequencyOptions } from '../utils';
+import { BillingDetailsDTO, BillingDetailsForm } from './BillingDetails.dto';
 
 interface BillingDetailsCardBProps {
   id: string;

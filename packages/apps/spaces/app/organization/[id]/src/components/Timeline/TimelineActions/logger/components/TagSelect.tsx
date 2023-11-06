@@ -1,20 +1,23 @@
 'use client';
-import React, { FC, KeyboardEvent, useEffect, useRef, useState } from 'react';
-import { Text } from '@ui/typography/Text';
-import { Flex } from '@ui/layout/Flex';
 import { OptionsOrGroups } from 'react-select';
+import { useField } from 'react-inverted-form';
+import React, { FC, useRef, useState, useEffect, KeyboardEvent } from 'react';
+
 import { AnimatePresence } from 'framer-motion';
+import { GroupBase, OptionProps } from 'chakra-react-select';
+
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
 import { chakraComponents } from '@ui/form/SyncSelect';
 import { MultiCreatableSelect } from '@ui/form/MultiCreatableSelect';
-import { tagsSelectStyles } from './tagSelectStyles';
+
 import { TagButton } from './TagButton';
+import { tagsSelectStyles } from './tagSelectStyles';
 import { useTagButtonSlideAnimation } from './useTagButtonSlideAnimation';
-import { useField } from 'react-inverted-form';
-import { OptionProps } from 'chakra-react-select';
 
 interface EmailParticipantSelect {
-  formId: string;
   name: string;
+  formId: string;
   tags?: Array<{ value: string; label: string }>;
 }
 
@@ -44,15 +47,17 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
   const getFilteredSuggestions = (
     filterString: string,
-    callback: (options: OptionsOrGroups<any, any>) => void,
+    callback: (options: OptionsOrGroups<unknown, GroupBase<unknown>>) => void,
   ) => {
     if (!filterString.slice(1).length) {
       callback(tags);
+
       return;
     }
 
-    const options: OptionsOrGroups<string, any> = tags.filter((e) =>
-      e.label.toLowerCase().includes(filterString.slice(1)?.toLowerCase()),
+    const options: OptionsOrGroups<unknown, GroupBase<unknown>> = tags.filter(
+      (e) =>
+        e.label.toLowerCase().includes(filterString.slice(1)?.toLowerCase()),
     );
 
     callback(options);
@@ -108,6 +113,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
       </div>
     );
   };
+
   return (
     <>
       <AnimatePresence initial={false}>
@@ -181,6 +187,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                     label: input.slice(1),
                   };
                 }
+
                 return {
                   value: input,
                   label: input,
@@ -193,11 +200,13 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                     label: input.slice(1),
                   };
                 }
+
                 return {
                   value: input,
                   label: input,
                 };
               }}
+              // @ts-expect-error remove this in favour of chakraStyles
               customStyles={tagsSelectStyles}
             />
           )}

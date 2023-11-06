@@ -1,6 +1,8 @@
-import { InfiniteData, QueryKey, useQueryClient } from '@tanstack/react-query';
-import { GetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { VirtuosoHandle } from 'react-virtuoso';
+
+import { QueryKey, InfiniteData, useQueryClient } from '@tanstack/react-query';
+
+import { GetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 
 export function useUpdateCacheWithNewEvent<T>(
   virtuosoRef?: React.RefObject<VirtuosoHandle> | null,
@@ -22,6 +24,7 @@ export function useUpdateCacheWithNewEvent<T>(
           ...currentCache,
           pages: currentCache?.pages?.map((p, idx) => {
             if (idx !== 0) return p;
+
             return {
               ...p,
               organization: {
@@ -41,6 +44,7 @@ export function useUpdateCacheWithNewEvent<T>(
     virtuosoRef?.current?.scrollToIndex({
       index: (timelineEntries?.length ?? 0) + 1,
     });
+
     return { previousTimelineEntries };
   };
 }

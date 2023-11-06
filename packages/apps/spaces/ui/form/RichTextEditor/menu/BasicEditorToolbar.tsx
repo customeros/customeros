@@ -1,11 +1,14 @@
 import React, { FC } from 'react';
+
 import { useActive, useCommands } from '@remirror/react';
 import { Flex, HStack, StackDivider } from '@chakra-ui/react';
-import { Quote } from '@ui/media/icons/Quote';
-import { TextFormatButtons } from './TextFormatButtons';
-import { ListButtons } from './ListButtons';
+
 import { Button } from '@ui/form/Button';
+import { Quote } from '@ui/media/icons/Quote';
+
+import { ListButtons } from './ListButtons';
 import { ToolbarButton } from './ToolbarButton';
+import { TextFormatButtons } from './TextFormatButtons';
 
 export const BasicEditorToolbar: FC<{
   isSending: boolean;

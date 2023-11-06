@@ -1,33 +1,38 @@
-import React, { ForwardedRef } from 'react';
+import React from 'react';
+
 import {
-  FormControl,
   FormLabel,
-  NumberInputProps,
+  FormControl,
   VisuallyHidden,
+  NumberInputProps,
 } from '@chakra-ui/react';
+
+import {
+  NumberInput,
+  NumberInputField,
+} from '@ui/form/NumberInput/NumberInput';
 import {
   InputGroup,
   InputLeftElement,
   InputRightElement,
 } from '@ui/form/InputGroup/InputGroup';
-import {
-  NumberInput,
-  NumberInputField,
-} from '@ui/form/NumberInput/NumberInput';
 
 export interface CurrencyInputProps
   extends Omit<NumberInputProps, 'onChange' | 'value'> {
   value: string;
-  onChange?: (value: string) => void;
-  leftElement?: React.ReactNode;
-  rightElement?: React.ReactNode;
   label?: string;
   isLabelVisible?: boolean;
-  formatValue?: (val: string) => string;
+  leftElement?: React.ReactNode;
+  rightElement?: React.ReactNode;
+  onChange?: (value: string) => void;
   parseValue?: (val: string) => string;
+  formatValue?: (val: string) => string;
 }
 
-export const CurrencyInput = React.forwardRef(
+export const CurrencyInput = React.forwardRef<
+  HTMLInputElement,
+  CurrencyInputProps
+>(
   (
     {
       isLabelVisible,
@@ -39,17 +44,19 @@ export const CurrencyInput = React.forwardRef(
       formatValue,
       parseValue,
       ...rest
-    }: CurrencyInputProps,
-    ref: ForwardedRef<any>,
+    },
+    ref,
   ) => {
     const handleValueChange = (valueString: string) => {
       // handle weird case of blurring the field with an empty value
       if (valueString === '-9007199254740991') {
         onChange?.('');
+
         return;
       }
       if (parseValue) {
         onChange?.(parseValue(valueString));
+
         return;
       }
       onChange?.(valueString);

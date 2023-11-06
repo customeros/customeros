@@ -1,18 +1,21 @@
 'use client';
 import React, { FC } from 'react';
-import { Text } from '@ui/typography/Text';
-import { Flex } from '@ui/layout/Flex';
-import { ComparisonOperator, Contact } from '@graphql/types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { GetContactsEmailListDocument } from '@organization/src/graphql/getContactsEmailList.generated';
-import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
 import { OptionsOrGroups } from 'react-select';
+
+import { GroupBase } from 'chakra-react-select';
+
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { Contact, ComparisonOperator } from '@graphql/types';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { emailRegex } from '@organization/src/components/Timeline/events/email/utils';
+import { GetContactsEmailListDocument } from '@organization/src/graphql/getContactsEmailList.generated';
 import { EmailFormMultiCreatableSelect } from '@organization/src/components/Timeline/events/email/compose-email/EmailFormMultiCreatableSelect';
 
 interface EmailParticipantSelect {
+  formId: string;
   entryType: string;
   fieldName: string;
-  formId: string;
   autofocus: boolean;
 }
 
@@ -26,10 +29,12 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
 
   const getFilteredSuggestions = async (
     filterString: string,
-    callback: (options: OptionsOrGroups<any, any>) => void,
+    callback: (options: OptionsOrGroups<unknown, GroupBase<unknown>>) => void,
   ) => {
     try {
-      const results = await client.request<any>(GetContactsEmailListDocument, {
+      const results = await client.request<{
+        contacts: { content: Contact[] };
+      }>(GetContactsEmailListDocument, {
         pagination: {
           page: 1,
           limit: 5,
@@ -60,7 +65,8 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           ],
         },
       });
-      const options: OptionsOrGroups<string, any> = (
+
+      const options: OptionsOrGroups<unknown, GroupBase<unknown>> = (
         results?.contacts?.content || []
       )
         .filter((e: Contact) => e.emails.length)
@@ -71,6 +77,7 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           })),
         )
         .flat();
+
       callback(options);
     } catch (error) {
       callback([]);
@@ -106,6 +113,7 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           if (d?.__isNew__) {
             return `${d.label}`;
           }
+
           return `${d.label} - ${d.value}`;
         }}
       />

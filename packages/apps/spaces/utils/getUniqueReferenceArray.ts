@@ -16,5 +16,6 @@ export function getUniqueReferenceArray({
       merged.push(item);
     }
   });
+
   return merged;
 }

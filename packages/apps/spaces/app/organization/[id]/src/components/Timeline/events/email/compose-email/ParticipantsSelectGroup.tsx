@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
+
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { InputProps } from '@ui/form/Input';
-import { EmailParticipantSelect } from '@organization/src/components/Timeline/events/email/compose-email/EmailParticipantSelect';
 import { useOutsideClick } from '@ui/utils';
-import { Box } from '@ui/layout/Box';
 import { EmailSubjectInput } from '@organization/src/components/Timeline/events/email/compose-email/EmailSubjectInput';
-import { Button } from '@ui/form/Button';
-import Image from 'next/image';
+import { EmailParticipantSelect } from '@organization/src/components/Timeline/events/email/compose-email/EmailParticipantSelect';
 
 interface ParticipantSelectGroupGroupProps extends InputProps {
+  formId: string;
+  modal?: boolean;
   to: Array<{ label: string; value: string }>;
+
   cc: Array<{ label: string; value: string }>;
   bcc: Array<{ label: string; value: string }>;
-
-  modal?: boolean;
-  formId: string;
 }
 
 export const ParticipantsSelectGroup = ({

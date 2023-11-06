@@ -1,19 +1,20 @@
 import { useRef } from 'react';
 
-import { FormSelect } from '@ui/form/SyncSelect';
+import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { useOutsideClick } from '@ui/utils';
-import { getTagColorScheme, RoleTag } from './RoleTag';
-import { Flex } from '@chakra-ui/react';
+import { FormSelect } from '@ui/form/SyncSelect';
 import { SelectOption } from '@shared/types/SelectOptions';
+
+import { RoleTag, getTagColorScheme } from './RoleTag';
 
 interface FormRoleSelectProps {
   name: string;
   formId: string;
   isFocused: boolean;
-  data: SelectOption<string>[];
   placeholder?: string;
   isCardOpen?: boolean;
+  data: SelectOption<string>[];
   setIsFocused: (isFocused: boolean) => void;
 }
 
@@ -55,6 +56,7 @@ export const FormRoleSelect = ({
           chakraStyles={{
             multiValue: (props, data) => {
               const colorScheme = (() => getTagColorScheme(data.data.label))();
+
               return {
                 ...props,
                 fontSize: 'xs',
@@ -96,6 +98,7 @@ export const FormRoleSelect = ({
       </Text>
     );
   }
+
   return (
     <Flex
       gap={1}

@@ -1,25 +1,26 @@
 import { PropsWithChildren } from 'react';
 
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Avatar } from '@ui/media/Avatar';
-import { User01 } from '@ui/media/icons/User01';
-import { Card, CardBody, CardProps } from '@ui/presentation/Card';
 // @ts-expect-error types not available
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
-import { ViewInExternalAppButton } from '@ui/form/Button';
+
+import { Flex } from '@ui/layout/Flex';
+import { Avatar } from '@ui/media/Avatar';
+import { Text } from '@ui/typography/Text';
 import { Slack } from '@ui/media/logos/Slack';
+import { User01 } from '@ui/media/icons/User01';
+import { ViewInExternalAppButton } from '@ui/form/Button';
+import { Card, CardBody, CardProps } from '@ui/presentation/Card';
 
 interface SlackMessageCardProps extends PropsWithChildren {
   name: string;
-  sourceUrl?: string | null;
-  profilePhotoUrl?: null | string;
-  content: string;
-  onClick?: () => void;
   date: string;
+  content: string;
   w?: CardProps['w'];
+  onClick?: () => void;
   ml?: CardProps['ml'];
+  sourceUrl?: string | null;
   showDateOnHover?: boolean;
+  profilePhotoUrl?: null | string;
 }
 
 export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
@@ -38,6 +39,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
     const sanitizeContent = content.replace(/\n/g, '<br/>');
     const slack = escapeForSlackWithMarkdown(sanitizeContent);
     const regex = /(@[\w]+)/g;
+
     return slack.replace(
       regex,
       (matched: string): string =>

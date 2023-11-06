@@ -1,19 +1,19 @@
-import merge from 'lodash/merge';
 import { produce } from 'immer';
+import merge from 'lodash/merge';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
+import { useAddSocialMutation } from '@organization/src/graphql/addOrganizationSocial.generated';
 import {
   OrganizationQuery,
   useOrganizationQuery,
 } from '@organization/src/graphql/organization.generated';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import {
   GetOrganizationsQuery,
   useInfiniteGetOrganizationsQuery,
 } from '@organizations/graphql/getOrganizations.generated';
-import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
-import { useAddSocialMutation } from '@organization/src/graphql/addOrganizationSocial.generated';
 
 interface UseAboutPanelMethodsOptions {
   id: string;

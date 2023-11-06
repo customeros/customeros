@@ -1,21 +1,22 @@
 import React from 'react';
-import { Action } from '@graphql/types';
-import { Card, CardFooter } from '@ui/presentation/Card';
+
 import { Flex } from '@ui/layout/Flex';
+import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
-import { TimelineEventPreviewHeader } from '../../../preview/header/TimelineEventPreviewHeader';
-import { CardBody } from '@chakra-ui/card';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { Divider } from '@ui/presentation/Divider';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
-  getCurrencyString,
   getMetadata,
+  getCurrencyString,
 } from '@organization/src/components/Timeline/events/action/utils';
 import {
-  useTimelineEventPreviewMethodsContext,
   useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
+import { TimelineEventPreviewHeader } from '../../../preview/header/TimelineEventPreviewHeader';
 
 export const RenewalForecastUpdatedActionPreview = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();

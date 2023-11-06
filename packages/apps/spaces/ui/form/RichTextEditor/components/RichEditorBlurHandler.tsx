@@ -1,10 +1,11 @@
 import { FC } from 'react';
-import { useEditorEvent } from '@remirror/react';
 import { useField } from 'react-inverted-form';
 
+import { useEditorEvent } from '@remirror/react';
+
 export const RichEditorBlurHandler: FC<{
-  formId: string;
   name: string;
+  formId: string;
 }> = ({ formId, name }) => {
   const { getInputProps } = useField(name, formId);
   const { value, onBlur } = getInputProps();

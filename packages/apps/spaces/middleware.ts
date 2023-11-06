@@ -1,5 +1,6 @@
-import { NextRequestWithAuth, withAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+
+import { withAuth, NextRequestWithAuth } from 'next-auth/middleware';
 
 const apiPaths = [
   '/customer-os-api/',

@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
-import { FormControl, FormLabel, VisuallyHidden } from '@chakra-ui/react';
+
+import { FormLabel, FormControl, VisuallyHidden } from '@chakra-ui/react';
 
 import {
   AutoresizeTextarea,

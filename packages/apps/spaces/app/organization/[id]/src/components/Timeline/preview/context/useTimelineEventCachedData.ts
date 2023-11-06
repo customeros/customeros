@@ -1,11 +1,15 @@
+import { QueryKey, useQueryClient } from '@tanstack/react-query';
+
+import { TimelineEvent } from '@graphql/types';
 import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import {
   GetTimelineEventsQuery,
   useGetTimelineEventsQuery,
 } from '@organization/src/graphql/getTimelineEvents.generated';
-import { QueryKey, useQueryClient } from '@tanstack/react-query';
-import { TimelineEvent } from '@graphql/types';
+
+// TODO: revisit if this abstraction is useful for us or not or if we need to re-implement in a better way
+// Typing is done just so the compiler does not complain.
 
 export const useTimelineEventCachedData = () => {
   const [timelineMeta, _] = useTimelineMeta();
@@ -68,6 +72,7 @@ export const useTimelineEventCachedData = () => {
     return (
       (timelineEventsQueryCachedData as TimelineEvent) ||
       findTimelineEventByIdInPages(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (timelineInfiniteQueryCachedData as unknown as any)?.pages,
         timelineEventId,
       )

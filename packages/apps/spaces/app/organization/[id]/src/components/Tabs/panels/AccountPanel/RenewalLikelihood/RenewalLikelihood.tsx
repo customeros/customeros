@@ -1,28 +1,29 @@
 'use client';
 import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
+import { UseDisclosureReturn } from '@ui/utils';
+import { Heading } from '@ui/typography/Heading';
 import { IconButton } from '@ui/form/IconButton';
-import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Divider } from '@ui/presentation/Divider';
-import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
-import { RenewalLikelihoodModal } from './RenewalLikelihoodModal';
+import { getUserDisplayData } from '@spaces/utils/getUserEmail';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
   Maybe,
-  RenewalLikelihood as RenewalLikelihoodT,
   RenewalLikelihoodProbability,
+  RenewalLikelihood as RenewalLikelihoodT,
 } from '@graphql/types';
-import { getUserDisplayData } from '@spaces/utils/getUserEmail';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { UseDisclosureReturn } from '@chakra-ui/hooks/dist/use-disclosure';
+
+import { RenewalLikelihoodModal } from './RenewalLikelihoodModal';
 
 export type RenewalLikelihoodType = RenewalLikelihoodT;
 
 interface RenewalLikelihoodProps {
-  data: RenewalLikelihoodType;
   name: string;
+  data: RenewalLikelihoodType;
   infoModal: UseDisclosureReturn;
   updateModal: UseDisclosureReturn;
 }

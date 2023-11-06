@@ -1,4 +1,4 @@
-import { Contact, User } from '@graphql/types';
+import { User, Contact } from '@graphql/types';
 
 export const getContactDisplayName = (
   contact?: Partial<Contact | User> | null,
@@ -10,6 +10,7 @@ export const getContactDisplayName = (
   }
 
   const name = `${contact?.firstName} ${contact?.lastName}`;
+
   return name.trim().length ? name : 'Unnamed';
 };
 export const getContactDisplayFirstName = (

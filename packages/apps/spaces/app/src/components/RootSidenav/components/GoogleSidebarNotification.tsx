@@ -1,19 +1,19 @@
 import { signIn, useSession } from 'next-auth/react';
-
-import { FeaturedIcon } from '@ui/media/Icon';
-import { AlertCircle } from '@ui/media/icons/AlertCircle';
-import { Box } from '@ui/layout/Box';
-import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
-import { useDisclosure } from '@ui/utils';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import {
   GetGoogleSettings,
   OAuthUserSettingsInterface,
 } from 'services/settings/settingsService';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
+import { useDisclosure } from '@ui/utils';
+import { FeaturedIcon } from '@ui/media/Icon';
+import { AlertCircle } from '@ui/media/icons/AlertCircle';
+import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
 export const GoogleSidebarNotification = () => {
   const client = getGraphQLClient();

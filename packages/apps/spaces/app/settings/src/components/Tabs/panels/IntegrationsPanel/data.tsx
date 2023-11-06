@@ -6,11 +6,11 @@ interface Field {
 
 export interface IntegrationItem {
   key: string;
-  state: 'INACTIVE' | 'ACTIVE';
-  identifier: string;
   name: string;
   icon: string;
   fields: Field[];
+  identifier: string;
+  state: 'INACTIVE' | 'ACTIVE';
   isFromIntegrationApp?: boolean;
 }
 

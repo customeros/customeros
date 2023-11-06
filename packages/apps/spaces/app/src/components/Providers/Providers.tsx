@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import { RecoilRoot } from 'recoil';
 import { QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -12,8 +13,8 @@ import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvide
 import { NextAuthProvider } from './SessionProvider';
 
 interface ProvidersProps {
-  sessionEmail?: string | null;
   children: React.ReactNode;
+  sessionEmail?: string | null;
 }
 
 const hostname =

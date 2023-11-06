@@ -1,9 +1,10 @@
 'use client';
 import { useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+
 import { produce } from 'immer';
 import { signOut } from 'next-auth/react';
 import { useLocalStorage } from 'usehooks-ts';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';

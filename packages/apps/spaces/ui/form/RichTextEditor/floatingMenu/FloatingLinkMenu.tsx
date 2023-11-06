@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
+
 import { FloatingWrapper, useCurrentSelection } from '@remirror/react';
-import { useEffect, useState } from 'react';
 
 import { LinkComponent } from '@ui/form/RichTextEditor/floatingMenu/LinkInput';
 

@@ -1,19 +1,20 @@
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-inverted-form';
+
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Divider } from '@ui/presentation/Divider';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { Card, CardBody, CardFooter } from '@ui/layout/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { OrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
-import { invalidateAccountDetailsQuery } from '../utils';
 import { NotesDTO } from './Notes.dto';
+import { invalidateAccountDetailsQuery } from '../utils';
 
 interface NotesProps {
   id: string;
@@ -49,6 +50,7 @@ export const Notes = ({ data, id }: NotesProps) => {
           input: NotesDTO.toPayload({ id, note: action.payload.value }),
         });
       }
+
       return next;
     },
   });

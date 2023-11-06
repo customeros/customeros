@@ -1,17 +1,19 @@
 'use client';
 
-import { RenewalLikelihood, RenewalLikelihoodType } from './RenewalLikelihood';
+import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
+
+import { useDisclosure } from '@ui/utils';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
+
+import { Notes } from './Notes';
+import { TimeToRenewal } from './TimeToRenewal';
+import { AccountPanelSkeleton } from './AccountPanelSkeleton';
 import { RenewalForecast, RenewalForecastType } from './RenewalForecast';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
 import { BillingDetailsCard } from './BillingDetailsCard/BillingDetailsCard';
-import { AccountPanelSkeleton } from './AccountPanelSkeleton';
-import { TimeToRenewal } from './TimeToRenewal';
-import { Notes } from './Notes';
-import { useDisclosure } from '@ui/utils';
-import { useMemo } from 'react';
+import { RenewalLikelihood, RenewalLikelihoodType } from './RenewalLikelihood';
 
 export const AccountPanel = () => {
   const id = useParams()?.id as string;

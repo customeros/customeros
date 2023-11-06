@@ -1,6 +1,6 @@
-import differenceInMonths from 'date-fns/differenceInMonths';
 import differenceInDays from 'date-fns/differenceInDays';
 import differenceInWeeks from 'date-fns/differenceInWeeks';
+import differenceInMonths from 'date-fns/differenceInMonths';
 
 export function formatSocialUrl(value = '') {
   let url = value;
@@ -55,5 +55,6 @@ export function getTimeToRenewal(renewalDate: string) {
   if (months === 1 && weeks % 4 === 0) return [months, 'month'];
 
   const roundedMonths = weeks % 4 > 2 ? months + 1 : months;
+
   return [roundedMonths, 'months'];
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { Flex, FlexProps } from '@ui/layout/Flex';
 import { ButtonProps } from '@ui/form/Button';
+import { Flex, FlexProps } from '@ui/layout/Flex';
 
 interface DotProps extends FlexProps {
   colorScheme?: ButtonProps['colorScheme'];

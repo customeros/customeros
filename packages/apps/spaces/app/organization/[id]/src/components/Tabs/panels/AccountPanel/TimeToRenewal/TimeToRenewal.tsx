@@ -1,24 +1,25 @@
-import { useRef, useEffect, useState } from 'react';
 import { useForm } from 'react-inverted-form';
+import { useRef, useState, useEffect } from 'react';
+
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { Heading } from '@ui/typography/Heading';
 import { BillingDetails } from '@graphql/types';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
-import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { Divider } from '@ui/presentation/Divider';
+import { Heading } from '@ui/typography/Heading';
 import { FormSelect } from '@ui/form/SyncSelect';
+import { Divider } from '@ui/presentation/Divider';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { invalidateAccountDetailsQuery } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { useQueryClient } from '@tanstack/react-query';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { useUpdateBillingDetailsMutation } from '@organization/src/graphql/updateBillingDetails.generated';
+import { invalidateAccountDetailsQuery } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-import { getTimeToRenewal } from '../../../shared/util';
 import { frequencyOptions } from '../utils';
 import { TimeToRenewalDTO } from './TimeToRenewal.dto';
+import { getTimeToRenewal } from '../../../shared/util';
 
 interface TimeToRenewalsCardProps {
   id: string;
@@ -64,6 +65,7 @@ export const TimeToRenewal = ({ id, data }: TimeToRenewalsCardProps) => {
                   }),
                 },
               });
+
               return {
                 ...next,
                 values: {

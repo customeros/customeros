@@ -1,4 +1,5 @@
 import React from 'react';
+
 import styles from './inline-loader.module.scss';
 
 export const InlineLoader: React.FC<{ label?: string; color?: string }> = ({

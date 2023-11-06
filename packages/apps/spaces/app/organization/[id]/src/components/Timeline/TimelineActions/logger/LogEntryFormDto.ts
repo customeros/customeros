@@ -1,17 +1,17 @@
 import { LogEntry, LogEntryUpdateInput } from '@graphql/types';
 
 export interface LogEntryFormDtoI {
-  tags: Array<{ label: string; value: string }>;
   content: string;
-  contentType: string;
   appSource: string;
+  contentType: string;
   startedAt: string | Date;
+  tags: Array<{ label: string; value: string }>;
 }
 
 export interface LogEntryForm {
-  tags: Array<{ label: string; value: string }>;
   content: string;
   contentType: string;
+  tags: Array<{ label: string; value: string }>;
 }
 
 export class LogEntryFormDto implements LogEntryForm {

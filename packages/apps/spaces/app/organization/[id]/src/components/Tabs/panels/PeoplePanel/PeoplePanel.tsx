@@ -1,25 +1,24 @@
 'use client';
 import { MouseEvent } from 'react';
 import { useParams } from 'next/navigation';
+
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Flex } from '@ui/layout/Flex';
 import { Box } from '@ui/layout/Box';
-import { Text } from '@ui/typography/Text';
-import { Button } from '@ui/form/Button';
+import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
+import { Button } from '@ui/form/Button';
+import { Contact } from '@graphql/types';
+import { Text } from '@ui/typography/Text';
 import { Fade } from '@ui/transitions/Fade';
-
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { invalidateQuery } from '@organization/src/components/Tabs/panels/PeoplePanel/util';
 import { useCreateContactMutation } from '@organization/src/graphql/createContact.generated';
-import { useAddOrganizationToContactMutation } from '@organization/src/graphql/addContactToOrganization.generated';
-
 import { ContactCard } from '@organization/src/components/Tabs/panels/PeoplePanel/ContactCard/ContactCard';
 import { useOrganizationPeoplePanelQuery } from '@organization/src/graphql/organizationPeoplePanel.generated';
-import { invalidateQuery } from '@organization/src/components/Tabs/panels/PeoplePanel/util';
-import { Contact } from '@graphql/types';
-import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 import { PeoplePanelSkeleton } from '@organization/src/components/Tabs/panels/PeoplePanel/PeoplePanelSkeleton';
+import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { useAddOrganizationToContactMutation } from '@organization/src/graphql/addContactToOrganization.generated';
 
 export const PeoplePanel = () => {
   const id = useParams()?.id as string;

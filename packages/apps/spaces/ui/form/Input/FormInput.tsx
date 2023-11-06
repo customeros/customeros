@@ -3,12 +3,13 @@
 import { forwardRef } from 'react';
 import { useField } from 'react-inverted-form';
 
+import { FormLabel, FormControl, VisuallyHidden } from '@chakra-ui/react';
+
 import { Input, InputProps } from './Input';
-import { FormControl, FormLabel, VisuallyHidden } from '@chakra-ui/react';
 
 interface FormInputProps extends InputProps {
-  formId: string;
   name: string;
+  formId: string;
   label?: string;
   isLabelVisible?: boolean;
 }

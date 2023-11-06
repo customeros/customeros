@@ -1,18 +1,19 @@
 import axios from 'axios';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { DefaultSession } from 'next-auth/core/types';
+
 import { DataSource } from '@graphql/types';
+import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 export type SendMailRequest = {
-  username: string;
-  content: string;
-  channel: string;
-  direction: string;
   to: string[];
   cc: string[];
   bcc: string[];
+  content: string;
+  channel: string;
+  username: string;
   subject?: string;
   replyTo?: string;
+  direction: string;
 };
 
 const generateEmailParticipant = (type: string, email: string) => ({
@@ -91,7 +92,7 @@ export const handleSendEmail = (
   bcc: Array<string> = [],
   replyTo: null | string,
   subject: null | string,
-  onSuccess: (res: any) => void,
+  onSuccess: (res: unknown) => void,
   onError: () => void,
   user?: DefaultSession['user'],
 ) => {

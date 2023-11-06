@@ -1,12 +1,13 @@
 import React from 'react';
-import { Text } from '@ui/typography/Text';
-import { Flex } from '@ui/layout/Flex';
-import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { Box } from '@ui/layout/Box';
-import { DatePicker as ReactDatePicker } from 'react-date-picker';
-import { FormInput } from '@ui/form/Input';
 import { useField } from 'react-inverted-form';
+import { DatePicker as ReactDatePicker } from 'react-date-picker';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { FormInput } from '@ui/form/Input';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 
 const calendarStyles = {
   '& .react-date-picker--open .react-date-picker__calendar-button, .react-date-picker:focus-within .react-date-picker__calendar-button, .react-date-picker:focus .react-date-picker__calendar-button, .react-date-picker:focus-visible .react-date-picker__calendar-button':
@@ -31,8 +32,8 @@ const calendarStyles = {
   },
 };
 export const LogEntryDatePicker: React.FC<{
-  event: LogEntryWithAliases;
   formId: string;
+  event: LogEntryWithAliases;
 }> = ({ event, formId }) => {
   const { getInputProps } = useField('date', formId);
   const { id, onChange, value: dateValue, onBlur } = getInputProps();

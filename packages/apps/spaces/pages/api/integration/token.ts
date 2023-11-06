@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+
 import jwt from 'jsonwebtoken';
 
 const WORKSPACE_KEY = process.env.INTEGRATION_APP_WORKSPACE_KEY;
@@ -34,7 +35,7 @@ export default async function handler(
   const token = jwt.sign(tokenData, PRIVATE_KEY_VALUE, {
     issuer: WORKSPACE_KEY,
     expiresIn: 3600,
-    algorithm: 'ES256'
+    algorithm: 'ES256',
   });
 
   res.status(200).json({ token });

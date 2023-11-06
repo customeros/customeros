@@ -1,40 +1,42 @@
 import React from 'react';
+
 import copy from 'copy-to-clipboard';
 
-import { CardHeader, CardBody } from '@ui/presentation/Card';
-import { Heading } from '@ui/typography/Heading';
-import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { VStack } from '@ui/layout/Stack';
-import { Tooltip } from '@ui/presentation/Tooltip';
-import { IconButton } from '@ui/form/IconButton';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { Text } from '@ui/typography/Text';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import { SlackMessageCard } from '@organization/src/components/Timeline/events/slack/SlackMessageCard';
-import { getName } from '@spaces/utils/getParticipantsName';
-import {
-  ContactParticipant,
-  InteractionEvent,
-  InteractionEventParticipant,
-  JobRoleParticipant,
-  UserParticipant,
-} from '@graphql/types';
+import { Heading } from '@ui/typography/Heading';
+import { IconButton } from '@ui/form/IconButton';
+import { Tooltip } from '@ui/presentation/Tooltip';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { Divider } from '@ui/presentation/Divider';
-import { useGetTimelineEventsQuery } from '@organization/src/graphql/getTimelineEvents.generated';
+import { getName } from '@spaces/utils/getParticipantsName';
+import { CardBody, CardHeader } from '@ui/presentation/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGetTimelineEventsQuery } from '@organization/src/graphql/getTimelineEvents.generated';
+import { SlackMessageCard } from '@organization/src/components/Timeline/events/slack/SlackMessageCard';
+import {
+  UserParticipant,
+  InteractionEvent,
+  ContactParticipant,
+  JobRoleParticipant,
+  InteractionEventParticipant,
+} from '@graphql/types';
+import {
+  useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 import { MessageCardSkeleton } from '../../shared';
-import {
-  useTimelineEventPreviewMethodsContext,
-  useTimelineEventPreviewStateContext,
-} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
   const sender =
     (sentBy?.[0] as ContactParticipant)?.contactParticipant ||
     (sentBy?.[0] as JobRoleParticipant)?.jobRoleParticipant?.contact ||
     (sentBy?.[0] as UserParticipant)?.userParticipant;
+
   return sender;
 };
 export const SlackThreadPreviewModal: React.FC = () => {
@@ -152,6 +154,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
                 )?.sentBy;
 
                 const replyParticipant = getParticipant(sentBy);
+
                 return (
                   <SlackMessageCard
                     key={`slack-event-thread-reply-preview-modal-${reply.id}`}

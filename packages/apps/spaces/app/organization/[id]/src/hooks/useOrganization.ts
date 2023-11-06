@@ -3,5 +3,6 @@ import { useOrganizationQuery } from '@organization/src/graphql/organization.gen
 
 export const useOrganization = ({ id }: { id: string }) => {
   const client = getGraphQLClient();
+
   return useOrganizationQuery(client, { id });
 };

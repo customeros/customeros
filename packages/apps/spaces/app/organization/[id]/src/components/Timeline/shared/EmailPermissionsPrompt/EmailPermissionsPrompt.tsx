@@ -1,13 +1,15 @@
 import { FC } from 'react';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Mail01 } from '@ui/media/icons/Mail01';
-import { FeaturedIcon } from '@ui/media/Icon';
-import { Button } from '@ui/form/Button';
+
 import { signIn } from 'next-auth/react';
-import { toastError } from '@ui/presentation/Toast';
-import { Box } from '@chakra-ui/react';
+
+import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
+import { Text } from '@ui/typography/Text';
+import { FeaturedIcon } from '@ui/media/Icon';
+import { Mail01 } from '@ui/media/icons/Mail01';
 import { Google } from '@ui/media/logos/Google';
+import { toastError } from '@ui/presentation/Toast';
 
 export const MissingPermissionsPrompt: FC<{
   modal: boolean;

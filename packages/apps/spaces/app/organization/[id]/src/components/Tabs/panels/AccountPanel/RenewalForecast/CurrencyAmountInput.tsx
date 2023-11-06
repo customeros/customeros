@@ -50,5 +50,6 @@ function format(number: string) {
   if (number.endsWith('.') && parts.length === 1) {
     return number + '.';
   }
+
   return '$' + parts.join('.');
 }

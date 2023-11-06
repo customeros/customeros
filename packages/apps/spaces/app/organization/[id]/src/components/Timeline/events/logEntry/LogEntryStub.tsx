@@ -1,14 +1,16 @@
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Card, CardBody } from '@ui/presentation/Card';
-import { User, Contact } from '@graphql/types';
-import React, { useCallback, useMemo } from 'react';
-import { Image } from '@ui/media/Image';
+import React, { useMemo, useCallback } from 'react';
+
 import noteIcon from 'public/images/event-ill-log-stub.png';
+
 import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
+import { Image } from '@ui/media/Image';
+import { Text } from '@ui/typography/Text';
+import { Phone } from '@ui/media/icons/Phone';
+import { User, Contact } from '@graphql/types';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Calendar } from '@ui/media/icons/Calendar';
-import { Phone } from '@ui/media/icons/Phone';
+import { Card, CardBody } from '@ui/presentation/Card';
 import { MessageTextSquare01 } from '@ui/media/icons/MessageTextSquare01';
 import { LogEntryWithAliases } from '@organization/src/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
@@ -33,9 +35,8 @@ function getAuthor(user: User | Contact) {
 }
 
 export const LogEntryStub = ({ data }: LogEntryStubProps) => {
-    const { openModal } = useTimelineEventPreviewMethodsContext();
+  const { openModal } = useTimelineEventPreviewMethodsContext();
   const isTemporary = !data?.updatedAt;
-
 
   const fullName = getAuthor(data?.logEntryCreatedBy);
   const getLogEntryIcon = useCallback((type: string | null) => {
@@ -62,6 +63,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(`<p>${data?.content}</p>`, 'text/html');
     const element = doc.querySelector('.customeros-tag');
+
     // Return the inner HTML of the found element
     return element?.innerHTML || null;
   }, [data.tags, data.content]);
@@ -71,6 +73,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
     const icon = getLogEntryIcon(firstTag);
 
     if (!icon) return null;
+
     return (
       <Flex
         zIndex={1}

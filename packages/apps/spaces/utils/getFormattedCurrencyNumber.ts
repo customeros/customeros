@@ -14,6 +14,7 @@ function abbreviateNumber(num: number): string {
 export function formatCurrency(amount: number): string {
   if (`${amount}`.length >= 6) {
     const abbreviatedNumber = abbreviateNumber(amount);
+
     return `$${abbreviatedNumber}`;
   } else {
     return Intl.NumberFormat('en-US', {

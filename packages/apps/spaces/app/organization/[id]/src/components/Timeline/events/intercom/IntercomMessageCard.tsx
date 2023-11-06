@@ -1,24 +1,24 @@
 import React, { PropsWithChildren } from 'react';
-import { Card, CardBody, CardProps } from '@ui/presentation/Card';
-import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
-import { Avatar } from '@ui/media/Avatar';
-import { User01 } from '@ui/media/icons/User01';
 
-import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
-import { ViewInExternalAppButton } from '@ui/form/Button';
+import { Flex } from '@ui/layout/Flex';
+import { Avatar } from '@ui/media/Avatar';
+import { Text } from '@ui/typography/Text';
+import { User01 } from '@ui/media/icons/User01';
 import Intercom from '@ui/media/icons/Intercom';
+import { ViewInExternalAppButton } from '@ui/form/Button';
+import { Card, CardBody, CardProps } from '@ui/presentation/Card';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 
 interface IntercomMessageCardProps extends PropsWithChildren {
   name: string;
-  sourceUrl?: string | null;
-  profilePhotoUrl?: null | string;
-  content: string;
-  onClick?: () => void;
   date: string;
+  content: string;
   w?: CardProps['w'];
+  onClick?: () => void;
   ml?: CardProps['ml'];
+  sourceUrl?: string | null;
   showDateOnHover?: boolean;
+  profilePhotoUrl?: null | string;
 }
 
 export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({

@@ -1,16 +1,16 @@
 import { convert } from 'html-to-text';
 
-import { Meeting } from '@graphql/types';
 import { Flex } from '@ui/layout/Flex';
-import { Center } from '@ui/layout/Center';
-import { VStack } from '@ui/layout/Stack';
-import { Text } from '@ui/typography/Text';
 import { Icons } from '@ui/media/Icon';
+import { Meeting } from '@graphql/types';
+import { VStack } from '@ui/layout/Stack';
+import { Center } from '@ui/layout/Center';
+import { Text } from '@ui/typography/Text';
 import { Card, CardBody } from '@ui/presentation/Card';
-
-import { getParticipants, getParticipantName } from '../utils';
-import { MeetingIcon } from './icons';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
+import { MeetingIcon } from './icons';
+import { getParticipants, getParticipantName } from '../utils';
 
 interface MeetingStubProps {
   data: Meeting;

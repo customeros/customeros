@@ -18,6 +18,7 @@ const prettierConfig = JSON.parse(
 
 function getSvgViewBox(svgString) {
   const match = svgString.match(/viewBox="([^"]*)"/);
+
   return match ? match[1] : '0 0 24 24'; // return matched viewBox value or null if not found
 }
 
@@ -58,7 +59,9 @@ files.forEach((name) => {
     const filePath = process.cwd() + '/ui/media/logos/' + outFileName;
 
     writeFileSync(filePath, formattedOutContent);
-  } catch (e) {}
+  } catch (e) {
+    // handle error
+  }
 });
 
 function camelize(str) {

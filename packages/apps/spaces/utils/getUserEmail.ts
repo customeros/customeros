@@ -12,5 +12,6 @@ export const getUserDisplayData = (user?: User | null): string => {
   if (user?.firstName || user?.lastName) {
     return `${user?.firstName} ${user?.lastName}`.trim();
   }
+
   return 'Unknown';
 };

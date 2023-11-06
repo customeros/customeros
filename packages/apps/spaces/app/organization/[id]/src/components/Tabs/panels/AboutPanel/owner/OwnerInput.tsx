@@ -1,14 +1,15 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useRef, useMemo, useCallback } from 'react';
+
+import { useQueryClient } from '@tanstack/react-query';
+
 import { User } from '@graphql/types';
+import { User02 } from '@ui/media/icons/User02';
 import { Select } from '@ui/form/SyncSelect/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
 import { useSetOrganizationOwnerMutation } from '@organizations/graphql/setOrganizationOwner.generated';
 import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';
-import { User02 } from '@ui/media/icons/User02';
-import { useQueryClient } from '@tanstack/react-query';
-
 import {
   OrganizationQuery,
   useOrganizationQuery,
@@ -55,6 +56,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
       queryClient.cancelQueries(queryKey);
       queryClient.setQueryData<OrganizationQuery>(queryKey, (oldData) => {
         if (!oldData || !oldData?.organization) return;
+
         return {
           ...oldData,
           organization: {
@@ -63,6 +65,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
           },
         };
       });
+
       return { organization };
     },
     onError: (_, __, context) => {
@@ -88,6 +91,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
       queryClient.cancelQueries(queryKey);
       queryClient.setQueryData<OrganizationQuery>(queryKey, (oldData) => {
         if (!oldData || !oldData?.organization) return;
+
         return {
           ...oldData,
           organization: {
@@ -96,6 +100,7 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
           },
         };
       });
+
       return { organization };
     },
     onError: (_, __, context) => {

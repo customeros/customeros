@@ -1,8 +1,10 @@
 import React from 'react';
+
 import { Box } from '@ui/layout/Box';
-import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
 import { useTimelineActionContext } from '@organization/src/components/Timeline/TimelineActions/context/TimelineActionContext';
+
 import { EmailTimelineAction } from './email/EmailTimelineAction';
+import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
 
 export const TimelineActionsArea: React.FC = () => {
   const { openedEditor } = useTimelineActionContext();

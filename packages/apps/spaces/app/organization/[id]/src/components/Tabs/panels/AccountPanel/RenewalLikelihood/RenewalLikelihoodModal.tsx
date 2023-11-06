@@ -1,12 +1,26 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useParams } from 'next/navigation';
+import { useRef, useState, useEffect } from 'react';
 
+import { useSession } from 'next-auth/react';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { Dot } from '@ui/media/Dot';
 import { Flex } from '@ui/layout/Flex';
-import { Heading } from '@ui/typography/Heading';
-import { Button, ButtonGroup } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-import { AutoresizeTextarea } from '@ui/form/Textarea';
+import { Heading } from '@ui/typography/Heading';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import { Button, ButtonGroup } from '@ui/form/Button';
+import { AutoresizeTextarea } from '@ui/form/Textarea';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { NEW_DATE } from '@organization/src/components/Timeline/OrganizationTimeline';
+import {
+  User,
+  RenewalLikelihood,
+  RenewalLikelihoodProbability,
+} from '@graphql/types';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
 import {
   Modal,
   ModalBody,
@@ -16,30 +30,16 @@ import {
   ModalOverlay,
   ModalCloseButton,
 } from '@ui/overlay/Modal';
-import { Dot } from '@ui/media/Dot';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-
-import { useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
-import {
-  RenewalLikelihood,
-  RenewalLikelihoodProbability,
-  User,
-} from '@graphql/types';
 import {
   OrganizationAccountDetailsQuery,
   useOrganizationAccountDetailsQuery,
 } from '@organization/src/graphql/getAccountPanelDetails.generated';
-import { useSession } from 'next-auth/react';
-import { NEW_DATE } from '@organization/src/components/Timeline/OrganizationTimeline';
-import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 
 interface RenewalLikelihoodModalProps {
+  name: string;
   isOpen: boolean;
   onClose: () => void;
   renewalLikelihood: RenewalLikelihood;
-  name: string;
 }
 
 export const RenewalLikelihoodModal = ({
@@ -71,6 +71,7 @@ export const RenewalLikelihoodModal = ({
         getOrganizationQueryKey,
         (oldData) => {
           if (!oldData || !oldData?.organization) return;
+
           return {
             organization: {
               ...(oldData?.organization ?? {}),
@@ -95,7 +96,7 @@ export const RenewalLikelihoodModal = ({
           from: NEW_DATE,
           size: 50,
         }),
-        (oldData: any) => {
+        (oldData) => {
           const newEvent = {
             __typename: 'Action',
             id: `timeline-event-action-new-id-${new Date()}`,
@@ -110,6 +111,7 @@ export const RenewalLikelihoodModal = ({
             content: `Renewal likelihood set to ${probability} by ${session?.user?.name}`,
           };
 
+          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
           if (!oldData || !oldData.pages?.length) {
             return {
               pages: [
@@ -124,7 +126,9 @@ export const RenewalLikelihoodModal = ({
             };
           }
 
+          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
           const firstPage = oldData.pages[0] ?? {};
+          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
           const pages = oldData.pages?.slice(1);
 
           const firstPageWithEvent = {

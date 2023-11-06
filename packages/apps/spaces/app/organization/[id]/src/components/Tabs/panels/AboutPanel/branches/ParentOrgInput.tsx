@@ -1,26 +1,28 @@
 import React, { useState } from 'react';
-import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
+
+import { produce } from 'immer';
+import { InfiniteData, useQueryClient } from '@tanstack/react-query';
+
 import { Select } from '@ui/form/SyncSelect';
-import { useAddSubsidiaryToOrganizationMutation } from '@organization/src/graphql/addSubsidiaryToOrganization.generated';
+import { ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useRemoveSubsidiaryToOrganizationMutation } from '@organization/src/graphql/removeSubsidiaryToOrganization.generated';
+import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
+import { useGetOrganizationOptionsQuery } from '@organization/src/graphql/getOrganizationOptions.generated';
 import {
   OrganizationQuery,
   useOrganizationQuery,
 } from '@organization/src/graphql/organization.generated';
-import { InfiniteData, useQueryClient } from '@tanstack/react-query';
+import { useAddSubsidiaryToOrganizationMutation } from '@organization/src/graphql/addSubsidiaryToOrganization.generated';
+import { useRemoveSubsidiaryToOrganizationMutation } from '@organization/src/graphql/removeSubsidiaryToOrganization.generated';
 import {
   GetOrganizationsQuery,
   useInfiniteGetOrganizationsQuery,
 } from '@organizations/graphql/getOrganizations.generated';
-import { produce } from 'immer';
-import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
-import { ComparisonOperator } from '@graphql/types';
-import { useGetOrganizationOptionsQuery } from '@organization/src/graphql/getOrganizationOptions.generated';
 
 interface ParentOrgInputProps {
-  parentOrg: { label: string; value: string } | null;
   id: string;
+  parentOrg: { label: string; value: string } | null;
 }
 
 export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
@@ -170,6 +172,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
             });
           },
         );
+
         return { previousEntries, previousOrganizationsEntries };
       },
 

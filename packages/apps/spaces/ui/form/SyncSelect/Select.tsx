@@ -1,19 +1,22 @@
-import { forwardRef, useCallback, useMemo } from 'react';
+import { useMemo, forwardRef, useCallback } from 'react';
+
+import omit from 'lodash/omit';
 import {
-  Select as _Select,
   Props,
+  GroupBase,
   ControlProps,
   SelectInstance,
   chakraComponents,
+  Select as _Select,
+  ChakraStylesConfig,
   ClearIndicatorProps,
   LoadingIndicatorProps,
-  GroupBase,
-  ChakraStylesConfig,
 } from 'chakra-react-select';
 
 import { Icons } from '@ui/media/Icon';
-import omit from 'lodash/omit';
 
+// Exhaustively typing this Props interface does not offer any benefit at this moment
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface SelectProps extends Props<any, any, any> {
   leftElement?: React.ReactNode;
 }
@@ -44,6 +47,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         })();
 
         if (!rest.isFocused) return null;
+
         return (
           <chakraComponents.ClearIndicator {...rest} className='clearButton'>
             <Icons.Delete color='gray.500' boxSize={boxSize} />

@@ -1,12 +1,14 @@
+import { useField } from 'react-inverted-form';
 import React, {
   FC,
   forwardRef,
   PropsWithChildren,
   useImperativeHandle,
 } from 'react';
-import { Remirror, ThemeProvider, Toolbar } from '@remirror/react';
-import { useField } from 'react-inverted-form';
+
 import { prosemirrorNodeToHtml } from 'remirror';
+import { Toolbar, Remirror, ThemeProvider } from '@remirror/react';
+
 import { RemirrorProps } from '@ui/form/RichTextEditor/types';
 import { FloatingLinkToolbar } from '@ui/form/RichTextEditor/floatingMenu/FloatingLinkMenu';
 
@@ -16,6 +18,8 @@ export const RichTextEditor: FC<
     formId: string;
     placeholder?: string;
     showToolbar: boolean;
+    // exhaustively typing this is not really necessary for us at the moment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } & RemirrorProps<any> &
     PropsWithChildren
 > = forwardRef(

@@ -1,5 +1,4 @@
 import { GraphQLClient } from 'graphql-request';
-
 import {
   useInfiniteQuery,
   UseInfiniteQueryOptions,

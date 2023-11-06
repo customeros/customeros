@@ -1,36 +1,40 @@
 'use client';
-import React, { FC, useCallback, useEffect, useMemo } from 'react';
-import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
-import { useIsRestoring } from '@tanstack/react-query';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Virtuoso } from 'react-virtuoso';
-import { EmailStub, TimelineItem } from './events';
-import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
-import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
-import { Button } from '@ui/form/Button';
-import { Flex } from '@ui/layout/Flex';
-import { EmptyTimeline } from '@organization/src/components/Timeline/EmptyTimeline';
-import { TimelineItemSkeleton } from '@organization/src/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
-import { TimelineActions } from '@organization/src/components/Timeline/TimelineActions/TimelineActions';
+import React, { FC, useMemo, useEffect, useCallback } from 'react';
+
+import { useIsRestoring } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query';
-import { SlackStub } from '@organization/src/components/Timeline/events/slack/SlackStub';
-import { MeetingStub } from './events/meeting/MeetingStub';
-import { TimelineEventPreviewModal } from '@organization/src/components/Timeline/preview/TimelineEventPreviewModal';
-import {
-  InteractionEventWithDate,
-  LogEntryWithAliases,
-  TimelineEvent,
-} from './types';
-import { UserActionStub } from '@organization/src/components/Timeline/events/action/UserActionStub';
-import { IntercomStub } from '@organization/src/components/Timeline/events/intercom/IntercomStub';
+import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
+
+import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { ExternalSystemType } from '@graphql/types';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { EmptyTimeline } from '@organization/src/components/Timeline/EmptyTimeline';
+import { SlackStub } from '@organization/src/components/Timeline/events/slack/SlackStub';
+import { IssueStub } from '@organization/src/components/Timeline/events/issue/IssueStub';
+import { IntercomStub } from '@organization/src/components/Timeline/events/intercom/IntercomStub';
 import { LogEntryStub } from '@organization/src/components/Timeline/events/logEntry/LogEntryStub';
+import { UserActionStub } from '@organization/src/components/Timeline/events/action/UserActionStub';
+import { TimelineActions } from '@organization/src/components/Timeline/TimelineActions/TimelineActions';
+import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
+import { TimelineEventPreviewModal } from '@organization/src/components/Timeline/preview/TimelineEventPreviewModal';
+import { TimelineItemSkeleton } from '@organization/src/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
 
 import { useTimelineMeta } from './shared/state';
-import { IssueStub } from '@organization/src/components/Timeline/events/issue/IssueStub';
+import { EmailStub, TimelineItem } from './events';
+import { MeetingStub } from './events/meeting/MeetingStub';
+import { useInfiniteGetTimelineQuery } from '../../graphql/getTimeline.generated';
+import {
+  TimelineEvent,
+  LogEntryWithAliases,
+  InteractionEventWithDate,
+} from './types';
 
+// TODO: type this context accordingly
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
     <Button
@@ -95,6 +99,7 @@ export const OrganizationTimeline: FC = () => {
             -1,
           )?.[0] as InteractionEventWithDate;
           const lastEventDate = getEventDate(lastEvent as TimelineEvent);
+
           return {
             from: lastEvent ? lastEventDate : new Date(),
           };

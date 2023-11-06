@@ -1,10 +1,11 @@
 import React from 'react';
-import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
-import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+
 import { Flex } from '@ui/layout/Flex';
-import { Divider } from '@ui/presentation/Divider';
-import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
 import { VStack } from '@ui/layout/Stack';
+import { Divider } from '@ui/presentation/Divider';
+import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
+import { Skeleton, SkeletonCircle } from '@ui/presentation/Skeleton';
+import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
 export const AccountPanelSkeleton: React.FC = () => {
   return (
@@ -30,8 +31,8 @@ const SkeletonCard = ({
   children,
   withValue = true,
 }: {
-  children?: React.ReactNode;
   withValue?: boolean;
+  children?: React.ReactNode;
 }) => {
   return (
     <Card

@@ -1,6 +1,5 @@
 import { Text } from '@ui/typography/Text';
 import { RenewalCycle } from '@graphql/types';
-
 import { getTimeToRenewal } from '@organization/src/components/Tabs/shared/util';
 
 interface TimeToRenewalCellProps {

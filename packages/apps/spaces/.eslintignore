@@ -1,1 +1,2 @@
-/scripts
+/node_modules
+/app/src/types/__generated__/graphql.types.ts

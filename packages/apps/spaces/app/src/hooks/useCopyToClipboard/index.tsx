@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { toastSuccess } from '@ui/presentation/Toast';
 
 type CopiedValue = string | null;
@@ -17,9 +18,11 @@ export function useCopyToClipboard(): [CopiedValue, CopyFn] {
       await navigator.clipboard.writeText(text);
       setCopiedText(text);
       toastSuccess(message, `copied-to-clipboard${text}`);
+
       return true;
     } catch (error) {
       setCopiedText(null);
+
       return false;
     }
   };

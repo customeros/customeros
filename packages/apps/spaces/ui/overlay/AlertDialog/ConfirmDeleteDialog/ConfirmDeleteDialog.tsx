@@ -1,30 +1,31 @@
-import React, { MouseEventHandler, useRef } from 'react';
+import React, { useRef, MouseEventHandler } from 'react';
 
-import {
-  AlertDialog,
-  AlertDialogCloseButton,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
-} from '@ui/overlay/AlertDialog';
-import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
-import { FeaturedIcon, Icons } from '@ui/media/Icon';
 import { AlertDialogBody } from '@chakra-ui/modal';
 
+import { Button } from '@ui/form/Button';
+import { Text } from '@ui/typography/Text';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
+import {
+  AlertDialog,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  AlertDialogCloseButton,
+} from '@ui/overlay/AlertDialog';
+
 interface ConfirmDeleteDialogProps {
+  label: string;
   isOpen: boolean;
   isLoading?: boolean;
   onClose: () => void;
-  onConfirm: MouseEventHandler<HTMLButtonElement>;
-  label: string;
   description?: string;
+  colorScheme?: string;
+  icon?: React.ReactNode;
   body?: React.ReactNode;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;
-  icon?: any;
-  colorScheme?: string;
+  onConfirm: MouseEventHandler<HTMLButtonElement>;
 }
 
 export const ConfirmDeleteDialog = ({

@@ -1,47 +1,50 @@
-import React, { useMemo, useState } from 'react';
-import { CardBody } from '@ui/presentation/Card';
-import { Flex } from '@ui/layout/Flex';
-import { EmailMetaDataEntry } from './EmailMetaDataEntry';
-import {
-  useTimelineEventPreviewMethodsContext,
-  useTimelineEventPreviewStateContext,
-} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
-import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import Image from 'next/image';
 import { useForm } from 'react-inverted-form';
+import { VirtuosoHandle } from 'react-virtuoso';
+import React, { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+
+import { useSession } from 'next-auth/react';
+import { useRemirror } from '@remirror/react';
+import { htmlToProsemirrorNode } from 'remirror';
+
+import { Flex } from '@ui/layout/Flex';
+import { useDisclosure } from '@ui/utils';
+import { CardBody } from '@ui/presentation/Card';
+import { InteractionEvent } from '@graphql/types';
+import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
+import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
+import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
+import { handleSendEmail } from '@organization/src/components/Timeline/events/email/compose-email/utils';
+import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
+import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
+import { ComposeEmailContainer } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmailContainer';
 import {
   ComposeEmailDto,
   ComposeEmailDtoI,
 } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail.dto';
-import { handleSendEmail } from '@organization/src/components/Timeline/events/email/compose-email/utils';
-import { useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import { useDisclosure } from '@ui/utils';
-import { useRemirror } from '@remirror/react';
-import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
-import { htmlToProsemirrorNode } from 'remirror';
-import { InteractionEvent } from '@graphql/types';
-import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
-import { TimelinePreviewBackdrop } from '@organization/src/components/Timeline/preview/TimelinePreviewBackdrop';
-import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
-import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
-import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
-import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
-import { VirtuosoHandle } from 'react-virtuoso';
-import { ComposeEmailContainer } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmailContainer';
+import {
+  useTimelineEventPreviewStateContext,
+  useTimelineEventPreviewMethodsContext,
+} from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
+import { EmailMetaDataEntry } from './EmailMetaDataEntry';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
 const FORWARD_MODE = 'forward';
 declare type FieldProps = {
+  error?: string;
   meta: {
     pristine: boolean;
     hasError: boolean;
     isTouched: boolean;
   };
-  error?: string;
 };
 
 declare type Fields<T> = Record<keyof T, FieldProps>;
@@ -115,7 +118,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     }
   };
 
-  const handleEmailSendSuccess = async (response: any) => {
+  const handleEmailSendSuccess = async (response: unknown) => {
     await updateTimelineCache(response, queryKey);
 
     setDefaultValues(defaultValues);
@@ -210,6 +213,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
     setIsSending(true);
     const id = params.get('events');
+
     return handleSendEmail(
       state.values.content,
       to,

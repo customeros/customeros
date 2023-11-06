@@ -1,20 +1,20 @@
 'use client';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
+
 import { Flex } from '@ui/layout/Flex';
+import { Issue } from '@graphql/types';
 import { VStack } from '@ui/layout/Stack';
 import { Fade } from '@ui/transitions/Fade';
 import { Heading } from '@ui/typography/Heading';
-
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { Issue } from '@graphql/types';
-import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
-import { IssueCard } from '@organization/src/components/Tabs/panels/IssuesPanel/IssueCard/IssueCard';
 import { Collapse } from '@ui/transitions/Collapse';
-import React, { useState } from 'react';
-import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { ChevronUp } from '@ui/media/icons/ChevronUp';
-import { IssuesPanelSkeleton } from '@organization/src/components/Tabs/panels/IssuesPanel/IssuesPanelSkeleton';
+import { ChevronDown } from '@ui/media/icons/ChevronDown';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetIssuesQuery } from '@organization/src/graphql/getIssues.generated';
+import { IssueCard } from '@organization/src/components/Tabs/panels/IssuesPanel/IssueCard/IssueCard';
+import { IssuesPanelSkeleton } from '@organization/src/components/Tabs/panels/IssuesPanel/IssuesPanelSkeleton';
+import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 import { EmptyIssueMessage } from '@organization/src/components/Tabs/panels/IssuesPanel/EmptyIssueMessage/EmptyIssueMessage';
 
 export const NEW_DATE = new Date(new Date().setDate(new Date().getDate() + 1));

@@ -1,12 +1,13 @@
 'use client';
 import React, { FC, PropsWithChildren } from 'react';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { Text } from '@ui/typography/Text';
+
 import { Box } from '@ui/layout/Box';
+import { Text } from '@ui/typography/Text';
+import { DateTimeUtils } from '@spaces/utils/date';
 
 interface TimelineItemProps extends PropsWithChildren {
-  showDate: boolean;
   date: string;
+  showDate: boolean;
 }
 
 export const TimelineItem: FC<TimelineItemProps> = ({

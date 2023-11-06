@@ -1,7 +1,7 @@
-import { Organization, Social, OrganizationUpdateInput } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
-
+import { Social, Organization, OrganizationUpdateInput } from '@graphql/types';
 import { OrganizationQuery } from '@organization/src/graphql/organization.generated';
+
 import {
   industryOptions,
   employeesOptions,
@@ -27,12 +27,12 @@ export interface OrganizationAboutForm
     | 'valueProposition'
     | 'lastFundingAmount'
   > {
-  businessType: SelectOption | null;
-  isCustomer?: SelectOption<boolean> | null;
-  lastFundingRound: SelectOption | null;
   industry: SelectOption | null;
-  employees: SelectOption<number> | null;
+  businessType: SelectOption | null;
+  lastFundingRound: SelectOption | null;
   socials: Pick<Social, 'id' | 'url'>[];
+  employees: SelectOption<number> | null;
+  isCustomer?: SelectOption<boolean> | null;
 }
 
 export class OrganizationAboutFormDto implements OrganizationAboutForm {

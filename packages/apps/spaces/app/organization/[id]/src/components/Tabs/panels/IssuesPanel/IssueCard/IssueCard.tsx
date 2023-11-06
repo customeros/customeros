@@ -1,14 +1,15 @@
 'use client';
-import React, { useMemo, useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
+
 import { Flex } from '@ui/layout/Flex';
+import { Issue } from '@graphql/types';
 import { Avatar } from '@ui/media/Avatar';
 import { Text } from '@ui/typography/Text';
-import { Card, CardHeader } from '@ui/presentation/Card';
 import { User01 } from '@ui/media/icons/User01';
 import { Heading } from '@ui/typography/Heading';
-import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { Issue } from '@graphql/types';
+import { Tag, TagLabel } from '@ui/presentation/Tag';
+import { Card, CardHeader } from '@ui/presentation/Card';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 // import { getContactDisplayName } from '@spaces/utils/getContactName';
 // import { useContactOrUserDisplayName } from '@shared/hooks/useContactOrUserDisplayData';
@@ -21,6 +22,7 @@ function getStatusColor(status: string) {
   if (['closed', 'solved'].includes(status.toLowerCase())) {
     return 'gray';
   }
+
   return 'blue';
 }
 export const IssueCard = ({ issue }: IssueCardProps) => {

@@ -1,4 +1,5 @@
 import { Fragment } from 'react';
+
 import { match } from 'ts-pattern';
 
 import { Flex } from '@ui/layout/Flex';
@@ -13,23 +14,24 @@ import { Comment, InteractionEvent } from '@graphql/types';
 import { getName } from '@spaces/utils/getParticipantsName';
 import { CardBody, CardFooter } from '@ui/presentation/Card';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
+import { IssueWithAliases } from '@organization/src/components/Timeline/types';
+import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
+import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';
 import {
   Priority,
   PriorityBadge,
 } from '@organization/src/components/Timeline/events/issue/PriorityBadge';
-import { IssueWithAliases } from '@organization/src/components/Timeline/types';
+import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import {
   useTimelineEventPreviewStateContext,
   useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import { IssueCommentCard } from '@organization/src/components/Timeline/events/issue/IssueCommentCard';
-import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';
-import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 
 function getStatusColor(status: string) {
   if (['closed', 'solved'].includes(status?.toLowerCase())) {
     return 'gray';
   }
+
   return 'blue';
 }
 
@@ -86,6 +88,7 @@ export const IssuePreviewModal: React.FC = () => {
   const externalUrl = (() => {
     const url = issue?.externalLinks?.[0]?.externalUrl;
     if (!url) return null;
+
     return url.replace('api/v2', 'agent').replace('.json', '');
   })();
 

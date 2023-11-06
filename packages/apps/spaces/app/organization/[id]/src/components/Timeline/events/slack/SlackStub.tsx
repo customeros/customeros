@@ -1,19 +1,20 @@
 'use client';
 import React, { FC } from 'react';
+
+import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
+import { Avatar } from '@ui/media/Avatar';
+import { User02 } from '@ui/media/icons/User02';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { getName } from '@spaces/utils/getParticipantsName';
+import { InteractionEventWithDate } from '@organization/src/components/Timeline/types';
 import {
+  UserParticipant,
   ContactParticipant,
   JobRoleParticipant,
-  UserParticipant,
 } from '@graphql/types';
-import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-import { Avatar } from '@ui/media/Avatar';
-import { Flex } from '@ui/layout/Flex';
-import { getName } from '@spaces/utils/getParticipantsName';
-import { Button } from '@ui/form/Button';
 import { SlackMessageCard } from '@organization/src/components/Timeline/events/slack/SlackMessageCard';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { InteractionEventWithDate } from '@organization/src/components/Timeline/types';
-import { User02 } from '@ui/media/icons/User02';
+import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
   slackEvent,

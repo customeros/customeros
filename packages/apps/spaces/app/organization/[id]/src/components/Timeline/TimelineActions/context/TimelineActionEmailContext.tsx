@@ -1,42 +1,47 @@
 'use client';
 
+import { useForm } from 'react-inverted-form';
+import { useSearchParams } from 'next/navigation';
 import React, {
   useState,
+  useEffect,
   useContext,
   createContext,
   PropsWithChildren,
-  useEffect,
 } from 'react';
 
-import { useForm } from 'react-inverted-form';
+import { useSession } from 'next-auth/react';
 import { useRemirror } from '@remirror/react';
-import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
+
 import { useDisclosure } from '@ui/utils';
+import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
+import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
+import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { handleSendEmail } from '@organization/src/components/Timeline/events/email/compose-email/utils';
+import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
+import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
 import {
   ComposeEmailDto,
   ComposeEmailDtoI,
 } from '@organization/src/components/Timeline/events/email/compose-email/ComposeEmail.dto';
-import { useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+
 import { useTimelineActionContext } from './TimelineActionContext';
-import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
-import { useUpdateCacheWithNewEvent } from '@organization/src/components/Timeline/hooks/updateCacheWithNewEvent';
-import { useTimelineMeta } from '@organization/src/components/Timeline/shared/state';
-import { useTimelineRefContext } from '@organization/src/components/Timeline/context/TimelineRefContext';
 
 export const noop = () => undefined;
 
+// TODO: type those any props accordingly
 interface TimelineActionEmailContextContextMethods {
-  checkCanExitSafely: () => boolean;
-  handleExitEditorAndCleanData: () => void;
-  closeConfirmationDialog: () => void;
-  onCreateEmail: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  state: any;
+  formId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remirrorProps: any;
   isSending: boolean;
+  onCreateEmail: () => void;
   showConfirmationDialog: boolean;
-  formId: string;
-  state: any;
+  checkCanExitSafely: () => boolean;
+  closeConfirmationDialog: () => void;
+  handleExitEditorAndCleanData: () => void;
 }
 
 const TimelineActionEmailContextContext =
@@ -61,8 +66,8 @@ export const TimelineActionEmailContextContextProvider = ({
   invalidateQuery,
   id = '',
 }: PropsWithChildren<{
-  invalidateQuery: () => void;
   id: string;
+  invalidateQuery: () => void;
 }>) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const searchParams = useSearchParams();
@@ -106,7 +111,7 @@ export const TimelineActionEmailContextContextProvider = ({
     reset();
   };
 
-  const handleEmailSendSuccess = async (response: any) => {
+  const handleEmailSendSuccess = async (response: unknown) => {
     await updateTimelineCache(response, queryKey);
 
     // no timeout needed is this case as the event id is created when this is called
@@ -125,6 +130,7 @@ export const TimelineActionEmailContextContextProvider = ({
 
     setIsSending(true);
     const id = params.get('events');
+
     return handleSendEmail(
       state.values.content,
       to,
@@ -153,10 +159,12 @@ export const TimelineActionEmailContextContextProvider = ({
     const showEmailEditorConfirmationDialog = !isFormEmpty || !areFieldsEmpty;
     if (showEmailEditorConfirmationDialog) {
       onOpen();
+
       return false;
     } else {
       handleResetEditor();
       onClose();
+
       return true;
     }
   };
@@ -173,6 +181,7 @@ export const TimelineActionEmailContextContextProvider = ({
     if (!isOpen) {
       document.removeEventListener('keydown', handleCloseOnEsc);
     }
+
     return () => {
       document.removeEventListener('keydown', handleCloseOnEsc);
     };

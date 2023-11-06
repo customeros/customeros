@@ -1,14 +1,16 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+
+import { useSession } from 'next-auth/react';
 import { IntegrationAppProvider } from '@integration-app/react';
 
 import { toastError } from '@ui/presentation/Toast';
-import { Panels } from './src/components/Tabs/Panels';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { TabsContainer } from './src/components/Tabs/TabsContainer';
 import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
+
+import { Panels } from './src/components/Tabs/Panels';
+import { TabsContainer } from './src/components/Tabs/TabsContainer';
 
 export default function SettingsPage() {
   const client = getGraphQLClient();

@@ -1,8 +1,8 @@
 'use client';
 import React, { FC } from 'react';
 
-import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { InteractionEventParticipant } from '@graphql/types';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
@@ -12,8 +12,8 @@ interface EmailMetaDataEntry {
   content: InteractionEventParticipant[] | string;
 }
 interface EmailMetaData {
-  [x: string]: string;
   label: string;
+  [x: string]: string;
 }
 
 export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
@@ -26,6 +26,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
       (e) => e?.label || e?.email,
     );
   if (typeof data !== 'boolean' && !data?.length) return null;
+
   return (
     <Flex overflow='hidden' maxWidth={'100%'}>
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
@@ -51,6 +52,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
                   </>
                 );
               }
+
               return (
                 <React.Fragment
                   key={`email-participant-tag-${e.label}-${e.email}`}

@@ -1,21 +1,24 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+
+import Fuse from 'fuse.js';
+import { GetIntegrationsSettings } from 'services';
 import {
   useConnections,
   useIntegrations,
   useIntegrationApp,
 } from '@integration-app/react';
-import Fuse from 'fuse.js';
 
-import { Card, CardBody, CardHeader } from '@ui/layout/Card';
-import { Heading } from '@ui/typography/Heading';
-import { SettingsIntegrationItem } from './SettingsIntegrationItem';
-import { GetIntegrationsSettings } from 'services';
-import { Skeleton } from '@ui/presentation/Skeleton';
-import { Text, VStack } from '@chakra-ui/react';
 import { Input } from '@ui/form/Input';
-import { IntegrationItem, integrationsData } from './data';
+import { VStack } from '@ui/layout/Stack';
+import { Text } from '@ui/typography/Text';
+import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
+import { Skeleton } from '@ui/presentation/Skeleton';
+import { Card, CardBody, CardHeader } from '@ui/layout/Card';
+
+import { IntegrationItem, integrationsData } from './data';
+import { SettingsIntegrationItem } from './SettingsIntegrationItem';
 
 export const IntegrationsPanel = () => {
   const iApp = useIntegrationApp();
@@ -39,7 +42,9 @@ export const IntegrationsPanel = () => {
         const map = integrations.map((integration) => {
           return {
             ...integration,
-            state: data[integration.key]?.state ?? 'INACTIVE',
+            state:
+              (data as Record<string, IntegrationItem>)[integration.key]
+                ?.state ?? 'INACTIVE',
           };
         });
 
@@ -61,6 +66,7 @@ export const IntegrationsPanel = () => {
   const handleFilterResults = (value: string) => {
     if (value.length === 0) {
       setIntegrationsDisplayed(integrations);
+
       return;
     }
 

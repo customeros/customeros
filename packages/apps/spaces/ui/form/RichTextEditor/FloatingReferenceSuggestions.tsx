@@ -1,15 +1,17 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
+
 import { cx } from '@remirror/core';
 import {
+  useMentionAtom,
   FloatingWrapper,
   MentionAtomNodeAttributes,
-  useMentionAtom,
 } from '@remirror/react';
+
 import { Box } from '@ui/layout/Box';
 
 export const FloatingReferenceSuggestions: FC<{
-  tags?: Array<{ label: string; id: string }>;
-  mentionOptions?: Array<{ label: string; id: string }>;
+  tags?: Array<{ id: string; label: string }>;
+  mentionOptions?: Array<{ id: string; label: string }>;
 }> = ({ tags = [], mentionOptions = [] }) => {
   const [options, setOptions] = useState<MentionAtomNodeAttributes[]>([]);
   const { state, getMenuProps, getItemProps, indexIsHovered, indexIsSelected } =
@@ -25,7 +27,7 @@ export const FloatingReferenceSuggestions: FC<{
     const searchTerm = state.query.full.toLowerCase();
     const options = state.name === 'tag' ? tags : mentionOptions;
 
-    let filteredOptions: { label: string; id: string; hide?: boolean }[] =
+    let filteredOptions: { id: string; label: string; hide?: boolean }[] =
       options
         .filter((option) => option.label.toLowerCase().includes(searchTerm))
         .sort()
@@ -38,6 +40,7 @@ export const FloatingReferenceSuggestions: FC<{
   }, [state]);
 
   const enabled = Boolean(state);
+
   return (
     <FloatingWrapper
       positioner='cursor'
@@ -61,6 +64,7 @@ export const FloatingReferenceSuggestions: FC<{
                 />
               );
             }
+
             return (
               <Box
                 key={`remirror-mention-reference-suggestion-${reference.label}-${reference.id}`}

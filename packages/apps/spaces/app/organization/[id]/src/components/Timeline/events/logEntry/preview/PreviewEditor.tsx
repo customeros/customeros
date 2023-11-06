@@ -1,22 +1,24 @@
 import React, { useEffect } from 'react';
-import { Text } from '@ui/typography/Text';
-import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
-import { FloatingReferenceSuggestions } from '@ui/form/RichTextEditor/FloatingReferenceSuggestions';
-import { useRemirror } from '@remirror/react';
-import { logEntryEditorExtensions } from '@organization/src/components/Timeline/TimelineActions/context/extensions';
-import { RichEditorBlurHandler } from '@ui/form/RichTextEditor/components/RichEditorBlurHandler';
-import { htmlToProsemirrorNode } from 'remirror';
-import { useGetMentionOptionsQuery } from '@organization/src/graphql/getMentionOptions.generated';
 import { useParams } from 'next/navigation';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { getMentionOptionLabel } from '@organization/src/components/Timeline/events/utils';
+
+import { useRemirror } from '@remirror/react';
+import { htmlToProsemirrorNode } from 'remirror';
+
 import { Contact } from '@graphql/types';
+import { Text } from '@ui/typography/Text';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
+import { getMentionOptionLabel } from '@organization/src/components/Timeline/events/utils';
+import { RichEditorBlurHandler } from '@ui/form/RichTextEditor/components/RichEditorBlurHandler';
+import { useGetMentionOptionsQuery } from '@organization/src/graphql/getMentionOptions.generated';
+import { FloatingReferenceSuggestions } from '@ui/form/RichTextEditor/FloatingReferenceSuggestions';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
+import { logEntryEditorExtensions } from '@organization/src/components/Timeline/TimelineActions/context/extensions';
 
 export const PreviewEditor: React.FC<{
   formId: string;
-  initialContent: string;
   onClose: () => void;
+  initialContent: string;
   tags?: Array<{ label: string; value: string }>;
 }> = ({ formId, initialContent, tags, onClose }) => {
   const id = useParams()?.id as string;
@@ -37,7 +39,7 @@ export const PreviewEditor: React.FC<{
 
   const mentionOptions = (data?.organization?.contacts?.content ?? [])
     .map((e) => ({ label: getMentionOptionLabel(e as Contact), id: e.id }))
-    .filter((e) => Boolean(e.label)) as { label: string; id: string }[];
+    .filter((e) => Boolean(e.label)) as { id: string; label: string }[];
 
   return (
     <>

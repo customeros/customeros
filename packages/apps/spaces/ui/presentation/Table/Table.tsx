@@ -1,12 +1,4 @@
 'use client';
-import { useRef, useState, useEffect, useMemo, forwardRef } from 'react';
-import {
-  createRow,
-  flexRender,
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-} from '@tanstack/react-table';
 import type {
   ColumnDef,
   OnChangeFn,
@@ -14,7 +6,17 @@ import type {
   RowSelectionState,
   Table as TableInstance,
 } from '@tanstack/react-table';
+
+import { useRef, useMemo, useState, useEffect, forwardRef } from 'react';
+
 import { useVirtualizer } from '@tanstack/react-virtual';
+import {
+  createRow,
+  flexRender,
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+} from '@tanstack/react-table';
 
 import { Center } from '@ui/layout/Center';
 import { Checkbox } from '@ui/form/Checkbox';
@@ -31,13 +33,13 @@ declare module '@tanstack/table-core' {
 interface TableProps<T extends object> {
   data: T[];
   // REASON: Typing TValue is too exhaustive and has no benefit
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  columns: ColumnDef<T, any>[];
   isLoading?: boolean;
   totalItems?: number;
   sorting?: SortingState;
   canFetchMore?: boolean;
   onFetchMore?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: ColumnDef<T, any>[];
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
   onSortingChange?: OnChangeFn<SortingState>;
@@ -142,6 +144,7 @@ export const Table = <T extends object>({
           )}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
+
             return (
               <TRow
                 key={virtualRow.key}

@@ -1,14 +1,15 @@
+import { SelectOption } from '@shared/types/SelectOptions';
 import {
+  RenewalCycle,
   BillingDetails,
   BillingDetailsInput,
-  RenewalCycle,
 } from '@graphql/types';
-import { SelectOption } from '@shared/types/SelectOptions';
+
 import { frequencyOptions } from '../utils';
 
 interface TimeToRenewalForm {
-  renewalCycle: SelectOption<RenewalCycle> | null;
   renewalCycleStart: Date | null;
+  renewalCycle: SelectOption<RenewalCycle> | null;
 }
 
 export class TimeToRenewalDTO implements TimeToRenewalForm {
