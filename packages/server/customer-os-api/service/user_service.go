@@ -305,7 +305,7 @@ func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter 
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repositories.UserRepository.GetPaginatedNonInternalUsers(
+	dbNodesWithTotalCount, err := s.repositories.UserRepository.GetPaginatedCustomerUsers(
 		ctx,
 		session,
 		common.GetContext(ctx).Tenant,
