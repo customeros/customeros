@@ -23,6 +23,7 @@ message UpsertUserGrpcRequest {
   SourceFields sourceFields = 14;
   ExternalSystemFields externalSystemFields = 15;
   string loggedInUserId = 16;
+  bool bot = 17;
 }
 
 message AddPlayerInfoGrpcRequest {

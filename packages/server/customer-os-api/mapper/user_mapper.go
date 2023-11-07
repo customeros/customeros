@@ -38,6 +38,7 @@ func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 		Roles:           MapRolesToModel(userEntity.Roles),
 		AppSource:       userEntity.AppSource,
 		Internal:        userEntity.Internal,
+		Bot:             userEntity.Bot,
 		ProfilePhotoURL: utils.StringPtr(userEntity.ProfilePhotoUrl),
 	}
 }

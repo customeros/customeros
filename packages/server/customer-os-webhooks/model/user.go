@@ -12,6 +12,7 @@ type UserData struct {
 	ExternalOwnerId string        `json:"externalOwnerId,omitempty"` // Deprecated in favor or ExternalIdSecond, to be removed after release of sync-process is modified and released
 	ProfilePhotoUrl string        `json:"profilePhotoUrl,omitempty"`
 	Timezone        string        `json:"timezone,omitempty"`
+	Bot             bool          `json:"bot,omitempty"`
 }
 
 func (u *UserData) HasPhoneNumbers() bool {

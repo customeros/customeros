@@ -12,6 +12,7 @@ type User struct {
 	FirstName       string                       `json:"firstName"`
 	LastName        string                       `json:"lastName"`
 	Internal        bool                         `json:"internal"`
+	Bot             bool                         `json:"bot"`
 	ProfilePhotoUrl string                       `json:"profilePhotoUrl"`
 	Timezone        string                       `json:"timezone"`
 	CreatedAt       time.Time                    `json:"createdAt"`
@@ -63,6 +64,7 @@ func (u *User) SameData(fields UserDataFields, externalSystem commonmodel.Extern
 		u.FirstName == fields.FirstName &&
 		u.LastName == fields.LastName &&
 		u.Internal == fields.Internal &&
+		u.Bot == fields.Bot &&
 		u.Timezone == fields.Timezone &&
 		u.ProfilePhotoUrl == fields.ProfilePhotoUrl {
 		return true

@@ -176,6 +176,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			Internal:        false,
 			ProfilePhotoUrl: userInput.ProfilePhotoUrl,
 			Timezone:        userInput.Timezone,
+			Bot:             userInput.Bot,
 			SourceFields: &commonpb.SourceFields{
 				Source:    userInput.ExternalSystem,
 				AppSource: appSource,

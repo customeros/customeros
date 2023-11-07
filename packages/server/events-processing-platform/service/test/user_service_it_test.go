@@ -36,6 +36,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 		LastName:        "Dole",
 		Name:            "Bob Dole",
 		Internal:        true,
+		Bot:             true,
 		ProfilePhotoUrl: "https://www.google.com",
 		Timezone:        "America/Los_Angeles",
 		CreatedAt:       timestamppb.New(timeNow),
@@ -70,6 +71,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, "ziggy", eventData.Tenant)
 	require.True(t, eventData.Internal)
+	require.True(t, eventData.Bot)
 	require.Equal(t, "https://www.google.com", eventData.ProfilePhotoUrl)
 	require.Equal(t, "America/Los_Angeles", eventData.Timezone)
 }
