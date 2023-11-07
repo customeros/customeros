@@ -9,4 +9,5 @@ type UserData struct {
 	PhoneNumbers    []PhoneNumber `json:"phoneNumbers,omitempty"`
 	ProfilePhotoUrl string        `json:"profilePhotoUrl,omitempty"`
 	Timezone        string        `json:"timezone,omitempty"`
+	Bot             bool          `json:"bot,omitempty"`
 }

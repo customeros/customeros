@@ -95,8 +95,7 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", input.ID))
 
-	updatedUserEntity, err := r.Services.UserService.Update(ctx, input.ID, input.FirstName, input.LastName,
-		input.Name, input.Timezone, input.ProfilePhotoURL)
+	updatedUserEntity, err := r.Services.UserService.Update(ctx, input.ID, input.FirstName, input.LastName, input.Name, input.Timezone, input.ProfilePhotoURL)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update user %s %s", input.FirstName, input.LastName)

@@ -34,6 +34,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 		LastName:        "Dole",
 		Name:            "Bob Dole",
 		Internal:        true,
+		Bot:             true,
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		Timezone:        "Europe/Paris",
 	},
@@ -66,6 +67,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "bot"))
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(props, "profilePhotoUrl"))
 	require.Equal(t, "Europe/Paris", utils.GetStringPropOrEmpty(props, "timezone"))
 }
@@ -94,6 +96,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 		LastName:        "Dole",
 		Name:            "Bob Dole",
 		Internal:        true,
+		Bot:             true,
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		Timezone:        "Europe/Paris",
 	}, cmnmod.Source{
@@ -132,6 +135,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "bot"))
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(props, "profilePhotoUrl"))
 	require.Equal(t, "Europe/Paris", utils.GetStringPropOrEmpty(props, "timezone"))
 }

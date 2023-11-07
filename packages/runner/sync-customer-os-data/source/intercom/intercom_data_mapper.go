@@ -276,7 +276,7 @@ func mapInteractionEventFromConversation(inputJson string) (string, error) {
 		output.SessionDetails.Status = "ACTIVE"
 	}
 
-	if input.Source.Author.Type == "admin" || input.Source.Author.Type == "team" {
+	if input.Source.Author.Type == "admin" || input.Source.Author.Type == "team" || input.Source.Author.Type == "bot" {
 		output.SentBy = entity.InteractionEventParticipant{
 			ReferencedUser: entity.ReferencedUser{
 				ExternalId: input.Source.Author.ID,
@@ -364,7 +364,7 @@ func mapInteractionEventFromConversationPart(inputJson string) (string, error) {
 		"session/" + input.ConversationId,
 	}
 
-	if input.Author.Type == "admin" || input.Author.Type == "team" {
+	if input.Author.Type == "admin" || input.Author.Type == "team" || input.Author.Type == "bot" {
 		output.SentBy = entity.InteractionEventParticipant{
 			ReferencedUser: entity.ReferencedUser{
 				ExternalId: input.Author.ID,

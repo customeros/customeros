@@ -574,6 +574,7 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 		LastName:        userEntity.LastName,
 		Name:            userEntity.Name,
 		Internal:        false,
+		Bot:             false,
 		ProfilePhotoUrl: userEntity.ProfilePhotoUrl,
 		Timezone:        userEntity.Timezone,
 	})
@@ -608,6 +609,7 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
+		Bot:             utils.GetBoolPropOrFalse(props, "bot"),
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
 		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
 	}

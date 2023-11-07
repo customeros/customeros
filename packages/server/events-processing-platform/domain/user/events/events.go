@@ -29,6 +29,7 @@ type UserCreateEvent struct {
 	CreatedAt       time.Time             `json:"createdAt"`
 	UpdatedAt       time.Time             `json:"updatedAt"`
 	Internal        bool                  `json:"internal"`
+	Bot             bool                  `json:"bot"`
 	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
 	Timezone        string                `json:"timezone"`
 	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
@@ -41,6 +42,7 @@ func NewUserCreateEvent(aggregate eventstore.Aggregate, dataFields models.UserDa
 		FirstName:       dataFields.FirstName,
 		LastName:        dataFields.LastName,
 		Internal:        dataFields.Internal,
+		Bot:             dataFields.Bot,
 		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
 		Timezone:        dataFields.Timezone,
 		SourceFields:    sourceFields,
@@ -70,6 +72,7 @@ type UserUpdateEvent struct {
 	FirstName       string                `json:"firstName"`
 	LastName        string                `json:"lastName"`
 	Internal        bool                  `json:"internal"`
+	Bot             bool                  `json:"bot"`
 	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
 	Timezone        string                `json:"timezone"`
 	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
@@ -82,6 +85,7 @@ func NewUserUpdateEvent(aggregate eventstore.Aggregate, dataFields models.UserDa
 		FirstName:       dataFields.FirstName,
 		LastName:        dataFields.LastName,
 		Internal:        dataFields.Internal,
+		Bot:             dataFields.Bot,
 		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
 		Timezone:        dataFields.Timezone,
 		UpdatedAt:       updatedAt,

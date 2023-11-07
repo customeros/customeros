@@ -17,6 +17,7 @@ type UserEntity struct {
 	ProfilePhotoUrl  string
 	Timezone         string
 	Internal         bool
+	Bot              bool
 	DefaultForPlayer bool
 	Tenant           string
 }

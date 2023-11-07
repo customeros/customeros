@@ -891,6 +891,7 @@ type ComplexityRoot struct {
 
 	User struct {
 		AppSource       func(childComplexity int) int
+		Bot             func(childComplexity int) int
 		Calendars       func(childComplexity int) int
 		CreatedAt       func(childComplexity int) int
 		Emails          func(childComplexity int) int
@@ -6573,6 +6574,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.AppSource(childComplexity), true
 
+	case "User.bot":
+		if e.complexity.User.Bot == nil {
+			break
+		}
+
+		return e.complexity.User.Bot(childComplexity), true
+
 	case "User.calendars":
 		if e.complexity.User.Calendars == nil {
 			break
@@ -9147,6 +9155,7 @@ type User {
     lastName: String!
     name: String
     internal: Boolean!
+    bot: Boolean!
     timezone: String
     profilePhotoUrl: String
 
@@ -13104,6 +13113,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(ctx context.Context, f
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -15083,6 +15094,8 @@ func (ec *executionContext) fieldContext_Comment_createdBy(ctx context.Context, 
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -16661,6 +16674,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -19127,6 +19142,8 @@ func (ec *executionContext) fieldContext_Email_users(ctx context.Context, field 
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -21510,6 +21527,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(ctx context.Context, f
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -27107,6 +27126,8 @@ func (ec *executionContext) fieldContext_LogEntry_createdBy(ctx context.Context,
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -40528,6 +40549,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -40641,6 +40664,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -40764,6 +40789,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -40887,6 +40914,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -41004,6 +41033,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -41121,6 +41152,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -41860,6 +41893,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -44517,6 +44552,8 @@ func (ec *executionContext) fieldContext_Organization_owner(ctx context.Context,
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -46479,6 +46516,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(ctx context.Context, 
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -47371,6 +47410,8 @@ func (ec *executionContext) fieldContext_PlayerUser_user(ctx context.Context, fi
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -49553,6 +49594,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(ctx c
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -50366,6 +50409,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -50489,6 +50534,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -50913,6 +50960,8 @@ func (ec *executionContext) fieldContext_RenewalForecast_updatedBy(ctx context.C
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -51197,6 +51246,8 @@ func (ec *executionContext) fieldContext_RenewalLikelihood_updatedBy(ctx context
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -52735,6 +52786,50 @@ func (ec *executionContext) fieldContext_User_internal(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _User_bot(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_bot(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Bot, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_bot(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_timezone(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_timezone(ctx, field)
 	if err != nil {
@@ -53479,6 +53574,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -53649,6 +53746,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(ctx con
 				return ec.fieldContext_User_name(ctx, field)
 			case "internal":
 				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
 			case "timezone":
 				return ec.fieldContext_User_timezone(ctx, field)
 			case "profilePhotoUrl":
@@ -68878,6 +68977,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._User_name(ctx, field, obj)
 		case "internal":
 			out.Values[i] = ec._User_internal(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "bot":
+			out.Values[i] = ec._User_bot(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

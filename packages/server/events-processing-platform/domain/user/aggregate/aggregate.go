@@ -68,6 +68,7 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	a.User.FirstName = eventData.FirstName
 	a.User.LastName = eventData.LastName
 	a.User.Internal = eventData.Internal
+	a.User.Bot = eventData.Bot
 	a.User.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 	a.User.Source = eventData.SourceFields
 	a.User.CreatedAt = eventData.CreatedAt
@@ -111,6 +112,7 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 
 	a.User.UpdatedAt = eventData.UpdatedAt
 	a.User.Internal = eventData.Internal
+	a.User.Bot = eventData.Bot
 	if eventData.Source == constants.SourceOpenline {
 		a.User.Source.SourceOfTruth = eventData.Source
 	}

@@ -65,6 +65,7 @@ func (r *userRepository) CreateUserInTx(ctx context.Context, tx neo4j.ManagedTra
 						u.createdAt = $createdAt,
 						u.updatedAt = $updatedAt,
 						u.internal = $internal,
+						u.bot = $bot,
 						u.profilePhotoUrl = $profilePhotoUrl,
 						u.timezone = $timezone,
 						u.syncedWithEventStore = true 
@@ -74,6 +75,7 @@ func (r *userRepository) CreateUserInTx(ctx context.Context, tx neo4j.ManagedTra
 						u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
 						u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
 						u.internal = $internal,
+						u.bot = $bot,
 						u.updatedAt = $updatedAt,
 						u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
 						u.syncedWithEventStore = true`, event.Tenant)
@@ -86,6 +88,7 @@ func (r *userRepository) CreateUserInTx(ctx context.Context, tx neo4j.ManagedTra
 		"firstName":       event.FirstName,
 		"lastName":        event.LastName,
 		"internal":        event.Internal,
+		"bot":             event.Bot,
 		"profilePhotoUrl": event.ProfilePhotoUrl,
 		"timezone":        event.Timezone,
 		"source":          helper.GetSource(event.SourceFields.Source),
@@ -110,7 +113,6 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 				u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
 				u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
 				u.updatedAt = $updatedAt,
-				u.internal = $internal,
 				u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
 				u.syncedWithEventStore = true`
 	span.LogFields(log.String("query", query))
@@ -129,6 +131,7 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 				"sourceOfTruth":   helper.GetSource(event.Source),
 				"updatedAt":       event.UpdatedAt,
 				"internal":        event.Internal,
+				"bot":             event.Bot,
 				"profilePhotoUrl": event.ProfilePhotoUrl,
 				"timezone":        event.Timezone,
 				"overwrite":       helper.GetSource(event.Source) == constants.SourceOpenline,
