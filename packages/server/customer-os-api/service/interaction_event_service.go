@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -15,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/vektah/gqlparser/v2/ast"
 	"golang.org/x/exp/slices"
 )
 
@@ -255,13 +257,34 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 }
 
 func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error) {
-	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForInteractionSessions(ctx, common.GetTenantFromContext(ctx), ids)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForInteractionSessions")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	// Get FieldContext from the ctx
+	fc := graphql.GetFieldContext(ctx)
+	// Check if the "content" field is selected
+	requestContent := true
+	if fc.Object == "InteractionSession" {
+		requestContent = false
+		for _, selected := range fc.Field.Selections {
+			if field, ok := selected.(*ast.Field); ok {
+				if field.Name == "content" {
+					requestContent = true
+					break
+				}
+			}
+		}
+	}
+
+	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForInteractionSessions(ctx, common.GetTenantFromContext(ctx), ids, requestContent)
 	if err != nil {
 		return nil, err
 	}
 	interactionEventEntities := entity.InteractionEventEntities{}
 	for _, v := range interactionEvents {
-		interactionEventEntity := s.mapDbNodeToInteractionEventEntity(*v.Node)
+		interactionEventEntity := s.mapDbPropsToInteractionEventEntity(v.Props)
 		interactionEventEntity.DataloaderKey = v.LinkedNodeId
 		interactionEventEntities = append(interactionEventEntities, *interactionEventEntity)
 	}
@@ -269,13 +292,34 @@ func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx
 }
 
 func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error) {
-	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForMeetings(ctx, common.GetTenantFromContext(ctx), ids)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForMeetings")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	// Get FieldContext from the ctx
+	fc := graphql.GetFieldContext(ctx)
+	// Check if the "content" field is selected
+	requestContent := true
+	if fc.Object == "Meeting" {
+		requestContent = false
+		for _, selected := range fc.Field.Selections {
+			if field, ok := selected.(*ast.Field); ok {
+				if field.Name == "content" {
+					requestContent = true
+					break
+				}
+			}
+		}
+	}
+
+	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForMeetings(ctx, common.GetTenantFromContext(ctx), ids, requestContent)
 	if err != nil {
 		return nil, err
 	}
 	interactionEventEntities := entity.InteractionEventEntities{}
 	for _, v := range interactionEvents {
-		interactionEventEntity := s.mapDbNodeToInteractionEventEntity(*v.Node)
+		interactionEventEntity := s.mapDbPropsToInteractionEventEntity(v.Props)
 		interactionEventEntity.DataloaderKey = v.LinkedNodeId
 		interactionEventEntities = append(interactionEventEntities, *interactionEventEntity)
 	}
@@ -288,14 +332,30 @@ func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Cont
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("issueIds", issueIds))
 
-	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
+	// Get FieldContext from the ctx
+	fc := graphql.GetFieldContext(ctx)
+	// Check if the "content" field is selected
+	requestContent := true
+	if fc.Object == "Issue" {
+		requestContent = false
+		for _, selected := range fc.Field.Selections {
+			if field, ok := selected.(*ast.Field); ok {
+				if field.Name == "content" {
+					requestContent = true
+					break
+				}
+			}
+		}
+	}
+
+	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds, requestContent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	interactionEventEntities := entity.InteractionEventEntities{}
 	for _, v := range interactionEvents {
-		interactionEventEntity := s.mapDbNodeToInteractionEventEntity(*v.Node)
+		interactionEventEntity := s.mapDbPropsToInteractionEventEntity(v.Props)
 		interactionEventEntity.DataloaderKey = v.LinkedNodeId
 		interactionEventEntities = append(interactionEventEntities, *interactionEventEntity)
 	}
@@ -340,12 +400,39 @@ func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx 
 }
 
 func (s *interactionEventService) GetReplyToInteractionsEventForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error) {
-	records, err := s.repositories.InteractionEventRepository.GetReplyToInteractionEventsForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetReplyToInteractionsEventForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	// Get FieldContext from the ctx
+	fc := graphql.GetFieldContext(ctx)
+	// Check if the "content" field is selected
+	requestContent := true
+	if fc.Object == "InteractionEvent" {
+		requestContent = false
+		for _, selected := range fc.Field.Selections {
+			if field, ok := selected.(*ast.Field); ok {
+				if field.Name == "content" {
+					requestContent = true
+					break
+				}
+			}
+		}
+	}
+
+	records, err := s.repositories.InteractionEventRepository.GetReplyToInteractionEventsForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids, requestContent)
 	if err != nil {
 		return nil, err
 	}
 
-	interactionEvents := s.convertDbNodesToInteractionEvent(records)
+	interactionEvents := entity.InteractionEventEntities{}
+	for _, v := range records {
+		event := s.mapDbPropsToInteractionEventEntity(v.Props)
+		event.DataloaderKey = v.LinkedNodeId
+		interactionEvents = append(interactionEvents, *event)
+
+	}
 
 	return &interactionEvents, nil
 }
@@ -399,7 +486,10 @@ func (s *interactionEventService) GetInteractionEventByEventIdentifier(ctx conte
 }
 
 func (s *interactionEventService) mapDbNodeToInteractionEventEntity(node dbtype.Node) *entity.InteractionEventEntity {
-	props := utils.GetPropsFromNode(node)
+	return s.mapDbPropsToInteractionEventEntity(utils.GetPropsFromNode(node))
+}
+
+func (s *interactionEventService) mapDbPropsToInteractionEventEntity(props map[string]any) *entity.InteractionEventEntity {
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
 	interactionEventEntity := entity.InteractionEventEntity{
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
@@ -415,17 +505,6 @@ func (s *interactionEventService) mapDbNodeToInteractionEventEntity(node dbtype.
 		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionEventEntity
-}
-
-func (s *interactionEventService) convertDbNodesToInteractionEvent(records []*utils.DbNodeAndId) entity.InteractionEventEntities {
-	interactionEvents := entity.InteractionEventEntities{}
-	for _, v := range records {
-		event := s.mapDbNodeToInteractionEventEntity(*v.Node)
-		event.DataloaderKey = v.LinkedNodeId
-		interactionEvents = append(interactionEvents, *event)
-
-	}
-	return interactionEvents
 }
 
 func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(records []*utils.DbNodeWithRelationAndId) entity.InteractionEventParticipants {

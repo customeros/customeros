@@ -46,9 +46,6 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.String("startingDate", startingDate.String()), log.Int("size", size))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
 	params := map[string]any{
 		"tenant":       tenant,
 		"contactId":    contactId,
@@ -61,7 +58,7 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		params["nodeLabels"] = labels
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
-	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+	cypher := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
 		" CALL {"+
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
@@ -86,10 +83,13 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
 		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
-	span.LogFields(log.String("query", query))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -113,9 +113,6 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
 	params := map[string]any{
 		"tenant":      tenant,
 		"contactId":   contactId,
@@ -126,7 +123,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		params["nodeLabels"] = labels
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
-	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+	cypher := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
 		" CALL {"+
 		// get all timeline events for the contact
 		" WITH c MATCH (c), "+
@@ -149,10 +146,13 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		" RETURN count(distinct timelineEvent)",
 		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
-	span.LogFields(log.String("query", query))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	record, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -170,9 +170,6 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId), log.String("startingDate", startingDate.String()), log.Int("size", size))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
 	params := map[string]any{
 		"tenant":                        tenant,
 		"organizationId":                organizationId,
@@ -189,7 +186,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		params["nodeLabels"] = labels
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
-	query := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+	cypher := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
 		" CALL { "+
 		// get all timeline events for the organization contacts
 		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), "+
@@ -234,10 +231,13 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
 		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
-	span.LogFields(log.String("query", query))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
@@ -261,9 +261,6 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
 	params := map[string]any{
 		"tenant":                        tenant,
 		"organizationId":                organizationId,
@@ -278,7 +275,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		params["nodeLabels"] = labels
 		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
 	}
-	query := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+	cypher := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
 		" CALL { "+
 		// get all timeline events for the organization' contacts
 		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), "+
@@ -319,14 +316,18 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" RETURN count(distinct timelineEvent)",
 		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	record, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
 		return queryResult.Single(ctx)
 	})
-	span.LogFields(log.String("query", query))
 	if err != nil {
 		return int64(0), err
 	}
@@ -362,9 +363,6 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
 	params := map[string]any{
 		"tenant":                             tenant,
 		"organizationId":                     organizationId,
@@ -376,7 +374,7 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 		"now":                                utils.Now(),
 	}
 
-	query := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+	cypher := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
 		CALL { ` +
 		// get all timeline events for the organization contacts
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
@@ -414,10 +412,13 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 		} 
 		RETURN coalesce(timelineEvent.startedAt, timelineEvent.createdAt), timelineEvent.id ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT 1`
 
-	span.LogFields(log.String("query", query))
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, params)
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}

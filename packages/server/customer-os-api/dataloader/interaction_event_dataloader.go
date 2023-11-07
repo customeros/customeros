@@ -60,11 +60,14 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 
 	ids, keyOrder := sortKeys(keys)
 
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForInteractionSessions(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
-		if ctx.Err() == context.DeadlineExceeded {
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction events for interaction sessions")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
