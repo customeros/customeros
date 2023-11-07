@@ -16,7 +16,7 @@ type UserRepository interface {
 	IsOwner(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, userId string) (*bool, error)
 	GetOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error)
 	GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
-	GetPaginatedNonInternalUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedCustomerUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
@@ -133,8 +133,8 @@ func (r *userRepository) GetCreatorForNote(parentCtx context.Context, tx neo4j.M
 	}
 }
 
-func (r *userRepository) GetPaginatedNonInternalUsers(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetPaginatedNonInternalUsers")
+func (r *userRepository) GetPaginatedCustomerUsers(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetPaginatedCustomerUsers")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -147,7 +147,7 @@ func (r *userRepository) GetPaginatedNonInternalUsers(parentCtx context.Context,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) 
-											WHERE u.internal=false or u.internal is null
+											WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
 											WITH u
 											%s RETURN count(u) as count`, filterCypherStr),
 			countParams)
@@ -166,7 +166,7 @@ func (r *userRepository) GetPaginatedNonInternalUsers(parentCtx context.Context,
 
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) 
-					WHERE u.internal=false or u.internal is null
+					WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
 					WITH u
 					%s
 					RETURN u 
