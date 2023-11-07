@@ -28,12 +28,12 @@ const (
 )
 
 type InteractionEventRepository interface {
-	GetAllForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	GetAllForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	GetAllForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error)
+	GetAllForInteractionSessions(ctx context.Context, tenant string, ids []string, returnContent bool) ([]*utils.DbPropsAndId, error)
+	GetAllForMeetings(ctx context.Context, tenant string, ids []string, returnContent bool) ([]*utils.DbPropsAndId, error)
+	GetAllForIssues(ctx context.Context, tenant string, issueIds []string, returnContent bool) ([]*utils.DbPropsAndId, error)
 	GetSentByParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
-	GetReplyToInteractionEventsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
+	GetReplyToInteractionEventsForInteractionEvents(ctx context.Context, tenant string, ids []string, returnContent bool) ([]*utils.DbPropsAndId, error)
 
 	// Deprecated, use events-platform
 	LinkWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, externalId, externalSystemId string) error
@@ -236,14 +236,20 @@ func (r *interactionEventRepository) LinkWithPartOfXXInTx(ctx context.Context, t
 	return err
 }
 
-func (r *interactionEventRepository) GetAllForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+func (r *interactionEventRepository) GetAllForInteractionSessions(ctx context.Context, tenant string, ids []string, returnContent bool) ([]*utils.DbPropsAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetAllForInteractionSessions")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Bool("returnContent", returnContent))
+
+	cypherReturnFragment := "e {.*}"
+	if !returnContent {
+		cypherReturnFragment = "e {.*, content: ''}"
+	}
 
 	cypher := fmt.Sprintf(`MATCH (s:InteractionSession)<-[:PART_OF]-(e:InteractionEvent_%s) 
 		 WHERE s.id IN $ids AND s:InteractionSession_%s
-		 RETURN e, s.id ORDER BY e.createdAt ASC`, tenant, tenant)
+		 RETURN %s, s.id ORDER BY e.createdAt ASC`, tenant, tenant, cypherReturnFragment)
 	params := map[string]any{
 		"ids": ids,
 	}
@@ -256,52 +262,64 @@ func (r *interactionEventRepository) GetAllForInteractionSessions(ctx context.Co
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbPropsAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.([]*utils.DbNodeAndId), err
+	return result.([]*utils.DbPropsAndId), err
 }
 
-func (r *interactionEventRepository) GetAllForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+func (r *interactionEventRepository) GetAllForMeetings(ctx context.Context, tenant string, ids []string, returnContent bool) ([]*utils.DbPropsAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetAllForMeetings")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Bool("returnContent", returnContent))
+
+	cypherReturnFragment := "e {.*}"
+	if !returnContent {
+		cypherReturnFragment = "e {.*, content: ''}"
+	}
+
+	cypher := fmt.Sprintf(`MATCH (m:Meeting)<-[:PART_OF]-(e:InteractionEvent) 
+		 WHERE m.id IN $ids AND m:Meeting_%s
+		 RETURN %s, m.id ORDER BY e.createdAt ASC`, tenant, cypherReturnFragment)
+	params := map[string]any{
+		"ids": ids,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (m:Meeting_%s)<-[:PART_OF]-(e:InteractionEvent) " +
-		" WHERE m.id IN $ids " +
-		" RETURN e, m.id ORDER BY e.createdAt ASC"
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"tenant": tenant,
-				"ids":    ids,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbPropsAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.([]*utils.DbNodeAndId), err
+	return result.([]*utils.DbPropsAndId), err
 }
 
-func (r *interactionEventRepository) GetAllForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error) {
+func (r *interactionEventRepository) GetAllForIssues(ctx context.Context, tenant string, issueIds []string, returnContent bool) ([]*utils.DbPropsAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetAllForIssues")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Bool("returnContent", returnContent))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)<-[:PART_OF]-(e:InteractionEvent) 
+	cypherReturnFragment := "e {.*}"
+	if !returnContent {
+		cypherReturnFragment = "e {.*, content: ''}"
+	}
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)<-[:PART_OF]-(e:InteractionEvent) 
 				WHERE i.id IN $issueIds
-				RETURN e, i.id ORDER BY e.createdAt ASC`
+				RETURN %s, i.id ORDER BY e.createdAt ASC`, cypherReturnFragment)
 	params := map[string]any{
 		"tenant":   tenant,
 		"issueIds": issueIds,
@@ -314,14 +332,14 @@ func (r *interactionEventRepository) GetAllForIssues(ctx context.Context, tenant
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbPropsAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return result.([]*utils.DbNodeAndId), nil
+	return result.([]*utils.DbPropsAndId), nil
 }
 
 func (r *interactionEventRepository) GetSentByParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {
@@ -400,13 +418,20 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 	}
 }
 
-func (r *interactionEventRepository) GetReplyToInteractionEventsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+func (r *interactionEventRepository) GetReplyToInteractionEventsForInteractionEvents(ctx context.Context, tenant string, ids []string, returnContent bool) ([]*utils.DbPropsAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetReplyToInteractionEventsForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Bool("returnContent", returnContent))
+
+	cypherReturnFragment := "rie {.*}"
+	if !returnContent {
+		cypherReturnFragment = "rie {.*, content: ''}"
+	}
 
 	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent)-[rel:REPLIES_TO]->(rie:InteractionEvent_%s) 
-		 WHERE ie.id IN $ids AND ie:InteractionEvent_%s RETURN rie, ie.id`, tenant, tenant)
+		 	WHERE ie.id IN $ids AND ie:InteractionEvent_%s 
+			RETURN %s, ie.id`, tenant, tenant, cypherReturnFragment)
 	params := map[string]any{
 		"ids": ids,
 	}
@@ -414,17 +439,18 @@ func (r *interactionEventRepository) GetReplyToInteractionEventsForInteractionEv
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
+
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbPropsAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.([]*utils.DbNodeAndId), err
+	return result.([]*utils.DbPropsAndId), err
 }
 
 func (r *interactionEventRepository) GetSentToParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {

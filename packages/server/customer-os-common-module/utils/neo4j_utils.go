@@ -50,6 +50,11 @@ type DbNodeAndId struct {
 	LinkedNodeId string
 }
 
+type DbPropsAndId struct {
+	Props        map[string]any
+	LinkedNodeId string
+}
+
 type DbNodePairAndId struct {
 	Pair         Pair[*dbtype.Node, *dbtype.Node]
 	LinkedNodeId string
@@ -214,6 +219,24 @@ func ExtractAllRecordsAsDbNodeAndId(ctx context.Context, result neo4j.ResultWith
 	for _, v := range records {
 		element := new(DbNodeAndId)
 		element.Node = NodePtr(v.Values[0].(neo4j.Node))
+		element.LinkedNodeId = v.Values[1].(string)
+		output = append(output, element)
+	}
+	return output, nil
+}
+
+func ExtractAllRecordsAsDbPropsAndId(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbPropsAndId, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]*DbPropsAndId, 0)
+	for _, v := range records {
+		element := new(DbPropsAndId)
+		element.Props = v.Values[0].(map[string]any)
 		element.LinkedNodeId = v.Values[1].(string)
 		output = append(output, element)
 	}
