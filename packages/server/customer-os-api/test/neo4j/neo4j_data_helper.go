@@ -1530,50 +1530,6 @@ func CreateOrganizationRelationship(ctx context.Context, driver *neo4j.DriverWit
 	})
 }
 
-func CreateOrganizationRelationshipStages(ctx context.Context, driver *neo4j.DriverWithContext, tenant, relationship string, stages []string) {
-	query := `WITH $stages as stages
-			UNWIND stages as stage
-			MATCH (t:Tenant {name:$tenant}), (r:OrganizationRelationship {name:$relationship})
-			MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name:stage})<-[:HAS_STAGE]-(r)
-			ON CREATE SET s.id=randomUUID(), s:OrganizationRelationshipStage_%s`
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"relationship": relationship,
-		"tenant":       tenant,
-		"stages":       stages,
-	})
-
-	for k, stage := range stages {
-		query = `MATCH (:Tenant {name:$tenant})<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name:$stage})<-[:HAS_STAGE]-(:OrganizationRelationship {name:$relationship})
-			SET s.order=$order`
-		ExecuteWriteQuery(ctx, driver, query, map[string]any{
-			"relationship": relationship,
-			"tenant":       tenant,
-			"stage":        stage,
-			"order":        k,
-		})
-	}
-}
-
-func LinkOrganizationWithRelationship(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, relationship string) {
-	query := `MATCH (org {id:$organizationId}), (or:OrganizationRelationship {name:$relationship}) MERGE (org)-[:IS]->(or)`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"organizationId": organizationId,
-		"relationship":   relationship,
-	})
-}
-
-func LinkOrganizationWithRelationshipAndStage(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, relationship, stage string) {
-	query := `MATCH (org {id:$organizationId}), 
-				(or:OrganizationRelationship {name:$relationship}),
-				(or)-[:HAS_STAGE]->(s:OrganizationRelationshipStage {name:$stage}) 
-				MERGE (s)<-[:HAS_STAGE]-(org)-[:IS]->(or)`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"organizationId": organizationId,
-		"relationship":   relationship,
-		"stage":          stage,
-	})
-}
-
 func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType entity.ActionType, createdAt time.Time) string {
 	var actionId, _ = uuid.NewRandom()
 

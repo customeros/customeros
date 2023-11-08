@@ -46,15 +46,6 @@ func MapOrganizationToGCliItem(contactEntity entity.OrganizationEntity) model.GC
 
 	return resultItem
 }
-func MapOrganizationRelationshipToGCliItem(relationship entity.OrganizationRelationship) model.GCliItem {
-	resultItem := model.GCliItem{}
-
-	resultItem.ID = relationship.String()
-	resultItem.Type = model.GCliSearchResultTypeOrganizationRelationship
-	resultItem.Display = relationship.String()
-
-	return resultItem
-}
 func MapEmailToGCliItem(emailEntity entity.EmailEntity) model.GCliItem {
 	resultItem := model.GCliItem{}
 

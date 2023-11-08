@@ -34,10 +34,6 @@ type OrganizationRepository interface {
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
 	RemoveOwner(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
-	AddRelationship(ctx context.Context, tenant, organizationId, relationship string) (*dbtype.Node, error)
-	RemoveRelationship(ctx context.Context, tenant, organizationId, relationship string) (*dbtype.Node, error)
-	SetRelationshipWithStage(ctx context.Context, tenant, organizationId, relationship, stage string) (*dbtype.Node, error)
-	RemoveRelationshipStage(ctx context.Context, tenant, organizationId, relationship string) (*dbtype.Node, error)
 
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
@@ -468,18 +464,6 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[rel:HAS_STAGE]->(ors:OrganizationRelationshipStage)<-[:HAS_STAGE]-(or:OrganizationRelationship) "+
-		" WITH primary, merged, ors, or, rel "+
-		" WHERE NOT (primary)-[:HAS_STAGE]->(:OrganizationRelationshipStage)<-[:HAS_STAGE]-(or) "+
-		" MERGE (primary)-[newRel:HAS_STAGE]->(ors) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
-		return err
-	}
-
-	if _, err := tx.Run(ctx, matchQuery+
-		" WITH primary, merged "+
 		" MERGE (merged)-[rel:IS_MERGED_INTO]->(primary) "+
 		" ON CREATE SET rel.mergedAt=$now", params); err != nil {
 		return err
@@ -759,148 +743,6 @@ func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organi
 			map[string]any{
 				"tenant":         tenant,
 				"organizationId": organizationID,
-				"source":         entity.DataSourceOpenline,
-				"now":            utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
-func (r *organizationRepository) AddRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.AddRelationship")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}),
-			(or:OrganizationRelationship {name:$relationship})
-			MERGE (org)-[:IS]->(or)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source			
-			RETURN org`
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationID,
-				"relationship":   relationship,
-				"source":         entity.DataSourceOpenline,
-				"now":            utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
-func (r *organizationRepository) RemoveRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveRelationship")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			OPTIONAL MATCH (org)-[rel:IS]->(or:OrganizationRelationship {name:$relationship})
-			OPTIONAL MATCH (org)-[rel_stage:HAS_STAGE]->(:OrganizationRelationshipStage)<-[:HAS_STAGE]-(or)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source			
-			DELETE rel, rel_stage
-			RETURN distinct(org)`
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationID,
-				"relationship":   relationship,
-				"source":         entity.DataSourceOpenline,
-				"now":            utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
-func (r *organizationRepository) SetRelationshipWithStage(ctx context.Context, tenant, organizationID, relationship, stage string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetRelationshipWithStage")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			MATCH (or:OrganizationRelationship {name:$relationship})
-			MERGE (org)-[:IS]->(or)
-			WITH t, org, or
-			CALL { 
-				WITH org, or
-				MATCH (or)-[:HAS_STAGE]->(:OrganizationRelationshipStage {name:$stage}),
-			    (or)-[:HAS_STAGE]->(existing:OrganizationRelationshipStage)<-[rel:HAS_STAGE]-(org)
-			    WHERE existing.name <> $stage
-			    DELETE rel
-			}
-			WITH t, org, or
-			CALL {
-				WITH t, org, or
-				MATCH (t)<-[:STAGE_BELONGS_TO_TENANT]-(ors:OrganizationRelationshipStage {name:$stage})<-[:HAS_STAGE]-(or)
-				MERGE (org)-[:HAS_STAGE]->(ors)
-			}
-			WITH org
-			SET org.updatedAt=$now, org.sourceOfTruth=$source
-			RETURN org`
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationID,
-				"relationship":   relationship,
-				"stage":          stage,
-				"source":         entity.DataSourceOpenline,
-				"now":            utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
-}
-
-func (r *organizationRepository) RemoveRelationshipStage(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveRelationship")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			OPTIONAL MATCH (org)-[:IS]->(or:OrganizationRelationship {name:$relationship})
-			OPTIONAL MATCH (org)-[rel_stage:HAS_STAGE]->(:OrganizationRelationshipStage)<-[:HAS_STAGE]-(or)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source			
-			DELETE rel_stage
-			RETURN distinct(org)`
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationID,
-				"relationship":   relationship,
 				"source":         entity.DataSourceOpenline,
 				"now":            utils.Now(),
 			})

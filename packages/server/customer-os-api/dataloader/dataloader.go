@@ -65,8 +65,6 @@ type Loaders struct {
 	AttachmentsForMeeting                       *dataloader.Loader
 	SocialsForContact                           *dataloader.Loader
 	SocialsForOrganization                      *dataloader.Loader
-	RelationshipsForOrganization                *dataloader.Loader
-	RelationshipStagesForOrganization           *dataloader.Loader
 	ExternalSystemsForComment                   *dataloader.Loader
 	ExternalSystemsForIssue                     *dataloader.Loader
 	ExternalSystemsForOrganization              *dataloader.Loader
@@ -145,9 +143,6 @@ type noteBatcher struct {
 }
 type attachmentBatcher struct {
 	attachmentService service.AttachmentService
-}
-type relationshipBatcher struct {
-	organizationRelationshipService service.OrganizationRelationshipService
 }
 type externalSystemBatcher struct {
 	externalSystemService service.ExternalSystemService
@@ -242,9 +237,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 	attachmentBatcher := attachmentBatcher{
 		attachmentService: services.AttachmentService,
 	}
-	relationshipBatcher := relationshipBatcher{
-		organizationRelationshipService: services.OrganizationRelationshipService,
-	}
 	externalSystemBatcher := externalSystemBatcher{
 		externalSystemService: services.ExternalSystemService,
 	}
@@ -313,8 +305,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 		AttachmentsForMeeting:                       dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForMeetings, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SocialsForContact:                           dataloader.NewBatchedLoader(socialBatcher.getSocialsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SocialsForOrganization:                      dataloader.NewBatchedLoader(socialBatcher.getSocialsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		RelationshipsForOrganization:                dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		RelationshipStagesForOrganization:           dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipStagesForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ExternalSystemsForComment:                   dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForComments, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ExternalSystemsForIssue:                     dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ExternalSystemsForOrganization:              dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

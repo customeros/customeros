@@ -17,75 +17,73 @@ type Services struct {
 	CommonServices     *commonService.Services
 	CommonAuthServices *commonAuthService.Services
 
-	ContactService                  ContactService
-	OrganizationService             OrganizationService
-	CustomFieldService              CustomFieldService
-	PhoneNumberService              PhoneNumberService
-	EmailService                    EmailService
-	UserService                     UserService
-	FieldSetService                 FieldSetService
-	EntityTemplateService           EntityTemplateService
-	FieldSetTemplateService         FieldSetTemplateService
-	CustomFieldTemplateService      CustomFieldTemplateService
-	TimelineEventService            TimelineEventService
-	NoteService                     NoteService
-	JobRoleService                  JobRoleService
-	CalendarService                 CalendarService
-	LocationService                 LocationService
-	TagService                      TagService
-	SearchService                   SearchService
-	QueryService                    DashboardService
-	DomainService                   DomainService
-	IssueService                    IssueService
-	InteractionSessionService       InteractionSessionService
-	InteractionEventService         InteractionEventService
-	PageViewService                 PageViewService
-	AnalysisService                 AnalysisService
-	AttachmentService               AttachmentService
-	MeetingService                  MeetingService
-	TenantService                   TenantService
-	WorkspaceService                WorkspaceService
-	SocialService                   SocialService
-	PlayerService                   PlayerService
-	OrganizationRelationshipService OrganizationRelationshipService
-	ExternalSystemService           ExternalSystemService
-	ActionService                   ActionService
-	CountryService                  CountryService
-	ActionItemService               ActionItemService
-	BillableService                 BillableService
-	LogEntryService                 LogEntryService
-	CommentService                  CommentService
+	ContactService             ContactService
+	OrganizationService        OrganizationService
+	CustomFieldService         CustomFieldService
+	PhoneNumberService         PhoneNumberService
+	EmailService               EmailService
+	UserService                UserService
+	FieldSetService            FieldSetService
+	EntityTemplateService      EntityTemplateService
+	FieldSetTemplateService    FieldSetTemplateService
+	CustomFieldTemplateService CustomFieldTemplateService
+	TimelineEventService       TimelineEventService
+	NoteService                NoteService
+	JobRoleService             JobRoleService
+	CalendarService            CalendarService
+	LocationService            LocationService
+	TagService                 TagService
+	SearchService              SearchService
+	QueryService               DashboardService
+	DomainService              DomainService
+	IssueService               IssueService
+	InteractionSessionService  InteractionSessionService
+	InteractionEventService    InteractionEventService
+	PageViewService            PageViewService
+	AnalysisService            AnalysisService
+	AttachmentService          AttachmentService
+	MeetingService             MeetingService
+	TenantService              TenantService
+	WorkspaceService           WorkspaceService
+	SocialService              SocialService
+	PlayerService              PlayerService
+	ExternalSystemService      ExternalSystemService
+	ActionService              ActionService
+	CountryService             CountryService
+	ActionItemService          ActionItemService
+	BillableService            BillableService
+	LogEntryService            LogEntryService
+	CommentService             CommentService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver, cfg.Neo4j.Database)
 
 	services := Services{
-		CommonServices:                  commonServices,
-		CommonAuthServices:              commonAuthServices,
-		OrganizationService:             NewOrganizationService(log, repositories, grpcClients),
-		CustomFieldService:              NewCustomFieldService(log, repositories),
-		UserService:                     NewUserService(log, repositories, grpcClients),
-		FieldSetService:                 NewFieldSetService(log, repositories),
-		EntityTemplateService:           NewEntityTemplateService(log, repositories),
-		FieldSetTemplateService:         NewFieldSetTemplateService(log, repositories),
-		CustomFieldTemplateService:      NewCustomFieldTemplateService(log, repositories),
-		LocationService:                 NewLocationService(log, repositories),
-		TagService:                      NewTagService(log, repositories),
-		DomainService:                   NewDomainService(log, repositories),
-		PageViewService:                 NewPageViewService(log, repositories),
-		AttachmentService:               NewAttachmentService(log, repositories),
-		TenantService:                   NewTenantService(log, repositories),
-		WorkspaceService:                NewWorkspaceService(log, repositories),
-		SocialService:                   NewSocialService(log, repositories),
-		OrganizationRelationshipService: NewOrganizationRelationshipService(log, repositories),
-		ExternalSystemService:           NewExternalSystemService(log, repositories),
-		ActionService:                   NewActionService(log, repositories),
-		CountryService:                  NewCountryService(log, repositories),
-		ActionItemService:               NewActionItemService(log, repositories),
-		BillableService:                 NewBillableService(log, repositories),
-		LogEntryService:                 NewLogEntryService(log, repositories),
-		CommentService:                  NewCommentService(log, repositories),
+		CommonServices:             commonServices,
+		CommonAuthServices:         commonAuthServices,
+		OrganizationService:        NewOrganizationService(log, repositories, grpcClients),
+		CustomFieldService:         NewCustomFieldService(log, repositories),
+		UserService:                NewUserService(log, repositories, grpcClients),
+		FieldSetService:            NewFieldSetService(log, repositories),
+		EntityTemplateService:      NewEntityTemplateService(log, repositories),
+		FieldSetTemplateService:    NewFieldSetTemplateService(log, repositories),
+		CustomFieldTemplateService: NewCustomFieldTemplateService(log, repositories),
+		LocationService:            NewLocationService(log, repositories),
+		TagService:                 NewTagService(log, repositories),
+		DomainService:              NewDomainService(log, repositories),
+		PageViewService:            NewPageViewService(log, repositories),
+		AttachmentService:          NewAttachmentService(log, repositories),
+		TenantService:              NewTenantService(log, repositories),
+		WorkspaceService:           NewWorkspaceService(log, repositories),
+		SocialService:              NewSocialService(log, repositories),
+		ExternalSystemService:      NewExternalSystemService(log, repositories),
+		ActionService:              NewActionService(log, repositories),
+		CountryService:             NewCountryService(log, repositories),
+		ActionItemService:          NewActionItemService(log, repositories),
+		BillableService:            NewBillableService(log, repositories),
+		LogEntryService:            NewLogEntryService(log, repositories),
+		CommentService:             NewCommentService(log, repositories),
 	}
 	services.IssueService = NewIssueService(log, repositories, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
