@@ -10,7 +10,7 @@
     },
     {
       "name": "Check for nodes missing link with tenant",
-      "query": "MATCH (n:Organization|Contact|Email|PhoneNumber|Location|Tag|User|OrganizationRelationshipStage|MergedContact|MergedOrganization|Issue|Workspace|EntityTemplate) where not (n)--(:Tenant) return count(n)"
+      "query": "MATCH (n:Organization|Contact|Email|PhoneNumber|Location|Tag|User|MergedContact|MergedOrganization|Issue|Workspace|EntityTemplate) where not (n)--(:Tenant) return count(n)"
     },
     {
       "name": "Check organization nodes labels",

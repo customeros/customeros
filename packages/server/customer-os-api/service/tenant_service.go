@@ -54,10 +54,6 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEnt
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("Merge: %w", err)
 	}
-	err = s.repositories.OrganizationRelationshipRepository.CreateDefaultStagesForNewTenant(ctx, tenantEntity.Name)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
 	return s.mapDbNodeToTenantEntity(tenant), nil
 }
 

@@ -37,10 +37,6 @@ type OrganizationService interface {
 	RemoveSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId string) error
 	ReplaceOwner(ctx context.Context, organizationId, userId string) (*entity.OrganizationEntity, error)
 	RemoveOwner(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
-	AddRelationship(ctx context.Context, organizationId string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
-	RemoveRelationship(ctx context.Context, organizationId string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
-	SetRelationshipStage(ctx context.Context, organizationId string, relationship entity.OrganizationRelationship, stage string) (*entity.OrganizationEntity, error)
-	RemoveRelationshipStage(ctx context.Context, organizationId string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 	UpdateLastTouchpointSync(ctx context.Context, organizationId string)
 	UpdateLastTouchpointSyncByContactId(ctx context.Context, contactId string)
 	UpdateLastTouchpointSyncByEmailId(ctx context.Context, emailId string)
@@ -466,62 +462,6 @@ func (s *organizationService) RemoveOwner(ctx context.Context, organizationID st
 	span.LogFields(log.String("organizationID", organizationID))
 
 	dbNode, err := s.repositories.OrganizationRepository.RemoveOwner(ctx, common.GetTenantFromContext(ctx), organizationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) AddRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddRelationship")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()))
-
-	dbNode, err := s.repositories.OrganizationRepository.AddRelationship(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) SetRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship, stage string) (*entity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.SetRelationshipWithStage")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()), log.String("stage", stage))
-
-	dbNode, err := s.repositories.OrganizationRepository.SetRelationshipWithStage(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String(), stage)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) RemoveRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveRelationship")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()))
-
-	dbNode, err := s.repositories.OrganizationRepository.RemoveRelationship(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveRelationshipStage")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()))
-
-	dbNode, err := s.repositories.OrganizationRepository.RemoveRelationshipStage(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

@@ -26,10 +26,10 @@ extend type Mutation {
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
 }
 
 type LinkedOrganization {
@@ -79,8 +79,8 @@ type Organization implements Node {
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
-    relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
-    relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true)
+    relationships: [OrganizationRelationship!]! @goField(forceResolver: true) @deprecated
+    relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true) @deprecated
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 
     lastTouchPointAt: Time
@@ -218,6 +218,7 @@ enum Market {
     MARKETPLACE
 }
 
+#Deprecated
 enum OrganizationRelationship {
     CUSTOMER
     DISTRIBUTOR
@@ -265,6 +266,7 @@ enum OrganizationRelationship {
     COMPETITOR
 }
 
+#Deprecated
 type OrganizationRelationshipStage {
     relationship: OrganizationRelationship!
     stage: String

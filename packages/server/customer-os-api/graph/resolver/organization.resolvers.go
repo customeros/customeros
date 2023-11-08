@@ -674,66 +674,26 @@ func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizat
 
 // OrganizationAddRelationship is the resolver for the organization_AddRelationship field.
 func (r *mutationResolver) OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddRelationship", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.relationship", relationship.String()))
-
-	organizationEntity, err := r.Services.OrganizationService.AddRelationship(ctx, organizationID, mapper.MapOrgRelationshipFromModel(relationship))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add relationship %s for organization %s", relationship.String(), organizationID)
-		return nil, nil
-	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
+	graphql.AddErrorf(ctx, "Not available")
+	return nil, nil
 }
 
 // OrganizationRemoveRelationship is the resolver for the organization_RemoveRelationship field.
 func (r *mutationResolver) OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveRelationship", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.relationship", relationship.String()))
-
-	organizationEntity, err := r.Services.OrganizationService.RemoveRelationship(ctx, organizationID, mapper.MapOrgRelationshipFromModel(relationship))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove relationship %s from organization %s", relationship.String(), organizationID)
-		return nil, nil
-	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
+	graphql.AddErrorf(ctx, "Not available")
+	return nil, nil
 }
 
 // OrganizationSetRelationshipStage is the resolver for the organization_SetRelationshipStage field.
 func (r *mutationResolver) OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage string) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSetRelationshipStage", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.relationship", relationship.String()), log.String("request.stage", stage))
-
-	organizationEntity, err := r.Services.OrganizationService.SetRelationshipStage(ctx, organizationID, mapper.MapOrgRelationshipFromModel(relationship), stage)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to set relationship' %s stage %s for organization %s", relationship.String(), stage, organizationID)
-		return nil, nil
-	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
+	graphql.AddErrorf(ctx, "Not available")
+	return nil, nil
 }
 
 // OrganizationRemoveRelationshipStage is the resolver for the organization_RemoveRelationshipStage field.
 func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveRelationshipStage", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.relationship", relationship.String()))
-
-	organizationEntity, err := r.Services.OrganizationService.RemoveRelationshipStage(ctx, organizationID, mapper.MapOrgRelationshipFromModel(relationship))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove relationship' %s stage from organization %s", relationship.String(), organizationID)
-		return nil, nil
-	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
+	graphql.AddErrorf(ctx, "Not available")
+	return nil, nil
 }
 
 // Domains is the resolver for the domains field.
@@ -1013,38 +973,14 @@ func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organizatio
 
 // Relationships is the resolver for the relationships field.
 func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	orgRelationships, err := dataloader.For(ctx).GetRelationshipsForOrganization(ctx, obj.ID)
-	if err != nil {
-		r.log.Errorf("Error fetching relationships for organization %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Error fetching relationships for organization %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapOrgRelationshipsToModel(orgRelationships), nil
+	graphql.AddErrorf(ctx, "Not available")
+	return nil, nil
 }
 
 // RelationshipStages is the resolver for the relationshipStages field.
 func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	serviceResult, err := dataloader.For(ctx).GetRelationshipStagesForOrganization(ctx, obj.ID)
-	if err != nil {
-		r.log.Errorf("Error fetching relationship stages for organization %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Error fetching relationship stages for organization %s", obj.ID)
-		return nil, nil
-	}
-
-	var output []*model.OrganizationRelationshipStage
-	for _, v := range *serviceResult {
-		item := model.OrganizationRelationshipStage{}
-		item.Relationship = mapper.MapOrgRelationshipToModel(v.Relationship)
-		if v.Stage != nil {
-			item.Stage = utils.StringPtr(v.Stage.Name)
-		}
-		output = append(output, &item)
-	}
-	return output, nil
+	graphql.AddErrorf(ctx, "Not available")
+	return nil, nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.

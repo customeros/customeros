@@ -5,44 +5,43 @@ import (
 )
 
 type Repositories struct {
-	Drivers                            Drivers
-	TimelineEventRepository            TimelineEventRepository
-	OrganizationRepository             OrganizationRepository
-	ContactRepository                  ContactRepository
-	CustomFieldTemplateRepository      CustomFieldTemplateRepository
-	CustomFieldRepository              CustomFieldRepository
-	EntityTemplateRepository           EntityTemplateRepository
-	FieldSetTemplateRepository         FieldSetTemplateRepository
-	FieldSetRepository                 FieldSetRepository
-	UserRepository                     UserRepository
-	ExternalSystemRepository           ExternalSystemRepository
-	NoteRepository                     NoteRepository
-	JobRoleRepository                  JobRoleRepository
-	CalendarRepository                 CalendarRepository
-	LocationRepository                 LocationRepository
-	EmailRepository                    EmailRepository
-	PhoneNumberRepository              PhoneNumberRepository
-	TagRepository                      TagRepository
-	SearchRepository                   SearchRepository
-	QueryRepository                    DashboardRepository
-	DomainRepository                   DomainRepository
-	IssueRepository                    IssueRepository
-	InteractionEventRepository         InteractionEventRepository
-	InteractionSessionRepository       InteractionSessionRepository
-	AnalysisRepository                 AnalysisRepository
-	AttachmentRepository               AttachmentRepository
-	MeetingRepository                  MeetingRepository
-	TenantRepository                   TenantRepository
-	WorkspaceRepository                WorkspaceRepository
-	SocialRepository                   SocialRepository
-	PlayerRepository                   PlayerRepository
-	OrganizationRelationshipRepository OrganizationRelationshipRepository
-	ActionRepository                   ActionRepository
-	CountryRepository                  CountryRepository
-	ActionItemRepository               ActionItemRepository
-	LogEntryRepository                 LogEntryRepository
-	CommonRepository                   CommonRepository
-	CommentRepository                  CommentRepository
+	Drivers                       Drivers
+	TimelineEventRepository       TimelineEventRepository
+	OrganizationRepository        OrganizationRepository
+	ContactRepository             ContactRepository
+	CustomFieldTemplateRepository CustomFieldTemplateRepository
+	CustomFieldRepository         CustomFieldRepository
+	EntityTemplateRepository      EntityTemplateRepository
+	FieldSetTemplateRepository    FieldSetTemplateRepository
+	FieldSetRepository            FieldSetRepository
+	UserRepository                UserRepository
+	ExternalSystemRepository      ExternalSystemRepository
+	NoteRepository                NoteRepository
+	JobRoleRepository             JobRoleRepository
+	CalendarRepository            CalendarRepository
+	LocationRepository            LocationRepository
+	EmailRepository               EmailRepository
+	PhoneNumberRepository         PhoneNumberRepository
+	TagRepository                 TagRepository
+	SearchRepository              SearchRepository
+	QueryRepository               DashboardRepository
+	DomainRepository              DomainRepository
+	IssueRepository               IssueRepository
+	InteractionEventRepository    InteractionEventRepository
+	InteractionSessionRepository  InteractionSessionRepository
+	AnalysisRepository            AnalysisRepository
+	AttachmentRepository          AttachmentRepository
+	MeetingRepository             MeetingRepository
+	TenantRepository              TenantRepository
+	WorkspaceRepository           WorkspaceRepository
+	SocialRepository              SocialRepository
+	PlayerRepository              PlayerRepository
+	ActionRepository              ActionRepository
+	CountryRepository             CountryRepository
+	ActionItemRepository          ActionItemRepository
+	LogEntryRepository            LogEntryRepository
+	CommonRepository              CommonRepository
+	CommentRepository             CommentRepository
 }
 
 type Drivers struct {
@@ -85,7 +84,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 	repositories.WorkspaceRepository = NewWorkspaceRepository(driver)
 	repositories.SocialRepository = NewSocialRepository(driver)
 	repositories.PlayerRepository = NewPlayerRepository(driver)
-	repositories.OrganizationRelationshipRepository = NewOrganizationRelationshipRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)
 	repositories.CountryRepository = NewCountryRepository(driver)
 	repositories.ActionItemRepository = NewActionItemRepository(driver)
