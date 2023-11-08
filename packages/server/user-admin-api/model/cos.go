@@ -9,7 +9,7 @@ type Result struct {
 }
 
 type GetTenantByWorkspaceResponse struct {
-	Workspace *string `json:"tenant_ByWorkspace"`
+	Name *string `json:"tenant_ByWorkspace"`
 }
 
 type MergeTenantToWorkspaceResponse struct {
