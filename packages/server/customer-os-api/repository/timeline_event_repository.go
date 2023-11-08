@@ -209,20 +209,18 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization contacts' emails and phone numbers
-		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), "+
+		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e:Email|PhoneNumber), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization emails, phone numbers or job roles
-		" WITH o MATCH (o)-[:HAS|ROLE_IN]-(e), "+
+		" WITH o MATCH (o)-[:HAS|ROLE_IN]-(e:Email|PhoneNumber|JobRole), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e) OR 'JobRole' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationProperties)"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationProperties)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
@@ -282,7 +280,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContact)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
-		//" AND (a.status IS NULL OR a.status <> $skipStatus) "+
+		" AND (a.status IS NULL OR a.status <> $skipStatus) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
@@ -291,24 +289,22 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" p = (o)-[*1]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganization)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
-		//" AND (a.status IS NULL OR a.status <> $skipStatus) "+
+		" AND (a.status IS NULL OR a.status <> $skipStatus) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization contacts' emails and phone numbers
-		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), "+
+		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e:Email|PhoneNumber), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithContactProperties)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization emails, phone numbers and job roles
-		" WITH o MATCH (o)-[:HAS|ROLE_IN]-(e), "+
+		" WITH o MATCH (o)-[:HAS|ROLE_IN]-(e:Email|PhoneNumber|JobRole), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e) OR 'JobRole' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationProperties)"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationProperties)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
