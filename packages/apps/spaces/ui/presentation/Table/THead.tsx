@@ -1,4 +1,8 @@
+'use client';
 import type { HeaderContext } from '@tanstack/react-table';
+
+import { useRef, RefObject } from 'react';
+
 import { Column } from '@tanstack/react-table';
 
 import { Flex } from '@ui/layout/Flex';
@@ -14,23 +18,42 @@ import {
   PopoverTrigger,
 } from '@ui/overlay/Popover';
 
-interface THeadProps<T extends object> extends HeaderContext<T, unknown> {
+import { useTHeadState } from './THead.atom';
+
+interface THeadProps<
+  T extends object,
+  InitialRefType extends { focus(): void } = HTMLButtonElement,
+> extends HeaderContext<T, unknown> {
+  id: string;
   title: string;
   subTitle?: string;
   icon?: React.ReactNode;
-  renderFilter?: (column: Column<T>) => React.ReactNode;
+  filterWidth?: string | number;
+  renderFilter?: (
+    column: Column<T>,
+    initialFocusRef: RefObject<InitialRefType>,
+  ) => React.ReactNode;
 }
 
-export const THead = <T extends object>({
+export const THead = <
+  T extends object,
+  InitialRefType extends { focus(): void } = HTMLButtonElement,
+>({
+  id,
   icon,
   title,
   header,
   subTitle,
+  filterWidth,
   renderFilter,
-}: THeadProps<T>) => {
+}: THeadProps<T, InitialRefType>) => {
+  const [isOpen, setIsOpen] = useTHeadState(id);
+  const initialFocusRef = useRef<InitialRefType>(null);
+
   const canSort = header.column.getCanSort();
   const isSorted = header.column.getIsSorted();
   const canFilter = header.column.getCanFilter();
+  const isFiltered = header.column.getIsFiltered();
   const onToggleSort = header.column.getToggleSortingHandler();
 
   const sortIconProps = {
@@ -42,7 +65,13 @@ export const THead = <T extends object>({
   };
 
   return (
-    <Popover placement='bottom-start'>
+    <Popover
+      isOpen={isOpen}
+      placement='bottom-start'
+      onOpen={() => setIsOpen(true)}
+      onClose={() => setIsOpen(false)}
+      initialFocusRef={initialFocusRef}
+    >
       {({ isOpen }) => (
         <Flex
           w='full'
@@ -56,9 +85,11 @@ export const THead = <T extends object>({
             border='1px solid'
             borderRadius='4px'
             transition='all 0.2s ease-in-out'
-            borderColor={isOpen ? 'gray.300' : 'transparent'}
+            borderColor={isFiltered || isOpen ? 'gray.300' : 'transparent'}
             boxShadow={
-              isOpen ? '0px 1px 2px 0px rgba(16, 24, 40, 0.05)' : 'unset'
+              isFiltered || isOpen
+                ? '0px 1px 2px 0px rgba(16, 24, 40, 0.05)'
+                : 'unset'
             }
             _hover={{
               '& #sort-icon': {
@@ -73,9 +104,15 @@ export const THead = <T extends object>({
           >
             {canSort ? (
               isSorted === 'asc' ? (
-                <ArrowUp {...sortIconProps} />
+                <ArrowUp
+                  {...sortIconProps}
+                  opacity={isFiltered || isOpen ? 1 : 0}
+                />
               ) : (
-                <ArrowDown {...sortIconProps} />
+                <ArrowDown
+                  {...sortIconProps}
+                  opacity={isFiltered || isOpen ? 1 : 0}
+                />
               )
             ) : (
               <Flex w='3' mx='1' />
@@ -98,18 +135,20 @@ export const THead = <T extends object>({
                     variant='ghost'
                     borderRadius='2px'
                     aria-label='filter'
-                    opacity={isOpen ? 1 : 0}
+                    opacity={isFiltered || isOpen ? 1 : 0}
                     className='filter-icon-button'
                     icon={
                       <FilterLines
                         boxSize='3'
-                        color={isOpen ? 'gray.700' : 'gray.400'}
+                        color={isFiltered || isOpen ? 'gray.700' : 'gray.400'}
                       />
                     }
                   />
                 </PopoverTrigger>
-                <PopoverContent>
-                  <PopoverBody>{renderFilter?.(header.column)}</PopoverBody>
+                <PopoverContent maxW={filterWidth ?? '12rem'}>
+                  <PopoverBody>
+                    {renderFilter?.(header.column, initialFocusRef)}
+                  </PopoverBody>
                 </PopoverContent>
               </>
             )}

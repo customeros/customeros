@@ -9,12 +9,31 @@ import { THead, createColumnHelper } from '@ui/presentation/Table';
 import { OwnerCell } from './Cells/owner/OwnerCell';
 import { AvatarCell } from './Cells/avatar/AvatarCell';
 import { WebsiteCell } from './Cells/website/WebsiteCell';
+import { OwnerFilter, filterOwnerFn } from './Filters/Owner';
+import { WebsiteFilter, filterWebsiteFn } from './Filters/Website';
+import { ForecastFilter, filterForecastFn } from './Filters/Forecast';
 import { TimeToRenewalCell } from './Cells/renewal/TimeToRenewalCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
 import { RenewalForecastCell } from './Cells/renewal/RenewalForecastCell';
 import { LastTouchpointCell } from './Cells/touchpoint/LastTouchpointCell';
 import { RenewalLikelihoodCell } from './Cells/renewal/RenewalLikelihoodCell';
+import {
+  OrganizationFilter,
+  filterOrganizationFn,
+} from './Filters/Organization';
+import {
+  RelationshipFilter,
+  filterRelationshipFn,
+} from './Filters/Relationship';
 import { OrganizationRelationship } from './Cells/relationship/OrganizationRelationship';
+import {
+  TimeToRenewalFilter,
+  filterTimeToRenewalFn,
+} from './Filters/TimeToRenewal';
+import {
+  RenewalLikelihoodFilter,
+  filterRenewalLikelihoodFn,
+} from './Filters/RenewalLikelihood';
 
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
@@ -68,7 +87,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor((row) => row, {
     id: 'ORGANIZATION',
     minSize: 200,
-    enableColumnFilter: false,
+    filterFn: filterOrganizationFn,
     cell: (props) => {
       return (
         <OrganizationCell
@@ -78,7 +97,20 @@ export const getColumns = (options: GetColumnsOptions) => [
         />
       );
     },
-    header: (props) => <THead<Organization> title='Organization' {...props} />,
+    header: (props) => (
+      <THead<Organization, HTMLInputElement>
+        id='organization'
+        title='Organization'
+        filterWidth='14rem'
+        renderFilter={(column, initialFocusRef) => (
+          <OrganizationFilter
+            column={column}
+            initialFocusRef={initialFocusRef}
+          />
+        )}
+        {...props}
+      />
+    ),
     skeleton: () => (
       <Flex flexDir='column' h='42px' align='flex-start' gap='1'>
         <Skeleton
@@ -100,9 +132,19 @@ export const getColumns = (options: GetColumnsOptions) => [
     id: 'WEBSITE',
     minSize: 200,
     enableSorting: false,
-    enableColumnFilter: false,
+    filterFn: filterWebsiteFn,
     cell: (props) => <WebsiteCell website={props.getValue()} />,
-    header: (props) => <THead<Organization> title='Website' {...props} />,
+    header: (props) => (
+      <THead<Organization, HTMLInputElement>
+        id='website'
+        title='Website'
+        filterWidth='14rem'
+        renderFilter={(column, initialFocusRef) => (
+          <WebsiteFilter column={column} initialFocusRef={initialFocusRef} />
+        )}
+        {...props}
+      />
+    ),
     skeleton: () => (
       <Skeleton
         width='50%'
@@ -115,13 +157,12 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('isCustomer', {
     id: 'RELATIONSHIP',
     minSize: 200,
-    filterFn: 'equalsString',
+    filterFn: filterRelationshipFn,
     header: (props) => (
       <THead<Organization>
+        id='relationship'
         title='Relationship'
-        renderFilter={(column) => {
-          return <p>Hello World</p>;
-        }}
+        renderFilter={(column) => <RelationshipFilter column={column} />}
         {...props}
       />
     ),
@@ -142,7 +183,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_LIKELIHOOD',
     minSize: 200,
-    enableColumnFilter: false,
+    filterFn: filterRenewalLikelihoodFn,
     cell: (props) => {
       const organizationId = props.row.original.id;
       const value = props.getValue()?.renewalLikelihood;
@@ -160,7 +201,12 @@ export const getColumns = (options: GetColumnsOptions) => [
       );
     },
     header: (props) => (
-      <THead<Organization> title='Renewal Likelihood' {...props} />
+      <THead<Organization>
+        id='renewalLikelihood'
+        title='Renewal Likelihood'
+        renderFilter={(column) => <RenewalLikelihoodFilter column={column} />}
+        {...props}
+      />
     ),
     skeleton: () => (
       <Flex flexDir='column' gap='1'>
@@ -182,7 +228,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_CYCLE_NEXT',
     minSize: 200,
-    enableColumnFilter: false,
+    filterFn: filterTimeToRenewalFn,
     cell: (props) => {
       const values = props.getValue()?.billingDetails;
       const renewalDate = values?.renewalCycleNext;
@@ -196,7 +242,12 @@ export const getColumns = (options: GetColumnsOptions) => [
       );
     },
     header: (props) => (
-      <THead<Organization> title='Time to Renewal' {...props} />
+      <THead<Organization>
+        id='timeToRenewal'
+        title='Time to Renewal'
+        renderFilter={(column) => <TimeToRenewalFilter column={column} />}
+        {...props}
+      />
     ),
     skeleton: () => (
       <Skeleton
@@ -210,7 +261,7 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('accountDetails', {
     id: 'FORECAST_AMOUNT',
     minSize: 200,
-    enableColumnFilter: false,
+    filterFn: filterForecastFn,
     cell: (props) => {
       const value = props.getValue()?.renewalForecast;
       const amount = value?.amount;
@@ -224,7 +275,15 @@ export const getColumns = (options: GetColumnsOptions) => [
         />
       );
     },
-    header: (props) => <THead<Organization> title='ARR Forecast' {...props} />,
+    header: (props) => (
+      <THead<Organization>
+        id='forecast'
+        title='ARR Forecast'
+        filterWidth='17rem'
+        renderFilter={(column) => <ForecastFilter column={column} />}
+        {...props}
+      />
+    ),
     skeleton: () => (
       <Flex flexDir='column' gap='1'>
         <Skeleton
@@ -245,11 +304,21 @@ export const getColumns = (options: GetColumnsOptions) => [
   columnHelper.accessor('owner', {
     id: 'OWNER',
     minSize: 200,
-    enableColumnFilter: false,
+    filterFn: filterOwnerFn,
     cell: (props) => (
       <OwnerCell id={props.row.original.id} owner={props.getValue()} />
     ),
-    header: (props) => <THead<Organization> title='Owner' {...props} />,
+    header: (props) => (
+      <THead<Organization, HTMLInputElement>
+        id='owner'
+        title='Owner'
+        filterWidth='14rem'
+        renderFilter={(column, initialFocusRef) => (
+          <OwnerFilter column={column} initialFocusRef={initialFocusRef} />
+        )}
+        {...props}
+      />
+    ),
     skeleton: () => (
       <Skeleton
         width='75%'
@@ -272,7 +341,11 @@ export const getColumns = (options: GetColumnsOptions) => [
       />
     ),
     header: (props) => (
-      <THead<Organization> title='Last Touchpoint' {...props} />
+      <THead<Organization>
+        id='lastTouchpoint'
+        title='Last Touchpoint'
+        {...props}
+      />
     ),
     skeleton: () => (
       <Flex flexDir='column' gap='1'>

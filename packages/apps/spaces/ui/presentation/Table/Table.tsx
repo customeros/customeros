@@ -55,6 +55,7 @@ interface TableProps<T extends object> {
 export const Table = <T extends object>({
   data,
   columns,
+  filters,
   isLoading,
   onFetchMore,
   canFetchMore,

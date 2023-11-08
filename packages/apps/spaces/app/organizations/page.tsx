@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { produce } from 'immer';
@@ -20,11 +20,12 @@ import {
   ComparisonOperator,
 } from '@graphql/types';
 
+import { useTableState } from './src/state';
 import { Search } from './src/components/Search';
 import { TableActions } from './src/components/Actions';
 import { useOrganizationsPageMethods } from './src/hooks';
 import { getColumns } from './src/components/Columns/Columns';
-import EmptyState from './src/components/EmptyState/EmptyState';
+// import EmptyState from './src/components/EmptyState/EmptyState';
 import { useGetOrganizationsInfiniteQuery } from './src/hooks/useGetOrganizationsInfiniteQuery';
 
 export default function OrganizationsPage() {
@@ -36,9 +37,11 @@ export default function OrganizationsPage() {
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
-  const router = useRouter();
+  // const router = useRouter();
 
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const { columnFilters } = useTableState();
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
   const { createOrganization } = useOrganizationsPageMethods();
   const isRestoring = useIsRestoring();
@@ -83,8 +86,44 @@ export default function OrganizationsPage() {
           },
         });
       }
+
+      if (
+        columnFilters?.organization?.isActive &&
+        columnFilters?.organization?.value
+      ) {
+        draft.AND.push({
+          filter: {
+            property: 'ORGANIZATION',
+            value: columnFilters?.organization?.value,
+            operation: ComparisonOperator.Contains,
+            caseSensitive: false,
+          },
+        });
+      }
+
+      if (
+        columnFilters?.relationship.isActive &&
+        columnFilters?.relationship.value.length > 0 &&
+        columnFilters?.relationship.value.length < 2
+      ) {
+        draft.AND.push({
+          filter: {
+            property: 'IS_CUSTOMER',
+            value: columnFilters.relationship.value[0],
+            operation: ComparisonOperator.Eq,
+          },
+        });
+      }
     });
-  }, [searchParams?.toString(), globalCache?.global_Cache?.user.id]);
+  }, [
+    searchParams?.toString(),
+    globalCache?.global_Cache?.user.id,
+    columnFilters?.organization?.value,
+    columnFilters?.relationship.isActive,
+    columnFilters?.organization?.isActive,
+    columnFilters.relationship.value.length,
+  ]);
+
   const sortBy: SortBy | undefined = useMemo(() => {
     if (!sorting.length) return;
 
@@ -94,10 +133,6 @@ export default function OrganizationsPage() {
       caseSensitive: false,
     };
   }, [sorting]);
-
-  // const { data: tableState } = useTableState();
-  // const filters = tableState?.columnFilters;
-
   const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
     useGetOrganizationsInfiniteQuery(
       client,
@@ -120,7 +155,13 @@ export default function OrganizationsPage() {
       (data?.pages?.flatMap(
         (o) => o.dashboardView_Organizations?.content,
       ) as Organization[]) || [],
-    [data],
+    [
+      data,
+      columnFilters?.organization?.value,
+      columnFilters?.relationship.isActive,
+      columnFilters?.organization?.isActive,
+      columnFilters.relationship.value.length,
+    ],
   );
 
   const allOrganizationIds = flatData.map((o) => o?.id);
@@ -160,33 +201,34 @@ export default function OrganizationsPage() {
     );
   }, [sortBy, searchParams?.toString(), data?.pageParams]);
 
-  if (
-    data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
-    !searchTerm
-  ) {
-    const emptyOrganization = {
-      title: "Let's get started",
-      description:
-        'Start seeing your customer conversations all in one place by adding an organization',
-      buttonLabel: 'Add Organization',
-      onClick: handleCreateOrganization,
-    };
-    const myPortfolioEmpty = {
-      title: 'No organizations assigned to you yet',
-      description:
-        'Currently, you have not been assigned to any organizations.\n' +
-        '\n' +
-        'Head to your list of organizations and assign yourself as an owner to one of them.',
-      buttonLabel: 'Go to Organizations',
-      onClick: () => {
-        router.push(`/organizations`);
-      },
-    };
-    const emptyState =
-      preset === 'portfolio' ? myPortfolioEmpty : emptyOrganization;
+  // this should only enter if no rows are present for this tenant in db
+  // if (
+  //   data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
+  //   !searchTerm
+  // ) {
+  //   const emptyOrganization = {
+  //     title: "Let's get started",
+  //     description:
+  //       'Start seeing your customer conversations all in one place by adding an organization',
+  //     buttonLabel: 'Add Organization',
+  //     onClick: handleCreateOrganization,
+  //   };
+  //   const myPortfolioEmpty = {
+  //     title: 'No organizations assigned to you yet',
+  //     description:
+  //       'Currently, you have not been assigned to any organizations.\n' +
+  //       '\n' +
+  //       'Head to your list of organizations and assign yourself as an owner to one of them.',
+  //     buttonLabel: 'Go to Organizations',
+  //     onClick: () => {
+  //       router.push(`/organizations`);
+  //     },
+  //   };
+  //   const emptyState =
+  //     preset === 'portfolio' ? myPortfolioEmpty : emptyOrganization;
 
-    return <EmptyState {...emptyState} />;
-  }
+  //   return <EmptyState {...emptyState} />;
+  // }
 
   return (
     <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
@@ -207,10 +249,10 @@ export default function OrganizationsPage() {
         sorting={sorting}
         enableTableActions
         enableRowSelection
-        isLoading={isRestoring ? false : isLoading}
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
+        isLoading={isRestoring ? false : isLoading}
         totalItems={
           isRestoring
             ? 40
