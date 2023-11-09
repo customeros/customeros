@@ -60,4 +60,8 @@ enum ComparisonOperator {
     EQ
     CONTAINS
     STARTS_WITH
+    LTE
+    GTE
+    IN
+    BETWEEN
 }

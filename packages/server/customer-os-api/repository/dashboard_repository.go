@@ -29,13 +29,23 @@ func NewDashboardRepository(driver *neo4j.DriverWithContext) DashboardRepository
 	}
 }
 
-func createCypherFilter(propertyName string, searchTerm string, comparator utils.ComparisonOperator) *utils.CypherFilter {
+func createStringCypherFilter(propertyName string, searchTerm any, comparator utils.ComparisonOperator) *utils.CypherFilter {
 	filter := utils.CypherFilter{}
 	filter.Details = new(utils.CypherFilterItem)
 	filter.Details.NodeProperty = propertyName
 	filter.Details.Value = &searchTerm
 	filter.Details.ComparisonOperator = comparator
 	filter.Details.SupportCaseSensitive = true
+	return &filter
+}
+
+func createCypherFilter(propertyName string, searchTerm any, comparator utils.ComparisonOperator, caseSensitive bool) *utils.CypherFilter {
+	filter := utils.CypherFilter{}
+	filter.Details = new(utils.CypherFilterItem)
+	filter.Details.NodeProperty = propertyName
+	filter.Details.Value = &searchTerm
+	filter.Details.ComparisonOperator = comparator
+	filter.Details.SupportCaseSensitive = caseSensitive
 	return &filter
 }
 
@@ -75,18 +85,18 @@ func (r *dashboardRepository) GetDashboardViewContactsData(ctx context.Context, 
 
 		for _, filter := range where.And {
 			if filter.Filter.Property == "CONTACT" {
-				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
-				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("firstName", *filter.Filter.Value.Str, utils.CONTAINS))
-				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("lastName", *filter.Filter.Value.Str, utils.CONTAINS))
+				contactFilter.Filters = append(contactFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				contactFilter.Filters = append(contactFilter.Filters, createStringCypherFilter("firstName", *filter.Filter.Value.Str, utils.CONTAINS))
+				contactFilter.Filters = append(contactFilter.Filters, createStringCypherFilter("lastName", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "EMAIL" {
-				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
-				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "COUNTRY" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "REGION" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "LOCALITY" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			}
 		}
 
@@ -238,20 +248,19 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
-	ownerId := ""
-	filterByCustomer, isCustomer := false, false
+	ownerId := []string{}
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
 	if where != nil {
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
-		organizationFilter.LogicalOperator = utils.OR
+		organizationFilter.LogicalOperator = utils.AND
 		organizationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		emailFilter := new(utils.CypherFilter)
 		emailFilter.Negate = false
-		emailFilter.LogicalOperator = utils.OR
+		emailFilter.LogicalOperator = utils.AND
 		emailFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		locationFilter := new(utils.CypherFilter)
@@ -261,24 +270,42 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 		for _, filter := range where.And {
 			if filter.Filter.Property == "ORGANIZATION" {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter := utils.CypherFilter{}
+				orFilter.LogicalOperator = utils.OR
+				orFilter.Details = new(utils.CypherFilterItem)
+
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("customerOsId", *filter.Filter.Value.Str, utils.CONTAINS))
+				orFilter.Filters = append(orFilter.Filters, createStringCypherFilter("referenceId", *filter.Filter.Value.Str, utils.CONTAINS))
+
+				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
+			} else if filter.Filter.Property == "NAME" {
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+			} else if filter.Filter.Property == "WEBSITE" {
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "EMAIL" {
-				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
-				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "COUNTRY" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "REGION" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "LOCALITY" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
+				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "OWNER_ID" {
-				ownerId = *filter.Filter.Value.Str
-			} else if filter.Filter.Property == "IS_CUSTOMER" {
-				filterByCustomer = true
-				isCustomer = *filter.Filter.Value.Bool
+				ownerId = *filter.Filter.Value.ArrayStr
+			} else if filter.Filter.Property == "IS_CUSTOMER" && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("isCustomer", *filter.Filter.Value.ArrayBool, utils.IN, false))
+			} else if filter.Filter.Property == "RENEWAL_LIKELIHOOD" && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilter("renewalLikelihood", *filter.Filter.Value.ArrayStr, utils.IN))
+			} else if filter.Filter.Property == "RENEWAL_CYCLE_NEXT" && filter.Filter.Value.Time != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
+			} else if filter.Filter.Property == "FORECAST_AMOUNT" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
+			} else if filter.Filter.Property == "LAST_TOUCHPOINT_AT" && filter.Filter.Value.Time != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.LTE, false))
 			}
 		}
 
@@ -299,20 +326,20 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
-			"tenant":     tenant,
-			"ownerId":    ownerId,
-			"isCustomer": isCustomer,
-			"skip":       skip,
-			"limit":      limit,
+			"tenant":  tenant,
+			"ownerId": ownerId,
+			"skip":    skip,
+			"limit":   limit,
 		}
+
 		utils.MergeMapToMap(organizationFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
 		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
 		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
-		if ownerId != "" {
-			countQuery += fmt.Sprintf(` MATCH (o)<-[:OWNS]-(owner:User {id:$ownerId}) WITH * `)
+		if len(ownerId) > 0 {
+			countQuery += fmt.Sprintf(` MATCH (o)<-[:OWNS]-(owner:User) WHERE owner.id IN $ownerId WITH * `)
 		}
 		if emailFilterCypher != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
@@ -321,9 +348,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			countQuery += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
 		countQuery += fmt.Sprintf(` WHERE (o.hide = false OR o.hide is null)`)
-		if filterByCustomer == true {
-			countQuery += fmt.Sprintf(` AND o.isCustomer = $isCustomer `)
-		}
+
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			countQuery += " AND "
 		}
@@ -355,8 +380,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 		//region query to fetch data
 		query := fmt.Sprintf(` MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
-		if ownerId != "" {
-			query += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(owner:User {id:$ownerId}) WITH * `)
+		if len(ownerId) > 0 {
+			query += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(owner:User) WHERE owner.id in $ownerId WITH * `)
 		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
@@ -365,9 +390,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
 		}
 		query += ` WHERE (o.hide = false OR o.hide is null) `
-		if filterByCustomer == true {
-			query += fmt.Sprintf(` AND o.isCustomer = $isCustomer `)
-		}
 
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			query += " AND "

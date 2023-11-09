@@ -87,6 +87,14 @@ func comparisonOperatorToEnum(co model.ComparisonOperator) utils.ComparisonOpera
 		return utils.CONTAINS
 	case model.ComparisonOperatorStartsWith:
 		return utils.STARTS_WITH
+	case model.ComparisonOperatorIn:
+		return utils.IN
+	case model.ComparisonOperatorLte:
+		return utils.LTE
+	case model.ComparisonOperatorGte:
+		return utils.GTE
+	case model.ComparisonOperatorBetween:
+		return utils.BETWEEN
 	default:
 		return utils.EQUALS
 	}

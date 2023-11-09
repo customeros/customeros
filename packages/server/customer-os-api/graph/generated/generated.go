@@ -7918,6 +7918,10 @@ enum ComparisonOperator {
     EQ
     CONTAINS
     STARTS_WITH
+    LTE
+    GTE
+    IN
+    BETWEEN
 }`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant | JobRoleParticipant
 union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant

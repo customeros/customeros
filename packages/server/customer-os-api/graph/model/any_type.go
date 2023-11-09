@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"go.uber.org/zap"
@@ -16,6 +17,10 @@ type AnyTypeValue struct {
 	Time  *time.Time
 	Bool  *bool
 	Float *float64
+
+	ArrayStr  *[]string
+	ArrayInt  *[]int64
+	ArrayBool *[]bool
 }
 
 func (a *AnyTypeValue) TimeToStr() {
@@ -101,6 +106,12 @@ func (a *AnyTypeValue) RealValue() any {
 		return *a.Time
 	} else if a.Bool != nil {
 		return *a.Bool
+	} else if a.ArrayStr != nil {
+		return *a.ArrayStr
+	} else if a.ArrayInt != nil {
+		return *a.ArrayInt
+	} else if a.ArrayBool != nil {
+		return *a.ArrayBool
 	} else {
 		return *a.Str
 	}
@@ -122,15 +133,62 @@ func MarshalAnyTypeValue(atv AnyTypeValue) graphql.Marshaler {
 func UnmarshalAnyTypeValue(input any) (AnyTypeValue, error) {
 	switch input := input.(type) {
 	case string:
-		return AnyTypeValue{Str: &input}, nil
+		pt, err := time.Parse(time.RFC3339, input)
+		if err != nil {
+			return AnyTypeValue{Str: &input}, nil
+		} else {
+			return AnyTypeValue{Time: &pt}, nil
+		}
 	case int64:
 		return AnyTypeValue{Int: &input}, nil
+	case json.Number:
+		intVal, err := input.Int64()
+		if err != nil {
+			return AnyTypeValue{}, err
+		}
+		return AnyTypeValue{Int: &intVal}, nil
 	case time.Time:
 		return AnyTypeValue{Time: &input}, nil
 	case bool:
 		return AnyTypeValue{Bool: &input}, nil
 	case float64:
 		return AnyTypeValue{Float: &input}, nil
+	case []interface{}:
+		if len(input) == 0 {
+			return AnyTypeValue{}, nil
+		}
+		switch input[0].(type) {
+		case int64:
+			var arrayInt []int64
+			for _, v := range input {
+				arrayInt = append(arrayInt, v.(int64))
+			}
+			return AnyTypeValue{ArrayInt: &arrayInt}, nil
+		case json.Number:
+			var arrayInt []int64
+			for _, v := range input {
+				intVal, err := v.(json.Number).Int64()
+				if err != nil {
+					return AnyTypeValue{}, err
+				}
+				arrayInt = append(arrayInt, intVal)
+			}
+			return AnyTypeValue{ArrayInt: &arrayInt}, nil
+		case bool:
+			var arrayBool []bool
+			for _, v := range input {
+				arrayBool = append(arrayBool, v.(bool))
+			}
+			return AnyTypeValue{ArrayBool: &arrayBool}, nil
+		case string:
+			var arrayStr []string
+			for _, v := range input {
+				arrayStr = append(arrayStr, v.(string))
+			}
+			return AnyTypeValue{ArrayStr: &arrayStr}, nil
+		default:
+			return AnyTypeValue{}, fmt.Errorf("unknown type for input: %s", input)
+		}
 	default:
 		return AnyTypeValue{}, fmt.Errorf("unknown type for input: %s", input)
 	}
