@@ -3,12 +3,12 @@ package server
 import (
 	"context"
 	"github.com/labstack/echo/v4"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -38,10 +38,11 @@ type server struct {
 	cfg             *config.Config
 	log             logger.Logger
 	repositories    *repository.Repositories
-	commandHandlers *domain.CommandHandlers
+	commandHandlers *command.CommandHandlers
 	echo            *echo.Echo
 	doneCh          chan struct{}
 	caches          caches.Cache
+	aggregateStore  eventstore.AggregateStore
 	//	metrics            *metrics.ESMicroserviceMetrics
 }
 
@@ -58,7 +59,11 @@ func (server *server) SetRepository(repository *repository.Repositories) {
 	server.repositories = repository
 }
 
-func (server *server) SetCommands(commands *domain.CommandHandlers) {
+func (server *server) SetAggregateStpre(aggregateStore eventstore.AggregateStore) {
+	server.aggregateStore = aggregateStore
+}
+
+func (server *server) SetCommands(commands *command.CommandHandlers) {
 	server.commandHandlers = commands
 }
 
@@ -82,14 +87,14 @@ func (server *server) Run(parentCtx context.Context) error {
 	//server.interceptorManager = interceptors.NewInterceptorManager(server.log, server.getGrpcMetricsCb())
 	//server.mw = middlewares.NewMiddlewareManager(server.log, server.cfg, server.getHttpMetricsCb())
 
-	db, err := eventstroredb.NewEventStoreDB(server.cfg.EventStoreConfig, server.log)
+	esdb, err := eventstroredb.NewEventStoreDB(server.cfg.EventStoreConfig, server.log)
 	if err != nil {
 		return err
 	}
-	defer db.Close() // nolint: errcheck
+	defer esdb.Close() // nolint: errcheck
 
 	// Setting up eventstore subscriptions
-	err = subscriptions.NewSubscriptions(server.log, db, server.cfg).RefreshSubscriptions(ctx)
+	err = subscriptions.NewSubscriptions(server.log, esdb, server.cfg).RefreshSubscriptions(ctx)
 	if err != nil {
 		server.log.Errorf("(graphConsumer.Connect) err: {%v}", err)
 		cancel()
@@ -100,18 +105,19 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer postgresDb.SqlDB.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
+	neo4jDriver, err := commonconf.NewNeo4jDriver(server.cfg.Neo4j)
 	if err != nil {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 	server.repositories = repository.InitRepos(&neo4jDriver, server.cfg.Neo4j.Database, postgresDb.GormDB, server.log)
 
-	aggregateStore := store.NewAggregateStore(server.log, db)
-	server.commandHandlers = commands.InitCommandHandlers(server.log, server.cfg, aggregateStore, server.repositories)
+	aggregateStore := store.NewAggregateStore(server.log, esdb)
+	server.aggregateStore = aggregateStore
+	server.commandHandlers = command.NewCommandHandlers(server.log, server.cfg, aggregateStore, server.repositories)
 
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.commandHandlers, server.cfg)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, esdb, server.repositories, server.commandHandlers, server.cfg)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
@@ -122,7 +128,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, db, server.cfg, server.commandHandlers.Email)
+		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Email)
 		go func() {
 			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -133,7 +139,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.PhoneNumberValidationSubscription.Enabled {
-		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, db, server.cfg, server.commandHandlers.PhoneNumber, server.repositories)
+		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.PhoneNumber, server.repositories)
 		go func() {
 			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -144,7 +150,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.LocationValidationSubscription.Enabled {
-		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.log, db, server.cfg, server.commandHandlers.Location, server.repositories)
+		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Location, server.repositories)
 		go func() {
 			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -155,7 +161,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {
@@ -166,7 +172,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
-		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, db, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
+		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.log, esdb, server.cfg, server.commandHandlers.Organization, server.repositories, server.caches)
 		go func() {
 			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
 			if err != nil {
@@ -177,7 +183,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.InteractionEventSubscription.Enabled {
-		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.log, db, server.cfg, server.commandHandlers.InteractionEvent, server.repositories)
+		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.log, esdb, server.cfg, server.commandHandlers.InteractionEvent, server.repositories)
 		go func() {
 			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
 			if err != nil {
@@ -218,8 +224,8 @@ func (server *server) waitShootDown(duration time.Duration) {
 	}()
 }
 
-func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, err error) {
-	if db, err = commonConfig.NewPostgresDBConn(cfg.Postgres); err != nil {
+func InitDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, err error) {
+	if db, err = commonconf.NewPostgresDBConn(cfg.Postgres); err != nil {
 		log.Fatalf("Could not open db connection: %s", err.Error())
 	}
 	return

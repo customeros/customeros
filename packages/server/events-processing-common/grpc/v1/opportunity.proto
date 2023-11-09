@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "common/source.proto";
+import "common/external_system.proto";
+
+option go_package = "api/grpc/v1/opportunity;opportunity_grpc_service";
+
+// Define an enum for internalType
+enum OpportunityInternalType {
+  NBO = 0;
+  UPSELL = 1;
+  CROSS_SELL = 2;
+}
+
+// Define an enum for internalStage
+enum OpportunityInternalStage {
+  OPEN = 0;
+  EVALUATING = 1;
+  CLOSED_WON = 2;
+  CLOSED_LOST = 3;
+}
+
+message CreateOpportunityGrpcRequest {
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string name = 4;
+  double amount = 5;
+  OpportunityInternalType internalType = 6;
+  string externalType = 7;
+  OpportunityInternalStage internalStage = 8;
+  string externalStage = 9;
+  google.protobuf.Timestamp estimatedCloseDate = 10;
+  string ownerUserId = 11;
+  string createdByUserId = 12;
+  google.protobuf.Timestamp createdAt = 13;
+  google.protobuf.Timestamp updatedAt = 14;
+  string generalNotes = 15;
+  string nextSteps = 16;
+  SourceFields sourceFields = 17;
+  ExternalSystemFields externalSystemFields = 18;
+  string organizationId = 19;
+}
+
+message UpdateOpportunityGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string name = 4;
+  double amount = 5;
+  string externalType = 7;
+  string externalStage = 9;
+  google.protobuf.Timestamp estimatedCloseDate = 10;
+  string ownerUserId = 11;
+  string createdByUserId = 12;
+  google.protobuf.Timestamp updatedAt = 14;
+  string generalNotes = 15;
+  string nextSteps = 16;
+  SourceFields sourceFields = 17;
+  ExternalSystemFields externalSystemFields = 18;
+}
+
+message OpportunityIdGrpcResponse {
+  string id = 1;
+}
+
+service opportunityGrpcService {
+  rpc CreateOpportunity(CreateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
+  rpc UpdateOpportunity(UpdateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
+}

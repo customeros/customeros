@@ -24,7 +24,7 @@ import (
 
 type interactionEventHandler struct {
 	repositories             *repository.Repositories
-	interactionEventCommands *command_handler.InteractionEventCommandHandlers
+	interactionEventCommands *command_handler.CommandHandlers
 	log                      logger.Logger
 	cfg                      *config.Config
 }

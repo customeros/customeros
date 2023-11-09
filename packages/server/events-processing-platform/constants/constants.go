@@ -5,9 +5,10 @@ const (
 	AppSourceIntegrationApp          = "integration.app"
 	AppSourceSyncCustomerOsData      = "sync-customer-os-data"
 
-	ComponentNeo4jRepository = "neo4jRepository"
-	ComponentService         = "service"
-	ComponentCommandHandler  = "commandHandler"
+	ComponentNeo4jRepository   = "neo4jRepository"
+	ComponentService           = "service"
+	ComponentCommandHandler    = "commandHandler"
+	ComponentSubscriptionGraph = "subscriptionGraph"
 
 	SourceOpenline  = "openline"
 	SourceWebscrape = "webscrape"
@@ -29,6 +30,7 @@ const (
 	NodeLabel_LogEntry         = "LogEntry"
 	NodeLabel_Issue            = "Issue"
 	NodeLabel_Comment          = "Comment"
+	NodeLabel_Opportunity      = "Opportunity"
 
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 	ApiKeyHeader    = "X-Openline-API-KEY"

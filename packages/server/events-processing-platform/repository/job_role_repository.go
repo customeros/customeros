@@ -6,7 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -18,7 +18,7 @@ import (
 type JobRoleRepository interface {
 	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string, updatedAt time.Time) error
 	CreateJobRole(ctx context.Context, tenant, jobRoleId string, event events.JobRoleCreateEvent) error
-	LinkContactWithOrganization(ctx context.Context, tenant, contactId string, data contactEvents.ContactLinkWithOrganizationEvent) error
+	LinkContactWithOrganization(ctx context.Context, tenant, contactId string, data contactevent.ContactLinkWithOrganizationEvent) error
 }
 
 type jobRoleRepository struct {
@@ -110,7 +110,7 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tenant, jobRoleId
 	return nil
 }
 
-func (r *jobRoleRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId string, eventData contactEvents.ContactLinkWithOrganizationEvent) error {
+func (r *jobRoleRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId string, eventData contactevent.ContactLinkWithOrganizationEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByInternalId")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)

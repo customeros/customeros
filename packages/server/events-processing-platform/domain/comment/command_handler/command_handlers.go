@@ -5,12 +5,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type CommentCommandHandlers struct {
+type CommandHandlers struct {
 	Upsert UpsertCommentCommandHandler
 }
 
-func NewCommentCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommentCommandHandlers {
-	return &CommentCommandHandlers{
+func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
+	return &CommandHandlers{
 		Upsert: NewUpsertCommentCommandHandler(log, es),
 	}
 }

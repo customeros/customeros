@@ -32,7 +32,7 @@ type ActionForecastMetadata struct {
 
 type OrganizationEventHandler struct {
 	repositories         *repository.Repositories
-	organizationCommands *cmdhnd.OrganizationCommandHandlers
+	organizationCommands *cmdhnd.CommandHandlers
 	log                  logger.Logger
 }
 
@@ -43,7 +43,7 @@ type eventMetadata struct {
 func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationCreate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -152,7 +152,7 @@ func (h *OrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, 
 func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationUpdate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -207,7 +207,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnPhoneNumberLinkedToOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationLinkPhoneNumberEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -224,7 +224,7 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailLinkedToOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationLinkEmailEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -241,7 +241,7 @@ func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Conte
 func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnLocationLinkedToOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationLinkLocationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -258,7 +258,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Co
 func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnDomainLinkedToOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationLinkDomainEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -288,7 +288,7 @@ func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Cont
 func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnSocialAddedToOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationAddSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -305,7 +305,7 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 func (h *OrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalLikelihoodUpdate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationUpdateRenewalLikelihoodEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -361,7 +361,7 @@ func (h *OrganizationEventHandler) OnRenewalLikelihoodUpdate(ctx context.Context
 func (h *OrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalForecastUpdate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationUpdateRenewalForecastEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -432,7 +432,7 @@ func (h *OrganizationEventHandler) OnRenewalForecastUpdate(ctx context.Context, 
 func (h *OrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRenewalForecastUpdate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationUpdateBillingDetailsEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -467,7 +467,7 @@ func (h *OrganizationEventHandler) OnBillingDetailsUpdate(ctx context.Context, e
 func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationHide")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.HideOrganizationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -486,7 +486,7 @@ func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt e
 func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationShow")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.HideOrganizationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -513,7 +513,7 @@ func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt e
 func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshLastTouchpoint")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationRefreshLastTouchpointEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -548,7 +548,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpsertCustomField")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationUpsertCustomField
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -581,7 +581,7 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 func (h *OrganizationEventHandler) OnLinkWithParentOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnLinkWithParentOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationAddParentEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -596,7 +596,7 @@ func (h *OrganizationEventHandler) OnLinkWithParentOrganization(ctx context.Cont
 func (h *OrganizationEventHandler) OnUnlinkFromParentOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUnlinkFromParentOrganization")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.OrganizationRemoveParentEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

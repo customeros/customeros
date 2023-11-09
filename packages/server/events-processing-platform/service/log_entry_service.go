@@ -20,10 +20,10 @@ import (
 type logEntryService struct {
 	logentrypb.UnimplementedLogEntryGrpcServiceServer
 	log              logger.Logger
-	logEntryCommands *logentrycmdhandler.LogEntryCommandHandlers
+	logEntryCommands *logentrycmdhandler.CommandHandlers
 }
 
-func NewLogEntryService(log logger.Logger, logEntryCommands *logentrycmdhandler.LogEntryCommandHandlers) *logEntryService {
+func NewLogEntryService(log logger.Logger, logEntryCommands *logentrycmdhandler.CommandHandlers) *logEntryService {
 	return &logEntryService{
 		log:              log,
 		logEntryCommands: logEntryCommands,

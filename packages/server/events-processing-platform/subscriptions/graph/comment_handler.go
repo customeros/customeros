@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -23,7 +22,7 @@ type GraphCommentEventHandler struct {
 func (h *GraphCommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphCommentEventHandler.OnCreate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.CommentCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -69,7 +68,7 @@ func (h *GraphCommentEventHandler) OnCreate(ctx context.Context, evt eventstore.
 func (h *GraphCommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphCommentEventHandler.OnCreate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.CommentUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

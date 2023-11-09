@@ -24,10 +24,10 @@ type organizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
 	log                  logger.Logger
 	repositories         *repository.Repositories
-	organizationCommands *command_handler.OrganizationCommandHandlers
+	organizationCommands *command_handler.CommandHandlers
 }
 
-func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, organizationCommands *command_handler.OrganizationCommandHandlers) *organizationService {
+func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, organizationCommands *command_handler.CommandHandlers) *organizationService {
 	return &organizationService{
 		log:                  log,
 		repositories:         repositories,

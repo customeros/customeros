@@ -20,10 +20,10 @@ type emailService struct {
 	emailpb.UnimplementedEmailGrpcServiceServer
 	log                  logger.Logger
 	repositories         *repository.Repositories
-	emailCommandHandlers *command_handler.EmailCommandHandlers
+	emailCommandHandlers *command_handler.CommandHandlers
 }
 
-func NewEmailService(log logger.Logger, repositories *repository.Repositories, emailCommandHandlers *command_handler.EmailCommandHandlers) *emailService {
+func NewEmailService(log logger.Logger, repositories *repository.Repositories, emailCommandHandlers *command_handler.CommandHandlers) *emailService {
 	return &emailService{
 		log:                  log,
 		repositories:         repositories,

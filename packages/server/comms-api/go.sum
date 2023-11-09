@@ -163,8 +163,8 @@ github.com/neo4j/neo4j-go-driver/v5 v5.14.0 h1:5x3vD4HkXQIktlG63jSG8v9iweGjmObIP
 github.com/neo4j/neo4j-go-driver/v5 v5.14.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230928134243-77b704310d37 h1:fsLTanjgIkOhy9Uthc/w16MNc6z8jq/Bhg45x/U0QMk=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230928134243-77b704310d37/go.mod h1:K1eh+fWPK7zFNCrcvqICb3JNa/fDNmnUcOa8809xNhM=
-github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231106090636-403e29ac5866 h1:PYZa6TtAEbnDbVVXhubl4Mz/9f0wCVdO4xRhDoyjIh8=
-github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231106090636-403e29ac5866/go.mod h1:zbaekXn7ZnVGsVLxwJ0RWrvVAumnUsSh01+D9d71Teo=
+github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231109125649-25f5840406d6 h1:F8bN6arDAGbGviI/T6Gkg2xM40UObUrQ+qJ4igEuuto=
+github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231109125649-25f5840406d6/go.mod h1:zbaekXn7ZnVGsVLxwJ0RWrvVAumnUsSh01+D9d71Teo=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pelletier/go-toml/v2 v2.0.1/go.mod h1:r9LEWfGN8R5k0VXJ+0BkIe7MYkRdwZOjgMj2KwnJFUo=

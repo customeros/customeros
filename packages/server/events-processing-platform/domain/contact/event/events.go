@@ -1,4 +1,4 @@
-package events
+package event
 
 import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"

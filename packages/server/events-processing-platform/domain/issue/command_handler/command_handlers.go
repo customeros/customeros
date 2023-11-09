@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type IssueCommandHandlers struct {
+type CommandHandlers struct {
 	UpsertIssue        UpsertIssueCommandHandler
 	AddUserAssignee    AddUserAssigneeCommandHandler
 	RemoveUserAssignee RemoveUserAssigneeCommandHandler
@@ -13,8 +13,8 @@ type IssueCommandHandlers struct {
 	RemoveUserFollower RemoveUserFollowerCommandHandler
 }
 
-func NewIssueCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *IssueCommandHandlers {
-	return &IssueCommandHandlers{
+func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
+	return &CommandHandlers{
 		UpsertIssue:        NewUpsertIssueCommandHandler(log, es),
 		AddUserAssignee:    NewAddUserAssigneeCommandHandler(log, es),
 		RemoveUserAssignee: NewRemoveUserAssigneeCommandHandler(log, es),

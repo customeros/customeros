@@ -45,7 +45,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -140,7 +140,7 @@ func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -222,7 +222,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByUser(t *testing
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -293,7 +293,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByInternalProcess
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -366,7 +366,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ResetAmount(t *te
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -433,7 +433,7 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate(t *testing.T) {
 	})
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -504,7 +504,7 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate_SetNotByUser(t *te
 	})
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -549,7 +549,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 	})
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -583,7 +583,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	})
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -625,7 +625,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	})
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -674,7 +674,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 
 	orgEventHandler := &OrganizationEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: command_handler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 

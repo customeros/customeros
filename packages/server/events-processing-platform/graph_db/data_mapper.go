@@ -179,3 +179,25 @@ func MapDbNodeToCommentEntity(node dbtype.Node) *entity.CommentEntity {
 	}
 	return &comment
 }
+
+func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
+	props := utils.GetPropsFromNode(node)
+	opportunity := entity.OpportunityEntity{
+		Id:                utils.GetStringPropOrEmpty(props, "id"),
+		Name:              utils.GetStringPropOrEmpty(props, "name"),
+		Amount:            utils.GetFloatPropOrZero(props, "amount"),
+		InternalType:      utils.GetStringPropOrEmpty(props, "internalType"),
+		ExternalType:      utils.GetStringPropOrEmpty(props, "externalType"),
+		InternalStage:     utils.GetStringPropOrEmpty(props, "internalStage"),
+		ExternalStage:     utils.GetStringPropOrEmpty(props, "externalStage"),
+		EstimatedClosedAt: utils.GetTimePropOrNil(props, "estimatedClosedAt"),
+		GeneralNotes:      utils.GetStringPropOrEmpty(props, "generalNotes"),
+		NextSteps:         utils.GetStringPropOrEmpty(props, "nextSteps"),
+		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &opportunity
+}

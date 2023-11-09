@@ -24,7 +24,7 @@ import (
 
 type PhoneNumberEventHandler struct {
 	repositories        *repository.Repositories
-	phoneNumberCommands *command_handler.PhoneNumberCommandHandlers
+	phoneNumberCommands *command_handler.CommandHandlers
 	log                 logger.Logger
 	cfg                 *config.Config
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -19,7 +18,7 @@ type GraphLocationEventHandler struct {
 func (h *GraphLocationEventHandler) OnLocationCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationCreate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.LocationCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -36,7 +35,7 @@ func (h *GraphLocationEventHandler) OnLocationCreate(ctx context.Context, evt ev
 func (h *GraphLocationEventHandler) OnLocationUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationUpdate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.LocationUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -53,7 +52,7 @@ func (h *GraphLocationEventHandler) OnLocationUpdate(ctx context.Context, evt ev
 func (e *GraphLocationEventHandler) OnLocationValidated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationValidated")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.LocationValidatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -70,7 +69,7 @@ func (e *GraphLocationEventHandler) OnLocationValidated(ctx context.Context, evt
 func (h *GraphLocationEventHandler) OnLocationValidationFailed(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLocationEventHandler.OnLocationValidationFailed")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.LocationFailedValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

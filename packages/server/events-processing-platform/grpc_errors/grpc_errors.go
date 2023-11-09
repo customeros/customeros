@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strings"
 )
 
 var (
@@ -16,6 +16,10 @@ var (
 	ErrBadRequest    = errors.New("Bad request")
 	ErrMissingFields = errors.New("Missing fields")
 )
+
+func ErrMissingField(fieldName string) error {
+	return errors.Errorf("missing required field: %s", fieldName)
+}
 
 // ErrResponse get gRPC error response
 func ErrResponse(err error) error {
@@ -59,10 +63,21 @@ func GetErrStatusCode(err error) codes.Code {
 		return codes.InvalidArgument
 	case eventstore.IsEventStoreErrorCodeResourceNotFound(err), errors.Is(err, eventstore.ErrAggregateNotFound):
 		return codes.NotFound
+	case CheckErrMessage(err, "missing required field"):
+		return codes.InvalidArgument
 	}
 	return codes.Internal
 }
 
 func CheckErrMessage(err error, msg string) bool {
-	return helper.CheckErrMessages(err, msg)
+	return checkErrMessages(err, msg)
+}
+
+func checkErrMessages(err error, messages ...string) bool {
+	for _, message := range messages {
+		if strings.Contains(strings.TrimSpace(strings.ToLower(err.Error())), strings.TrimSpace(strings.ToLower(message))) {
+			return true
+		}
+	}
+	return false
 }

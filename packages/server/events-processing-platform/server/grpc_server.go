@@ -9,6 +9,7 @@ import (
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
@@ -98,4 +99,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	commentService := service.NewCommentService(server.log, server.commandHandlers.Comment)
 	commentpb.RegisterCommentGrpcServiceServer(grpcServer, commentService)
+
+	opportunityService := service.NewOpportunityService(server.log, server.commandHandlers.Opportunity, server.aggregateStore)
+	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, opportunityService)
 }

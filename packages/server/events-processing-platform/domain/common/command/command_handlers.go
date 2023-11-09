@@ -1,8 +1,7 @@
-package commands
+package command
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	commentcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/command_handler"
 	contactcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	emailcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
@@ -11,6 +10,7 @@ import (
 	jobrolecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
 	logentrycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command_handler"
+	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	phonenumbercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	usercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
@@ -19,22 +19,38 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
-func InitCommandHandlers(log logger.Logger,
+type CommandHandlers struct {
+	Contact          *contactcmdhandler.CommandHandlers
+	Organization     *organizationcmdhandler.CommandHandlers
+	PhoneNumber      *phonenumbercmdhandler.CommandHandlers
+	Email            *emailcmdhandler.CommandHandlers
+	User             *usercmdhandler.CommandHandlers
+	Location         *locationcmdhandler.CommandHandlers
+	JobRole          *jobrolecmdhandler.CommandHandlers
+	InteractionEvent *iecmdhandler.CommandHandlers
+	LogEntry         *logentrycmdhandler.CommandHandlers
+	Issue            *issuecmdhandler.CommandHandlers
+	Comment          *commentcmdhandler.CommandHandlers
+	Opportunity      *opportunitycmdhandler.CommandHandlers
+}
+
+func NewCommandHandlers(log logger.Logger,
 	cfg *config.Config,
 	aggregateStore eventstore.AggregateStore,
-	repositories *repository.Repositories) *domain.CommandHandlers {
+	repositories *repository.Repositories) *CommandHandlers {
 
-	return &domain.CommandHandlers{
-		Contact:          contactcmdhandler.NewContactCommandHandlers(log, aggregateStore),
-		Organization:     organizationcmdhandler.NewOrganizationCommands(log, cfg, aggregateStore, repositories),
-		InteractionEvent: iecmdhandler.NewInteractionEventCommandHandlers(log, aggregateStore),
-		PhoneNumber:      phonenumbercmdhandler.NewPhoneNumberCommands(log, cfg, aggregateStore),
-		Location:         locationcmdhandler.NewLocationCommands(log, cfg, aggregateStore),
-		Email:            emailcmdhandler.NewEmailCommandHandlers(log, cfg, aggregateStore),
-		User:             usercmdhandler.NewUserCommands(log, cfg, aggregateStore),
-		JobRole:          jobrolecmdhandler.NewJobRoleCommands(log, cfg, aggregateStore),
-		LogEntry:         logentrycmdhandler.NewLogEntryCommands(log, aggregateStore),
-		Issue:            issuecmdhandler.NewIssueCommandHandlers(log, aggregateStore),
-		Comment:          commentcmdhandler.NewCommentCommandHandlers(log, aggregateStore),
+	return &CommandHandlers{
+		Contact:          contactcmdhandler.NewCommandHandlers(log, aggregateStore),
+		Organization:     organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, repositories),
+		InteractionEvent: iecmdhandler.NewCommandHandlers(log, aggregateStore),
+		PhoneNumber:      phonenumbercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		Location:         locationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		Email:            emailcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		User:             usercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		JobRole:          jobrolecmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		LogEntry:         logentrycmdhandler.NewCommandHandlers(log, aggregateStore),
+		Issue:            issuecmdhandler.NewCommandHandlers(log, aggregateStore),
+		Comment:          commentcmdhandler.NewCommandHandlers(log, aggregateStore),
+		Opportunity:      opportunitycmdhandler.NewCommandHandlers(log, aggregateStore),
 	}
 }
