@@ -53,10 +53,10 @@ query getTimelineEvents($ids: [ID!]!) {
       id
       subject
       priority
-
       issueStatus: status
       appSource
       createdAt
+      updatedAt
       description
       externalLinks {
         externalId

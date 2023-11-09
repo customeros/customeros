@@ -145,9 +145,9 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         id
         subject
         priority
-
         issueStatus: status
         appSource
+        updatedAt
         createdAt
         description
         externalLinks {
@@ -166,6 +166,7 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         reportedBy {
           ...InteractionEventParticipantFragment
         }
+
         interactionEvents {
           content
           contentType

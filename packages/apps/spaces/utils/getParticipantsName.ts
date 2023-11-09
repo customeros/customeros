@@ -22,6 +22,10 @@ export const getName = (
     return getEmailParticipantName(data as Email);
   }
 
+  if ((data as Organization)?.name) {
+    return (data as Organization).name;
+  }
+
   return email || rawEmail || 'Unknown';
 };
 

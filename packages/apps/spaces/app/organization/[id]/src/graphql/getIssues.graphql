@@ -14,11 +14,18 @@ query GetIssues($organizationId: ID!, $from: Time!, $size: Int!) {
                 subject
                 status
                 appSource
+                updatedAt
                 externalLinks {
                     externalId
                     externalUrl
                 }
                 createdAt
+                submittedBy {
+                    ...InteractionEventParticipantFragment
+                }
+                reportedBy {
+                    ...InteractionEventParticipantFragment
+                }
             }
         }
     }

@@ -4,6 +4,10 @@ import * as Types from '../../../../src/types/__generated__/graphql.types';
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import {
+  InteractionEventParticipantFragmentFragmentDoc,
+  MeetingParticipantFragmentFragmentDoc,
+} from './participantsFragment.generated';
+import {
   useQuery,
   useInfiniteQuery,
   UseQueryOptions,
@@ -46,12 +50,77 @@ export type GetIssuesQuery = {
           subject?: string | null;
           status: string;
           appSource: string;
+          updatedAt: any;
           createdAt: any;
           externalLinks: Array<{
             __typename?: 'ExternalSystem';
             externalId?: string | null;
             externalUrl?: string | null;
           }>;
+          submittedBy?:
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  name?: string | null;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | null;
+          reportedBy?:
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  id: string;
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | {
+                __typename: 'OrganizationParticipant';
+                organizationParticipant: {
+                  __typename?: 'Organization';
+                  id: string;
+                  name: string;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  id: string;
+                  name?: string | null;
+                  firstName: string;
+                  lastName: string;
+                  profilePhotoUrl?: string | null;
+                };
+              }
+            | null;
         }
       | { __typename?: 'LogEntry' }
       | { __typename?: 'Meeting' }
@@ -72,16 +141,23 @@ export const GetIssuesDocument = `
         subject
         status
         appSource
+        updatedAt
         externalLinks {
           externalId
           externalUrl
         }
         createdAt
+        submittedBy {
+          ...InteractionEventParticipantFragment
+        }
+        reportedBy {
+          ...InteractionEventParticipantFragment
+        }
       }
     }
   }
 }
-    `;
+    ${InteractionEventParticipantFragmentFragmentDoc}`;
 export const useGetIssuesQuery = <TData = GetIssuesQuery, TError = unknown>(
   client: GraphQLClient,
   variables: GetIssuesQueryVariables,

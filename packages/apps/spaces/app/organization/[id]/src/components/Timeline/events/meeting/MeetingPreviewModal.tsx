@@ -25,7 +25,7 @@ import {
   useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
-import { getParticipantEmail } from '../utils';
+import { getParticipantEmail } from '../../../../hooks/utils';
 import { CalcomIcon, MeetingIcon, HubspotIcon } from './icons';
 
 interface MeetingPreviewModalProps {

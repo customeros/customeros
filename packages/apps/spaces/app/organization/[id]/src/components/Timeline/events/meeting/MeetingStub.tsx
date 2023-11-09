@@ -10,7 +10,7 @@ import { Card, CardBody } from '@ui/presentation/Card';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 import { MeetingIcon } from './icons';
-import { getParticipants, getParticipantName } from '../utils';
+import { getParticipants, getParticipantName } from '../../../../hooks/utils';
 
 interface MeetingStubProps {
   data: Meeting;
