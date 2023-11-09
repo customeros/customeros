@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 
 import { convert } from 'html-to-text';
 
@@ -8,8 +8,11 @@ import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { EmailParticipant } from '@graphql/types';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
 import { getEmailParticipantsByType } from '@organization/src/components/Timeline/events/email/utils';
+import {
+  getEmailParticipantsName,
+  getEmailParticipantsNameAndEmail,
+} from '@spaces/utils/getParticipantsName';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 import { InteractionEventWithDate } from '../../types';
@@ -28,7 +31,25 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
     ],
   });
 
-  const { to, cc } = getEmailParticipantsByType(email?.sentTo || []);
+  const { to, cc, bcc } = useMemo(
+    () => getEmailParticipantsByType(email?.sentTo || []),
+    [email?.sentTo],
+  );
+
+  const cleanCC = useMemo(
+    () =>
+      getEmailParticipantsNameAndEmail(cc || [])
+        .map((e) => e.label || e.email)
+        .filter((data) => Boolean(data)),
+    [cc],
+  );
+  const cleanBCC = useMemo(
+    () =>
+      getEmailParticipantsNameAndEmail(bcc || [])
+        .map((e) => e.label || e.email)
+        .filter((data) => Boolean(data)),
+    [bcc],
+  );
   const isSendByTenant = (email?.sentBy?.[0] as EmailParticipant)
     ?.emailParticipant?.users?.length;
 
@@ -66,12 +87,20 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
               <Text as={'span'} fontWeight={500} marginRight={2}>
                 {getEmailParticipantsName(to)}
               </Text>{' '}
-              {!!cc.length && (
+              {!!cleanBCC.length && (
+                <>
+                  <Text as={'span'} color='#6C757D'>
+                    BCC:
+                  </Text>{' '}
+                  <Text as={'span'}>{cleanBCC}</Text>
+                </>
+              )}
+              {!!cleanCC.length && (
                 <>
                   <Text as={'span'} color='#6C757D'>
                     CC:
                   </Text>{' '}
-                  <Text as={'span'}>{getEmailParticipantsName(cc)}</Text>
+                  <Text as={'span'}>{cleanCC}</Text>
                 </>
               )}
             </Text>
