@@ -14,7 +14,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231010053057-7f0277709731
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231010053057-7f0277709731
 	github.com/sirupsen/logrus v1.9.3
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.14.0
 	golang.org/x/text v0.14.0
 	google.golang.org/api v0.149.0
 	gorm.io/driver/postgres v1.5.4
@@ -58,9 +58,9 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/arch v0.5.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/crypto v0.15.0 // indirect
+	golang.org/x/net v0.18.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/grpc v1.59.0 // indirect
