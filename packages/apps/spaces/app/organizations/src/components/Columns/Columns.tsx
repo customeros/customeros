@@ -31,6 +31,10 @@ import {
   filterTimeToRenewalFn,
 } from './Filters/TimeToRenewal';
 import {
+  LastTouchpointFilter,
+  filterLastTouchpointFn,
+} from './Filters/LastTouchpoint';
+import {
   RenewalLikelihoodFilter,
   filterRenewalLikelihoodFn,
 } from './Filters/RenewalLikelihood';
@@ -328,10 +332,10 @@ export const getColumns = (options: GetColumnsOptions) => [
       />
     ),
   }),
-  columnHelper.accessor('market', {
+  columnHelper.accessor((row) => row, {
     id: 'LAST_TOUCHPOINT',
     minSize: 250,
-    enableColumnFilter: false,
+    filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
         lastTouchPointAt={props.row.original.lastTouchPointAt}
@@ -341,9 +345,15 @@ export const getColumns = (options: GetColumnsOptions) => [
       />
     ),
     header: (props) => (
-      <THead<Organization>
+      <THead<Organization, HTMLInputElement>
         id='lastTouchpoint'
         title='Last Touchpoint'
+        renderFilter={(column, initialFocusRef) => (
+          <LastTouchpointFilter
+            column={column}
+            initialFocusRef={initialFocusRef}
+          />
+        )}
         {...props}
       />
     ),
