@@ -3,15 +3,16 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
-	contactevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
+	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -44,25 +45,27 @@ type GraphSubscriber struct {
 	logEntryEventHandler     *GraphLogEntryEventHandler
 	issueEventHandler        *GraphIssueEventHandler
 	commentEventHandler      *GraphCommentEventHandler
+	opportunityEventHandler  *OpportunityEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commands *domain.CommandHandlers, cfg *config.Config) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commandHandlers *command.CommandHandlers, cfg *config.Config) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                      log,
 		db:                       db,
 		repositories:             repositories,
 		cfg:                      cfg,
 		contactEventHandler:      &ContactEventHandler{repositories: repositories},
-		organizationEventHandler: &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commands.Organization},
+		organizationEventHandler: &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commandHandlers.Organization},
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
 		userEventHandler:         &GraphUserEventHandler{repositories: repositories, log: log},
 		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
-		interactionEventHandler:  &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commands.Organization, log: log},
-		logEntryEventHandler:     &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commands.Organization, log: log},
-		issueEventHandler:        &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commands.Organization, log: log},
+		interactionEventHandler:  &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
+		logEntryEventHandler:     &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
+		issueEventHandler:        &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
 		commentEventHandler:      &GraphCommentEventHandler{repositories: repositories, log: log},
+		opportunityEventHandler:  &OpportunityEventHandler{repositories: repositories, log: log},
 	}
 }
 
@@ -165,17 +168,17 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case emailevents.EmailValidatedV1:
 		return s.emailEventHandler.OnEmailValidated(ctx, evt)
 
-	case contactevents.ContactCreateV1:
+	case contactevent.ContactCreateV1:
 		return s.contactEventHandler.OnContactCreate(ctx, evt)
-	case contactevents.ContactUpdateV1:
+	case contactevent.ContactUpdateV1:
 		return s.contactEventHandler.OnContactUpdate(ctx, evt)
-	case contactevents.ContactPhoneNumberLinkV1:
+	case contactevent.ContactPhoneNumberLinkV1:
 		return s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
-	case contactevents.ContactEmailLinkV1:
+	case contactevent.ContactEmailLinkV1:
 		return s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
-	case contactevents.ContactLocationLinkV1:
+	case contactevent.ContactLocationLinkV1:
 		return s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
-	case contactevents.ContactOrganizationLinkV1:
+	case contactevent.ContactOrganizationLinkV1:
 		return s.contactEventHandler.OnContactLinkToOrganization(ctx, evt)
 
 	case orgevents.OrganizationCreateV1:
@@ -283,6 +286,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.issueEventHandler.OnAddUserFollower(ctx, evt)
 	case issueevent.IssueRemoveUserFollowerV1:
 		return s.issueEventHandler.OnRemoveUserFollower(ctx, evt)
+
+	case opportunityevent.OpportunityCreateV1:
+		return s.opportunityEventHandler.OnCreate(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType

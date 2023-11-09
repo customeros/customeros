@@ -43,7 +43,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	// prepare event handler
 	interactionEventHandler := &GraphInteractionEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: organizationcmdhandler.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()

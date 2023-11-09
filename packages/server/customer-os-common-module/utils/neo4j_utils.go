@@ -467,6 +467,14 @@ func GetFloatPropOrNil(props map[string]any, key string) *float64 {
 	return nil
 }
 
+func GetFloatPropOrZero(props map[string]any, key string) float64 {
+	if props[key] != nil {
+		f := props[key].(float64)
+		return f
+	}
+	return float64(0)
+}
+
 func GetTimePropOrEpochStart(props map[string]any, key string) time.Time {
 	timePtr := GetTimePropOrNil(props, key)
 	if timePtr != nil {

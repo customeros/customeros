@@ -5,7 +5,7 @@ import (
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	contactAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	emailEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -20,6 +20,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
+
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	if err != nil {
 		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
@@ -47,8 +48,8 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.Equal(t, 1, len(eventsMap))
 	eventList := eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("ziggy", response.Id).ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, contactEvents.ContactCreateV1, eventList[0].GetEventType())
-	var eventData contactEvents.ContactCreateEvent
+	require.Equal(t, event.ContactCreateV1, eventList[0].GetEventType())
+	var eventData event.ContactCreateEvent
 	if err := eventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
@@ -100,8 +101,8 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	require.Equal(t, 1, len(eventsMap))
 	contactEventList := eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("ziggy", responseContact.Id).ID]
 	require.Equal(t, 1, len(contactEventList))
-	require.Equal(t, contactEvents.ContactCreateV1, contactEventList[0].GetEventType())
-	var createEventData contactEvents.ContactCreateEvent
+	require.Equal(t, event.ContactCreateV1, contactEventList[0].GetEventType())
+	var createEventData event.ContactCreateEvent
 	if err := contactEventList[0].GetJsonData(&createEventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
@@ -148,8 +149,8 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	contactEventList = eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("ziggy", responseContact.Id).ID]
 
 	require.Equal(t, 2, len(contactEventList))
-	require.Equal(t, contactEvents.ContactEmailLinkV1, contactEventList[1].GetEventType())
-	var linkEmailToContact contactEvents.ContactLinkEmailEvent
+	require.Equal(t, event.ContactEmailLinkV1, contactEventList[1].GetEventType())
+	var linkEmailToContact event.ContactLinkEmailEvent
 	if err := contactEventList[1].GetJsonData(&linkEmailToContact); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}

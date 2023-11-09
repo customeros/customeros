@@ -26,7 +26,7 @@ type LocationValidationSubscriber struct {
 	repositories         *repository.Repositories
 }
 
-func NewLocationValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, locationCommands *command_handler.LocationCommandHandlers, repositories *repository.Repositories) *LocationValidationSubscriber {
+func NewLocationValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, locationCommands *command_handler.CommandHandlers, repositories *repository.Repositories) *LocationValidationSubscriber {
 	return &LocationValidationSubscriber{
 		log: log,
 		db:  db,

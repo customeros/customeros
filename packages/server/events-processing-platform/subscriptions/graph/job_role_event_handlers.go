@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -24,7 +23,7 @@ func NewGraphJobRoleEventHandler(repositories *repository.Repositories) *GraphJo
 func (h *GraphJobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphJobRoleEventHandler.OnJobRoleCreate")
 	defer span.Finish()
-	span.LogFields(log.String("ID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.JobRoleCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

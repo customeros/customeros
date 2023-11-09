@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type UserCommandHandlers struct {
+type CommandHandlers struct {
 	UpsertUser             UpsertUserCommandHandler
 	AddPlayerInfo          AddPlayerInfoCommandHandler
 	AddRole                AddRoleCommandHandler
@@ -16,8 +16,8 @@ type UserCommandHandlers struct {
 	LinkEmailCommand       LinkEmailCommandHandler
 }
 
-func NewUserCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *UserCommandHandlers {
-	return &UserCommandHandlers{
+func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
+	return &CommandHandlers{
 		UpsertUser:             NewUpsertUserCommandHandler(log, cfg, es),
 		AddPlayerInfo:          NewAddPlayerInfoCommandHandler(log, cfg, es),
 		LinkPhoneNumberCommand: NewLinkPhoneNumberCommandHandler(log, cfg, es),

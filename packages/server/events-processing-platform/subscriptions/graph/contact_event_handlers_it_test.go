@@ -7,8 +7,8 @@ import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	contactAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
-	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
+	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contactModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
@@ -37,9 +37,9 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	}
 	source :=
 		cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "unit-test"}
-	event, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
+	evt, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
-	err = contactEventHandler.OnContactCreate(context.Background(), event)
+	err = contactEventHandler.OnContactCreate(context.Background(), evt)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Contact"))
@@ -94,7 +94,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	}
 	orgAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	now := utils.Now()
-	event, err := events.NewContactLinkLocationEvent(orgAggregate, locationId, now)
+	event, err := event.NewContactLinkLocationEvent(orgAggregate, locationId, now)
 	require.Nil(t, err)
 	err = contactEventHandler.OnLocationLinkToContact(context.Background(), event)
 	require.Nil(t, err)

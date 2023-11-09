@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/pkg/errors"
@@ -29,32 +29,32 @@ func NewContactAggregateWithTenantAndID(tenant, id string) *ContactAggregate {
 	return &contactAggregate
 }
 
-func (a *ContactAggregate) When(event eventstore.Event) error {
+func (a *ContactAggregate) When(evt eventstore.Event) error {
 
-	switch event.GetEventType() {
+	switch evt.GetEventType() {
 
-	case events.ContactCreateV1:
-		return a.onContactCreate(event)
-	case events.ContactUpdateV1:
-		return a.onContactUpdate(event)
-	case events.ContactPhoneNumberLinkV1:
-		return a.onPhoneNumberLink(event)
-	case events.ContactEmailLinkV1:
-		return a.onEmailLink(event)
-	case events.ContactLocationLinkV1:
-		return a.onLocationLink(event)
-	case events.ContactOrganizationLinkV1:
-		return a.onOrganizationLink(event)
+	case event.ContactCreateV1:
+		return a.onContactCreate(evt)
+	case event.ContactUpdateV1:
+		return a.onContactUpdate(evt)
+	case event.ContactPhoneNumberLinkV1:
+		return a.onPhoneNumberLink(evt)
+	case event.ContactEmailLinkV1:
+		return a.onEmailLink(evt)
+	case event.ContactLocationLinkV1:
+		return a.onLocationLink(evt)
+	case event.ContactOrganizationLinkV1:
+		return a.onOrganizationLink(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
-		err.EventType = event.GetEventType()
+		err.EventType = evt.GetEventType()
 		return err
 	}
 }
 
-func (a *ContactAggregate) onContactCreate(event eventstore.Event) error {
-	var eventData events.ContactCreateEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *ContactAggregate) onContactCreate(evt eventstore.Event) error {
+	var eventData event.ContactCreateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Contact.FirstName = eventData.FirstName
@@ -77,9 +77,9 @@ func (a *ContactAggregate) onContactCreate(event eventstore.Event) error {
 	return nil
 }
 
-func (a *ContactAggregate) onContactUpdate(event eventstore.Event) error {
-	var eventData events.ContactUpdateEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *ContactAggregate) onContactUpdate(evt eventstore.Event) error {
+	var eventData event.ContactUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
@@ -138,9 +138,9 @@ func (a *ContactAggregate) onContactUpdate(event eventstore.Event) error {
 	return nil
 }
 
-func (a *ContactAggregate) onPhoneNumberLink(event eventstore.Event) error {
-	var eventData events.ContactLinkPhoneNumberEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *ContactAggregate) onPhoneNumberLink(evt eventstore.Event) error {
+	var eventData event.ContactLinkPhoneNumberEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Contact.PhoneNumbers == nil {
@@ -154,9 +154,9 @@ func (a *ContactAggregate) onPhoneNumberLink(event eventstore.Event) error {
 	return nil
 }
 
-func (a *ContactAggregate) onEmailLink(event eventstore.Event) error {
-	var eventData events.ContactLinkEmailEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *ContactAggregate) onEmailLink(evt eventstore.Event) error {
+	var eventData event.ContactLinkEmailEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Contact.Emails == nil {
@@ -170,18 +170,18 @@ func (a *ContactAggregate) onEmailLink(event eventstore.Event) error {
 	return nil
 }
 
-func (a *ContactAggregate) onLocationLink(event eventstore.Event) error {
-	var eventData events.ContactLinkLocationEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *ContactAggregate) onLocationLink(evt eventstore.Event) error {
+	var eventData event.ContactLinkLocationEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Contact.Locations = utils.AddToListIfNotExists(a.Contact.Locations, eventData.LocationId)
 	return nil
 }
 
-func (a *ContactAggregate) onOrganizationLink(event eventstore.Event) error {
-	var eventData events.ContactLinkWithOrganizationEvent
-	if err := event.GetJsonData(&eventData); err != nil {
+func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
+	var eventData event.ContactLinkWithOrganizationEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Contact.JobRolesByOrganization == nil {

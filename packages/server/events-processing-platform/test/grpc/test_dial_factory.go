@@ -2,9 +2,9 @@ package grpc
 
 import (
 	"context"
-	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -33,7 +33,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 	listener := bufconn.Listen(1024 * 1024)
 
 	grpcServer := grpc.NewServer()
-	appLogger := logger.NewExtendedAppLogger(&common_logger.Config{
+	appLogger := logger.NewExtendedAppLogger(&comlog.Config{
 		LogLevel: "debug",
 		DevMode:  false,
 		Encoder:  "console",
@@ -47,7 +47,8 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 		},
 	}, appLogger)
 	myServer.SetRepository(repositories)
-	myServer.SetCommands(commands.InitCommandHandlers(appLogger, &config.Config{}, aggregateStore, repositories))
+	myServer.SetAggregateStpre(aggregateStore)
+	myServer.SetCommands(command.NewCommandHandlers(appLogger, &config.Config{}, aggregateStore, repositories))
 
 	server.RegisterGrpcServices(myServer, grpcServer)
 	go func() {

@@ -18,10 +18,10 @@ import (
 type commentService struct {
 	commentpb.UnimplementedCommentGrpcServiceServer
 	log                    logger.Logger
-	commentCommandHandlers *commentcmdhandler.CommentCommandHandlers
+	commentCommandHandlers *commentcmdhandler.CommandHandlers
 }
 
-func NewCommentService(log logger.Logger, commentCommandHandlers *commentcmdhandler.CommentCommandHandlers) *commentService {
+func NewCommentService(log logger.Logger, commentCommandHandlers *commentcmdhandler.CommandHandlers) *commentService {
 	return &commentService{
 		log:                    log,
 		commentCommandHandlers: commentCommandHandlers,

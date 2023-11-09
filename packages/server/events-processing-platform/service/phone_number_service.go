@@ -20,10 +20,10 @@ type phoneNumberService struct {
 	phonenumberpb.UnimplementedPhoneNumberGrpcServiceServer
 	log                 logger.Logger
 	repositories        *repository.Repositories
-	phoneNumberCommands *command_handler.PhoneNumberCommandHandlers
+	phoneNumberCommands *command_handler.CommandHandlers
 }
 
-func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, phoneNumberCommands *command_handler.PhoneNumberCommandHandlers) *phoneNumberService {
+func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, phoneNumberCommands *command_handler.CommandHandlers) *phoneNumberService {
 	return &phoneNumberService{
 		log:                 log,
 		repositories:        repositories,

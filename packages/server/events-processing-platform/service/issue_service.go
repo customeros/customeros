@@ -19,10 +19,10 @@ import (
 type issueService struct {
 	issuepb.UnimplementedIssueGrpcServiceServer
 	log                  logger.Logger
-	issueCommandHandlers *cmdhnd.IssueCommandHandlers
+	issueCommandHandlers *cmdhnd.CommandHandlers
 }
 
-func NewIssueService(log logger.Logger, issueCommandHandlers *cmdhnd.IssueCommandHandlers) *issueService {
+func NewIssueService(log logger.Logger, issueCommandHandlers *cmdhnd.CommandHandlers) *issueService {
 	return &issueService{
 		log:                  log,
 		issueCommandHandlers: issueCommandHandlers,

@@ -19,10 +19,10 @@ type contactService struct {
 	contactpb.UnimplementedContactGrpcServiceServer
 	log                    logger.Logger
 	repositories           *repository.Repositories
-	contactCommandHandlers *command_handler.ContactCommandHandlers
+	contactCommandHandlers *command_handler.CommandHandlers
 }
 
-func NewContactService(log logger.Logger, repositories *repository.Repositories, contactCommandHandlers *command_handler.ContactCommandHandlers) *contactService {
+func NewContactService(log logger.Logger, repositories *repository.Repositories, contactCommandHandlers *command_handler.CommandHandlers) *contactService {
 	return &contactService{
 		log:                    log,
 		repositories:           repositories,

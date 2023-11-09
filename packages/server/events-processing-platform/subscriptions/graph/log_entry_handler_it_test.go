@@ -40,7 +40,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	// prepare event handler
 	logEntryEventHandler := &GraphLogEntryEventHandler{
 		repositories:         testDatabase.Repositories,
-		organizationCommands: orgcmdhnd.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: orgcmdhnd.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()

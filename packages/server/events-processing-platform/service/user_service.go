@@ -18,10 +18,10 @@ import (
 type userService struct {
 	userpb.UnimplementedUserGrpcServiceServer
 	log          logger.Logger
-	userCommands *command_handler.UserCommandHandlers
+	userCommands *command_handler.CommandHandlers
 }
 
-func NewUserService(log logger.Logger, userCommands *command_handler.UserCommandHandlers) *userService {
+func NewUserService(log logger.Logger, userCommands *command_handler.CommandHandlers) *userService {
 	return &userService{
 		log:          log,
 		userCommands: userCommands,

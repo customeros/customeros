@@ -6,12 +6,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type JobRoleCommandHandlers struct {
+type CommandHandlers struct {
 	CreateJobRoleCommand CreateJobRoleCommandHander
 }
 
-func NewJobRoleCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *JobRoleCommandHandlers {
-	return &JobRoleCommandHandlers{
+func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
+	return &CommandHandlers{
 		CreateJobRoleCommand: NewCreateJobRoleCommandHandler(log, cfg, es),
 	}
 }

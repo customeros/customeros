@@ -41,7 +41,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	// prepare event handler
 	issueEventHandler := &GraphIssueEventHandler{
 		Repositories:         testDatabase.Repositories,
-		organizationCommands: orgcmdhnd.NewOrganizationCommands(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+		organizationCommands: orgcmdhnd.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
 	}
 	orgAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenantName, reporterOrgId)
 	now := utils.Now()

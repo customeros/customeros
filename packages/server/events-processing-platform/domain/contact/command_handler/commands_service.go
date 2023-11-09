@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type ContactCommandHandlers struct {
+type CommandHandlers struct {
 	Upsert           UpsertContactCommandHandler
 	LinkPhoneNumber  LinkPhoneNumberCommandHandler
 	LinkEmail        LinkEmailCommandHandler
@@ -13,8 +13,8 @@ type ContactCommandHandlers struct {
 	LinkOrganization LinkOrganizationCommandHandler
 }
 
-func NewContactCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *ContactCommandHandlers {
-	return &ContactCommandHandlers{
+func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
+	return &CommandHandlers{
 		Upsert:           NewUpsertContactCommandHandler(log, es),
 		LinkPhoneNumber:  NewLinkPhoneNumberCommandHandler(log, es),
 		LinkEmail:        NewLinkEmailCommandHandler(log, es),

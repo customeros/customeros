@@ -20,10 +20,10 @@ type locationService struct {
 	locationpb.UnimplementedLocationGrpcServiceServer
 	log              logger.Logger
 	repositories     *repository.Repositories
-	locationCommands *command_handler.LocationCommandHandlers
+	locationCommands *command_handler.CommandHandlers
 }
 
-func NewLocationService(log logger.Logger, repositories *repository.Repositories, locationCommands *command_handler.LocationCommandHandlers) *locationService {
+func NewLocationService(log logger.Logger, repositories *repository.Repositories, locationCommands *command_handler.CommandHandlers) *locationService {
 	return &locationService{
 		log:              log,
 		repositories:     repositories,

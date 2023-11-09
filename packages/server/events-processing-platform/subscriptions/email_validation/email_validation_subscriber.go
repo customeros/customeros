@@ -24,7 +24,7 @@ type EmailValidationSubscriber struct {
 	emailEventHandler *emailEventHandler
 }
 
-func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *command_handler.EmailCommandHandlers) *EmailValidationSubscriber {
+func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *command_handler.CommandHandlers) *EmailValidationSubscriber {
 	return &EmailValidationSubscriber{
 		log: log,
 		db:  db,

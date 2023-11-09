@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -19,7 +18,7 @@ type GraphEmailEventHandler struct {
 func (h *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailCreate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.EmailCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -36,7 +35,7 @@ func (h *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventsto
 func (h *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailUpdate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.EmailUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -53,7 +52,7 @@ func (h *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventsto
 func (h *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidationFailed")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.EmailFailedValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -70,7 +69,7 @@ func (h *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, ev
 func (h *GraphEmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidated")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData events.EmailValidatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

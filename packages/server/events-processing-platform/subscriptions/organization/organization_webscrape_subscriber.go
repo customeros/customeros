@@ -26,7 +26,7 @@ type OrganizationWebscrapeSubscriber struct {
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.OrganizationCommandHandlers, repositories *repository.Repositories, caches caches.Cache) *OrganizationWebscrapeSubscriber {
+func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.CommandHandlers, repositories *repository.Repositories, caches caches.Cache) *OrganizationWebscrapeSubscriber {
 	return &OrganizationWebscrapeSubscriber{
 		log: log,
 		db:  db,

@@ -18,10 +18,10 @@ type jobRoleService struct {
 	jobrolepb.UnimplementedJobRoleGrpcServiceServer
 	log             logger.Logger
 	repositories    *repository.Repositories
-	jobRoleCommands *commands.JobRoleCommandHandlers
+	jobRoleCommands *commands.CommandHandlers
 }
 
-func NewJobRoleService(log logger.Logger, repositories *repository.Repositories, jobRoleCommands *commands.JobRoleCommandHandlers) *jobRoleService {
+func NewJobRoleService(log logger.Logger, repositories *repository.Repositories, jobRoleCommands *commands.CommandHandlers) *jobRoleService {
 	return &jobRoleService{
 		log:             log,
 		repositories:    repositories,

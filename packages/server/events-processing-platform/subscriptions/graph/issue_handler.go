@@ -19,14 +19,14 @@ import (
 
 type GraphIssueEventHandler struct {
 	log                  logger.Logger
-	organizationCommands *orgcmdhnd.OrganizationCommandHandlers
+	organizationCommands *orgcmdhnd.CommandHandlers
 	Repositories         *repository.Repositories
 }
 
 func (h *GraphIssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnCreate")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -67,7 +67,7 @@ func (h *GraphIssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Ev
 func (h *GraphIssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnUpdate")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -99,7 +99,7 @@ func (h *GraphIssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Ev
 func (h *GraphIssueEventHandler) OnAddUserAssignee(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnAddUserAssignee")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueAddUserAssigneeEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -122,7 +122,7 @@ func (h *GraphIssueEventHandler) OnAddUserAssignee(ctx context.Context, evt even
 func (h *GraphIssueEventHandler) OnAddUserFollower(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnAddUserFollower")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueAddUserFollowerEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -145,7 +145,7 @@ func (h *GraphIssueEventHandler) OnAddUserFollower(ctx context.Context, evt even
 func (h *GraphIssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnRemoveUserAssignee")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueRemoveUserAssigneeEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -169,7 +169,7 @@ func (h *GraphIssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt e
 func (h *GraphIssueEventHandler) OnRemoveUserFollower(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphIssueEventHandler.OnRemoveUserFollower")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.IssueRemoveUserFollowerEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

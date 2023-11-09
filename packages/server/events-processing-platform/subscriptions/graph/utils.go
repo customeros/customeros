@@ -1,6 +1,11 @@
 package graph
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"math/rand"
 	"time"
 )
@@ -26,4 +31,10 @@ func generateRandomStringFromCharset(length int) string {
 		output += string(randChar)
 	}
 	return output
+}
+
+func setCommonSpanTagsAndLogFields(span opentracing.Span, evt eventstore.Event) {
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentSubscriptionGraph)
+	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
+	span.LogFields(log.Object("event", evt))
 }

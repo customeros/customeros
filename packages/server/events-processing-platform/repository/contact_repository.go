@@ -6,7 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -14,9 +14,9 @@ import (
 )
 
 type ContactRepository interface {
-	CreateContact(ctx context.Context, contactId string, event events.ContactCreateEvent) error
-	CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, contactId string, event events.ContactCreateEvent) error
-	UpdateContact(ctx context.Context, contactId string, event events.ContactUpdateEvent) error
+	CreateContact(ctx context.Context, contactId string, event event.ContactCreateEvent) error
+	CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, contactId string, event event.ContactCreateEvent) error
+	UpdateContact(ctx context.Context, contactId string, event event.ContactUpdateEvent) error
 }
 
 type contactRepository struct {
@@ -29,7 +29,7 @@ func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	}
 }
 
-func (r *contactRepository) CreateContact(ctx context.Context, contactId string, event events.ContactCreateEvent) error {
+func (r *contactRepository) CreateContact(ctx context.Context, contactId string, event event.ContactCreateEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.CreateContact")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
@@ -44,7 +44,7 @@ func (r *contactRepository) CreateContact(ctx context.Context, contactId string,
 	return err
 }
 
-func (r *contactRepository) CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, contactId string, event events.ContactCreateEvent) error {
+func (r *contactRepository) CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, contactId string, event event.ContactCreateEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.CreateContact")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
@@ -99,7 +99,7 @@ func (r *contactRepository) CreateContactInTx(ctx context.Context, tx neo4j.Mana
 	})
 }
 
-func (r *contactRepository) UpdateContact(ctx context.Context, contactId string, event events.ContactUpdateEvent) error {
+func (r *contactRepository) UpdateContact(ctx context.Context, contactId string, event event.ContactUpdateEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.UpdateContact")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)

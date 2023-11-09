@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-type InteractionEventCommandHandlers struct {
+type CommandHandlers struct {
 	UpsertInteractionEvent UpsertInteractionEventCommandHandler
 	RequestSummary         RequestSummaryCommandHandler
 	ReplaceSummary         ReplaceSummaryCommandHandler
@@ -13,8 +13,8 @@ type InteractionEventCommandHandlers struct {
 	ReplaceActionItems     ReplaceActionItemsCommandHandler
 }
 
-func NewInteractionEventCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *InteractionEventCommandHandlers {
-	return &InteractionEventCommandHandlers{
+func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
+	return &CommandHandlers{
 		UpsertInteractionEvent: NewUpsertInteractionEventCommandHandler(log, es),
 		RequestSummary:         NewRequestSummaryCommandHandler(log, es),
 		ReplaceSummary:         NewReplaceSummaryCommandHandler(log, es),

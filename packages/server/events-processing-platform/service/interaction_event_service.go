@@ -19,10 +19,10 @@ import (
 type interactionEventService struct {
 	interactioneventpb.UnimplementedInteractionEventGrpcServiceServer
 	log                              logger.Logger
-	interactionEventsCommandHandlers *cmdhnd.InteractionEventCommandHandlers
+	interactionEventsCommandHandlers *cmdhnd.CommandHandlers
 }
 
-func NewInteractionEventService(log logger.Logger, commands *cmdhnd.InteractionEventCommandHandlers) *interactionEventService {
+func NewInteractionEventService(log logger.Logger, commands *cmdhnd.CommandHandlers) *interactionEventService {
 	return &interactionEventService{
 		log:                              log,
 		interactionEventsCommandHandlers: commands,

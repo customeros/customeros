@@ -25,7 +25,7 @@ type InteractionEventSubscriber struct {
 	interactionEventHandler *interactionEventHandler
 }
 
-func NewInteractionEventSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *command_handler.InteractionEventCommandHandlers, repositories *repository.Repositories) *InteractionEventSubscriber {
+func NewInteractionEventSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, commands *command_handler.CommandHandlers, repositories *repository.Repositories) *InteractionEventSubscriber {
 	return &InteractionEventSubscriber{
 		log: log,
 		db:  db,

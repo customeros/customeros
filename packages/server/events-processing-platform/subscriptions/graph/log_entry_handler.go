@@ -12,20 +12,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
 type GraphLogEntryEventHandler struct {
 	log                  logger.Logger
-	organizationCommands *orgcmdhnd.OrganizationCommandHandlers
+	organizationCommands *orgcmdhnd.CommandHandlers
 	repositories         *repository.Repositories
 }
 
 func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnCreate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -62,7 +61,7 @@ func (h *GraphLogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore
 func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnCreate")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -83,7 +82,7 @@ func (h *GraphLogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore
 func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnAddTag")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryAddTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -104,7 +103,7 @@ func (h *GraphLogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore
 func (h *GraphLogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphLogEntryEventHandler.OnRemoveTag")
 	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+	setCommonSpanTagsAndLogFields(span, evt)
 
 	var eventData event.LogEntryRemoveTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {

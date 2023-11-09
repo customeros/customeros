@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -49,7 +49,7 @@ func (a *ContactAggregate) createContact(ctx context.Context, cmd *command.Upser
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
 	cmd.Source.SetDefaultValues()
 
-	createEvent, err := events.NewContactCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
+	createEvent, err := event.NewContactCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactCreateEvent")
@@ -80,7 +80,7 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	updateEvent, err := events.NewContactUpdateEvent(a, cmd.Source.Source, cmd.DataFields, cmd.ExternalSystem, updatedAtNotNil)
+	updateEvent, err := event.NewContactUpdateEvent(a, cmd.Source.Source, cmd.DataFields, cmd.ExternalSystem, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactUpdateEvent")
@@ -111,7 +111,7 @@ func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmail
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewContactLinkEmailEvent(a, cmd.EmailId, cmd.Label, cmd.Primary, updatedAtNotNil)
+	event, err := event.NewContactLinkEmailEvent(a, cmd.EmailId, cmd.Label, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactLinkEmailEvent")
@@ -156,7 +156,7 @@ func (a *ContactAggregate) SetEmailNonPrimary(ctx context.Context, emailId, logg
 	}
 
 	if email.Primary {
-		event, err := events.NewContactLinkEmailEvent(a, emailId, email.Label, false, updatedAtNotNil)
+		event, err := event.NewContactLinkEmailEvent(a, emailId, email.Label, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewContactLinkEmailEvent")
@@ -188,7 +188,7 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewContactLinkPhoneNumberEvent(a, cmd.PhoneNumberId, cmd.Label, cmd.Primary, updatedAtNotNil)
+	event, err := event.NewContactLinkPhoneNumberEvent(a, cmd.PhoneNumberId, cmd.Label, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
@@ -233,7 +233,7 @@ func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, phoneNu
 	}
 
 	if phoneNumber.Primary {
-		event, err := events.NewContactLinkPhoneNumberEvent(a, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
+		event, err := event.NewContactLinkPhoneNumberEvent(a, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
@@ -265,7 +265,7 @@ func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLo
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewContactLinkLocationEvent(a, cmd.LocationId, updatedAtNotNil)
+	event, err := event.NewContactLinkLocationEvent(a, cmd.LocationId, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactLinkLocationEvent")
@@ -297,7 +297,7 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	event, err := events.NewContactLinkWithOrganizationEvent(a, cmd.OrganizationId, cmd.JobRoleFields.JobTitle, cmd.JobRoleFields.Description,
+	event, err := event.NewContactLinkWithOrganizationEvent(a, cmd.OrganizationId, cmd.JobRoleFields.JobTitle, cmd.JobRoleFields.Description,
 		cmd.JobRoleFields.Primary, cmd.Source, createdAtNotNil, updatedAtNotNil, cmd.JobRoleFields.StartedAt, cmd.JobRoleFields.EndedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)

@@ -26,7 +26,7 @@ type OrganizationSubscriber struct {
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.OrganizationCommandHandlers, repositories *repository.Repositories, caches caches.Cache) *OrganizationSubscriber {
+func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.CommandHandlers, repositories *repository.Repositories, caches caches.Cache) *OrganizationSubscriber {
 	return &OrganizationSubscriber{
 		log: log,
 		db:  db,
