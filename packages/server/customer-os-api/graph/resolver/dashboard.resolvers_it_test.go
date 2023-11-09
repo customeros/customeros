@@ -442,7 +442,7 @@ func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
 
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_owner", map[string]interface{}{"ownerId": userId1, "page": 1, "limit": 10})
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_owner", map[string]interface{}{"ownerId": []string{userId1}, "page": 1, "limit": 10})
 
 	var organizationsPageStruct struct {
 		DashboardView_Organizations model.OrganizationPage
