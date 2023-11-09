@@ -18,6 +18,10 @@ const (
 	EQUALS
 	CONTAINS
 	STARTS_WITH
+	LTE
+	GTE
+	IN
+	BETWEEN
 )
 
 func (c ComparisonOperator) String() string {
@@ -30,6 +34,14 @@ func (c ComparisonOperator) String() string {
 		return "CONTAINS"
 	case STARTS_WITH:
 		return "STARTS WITH"
+	case LTE:
+		return "LTE"
+	case GTE:
+		return "GTE"
+	case IN:
+		return "IN"
+	case BETWEEN:
+		return "BETWEEN"
 	default:
 		return fmt.Sprintf("%d", int(c))
 	}
@@ -45,6 +57,14 @@ func (c ComparisonOperator) CypherString() string {
 		return "CONTAINS"
 	case STARTS_WITH:
 		return "STARTS WITH"
+	case LTE:
+		return "<="
+	case GTE:
+		return ">="
+	case IN:
+		return "IN"
+	case BETWEEN:
+		return "BETWEEN"
 	default:
 		return "="
 	}

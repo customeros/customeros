@@ -16,20 +16,29 @@ const (
 func GetPropertyDetailsByLookupName(T reflect.Type, lookupName string) (map[string]string, error) {
 	for i := 0; i < T.NumField(); i++ {
 		structField := T.Field(i)
-		tag, ok := structField.Tag.Lookup(TagKey)
-		if ok {
-			tags := strings.Split(tag, ";")
-			if len(tags) > 0 {
-				m := make(map[string]string)
-				for _, v := range tags {
-					kvs := strings.Split(v, ":")
-					if len(kvs) == 2 {
-						m[kvs[0]] = kvs[1]
+
+		switch structField.Type.Kind() {
+		case reflect.Struct:
+			m, _ := GetPropertyDetailsByLookupName(structField.Type, lookupName)
+			if m != nil {
+				return m, nil
+			}
+		default:
+			tag, ok := structField.Tag.Lookup(TagKey)
+			if ok {
+				tags := strings.Split(tag, ";")
+				if len(tags) > 0 {
+					m := make(map[string]string)
+					for _, v := range tags {
+						kvs := strings.Split(v, ":")
+						if len(kvs) == 2 {
+							m[kvs[0]] = kvs[1]
+						}
 					}
-				}
-				if val, ok := m[TagLookupName]; ok {
-					if val == lookupName {
-						return m, nil
+					if val, ok := m[TagLookupName]; ok {
+						if val == lookupName {
+							return m, nil
+						}
 					}
 				}
 			}

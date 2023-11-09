@@ -1724,17 +1724,25 @@ const (
 	ComparisonOperatorEq         ComparisonOperator = "EQ"
 	ComparisonOperatorContains   ComparisonOperator = "CONTAINS"
 	ComparisonOperatorStartsWith ComparisonOperator = "STARTS_WITH"
+	ComparisonOperatorLte        ComparisonOperator = "LTE"
+	ComparisonOperatorGte        ComparisonOperator = "GTE"
+	ComparisonOperatorIn         ComparisonOperator = "IN"
+	ComparisonOperatorBetween    ComparisonOperator = "BETWEEN"
 )
 
 var AllComparisonOperator = []ComparisonOperator{
 	ComparisonOperatorEq,
 	ComparisonOperatorContains,
 	ComparisonOperatorStartsWith,
+	ComparisonOperatorLte,
+	ComparisonOperatorGte,
+	ComparisonOperatorIn,
+	ComparisonOperatorBetween,
 }
 
 func (e ComparisonOperator) IsValid() bool {
 	switch e {
-	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith:
+	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween:
 		return true
 	}
 	return false
