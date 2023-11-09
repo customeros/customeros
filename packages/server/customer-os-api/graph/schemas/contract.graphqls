@@ -1,0 +1,39 @@
+extend type Mutation {
+    contract_Create(input: ContractInput!): Contract!
+}
+
+type Contract implements Node {
+    id: ID!
+    customerOsId: String!
+    organizationId: String!
+    createdAt:   Time!
+    updatedAt:   Time!
+    serviceStartedAt:   Time!
+    signedAt:   Time!
+    name:        String!
+    sourceFields: SourceFields!
+    renewalCycle: ContractRenewalCycle!
+    status: ContractStatus!
+    appSource: String!
+    owner: User @goField(forceResolver: true)
+    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+}
+
+input ContractInput {
+    referenceId:   String
+    name:          String!
+    organizationId: String!
+    renewalCycle: ContractRenewalCycle!
+    status: ContractStatus!
+}
+
+enum ContractRenewalCycle {
+    NONE
+    MONTHLY_RENEWAL
+    ANNUAL_RENEWAL
+}
+enum ContractStatus {
+    DRAFT
+    LIVE
+    ENDED
+}

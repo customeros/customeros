@@ -349,6 +349,34 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
+type Contract struct {
+	ID               string               `json:"id"`
+	CustomerOsID     string               `json:"customerOsId"`
+	OrganizationID   string               `json:"organizationId"`
+	CreatedAt        time.Time            `json:"createdAt"`
+	UpdatedAt        time.Time            `json:"updatedAt"`
+	ServiceStartedAt time.Time            `json:"serviceStartedAt"`
+	SignedAt         time.Time            `json:"signedAt"`
+	Name             string               `json:"name"`
+	SourceFields     SourceFields         `json:"sourceFields"`
+	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
+	Status           ContractStatus       `json:"status"`
+	AppSource        string               `json:"appSource"`
+	Owner            *User                `json:"owner,omitempty"`
+	ExternalLinks    []*ExternalSystem    `json:"externalLinks"`
+}
+
+func (Contract) IsNode()            {}
+func (this Contract) GetID() string { return this.ID }
+
+type ContractInput struct {
+	ReferenceID    *string              `json:"referenceId,omitempty"`
+	Name           string               `json:"name"`
+	OrganizationID string               `json:"organizationId"`
+	RenewalCycle   ContractRenewalCycle `json:"renewalCycle"`
+	Status         ContractStatus       `json:"status"`
+}
+
 type Country struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
@@ -1767,6 +1795,92 @@ func (e *ComparisonOperator) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ComparisonOperator) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ContractRenewalCycle string
+
+const (
+	ContractRenewalCycleNone           ContractRenewalCycle = "NONE"
+	ContractRenewalCycleMonthlyRenewal ContractRenewalCycle = "MONTHLY_RENEWAL"
+	ContractRenewalCycleAnnualRenewal  ContractRenewalCycle = "ANNUAL_RENEWAL"
+)
+
+var AllContractRenewalCycle = []ContractRenewalCycle{
+	ContractRenewalCycleNone,
+	ContractRenewalCycleMonthlyRenewal,
+	ContractRenewalCycleAnnualRenewal,
+}
+
+func (e ContractRenewalCycle) IsValid() bool {
+	switch e {
+	case ContractRenewalCycleNone, ContractRenewalCycleMonthlyRenewal, ContractRenewalCycleAnnualRenewal:
+		return true
+	}
+	return false
+}
+
+func (e ContractRenewalCycle) String() string {
+	return string(e)
+}
+
+func (e *ContractRenewalCycle) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContractRenewalCycle(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContractRenewalCycle", str)
+	}
+	return nil
+}
+
+func (e ContractRenewalCycle) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ContractStatus string
+
+const (
+	ContractStatusDraft ContractStatus = "DRAFT"
+	ContractStatusLive  ContractStatus = "LIVE"
+	ContractStatusEnded ContractStatus = "ENDED"
+)
+
+var AllContractStatus = []ContractStatus{
+	ContractStatusDraft,
+	ContractStatusLive,
+	ContractStatusEnded,
+}
+
+func (e ContractStatus) IsValid() bool {
+	switch e {
+	case ContractStatusDraft, ContractStatusLive, ContractStatusEnded:
+		return true
+	}
+	return false
+}
+
+func (e ContractStatus) String() string {
+	return string(e)
+}
+
+func (e *ContractStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContractStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContractStatus", str)
+	}
+	return nil
+}
+
+func (e ContractStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
