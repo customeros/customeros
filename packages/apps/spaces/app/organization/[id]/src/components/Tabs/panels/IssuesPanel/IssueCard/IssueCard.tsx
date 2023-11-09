@@ -2,19 +2,20 @@
 import React, { useRef, useMemo } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
-import { Issue } from '@graphql/types';
 import { Avatar } from '@ui/media/Avatar';
 import { Text } from '@ui/typography/Text';
 import { User01 } from '@ui/media/icons/User01';
+import { Issue, Contact } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { Card, CardHeader } from '@ui/presentation/Card';
+import {
+  getParticipant,
+  getParticipantName,
+} from '@organization/src/hooks/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
-// import { getContactDisplayName } from '@spaces/utils/getContactName';
-// import { useContactOrUserDisplayName } from '@shared/hooks/useContactOrUserDisplayData';
 
-// TODO uncomment commented out code as soon as COS-464 is merged
 interface IssueCardProps {
   issue: Issue;
 }
@@ -29,19 +30,57 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const { openModal } = useTimelineEventPreviewMethodsContext();
   const statusColorScheme = (() => getStatusColor(issue.status))();
-
-  // const getDisplayName = useContactOrUserDisplayName();
-  // const requestorName = getDisplayName(issue.requestedBy);
-
-  // const getLastCreatedNote = (notes: Array<Note>) => {
-  //   const sortedNotes = notes.sort((a, b) => b.createdAt - a.createdAt);
-  //   return sortedNotes[0].createdAt;
-  // };
-
   const isStatusClosed = useMemo(
     () => ['closed', 'solved'].includes(issue.status.toLowerCase()),
     [issue.status],
   );
+
+  const submittedBy = useMemo(
+    () =>
+      issue.submittedBy ? getParticipantName(issue.submittedBy) : undefined,
+    [issue.id],
+  );
+  const reportedBy = useMemo(
+    () => (issue.reportedBy ? getParticipantName(issue.reportedBy) : undefined),
+
+    [issue.id],
+  );
+  const profilePhoto = useMemo(
+    () =>
+      issue.reportedBy
+        ? getParticipant(issue.reportedBy)
+        : issue?.submittedBy
+        ? getParticipant(issue.submittedBy)
+        : undefined,
+
+    [issue.id],
+  );
+
+  const participantName = useMemo(
+    () => (
+      <Text display='inline'>
+        {reportedBy ? `Reported` : `Submitted`}
+
+        {(reportedBy || submittedBy) && (
+          <Text as='span' mx={1}>
+            by
+          </Text>
+        )}
+        <Text fontWeight='bold' as='span' mr={1}>
+          {issue?.reportedBy ? reportedBy : submittedBy}
+        </Text>
+      </Text>
+    ),
+    [reportedBy, submittedBy],
+  );
+
+  const titleWidth = useMemo(() => {
+    if (isStatusClosed) {
+      return 'auto';
+    }
+
+    return issue?.status === 'pending' ? 250 : 260;
+  }, [isStatusClosed, issue?.status]);
 
   return (
     <Card
@@ -68,39 +107,39 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
         <Flex flex='1' gap='4' alignItems='flex-start' flexWrap='wrap'>
           <Avatar
             size='md'
-            name={''}
+            name={submittedBy ?? reportedBy}
             variant='outlined'
-            src={undefined} // todo
+            src={
+              (profilePhoto as unknown as Contact)?.profilePhotoUrl ?? undefined
+            }
             border={'1px solid var(--chakra-colors-primary-200)'}
             icon={<User01 color='primary.700' height='1.8rem' />}
           />
 
           <Flex direction='column' flex={1}>
             <Heading
+              mt={1}
               size='sm'
               fontSize='sm'
               noOfLines={1}
-              maxW={isStatusClosed ? 'auto' : 260}
+              maxW={titleWidth}
             >
               {issue?.subject ?? '[No subject]'}
             </Heading>
 
-            <Text fontSize='sm'>
-              Requested{' '}
+            <Text fontSize='sm' mt={1} mb='2px' lineHeight={1}>
+              {participantName}
               {DateTimeUtils.timeAgo(issue?.createdAt, { addSuffix: true })}
-              {/* by <Text as='span' fontWeight='medium' color='gray.700' mx={1}>*/}
-              {/*  {requestorName}*/}
-              {/*</Text>*/}
             </Text>
 
-            {/*{!!issue?.notes?.length && (*/}
-            {/*  <Text fontSize='sm' color='gray.500'>*/}
-            {/*    Last response was{' '}*/}
-            {/*    {DateTimeUtils.timeAgo(getLastCreatedNote(issue.notes), {*/}
-            {/*      addSuffix: true,*/}
-            {/*    })}*/}
-            {/*  </Text>*/}
-            {/*)}*/}
+            {!!issue?.updatedAt && (
+              <Text fontSize='sm' color='gray.500' lineHeight={1}>
+                Last response was{' '}
+                {DateTimeUtils.timeAgo(issue.updatedAt, {
+                  addSuffix: true,
+                })}
+              </Text>
+            )}
           </Flex>
 
           {!isStatusClosed && (

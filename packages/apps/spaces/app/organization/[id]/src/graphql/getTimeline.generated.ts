@@ -341,6 +341,7 @@ export type GetTimelineQuery = {
           subject?: string | null;
           priority?: string | null;
           appSource: string;
+          updatedAt: any;
           createdAt: any;
           description?: string | null;
           issueStatus: string;
@@ -921,6 +922,7 @@ export const GetTimelineDocument = `
         priority
         issueStatus: status
         appSource
+        updatedAt
         createdAt
         description
         externalLinks {

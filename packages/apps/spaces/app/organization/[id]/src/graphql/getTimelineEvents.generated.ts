@@ -255,6 +255,7 @@ export type GetTimelineEventsQuery = {
         priority?: string | null;
         appSource: string;
         createdAt: any;
+        updatedAt: any;
         description?: string | null;
         issueStatus: string;
         externalLinks: Array<{
@@ -744,6 +745,7 @@ export const GetTimelineEventsDocument = `
       issueStatus: status
       appSource
       createdAt
+      updatedAt
       description
       externalLinks {
         externalId

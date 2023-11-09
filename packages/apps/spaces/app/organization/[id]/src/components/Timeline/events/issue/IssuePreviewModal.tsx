@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { FC, Fragment } from 'react';
 
 import { match } from 'ts-pattern';
 
@@ -35,7 +35,7 @@ function getStatusColor(status: string) {
   return 'blue';
 }
 
-export const IssuePreviewModal: React.FC = () => {
+export const IssuePreviewModal: FC = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const issue = modalContent as IssueWithAliases;
@@ -198,12 +198,20 @@ export const IssuePreviewModal: React.FC = () => {
         >
           {Object.entries(commentsByDay)?.map(([date, comments]) => (
             <Fragment key={date}>
-              <Flex mb={2} alignItems='center' w='full'>
-                <Text color='gray.400' fontSize='sm' whiteSpace='nowrap' mr={2}>
-                  {DateTimeUtils.format(date, DateTimeUtils.date)}
-                </Text>
-                <Divider orientation='horizontal' />
-              </Flex>
+              {!DateTimeUtils.isSameDay(issue?.createdAt, date) && (
+                <Flex alignItems='center' w='full'>
+                  <Text
+                    color='gray.400'
+                    fontSize='sm'
+                    whiteSpace='nowrap'
+                    mr={2}
+                  >
+                    {DateTimeUtils.format(date, DateTimeUtils.date)}
+                  </Text>
+                  <Divider orientation='horizontal' />
+                </Flex>
+              )}
+
               {comments?.map((c) => {
                 const name = match(c)
                   .with({ __typename: 'Comment' }, (c) => {
@@ -248,15 +256,31 @@ export const IssuePreviewModal: React.FC = () => {
         </VStack>
 
         {['solved', 'closed'].includes(issue.issueStatus?.toLowerCase()) && (
-          <Text>
-            Issue closed
-            <Text color='gray.400' as='span' ml={1}>
-              {DateTimeUtils.format(
-                issue.updatedAt,
-                DateTimeUtils.dateWithHour,
-              )}
-            </Text>
-          </Text>
+          <Flex align='center' mt='2'>
+            <Flex alignItems='baseline'>
+              <Text fontSize='sm' whiteSpace='nowrap'>
+                Issue closed
+              </Text>
+
+              <Text
+                color='gray.400'
+                fontSize='sm'
+                whiteSpace='nowrap'
+                ml={2}
+                mr={2}
+              >
+                {DateTimeUtils.format(
+                  issue?.updatedAt,
+                  DateTimeUtils.dateWithHour,
+                )}
+              </Text>
+            </Flex>
+            <Divider
+              orientation='horizontal'
+              borderBottomColor='gray.200'
+              h='full'
+            />
+          </Flex>
         )}
       </CardBody>
 
