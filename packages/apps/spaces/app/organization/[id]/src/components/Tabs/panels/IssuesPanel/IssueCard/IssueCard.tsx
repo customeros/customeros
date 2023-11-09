@@ -38,12 +38,12 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
   const submittedBy = useMemo(
     () =>
       issue.submittedBy ? getParticipantName(issue.submittedBy) : undefined,
-    [issue.id],
+    [issue.submittedBy],
   );
   const reportedBy = useMemo(
     () => (issue.reportedBy ? getParticipantName(issue.reportedBy) : undefined),
 
-    [issue.id],
+    [issue.reportedBy],
   );
   const profilePhoto = useMemo(
     () =>
@@ -53,7 +53,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
         ? getParticipant(issue.submittedBy)
         : undefined,
 
-    [issue.id],
+    [issue.reportedBy, issue.submittedBy],
   );
 
   const participantName = useMemo(
@@ -67,7 +67,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
           </Text>
         )}
         <Text fontWeight='bold' as='span' mr={1}>
-          {issue?.reportedBy ? reportedBy : submittedBy}
+          {reportedBy ? reportedBy : submittedBy}
         </Text>
       </Text>
     ),
