@@ -280,11 +280,13 @@ export const getColumns = (options: GetColumnsOptions) => [
       );
     },
     header: (props) => (
-      <THead<Organization>
+      <THead<Organization, HTMLInputElement>
         id='forecast'
         title='ARR Forecast'
         filterWidth='17rem'
-        renderFilter={(column) => <ForecastFilter column={column} />}
+        renderFilter={(column, initialFocusRef) => (
+          <ForecastFilter column={column} initialFocusRef={initialFocusRef} />
+        )}
         {...props}
       />
     ),
