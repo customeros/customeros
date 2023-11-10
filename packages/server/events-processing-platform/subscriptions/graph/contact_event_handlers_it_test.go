@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contactAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contactModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -37,9 +36,9 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	}
 	source :=
 		cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "unit-test"}
-	evt, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
+	event, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
-	err = contactEventHandler.OnContactCreate(context.Background(), evt)
+	err = contactEventHandler.OnContactCreate(context.Background(), event)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Contact"))
@@ -94,7 +93,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	}
 	orgAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	now := utils.Now()
-	event, err := event.NewContactLinkLocationEvent(orgAggregate, locationId, now)
+	event, err := contactEvents.NewContactLinkLocationEvent(orgAggregate, locationId, now)
 	require.Nil(t, err)
 	err = contactEventHandler.OnLocationLinkToContact(context.Background(), event)
 	require.Nil(t, err)
@@ -148,7 +147,7 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 	contactAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	phoneNumberLabel := "phoneNumberLabel"
 	updateTime := utils.Now()
-	event, err := events.NewContactLinkPhoneNumberEvent(contactAggregate, phoneNumberId, phoneNumberLabel, true, updateTime)
+	event, err := contactEvents.NewContactLinkPhoneNumberEvent(contactAggregate, phoneNumberId, phoneNumberLabel, true, updateTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnPhoneNumberLinkToContact(context.Background(), event)
 	require.Nil(t, err)
@@ -208,7 +207,7 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	contactAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	emailLabel := "emailLabel"
 	updateTime := utils.Now()
-	event, err := events.NewContactLinkEmailEvent(contactAggregate, emailId, emailLabel, true, updateTime)
+	event, err := contactEvents.NewContactLinkEmailEvent(contactAggregate, emailId, emailLabel, true, updateTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnEmailLinkToContact(context.Background(), event)
 	require.Nil(t, err)
@@ -267,7 +266,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	}
 	curTime := utils.Now()
 	endedAt := curTime.AddDate(2, 0, 0)
-	event, err := events.NewContactLinkWithOrganizationEvent(contactAggregate, organizationId, jobTitle, jobRoleDescription, true, sourceFields, curTime, curTime, &curTime, &endedAt)
+	event, err := contactEvents.NewContactLinkWithOrganizationEvent(contactAggregate, organizationId, jobTitle, jobRoleDescription, true, sourceFields, curTime, curTime, &curTime, &endedAt)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactLinkToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -355,7 +354,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 		Description:     descriptionUpdate,
 	}
 	curTime := utils.Now()
-	event, err := events.NewContactUpdateEvent(contactAggregate, source, dataFields, cmnmod.ExternalSystem{}, curTime)
+	event, err := contactEvents.NewContactUpdateEvent(contactAggregate, source, dataFields, cmnmod.ExternalSystem{}, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactUpdate(context.Background(), event)
 	require.Nil(t, err)
