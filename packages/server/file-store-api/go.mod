@@ -6,7 +6,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 require (
 	github.com/99designs/gqlgen v0.17.40
-	github.com/aws/aws-sdk-go v1.47.7
+	github.com/aws/aws-sdk-go v1.47.8
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
