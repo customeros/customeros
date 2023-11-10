@@ -1,24 +1,45 @@
+import { useRouter, useSearchParams } from 'next/navigation';
+
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Center } from '@ui/layout/Center';
 import { Text } from '@ui/typography/Text';
 import { EmptyTable } from '@ui/media/logos/EmptyTable';
 
+import { useOrganizationsPageMethods } from '../../hooks';
 import HalfCirclePattern from '../../../../src/assets/HalfCirclePattern';
 
-interface EmptyStateProps {
-  title: string;
-  onClick: () => void;
-  buttonLabel: string;
-  description: string;
-}
+export const EmptyState = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const preset = searchParams?.get('preset');
+  const { createOrganization } = useOrganizationsPageMethods();
 
-const EmptyState = ({
-  onClick,
-  title,
-  buttonLabel,
-  description,
-}: EmptyStateProps) => {
+  const handleCreateOrganization = () => {
+    createOrganization.mutate({ input: { name: '' } });
+  };
+
+  const options =
+    preset === 'portfolio'
+      ? {
+          title: "Let's get started",
+          description:
+            'Start seeing your customer conversations all in one place by adding an organization',
+          buttonLabel: 'Add Organization',
+          onClick: handleCreateOrganization,
+        }
+      : {
+          title: 'No organizations assigned to you yet',
+          description:
+            'Currently, you have not been assigned to any organizations.\n' +
+            '\n' +
+            'Head to your list of organizations and assign yourself as an owner to one of them.',
+          buttonLabel: 'Go to Organizations',
+          onClick: () => {
+            router.push(`/organizations`);
+          },
+        };
+
   return (
     <Center
       h='100%'
@@ -46,25 +67,23 @@ const EmptyState = ({
           transform='translateY(-230px)'
         >
           <Text color='gray.900' fontSize='md' fontWeight='semibold'>
-            {title}
+            {options.title}
           </Text>
           <Text maxW='400px' fontSize='sm' color='gray.600' my={1}>
-            {description}
+            {options.description}
           </Text>
 
           <Button
-            onClick={onClick}
+            onClick={options.onClick}
             mt='2'
             w='min-content'
             variant='outline'
             fontSize='sm'
           >
-            {buttonLabel}
+            {options.buttonLabel}
           </Button>
         </Flex>
       </Flex>
     </Center>
   );
 };
-
-export default EmptyState;

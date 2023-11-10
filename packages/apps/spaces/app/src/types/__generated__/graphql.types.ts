@@ -2121,6 +2121,7 @@ export type OrganizationInput = {
 export type OrganizationPage = Pages & {
   __typename?: 'OrganizationPage';
   content: Array<Organization>;
+  totalAvailable: Scalars['Int64'];
   totalElements: Scalars['Int64'];
   totalPages: Scalars['Int'];
 };

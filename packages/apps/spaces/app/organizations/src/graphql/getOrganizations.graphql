@@ -172,5 +172,6 @@ query getOrganizations(
       }
     }
     totalElements
+    totalAvailable
   }
 }
