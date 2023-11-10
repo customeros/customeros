@@ -18,84 +18,84 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// ContractServiceClient is the client API for ContractService service.
+// ContractGrpcServiceClient is the client API for ContractGrpcService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ContractServiceClient interface {
-	CreateContract(ctx context.Context, in *CreateContractRequest, opts ...grpc.CallOption) (*ContractIdResponse, error)
+type ContractGrpcServiceClient interface {
+	CreateContract(ctx context.Context, in *CreateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 }
 
-type contractServiceClient struct {
+type contractGrpcServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewContractServiceClient(cc grpc.ClientConnInterface) ContractServiceClient {
-	return &contractServiceClient{cc}
+func NewContractGrpcServiceClient(cc grpc.ClientConnInterface) ContractGrpcServiceClient {
+	return &contractGrpcServiceClient{cc}
 }
 
-func (c *contractServiceClient) CreateContract(ctx context.Context, in *CreateContractRequest, opts ...grpc.CallOption) (*ContractIdResponse, error) {
-	out := new(ContractIdResponse)
-	err := c.cc.Invoke(ctx, "/ContractService/CreateContract", in, out, opts...)
+func (c *contractGrpcServiceClient) CreateContract(ctx context.Context, in *CreateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
+	out := new(ContractIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/CreateContract", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ContractServiceServer is the server API for ContractService service.
-// All implementations should embed UnimplementedContractServiceServer
+// ContractGrpcServiceServer is the server API for ContractGrpcService service.
+// All implementations should embed UnimplementedContractGrpcServiceServer
 // for forward compatibility
-type ContractServiceServer interface {
-	CreateContract(context.Context, *CreateContractRequest) (*ContractIdResponse, error)
+type ContractGrpcServiceServer interface {
+	CreateContract(context.Context, *CreateContractGrpcRequest) (*ContractIdGrpcResponse, error)
 }
 
-// UnimplementedContractServiceServer should be embedded to have forward compatible implementations.
-type UnimplementedContractServiceServer struct {
+// UnimplementedContractGrpcServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedContractGrpcServiceServer struct {
 }
 
-func (UnimplementedContractServiceServer) CreateContract(context.Context, *CreateContractRequest) (*ContractIdResponse, error) {
+func (UnimplementedContractGrpcServiceServer) CreateContract(context.Context, *CreateContractGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContract not implemented")
 }
 
-// UnsafeContractServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ContractServiceServer will
+// UnsafeContractGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ContractGrpcServiceServer will
 // result in compilation errors.
-type UnsafeContractServiceServer interface {
-	mustEmbedUnimplementedContractServiceServer()
+type UnsafeContractGrpcServiceServer interface {
+	mustEmbedUnimplementedContractGrpcServiceServer()
 }
 
-func RegisterContractServiceServer(s grpc.ServiceRegistrar, srv ContractServiceServer) {
-	s.RegisterService(&ContractService_ServiceDesc, srv)
+func RegisterContractGrpcServiceServer(s grpc.ServiceRegistrar, srv ContractGrpcServiceServer) {
+	s.RegisterService(&ContractGrpcService_ServiceDesc, srv)
 }
 
-func _ContractService_CreateContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateContractRequest)
+func _ContractGrpcService_CreateContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateContractGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ContractServiceServer).CreateContract(ctx, in)
+		return srv.(ContractGrpcServiceServer).CreateContract(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ContractService/CreateContract",
+		FullMethod: "/ContractGrpcService/CreateContract",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContractServiceServer).CreateContract(ctx, req.(*CreateContractRequest))
+		return srv.(ContractGrpcServiceServer).CreateContract(ctx, req.(*CreateContractGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// ContractService_ServiceDesc is the grpc.ServiceDesc for ContractService service.
+// ContractGrpcService_ServiceDesc is the grpc.ServiceDesc for ContractGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var ContractService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ContractService",
-	HandlerType: (*ContractServiceServer)(nil),
+var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "ContractGrpcService",
+	HandlerType: (*ContractGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CreateContract",
-			Handler:    _ContractService_CreateContract_Handler,
+			Handler:    _ContractGrpcService_CreateContract_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

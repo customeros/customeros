@@ -39,6 +39,7 @@ type Repositories struct {
 	CustomFieldRepository      CustomFieldRepository
 	CommentRepository          CommentRepository
 	OpportunityRepository      OpportunityRepository
+	ContractRepository         ContractRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *gorm.DB, log logger.Logger) *Repositories {
@@ -68,6 +69,7 @@ func InitRepos(driver *neo4j.DriverWithContext, neo4jDatabase string, gormDb *go
 		CustomFieldRepository:      NewCustomFieldRepository(driver),
 		CommentRepository:          NewCommentRepository(driver, neo4jDatabase),
 		OpportunityRepository:      NewOpportunityRepository(driver, neo4jDatabase),
+		ContractRepository:         NewContractRepository(driver, neo4jDatabase),
 	}
 
 	err := gormDb.AutoMigrate(&entity.CustomerOsIds{})

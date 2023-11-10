@@ -3,6 +3,7 @@ package server
 import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/comment"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
@@ -102,4 +103,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	opportunityService := service.NewOpportunityService(server.log, server.commandHandlers.Opportunity, server.aggregateStore)
 	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, opportunityService)
+
+	contractService := service.NewContractService(server.log, server.commandHandlers.Contract, server.aggregateStore)
+	contractpb.RegisterContractGrpcServiceServer(grpcServer, contractService)
 }

@@ -21,7 +21,7 @@ type Opportunity struct {
 	OwnerUserId       string                       `json:"ownerUserId"`
 	CreatedByUserId   string                       `json:"createdByUserId"`
 	Source            commonmodel.Source           `json:"source"`
-	ExternalSystems   []commonmodel.ExternalSystem `json:"externalSystem"`
+	ExternalSystems   []commonmodel.ExternalSystem `json:"externalSystems"`
 	GeneralNotes      string                       `json:"generalNotes"`
 	NextSteps         string                       `json:"nextSteps"`
 	CreatedAt         time.Time                    `json:"createdAt"`

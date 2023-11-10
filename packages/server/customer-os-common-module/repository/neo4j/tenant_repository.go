@@ -22,13 +22,13 @@ func NewTenantRepository(driver *neo4j.DriverWithContext) TenantRepository {
 	}
 }
 
-func (u *tenantRepository) TenantExists(ctx context.Context, tenantName string) (bool, error) {
+func (r *tenantRepository) TenantExists(ctx context.Context, tenantName string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.TenantExists")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "neo4jRepository")
 	span.LogFields(log.String("tenantName", tenantName))
 
-	session := (*u.driver).NewSession(
+	session := (*r.driver).NewSession(
 		ctx,
 		neo4j.SessionConfig{
 			AccessMode: neo4j.AccessModeRead,
@@ -39,8 +39,7 @@ func (u *tenantRepository) TenantExists(ctx context.Context, tenantName string) 
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$name})
-			RETURN t.id`,
+			MATCH (t:Tenant {name:$name}) RETURN t.name`,
 			map[string]interface{}{
 				"name": tenantName,
 			})

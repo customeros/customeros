@@ -31,6 +31,7 @@ const (
 	NodeLabel_Issue            = "Issue"
 	NodeLabel_Comment          = "Comment"
 	NodeLabel_Opportunity      = "Opportunity"
+	NodeLabel_Contract         = "Contract"
 
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 	ApiKeyHeader    = "X-Openline-API-KEY"
