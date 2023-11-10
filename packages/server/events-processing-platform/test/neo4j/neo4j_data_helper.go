@@ -235,6 +235,30 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	return phoneNumberId
 }
 
+func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, entity entity.EmailEntity) string {
+	emailId := utils.NewUUIDIfEmpty(entity.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+								MERGE (e:Email {id:$emailId})
+								MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+								ON CREATE SET e:Email_%s,
+									e.email=$email,
+									e.rawEmail=$rawEmail,
+									e.isReachable=$isReachable,
+									e.createdAt=$createdAt,
+									e.updatedAt=$updatedAt
+							`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":      tenant,
+		"emailId":     emailId,
+		"email":       entity.Email,
+		"rawEmail":    entity.RawEmail,
+		"isReachable": entity.IsReachable,
+		"createdAt":   entity.CreatedAt,
+		"updatedAt":   entity.UpdatedAt,
+	})
+	return emailId
+}
+
 func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
 	locationId := utils.NewUUIDIfEmpty(location.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
