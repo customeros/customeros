@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	contactAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
@@ -93,7 +92,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	orgAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	orgAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	now := utils.Now()
 	event, err := event.NewContactLinkLocationEvent(orgAggregate, locationId, now)
 	require.Nil(t, err)
@@ -146,7 +145,7 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	phoneNumberLabel := "phoneNumberLabel"
 	updateTime := utils.Now()
 	event, err := events.NewContactLinkPhoneNumberEvent(contactAggregate, phoneNumberId, phoneNumberLabel, true, updateTime)
@@ -206,7 +205,7 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	emailLabel := "emailLabel"
 	updateTime := utils.Now()
 	event, err := events.NewContactLinkEmailEvent(contactAggregate, emailId, emailLabel, true, updateTime)
@@ -258,7 +257,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	jobTitle := "Test Title"
 	jobRoleDescription := "Test Description"
 	sourceFields := cmnmod.Source{
@@ -337,7 +336,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	source := constants.SourceOpenline
 	contactNameUpdate := "Contact Name Update"
 	contactFirstNameUpdate := "Contact FirstName Update"
