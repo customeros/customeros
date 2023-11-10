@@ -26,6 +26,17 @@ func MapRenewalLikelihoodFromModel(input *model.RenewalLikelihoodProbability) st
 	}
 }
 
+func MapRenewalLikelihoodFromString(input *string) string {
+	if input == nil {
+		return ""
+	}
+	if v, exists := probabilityByModel[model.RenewalLikelihoodProbability(*input)]; exists {
+		return v
+	} else {
+		return ""
+	}
+}
+
 func MapRenewalLikelihoodToModel(input string) *model.RenewalLikelihoodProbability {
 
 	if v, exists := probabilityByValue[input]; exists {
