@@ -128,6 +128,7 @@ type OrganizationPage implements Pages {
     content: [Organization!]!
     totalPages: Int!
     totalElements: Int64!
+    totalAvailable: Int64!
 }
 
 input OrganizationInput {

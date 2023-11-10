@@ -1189,9 +1189,10 @@ type OrganizationInput struct {
 }
 
 type OrganizationPage struct {
-	Content       []*Organization `json:"content"`
-	TotalPages    int             `json:"totalPages"`
-	TotalElements int64           `json:"totalElements"`
+	Content        []*Organization `json:"content"`
+	TotalPages     int             `json:"totalPages"`
+	TotalElements  int64           `json:"totalElements"`
+	TotalAvailable int64           `json:"totalAvailable"`
 }
 
 func (OrganizationPage) IsPages() {}
