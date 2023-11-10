@@ -201,3 +201,22 @@ func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
 	}
 	return &opportunity
 }
+
+func MapDbNodeToContractEntity(node dbtype.Node) *entity.ContractEntity {
+	props := utils.GetPropsFromNode(node)
+	contract := entity.ContractEntity{
+		Id:               utils.GetStringPropOrEmpty(props, "id"),
+		Name:             utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		ServiceStartedAt: utils.GetTimePropOrNil(props, "serviceStartedAt"),
+		SignedAt:         utils.GetTimePropOrNil(props, "signedAt"),
+		EndedAt:          utils.GetTimePropOrNil(props, "endedAt"),
+		RenewalCycle:     utils.GetStringPropOrEmpty(props, "renewalCycle"),
+		Status:           utils.GetStringPropOrEmpty(props, "status"),
+	}
+	return &contract
+}

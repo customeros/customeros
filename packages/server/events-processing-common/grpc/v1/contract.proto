@@ -21,7 +21,7 @@ enum RenewalCycle {
 }
 
 // CreateContract request message
-message CreateContractRequest {
+message CreateContractGrpcRequest {
   string tenant = 1;
   string loggedInUserId = 2;
   string organizationId = 3;
@@ -38,11 +38,11 @@ message CreateContractRequest {
 }
 
 // Contract response message
-message ContractIdResponse {
+message ContractIdGrpcResponse {
   string id = 1;
 }
 
 // Service definition
-service ContractService {
-  rpc CreateContract(CreateContractRequest) returns (ContractIdResponse);
+service ContractGrpcService {
+  rpc CreateContract(CreateContractGrpcRequest) returns (ContractIdGrpcResponse);
 }

@@ -6,6 +6,7 @@ import (
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
+	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
@@ -46,6 +47,7 @@ type GraphSubscriber struct {
 	issueEventHandler        *GraphIssueEventHandler
 	commentEventHandler      *GraphCommentEventHandler
 	opportunityEventHandler  *OpportunityEventHandler
+	contractEventHandler     *ContractEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commandHandlers *command.CommandHandlers, cfg *config.Config) *GraphSubscriber {
@@ -66,6 +68,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		issueEventHandler:        &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
 		commentEventHandler:      &GraphCommentEventHandler{repositories: repositories, log: log},
 		opportunityEventHandler:  &OpportunityEventHandler{repositories: repositories, log: log},
+		contractEventHandler:     &ContractEventHandler{repositories: repositories, log: log},
 	}
 }
 
@@ -289,6 +292,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	case opportunityevent.OpportunityCreateV1:
 		return s.opportunityEventHandler.OnCreate(ctx, evt)
+
+	case contractevent.ContractCreateV1:
+		return s.contractEventHandler.OnCreate(ctx, evt)
+
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType
