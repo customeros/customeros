@@ -6,14 +6,18 @@ import { Input } from '@ui/form/Input';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { InputGroup, InputLeftElement } from '@ui/form/InputGroup';
 
-interface SearchProps {
-  placeholder?: string;
-}
-
-export const Search = ({ placeholder }: SearchProps) => {
+export const Search = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultValue = searchParams?.get('search') ?? '';
+  const preset = searchParams?.get('preset');
+
+  const placeholder =
+    preset === 'customer'
+      ? 'Search customers'
+      : preset === 'portfolio'
+      ? 'Search portfolio'
+      : 'Search organizations';
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;

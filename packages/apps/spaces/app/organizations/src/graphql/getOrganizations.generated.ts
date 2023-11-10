@@ -34,6 +34,7 @@ export type GetOrganizationsQuery = {
   dashboardView_Organizations?: {
     __typename?: 'OrganizationPage';
     totalElements: any;
+    totalAvailable: any;
     content: Array<{
       __typename?: 'Organization';
       id: string;
@@ -390,6 +391,7 @@ export const GetOrganizationsDocument = `
       }
     }
     totalElements
+    totalAvailable
   }
 }
     `;
