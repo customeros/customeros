@@ -17,6 +17,7 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getFacetedRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
 
@@ -44,18 +45,15 @@ interface TableProps<T extends object> {
   onFetchMore?: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: ColumnDef<T, any>[];
-  filters?: ColumnFiltersState;
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
   onSortingChange?: OnChangeFn<SortingState>;
-  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
 
 export const Table = <T extends object>({
   data,
   columns,
-  filters,
   isLoading,
   onFetchMore,
   canFetchMore,
@@ -65,7 +63,6 @@ export const Table = <T extends object>({
   renderTableActions,
   enableRowSelection,
   enableTableActions,
-  onColumnFiltersChange,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -81,6 +78,7 @@ export const Table = <T extends object>({
     enableColumnFilters: true,
     getCoreRowModel: getCoreRowModel<T>(),
     getSortedRowModel: getSortedRowModel<T>(),
+    getFacetedRowModel: getFacetedRowModel<T>(),
     getFilteredRowModel: getFilteredRowModel<T>(),
     onSortingChange: onSortingChange ?? setSorting,
   });

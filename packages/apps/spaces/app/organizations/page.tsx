@@ -37,7 +37,6 @@ export default function OrganizationsPage() {
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
-  // const router = useRouter();
 
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -67,12 +66,12 @@ export default function OrganizationsPage() {
       if (preset) {
         const [property, value] = (() => {
           if (preset === 'customer') {
-            return ['IS_CUSTOMER', true];
+            return ['IS_CUSTOMER', [true]];
           }
           if (preset === 'portfolio') {
             const userId = globalCache?.global_Cache?.user.id;
 
-            return ['OWNER_ID', userId];
+            return ['OWNER_ID', [userId]];
           }
 
           return [];
@@ -101,16 +100,71 @@ export default function OrganizationsPage() {
         });
       }
 
+      if (columnFilters?.website?.isActive && columnFilters?.website?.value) {
+        draft.AND.push({
+          filter: {
+            property: 'WEBSITE',
+            value: columnFilters?.website?.value,
+            operation: ComparisonOperator.Contains,
+          },
+        });
+      }
+
       if (
         columnFilters?.relationship.isActive &&
-        columnFilters?.relationship.value.length > 0 &&
-        columnFilters?.relationship.value.length < 2
+        columnFilters?.relationship?.value
       ) {
         draft.AND.push({
           filter: {
             property: 'IS_CUSTOMER',
-            value: columnFilters.relationship.value[0],
-            operation: ComparisonOperator.Eq,
+            value: columnFilters.relationship.value,
+            operation: ComparisonOperator.In,
+          },
+        });
+      }
+
+      if (
+        columnFilters?.renewalLikelihood?.isActive &&
+        columnFilters?.renewalLikelihood?.value
+      ) {
+        draft.AND.push({
+          filter: {
+            property: 'RENEWAL_LIKELIHOOD',
+            value: columnFilters?.renewalLikelihood?.value,
+            operation: ComparisonOperator.In,
+          },
+        });
+      }
+
+      if (
+        columnFilters?.timeToRenewal?.isActive &&
+        columnFilters?.timeToRenewal?.value
+      ) {
+        draft.AND.push({
+          filter: {
+            property: 'RENEWAL_CYCLE_NEXT',
+            value: columnFilters?.timeToRenewal?.value,
+            operation: ComparisonOperator.Lte,
+          },
+        });
+      }
+
+      if (columnFilters?.forecast.isActive && columnFilters?.forecast.value) {
+        draft.AND.push({
+          filter: {
+            property: 'FORECAST_AMOUNT',
+            value: columnFilters?.forecast.value,
+            operation: ComparisonOperator.Between,
+          },
+        });
+      }
+
+      if (columnFilters?.owner.isActive && columnFilters?.owner.value) {
+        draft.AND.push({
+          filter: {
+            property: 'OWNER_ID',
+            value: columnFilters?.owner.value,
+            operation: ComparisonOperator.In,
           },
         });
       }
@@ -118,10 +172,21 @@ export default function OrganizationsPage() {
   }, [
     searchParams?.toString(),
     globalCache?.global_Cache?.user.id,
-    columnFilters?.organization?.value,
-    columnFilters?.relationship.isActive,
     columnFilters?.organization?.isActive,
-    columnFilters.relationship.value.length,
+    columnFilters?.organization?.value,
+    columnFilters?.website?.isActive,
+    columnFilters?.website.value,
+    columnFilters?.relationship.isActive,
+    columnFilters?.relationship?.value.length,
+    columnFilters?.renewalLikelihood?.isActive,
+    columnFilters?.renewalLikelihood?.value.length,
+    columnFilters?.timeToRenewal?.isActive,
+    columnFilters?.timeToRenewal?.value,
+    columnFilters?.forecast?.isActive,
+    columnFilters?.forecast?.value[0],
+    columnFilters?.forecast?.value[1],
+    columnFilters?.owner?.isActive,
+    columnFilters?.owner?.value.length,
   ]);
 
   const sortBy: SortBy | undefined = useMemo(() => {
@@ -157,10 +222,21 @@ export default function OrganizationsPage() {
       ) as Organization[]) || [],
     [
       data,
-      columnFilters?.organization?.value,
-      columnFilters?.relationship.isActive,
       columnFilters?.organization?.isActive,
-      columnFilters.relationship.value.length,
+      columnFilters?.organization?.value,
+      columnFilters?.website?.isActive,
+      columnFilters?.website.value,
+      columnFilters?.relationship.isActive,
+      columnFilters?.relationship?.value.length,
+      columnFilters?.renewalLikelihood?.isActive,
+      columnFilters?.renewalLikelihood?.value.length,
+      columnFilters?.timeToRenewal?.isActive,
+      columnFilters?.timeToRenewal?.value,
+      columnFilters?.forecast?.isActive,
+      columnFilters?.forecast?.value[0],
+      columnFilters?.forecast?.value[1],
+      columnFilters?.owner?.isActive,
+      columnFilters?.owner?.value.length,
     ],
   );
 

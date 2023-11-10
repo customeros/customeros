@@ -38,8 +38,11 @@ export const OwnerFilter = ({ column, initialFocusRef }: OwnerFilterProps) => {
     const items = data?.users.content ?? [];
     if (!searchValue) return items;
 
-    return items.filter(({ name }) =>
-      name?.toLowerCase().includes(searchValue.toLowerCase()),
+    return items.filter(
+      ({ name, firstName, lastName }) =>
+        name?.toLowerCase().includes(searchValue.toLowerCase()) ||
+        firstName?.toLowerCase().includes(searchValue.toLowerCase()) ||
+        lastName?.toLowerCase().includes(searchValue.toLowerCase()),
     );
   }, [data?.users.content, searchValue]);
 

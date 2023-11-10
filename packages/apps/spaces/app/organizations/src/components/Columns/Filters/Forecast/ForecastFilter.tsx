@@ -11,7 +11,7 @@ import {
 } from 'react';
 
 import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
+// import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
 import { Flex } from '@ui/layout/Flex';
@@ -30,7 +30,7 @@ import {
 
 import {
   useForecastFilter,
-  ForecastFilterSelector,
+  // ForecastFilterSelector,
 } from './ForecastFilter.atom';
 
 interface ForecastFilterProps {
@@ -41,7 +41,7 @@ interface ForecastFilterProps {
 export const ForecastFilter = memo(
   ({ column, initialFocusRef }: ForecastFilterProps) => {
     const [filter, setFilter] = useForecastFilter();
-    const filterValue = useRecoilValue(ForecastFilterSelector);
+    // const filterValue = useRecoilValue(ForecastFilterSelector);
     const [_, startTransition] = useTransition();
     const [displayValue, setDisplayValue] = useState<[number, number]>(
       () => filter.value,
@@ -71,8 +71,6 @@ export const ForecastFilter = memo(
 
     const handleInputChange = useCallback(
       (index: number) => (value: number) => {
-        // setIsFocused(null);
-
         setFilter((prev) => {
           return produce(prev, (draft) => {
             draft.isActive = true;
@@ -97,11 +95,13 @@ export const ForecastFilter = memo(
       });
     };
 
-    useEffect(() => {
-      column.setFilterValue(
-        filterValue.isActive ? filterValue.value : undefined,
-      );
-    }, [filterValue.value[0], filterValue.value[1], filterValue.isActive]);
+    // investigate why this does not work
+
+    // useEffect(() => {
+    //   column.setFilterValue(
+    //     filterValue.isActive ? filterValue.value : undefined,
+    //   );
+    // }, [filterValue.value[0], filterValue.value[1], filterValue.isActive]);
 
     return (
       <>

@@ -9,12 +9,9 @@ export const filterRelationshipFn: FilterFn<Organization> = (
 ) => {
   const value = row.getValue(id);
 
-  if (filterValue.length === 2) {
-    return filterValue.includes(value);
-  }
-
-  return filterValue[0] === value;
+  return filterValue.includes(value);
 };
+
 filterRelationshipFn.autoRemove = (filterValue) => {
-  return !filterValue || filterValue.length === 0;
+  return !filterValue;
 };

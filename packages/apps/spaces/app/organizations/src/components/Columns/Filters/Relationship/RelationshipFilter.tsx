@@ -9,6 +9,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Switch } from '@ui/form/Switch';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
+import { Organization } from '@graphql/types';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
 
 import {
@@ -16,18 +17,16 @@ import {
   RelationshipFilterSelector,
 } from './RelationshipFilter.atom';
 
-interface RelationshipFilterProps<T> {
-  column: Column<T>;
+interface RelationshipFilterProps {
+  column: Column<Organization>;
 }
 
-export const RelationshipFilter = <T,>({
-  column,
-}: RelationshipFilterProps<T>) => {
+export const RelationshipFilter = ({ column }: RelationshipFilterProps) => {
   const [filter, setFilter] = useRelationshipFilter();
   const filterValue = useRecoilValue(RelationshipFilterSelector);
   const [_, startTransition] = useTransition();
 
-  const handleSelect = (value: string) => () => {
+  const handleSelect = (value: boolean) => () => {
     startTransition(() => {
       setFilter((prev) =>
         produce(prev, (draft) => {
@@ -58,7 +57,7 @@ export const RelationshipFilter = <T,>({
   }, [filterValue.value.length, filterValue.isActive]);
 
   return (
-    <CheckboxGroup size='md' value={filter.value}>
+    <CheckboxGroup size='md' value={filter.value?.map((v) => String(v))}>
       <Flex
         mb='2'
         flexDir='row'
@@ -76,10 +75,10 @@ export const RelationshipFilter = <T,>({
         />
       </Flex>
       <VStack spacing={2} align='flex-start'>
-        <Checkbox value='customer' onChange={handleSelect('customer')}>
+        <Checkbox value='true' onChange={handleSelect(true)}>
           <Text fontSize='sm'>Customer</Text>
         </Checkbox>
-        <Checkbox value='prospect' onChange={handleSelect('prospect')}>
+        <Checkbox value='false' onChange={handleSelect(false)}>
           <Text fontSize='sm'>Prospect</Text>
         </Checkbox>
       </VStack>

@@ -1,34 +1,21 @@
 import { atom, selector, useRecoilState } from 'recoil';
 
 interface RelationshipFilterState {
-  value: string[];
+  value: boolean[];
   isActive: boolean;
 }
 
 export const RelationshipFilterAtom = atom<RelationshipFilterState>({
   key: 'relationship-filter',
   default: {
-    value: ['customer', 'prospect'],
+    value: [true, false],
     isActive: false,
   },
 });
 
-export const getRelationshipFilterValue = (state: RelationshipFilterState) => {
-  const value = state.value.map((item) => (item === 'customer' ? true : false));
-
-  return {
-    value,
-    isActive: state.isActive,
-  };
-};
-
 export const RelationshipFilterSelector = selector({
   key: 'relationship-filter-selector',
-  get: ({ get }) => {
-    const state = get(RelationshipFilterAtom);
-
-    return getRelationshipFilterValue(state);
-  },
+  get: ({ get }) => get(RelationshipFilterAtom),
 });
 
 export const useRelationshipFilter = () => {
