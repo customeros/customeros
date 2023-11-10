@@ -22,6 +22,7 @@ import (
 )
 
 type OrganizationService interface {
+	CountOrganizations(ctx context.Context, tenant string) (int64, error)
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
 	GetById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	ExistsById(ctx context.Context, organizationId string) (bool, error)
@@ -78,6 +79,15 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 		repositories: repositories,
 		grpcClients:  grpcClients,
 	}
+}
+
+func (s *organizationService) CountOrganizations(ctx context.Context, tenant string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CountOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("tenant", tenant))
+
+	return s.repositories.OrganizationRepository.CountOrganizations(ctx, tenant)
 }
 
 func (s *organizationService) ExistsById(ctx context.Context, organizationId string) (bool, error) {

@@ -20,6 +20,7 @@ const (
 )
 
 type OrganizationRepository interface {
+	CountOrganizations(ctx context.Context, tenant string) (int64, error)
 	GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -71,6 +72,32 @@ func (r *organizationRepository) Archive(ctx context.Context, organizationId str
 		"now":            utils.Now(),
 	})
 	return err
+}
+
+func (r *organizationRepository) CountOrganizations(ctx context.Context, tenant string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CountOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
+			RETURN count(org)`,
+			map[string]any{
+				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Single(ctx)
+		}
+	})
+	if err != nil {
+		return 0, err
+	}
+	return dbRecord.(*db.Record).Values[0].(int64), nil
 }
 
 func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {

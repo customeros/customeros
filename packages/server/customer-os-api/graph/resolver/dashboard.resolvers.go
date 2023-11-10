@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -59,9 +60,17 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
 		return nil, nil
 	}
+	countOrganizations, err := r.Services.OrganizationService.CountOrganizations(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
+		return nil, nil
+	}
+
 	return &model.OrganizationPage{
-		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
+		Content:        mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
+		TotalPages:     paginatedResult.TotalPages,
+		TotalElements:  paginatedResult.TotalRows,
+		TotalAvailable: countOrganizations,
 	}, err
 }
