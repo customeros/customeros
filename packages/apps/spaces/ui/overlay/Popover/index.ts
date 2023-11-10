@@ -2,6 +2,8 @@ export {
   Popover,
   PopoverArrow,
   PopoverBody,
+  PopoverHeader,
+  PopoverFooter,
   PopoverContent,
   PopoverTrigger,
   Portal,

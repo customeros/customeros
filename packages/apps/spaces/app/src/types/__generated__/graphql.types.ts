@@ -150,8 +150,12 @@ export type Comment = {
 };
 
 export enum ComparisonOperator {
+  Between = 'BETWEEN',
   Contains = 'CONTAINS',
   Eq = 'EQ',
+  Gte = 'GTE',
+  In = 'IN',
+  Lte = 'LTE',
   StartsWith = 'STARTS_WITH',
 }
 
@@ -1309,6 +1313,7 @@ export type Mutation = {
   note_UnlinkAttachment: Note;
   note_Update: Note;
   organization_AddNewLocation: Location;
+  /** @deprecated No longer supported */
   organization_AddRelationship: Organization;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
@@ -1318,10 +1323,13 @@ export type Mutation = {
   organization_Hide: Scalars['ID'];
   organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
+  /** @deprecated No longer supported */
   organization_RemoveRelationship: Organization;
+  /** @deprecated No longer supported */
   organization_RemoveRelationshipStage: Organization;
   organization_RemoveSubsidiary: Organization;
   organization_SetOwner: Organization;
+  /** @deprecated No longer supported */
   organization_SetRelationshipStage: Organization;
   organization_Show: Scalars['ID'];
   organization_ShowAll?: Maybe<Result>;
@@ -2046,7 +2054,9 @@ export type Organization = Node & {
   owner?: Maybe<User>;
   phoneNumbers: Array<PhoneNumber>;
   referenceId?: Maybe<Scalars['String']>;
+  /** @deprecated No longer supported */
   relationshipStages: Array<OrganizationRelationshipStage>;
+  /** @deprecated No longer supported */
   relationships: Array<OrganizationRelationship>;
   socials: Array<Social>;
   source: DataSource;

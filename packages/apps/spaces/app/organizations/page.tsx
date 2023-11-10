@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import { produce } from 'immer';
@@ -20,11 +20,12 @@ import {
   ComparisonOperator,
 } from '@graphql/types';
 
+import { useTableState } from './src/state';
 import { Search } from './src/components/Search';
 import { TableActions } from './src/components/Actions';
 import { useOrganizationsPageMethods } from './src/hooks';
 import { getColumns } from './src/components/Columns/Columns';
-import EmptyState from './src/components/EmptyState/EmptyState';
+// import EmptyState from './src/components/EmptyState/EmptyState';
 import { useGetOrganizationsInfiniteQuery } from './src/hooks/useGetOrganizationsInfiniteQuery';
 
 export default function OrganizationsPage() {
@@ -36,9 +37,10 @@ export default function OrganizationsPage() {
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
-  const router = useRouter();
 
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const { columnFilters } = useTableState();
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
   const { createOrganization } = useOrganizationsPageMethods();
   const isRestoring = useIsRestoring();
@@ -64,12 +66,12 @@ export default function OrganizationsPage() {
       if (preset) {
         const [property, value] = (() => {
           if (preset === 'customer') {
-            return ['IS_CUSTOMER', true];
+            return ['IS_CUSTOMER', [true]];
           }
           if (preset === 'portfolio') {
             const userId = globalCache?.global_Cache?.user.id;
 
-            return ['OWNER_ID', userId];
+            return ['OWNER_ID', [userId]];
           }
 
           return [];
@@ -83,8 +85,110 @@ export default function OrganizationsPage() {
           },
         });
       }
+
+      if (
+        columnFilters?.organization?.isActive &&
+        columnFilters?.organization?.value
+      ) {
+        draft.AND.push({
+          filter: {
+            property: 'ORGANIZATION',
+            value: columnFilters?.organization?.value,
+            operation: ComparisonOperator.Contains,
+            caseSensitive: false,
+          },
+        });
+      }
+
+      if (columnFilters?.website?.isActive && columnFilters?.website?.value) {
+        draft.AND.push({
+          filter: {
+            property: 'WEBSITE',
+            value: columnFilters?.website?.value,
+            operation: ComparisonOperator.Contains,
+          },
+        });
+      }
+
+      if (
+        columnFilters?.relationship.isActive &&
+        columnFilters?.relationship?.value
+      ) {
+        draft.AND.push({
+          filter: {
+            property: 'IS_CUSTOMER',
+            value: columnFilters.relationship.value,
+            operation: ComparisonOperator.In,
+          },
+        });
+      }
+
+      if (
+        columnFilters?.renewalLikelihood?.isActive &&
+        columnFilters?.renewalLikelihood?.value
+      ) {
+        draft.AND.push({
+          filter: {
+            property: 'RENEWAL_LIKELIHOOD',
+            value: columnFilters?.renewalLikelihood?.value,
+            operation: ComparisonOperator.In,
+          },
+        });
+      }
+
+      if (
+        columnFilters?.timeToRenewal?.isActive &&
+        columnFilters?.timeToRenewal?.value
+      ) {
+        draft.AND.push({
+          filter: {
+            property: 'RENEWAL_CYCLE_NEXT',
+            value: columnFilters?.timeToRenewal?.value,
+            operation: ComparisonOperator.Lte,
+          },
+        });
+      }
+
+      if (columnFilters?.forecast.isActive && columnFilters?.forecast.value) {
+        draft.AND.push({
+          filter: {
+            property: 'FORECAST_AMOUNT',
+            value: columnFilters?.forecast.value,
+            operation: ComparisonOperator.Between,
+          },
+        });
+      }
+
+      if (columnFilters?.owner.isActive && columnFilters?.owner.value) {
+        draft.AND.push({
+          filter: {
+            property: 'OWNER_ID',
+            value: columnFilters?.owner.value,
+            operation: ComparisonOperator.In,
+          },
+        });
+      }
     });
-  }, [searchParams?.toString(), globalCache?.global_Cache?.user.id]);
+  }, [
+    searchParams?.toString(),
+    globalCache?.global_Cache?.user.id,
+    columnFilters?.organization?.isActive,
+    columnFilters?.organization?.value,
+    columnFilters?.website?.isActive,
+    columnFilters?.website.value,
+    columnFilters?.relationship.isActive,
+    columnFilters?.relationship?.value.length,
+    columnFilters?.renewalLikelihood?.isActive,
+    columnFilters?.renewalLikelihood?.value.length,
+    columnFilters?.timeToRenewal?.isActive,
+    columnFilters?.timeToRenewal?.value,
+    columnFilters?.forecast?.isActive,
+    columnFilters?.forecast?.value[0],
+    columnFilters?.forecast?.value[1],
+    columnFilters?.owner?.isActive,
+    columnFilters?.owner?.value.length,
+  ]);
+
   const sortBy: SortBy | undefined = useMemo(() => {
     if (!sorting.length) return;
 
@@ -94,7 +198,6 @@ export default function OrganizationsPage() {
       caseSensitive: false,
     };
   }, [sorting]);
-
   const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
     useGetOrganizationsInfiniteQuery(
       client,
@@ -117,7 +220,24 @@ export default function OrganizationsPage() {
       (data?.pages?.flatMap(
         (o) => o.dashboardView_Organizations?.content,
       ) as Organization[]) || [],
-    [data],
+    [
+      data,
+      columnFilters?.organization?.isActive,
+      columnFilters?.organization?.value,
+      columnFilters?.website?.isActive,
+      columnFilters?.website.value,
+      columnFilters?.relationship.isActive,
+      columnFilters?.relationship?.value.length,
+      columnFilters?.renewalLikelihood?.isActive,
+      columnFilters?.renewalLikelihood?.value.length,
+      columnFilters?.timeToRenewal?.isActive,
+      columnFilters?.timeToRenewal?.value,
+      columnFilters?.forecast?.isActive,
+      columnFilters?.forecast?.value[0],
+      columnFilters?.forecast?.value[1],
+      columnFilters?.owner?.isActive,
+      columnFilters?.owner?.value.length,
+    ],
   );
 
   const allOrganizationIds = flatData.map((o) => o?.id);
@@ -157,33 +277,34 @@ export default function OrganizationsPage() {
     );
   }, [sortBy, searchParams?.toString(), data?.pageParams]);
 
-  if (
-    data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
-    !searchTerm
-  ) {
-    const emptyOrganization = {
-      title: "Let's get started",
-      description:
-        'Start seeing your customer conversations all in one place by adding an organization',
-      buttonLabel: 'Add Organization',
-      onClick: handleCreateOrganization,
-    };
-    const myPortfolioEmpty = {
-      title: 'No organizations assigned to you yet',
-      description:
-        'Currently, you have not been assigned to any organizations.\n' +
-        '\n' +
-        'Head to your list of organizations and assign yourself as an owner to one of them.',
-      buttonLabel: 'Go to Organizations',
-      onClick: () => {
-        router.push(`/organizations`);
-      },
-    };
-    const emptyState =
-      preset === 'portfolio' ? myPortfolioEmpty : emptyOrganization;
+  // this should only enter if no rows are present for this tenant in db
+  // if (
+  //   data?.pages?.[0].dashboardView_Organizations?.totalElements === 0 &&
+  //   !searchTerm
+  // ) {
+  //   const emptyOrganization = {
+  //     title: "Let's get started",
+  //     description:
+  //       'Start seeing your customer conversations all in one place by adding an organization',
+  //     buttonLabel: 'Add Organization',
+  //     onClick: handleCreateOrganization,
+  //   };
+  //   const myPortfolioEmpty = {
+  //     title: 'No organizations assigned to you yet',
+  //     description:
+  //       'Currently, you have not been assigned to any organizations.\n' +
+  //       '\n' +
+  //       'Head to your list of organizations and assign yourself as an owner to one of them.',
+  //     buttonLabel: 'Go to Organizations',
+  //     onClick: () => {
+  //       router.push(`/organizations`);
+  //     },
+  //   };
+  //   const emptyState =
+  //     preset === 'portfolio' ? myPortfolioEmpty : emptyOrganization;
 
-    return <EmptyState {...emptyState} />;
-  }
+  //   return <EmptyState {...emptyState} />;
+  // }
 
   return (
     <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
@@ -204,10 +325,10 @@ export default function OrganizationsPage() {
         sorting={sorting}
         enableTableActions
         enableRowSelection
-        isLoading={isRestoring ? false : isLoading}
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
+        isLoading={isRestoring ? false : isLoading}
         totalItems={
           isRestoring
             ? 40
