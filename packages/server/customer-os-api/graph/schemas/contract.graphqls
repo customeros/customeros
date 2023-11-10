@@ -1,5 +1,8 @@
+extend type Query {
+    contract(id: ID!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
 extend type Mutation {
-    contract_Create(input: ContractInput!): Contract!
+    contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, OWNER]) @hasTenant
 }
 
 type Contract implements Node {

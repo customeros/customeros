@@ -27,6 +27,11 @@ func (r *mutationResolver) ContractCreate(ctx context.Context, input model.Contr
 	panic(fmt.Errorf("not implemented: ContractCreate - contract_Create"))
 }
 
+// Contract is the resolver for the contract field.
+func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contract, error) {
+	panic(fmt.Errorf("not implemented: Contract - contract"))
+}
+
 // Contract returns generated.ContractResolver implementation.
 func (r *Resolver) Contract() generated.ContractResolver { return &contractResolver{r} }
 
