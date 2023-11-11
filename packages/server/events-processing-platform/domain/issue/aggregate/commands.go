@@ -74,7 +74,7 @@ func (a *IssueAggregate) updateIssue(ctx context.Context, cmd *command.UpsertIss
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	source := cmd.Source.Source
 	if source == "" {
-		source = a.Issue.Source.Source
+		source = a.Issue.Source.SourceOfTruth
 	}
 
 	updateEvent, err := event.NewIssueUpdateEvent(a, cmd.DataFields, cmd.Source.Source, cmd.ExternalSystem, updatedAtNotNil)

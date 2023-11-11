@@ -107,7 +107,7 @@ func (r *issueRepository) Update(ctx context.Context, tenant, issueId string, ev
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.Update")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
-	span.LogFields(log.String("issueId", issueId), log.Object("event", fmt.Sprintf("%+v", evt)))
+	span.LogFields(log.String("issueId", issueId), log.Object("event", evt))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})
 		 	SET	

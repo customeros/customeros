@@ -37,8 +37,6 @@ type ContractDataFields struct {
 	Status               ContractStatus
 	Source               commonmodel.Source
 	ExternalSystemFields commonmodel.ExternalSystem
-	CreatedAt            time.Time
-	UpdatedAt            time.Time
 }
 
 // ContractStatus represents the status of a contract.
@@ -77,11 +75,11 @@ func (cs ContractStatus) String() string {
 func (rc RenewalCycle) String() string {
 	switch rc {
 	case None:
-		return "NONE"
+		return ""
 	case MonthlyRenewal:
-		return "MONTHLY_RENEWAL"
+		return "MONTHLY"
 	case AnnuallyRenewal:
-		return "ANNUALLY_RENEWAL"
+		return "ANNUALLY"
 	default:
 		return ""
 	}

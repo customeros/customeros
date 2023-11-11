@@ -37,6 +37,21 @@ message CreateContractGrpcRequest {
   string contractUrl = 14;
 }
 
+message UpdateContractGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string name = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+  google.protobuf.Timestamp serviceStartedAt = 6;
+  google.protobuf.Timestamp signedAt = 7;
+  google.protobuf.Timestamp endedAt = 8;
+  RenewalCycle renewalCycle = 9;
+  SourceFields sourceFields = 10;
+  ExternalSystemFields externalSystemFields = 11;
+  string contractUrl = 12;
+}
+
 // Contract response message
 message ContractIdGrpcResponse {
   string id = 1;
@@ -45,4 +60,5 @@ message ContractIdGrpcResponse {
 // Service definition
 service ContractGrpcService {
   rpc CreateContract(CreateContractGrpcRequest) returns (ContractIdGrpcResponse);
+  rpc UpdateContract(UpdateContractGrpcRequest) returns (ContractIdGrpcResponse);
 }
