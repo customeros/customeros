@@ -193,20 +193,24 @@ type ComplexityRoot struct {
 	}
 
 	Contract struct {
-		AppSource        func(childComplexity int) int
-		CreatedAt        func(childComplexity int) int
-		CustomerOsID     func(childComplexity int) int
-		ExternalLinks    func(childComplexity int) int
-		ID               func(childComplexity int) int
-		Name             func(childComplexity int) int
-		OrganizationID   func(childComplexity int) int
-		Owner            func(childComplexity int) int
-		RenewalCycle     func(childComplexity int) int
-		ServiceStartedAt func(childComplexity int) int
-		SignedAt         func(childComplexity int) int
-		SourceFields     func(childComplexity int) int
-		Status           func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
+		AppSource                       func(childComplexity int) int
+		CreatedAt                       func(childComplexity int) int
+		CustomerOsID                    func(childComplexity int) int
+		ExternalLinks                   func(childComplexity int) int
+		ID                              func(childComplexity int) int
+		Name                            func(childComplexity int) int
+		OrganizationID                  func(childComplexity int) int
+		Owner                           func(childComplexity int) int
+		ReferenceID                     func(childComplexity int) int
+		RenewalCycle                    func(childComplexity int) int
+		ServiceStartedAt                func(childComplexity int) int
+		ServiceStartedAtTimelineEvent   func(childComplexity int) int
+		ServiceStartedAtTimelineEventID func(childComplexity int) int
+		SignedAt                        func(childComplexity int) int
+		Source                          func(childComplexity int) int
+		SourceFields                    func(childComplexity int) int
+		Status                          func(childComplexity int) int
+		UpdatedAt                       func(childComplexity int) int
 	}
 
 	Country struct {
@@ -981,7 +985,10 @@ type ContactResolver interface {
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error)
 }
 type ContractResolver interface {
+	ServiceStartedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error)
+
 	Owner(ctx context.Context, obj *model.Contract) (*model.User, error)
+
 	ExternalLinks(ctx context.Context, obj *model.Contract) ([]*model.ExternalSystem, error)
 }
 type CustomFieldResolver interface {
@@ -2009,6 +2016,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.Owner(childComplexity), true
 
+	case "Contract.referenceId":
+		if e.complexity.Contract.ReferenceID == nil {
+			break
+		}
+
+		return e.complexity.Contract.ReferenceID(childComplexity), true
+
 	case "Contract.renewalCycle":
 		if e.complexity.Contract.RenewalCycle == nil {
 			break
@@ -2023,12 +2037,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.ServiceStartedAt(childComplexity), true
 
+	case "Contract.serviceStartedAtTimelineEvent":
+		if e.complexity.Contract.ServiceStartedAtTimelineEvent == nil {
+			break
+		}
+
+		return e.complexity.Contract.ServiceStartedAtTimelineEvent(childComplexity), true
+
+	case "Contract.serviceStartedAtTimelineEventId":
+		if e.complexity.Contract.ServiceStartedAtTimelineEventID == nil {
+			break
+		}
+
+		return e.complexity.Contract.ServiceStartedAtTimelineEventID(childComplexity), true
+
 	case "Contract.signedAt":
 		if e.complexity.Contract.SignedAt == nil {
 			break
 		}
 
 		return e.complexity.Contract.SignedAt(childComplexity), true
+
+	case "Contract.source":
+		if e.complexity.Contract.Source == nil {
+			break
+		}
+
+		return e.complexity.Contract.Source(childComplexity), true
 
 	case "Contract.sourceFields":
 		if e.complexity.Contract.SourceFields == nil {
@@ -7583,18 +7618,24 @@ extend type Mutation {
 
 type Contract implements Node {
     id: ID!
+    referenceId:   String
     customerOsId: String!
     organizationId: String!
     createdAt:   Time!
     updatedAt:   Time!
+
     serviceStartedAt:   Time!
+    serviceStartedAtTimelineEventId: ID #we need this in order to use the dataloader for the serviceStartedAtTimelineEvent if asked
+    serviceStartedAtTimelineEvent: TimelineEvent @goField(forceResolver: true)
+
     signedAt:   Time!
     name:        String!
     sourceFields: SourceFields!
     renewalCycle: ContractRenewalCycle!
     status: ContractStatus!
-    appSource: String!
     owner: User @goField(forceResolver: true)
+    source: DataSource!
+    appSource: String!
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }
 
@@ -7604,6 +7645,7 @@ input ContractInput {
     organizationId: String!
     renewalCycle: ContractRenewalCycle!
     status: ContractStatus!
+    appSource:     String
 }
 
 enum ContractRenewalCycle {
@@ -7612,6 +7654,7 @@ enum ContractRenewalCycle {
     ANNUAL_RENEWAL
 }
 enum ContractStatus {
+    UNDEFINED
     DRAFT
     LIVE
     ENDED
@@ -17584,6 +17627,47 @@ func (ec *executionContext) fieldContext_Contract_id(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Contract_referenceId(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_referenceId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ReferenceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_referenceId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contract_customerOsId(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_customerOsId(ctx, field)
 	if err != nil {
@@ -17799,6 +17883,88 @@ func (ec *executionContext) fieldContext_Contract_serviceStartedAt(ctx context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_serviceStartedAtTimelineEventId(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_serviceStartedAtTimelineEventId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ServiceStartedAtTimelineEventID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_serviceStartedAtTimelineEventId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_serviceStartedAtTimelineEvent(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_serviceStartedAtTimelineEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contract().ServiceStartedAtTimelineEvent(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.TimelineEvent)
+	fc.Result = res
+	return ec.marshalOTimelineEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimelineEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_serviceStartedAtTimelineEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type TimelineEvent does not have child fields")
 		},
 	}
 	return fc, nil
@@ -18024,50 +18190,6 @@ func (ec *executionContext) fieldContext_Contract_status(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Contract_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contract_appSource(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AppSource, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contract_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contract",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contract_owner(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_owner(ctx, field)
 	if err != nil {
@@ -18144,6 +18266,94 @@ func (ec *executionContext) fieldContext_Contract_owner(ctx context.Context, fie
 				return ec.fieldContext_User_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_source(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -31149,6 +31359,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Contract_id(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Contract_referenceId(ctx, field)
 			case "customerOsId":
 				return ec.fieldContext_Contract_customerOsId(ctx, field)
 			case "organizationId":
@@ -31159,6 +31371,10 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_updatedAt(ctx, field)
 			case "serviceStartedAt":
 				return ec.fieldContext_Contract_serviceStartedAt(ctx, field)
+			case "serviceStartedAtTimelineEventId":
+				return ec.fieldContext_Contract_serviceStartedAtTimelineEventId(ctx, field)
+			case "serviceStartedAtTimelineEvent":
+				return ec.fieldContext_Contract_serviceStartedAtTimelineEvent(ctx, field)
 			case "signedAt":
 				return ec.fieldContext_Contract_signedAt(ctx, field)
 			case "name":
@@ -31169,10 +31385,12 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Contract_appSource(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Contract_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contract_appSource(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
 			}
@@ -49356,6 +49574,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Contract_id(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Contract_referenceId(ctx, field)
 			case "customerOsId":
 				return ec.fieldContext_Contract_customerOsId(ctx, field)
 			case "organizationId":
@@ -49366,6 +49586,10 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_updatedAt(ctx, field)
 			case "serviceStartedAt":
 				return ec.fieldContext_Contract_serviceStartedAt(ctx, field)
+			case "serviceStartedAtTimelineEventId":
+				return ec.fieldContext_Contract_serviceStartedAtTimelineEventId(ctx, field)
+			case "serviceStartedAtTimelineEvent":
+				return ec.fieldContext_Contract_serviceStartedAtTimelineEvent(ctx, field)
 			case "signedAt":
 				return ec.fieldContext_Contract_signedAt(ctx, field)
 			case "name":
@@ -49376,10 +49600,12 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Contract_appSource(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Contract_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contract_appSource(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Contract_externalLinks(ctx, field)
 			}
@@ -57709,7 +57935,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceId", "name", "organizationId", "renewalCycle", "status"}
+	fieldsInOrder := [...]string{"referenceId", "name", "organizationId", "renewalCycle", "status", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -57761,6 +57987,15 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.Status = data
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppSource = data
 		}
 	}
 
@@ -63002,6 +63237,8 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "referenceId":
+			out.Values[i] = ec._Contract_referenceId(ctx, field, obj)
 		case "customerOsId":
 			out.Values[i] = ec._Contract_customerOsId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -63027,6 +63264,41 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "serviceStartedAtTimelineEventId":
+			out.Values[i] = ec._Contract_serviceStartedAtTimelineEventId(ctx, field, obj)
+		case "serviceStartedAtTimelineEvent":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contract_serviceStartedAtTimelineEvent(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "signedAt":
 			out.Values[i] = ec._Contract_signedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -63049,11 +63321,6 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "status":
 			out.Values[i] = ec._Contract_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "appSource":
-			out.Values[i] = ec._Contract_appSource(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -63090,6 +63357,16 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "source":
+			out.Values[i] = ec._Contract_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "appSource":
+			out.Values[i] = ec._Contract_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "externalLinks":
 			field := field
 

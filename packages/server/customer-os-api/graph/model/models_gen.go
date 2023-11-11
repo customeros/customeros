@@ -350,20 +350,24 @@ func (this ContactsPage) GetTotalPages() int { return this.TotalPages }
 func (this ContactsPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Contract struct {
-	ID               string               `json:"id"`
-	CustomerOsID     string               `json:"customerOsId"`
-	OrganizationID   string               `json:"organizationId"`
-	CreatedAt        time.Time            `json:"createdAt"`
-	UpdatedAt        time.Time            `json:"updatedAt"`
-	ServiceStartedAt time.Time            `json:"serviceStartedAt"`
-	SignedAt         time.Time            `json:"signedAt"`
-	Name             string               `json:"name"`
-	SourceFields     SourceFields         `json:"sourceFields"`
-	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
-	Status           ContractStatus       `json:"status"`
-	AppSource        string               `json:"appSource"`
-	Owner            *User                `json:"owner,omitempty"`
-	ExternalLinks    []*ExternalSystem    `json:"externalLinks"`
+	ID                              string               `json:"id"`
+	ReferenceID                     *string              `json:"referenceId,omitempty"`
+	CustomerOsID                    string               `json:"customerOsId"`
+	OrganizationID                  string               `json:"organizationId"`
+	CreatedAt                       time.Time            `json:"createdAt"`
+	UpdatedAt                       time.Time            `json:"updatedAt"`
+	ServiceStartedAt                time.Time            `json:"serviceStartedAt"`
+	ServiceStartedAtTimelineEventID *string              `json:"serviceStartedAtTimelineEventId,omitempty"`
+	ServiceStartedAtTimelineEvent   TimelineEvent        `json:"serviceStartedAtTimelineEvent,omitempty"`
+	SignedAt                        time.Time            `json:"signedAt"`
+	Name                            string               `json:"name"`
+	SourceFields                    SourceFields         `json:"sourceFields"`
+	RenewalCycle                    ContractRenewalCycle `json:"renewalCycle"`
+	Status                          ContractStatus       `json:"status"`
+	Owner                           *User                `json:"owner,omitempty"`
+	Source                          DataSource           `json:"source"`
+	AppSource                       string               `json:"appSource"`
+	ExternalLinks                   []*ExternalSystem    `json:"externalLinks"`
 }
 
 func (Contract) IsNode()            {}
@@ -375,6 +379,7 @@ type ContractInput struct {
 	OrganizationID string               `json:"organizationId"`
 	RenewalCycle   ContractRenewalCycle `json:"renewalCycle"`
 	Status         ContractStatus       `json:"status"`
+	AppSource      *string              `json:"appSource,omitempty"`
 }
 
 type Country struct {
@@ -1844,12 +1849,14 @@ func (e ContractRenewalCycle) MarshalGQL(w io.Writer) {
 type ContractStatus string
 
 const (
-	ContractStatusDraft ContractStatus = "DRAFT"
-	ContractStatusLive  ContractStatus = "LIVE"
-	ContractStatusEnded ContractStatus = "ENDED"
+	ContractStatusUndefined ContractStatus = "UNDEFINED"
+	ContractStatusDraft     ContractStatus = "DRAFT"
+	ContractStatusLive      ContractStatus = "LIVE"
+	ContractStatusEnded     ContractStatus = "ENDED"
 )
 
 var AllContractStatus = []ContractStatus{
+	ContractStatusUndefined,
 	ContractStatusDraft,
 	ContractStatusLive,
 	ContractStatusEnded,
@@ -1857,7 +1864,7 @@ var AllContractStatus = []ContractStatus{
 
 func (e ContractStatus) IsValid() bool {
 	switch e {
-	case ContractStatusDraft, ContractStatusLive, ContractStatusEnded:
+	case ContractStatusUndefined, ContractStatusDraft, ContractStatusLive, ContractStatusEnded:
 		return true
 	}
 	return false
