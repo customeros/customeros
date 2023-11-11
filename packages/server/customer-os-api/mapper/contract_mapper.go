@@ -11,17 +11,17 @@ func MapEntityToContract(entity *entity.ContractEntity) *model.Contract {
 		return nil
 	}
 	return &model.Contract{
-		ID:                              entity.ID,
-		ReferenceID:                     utils.StringPtrNillable(entity.ReferenceId),
-		CustomerOsID:                    entity.CustomerOsId,
-		Name:                            entity.Name,
-		CreatedAt:                       entity.CreatedAt,
-		UpdatedAt:                       entity.UpdatedAt,
-		Source:                          MapDataSourceToModel(entity.Source),
-		Status:                          MapContractStatusToModel(entity.ContractStatus),
-		RenewalCycle:                    MapContractRenewalCycleToModel(entity.ContractRenewalCycle),
-		AppSource:                       entity.AppSource,
-		ServiceStartedAt:                *entity.ServiceStartedAt,
-		ServiceStartedAtTimelineEventID: entity.ServiceStartedId,
+		ID:               entity.ID,
+		Name:             entity.Name,
+		CreatedAt:        *entity.CreatedAt,
+		UpdatedAt:        *entity.UpdatedAt,
+		Source:           MapDataSourceToModel(entity.Source),
+		Status:           MapContractStatusToModel(entity.ContractStatus),
+		RenewalCycle:     MapContractRenewalCycleToModel(entity.ContractRenewalCycle),
+		AppSource:        entity.AppSource,
+		ServiceStartedAt: *entity.ServiceStartedAt,
+		SignedAt:         *entity.SignedAt,
+		EndedAt:          *entity.EndedAt,
+		ContractURL:      *utils.StringPtrNillable(entity.ContractUrl),
 	}
 }
