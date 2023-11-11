@@ -54,6 +54,7 @@ func (s *contractService) Create(ctx context.Context, contract *ContractCreateDa
 
 	dbNodePtr, err := s.repositories.ContractRepository.CreateContract(ctx, common.GetContext(ctx).Tenant, contract.Organization, *contract.ContractEntity)
 	if err != nil {
+		s.log.Error("Failed to create contract", err)
 		return nil, err
 	}
 	// set contract creator
@@ -66,6 +67,7 @@ func (s *contractService) Create(ctx context.Context, contract *ContractCreateDa
 			return nil, err
 		}
 	}
+	s.log.Info("Successfully created contract for organization", contract.Organization)
 	return s.mapDbNodeToContractEntity(*dbNodePtr), nil
 }
 

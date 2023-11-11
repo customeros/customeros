@@ -12,7 +12,7 @@ import (
 )
 
 type ContractRepository interface {
-	CreateContract(ctx context.Context, tenant, organization string, entity entity.ContractEntity) (*dbtype.Node, error)
+	CreateContract(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.ContractEntity) (*dbtype.Node, error)
 	SetContractCreator(ctx context.Context, tenant, userId, contractId string) error
 }
 
@@ -26,44 +26,37 @@ func NewContractRepository(driver *neo4j.DriverWithContext) ContractRepository {
 	}
 }
 
-func (r *contractRepository) CreateContract(ctx context.Context, tenant, organizationId string, entity entity.ContractEntity) (*dbtype.Node, error) {
+func (r *contractRepository) CreateContract(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.ContractEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.CreateContract")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (org)-[:NOTED]->(c:Contract {id:randomUUID()}) " +
-		" ON CREATE SET c.createdAt=$now, " +
-		"				c.source=$source, " +
+	query := "MERGE (c:Contract_%s {id:randomUUID()}) " +
+		" ON CREATE SET c:Contract, " +
+		" 				c:TimelineEvent, " +
+		" 				c:TimelineEvent_%s, " +
+		"				c.name=$name, " +
+		"				c.createdAt=$createdAt, " +
+		"				c.updatedAt=$updatedAt, " +
+		"				c.serviceStartedAt=serviceStartedAt, " +
 		"				c.appSource=$appSource, " +
-		"				c:Contract_%s," +
-		"				c:TimelineEvent," +
-		"				c:TimelineEvent_%s " +
-		" RETURN c"
+		"				c.source=$source, " +
+		"				c.contractStatus=contractStatus " +
+		"				c.contractRenewalCycle=contractRenewalCycle " +
+		" RETURN m"
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer func(session neo4j.SessionWithContext, ctx context.Context) {
-		err := session.Close(ctx)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-	}(session, ctx)
-
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
-			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-				"now":            utils.Now(),
-				"source":         entity.Source,
-				"appSource":      entity.AppSource,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(*dbtype.Node), nil
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
+		map[string]any{
+			"name":                 entity.Name,
+			"createdAt":            entity.CreatedAt,
+			"updatedAt":            entity.CreatedAt,
+			"serviceStartedAt":     entity.ServiceStartedAt,
+			"appSource":            entity.AppSource,
+			"source":               entity.Source,
+			"contractStatus":       entity.ContractStatus,
+			"contractRenewalCycle": entity.ContractRenewalCycle,
+		})
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *contractRepository) SetContractCreator(ctx context.Context, tenant, userId, contractId string) error {
@@ -71,9 +64,9 @@ func (r *contractRepository) SetContractCreator(ctx context.Context, tenant, use
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), " +
-		" (c:Contract {id:$contractId})" +
-		"  MERGE (u)-[:CREATED]->(c) "
+	query := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+		(c:Contract {id:$contractId})
+		MERGE (u)-[:CREATED]->(c)`
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
