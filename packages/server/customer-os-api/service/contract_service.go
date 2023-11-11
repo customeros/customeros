@@ -60,7 +60,11 @@ func (s *contractService) Create(ctx context.Context, contract *ContractCreateDa
 	if len(common.GetUserIdFromContext(ctx)) > 0 {
 		props := utils.GetPropsFromNode(*dbNodePtr)
 		contractId := utils.GetStringPropOrEmpty(props, "id")
-		_ = s.repositories.ContractRepository.SetContractCreator(ctx, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), contractId)
+		err = s.repositories.ContractRepository.SetContractCreator(ctx, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), contractId)
+		if err != nil {
+			s.log.Error("Failed to set contract creator", err)
+			return nil, err
+		}
 	}
 	return s.mapDbNodeToContractEntity(*dbNodePtr), nil
 }
