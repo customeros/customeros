@@ -48,3 +48,34 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 
 	return nil
 }
+
+func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnCreate")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContractUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
+	err := h.repositories.ContractRepository.Update(ctx, eventData.Tenant, contractId, eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
+		return err
+	}
+
+	if eventData.ExternalSystem.Available() {
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, constants.NodeLabel_Contract, eventData.ExternalSystem)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while link contract %s with external system %s: %s", contractId, eventData.ExternalSystem.ExternalSystemId, err.Error())
+			return err
+		}
+	}
+
+	return nil
+}

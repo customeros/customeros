@@ -59,20 +59,14 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 
 	// Convert any protobuf timestamp to time.Time, if necessary
 	createdAt, updatedAt := convertCreateAndUpdateProtoTimestampsToTime(request.CreatedAt, request.UpdatedAt)
+	serviceStartedAt := utils.TimestampProtoToTimePtr(request.ServiceStartedAt)
+	signedAt := utils.TimestampProtoToTimePtr(request.SignedAt)
 
 	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
 
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	// Determine the status based on ServiceStartedAt
-	var contractStatus model.ContractStatus
-	if request.ServiceStartedAt == nil || request.ServiceStartedAt.AsTime().After(utils.Now()) {
-		contractStatus = model.Draft
-	} else {
-		contractStatus = model.Live
-	}
 
 	createContractCommand := command.NewCreateContractCommand(
 		contractId,
@@ -83,10 +77,9 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 			Name:             request.Name,
 			ContractUrl:      request.ContractUrl,
 			CreatedByUserId:  utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
-			ServiceStartedAt: utils.ToDatePtr(utils.TimestampProtoToTimePtr(request.ServiceStartedAt)),
-			SignedAt:         utils.TimestampProtoToTimePtr(request.SignedAt),
+			ServiceStartedAt: serviceStartedAt,
+			SignedAt:         signedAt,
 			RenewalCycle:     model.RenewalCycle(request.RenewalCycle),
-			Status:           contractStatus,
 		},
 		source,
 		externalSystem,
@@ -102,6 +95,56 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 
 	// Return the ID of the newly created contract
 	return &contractpb.ContractIdGrpcResponse{Id: contractId}, nil
+}
+
+func (s *contractService) UpdateContract(ctx context.Context, request *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.UpdateContract")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Check if the contract ID is valid
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	// Convert any protobuf timestamp to time.Time, if necessary
+	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+	serviceStartedAt := utils.TimestampProtoToTimePtr(request.ServiceStartedAt)
+	signedAt := utils.TimestampProtoToTimePtr(request.SignedAt)
+	endedAt := utils.TimestampProtoToTimePtr(request.EndedAt)
+
+	externalSystem := commonmodel.ExternalSystem{}
+	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	source := commonmodel.Source{}
+	source.FromGrpc(request.SourceFields)
+
+	// Create update contract command
+	updateContractCommand := command.NewUpdateContractCommand(
+		request.Id,
+		request.Tenant,
+		request.LoggedInUserId,
+		model.ContractDataFields{
+			Name:             request.Name,
+			ServiceStartedAt: serviceStartedAt,
+			SignedAt:         signedAt,
+			EndedAt:          endedAt,
+			RenewalCycle:     model.RenewalCycle(request.RenewalCycle),
+			ContractUrl:      request.ContractUrl,
+		},
+		source,
+		externalSystem,
+		updatedAt,
+	)
+
+	if err := s.contractCommandHandlers.UpdateContract.Handle(ctx, updateContractCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &contractpb.ContractIdGrpcResponse{Id: request.Id}, nil
 }
 
 func (s *contractService) checkOrganizationExists(ctx context.Context, tenant, organizationId string) (bool, error) {

@@ -3,9 +3,11 @@ package servicet
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
@@ -19,14 +21,6 @@ import (
 	"time"
 )
 
-func prepareContractClient(ctx context.Context, aggregateStore *eventstoret.TestAggregateStore, tenant, orgId string) contractpb.ContractGrpcServiceClient {
-	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, orgId)
-	aggregateStore.Save(ctx, organizationAggregate)
-	grpcConnection, _ := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
-	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
-	return contractClient
-}
-
 func TestContractService_CreateContract(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
@@ -36,9 +30,11 @@ func TestContractService_CreateContract(t *testing.T) {
 	orgId := "Org123"
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
-	contractClient := prepareContractClient(ctx, aggregateStore, tenant, orgId)
+	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, orgId)
+	aggregateStore.Save(ctx, organizationAggregate)
+	grpcConnection, _ := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
 	timeNow := time.Now()
-	today := *utils.ToDatePtr(&timeNow)
 	response, err := contractClient.CreateContract(ctx, &contractpb.CreateContractGrpcRequest{
 		Tenant:           tenant,
 		Name:             "New Contract",
@@ -80,7 +76,7 @@ func TestContractService_CreateContract(t *testing.T) {
 	require.Equal(t, "http://contract.url", eventData.ContractUrl)
 	require.Equal(t, orgId, eventData.OrganizationId)
 	require.Equal(t, "User123", eventData.CreatedByUserId)
-	require.True(t, today.Equal(*eventData.ServiceStartedAt))
+	require.True(t, timeNow.Equal(*eventData.ServiceStartedAt))
 	require.True(t, timeNow.Equal(*eventData.SignedAt))
 	require.Equal(t, model.MonthlyRenewal.String(), eventData.RenewalCycle)
 	require.Equal(t, model.Live.String(), eventData.Status)
@@ -101,7 +97,10 @@ func TestContractService_CreateContract_ServiceStartedInFuture(t *testing.T) {
 	orgId := "Org123"
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
-	contractClient := prepareContractClient(ctx, aggregateStore, tenant, orgId)
+	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, orgId)
+	aggregateStore.Save(ctx, organizationAggregate)
+	grpcConnection, _ := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
 
 	// Create a future date
 	futureDate := time.Now().AddDate(0, 1, 0) // 1 month into the future
@@ -133,7 +132,10 @@ func TestContractService_CreateContract_ServiceStartedNil(t *testing.T) {
 	orgId := "Org123"
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
-	contractClient := prepareContractClient(ctx, aggregateStore, tenant, orgId)
+	organizationAggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, orgId)
+	aggregateStore.Save(ctx, organizationAggregate)
+	grpcConnection, _ := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
 
 	// Call CreateContract with future ServiceStartedAt
 	response, err := contractClient.CreateContract(ctx, &contractpb.CreateContractGrpcRequest{
@@ -199,4 +201,80 @@ func TestContractService_CreateContract_OrganizationAggregateDoesNotExists(t *te
 	require.True(t, ok)
 	require.Equal(t, codes.NotFound, st.Code())
 	require.Contains(t, st.Message(), fmt.Sprintf("organization with ID %s not found", orgId))
+}
+
+func TestContractService_UpdateContract(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Setup test environment
+	tenant := "ziggy"
+	contractId := uuid.New().String()
+
+	// Setup aggregate store and create initial contract
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
+	aggregateStore.Save(ctx, contractAggregate)
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err, "Failed to connect to processing platform")
+	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
+
+	// Create update request
+	timeNow := utils.Now()
+	updateRequest := &contractpb.UpdateContractGrpcRequest{
+		Tenant:           tenant,
+		Id:               contractId,
+		Name:             "Updated Contract",
+		ContractUrl:      "http://new.contract.url",
+		UpdatedAt:        timestamppb.New(timeNow),
+		ServiceStartedAt: timestamppb.New(timeNow),
+		SignedAt:         timestamppb.New(timeNow),
+		EndedAt:          timestamppb.New(timeNow.AddDate(0, 1, 0)),
+		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		SourceFields: &commonpb.SourceFields{
+			Source:    constants.SourceOpenline,
+			AppSource: "unit-test",
+		},
+		ExternalSystemFields: &commonpb.ExternalSystemFields{
+			ExternalSystemId: "ExternalSystemID",
+			ExternalUrl:      "http://external.url",
+			ExternalId:       "ExternalID",
+			ExternalIdSecond: "ExternalIDSecond",
+			ExternalSource:   "ExternalSource",
+			SyncDate:         timestamppb.New(timeNow),
+		},
+	}
+
+	// Execute update contract request
+	response, err := contractClient.UpdateContract(ctx, updateRequest)
+	require.Nil(t, err, "Failed to update contract")
+
+	// Assert response
+	require.NotNil(t, response)
+	require.Equal(t, contractId, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	contractEvents := eventsMap[contractAggregate.ID]
+	require.Equal(t, 1, len(contractEvents))
+
+	require.Equal(t, event.ContractUpdateV1, contractEvents[0].GetEventType())
+
+	var eventData event.ContractUpdateEvent
+	err = contractEvents[0].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	// Assert event data
+	require.Equal(t, "Updated Contract", eventData.Name)
+	require.Equal(t, "http://new.contract.url", eventData.ContractUrl)
+	require.Equal(t, model.MonthlyRenewal.String(), eventData.RenewalCycle)
+	require.Equal(t, model.Live.String(), eventData.Status)
+	require.True(t, timeNow.Equal(eventData.UpdatedAt))
+	require.True(t, timeNow.Equal(*eventData.ServiceStartedAt))
+	require.True(t, timeNow.Equal(*eventData.SignedAt))
+	require.True(t, timeNow.AddDate(0, 1, 0).Equal(*eventData.EndedAt))
+	require.Equal(t, constants.SourceOpenline, eventData.Source)
+	require.Equal(t, "ExternalSystemID", eventData.ExternalSystem.ExternalSystemId)
 }

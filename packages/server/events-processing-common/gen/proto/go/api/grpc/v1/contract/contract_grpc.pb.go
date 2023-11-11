@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ContractGrpcServiceClient interface {
 	CreateContract(ctx context.Context, in *CreateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
+	UpdateContract(ctx context.Context, in *UpdateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 }
 
 type contractGrpcServiceClient struct {
@@ -42,11 +43,21 @@ func (c *contractGrpcServiceClient) CreateContract(ctx context.Context, in *Crea
 	return out, nil
 }
 
+func (c *contractGrpcServiceClient) UpdateContract(ctx context.Context, in *UpdateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
+	out := new(ContractIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/UpdateContract", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContractGrpcServiceServer is the server API for ContractGrpcService service.
 // All implementations should embed UnimplementedContractGrpcServiceServer
 // for forward compatibility
 type ContractGrpcServiceServer interface {
 	CreateContract(context.Context, *CreateContractGrpcRequest) (*ContractIdGrpcResponse, error)
+	UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error)
 }
 
 // UnimplementedContractGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -55,6 +66,9 @@ type UnimplementedContractGrpcServiceServer struct {
 
 func (UnimplementedContractGrpcServiceServer) CreateContract(context.Context, *CreateContractGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContract not implemented")
+}
+func (UnimplementedContractGrpcServiceServer) UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateContract not implemented")
 }
 
 // UnsafeContractGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -86,6 +100,24 @@ func _ContractGrpcService_CreateContract_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContractGrpcService_UpdateContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateContractGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractGrpcServiceServer).UpdateContract(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ContractGrpcService/UpdateContract",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractGrpcServiceServer).UpdateContract(ctx, req.(*UpdateContractGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContractGrpcService_ServiceDesc is the grpc.ServiceDesc for ContractGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +128,10 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateContract",
 			Handler:    _ContractGrpcService_CreateContract_Handler,
+		},
+		{
+			MethodName: "UpdateContract",
+			Handler:    _ContractGrpcService_UpdateContract_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

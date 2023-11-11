@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -14,6 +15,7 @@ import (
 
 type ContractRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, contractId string, evt event.ContractCreateEvent) error
+	Update(ctx context.Context, tenant, contractId string, evt event.ContractUpdateEvent) error
 }
 
 type contractRepository struct {
@@ -71,6 +73,43 @@ func (r *contractRepository) CreateForOrganization(ctx context.Context, tenant, 
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(evt.SignedAt),
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.ServiceStartedAt),
 		"createdByUserId":  evt.CreatedByUserId,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *contractRepository) Update(ctx context.Context, tenant, contractId string, evt event.ContractUpdateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.Update")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId), log.Object("event", evt))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET 
+				ct.name = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR ct.name is null OR ct.name = '' THEN $name ELSE ct.name END,	
+				ct.contractUrl = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR ct.contractUrl is null OR ct.contractUrl = '' THEN $contractUrl ELSE ct.contractUrl END,	
+				ct.signedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $signedAt ELSE ct.signedAt END,
+				ct.endedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $endedAt ELSE ct.endedAt END,
+				ct.serviceStartedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $serviceStartedAt ELSE ct.serviceStartedAt END,
+				ct.status = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $status ELSE ct.status END,
+				ct.renewalCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalCycle ELSE ct.renewalCycle END,
+				ct.updatedAt = $updatedAt,
+				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END
+							`
+	params := map[string]any{
+		"tenant":           tenant,
+		"contractId":       contractId,
+		"updatedAt":        evt.UpdatedAt,
+		"name":             evt.Name,
+		"contractUrl":      evt.ContractUrl,
+		"status":           evt.Status,
+		"renewalCycle":     evt.RenewalCycle,
+		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(evt.SignedAt),
+		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.ServiceStartedAt),
+		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(evt.EndedAt),
+		"sourceOfTruth":    helper.GetSourceOfTruth(evt.Source),
+		"overwrite":        helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 

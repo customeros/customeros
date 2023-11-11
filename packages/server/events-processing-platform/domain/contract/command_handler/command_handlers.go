@@ -8,10 +8,12 @@ import (
 // CommandHandlers acts as a container for all command handlers.
 type CommandHandlers struct {
 	CreateContract CreateContractCommandHandler
+	UpdateContract UpdateContractCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
 		CreateContract: NewCreateContractCommandHandler(log, es),
+		UpdateContract: NewUpdateContractCommandHandler(log, es),
 	}
 }

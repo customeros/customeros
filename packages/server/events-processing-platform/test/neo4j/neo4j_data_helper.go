@@ -206,6 +206,37 @@ func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return commentId
 }
 
+func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contract entity.ContractEntity) string {
+	contractId := utils.NewUUIDIfEmpty(contract.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract:Contract_%s {id:$id})
+				SET c.name=$name,
+					c.contractUrl=$contractUrl,
+					c.source=$source,
+					c.sourceOfTruth=$sourceOfTruth,
+					c.status=$status,
+					c.renewalCycle=$renewalCycle,
+					c.signedAt=$signedAt,
+					c.serviceStartedAt=$serviceStartedAt,
+					c.endedAt=$endedAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":               contractId,
+		"tenant":           tenant,
+		"name":             contract.Name,
+		"contractUrl":      contract.ContractUrl,
+		"source":           contract.Source,
+		"sourceOfTruth":    contract.SourceOfTruth,
+		"status":           contract.Status,
+		"renewalCycle":     contract.RenewalCycle,
+		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
+		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
+		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
+	})
+	return contractId
+}
+
 func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
 	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
