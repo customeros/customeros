@@ -26,6 +26,7 @@ func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 
 	contactAggregate := NewContactAggregateWithTenantAndID(tenant, objectID)
 
+	// ErrAggregateNotFound is an expected error, in which case we return the contractAggregate without any error.
 	err := eventStore.Exists(ctx, contactAggregate.GetID())
 	if err != nil {
 		if !errors.Is(err, eventstore.ErrAggregateNotFound) {

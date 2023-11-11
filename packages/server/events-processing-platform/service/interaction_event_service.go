@@ -74,7 +74,7 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	cmd := command.NewUpsertInteractionEventCommand(interactionEventId, request.Tenant, request.LoggedInUserId, dataFields, source, externalSystem, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	cmd := command.NewUpsertInteractionEventCommand(interactionEventId, request.Tenant, request.LoggedInUserId, dataFields, source, externalSystem, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.interactionEventsCommandHandlers.UpsertInteractionEvent.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(NewUpsertInteractionEventCommand.Handle) tenant:{%v}, interactionEventId:{%v} , err: %v", request.Tenant, request.Id, err.Error())

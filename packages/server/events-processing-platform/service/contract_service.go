@@ -58,14 +58,21 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 	contractId := uuid.New().String()
 
 	// Convert any protobuf timestamp to time.Time, if necessary
-	createdAt := utils.TimestampProtoToTime(request.CreatedAt)
-	updatedAt := utils.TimestampProtoToTime(request.UpdatedAt)
+	createdAt, updatedAt := convertCreateAndUpdateProtoTimestampsToTime(request.CreatedAt, request.UpdatedAt)
 
 	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
 
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	// Determine the status based on ServiceStartedAt
+	var contractStatus model.ContractStatus
+	if request.ServiceStartedAt == nil || request.ServiceStartedAt.AsTime().After(utils.Now()) {
+		contractStatus = model.Draft
+	} else {
+		contractStatus = model.Live
+	}
 
 	createContractCommand := command.NewCreateContractCommand(
 		contractId,
@@ -75,10 +82,10 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 			OrganizationId:   request.OrganizationId,
 			Name:             request.Name,
 			CreatedByUserId:  utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
-			ServiceStartedAt: utils.TimestampProtoToTime(request.ServiceStartedAt),
-			SignedAt:         utils.TimestampProtoToTime(request.SignedAt),
+			ServiceStartedAt: utils.ToDatePtr(utils.TimestampProtoToTimePtr(request.ServiceStartedAt)),
+			SignedAt:         utils.TimestampProtoToTimePtr(request.SignedAt),
 			RenewalCycle:     model.RenewalCycle(request.RenewalCycle),
-			Status:           model.ContractStatus(request.Status),
+			Status:           contractStatus,
 		},
 		source,
 		externalSystem,

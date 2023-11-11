@@ -5,15 +5,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 )
 
-type testAggregateStore struct {
+type TestAggregateStore struct {
 	aggregateMap map[string][]eventstore.Event
 }
 
-func NewTestAggregateStore() *testAggregateStore {
-	return &testAggregateStore{aggregateMap: make(map[string][]eventstore.Event)}
+func NewTestAggregateStore() *TestAggregateStore {
+	return &TestAggregateStore{aggregateMap: make(map[string][]eventstore.Event)}
 }
 
-func (as *testAggregateStore) Load(ctx context.Context, aggregate eventstore.Aggregate) error {
+func (as *TestAggregateStore) Load(ctx context.Context, aggregate eventstore.Aggregate) error {
 	if _, ok := as.aggregateMap[aggregate.GetID()]; !ok {
 		return eventstore.ErrAggregateNotFound
 	}
@@ -25,7 +25,7 @@ func (as *testAggregateStore) Load(ctx context.Context, aggregate eventstore.Agg
 	return nil
 }
 
-func (as *testAggregateStore) Save(ctx context.Context, aggregate eventstore.Aggregate) error {
+func (as *TestAggregateStore) Save(ctx context.Context, aggregate eventstore.Aggregate) error {
 	if _, ok := as.aggregateMap[aggregate.GetID()]; !ok {
 		as.aggregateMap[aggregate.GetID()] = make([]eventstore.Event, 0)
 	}
@@ -42,13 +42,13 @@ func (as *testAggregateStore) Save(ctx context.Context, aggregate eventstore.Agg
 	return nil
 }
 
-func (as *testAggregateStore) Exists(ctx context.Context, aggregateID string) error {
+func (as *TestAggregateStore) Exists(ctx context.Context, aggregateID string) error {
 	if _, ok := as.aggregateMap[aggregateID]; !ok {
 		return eventstore.ErrAggregateNotFound
 	}
 	return nil
 }
 
-func (as *testAggregateStore) GetEventMap() map[string][]eventstore.Event {
+func (as *TestAggregateStore) GetEventMap() map[string][]eventstore.Event {
 	return as.aggregateMap
 }

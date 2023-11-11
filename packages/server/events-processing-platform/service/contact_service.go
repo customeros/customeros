@@ -57,7 +57,7 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.U
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	cmd := command.NewUpsertContactCommand(contactId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem,
-		dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.Id == "")
+		dataFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt), request.Id == "")
 	if err := s.contactCommandHandlers.Upsert.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertContact.Handle) tenant:%s, contactID: %s, err: {%v}", request.Tenant, contactId, err)
@@ -125,12 +125,12 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *cont
 		JobTitle:    request.JobTitle,
 		Description: request.Description,
 		Primary:     request.Primary,
-		StartedAt:   utils.TimestampProtoToTime(request.StartedAt),
-		EndedAt:     utils.TimestampProtoToTime(request.EndedAt),
+		StartedAt:   utils.TimestampProtoToTimePtr(request.StartedAt),
+		EndedAt:     utils.TimestampProtoToTimePtr(request.EndedAt),
 	}
 
 	cmd := command.NewLinkOrganizationCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.OrganizationId, sourceFields, jobRoleFields,
-		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+		utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.contactCommandHandlers.LinkOrganization.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(LinkOrganizationCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
 		return nil, s.errResponse(err)

@@ -66,7 +66,7 @@ func (s *locationService) UpsertLocation(ctx context.Context, request *locationp
 	}
 
 	cmd := command.NewUpsertLocationCommand(locationId, request.Tenant, request.LoggedInUserId, request.Name, request.RawAddress, addressFields, sourceFields,
-		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+		utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.locationCommands.UpsertLocation.Handle(ctx, cmd); err != nil {
 		s.log.Errorf("(UpsertLocation.Handle) tenant:{%s}, location id: {%s}, err: {%v}", request.Tenant, locationId, err)
 		return nil, s.errResponse(err)

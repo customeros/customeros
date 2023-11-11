@@ -54,7 +54,7 @@ func (s *userService) UpsertUser(ctx context.Context, request *userpb.UpsertUser
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	cmd := command.NewUpsertUserCommand(userInputId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem,
-		dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+		dataFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.userCommands.UpsertUser.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertUserCommand.Handle) tenant:{%s}, user input id:{%s}, err: %s", request.Tenant, userInputId, err.Error())
@@ -76,7 +76,7 @@ func (s *userService) AddPlayerInfo(ctx context.Context, request *userpb.AddPlay
 	sourceFields.FromGrpc(request.SourceFields)
 
 	cmd := command.NewAddPlayerInfoCommand(request.UserId, request.Tenant, request.LoggedInUserId, sourceFields,
-		request.Provider, request.AuthId, request.IdentityId, utils.TimestampProtoToTime(request.Timestamp))
+		request.Provider, request.AuthId, request.IdentityId, utils.TimestampProtoToTimePtr(request.Timestamp))
 	if err := s.userCommands.AddPlayerInfo.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddPlayerInfoCommand.Handle) tenant:{%s}, user input id:{%s}, err: %s", request.Tenant, request.UserId, err.Error())

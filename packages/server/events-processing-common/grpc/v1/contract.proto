@@ -32,7 +32,6 @@ message CreateContractGrpcRequest {
   google.protobuf.Timestamp serviceStartedAt = 8;
   google.protobuf.Timestamp signedAt = 9;
   RenewalCycle renewalCycle = 10;
-  ContractStatus status = 11;
   SourceFields sourceFields = 12;
   ExternalSystemFields externalSystemFields = 13;
 }

@@ -44,7 +44,7 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *logentryp
 	dataFields := model.LogEntryDataFields{
 		Content:              request.Content,
 		ContentType:          request.ContentType,
-		StartedAt:            utils.TimestampProtoToTime(request.StartedAt),
+		StartedAt:            utils.TimestampProtoToTimePtr(request.StartedAt),
 		AuthorUserId:         request.AuthorUserId,
 		LoggedOrganizationId: request.LoggedOrganizationId,
 	}
@@ -53,7 +53,7 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *logentryp
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	cmd := command.NewUpsertLogEntryCommand(logEntryId, request.Tenant, request.UserId, source, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	cmd := command.NewUpsertLogEntryCommand(logEntryId, request.Tenant, request.UserId, source, externalSystem, dataFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.logEntryCommands.UpsertLogEntry.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertLogEntryCommand.Handle) tenant:{%s}, logEntryId:{%s} , err: %s", request.Tenant, request.Id, err.Error())

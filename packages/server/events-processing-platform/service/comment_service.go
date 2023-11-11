@@ -47,7 +47,7 @@ func (s *commentService) UpsertComment(ctx context.Context, request *commentpb.U
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	cmd := command.NewUpsertCommentCommand(commentId, request.Tenant, request.UserId, source, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	cmd := command.NewUpsertCommentCommand(commentId, request.Tenant, request.UserId, source, externalSystem, dataFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.commentCommandHandlers.Upsert.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertCommentCommand.Handle) tenant:{%s}, commentId:{%s} , err: %s", request.Tenant, commentId, err.Error())
