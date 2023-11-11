@@ -42,6 +42,7 @@ type Repositories struct {
 	LogEntryRepository            LogEntryRepository
 	CommonRepository              CommonRepository
 	CommentRepository             CommentRepository
+	ContractRepository            ContractRepository
 }
 
 type Drivers struct {
@@ -90,5 +91,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string) *Repositories {
 	repositories.LogEntryRepository = NewLogEntryRepository(driver)
 	repositories.CommonRepository = NewCommonRepository(driver, database)
 	repositories.CommentRepository = NewCommentRepository(driver, database)
+	repositories.ContractRepository = NewContractRepository(driver)
 	return &repositories
 }

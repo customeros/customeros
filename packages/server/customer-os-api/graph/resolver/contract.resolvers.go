@@ -12,6 +12,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
+// ServiceStartedAtTimelineEvent is the resolver for the serviceStartedAtTimelineEvent field.
+func (r *contractResolver) ServiceStartedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error) {
+	panic(fmt.Errorf("not implemented: ServiceStartedAtTimelineEvent - serviceStartedAtTimelineEvent"))
+}
+
 // Owner is the resolver for the owner field.
 func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: Owner - owner"))
