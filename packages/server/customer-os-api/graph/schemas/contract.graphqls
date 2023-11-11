@@ -7,25 +7,19 @@ extend type Mutation {
 
 type Contract implements Node {
     id: ID!
-    referenceId:   String
-    customerOsId: String!
-    organizationId: String!
     createdAt:   Time!
     updatedAt:   Time!
-
     serviceStartedAt:   Time!
-    serviceStartedAtTimelineEventId: ID #we need this in order to use the dataloader for the serviceStartedAtTimelineEvent if asked
-    serviceStartedAtTimelineEvent: TimelineEvent @goField(forceResolver: true)
-
     signedAt:   Time!
+    endedAt:   Time!
     name:        String!
-    sourceFields: SourceFields!
     renewalCycle: ContractRenewalCycle!
     status: ContractStatus!
     owner: User @goField(forceResolver: true)
     source: DataSource!
     appSource: String!
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+    contractUrl:        String!
 }
 
 input ContractInput {
@@ -35,6 +29,7 @@ input ContractInput {
     renewalCycle: ContractRenewalCycle!
     status: ContractStatus!
     appSource:     String
+    contractUrl:        String
 }
 
 enum ContractRenewalCycle {

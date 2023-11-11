@@ -12,11 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
-// ServiceStartedAtTimelineEvent is the resolver for the serviceStartedAtTimelineEvent field.
-func (r *contractResolver) ServiceStartedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error) {
-	panic(fmt.Errorf("not implemented: ServiceStartedAtTimelineEvent - serviceStartedAtTimelineEvent"))
-}
-
 // Owner is the resolver for the owner field.
 func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: Owner - owner"))
@@ -41,3 +36,19 @@ func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contrac
 func (r *Resolver) Contract() generated.ContractResolver { return &contractResolver{r} }
 
 type contractResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *contractResolver) ServiceStartedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error) {
+	panic(fmt.Errorf("not implemented: ServiceStartedAtTimelineEvent - serviceStartedAtTimelineEvent"))
+}
+func (r *contractResolver) ServiceSignedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error) {
+	panic(fmt.Errorf("not implemented: ServiceSignedAtTimelineEvent - serviceSignedAtTimelineEvent"))
+}
+func (r *contractResolver) SignedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error) {
+	panic(fmt.Errorf("not implemented: SignedAtTimelineEvent - signedAtTimelineEvent"))
+}
