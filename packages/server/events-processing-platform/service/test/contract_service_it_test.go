@@ -42,6 +42,7 @@ func TestContractService_CreateContract(t *testing.T) {
 	response, err := contractClient.CreateContract(ctx, &contractpb.CreateContractGrpcRequest{
 		Tenant:           tenant,
 		Name:             "New Contract",
+		ContractUrl:      "http://contract.url",
 		OrganizationId:   orgId,
 		CreatedByUserId:  "User123",
 		ServiceStartedAt: timestamppb.New(timeNow),
@@ -76,6 +77,7 @@ func TestContractService_CreateContract(t *testing.T) {
 	// Assertions to validate the contract create event data
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, "New Contract", eventData.Name)
+	require.Equal(t, "http://contract.url", eventData.ContractUrl)
 	require.Equal(t, orgId, eventData.OrganizationId)
 	require.Equal(t, "User123", eventData.CreatedByUserId)
 	require.True(t, today.Equal(*eventData.ServiceStartedAt))

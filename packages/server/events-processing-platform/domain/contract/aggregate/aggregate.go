@@ -49,6 +49,7 @@ func (a *ContractAggregate) onContractCreate(evt eventstore.Event) error {
 	a.Contract.Tenant = a.Tenant
 	a.Contract.OrganizationId = eventData.OrganizationId
 	a.Contract.Name = eventData.Name
+	a.Contract.ContractUrl = eventData.ContractUrl
 	a.Contract.CreatedByUserId = eventData.CreatedByUserId
 	a.Contract.ServiceStartedAt = eventData.ServiceStartedAt
 	a.Contract.SignedAt = eventData.SignedAt

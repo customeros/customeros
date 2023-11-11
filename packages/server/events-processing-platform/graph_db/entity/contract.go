@@ -12,6 +12,7 @@ type ContractEntity struct {
 	SourceOfTruth    DataSource
 	AppSource        string
 	Name             string
+	ContractUrl      string
 	Status           string
 	RenewalCycle     string
 	SignedAt         *time.Time

@@ -81,6 +81,7 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 		model.ContractDataFields{
 			OrganizationId:   request.OrganizationId,
 			Name:             request.Name,
+			ContractUrl:      request.ContractUrl,
 			CreatedByUserId:  utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
 			ServiceStartedAt: utils.ToDatePtr(utils.TimestampProtoToTimePtr(request.ServiceStartedAt)),
 			SignedAt:         utils.TimestampProtoToTimePtr(request.SignedAt),
