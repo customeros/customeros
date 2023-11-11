@@ -17,6 +17,7 @@ type ContractCreateEvent struct {
 	Tenant           string                     `json:"tenant" validate:"required"`
 	OrganizationId   string                     `json:"organizationId" validate:"required"`
 	Name             string                     `json:"name"`
+	ContractUrl      string                     `json:"contractUrl"`
 	CreatedByUserId  string                     `json:"createdByUserId"`
 	ServiceStartedAt *time.Time                 `json:"serviceStartedAt,omitempty"`
 	SignedAt         *time.Time                 `json:"signedAt,omitempty"`
@@ -33,6 +34,7 @@ func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		Tenant:           aggregate.GetTenant(),
 		OrganizationId:   dataFields.OrganizationId,
 		Name:             dataFields.Name,
+		ContractUrl:      dataFields.ContractUrl,
 		CreatedByUserId:  dataFields.CreatedByUserId,
 		ServiceStartedAt: dataFields.ServiceStartedAt,
 		SignedAt:         dataFields.SignedAt,

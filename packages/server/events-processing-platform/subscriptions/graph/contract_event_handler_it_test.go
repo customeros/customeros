@@ -41,6 +41,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 		contractAggregate,
 		model.ContractDataFields{
 			Name:             "New Contract",
+			ContractUrl:      "http://contract.url",
 			OrganizationId:   orgId,
 			CreatedByUserId:  userIdCreator,
 			ServiceStartedAt: &timeNow,
@@ -84,6 +85,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "New Contract", contract.Name)
+	require.Equal(t, "http://contract.url", contract.ContractUrl)
 	require.Equal(t, model.Live.String(), contract.Status)
 	require.Equal(t, model.MonthlyRenewal.String(), contract.RenewalCycle)
 	require.True(t, timeNow.Equal(contract.CreatedAt.UTC()))

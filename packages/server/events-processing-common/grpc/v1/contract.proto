@@ -34,6 +34,7 @@ message CreateContractGrpcRequest {
   RenewalCycle renewalCycle = 10;
   SourceFields sourceFields = 12;
   ExternalSystemFields externalSystemFields = 13;
+  string contractUrl = 14;
 }
 
 // Contract response message

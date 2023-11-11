@@ -12,6 +12,7 @@ type Contract struct {
 	Tenant           string                       `json:"tenant"`
 	OrganizationId   string                       `json:"organizationId"`
 	Name             string                       `json:"name"`
+	ContractUrl      string                       `json:"contractUrl"`
 	CreatedByUserId  string                       `json:"createdByUserId"`
 	CreatedAt        time.Time                    `json:"createdAt"`
 	UpdatedAt        time.Time                    `json:"updatedAt"`
@@ -27,6 +28,7 @@ type Contract struct {
 type ContractDataFields struct {
 	OrganizationId       string
 	Name                 string
+	ContractUrl          string
 	CreatedByUserId      string
 	ServiceStartedAt     *time.Time
 	SignedAt             *time.Time

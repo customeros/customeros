@@ -207,6 +207,7 @@ func MapDbNodeToContractEntity(node dbtype.Node) *entity.ContractEntity {
 	contract := entity.ContractEntity{
 		Id:               utils.GetStringPropOrEmpty(props, "id"),
 		Name:             utils.GetStringPropOrEmpty(props, "name"),
+		ContractUrl:      utils.GetStringPropOrEmpty(props, "contractUrl"),
 		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
