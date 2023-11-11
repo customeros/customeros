@@ -34,7 +34,6 @@ func (r *contractRepository) CreateContract(ctx context.Context, tenant, organiz
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (org)-[:NOTED]->(c:Contract {id:randomUUID()}) " +
 		" ON CREATE SET c.createdAt=$now, " +
-		"				c.createdAt=$now, " +
 		"				c.source=$source, " +
 		"				c.appSource=$appSource, " +
 		"				c:Contract_%s," +

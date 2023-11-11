@@ -20,7 +20,7 @@ type Clients struct {
 	UserClient         user_grpc_service.UserGrpcServiceClient
 	JobRoleClient      job_role_grpc_service.JobRoleGrpcServiceClient
 	LogEntryClient     log_entry_grpc_service.LogEntryGrpcServiceClient
-	ContractClient     contract_grpc_service.ContractServiceClient
+	ContractClient     contract_grpc_service.ContractGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -35,7 +35,7 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		UserClient:         user_grpc_service.NewUserGrpcServiceClient(conn),
 		JobRoleClient:      job_role_grpc_service.NewJobRoleGrpcServiceClient(conn),
 		LogEntryClient:     log_entry_grpc_service.NewLogEntryGrpcServiceClient(conn),
-		ContractClient:     contract_grpc_service.NewContractServiceClient(conn),
+		ContractClient:     contract_grpc_service.NewContractGrpcServiceClient(conn),
 	}
 	return &clients
 }
