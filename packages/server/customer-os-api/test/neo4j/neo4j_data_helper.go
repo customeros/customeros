@@ -694,7 +694,7 @@ func TagLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, logEntryI
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tagId":      tagId,
 		"logEntryId": logEntryId,
-		"taggedAt":   utils.TimePtrFirstNonNilNillableAsAny(taggedAt, utils.NowAsPtr()),
+		"taggedAt":   utils.TimePtrFirstNonNilNillableAsAny(taggedAt, utils.NowPtr()),
 	})
 }
 
@@ -823,8 +823,8 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"billingDetailsAmount":            organization.BillingDetails.Amount,
 		"billingDetailsFrequency":         organization.BillingDetails.Frequency,
 		"billingDetailsRenewalCycle":      organization.BillingDetails.RenewalCycle,
-		"billingDetailsRenewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(utils.ToDateNillable(organization.BillingDetails.RenewalCycleStart)),
-		"billingDetailsRenewalCycleNext":  utils.TimePtrFirstNonNilNillableAsAny(utils.ToDateNillable(organization.BillingDetails.RenewalCycleNext)),
+		"billingDetailsRenewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(utils.ToDatePtr(organization.BillingDetails.RenewalCycleStart)),
+		"billingDetailsRenewalCycleNext":  utils.TimePtrFirstNonNilNillableAsAny(utils.ToDatePtr(organization.BillingDetails.RenewalCycleNext)),
 
 		"now": utils.Now(),
 	})

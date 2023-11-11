@@ -53,7 +53,7 @@ func (s *issueService) UpsertIssue(ctx context.Context, request *issuepb.UpsertI
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	cmd := command.NewUpsertIssueCommand(issueId, request.Tenant, request.LoggedInUserId, dataFields, source, externalSystem, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	cmd := command.NewUpsertIssueCommand(issueId, request.Tenant, request.LoggedInUserId, dataFields, source, externalSystem, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err := s.issueCommandHandlers.UpsertIssue.Handle(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertIssueCommand.Handle) tenant:{%v}, issueId:{%v} , err: %v", request.Tenant, request.Id, err.Error())

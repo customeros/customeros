@@ -46,7 +46,7 @@ func (b *BaseData) SetTimes() {
 	if b.UpdatedAt != nil {
 		b.UpdatedAt = utils.TimePtr((*b.UpdatedAt).UTC())
 	} else {
-		b.UpdatedAt = utils.NowAsPtr()
+		b.UpdatedAt = utils.NowPtr()
 	}
 }
 

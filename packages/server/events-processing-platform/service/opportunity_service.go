@@ -58,9 +58,9 @@ func (s *opportunityService) CreateOpportunity(ctx context.Context, request *opp
 	opportunityId := uuid.New().String()
 
 	// Convert any protobuf timestamp to time.Time, if necessary
-	createdAt := utils.TimestampProtoToTime(request.CreatedAt)
-	updatedAt := utils.TimestampProtoToTime(request.UpdatedAt)
-	estimatedClosedAt := utils.TimestampProtoToTime(request.EstimatedCloseDate)
+	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
+	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+	estimatedClosedAt := utils.TimestampProtoToTimePtr(request.EstimatedCloseDate)
 
 	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)

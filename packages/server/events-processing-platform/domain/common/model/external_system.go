@@ -29,7 +29,7 @@ func (e *ExternalSystem) FromGrpc(grpcExternalSystem *grpccommon.ExternalSystemF
 	e.ExternalId = grpcExternalSystem.ExternalId
 	e.ExternalIdSecond = grpcExternalSystem.ExternalIdSecond
 	e.ExternalSource = grpcExternalSystem.ExternalSource
-	e.SyncDate = utils.TimestampProtoToTime(grpcExternalSystem.SyncDate)
+	e.SyncDate = utils.TimestampProtoToTimePtr(grpcExternalSystem.SyncDate)
 }
 
 func (e *ExternalSystem) Available() bool {

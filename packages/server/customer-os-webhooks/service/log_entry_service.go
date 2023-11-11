@@ -187,9 +187,9 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 			Tenant:      tenant,
 			Content:     logEntryInput.Content,
 			ContentType: logEntryInput.ContentType,
-			CreatedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.CreatedAt, utils.NowAsPtr()).(time.Time)),
-			UpdatedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.UpdatedAt, utils.NowAsPtr()).(time.Time)),
-			StartedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.StartedAt, utils.NowAsPtr()).(time.Time)),
+			CreatedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.CreatedAt, utils.NowPtr()).(time.Time)),
+			UpdatedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.UpdatedAt, utils.NowPtr()).(time.Time)),
+			StartedAt:   timestamppb.New(utils.TimePtrFirstNonNilNillableAsAny(logEntryInput.StartedAt, utils.NowPtr()).(time.Time)),
 			SourceFields: &commonpb.SourceFields{
 				Source:    logEntryInput.ExternalSystem,
 				AppSource: utils.StringFirstNonEmpty(logEntryInput.AppSource, constants.AppSourceCustomerOsWebhooks),

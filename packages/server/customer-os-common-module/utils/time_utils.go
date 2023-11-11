@@ -21,7 +21,7 @@ func Now() time.Time {
 	return time.Now().UTC()
 }
 
-func NowAsPtr() *time.Time {
+func NowPtr() *time.Time {
 	return TimePtr(time.Now().UTC())
 }
 
@@ -32,12 +32,11 @@ func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {
 	return timestamppb.New(*input)
 }
 
-func ToDateNillable(t *time.Time) *time.Time {
+func ToDatePtr(t *time.Time) *time.Time {
 	if t == nil {
 		return nil
 	}
-	y, m, d := t.Date()
-	val := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+	val := t.Truncate(24 * time.Hour).UTC()
 	return &val
 }
 
@@ -78,7 +77,7 @@ func UnmarshalDateTime(input string) (*time.Time, error) {
 	return nil, errors.New(fmt.Sprintf("cannot parse input as date time %s", input))
 }
 
-func TimestampProtoToTime(pbTime *timestamppb.Timestamp) *time.Time {
+func TimestampProtoToTimePtr(pbTime *timestamppb.Timestamp) *time.Time {
 	if pbTime == nil {
 		return nil
 	}

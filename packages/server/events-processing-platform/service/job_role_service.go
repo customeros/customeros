@@ -45,7 +45,7 @@ func (jobRoleService *jobRoleService) CreateJobRole(ctx context.Context, request
 	if request.Primary != nil {
 		primary = *request.Primary
 	}
-	command := model.NewCreateJobRoleCommand(objectID, request.Tenant, request.JobTitle, request.Description, primary, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.StartedAt), utils.TimestampProtoToTime(request.EndedAt), utils.TimestampProtoToTime(request.CreatedAt))
+	command := model.NewCreateJobRoleCommand(objectID, request.Tenant, request.JobTitle, request.Description, primary, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTimePtr(request.StartedAt), utils.TimestampProtoToTimePtr(request.EndedAt), utils.TimestampProtoToTimePtr(request.CreatedAt))
 	if err := jobRoleService.jobRoleCommands.CreateJobRoleCommand.Handle(ctx, command); err != nil {
 		return nil, fmt.Errorf("failed to create job role: %w", err)
 	}

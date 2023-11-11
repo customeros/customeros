@@ -72,7 +72,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	command := command.NewUpsertOrganizationCommand(organizationId, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId),
-		sourceFields, externalSystem, dataFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), request.IgnoreEmptyFields)
+		sourceFields, externalSystem, dataFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt), request.IgnoreEmptyFields)
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpsertSyncOrganization.Handle) tenant:%s, organizationID: %s , err: {%v}", request.Tenant, organizationId, err)
@@ -226,7 +226,7 @@ func (s *organizationService) UpdateOrganizationBillingDetails(ctx context.Conte
 		UpdatedBy:         utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
 		Frequency:         mapper.MapFrequencyToString(request.Frequency),
 		RenewalCycle:      mapper.MapFrequencyToString(request.RenewalCycle),
-		RenewalCycleStart: utils.TimestampProtoToTime(request.CycleStart),
+		RenewalCycleStart: utils.TimestampProtoToTimePtr(request.CycleStart),
 	}
 	command := command.NewUpdateBillingDetailsCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId), fields)
 	if err := s.organizationCommands.UpdateBillingDetailsCommand.Handle(ctx, command); err != nil {
@@ -329,7 +329,7 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 		CustomFieldValue: models.CustomFieldValue{
 			Str:     request.CustomFieldValue.StringValue,
 			Bool:    request.CustomFieldValue.BoolValue,
-			Time:    utils.TimestampProtoToTime(request.CustomFieldValue.DatetimeValue),
+			Time:    utils.TimestampProtoToTimePtr(request.CustomFieldValue.DatetimeValue),
 			Int:     request.CustomFieldValue.IntegerValue,
 			Decimal: request.CustomFieldValue.DecimalValue,
 		},
@@ -338,7 +338,7 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 
 	command := command.NewUpsertCustomFieldCommand(request.OrganizationId, request.Tenant,
 		sourceFields.Source, sourceFields.SourceOfTruth, sourceFields.AppSource, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
-		utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt), customField)
+		utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt), customField)
 	if err := s.organizationCommands.UpsertCustomFieldCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
