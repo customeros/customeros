@@ -1,7 +1,9 @@
 'use client';
-import { useRef } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
+
+import { debounce } from 'lodash';
 
 import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
@@ -46,12 +48,22 @@ const placeholders = {
 export const AboutPanel = () => {
   const client = getGraphQLClient();
   const id = useParams()?.id as string;
-  const timeoutRef = useRef<NodeJS.Timeout>();
   const [_, copyToClipboard] = useCopyToClipboard();
   const { data } = useOrganizationQuery(client, { id });
   const { updateOrganization, addSocial, invalidateQuery } =
     useAboutPanelMethods({ id });
   const { data: tenantNameQueryData } = useTenantNameQuery(client);
+  const saveOrganization = debounce(
+    (variables?: Partial<OrganizationAboutForm>) => {
+      updateOrganization.mutate({
+        input: OrganizationAboutFormDto.toPayload({
+          ...state.values,
+          ...(variables ?? {}),
+        }),
+      });
+    },
+    300,
+  );
 
   const showSubOrgData = (() =>
     tenantNameQueryData?.tenant
@@ -62,11 +74,11 @@ export const AboutPanel = () => {
     data?.organization,
   );
 
-  const mutateOrganization = (variables: Partial<OrganizationAboutForm>) => {
+  const mutateOrganization = (variables?: Partial<OrganizationAboutForm>) => {
     updateOrganization.mutate({
       input: OrganizationAboutFormDto.toPayload({
         ...state.values,
-        ...variables,
+        ...(variables ?? {}),
       }),
     });
   };
@@ -100,16 +112,9 @@ export const AboutPanel = () => {
             ) {
               return next;
             }
-            if (timeoutRef.current) {
-              clearTimeout(timeoutRef.current);
-            }
-            timeoutRef.current = setTimeout(
-              () =>
-                mutateOrganization({
-                  [action.payload.name]: trimmedValue,
-                }),
-              300,
-            );
+            saveOrganization({
+              [action.payload.name]: trimmedValue,
+            });
             break;
           }
           default:
@@ -120,6 +125,12 @@ export const AboutPanel = () => {
       return next;
     },
   });
+
+  useEffect(() => {
+    return () => {
+      saveOrganization.flush();
+    };
+  }, []); // empty array so it runs just once
 
   const handleAddSocial = ({
     newValue,
