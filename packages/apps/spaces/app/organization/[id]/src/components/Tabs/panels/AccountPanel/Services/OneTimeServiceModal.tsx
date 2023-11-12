@@ -11,7 +11,6 @@ import { DotSingle } from '@ui/media/icons/DotSingle';
 import { AutoresizeTextarea } from '@ui/form/Textarea';
 import { CurrencyInput } from '@ui/form/CurrencyInput';
 import { ClockCheck } from '@ui/media/icons/ClockCheck';
-import { RenewalLikelihoodProbability } from '@graphql/types';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import {
   Modal,
@@ -33,7 +32,6 @@ interface OneTimeServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: OneTimeServiceValue;
-  renewalProbability?: RenewalLikelihoodProbability | null;
 }
 
 export const OneTimeServiceModal = ({
