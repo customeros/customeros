@@ -24,27 +24,29 @@ import {
 } from '@ui/overlay/Modal';
 
 export type OneTimeServiceValue = {
-  amount?: string | null;
-  comment?: string | null;
+  price?: string | null;
+  description?: string | null;
 };
 
 interface OneTimeServiceModalProps {
   name: string;
   isOpen: boolean;
   onClose: () => void;
-  OneTimeService: OneTimeServiceValue;
+  data: OneTimeServiceValue;
   renewalProbability?: RenewalLikelihoodProbability | null;
 }
 
 export const OneTimeServiceModal = ({
-  OneTimeService,
+  data,
   isOpen,
   onClose,
 }: OneTimeServiceModalProps) => {
   const initialRef = useRef(null);
 
-  const [amount, setAmount] = useState<string>(OneTimeService?.amount || '');
-  const [reason, setReason] = useState<string>(OneTimeService?.comment || '');
+  const [price, setPrice] = useState<string>(data?.price || '');
+  const [description, setDescription] = useState<string>(
+    data?.description || '',
+  );
 
   const handleSetOneTimeServiceData = () => {
     // todo COS-857
@@ -85,8 +87,8 @@ export const OneTimeServiceModal = ({
               leftElement={<ClockCheck mr='3' color='gray.500' />}
             />
             <CurrencyInput
-              onChange={setAmount}
-              value={`${amount}`}
+              onChange={setPrice}
+              value={`${price}`}
               w='full'
               placeholder='Price'
               isLabelVisible
@@ -104,11 +106,11 @@ export const OneTimeServiceModal = ({
           <AutoresizeTextarea
             pt='0'
             id='description'
-            value={reason}
+            value={description}
             label='Description (Optional)'
             isLabelVisible
             spellCheck='false'
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder='What is this service about?'
           />
         </ModalBody>
