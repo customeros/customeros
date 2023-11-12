@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 
 // import { useDisclosure } from '@ui/utils';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+// import { EmptyContracts } from '@organization/src/components/Tabs/panels/AccountPanel/EmptyContracts';
 import { ContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractCard';
 import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
 import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
@@ -55,6 +56,11 @@ export const AccountPanel = () => {
   if (isInitialLoading) {
     return <AccountPanelSkeleton />;
   }
+
+  // TODO uncomment after integrating with BE
+  // if (no contracts available) {
+  //   return <EmptyContracts name={data?.organization?.name || ''} />;
+  // }
 
   return (
     <OrganizationPanel
