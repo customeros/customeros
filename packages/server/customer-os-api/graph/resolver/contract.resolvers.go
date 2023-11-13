@@ -7,13 +7,15 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/opentracing/opentracing-go/log"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // Owner is the resolver for the owner field.
@@ -37,7 +39,12 @@ func (r *mutationResolver) ContractCreate(ctx context.Context, input model.Contr
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	contractId, err := r.Services.ContractService.Create(ctx, input) // TODO pass whatever needed
+	contractId, err := r.Services.ContractService.Create(ctx, &service.ContractCreateData{
+		ContractEntity:    mapper.MapContractInputToEntity(input),
+		OrganizationId:    input.OrganizationID,
+		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
+		Source:            entity.DataSourceOpenline,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create contract")

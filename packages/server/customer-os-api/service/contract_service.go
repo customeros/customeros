@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -15,12 +16,14 @@ import (
 	contractgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
 type ContractService interface {
-	Create(ctx context.Context, contact *ContractCreateData) (string, error)
+	Create(ctx context.Context, contract *ContractCreateData) (string, error)
+	GetById(ctx context.Context, id string) (*entity.ContractEntity, error)
 }
 type contractService struct {
 	log          logger.Logger
@@ -80,10 +83,9 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 			Source:    string(contractDetails.Source),
 			AppSource: utils.StringFirstNonEmpty(contractDetails.AppSource, constants.AppSourceCustomerOsApi),
 		},
-		LoggedInUserId:  common.GetUserIdFromContext(ctx),
-		OrganizationId:  contractDetails.OrganizationId,
-		Name:            contractDetails.ContractEntity.Name,
-		CreatedByUserId: contractDetails.ContractEntity.CreatedByUsedId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		OrganizationId: contractDetails.OrganizationId,
+		Name:           contractDetails.ContractEntity.Name,
 		//TODO map entity enum to grpc enum
 		//RenewalCycle:    contractDetails.ContractEntity.ContractRenewalCycle,
 		ContractUrl: contractDetails.ContractEntity.ContractUrl,
@@ -116,4 +118,41 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		time.Sleep(utils.BackOffIncrementalDelay(i))
 	}
 	return response.Id, err
+}
+
+func (s *contractService) GetById(ctx context.Context, contractId string) (*entity.ContractEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contractId", contractId))
+
+	if contractDbNode, err := s.repositories.ContactRepository.GetById(ctx, common.GetContext(ctx).Tenant, contractId); err != nil {
+		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
+		return nil, wrappedErr
+	} else {
+		return s.mapDbNodeToContractEntity(*contractDbNode), nil
+	}
+}
+
+func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.ContractEntity {
+	props := utils.GetPropsFromNode(dbNode)
+	contractStatus := entity.GetContractStatus(utils.GetStringPropOrEmpty(props, "ContractStatus"))
+	contractRenewalCycle := entity.GetContractRenewalCycle(utils.GetStringPropOrEmpty(props, "ContractRenewalCycle"))
+
+	contract := entity.ContractEntity{
+		ID:                   utils.GetStringPropOrEmpty(props, "id"),
+		Name:                 utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:            utils.ToPtr(utils.GetTimePropOrEpochStart(props, "createdAt")),
+		UpdatedAt:            utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		ServiceStartedAt:     utils.ToPtr(utils.GetTimePropOrEpochStart(props, "serviceStartedAt")),
+		SignedAt:             utils.ToPtr(utils.GetTimePropOrEpochStart(props, "signedAt")),
+		EndedAt:              utils.ToPtr(utils.GetTimePropOrEpochStart(props, "endedAt")),
+		ContractUrl:          utils.GetStringPropOrEmpty(props, "contractUrl"),
+		ContractStatus:       contractStatus,
+		ContractRenewalCycle: contractRenewalCycle,
+		Source:               entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:            utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &contract
 }

@@ -85,7 +85,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		BillableService:            NewBillableService(log, repositories),
 		LogEntryService:            NewLogEntryService(log, repositories),
 		CommentService:             NewCommentService(log, repositories),
-		ContractService():          NewContractService(log, repositories),
 	}
 	services.IssueService = NewIssueService(log, repositories, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
@@ -102,6 +101,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.AnalysisService = NewAnalysisService(log, repositories, &services)
 	services.MeetingService = NewMeetingService(log, repositories, &services)
 	services.PlayerService = NewPlayerService(repositories, &services)
+	services.ContractService = NewContractService(log, repositories, grpcClients, &services)
 
 	log.Info("Init cache service")
 	services.Cache = NewCacheService(&services)

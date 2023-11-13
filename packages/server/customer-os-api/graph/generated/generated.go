@@ -7626,6 +7626,7 @@ input ContractInput {
     contractUrl:        String
     serviceStartedAt:   Time
     signedAt:           Time
+    externalReference:  ExternalSystemReferenceInput
 }
 
 enum ContractRenewalCycle {
@@ -57853,7 +57854,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "organizationId", "renewalCycle", "appSource", "contractUrl", "serviceStartedAt", "signedAt"}
+	fieldsInOrder := [...]string{"name", "organizationId", "renewalCycle", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -57923,6 +57924,15 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.SignedAt = data
+		case "externalReference":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalReference = data
 		}
 	}
 
