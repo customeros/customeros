@@ -5,8 +5,8 @@ import { FC } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
-import { Check } from '@ui/media/icons/Check';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { Star06 } from '@ui/media/icons/Star06';
 import { Heading } from '@ui/typography/Heading';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
@@ -35,7 +35,7 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
         alignItems='center'
       >
         <FeaturedIcon colorScheme='primary' mb={2} size='lg'>
-          <Check boxSize={4} />
+          <Star06 boxSize={4} />
         </FeaturedIcon>
         <Heading mb={1} size='sm' fontWeight='semibold'>
           Create new contract
