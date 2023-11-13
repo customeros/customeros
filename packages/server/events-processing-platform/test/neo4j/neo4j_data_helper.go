@@ -239,6 +239,29 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return contractId
 }
 
+func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
+	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.Id)
+	query := fmt.Sprintf(`MATCH (c:Contract {id:$contractId})
+				MERGE (c)-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$id})
+				ON CREATE SET 
+					sli:ServiceLineItem_%s,
+					sli.name=$name,
+					sli.price=$price,
+					sli.quantity=$quantity,
+					sli.billed=$billed
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"contractId": contractId,
+		"id":         serviceLineItemId,
+		"price":      serviceLineItem.Price,
+		"name":       serviceLineItem.Name,
+		"quantity":   serviceLineItem.Quantity,
+		"billed":     serviceLineItem.Billed,
+	})
+	return serviceLineItemId
+}
+
 func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
 	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})

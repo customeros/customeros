@@ -8,10 +8,12 @@ import (
 // CommandHandlers acts as a container for all command handlers.
 type CommandHandlers struct {
 	CreateServiceLineItem CreateServiceLineItemCommandHandler
+	UpdateServiceLineItem UpdateServiceLineItemCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
 		CreateServiceLineItem: NewCreateServiceLineItemCommandHandler(log, es),
+		UpdateServiceLineItem: NewUpdateServiceLineItemCommandHandler(log, es),
 	}
 }

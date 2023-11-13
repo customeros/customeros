@@ -226,7 +226,7 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 	props := utils.GetPropsFromNode(node)
 	serviceLineItem := entity.ServiceLineItemEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Description:   utils.GetStringPropOrEmpty(props, "description"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
@@ -234,7 +234,7 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Billed:        utils.GetStringPropOrEmpty(props, "billed"),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
-		Licenses:      utils.GetInt64PropOrZero(props, "licenses"),
+		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
 	}
 	return &serviceLineItem
 }

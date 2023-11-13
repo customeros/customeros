@@ -18,7 +18,7 @@ import (
 )
 
 func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -73,7 +73,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 }
 
 func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -141,7 +141,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 }
 
 func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -232,7 +232,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 }
 
 func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)

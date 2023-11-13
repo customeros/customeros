@@ -22,7 +22,7 @@ import (
 )
 
 func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -107,7 +107,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 }
 
 func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -150,7 +150,7 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 }
 
 func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -190,7 +190,7 @@ func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
 }
 
 func TestGraphLogEntryEventHandler_OnRemoveTag(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data

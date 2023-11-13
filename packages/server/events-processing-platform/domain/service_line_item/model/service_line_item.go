@@ -7,24 +7,24 @@ import (
 
 // ServiceLineItem represents the state of a service line item aggregate.
 type ServiceLineItem struct {
-	ID          string    `json:"id"`
-	ContractId  string    `json:"contractId"`
-	Billed      string    `json:"billed"`
-	Licenses    int32     `json:"licenses"` // Relevant only for Subscription type
-	Price       float32   `json:"price"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-	Source      commonmodel.Source
+	ID         string    `json:"id"`
+	ContractId string    `json:"contractId"`
+	Billed     string    `json:"billed"`
+	Quantity   int64     `json:"quantity"` // Relevant only for Subscription type
+	Price      float64   `json:"price"`
+	Name       string    `json:"name"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+	Source     commonmodel.Source
 }
 
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.
 type ServiceLineItemDataFields struct {
-	Billed      BilledType `json:"billed"`
-	Licenses    int32      `json:"licenses"` // Relevant only for Subscription type
-	Price       float32    `json:"price"`
-	Description string     `json:"description"`
-	ContractId  string     `json:"contractId"`
+	Billed     BilledType `json:"billed"`
+	Quantity   int64      `json:"quantity"` // Relevant only for Subscription type
+	Price      float64    `json:"price"`
+	Name       string     `json:"name"`
+	ContractId string     `json:"contractId"`
 }
 
 // BilledType enum represents the billing type for a service line item.

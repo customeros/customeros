@@ -17,7 +17,7 @@ import (
 )
 
 func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -81,7 +81,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 }
 
 func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -121,7 +121,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 }
 
 func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline_UpdateOnlyEmptyFields(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data

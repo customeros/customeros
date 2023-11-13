@@ -11,8 +11,8 @@ type ServiceLineItemEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
-	Description   string
+	Name          string
 	Billed        string
 	Price         float64
-	Licenses      int64
+	Quantity      int64
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/service_line_item"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
@@ -66,11 +67,11 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 		request.Tenant,
 		request.LoggedInUserId,
 		model.ServiceLineItemDataFields{
-			Billed:      model.BilledType(request.Billed),
-			Licenses:    request.Licenses,
-			Price:       request.Price,
-			Description: request.Description,
-			ContractId:  request.ContractId,
+			Billed:     model.BilledType(request.Billed),
+			Quantity:   request.Quantity,
+			Price:      float64(request.Price),
+			Name:       request.Name,
+			ContractId: request.ContractId,
 		},
 		source,
 		createdAt,
@@ -85,6 +86,46 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 
 	// Return the ID of the newly created service line item
 	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: serviceLineItemId}, nil
+}
+
+func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, request *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.UpdateServiceLineItem")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Validate service line item ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+
+	source := commonmodel.Source{}
+	source.FromGrpc(request.SourceFields)
+
+	updateServiceLineItemCommand := command.NewUpdateServiceLineItemCommand(
+		request.Id,
+		request.Tenant,
+		request.LoggedInUserId,
+		model.ServiceLineItemDataFields{
+			Billed:   model.BilledType(request.Billed),
+			Quantity: request.Quantity,
+			Price:    float64(request.Price),
+			Name:     request.Name,
+		},
+		source,
+		updatedAt,
+	)
+
+	if err := s.serviceLineItemCommandHandlers.UpdateServiceLineItem.Handle(ctx, updateServiceLineItemCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the updated service line item
+	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
 }
 
 func (s *serviceLineItemService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {
