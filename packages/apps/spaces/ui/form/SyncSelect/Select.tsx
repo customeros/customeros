@@ -78,13 +78,20 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         components={components}
         tabSelectsValue={false}
         chakraStyles={{
-          container: (props, state) => ({
-            ...props,
-            w: '100%',
-            overflow: 'visible',
-            _hover: { cursor: 'pointer' },
-            ...chakraStyles?.container?.(props, state),
-          }),
+          container: (props, state) => {
+            const readOnlyStyles = state.selectProps?.isReadOnly
+              ? { pointerEvents: 'none' }
+              : {};
+
+            return {
+              ...props,
+              w: '100%',
+              overflow: 'visible',
+              _hover: { cursor: 'pointer' },
+              ...chakraStyles?.container?.(props, state),
+              ...readOnlyStyles,
+            };
+          },
           clearIndicator: (props, state) => ({
             ...props,
             padding: 2,
