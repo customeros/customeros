@@ -162,7 +162,6 @@ export const AccountPanel = () => {
                   ...props,
                   w: 'fit-content',
                   left: '-32px',
-                  // top: '-10px',
                 };
               },
             }}
