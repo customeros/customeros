@@ -24,4 +24,5 @@ const (
 	NodeLabel_Country            = "Country"
 	NodeLabel_ActionItem         = "ActionItem"
 	NodeLabel_Comment            = "Comment"
+	NodeLabel_Contract           = "Contract"
 )

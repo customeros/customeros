@@ -4,8 +4,8 @@ type ContractRenewalCycle string
 
 const (
 	ContractRenewalCycleNone           ContractRenewalCycle = ""
-	ContractRenewalCycleMonthlyRenewal ContractRenewalCycle = "MONTHLY_RENEWAL"
-	ContractRenewalCycleAnnualRenewal  ContractRenewalCycle = "ANNUAL_RENEWAL"
+	ContractRenewalCycleMonthlyRenewal ContractRenewalCycle = "MONTHLY"
+	ContractRenewalCycleAnnualRenewal  ContractRenewalCycle = "ANNUALLY"
 )
 
 var AllContractRenewalCycles = []ContractRenewalCycle{

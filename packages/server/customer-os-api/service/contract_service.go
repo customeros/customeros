@@ -13,11 +13,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
-	contractgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
@@ -73,32 +72,33 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 }
 
 func (s *contractService) createContractWithEvents(ctx context.Context, contractDetails *ContractCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Create")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.createContractWithEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	createContractRequest := contractgrpc.CreateContractGrpcRequest{
-		Tenant: common.GetTenantFromContext(ctx),
+	createContractRequest := contractpb.CreateContractGrpcRequest{
+		Tenant:           common.GetTenantFromContext(ctx),
+		OrganizationId:   contractDetails.OrganizationId,
+		Name:             contractDetails.ContractEntity.Name,
+		ContractUrl:      contractDetails.ContractEntity.ContractUrl,
+		SignedAt:         utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.SignedAt),
+		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(contractDetails.ContractEntity.ServiceStartedAt),
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(contractDetails.Source),
 			AppSource: utils.StringFirstNonEmpty(contractDetails.AppSource, constants.AppSourceCustomerOsApi),
 		},
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		OrganizationId: contractDetails.OrganizationId,
-		Name:           contractDetails.ContractEntity.Name,
-		//TODO map entity enum to grpc enum
-		//RenewalCycle:    contractDetails.ContractEntity.ContractRenewalCycle,
-		ContractUrl: contractDetails.ContractEntity.ContractUrl,
 	}
-	if contractDetails.ContractEntity.CreatedAt != nil {
-		createContractRequest.CreatedAt = timestamppb.New(*contractDetails.ContractEntity.CreatedAt)
+
+	switch contractDetails.ContractEntity.ContractRenewalCycle {
+	case entity.ContractRenewalCycleMonthlyRenewal:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+	case entity.ContractRenewalCycleAnnualRenewal:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
+	default:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_NONE
 	}
-	if contractDetails.ContractEntity.ServiceStartedAt != nil {
-		createContractRequest.ServiceStartedAt = timestamppb.New(*contractDetails.ContractEntity.ServiceStartedAt)
-	}
-	if contractDetails.ContractEntity.SignedAt != nil {
-		createContractRequest.SignedAt = timestamppb.New(*contractDetails.ContractEntity.SignedAt)
-	}
+
 	if contractDetails.ExternalReference != nil && contractDetails.ExternalReference.ExternalSystemId != "" {
 		createContractRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
 			ExternalSystemId: string(contractDetails.ExternalReference.ExternalSystemId),
@@ -107,14 +107,15 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 			ExternalSource:   utils.IfNotNilString(contractDetails.ExternalReference.Relationship.ExternalSource),
 		}
 	}
+
 	response, err := s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
+
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
-		//TODO implement get contract by id
-		//user, findErr := s.GetById(ctx, response.Id)
-		//if user != nil && findErr == nil {
-		//	span.LogFields(log.Bool("contractSavedInGraphDb", true))
-		//	break
-		//}
+		contractFound, findErr := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, entity.NodeLabel_Contract)
+		if contractFound && findErr == nil {
+			span.LogFields(log.Bool("contractSavedInGraphDb", true))
+			break
+		}
 		time.Sleep(utils.BackOffIncrementalDelay(i))
 	}
 	return response.Id, err
@@ -126,7 +127,8 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*enti
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contractId", contractId))
 
-	if contractDbNode, err := s.repositories.ContactRepository.GetById(ctx, common.GetContext(ctx).Tenant, contractId); err != nil {
+	if contractDbNode, err := s.repositories.ContractRepository.GetById(ctx, common.GetContext(ctx).Tenant, contractId); err != nil {
+		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contract with id {%s} not found", contractId))
 		return nil, wrappedErr
 	} else {
@@ -142,11 +144,11 @@ func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.
 	contract := entity.ContractEntity{
 		ID:                   utils.GetStringPropOrEmpty(props, "id"),
 		Name:                 utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:            utils.ToPtr(utils.GetTimePropOrEpochStart(props, "createdAt")),
+		CreatedAt:            utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:            utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		ServiceStartedAt:     utils.ToPtr(utils.GetTimePropOrEpochStart(props, "serviceStartedAt")),
-		SignedAt:             utils.ToPtr(utils.GetTimePropOrEpochStart(props, "signedAt")),
-		EndedAt:              utils.ToPtr(utils.GetTimePropOrEpochStart(props, "endedAt")),
+		ServiceStartedAt:     utils.GetTimePropOrNil(props, "serviceStartedAt"),
+		SignedAt:             utils.GetTimePropOrNil(props, "signedAt"),
+		EndedAt:              utils.GetTimePropOrNil(props, "endedAt"),
 		ContractUrl:          utils.GetStringPropOrEmpty(props, "contractUrl"),
 		ContractStatus:       contractStatus,
 		ContractRenewalCycle: contractRenewalCycle,
