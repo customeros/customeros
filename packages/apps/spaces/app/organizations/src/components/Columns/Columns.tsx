@@ -1,11 +1,10 @@
 import { Flex } from '@ui/layout/Flex';
-import { Plus } from '@ui/media/icons/Plus';
-import { Tooltip } from '@ui/overlay/Tooltip';
 import { Organization } from '@graphql/types';
-import { IconButton } from '@ui/form/IconButton';
 import { Skeleton } from '@ui/presentation/Skeleton';
-import { THead, createColumnHelper } from '@ui/presentation/Table';
+import { createColumnHelper } from '@ui/presentation/Table';
+import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 
+import { AvatarHeader } from './Headers/Avatar';
 import { OwnerCell } from './Cells/owner/OwnerCell';
 import { AvatarCell } from './Cells/avatar/AvatarCell';
 import { WebsiteCell } from './Cells/website/WebsiteCell';
@@ -42,13 +41,7 @@ import {
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
 
-interface GetColumnsOptions {
-  createIsLoading?: boolean;
-  onCreateOrganization?: () => void;
-  tabs?: { [key: string]: string } | null;
-}
-
-export const getColumns = (options: GetColumnsOptions) => [
+export const columns = [
   columnHelper.accessor((row) => row, {
     id: 'AVATAR',
     minSize: 42,
@@ -57,28 +50,10 @@ export const getColumns = (options: GetColumnsOptions) => [
     enableColumnFilter: false,
     cell: (props) => {
       return (
-        <AvatarCell
-          organization={props.getValue()}
-          lastPositionParams={options?.tabs?.[props.getValue()?.id]}
-        />
+        <AvatarCell id={props.getValue()?.id} name={props.getValue()?.name} />
       );
     },
-    header: (props) => {
-      return (
-        <Flex w='42px' align='center' justify='center'>
-          <Tooltip label='Create an organization'>
-            <IconButton
-              size='sm'
-              variant='ghost'
-              aria-label='create organization'
-              isLoading={options?.createIsLoading}
-              onClick={options?.onCreateOrganization}
-              icon={<Plus color='gray.400' boxSize='5' />}
-            />
-          </Tooltip>
-        </Flex>
-      );
-    },
+    header: AvatarHeader,
     skeleton: () => (
       <Skeleton
         width='42px'
@@ -95,24 +70,27 @@ export const getColumns = (options: GetColumnsOptions) => [
     cell: (props) => {
       return (
         <OrganizationCell
-          key={props.getValue().id}
-          organization={props.getValue()}
-          lastPositionParams={options?.tabs?.[props.getValue()?.id]}
+          id={props.getValue().id}
+          name={props.getValue().name}
+          isSubsidiary={!!props.getValue()?.subsidiaryOf?.length}
+          parentOrganizationName={
+            props.getValue()?.subsidiaryOf?.[0]?.organization.name
+          }
         />
       );
     },
     header: (props) => (
-      <THead<Organization, HTMLInputElement>
+      <THead<HTMLInputElement>
         id='organization'
         title='Organization'
         filterWidth='14rem'
-        renderFilter={(column, initialFocusRef) => (
+        renderFilter={(initialFocusRef) => (
           <OrganizationFilter
-            column={column}
             initialFocusRef={initialFocusRef}
+            onFilterValueChange={props.column.setFilterValue}
           />
         )}
-        {...props}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (
@@ -139,14 +117,17 @@ export const getColumns = (options: GetColumnsOptions) => [
     filterFn: filterWebsiteFn,
     cell: (props) => <WebsiteCell website={props.getValue()} />,
     header: (props) => (
-      <THead<Organization, HTMLInputElement>
+      <THead<HTMLInputElement>
         id='website'
         title='Website'
         filterWidth='14rem'
-        renderFilter={(column, initialFocusRef) => (
-          <WebsiteFilter column={column} initialFocusRef={initialFocusRef} />
+        renderFilter={(initialFocusRef) => (
+          <WebsiteFilter
+            column={props.column}
+            initialFocusRef={initialFocusRef}
+          />
         )}
-        {...props}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (
@@ -163,11 +144,15 @@ export const getColumns = (options: GetColumnsOptions) => [
     minSize: 200,
     filterFn: filterRelationshipFn,
     header: (props) => (
-      <THead<Organization>
+      <THead
         id='relationship'
         title='Relationship'
-        renderFilter={(column) => <RelationshipFilter column={column} />}
-        {...props}
+        renderFilter={() => (
+          <RelationshipFilter
+            onFilterValueChange={props.column.setFilterValue}
+          />
+        )}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     cell: (props) => {
@@ -205,11 +190,11 @@ export const getColumns = (options: GetColumnsOptions) => [
       );
     },
     header: (props) => (
-      <THead<Organization>
+      <THead
         id='renewalLikelihood'
         title='Renewal Likelihood'
-        renderFilter={(column) => <RenewalLikelihoodFilter column={column} />}
-        {...props}
+        renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (
@@ -246,11 +231,15 @@ export const getColumns = (options: GetColumnsOptions) => [
       );
     },
     header: (props) => (
-      <THead<Organization>
+      <THead
         id='timeToRenewal'
         title='Time to Renewal'
-        renderFilter={(column) => <TimeToRenewalFilter column={column} />}
-        {...props}
+        renderFilter={() => (
+          <TimeToRenewalFilter
+            onFilterValueChange={props.column.setFilterValue}
+          />
+        )}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (
@@ -280,14 +269,17 @@ export const getColumns = (options: GetColumnsOptions) => [
       );
     },
     header: (props) => (
-      <THead<Organization, HTMLInputElement>
+      <THead<HTMLInputElement>
         id='forecast'
         title='ARR Forecast'
         filterWidth='17rem'
-        renderFilter={(column, initialFocusRef) => (
-          <ForecastFilter column={column} initialFocusRef={initialFocusRef} />
+        renderFilter={(initialFocusRef) => (
+          <ForecastFilter
+            initialFocusRef={initialFocusRef}
+            onFilterValueChange={props.column.setFilterValue}
+          />
         )}
-        {...props}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (
@@ -315,14 +307,17 @@ export const getColumns = (options: GetColumnsOptions) => [
       <OwnerCell id={props.row.original.id} owner={props.getValue()} />
     ),
     header: (props) => (
-      <THead<Organization, HTMLInputElement>
+      <THead<HTMLInputElement>
         id='owner'
         title='Owner'
         filterWidth='14rem'
-        renderFilter={(column, initialFocusRef) => (
-          <OwnerFilter column={column} initialFocusRef={initialFocusRef} />
+        renderFilter={(initialFocusRef) => (
+          <OwnerFilter
+            initialFocusRef={initialFocusRef}
+            onFilterValueChange={props.column.setFilterValue}
+          />
         )}
-        {...props}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (
@@ -348,16 +343,16 @@ export const getColumns = (options: GetColumnsOptions) => [
       />
     ),
     header: (props) => (
-      <THead<Organization, HTMLInputElement>
+      <THead<HTMLInputElement>
         id='lastTouchpoint'
         title='Last Touchpoint'
-        renderFilter={(column, initialFocusRef) => (
+        renderFilter={(initialFocusRef) => (
           <LastTouchpointFilter
-            column={column}
+            column={props.column}
             initialFocusRef={initialFocusRef}
           />
         )}
-        {...props}
+        {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => (

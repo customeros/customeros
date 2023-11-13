@@ -6,17 +6,13 @@ import {
   useEffect,
   forwardRef,
   ChangeEvent,
-  useCallback,
-  useTransition,
 } from 'react';
 
 import { produce } from 'immer';
-// import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
 import { Flex } from '@ui/layout/Flex';
 import { Input } from '@ui/form/Input';
-import { Switch } from '@ui/form/Switch';
 import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
@@ -28,99 +24,84 @@ import {
   RangeSliderFilledTrack,
 } from '@ui/form/RangeSlider';
 
-import {
-  useForecastFilter,
-  // ForecastFilterSelector,
-} from './ForecastFilter.atom';
+import { useForecastFilter } from './ForecastFilter.atom';
+import { FilterHeader, useFilterToggle } from '../shared/FilterHeader';
 
 interface ForecastFilterProps {
-  column: Column<Organization>;
   initialFocusRef: React.RefObject<HTMLInputElement>;
+  onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
 
 export const ForecastFilter = memo(
-  ({ column, initialFocusRef }: ForecastFilterProps) => {
+  ({ initialFocusRef, onFilterValueChange }: ForecastFilterProps) => {
     const [filter, setFilter] = useForecastFilter();
-    // const filterValue = useRecoilValue(ForecastFilterSelector);
-    const [_, startTransition] = useTransition();
     const [displayValue, setDisplayValue] = useState<[number, number]>(
       () => filter.value,
     );
+    const toggle = useFilterToggle({
+      defaultValue: filter.isActive,
+      onToggle: (setIsActive) => {
+        setFilter((prev) => {
+          const next = produce(prev, (draft) => {
+            draft.isActive = !draft.isActive;
+          });
+
+          setIsActive(next.isActive);
+
+          return next;
+        });
+      },
+    });
 
     const handleChange = (value: [number, number]) => {
-      startTransition(() => {
-        setFilter((prev) =>
-          produce(prev, (draft) => {
-            draft.isActive = true;
-            draft.value = value;
-          }),
-        );
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.isActive = true;
+          draft.value = value;
+        });
+
+        toggle.setIsActive(next.isActive);
+
+        return next;
       });
     };
 
-    const handleInputDisplayChange = useCallback(
-      (index: number) => (value: number) => {
-        setDisplayValue((prev) => {
-          return produce(prev, (draft) => {
-            draft[index] = value;
-          });
-        });
-      },
-      [setDisplayValue],
-    );
+    const handleInputDisplayChange = (index: number) => (value: number) => {
+      setDisplayValue((prev) =>
+        produce(prev, (draft) => {
+          draft[index] = value;
+        }),
+      );
+    };
 
-    const handleInputChange = useCallback(
-      (index: number) => (value: number) => {
-        setFilter((prev) => {
-          return produce(prev, (draft) => {
-            draft.isActive = true;
-            draft.value[index] = value;
-          });
+    const handleInputChange = (index: number) => (value: number) => {
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.isActive = true;
+          draft.value[index] = value;
         });
-      },
-      [setFilter],
-    );
+
+        toggle.setIsActive(next.isActive);
+
+        return next;
+      });
+    };
 
     const handleDragChange = (value: [number, number]) => {
       setDisplayValue(value);
     };
 
-    const handleToggle = () => {
-      startTransition(() => {
-        setFilter((prev) =>
-          produce(prev, (draft) => {
-            draft.isActive = !draft.isActive;
-          }),
-        );
-      });
-    };
-
-    // investigate why this does not work
-
-    // useEffect(() => {
-    //   column.setFilterValue(
-    //     filterValue.isActive ? filterValue.value : undefined,
-    //   );
-    // }, [filterValue.value[0], filterValue.value[1], filterValue.isActive]);
+    useEffect(() => {
+      onFilterValueChange?.(filter.isActive ? filter.value : undefined);
+    }, [filter.isActive, filter.value[0], filter.value[1]]);
 
     return (
       <>
-        <Flex
-          mb='3'
-          flexDir='row'
-          alignItems='center'
-          justifyContent='space-between'
-        >
-          <Text fontSize='sm' fontWeight='medium'>
-            Filter
-          </Text>
-          <Switch
-            size='sm'
-            colorScheme='primary'
-            onChange={handleToggle}
-            isChecked={filter.isActive}
-          />
-        </Flex>
+        <FilterHeader
+          isChecked={toggle.isActive}
+          onToggle={toggle.handleChange}
+          onDisplayChange={toggle.handleClick}
+        />
 
         <Flex justify='space-between' mb='8' gap='2'>
           <Flex flexDir='column' flex='1'>
@@ -152,26 +133,27 @@ export const ForecastFilter = memo(
         <Flex px='1'>
           <RangeSlider
             min={0}
+            step={10}
             max={1000 * 10}
             colorScheme='gray'
+            value={displayValue}
             onChangeEnd={handleChange}
             onChange={handleDragChange}
-            defaultValue={filter.value}
           >
             <RangeSliderTrack bg='gray.200' h='2px'>
               <RangeSliderFilledTrack h='2px' bg='gray.400' />
             </RangeSliderTrack>
             <RangeSliderThumb
+              index={0}
               boxSize='5'
               border='2px solid'
               borderColor='gray.400'
-              index={0}
             />
             <RangeSliderThumb
+              index={1}
               boxSize='5'
               border='2px solid'
               borderColor='gray.400'
-              index={1}
             />
           </RangeSlider>
         </Flex>
@@ -185,7 +167,6 @@ interface DebouncedNumberInputProps {
   max?: number;
   value: number;
   placeholder?: string;
-  onFocus?: () => void;
   defaultValue?: number;
   onChange: (value: number) => void;
   onDisplayChange: (value: number) => void;
@@ -234,9 +215,7 @@ export const DebouncedNumberInput = memo(
 
       useEffect(() => {
         return () => {
-          if (timeout.current) {
-            clearTimeout(timeout.current);
-          }
+          timeout.current && clearTimeout(timeout.current);
         };
       }, []);
 

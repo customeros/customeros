@@ -9,6 +9,8 @@ export const filterRelationshipFn: FilterFn<Organization> = (
 ) => {
   const value = row.getValue(id);
 
+  if (filterValue.length === 0) return true;
+
   return filterValue.includes(value);
 };
 

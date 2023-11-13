@@ -1,9 +1,7 @@
 'use client';
 import type { HeaderContext } from '@tanstack/react-table';
 
-import { useRef, RefObject } from 'react';
-
-import { Column } from '@tanstack/react-table';
+import { memo, useRef, RefObject } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -21,45 +19,42 @@ import {
 import { useTHeadState } from './THead.atom';
 
 interface THeadProps<
-  T extends object,
   InitialRefType extends { focus(): void } = HTMLButtonElement,
-> extends HeaderContext<T, unknown> {
+> {
   id: string;
   title: string;
   subTitle?: string;
-  icon?: React.ReactNode;
+  canSort?: boolean;
+  canFilter?: boolean;
+  isFiltered?: boolean;
+  isSorted?: string | boolean;
   filterWidth?: string | number;
+  onToggleSort?: (e: unknown) => void;
   renderFilter?: (
-    column: Column<T>,
     initialFocusRef: RefObject<InitialRefType>,
   ) => React.ReactNode;
 }
 
-export const THead = <
-  T extends object,
-  InitialRefType extends { focus(): void } = HTMLButtonElement,
->({
+const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
   id,
-  icon,
   title,
-  header,
+  canSort,
+  isSorted,
   subTitle,
+  canFilter,
+  isFiltered,
   filterWidth,
+  onToggleSort,
   renderFilter,
-}: THeadProps<T, InitialRefType>) => {
+}: THeadProps<InitialRefType>) => {
   const [isOpen, setIsOpen] = useTHeadState(id);
   const initialFocusRef = useRef<InitialRefType>(null);
-
-  const canSort = header.column.getCanSort();
-  const isSorted = header.column.getIsSorted();
-  const canFilter = header.column.getCanFilter();
-  const isFiltered = header.column.getIsFiltered();
-  const onToggleSort = header.column.getToggleSortingHandler();
 
   const sortIconProps = {
     mx: '1',
     boxSize: '3',
     id: 'sort-icon',
+    w: isSorted ? '3' : '0',
     opacity: isSorted ? 1 : 0,
     color: !isSorted ? 'gray.400' : 'gray.700',
   };
@@ -84,7 +79,8 @@ export const THead = <
             align='center'
             border='1px solid'
             borderRadius='4px'
-            transition='all 0.2s ease-in-out'
+            transition='opacity 0.2s ease-in-out'
+            ml={isOpen || isSorted || !canSort ? '0' : '3'}
             borderColor={isFiltered || isOpen ? 'gray.300' : 'transparent'}
             boxShadow={
               isFiltered || isOpen
@@ -92,9 +88,11 @@ export const THead = <
                 : 'unset'
             }
             _hover={{
+              ml: 0,
               '& #sort-icon': {
                 transition: 'opacity 0.2s ease-in-out',
                 opacity: 1,
+                w: '3',
               },
               '& .filter-icon-button': {
                 transition: 'opacity 0.2s ease-in-out',
@@ -106,12 +104,14 @@ export const THead = <
               isSorted === 'asc' ? (
                 <ArrowUp
                   {...sortIconProps}
-                  opacity={isFiltered || isOpen ? 1 : 0}
+                  w={isSorted || isOpen ? '3' : '0'}
+                  opacity={isSorted || isOpen ? 1 : 0}
                 />
               ) : (
                 <ArrowDown
                   {...sortIconProps}
-                  opacity={isFiltered || isOpen ? 1 : 0}
+                  w={isSorted || isOpen ? '3' : '0'}
+                  opacity={isSorted || isOpen ? 1 : 0}
                 />
               )
             ) : (
@@ -122,7 +122,9 @@ export const THead = <
               color='gray.700'
               cursor='pointer'
               onClick={onToggleSort}
+              mt={isSorted ? '-2px' : '0px'}
               fontWeight={!isSorted ? 'normal' : 'medium'}
+              letterSpacing={isSorted ? '-0.3px' : 'unset'}
             >
               {title}
             </Text>
@@ -146,9 +148,7 @@ export const THead = <
                   />
                 </PopoverTrigger>
                 <PopoverContent maxW={filterWidth ?? '12rem'}>
-                  <PopoverBody>
-                    {renderFilter?.(header.column, initialFocusRef)}
-                  </PopoverBody>
+                  <PopoverBody>{renderFilter?.(initialFocusRef)}</PopoverBody>
                 </PopoverContent>
               </>
             )}
@@ -163,3 +163,25 @@ export const THead = <
     </Popover>
   );
 };
+
+export function getTHeadProps<T extends object>(
+  context: HeaderContext<T, unknown>,
+) {
+  const header = context.header;
+
+  const canSort = header.column.getCanSort();
+  const isSorted = header.column.getIsSorted();
+  const canFilter = header.column.getCanFilter();
+  const isFiltered = header.column.getIsFiltered();
+  const onToggleSort = header.column.getToggleSortingHandler();
+
+  return {
+    canSort,
+    isSorted,
+    canFilter,
+    isFiltered,
+    onToggleSort,
+  };
+}
+
+export default memo(THead) as typeof THead;

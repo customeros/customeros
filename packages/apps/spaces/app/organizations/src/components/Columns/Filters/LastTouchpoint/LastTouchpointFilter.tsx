@@ -1,19 +1,18 @@
 'use client';
-import { useMemo, useState, useEffect, RefObject, useTransition } from 'react';
+import { useMemo, useState, useEffect, RefObject } from 'react';
 
 import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
 import { Flex } from '@ui/layout/Flex';
-import { Switch } from '@ui/form/Switch';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
 
-import { DebouncedSearchInput } from '../shared';
 import { TouchPoint, touchpoints } from './util';
+import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';
 import {
   LastTouchpointSelector,
   useLastTouchpointFilter,
@@ -31,7 +30,21 @@ export const LastTouchpointFilter = ({
   const [filter, setFilter] = useLastTouchpointFilter();
   const [searchValue, setSearchValue] = useState('');
   const filterValue = useRecoilValue(LastTouchpointSelector);
-  const [_, startTransition] = useTransition();
+
+  const toggle = useFilterToggle({
+    defaultValue: filter.isActive,
+    onToggle: (setIsActive) => {
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.isActive = !draft.isActive;
+        });
+
+        setIsActive(next.isActive);
+
+        return next;
+      });
+    },
+  });
 
   const touchpointOptions = useMemo(() => {
     if (!searchValue) return touchpoints;
@@ -42,41 +55,33 @@ export const LastTouchpointFilter = ({
   }, [searchValue]);
 
   const handleSelect = (value: TouchPoint | 'ALL') => () => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = true;
+    setFilter((prev) => {
+      const next = produce(prev, (draft) => {
+        draft.isActive = true;
 
-          if (value === 'ALL') {
-            if (
-              draft.value.length === touchpointOptions.length &&
-              draft.value.length > 0
-            ) {
-              draft.value = [];
-            } else {
-              draft.value = touchpointOptions.map(({ value }) => value);
-            }
-
-            return;
-          }
-
-          if (draft.value.includes(value)) {
-            draft.value = draft.value.filter((item) => item !== value);
+        if (value === 'ALL') {
+          if (
+            draft.value.length === touchpointOptions.length &&
+            draft.value.length > 0
+          ) {
+            draft.value = [];
           } else {
-            draft.value.push(value);
+            draft.value = touchpointOptions.map(({ value }) => value);
           }
-        }),
-      );
-    });
-  };
 
-  const handleToggle = () => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        }),
-      );
+          return;
+        }
+
+        if (draft.value.includes(value)) {
+          draft.value = draft.value.filter((item) => item !== value);
+        } else {
+          draft.value.push(value);
+        }
+      });
+
+      toggle.setIsActive(next.isActive);
+
+      return next;
     });
   };
 
@@ -86,22 +91,11 @@ export const LastTouchpointFilter = ({
 
   return (
     <>
-      <Flex
-        mb='2'
-        flexDir='row'
-        alignItems='center'
-        justifyContent='space-between'
-      >
-        <Text fontSize='sm' fontWeight='medium'>
-          Filter
-        </Text>
-        <Switch
-          size='sm'
-          colorScheme='primary'
-          onChange={handleToggle}
-          isChecked={filter.isActive}
-        />
-      </Flex>
+      <FilterHeader
+        isChecked={toggle.isActive}
+        onToggle={toggle.handleChange}
+        onDisplayChange={toggle.handleClick}
+      />
 
       <DebouncedSearchInput
         value={searchValue}

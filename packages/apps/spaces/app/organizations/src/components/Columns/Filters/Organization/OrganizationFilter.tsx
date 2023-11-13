@@ -1,84 +1,76 @@
 'use client';
-import { useEffect, RefObject, useCallback, useTransition } from 'react';
+import { useEffect, RefObject, useCallback } from 'react';
 
 import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Flex } from '@ui/layout/Flex';
-import { Switch } from '@ui/form/Switch';
-import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
 
-import { DebouncedSearchInput } from '../shared';
+import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';
 import {
   useOrganizationFilter,
   OrganizationFilterSelector,
 } from './OrganizationFilter.atom';
 
 interface OrganizationFilterProps {
-  column: Column<Organization>;
   initialFocusRef: RefObject<HTMLInputElement>;
+  onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
 
 export const OrganizationFilter = ({
-  column,
   initialFocusRef,
+  onFilterValueChange,
 }: OrganizationFilterProps) => {
   const [filter, setFilter] = useOrganizationFilter();
   const filterValue = useRecoilValue(OrganizationFilterSelector);
-  const [_, startTransition] = useTransition();
+
+  const toggle = useFilterToggle({
+    defaultValue: filter.isActive,
+    onToggle: (setIsActive) => {
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.isActive = !draft.isActive;
+        });
+
+        setIsActive(next.isActive);
+
+        return next;
+      });
+    },
+  });
 
   const handleChange = useCallback(
     (value: string) => {
-      startTransition(() => {
-        setFilter((prev) =>
-          produce(prev, (draft) => {
-            draft.value = value;
-            if (!value) {
-              draft.isActive = false;
-            } else {
-              draft.isActive = true;
-            }
-          }),
-        );
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.value = value;
+          if (!value) {
+            draft.isActive = false;
+          } else {
+            draft.isActive = true;
+          }
+        });
+
+        toggle.setIsActive(next.isActive);
+
+        return next;
       });
     },
-    [setFilter],
+    [setFilter, toggle.setIsActive],
   );
 
-  const handleToggle = useCallback(() => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        }),
-      );
-    });
-  }, [setFilter]);
-
   useEffect(() => {
-    column.setFilterValue(filterValue.isActive ? filterValue.value : undefined);
+    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
   }, [filterValue.value, filterValue.isActive]);
 
   return (
     <>
-      <Flex
-        mb='2'
-        flexDir='row'
-        alignItems='center'
-        justifyContent='space-between'
-      >
-        <Text fontSize='sm' fontWeight='medium'>
-          Filter
-        </Text>
-        <Switch
-          size='sm'
-          colorScheme='primary'
-          onChange={handleToggle}
-          isChecked={filter.isActive}
-        />
-      </Flex>
+      <FilterHeader
+        isChecked={toggle.isActive}
+        onToggle={toggle.handleChange}
+        onDisplayChange={toggle.handleClick}
+      />
 
       <DebouncedSearchInput
         ref={initialFocusRef}

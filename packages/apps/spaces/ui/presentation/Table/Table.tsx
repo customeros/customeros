@@ -76,6 +76,7 @@ export const Table = <T extends object>({
     manualSorting: true,
     enableRowSelection,
     enableColumnFilters: true,
+    enableSortingRemoval: false,
     getCoreRowModel: getCoreRowModel<T>(),
     getSortedRowModel: getSortedRowModel<T>(),
     getFacetedRowModel: getFacetedRowModel<T>(),

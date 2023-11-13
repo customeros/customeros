@@ -1,17 +1,16 @@
 'use client';
-import { useEffect, useTransition } from 'react';
+import { useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Flex } from '@ui/layout/Flex';
-import { Switch } from '@ui/form/Switch';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
 import { RenewalLikelihoodProbability } from '@graphql/types';
 
+import { FilterHeader, useFilterToggle } from '../shared';
 import {
   useRenewalLikelihoodFilter,
   RenewalLikelihoodFilterSelector,
@@ -26,31 +25,37 @@ export const RenewalLikelihoodFilter = <T,>({
 }: RenewalLikelihoodFilterProps<T>) => {
   const [filter, setFilter] = useRenewalLikelihoodFilter();
   const filterValue = useRecoilValue(RenewalLikelihoodFilterSelector);
-  const [_, startTransition] = useTransition();
+
+  const toggle = useFilterToggle({
+    defaultValue: filter.isActive,
+    onToggle: (setIsActive) => {
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.isActive = !draft.isActive;
+        });
+
+        setIsActive(next.isActive);
+
+        return next;
+      });
+    },
+  });
 
   const handleSelect = (value: RenewalLikelihoodProbability) => () => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = true;
+    setFilter((prev) => {
+      const next = produce(prev, (draft) => {
+        draft.isActive = true;
 
-          if (draft.value.includes(value)) {
-            draft.value = draft.value.filter((item) => item !== value);
-          } else {
-            draft.value.push(value);
-          }
-        }),
-      );
-    });
-  };
+        if (draft.value.includes(value)) {
+          draft.value = draft.value.filter((item) => item !== value);
+        } else {
+          draft.value.push(value);
+        }
+      });
 
-  const handleToggle = () => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        }),
-      );
+      toggle.setIsActive(next.isActive);
+
+      return next;
     });
   };
 
@@ -60,22 +65,11 @@ export const RenewalLikelihoodFilter = <T,>({
 
   return (
     <CheckboxGroup size='md' value={filter.value}>
-      <Flex
-        mb='2'
-        flexDir='row'
-        alignItems='center'
-        justifyContent='space-between'
-      >
-        <Text fontSize='sm' fontWeight='medium'>
-          Filter
-        </Text>
-        <Switch
-          size='sm'
-          colorScheme='primary'
-          onChange={handleToggle}
-          isChecked={filter.isActive}
-        />
-      </Flex>
+      <FilterHeader
+        isChecked={toggle.isActive}
+        onToggle={toggle.handleChange}
+        onDisplayChange={toggle.handleClick}
+      />
       <VStack spacing={2} align='flex-start'>
         <Checkbox
           value={RenewalLikelihoodProbability.High}
