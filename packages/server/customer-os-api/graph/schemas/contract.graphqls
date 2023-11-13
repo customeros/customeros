@@ -6,30 +6,32 @@ extend type Mutation {
 }
 
 type Contract implements Node {
-    id: ID!
-    createdAt:   Time!
-    updatedAt:   Time!
-    serviceStartedAt:   Time!
-    signedAt:   Time!
-    endedAt:   Time!
-    name:        String!
-    renewalCycle: ContractRenewalCycle!
-    status: ContractStatus!
-    owner: User @goField(forceResolver: true)
-    source: DataSource!
-    appSource: String!
-    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
-    contractUrl:        String!
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    serviceStartedAt:   Time
+    signedAt:           Time
+    endedAt:            Time
+    name:               String!
+    renewalCycle:       ContractRenewalCycle!
+    status:             ContractStatus!
+    owner:              User @goField(forceResolver: true)
+    createdBy:          User @goField(forceResolver: true)
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    contractUrl:        String
 }
 
 input ContractInput {
-    referenceId:   String
-    name:          String!
-    organizationId: String!
-    renewalCycle: ContractRenewalCycle!
-    status: ContractStatus!
-    appSource:     String
+    name:               String
+    organizationId:     String!
+    renewalCycle:       ContractRenewalCycle
+    appSource:          String
     contractUrl:        String
+    serviceStartedAt:   Time
+    signedAt:           Time
 }
 
 enum ContractRenewalCycle {

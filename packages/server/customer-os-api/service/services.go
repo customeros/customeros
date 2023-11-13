@@ -54,6 +54,7 @@ type Services struct {
 	BillableService            BillableService
 	LogEntryService            LogEntryService
 	CommentService             CommentService
+	ContractService            ContractService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -84,6 +85,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		BillableService:            NewBillableService(log, repositories),
 		LogEntryService:            NewLogEntryService(log, repositories),
 		CommentService:             NewCommentService(log, repositories),
+		ContractService():          NewContractService(log, repositories),
 	}
 	services.IssueService = NewIssueService(log, repositories, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)

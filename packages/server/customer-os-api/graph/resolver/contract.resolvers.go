@@ -7,6 +7,10 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -17,6 +21,11 @@ func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*mod
 	panic(fmt.Errorf("not implemented: Owner - owner"))
 }
 
+// CreatedBy is the resolver for the createdBy field.
+func (r *contractResolver) CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
+}
+
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contract) ([]*model.ExternalSystem, error) {
 	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
@@ -24,7 +33,24 @@ func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contrac
 
 // ContractCreate is the resolver for the contract_Create field.
 func (r *mutationResolver) ContractCreate(ctx context.Context, input model.ContractInput) (*model.Contract, error) {
-	panic(fmt.Errorf("not implemented: ContractCreate - contract_Create"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	contractId, err := r.Services.ContractService.Create(ctx, input) // TODO pass whatever needed
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create contract")
+		return &model.Contract{ID: contractId}, err
+	}
+	createdContractEntity, err := r.Services.ContractService.GetById(ctx, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Contract details not yet available. Contract id: %s", contractId)
+		return &model.Contract{ID: contractId}, nil
+	}
+	span.LogFields(log.String("response.contractID", contractId))
+	return mapper.MapEntityToContract(createdContractEntity), nil
 }
 
 // Contract is the resolver for the contract field.
@@ -36,19 +62,3 @@ func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contrac
 func (r *Resolver) Contract() generated.ContractResolver { return &contractResolver{r} }
 
 type contractResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *contractResolver) ServiceStartedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error) {
-	panic(fmt.Errorf("not implemented: ServiceStartedAtTimelineEvent - serviceStartedAtTimelineEvent"))
-}
-func (r *contractResolver) ServiceSignedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error) {
-	panic(fmt.Errorf("not implemented: ServiceSignedAtTimelineEvent - serviceSignedAtTimelineEvent"))
-}
-func (r *contractResolver) SignedAtTimelineEvent(ctx context.Context, obj *model.Contract) (model.TimelineEvent, error) {
-	panic(fmt.Errorf("not implemented: SignedAtTimelineEvent - signedAtTimelineEvent"))
-}
