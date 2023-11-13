@@ -17,7 +17,7 @@ import (
 )
 
 func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -121,7 +121,7 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 }
 
 func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -262,7 +262,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 }
 
 func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)

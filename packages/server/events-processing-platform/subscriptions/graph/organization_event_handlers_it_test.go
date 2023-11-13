@@ -24,7 +24,7 @@ import (
 const customerOsIdPattern = `^C-[A-HJ-NP-Z2-9]{3}-[A-HJ-NP-Z2-9]{3}$`
 
 func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -114,7 +114,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 }
 
 func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -199,7 +199,7 @@ func TestGraphOrganizationEventHandler_OnRenewalLikelihoodUpdate(t *testing.T) {
 }
 
 func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByUser(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -273,7 +273,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByUser(t *testing
 }
 
 func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByInternalProcess(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -342,7 +342,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ByInternalProcess
 }
 
 func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ResetAmount(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -412,7 +412,7 @@ func TestGraphOrganizationEventHandler_OnRenewalForecastUpdate_ResetAmount(t *te
 }
 
 func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -483,7 +483,7 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate(t *testing.T) {
 }
 
 func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate_SetNotByUser(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -537,7 +537,7 @@ func TestGraphOrganizationEventHandler_OnBillingDetailsUpdate_SetNotByUser(t *te
 }
 
 func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -571,7 +571,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 }
 
 func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -607,7 +607,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 }
 
 func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -653,7 +653,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 }
 
 func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlreadyExistsForOrg_NoChanges(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -697,7 +697,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 }
 
 func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)

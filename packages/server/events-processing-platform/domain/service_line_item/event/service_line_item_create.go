@@ -10,28 +10,28 @@ import (
 )
 
 type ServiceLineItemCreateEvent struct {
-	Tenant      string             `json:"tenant" validate:"required"`
-	Billed      string             `json:"billed"`
-	Licenses    int32              `json:"licenses,omitempty"`
-	Price       float32            `json:"price"`
-	Description string             `json:"description"`
-	ContractId  string             `json:"contractId"`
-	CreatedAt   time.Time          `json:"createdAt"`
-	UpdatedAt   time.Time          `json:"updatedAt"`
-	Source      commonmodel.Source `json:"source"`
+	Tenant     string             `json:"tenant" validate:"required"`
+	Billed     string             `json:"billed"`
+	Quantity   int64              `json:"quantity,omitempty"`
+	Price      float64            `json:"price"`
+	Name       string             `json:"name"`
+	ContractId string             `json:"contractId"`
+	CreatedAt  time.Time          `json:"createdAt"`
+	UpdatedAt  time.Time          `json:"updatedAt"`
+	Source     commonmodel.Source `json:"source"`
 }
 
 func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ServiceLineItemCreateEvent{
-		Tenant:      aggregate.GetTenant(),
-		Billed:      dataFields.Billed.String(),
-		Licenses:    dataFields.Licenses,
-		Price:       dataFields.Price,
-		Description: dataFields.Description,
-		ContractId:  dataFields.ContractId,
-		CreatedAt:   createdAt,
-		UpdatedAt:   updatedAt,
-		Source:      source,
+		Tenant:     aggregate.GetTenant(),
+		Billed:     dataFields.Billed.String(),
+		Quantity:   dataFields.Quantity,
+		Price:      dataFields.Price,
+		Name:       dataFields.Name,
+		ContractId: dataFields.ContractId,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
+		Source:     source,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

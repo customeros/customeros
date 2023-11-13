@@ -17,7 +17,7 @@ import (
 )
 
 func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -60,7 +60,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 }
 
 func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -103,7 +103,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 }
 
 func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -163,7 +163,7 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 }
 
 func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -223,7 +223,7 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 }
 
 func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -299,7 +299,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 }
 
 func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)

@@ -17,13 +17,26 @@ message CreateServiceLineItemGrpcRequest {
   string tenant = 1;
   string loggedInUserId = 2;
   BilledType billed = 3;
-  int32 licenses = 4; // Relevant only for Subscription type
+  int64 quantity = 4; // Relevant only for Subscription type
   float price = 5;
-  string description = 6; // Optional
+  string name = 6;
   string contractId = 7;
   SourceFields sourceFields = 8;
   google.protobuf.Timestamp createdAt = 9;
   google.protobuf.Timestamp updatedAt = 10;
+}
+
+
+message UpdateServiceLineItemGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string name = 4;
+  float price = 5;
+  int64 quantity = 6;
+  BilledType billed = 7;
+  google.protobuf.Timestamp updatedAt = 8;
+  SourceFields sourceFields = 9;
 }
 
 // Service line item response message
@@ -34,4 +47,5 @@ message ServiceLineItemIdGrpcResponse {
 // Service definition
 service ServiceLineItemGrpcService {
   rpc CreateServiceLineItem(CreateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
+  rpc UpdateServiceLineItem(UpdateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
 }

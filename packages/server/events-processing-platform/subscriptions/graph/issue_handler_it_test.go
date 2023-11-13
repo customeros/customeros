@@ -23,7 +23,7 @@ import (
 )
 
 func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	aggregateStore := eventstore.NewTestAggregateStore()
@@ -116,7 +116,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 }
 
 func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -171,7 +171,7 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 }
 
 func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline_UpdateOnlyEmptyFields(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -225,7 +225,7 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 }
 
 func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -262,7 +262,7 @@ func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
 }
 
 func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -300,7 +300,7 @@ func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
 }
 
 func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data
@@ -337,7 +337,7 @@ func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
 }
 
 func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data

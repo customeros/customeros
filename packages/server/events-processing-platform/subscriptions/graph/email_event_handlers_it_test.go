@@ -18,7 +18,7 @@ import (
 )
 
 func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -53,7 +53,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 }
 
 func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -106,7 +106,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 }
 
 func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -158,7 +158,7 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 }
 
 func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)

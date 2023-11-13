@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServiceLineItemGrpcServiceClient interface {
 	CreateServiceLineItem(ctx context.Context, in *CreateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
+	UpdateServiceLineItem(ctx context.Context, in *UpdateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 }
 
 type serviceLineItemGrpcServiceClient struct {
@@ -42,11 +43,21 @@ func (c *serviceLineItemGrpcServiceClient) CreateServiceLineItem(ctx context.Con
 	return out, nil
 }
 
+func (c *serviceLineItemGrpcServiceClient) UpdateServiceLineItem(ctx context.Context, in *UpdateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error) {
+	out := new(ServiceLineItemIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/ServiceLineItemGrpcService/UpdateServiceLineItem", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceLineItemGrpcServiceServer is the server API for ServiceLineItemGrpcService service.
 // All implementations should embed UnimplementedServiceLineItemGrpcServiceServer
 // for forward compatibility
 type ServiceLineItemGrpcServiceServer interface {
 	CreateServiceLineItem(context.Context, *CreateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
+	UpdateServiceLineItem(context.Context, *UpdateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 }
 
 // UnimplementedServiceLineItemGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -55,6 +66,9 @@ type UnimplementedServiceLineItemGrpcServiceServer struct {
 
 func (UnimplementedServiceLineItemGrpcServiceServer) CreateServiceLineItem(context.Context, *CreateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateServiceLineItem not implemented")
+}
+func (UnimplementedServiceLineItemGrpcServiceServer) UpdateServiceLineItem(context.Context, *UpdateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateServiceLineItem not implemented")
 }
 
 // UnsafeServiceLineItemGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -86,6 +100,24 @@ func _ServiceLineItemGrpcService_CreateServiceLineItem_Handler(srv interface{}, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ServiceLineItemGrpcService_UpdateServiceLineItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateServiceLineItemGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceLineItemGrpcServiceServer).UpdateServiceLineItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ServiceLineItemGrpcService/UpdateServiceLineItem",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceLineItemGrpcServiceServer).UpdateServiceLineItem(ctx, req.(*UpdateServiceLineItemGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ServiceLineItemGrpcService_ServiceDesc is the grpc.ServiceDesc for ServiceLineItemGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +128,10 @@ var ServiceLineItemGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateServiceLineItem",
 			Handler:    _ServiceLineItemGrpcService_CreateServiceLineItem_Handler,
+		},
+		{
+			MethodName: "UpdateServiceLineItem",
+			Handler:    _ServiceLineItemGrpcService_UpdateServiceLineItem_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

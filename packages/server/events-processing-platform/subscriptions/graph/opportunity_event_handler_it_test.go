@@ -18,7 +18,7 @@ import (
 )
 
 func TestOpportunityEventHandler_OnCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// prepare neo4j data

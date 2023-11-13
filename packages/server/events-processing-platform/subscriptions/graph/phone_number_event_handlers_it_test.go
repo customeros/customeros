@@ -16,7 +16,7 @@ import (
 )
 
 func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -51,7 +51,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
 }
 
 func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidated(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -100,7 +100,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidated(t *testing.T) {
 }
 
 func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)

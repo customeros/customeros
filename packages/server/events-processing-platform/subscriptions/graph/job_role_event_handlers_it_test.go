@@ -14,7 +14,7 @@ import (
 )
 
 func TestGraphJobRoleEventHandler_OnJobRoleCreate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
