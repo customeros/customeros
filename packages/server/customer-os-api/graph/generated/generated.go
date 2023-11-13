@@ -196,6 +196,7 @@ type ComplexityRoot struct {
 		AppSource        func(childComplexity int) int
 		ContractURL      func(childComplexity int) int
 		CreatedAt        func(childComplexity int) int
+		CreatedBy        func(childComplexity int) int
 		EndedAt          func(childComplexity int) int
 		ExternalLinks    func(childComplexity int) int
 		ID               func(childComplexity int) int
@@ -205,6 +206,7 @@ type ComplexityRoot struct {
 		ServiceStartedAt func(childComplexity int) int
 		SignedAt         func(childComplexity int) int
 		Source           func(childComplexity int) int
+		SourceOfTruth    func(childComplexity int) int
 		Status           func(childComplexity int) int
 		UpdatedAt        func(childComplexity int) int
 	}
@@ -982,6 +984,7 @@ type ContactResolver interface {
 }
 type ContractResolver interface {
 	Owner(ctx context.Context, obj *model.Contract) (*model.User, error)
+	CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error)
 
 	ExternalLinks(ctx context.Context, obj *model.Contract) ([]*model.ExternalSystem, error)
 }
@@ -1975,6 +1978,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.CreatedAt(childComplexity), true
 
+	case "Contract.createdBy":
+		if e.complexity.Contract.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.Contract.CreatedBy(childComplexity), true
+
 	case "Contract.endedAt":
 		if e.complexity.Contract.EndedAt == nil {
 			break
@@ -2037,6 +2047,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.Source(childComplexity), true
+
+	case "Contract.sourceOfTruth":
+		if e.complexity.Contract.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Contract.SourceOfTruth(childComplexity), true
 
 	case "Contract.status":
 		if e.complexity.Contract.Status == nil {
@@ -7583,30 +7600,32 @@ extend type Mutation {
 }
 
 type Contract implements Node {
-    id: ID!
-    createdAt:   Time!
-    updatedAt:   Time!
-    serviceStartedAt:   Time!
-    signedAt:   Time!
-    endedAt:   Time!
-    name:        String!
-    renewalCycle: ContractRenewalCycle!
-    status: ContractStatus!
-    owner: User @goField(forceResolver: true)
-    source: DataSource!
-    appSource: String!
-    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
-    contractUrl:        String!
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    serviceStartedAt:   Time
+    signedAt:           Time
+    endedAt:            Time
+    name:               String!
+    renewalCycle:       ContractRenewalCycle!
+    status:             ContractStatus!
+    owner:              User @goField(forceResolver: true)
+    createdBy:          User @goField(forceResolver: true)
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    contractUrl:        String
 }
 
 input ContractInput {
-    referenceId:   String
-    name:          String!
-    organizationId: String!
-    renewalCycle: ContractRenewalCycle!
-    status: ContractStatus!
-    appSource:     String
+    name:               String
+    organizationId:     String!
+    renewalCycle:       ContractRenewalCycle
+    appSource:          String
     contractUrl:        String
+    serviceStartedAt:   Time
+    signedAt:           Time
 }
 
 enum ContractRenewalCycle {
@@ -17697,14 +17716,11 @@ func (ec *executionContext) _Contract_serviceStartedAt(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_serviceStartedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -17741,14 +17757,11 @@ func (ec *executionContext) _Contract_signedAt(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_signedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -17785,14 +17798,11 @@ func (ec *executionContext) _Contract_endedAt(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -18021,6 +18031,87 @@ func (ec *executionContext) fieldContext_Contract_owner(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Contract_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_createdBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contract().CreatedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contract_source(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_source(ctx, field)
 	if err != nil {
@@ -18053,6 +18144,50 @@ func (ec *executionContext) _Contract_source(ctx context.Context, field graphql.
 }
 
 func (ec *executionContext) fieldContext_Contract_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Contract",
 		Field:      field,
@@ -18186,14 +18321,11 @@ func (ec *executionContext) _Contract_contractUrl(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_contractUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31171,8 +31303,12 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Contract_createdBy(ctx, field)
 			case "source":
 				return ec.fieldContext_Contract_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contract_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contract_appSource(ctx, field)
 			case "externalLinks":
@@ -49378,8 +49514,12 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Contract_createdBy(ctx, field)
 			case "source":
 				return ec.fieldContext_Contract_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contract_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Contract_appSource(ctx, field)
 			case "externalLinks":
@@ -57713,27 +57853,18 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceId", "name", "organizationId", "renewalCycle", "status", "appSource", "contractUrl"}
+	fieldsInOrder := [...]string{"name", "organizationId", "renewalCycle", "appSource", "contractUrl", "serviceStartedAt", "signedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "referenceId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceId"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ReferenceID = data
 		case "name":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -57751,20 +57882,11 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
-			data, err := ec.unmarshalNContractRenewalCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.RenewalCycle = data
-		case "status":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNContractStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractStatus(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
 		case "appSource":
 			var err error
 
@@ -57783,6 +57905,24 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.ContractURL = data
+		case "serviceStartedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceStartedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ServiceStartedAt = data
+		case "signedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SignedAt = data
 		}
 	}
 
@@ -63036,19 +63176,10 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "serviceStartedAt":
 			out.Values[i] = ec._Contract_serviceStartedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "signedAt":
 			out.Values[i] = ec._Contract_signedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "endedAt":
 			out.Values[i] = ec._Contract_endedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "name":
 			out.Values[i] = ec._Contract_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -63097,8 +63228,46 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "createdBy":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contract_createdBy(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "source":
 			out.Values[i] = ec._Contract_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._Contract_sourceOfTruth(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -63145,9 +63314,6 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "contractUrl":
 			out.Values[i] = ec._Contract_contractUrl(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -74589,6 +74755,22 @@ func (ec *executionContext) marshalOContactsPage2ᚖgithubᚗcomᚋopenlineᚑai
 		return graphql.Null
 	}
 	return ec._ContactsPage(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx context.Context, v interface{}) (*model.ContractRenewalCycle, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.ContractRenewalCycle)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx context.Context, sel ast.SelectionSet, v *model.ContractRenewalCycle) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {

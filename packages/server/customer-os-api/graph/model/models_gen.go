@@ -353,30 +353,32 @@ type Contract struct {
 	ID               string               `json:"id"`
 	CreatedAt        time.Time            `json:"createdAt"`
 	UpdatedAt        time.Time            `json:"updatedAt"`
-	ServiceStartedAt time.Time            `json:"serviceStartedAt"`
-	SignedAt         time.Time            `json:"signedAt"`
-	EndedAt          time.Time            `json:"endedAt"`
+	ServiceStartedAt *time.Time           `json:"serviceStartedAt,omitempty"`
+	SignedAt         *time.Time           `json:"signedAt,omitempty"`
+	EndedAt          *time.Time           `json:"endedAt,omitempty"`
 	Name             string               `json:"name"`
 	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
 	Status           ContractStatus       `json:"status"`
 	Owner            *User                `json:"owner,omitempty"`
+	CreatedBy        *User                `json:"createdBy,omitempty"`
 	Source           DataSource           `json:"source"`
+	SourceOfTruth    DataSource           `json:"sourceOfTruth"`
 	AppSource        string               `json:"appSource"`
 	ExternalLinks    []*ExternalSystem    `json:"externalLinks"`
-	ContractURL      string               `json:"contractUrl"`
+	ContractURL      *string              `json:"contractUrl,omitempty"`
 }
 
 func (Contract) IsNode()            {}
 func (this Contract) GetID() string { return this.ID }
 
 type ContractInput struct {
-	ReferenceID    *string              `json:"referenceId,omitempty"`
-	Name           string               `json:"name"`
-	OrganizationID string               `json:"organizationId"`
-	RenewalCycle   ContractRenewalCycle `json:"renewalCycle"`
-	Status         ContractStatus       `json:"status"`
-	AppSource      *string              `json:"appSource,omitempty"`
-	ContractURL    *string              `json:"contractUrl,omitempty"`
+	Name             *string               `json:"name,omitempty"`
+	OrganizationID   string                `json:"organizationId"`
+	RenewalCycle     *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	AppSource        *string               `json:"appSource,omitempty"`
+	ContractURL      *string               `json:"contractUrl,omitempty"`
+	ServiceStartedAt *time.Time            `json:"serviceStartedAt,omitempty"`
+	SignedAt         *time.Time            `json:"signedAt,omitempty"`
 }
 
 type Country struct {
