@@ -32,6 +32,7 @@ input ContractInput {
     contractUrl:        String
     serviceStartedAt:   Time
     signedAt:           Time
+    externalReference:  ExternalSystemReferenceInput
 }
 
 enum ContractRenewalCycle {
