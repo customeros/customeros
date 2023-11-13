@@ -41,13 +41,13 @@ func (h *updateContractCommandHandler) Handle(ctx context.Context, cmd *command.
 	}
 
 	// Apply the command to the aggregate
-	if err := contractAggregate.HandleCommand(ctx, cmd); err != nil {
+	if err = contractAggregate.HandleCommand(ctx, cmd); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// Persist the changes to the event store
-	if err := h.es.Save(ctx, contractAggregate); err != nil {
+	if err = h.es.Save(ctx, contractAggregate); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
