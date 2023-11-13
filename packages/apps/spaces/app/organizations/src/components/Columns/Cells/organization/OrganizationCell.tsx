@@ -1,27 +1,35 @@
+import { useLocalStorage } from 'usehooks-ts';
+
 import { Flex } from '@ui/layout/Flex';
 import { Link } from '@ui/navigation/Link';
 import { Text } from '@ui/typography/Text';
-import { Organization } from '@graphql/types';
 
 interface OrganizationCellProps {
-  organization: Organization;
-  lastPositionParams?: string;
+  id: string;
+  name: string;
+  isSubsidiary: boolean;
+  parentOrganizationName: string;
 }
 
 export const OrganizationCell = ({
-  organization,
-  lastPositionParams,
+  id,
+  name,
+  isSubsidiary,
+  parentOrganizationName,
 }: OrganizationCellProps) => {
-  const href = getHref(organization.id, lastPositionParams);
-  const hasParent = !!organization.subsidiaryOf?.length;
-  const fullName = organization.name || 'Unnamed';
-  const parentName = organization.subsidiaryOf?.[0]?.organization.name;
+  const [tabs] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-player-last-position`, { root: 'organization' });
+
+  const lastPositionParams = tabs[id];
+  const href = getHref(id, lastPositionParams);
+  const fullName = name || 'Unnamed';
 
   return (
     <Flex isTruncated flexDir='column'>
-      {hasParent && (
+      {isSubsidiary && (
         <Text fontSize='xs' color='gray.500'>
-          {parentName}
+          {parentOrganizationName}
         </Text>
       )}
       <Link

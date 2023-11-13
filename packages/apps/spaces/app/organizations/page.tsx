@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
-import { useLocalStorage } from 'usehooks-ts';
 import { useIsRestoring } from '@tanstack/react-query';
 
 import { GridItem } from '@ui/layout/Grid';
@@ -10,21 +9,16 @@ import { Organization } from '@graphql/types';
 import { Table, SortingState } from '@ui/presentation/Table';
 
 import { Search } from './src/components/Search';
+import { useOrganizationsPageData } from './src/hooks';
 import { TableActions } from './src/components/Actions';
-import { getColumns } from './src/components/Columns/Columns';
+import { columns } from './src/components/Columns/Columns';
 import { EmptyState } from './src/components/EmptyState/EmptyState';
-import {
-  useOrganizationsPageData,
-  useOrganizationsPageMethods,
-} from './src/hooks';
 
 export default function OrganizationsPage() {
   const isRestoring = useIsRestoring();
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const { createOrganization } = useOrganizationsPageMethods();
-  const [tabs] = useLocalStorage<{
-    [key: string]: string;
-  }>(`customeros-player-last-position`, { root: 'organization' });
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'LAST_TOUCHPOINT', desc: false },
+  ]);
 
   const {
     data,
@@ -37,23 +31,9 @@ export default function OrganizationsPage() {
     allOrganizationIds,
   } = useOrganizationsPageData({ sorting });
 
-  const handleCreateOrganization = useCallback(() => {
-    createOrganization.mutate({ input: { name: '' } });
-  }, [createOrganization]);
-
   const handleFetchMore = useCallback(() => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
-
-  const columns = useMemo(
-    () =>
-      getColumns({
-        tabs,
-        createIsLoading: createOrganization.isLoading,
-        onCreateOrganization: handleCreateOrganization,
-      }),
-    [tabs, handleCreateOrganization, createOrganization, getColumns],
-  );
 
   if (totalAvailable === 0) {
     return <EmptyState />;

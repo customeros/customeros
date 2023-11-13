@@ -1,23 +1,25 @@
 import { useRouter } from 'next/navigation';
 
+import { useLocalStorage } from 'usehooks-ts';
+
 import { Flex } from '@ui/layout/Flex';
 import { Avatar } from '@ui/media/Avatar';
-import { Organization } from '@graphql/types';
 import { Tooltip } from '@ui/overlay/Tooltip';
 
 interface AvatarCellProps {
-  organization: Organization;
-  lastPositionParams?: string;
+  id: string;
+  name: string;
 }
 
-export const AvatarCell = ({
-  organization,
-  lastPositionParams,
-}: AvatarCellProps) => {
+export const AvatarCell = ({ name, id }: AvatarCellProps) => {
   const router = useRouter();
+  const [tabs] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-player-last-position`, { root: 'organization' });
 
-  const href = getHref(organization.id, lastPositionParams);
-  const fullName = organization.name || 'Unnamed';
+  const lastPositionParams = tabs[id];
+  const href = getHref(id, lastPositionParams);
+  const fullName = name || 'Unnamed';
 
   return (
     <Flex align='center'>

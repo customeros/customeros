@@ -1,30 +1,46 @@
 'use client';
-import { useMemo, useEffect, useTransition } from 'react';
+import { useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
 import addDays from 'date-fns/addDays';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Flex } from '@ui/layout/Flex';
-import { Switch } from '@ui/form/Switch';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
+import { Organization } from '@graphql/types';
 import { Radio, RadioGroup } from '@ui/form/Radio';
 
+import { FilterHeader, useFilterToggle } from '../shared';
 import {
   useTimeToRenewalFilter,
   TimeToRenewalFilterSelector,
 } from './TimeToRenewalFilter.atom';
 
-interface TimeToRenewalProps<T> {
-  column: Column<T>;
+interface TimeToRenewalProps {
+  onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
 
-export const TimeToRenewalFilter = <T,>({ column }: TimeToRenewalProps<T>) => {
+export const TimeToRenewalFilter = ({
+  onFilterValueChange,
+}: TimeToRenewalProps) => {
   const [filter, setFilter] = useTimeToRenewalFilter();
   const filterValue = useRecoilValue(TimeToRenewalFilterSelector);
-  const [_, startTransition] = useTransition();
+
+  const toggle = useFilterToggle({
+    defaultValue: filter.isActive,
+    onToggle: (setIsActive) => {
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.isActive = !draft.isActive;
+        });
+
+        setIsActive(next.isActive);
+
+        return next;
+      });
+    },
+  });
 
   const [week, month, quarter] = useMemo(
     () =>
@@ -35,65 +51,48 @@ export const TimeToRenewalFilter = <T,>({ column }: TimeToRenewalProps<T>) => {
   );
 
   const handleChange = (value: string) => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = true;
-          draft.value = value;
-        }),
-      );
-    });
-  };
+    setFilter((prev) => {
+      const next = produce(prev, (draft) => {
+        draft.isActive = true;
+        draft.value = value;
+      });
 
-  const handleToggle = () => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        }),
-      );
+      toggle.setIsActive(next.isActive);
+
+      return next;
     });
   };
 
   useEffect(() => {
-    column.setFilterValue(filterValue.isActive ? filterValue.value : undefined);
+    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
   }, [filterValue.value, filterValue.isActive]);
 
   return (
-    <RadioGroup
-      name='timeToRenewal'
-      colorScheme='primary'
-      value={filter.value}
-      onChange={handleChange}
-      isDisabled={!filter.isActive}
-    >
-      <Flex
-        mb='2'
-        flexDir='row'
-        alignItems='center'
-        justifyContent='space-between'
+    <>
+      <FilterHeader
+        isChecked={toggle.isActive}
+        onToggle={toggle.handleChange}
+        onDisplayChange={toggle.handleClick}
+      />
+      <RadioGroup
+        name='timeToRenewal'
+        colorScheme='primary'
+        value={filter.value}
+        onChange={handleChange}
+        isDisabled={!filter.isActive}
       >
-        <Text fontSize='sm' fontWeight='medium'>
-          Filter
-        </Text>
-        <Switch
-          size='sm'
-          colorScheme='primary'
-          onChange={handleToggle}
-          isChecked={filter.isActive}
-        />
-      </Flex>
-      <VStack spacing={2} align='flex-start'>
-        <Radio value={week}>
-          <Text fontSize='sm'>Next 7 days</Text>
-        </Radio>
-        <Radio value={month}>
-          <Text fontSize='sm'>Next 30 days</Text>
-        </Radio>
-        <Radio value={quarter}>
-          <Text fontSize='sm'>Next 90 days</Text>
-        </Radio>
-      </VStack>
-    </RadioGroup>
+        <VStack spacing={2} align='flex-start'>
+          <Radio value={week}>
+            <Text fontSize='sm'>Next 7 days</Text>
+          </Radio>
+          <Radio value={month}>
+            <Text fontSize='sm'>Next 30 days</Text>
+          </Radio>
+          <Radio value={quarter}>
+            <Text fontSize='sm'>Next 90 days</Text>
+          </Radio>
+        </VStack>
+      </RadioGroup>
+    </>
   );
 };

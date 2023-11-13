@@ -8,7 +8,7 @@ export const filterForecastFn: FilterFn<Organization> = (
   filterValue,
 ) => {
   const value = row.getValue<Organization['accountDetails']>(id);
-  const potentialValue = value?.renewalForecast?.potentialAmount || 0;
+  const potentialValue = value?.renewalForecast?.amount || 0;
 
   if (!potentialValue) return false;
 

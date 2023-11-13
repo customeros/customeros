@@ -67,15 +67,17 @@ export const DebouncedSearchInput = memo(
             placeholder='Search'
             onChange={handleChange}
           />
-          <InputRightElement w='fit-content'>
-            <IconButton
-              size='xs'
-              variant='ghost'
-              onClick={handleClear}
-              aria-label='search organization'
-              icon={<Delete color='gray.500' />}
-            />
-          </InputRightElement>
+          {value.length && (
+            <InputRightElement w='fit-content'>
+              <IconButton
+                size='xs'
+                variant='ghost'
+                onClick={handleClear}
+                aria-label='search organization'
+                icon={<Delete color='gray.500' />}
+              />
+            </InputRightElement>
+          )}
         </InputGroup>
       );
     },

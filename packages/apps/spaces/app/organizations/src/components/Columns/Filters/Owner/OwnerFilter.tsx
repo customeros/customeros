@@ -1,34 +1,52 @@
 'use client';
-import { useMemo, useState, useEffect, RefObject, useTransition } from 'react';
+import { useMemo, useState, useEffect, RefObject } from 'react';
 
 import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
+import difference from 'lodash/difference';
+import intersection from 'lodash/intersection';
 import { Column } from '@tanstack/react-table';
 
 import { Flex } from '@ui/layout/Flex';
-import { Switch } from '@ui/form/Switch';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
+import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
 
-import { DebouncedSearchInput } from '../shared';
 import { useOwnerFilter, OwnerFilterSelector } from './OwnerFilter.atom';
+import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';
 
 interface OwnerFilterProps {
-  column: Column<Organization>;
   initialFocusRef: RefObject<HTMLInputElement>;
+  onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
 
-const client = getGraphQLClient();
-
-export const OwnerFilter = ({ column, initialFocusRef }: OwnerFilterProps) => {
+export const OwnerFilter = ({
+  initialFocusRef,
+  onFilterValueChange,
+}: OwnerFilterProps) => {
+  const client = getGraphQLClient();
   const [filter, setFilter] = useOwnerFilter();
   const [searchValue, setSearchValue] = useState('');
   const filterValue = useRecoilValue(OwnerFilterSelector);
-  const [_, startTransition] = useTransition();
+
+  const toggle = useFilterToggle({
+    defaultValue: filter.isActive,
+    onToggle: (setIsActive) => {
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.isActive = !draft.isActive;
+        });
+
+        setIsActive(next.isActive);
+
+        return next;
+      });
+    },
+  });
 
   const { data } = useGetUsersQuery(client, {
     pagination: { limit: 100, page: 1 },
@@ -46,64 +64,73 @@ export const OwnerFilter = ({ column, initialFocusRef }: OwnerFilterProps) => {
     );
   }, [data?.users.content, searchValue]);
 
-  const handleSelect = (value: string) => () => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = true;
+  const userIds = users.map(({ id }) => id);
+  const isAllSelected =
+    intersection(filter.value, userIds).length === users.length &&
+    users.length > 0;
 
-          if (value === 'ALL') {
-            if (draft.value.length === users.length && draft.value.length > 0) {
-              draft.value = [];
-            } else {
-              draft.value = users.map(({ id }) => id);
-            }
+  const handleSelectAll = () => {
+    setFilter((prev) => {
+      const next = produce(prev, (draft) => {
+        draft.isActive = true;
 
-            return;
+        if (isAllSelected) {
+          draft.value = draft.value.filter((item) => !userIds.includes(item));
+
+          if (draft.value.length === 0) {
+            draft.isActive = false;
           }
 
-          if (draft.value.includes(value)) {
-            draft.value = draft.value.filter((item) => item !== value);
-          } else {
-            draft.value.push(value);
-          }
-        }),
-      );
+          return;
+        }
+
+        if (searchValue) {
+          draft.value = [...userIds, ...difference(draft.value, userIds)];
+
+          return;
+        }
+
+        draft.value = userIds;
+      });
+
+      toggle.setIsActive(next.isActive);
+
+      return next;
     });
   };
 
-  const handleToggle = () => {
-    startTransition(() => {
-      setFilter((prev) =>
-        produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        }),
-      );
+  const handleSelect = (value: string) => () => {
+    setFilter((prev) => {
+      const next = produce(prev, (draft) => {
+        draft.isActive = true;
+
+        if (draft.value.includes(value)) {
+          draft.value = draft.value.filter((item) => item !== value);
+          if (draft.value.length === 0) {
+            draft.isActive = false;
+          }
+        } else {
+          draft.value.push(value);
+        }
+      });
+
+      toggle.setIsActive(next.isActive);
+
+      return next;
     });
   };
 
   useEffect(() => {
-    column.setFilterValue(filterValue.isActive ? filterValue.value : undefined);
+    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
   }, [filterValue.value.length, filterValue.isActive]);
 
   return (
     <>
-      <Flex
-        mb='2'
-        flexDir='row'
-        alignItems='center'
-        justifyContent='space-between'
-      >
-        <Text fontSize='sm' fontWeight='medium'>
-          Filter
-        </Text>
-        <Switch
-          size='sm'
-          colorScheme='primary'
-          onChange={handleToggle}
-          isChecked={filter.isActive}
-        />
-      </Flex>
+      <FilterHeader
+        isChecked={toggle.isActive}
+        onToggle={toggle.handleChange}
+        onDisplayChange={toggle.handleClick}
+      />
 
       <DebouncedSearchInput
         value={searchValue}
@@ -137,20 +164,16 @@ export const OwnerFilter = ({ column, initialFocusRef }: OwnerFilterProps) => {
               <Checkbox
                 top='0'
                 zIndex='10'
-                onChange={handleSelect('ALL')}
-                isChecked={
-                  filter.value.length > 0 &&
-                  filter.value.length === users.length
-                }
-                isIndeterminate={
-                  filter.value.length > 0 && filter.value.length < users.length
-                }
+                isChecked={isAllSelected}
+                onChange={handleSelectAll}
               >
                 <Text fontSize='sm'>
-                  {filter.value.length === users.length &&
-                  filter.value.length > 0
-                    ? 'Deselect All'
-                    : 'Select All'}
+                  {isAllSelected
+                    ? 'Deselect all'
+                    : 'Select all' +
+                      (searchValue && users.length > 2
+                        ? ` ${users.length}`
+                        : '')}
                 </Text>
               </Checkbox>
             </Flex>
@@ -166,9 +189,17 @@ export const OwnerFilter = ({ column, initialFocusRef }: OwnerFilterProps) => {
               </Checkbox>
             ))
           ) : (
-            <Text fontSize='sm' color='gray.500'>
-              Empty here in <b>No Results ville</b>
-            </Text>
+            <Flex w='full' justify='center' align='center' flexDir='column'>
+              <Tumbleweed
+                mr='10'
+                boxSize='8'
+                color='gray.400'
+                alignSelf='flex-end'
+              />
+              <Text fontSize='sm' color='gray.500'>
+                Empty here in <b>No Resultsville</b>
+              </Text>
+            </Flex>
           )}
         </CheckboxGroup>
       </VStack>
