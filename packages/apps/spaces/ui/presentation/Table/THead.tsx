@@ -80,7 +80,7 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
             border='1px solid'
             borderRadius='4px'
             transition='opacity 0.2s ease-in-out'
-            ml={isOpen || isSorted || !canSort ? '0' : '3'}
+            ml={(canSort && isOpen) || isSorted ? '0' : '3'}
             borderColor={isFiltered || isOpen ? 'gray.300' : 'transparent'}
             boxShadow={
               isFiltered || isOpen
@@ -88,7 +88,7 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
                 : 'unset'
             }
             _hover={{
-              ml: 0,
+              ml: canSort ? 0 : 3,
               '& #sort-icon': {
                 transition: 'opacity 0.2s ease-in-out',
                 opacity: 1,
@@ -115,7 +115,7 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
                 />
               )
             ) : (
-              <Flex w='3' mx='1' />
+              <Flex w={canSort ? '3' : '0'} mx='1' />
             )}
             <Text
               fontSize='sm'
