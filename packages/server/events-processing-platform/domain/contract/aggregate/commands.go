@@ -2,7 +2,6 @@ package aggregate
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
@@ -72,7 +71,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, cmd *command.Upd
 	// Validate the dates
 	if cmd.DataFields.EndedAt != nil && (cmd.DataFields.SignedAt != nil && cmd.DataFields.EndedAt.Before(*cmd.DataFields.SignedAt) ||
 		cmd.DataFields.ServiceStartedAt != nil && cmd.DataFields.EndedAt.Before(*cmd.DataFields.ServiceStartedAt)) {
-		return errors.New(fmt.Sprintf("%s: endedAt date must be after both signedAt and serviceStartedAt dates", constants.FieldValidation))
+		return errors.New(constants.FieldValidation + ": endedAt date must be after both signedAt and serviceStartedAt dates")
 	}
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())

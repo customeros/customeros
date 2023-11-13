@@ -209,8 +209,10 @@ func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contract entity.ContractEntity) string {
 	contractId := utils.NewUUIDIfEmpty(contract.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract:Contract_%s {id:$id})
-				SET c.name=$name,
+				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})
+				SET 
+					c:Contract_%s,
+					c.name=$name,
 					c.contractUrl=$contractUrl,
 					c.source=$source,
 					c.sourceOfTruth=$sourceOfTruth,

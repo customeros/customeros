@@ -221,3 +221,20 @@ func MapDbNodeToContractEntity(node dbtype.Node) *entity.ContractEntity {
 	}
 	return &contract
 }
+
+func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemEntity {
+	props := utils.GetPropsFromNode(node)
+	serviceLineItem := entity.ServiceLineItemEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Description:   utils.GetStringPropOrEmpty(props, "description"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Billed:        utils.GetStringPropOrEmpty(props, "billed"),
+		Price:         utils.GetFloatPropOrZero(props, "price"),
+		Licenses:      utils.GetInt64PropOrZero(props, "licenses"),
+	}
+	return &serviceLineItem
+}
