@@ -32,12 +32,14 @@ interface OneTimeServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: OneTimeServiceValue;
+  mode?: 'create' | 'update';
 }
 
 export const OneTimeServiceModal = ({
   data,
   isOpen,
   onClose,
+  mode = 'create',
 }: OneTimeServiceModalProps) => {
   const initialRef = useRef(null);
 
@@ -74,16 +76,19 @@ export const OneTimeServiceModal = ({
         </ModalHeader>
         <ModalBody pb='0'>
           <Flex>
-            <FormSelect
-              isReadOnly
-              label='Billed'
-              isLabelVisible
-              name='billed'
-              formId='tbd'
-              options={[{ value: 'once', label: 'Once' }]}
-              value={{ value: 'once', label: 'Once' }}
-              leftElement={<ClockCheck mr='3' color='gray.500' />}
-            />
+            {mode === 'create' && (
+              <FormSelect
+                isReadOnly
+                label='Billed'
+                isLabelVisible
+                name='billed'
+                formId='tbd'
+                options={[{ value: 'once', label: 'Once' }]}
+                value={{ value: 'once', label: 'Once' }}
+                leftElement={<ClockCheck mr='3' color='gray.500' />}
+              />
+            )}
+
             <CurrencyInput
               onChange={setPrice}
               value={`${price}`}
@@ -123,7 +128,7 @@ export const OneTimeServiceModal = ({
             colorScheme='primary'
             onClick={handleSetOneTimeServiceData}
           >
-            Add
+            {mode === 'create' ? 'Add' : 'Update'}
           </Button>
         </ModalFooter>
       </ModalContent>

@@ -2,10 +2,14 @@
 import { useIsMutating, useIsRestoring } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
-import { FeaturedIcon } from '@ui/media/Icon';
+import { Text } from '@ui/typography/Text';
+import { UseDisclosureReturn } from '@ui/utils';
+import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
 import { RenewalLikelihoodProbability } from '@graphql/types';
+import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
@@ -15,6 +19,7 @@ import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/up
 interface ARRForecastProps {
   name: string;
   isInitialLoading?: boolean;
+  infoModal: UseDisclosureReturn;
   aRRForecast?: RenewalForecastType;
   renewalProbability?: RenewalLikelihoodProbability | null;
 }
@@ -23,15 +28,14 @@ export const ARRForecast = ({
   isInitialLoading,
   aRRForecast,
   renewalProbability,
+  infoModal,
+  name,
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
 
   const isMutating = useIsMutating({
     mutationKey: useUpdateRenewalLikelihoodMutation.getKey(),
   });
-
-  const isAmountSet =
-    aRRForecast?.amount !== null && aRRForecast?.amount !== undefined;
 
   return (
     <>
@@ -43,6 +47,17 @@ export const ARRForecast = ({
         bg='transparent'
         cursor='default'
         boxShadow='none'
+        sx={{
+          '& button': {
+            opacity: 0,
+            transition: 'opacity 0.2s linear',
+          },
+        }}
+        _hover={{
+          '& button': {
+            opacity: 1,
+          },
+        }}
       >
         <CardBody as={Flex} p='0' align='center'>
           <FeaturedIcon
@@ -74,22 +89,47 @@ export const ARRForecast = ({
                 >
                   ARR forecast
                 </Heading>
+                <IconButton
+                  size='xs'
+                  variant='ghost'
+                  aria-label='Help'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    infoModal.onOpen();
+                  }}
+                  icon={<Icons.HelpCircle color='gray.400' />}
+                />
               </Flex>
             </Flex>
 
-            <Heading
-              fontSize='2xl'
-              color={isAmountSet ? 'gray.700' : 'gray.400'}
-            >
+            <Heading fontSize='2xl' color='gray.700'>
               {isMutating && (!isInitialLoading || !isRestoring)
                 ? 'Calculating...'
-                : isAmountSet
-                ? formatCurrency(aRRForecast?.amount ?? 0)
-                : 'Unknown'}
+                : formatCurrency(aRRForecast?.amount ?? 0)}
             </Heading>
           </Flex>
         </CardBody>
       </Card>
+      <InfoDialog
+        isOpen={infoModal.isOpen}
+        onClose={infoModal.onClose}
+        onConfirm={infoModal.onClose}
+        confirmButtonLabel='Got it'
+        label='ARR forecast'
+      >
+        <Text fontSize='sm' fontWeight='normal' mb={4}>
+          Annual Recurring Revenue (ARR) is the total amount of money you can
+          expect to receive from{' '}
+          <Text as='span' fontWeight='medium'>
+            {name}
+          </Text>{' '}
+          for the next 12 months.
+        </Text>
+        <Text fontSize='sm' fontWeight='normal'>
+          It includes all renewals but excludes one-time services. Renewals are
+          discounted based on the renewal likelihood.
+        </Text>
+      </InfoDialog>
     </>
   );
 };

@@ -1,9 +1,13 @@
 'use client';
 
+import React, { useMemo } from 'react';
 // import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 
-// import { useDisclosure } from '@ui/utils';
+import { Box } from '@ui/layout/Box';
+import { useDisclosure } from '@ui/utils';
+import { Select } from '@ui/form/SyncSelect';
+import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 // import { EmptyContracts } from '@organization/src/components/Tabs/panels/AccountPanel/EmptyContracts';
 import { ContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractCard';
@@ -23,10 +27,10 @@ export const AccountPanel = () => {
   // const renewalLikelihoodUpdateModal = useDisclosure({
   //   id: 'renewal-likelihood-update-modal',
   // });
-  // const renewalLikelihoodInfoModal = useDisclosure({
-  //   id: 'renewal-likelihood-info-modal',
-  // });
-  //
+  const arrForecastInfoModal = useDisclosure({
+    id: 'arr-forecast-info-modal',
+  });
+
   // const renewalForecastUpdateModal = useDisclosure({
   //   id: 'renewal-renewal-update-modal',
   // });
@@ -39,21 +43,11 @@ export const AccountPanel = () => {
     client,
     { id },
   );
-  // const isModalOpen = useMemo(() => {
-  //   return (
-  //     renewalForecastUpdateModal.isOpen ||
-  //     renewalLikelihoodUpdateModal.isOpen ||
-  //     renewalForecastInfoModal.isOpen ||
-  //     renewalLikelihoodInfoModal.isOpen
-  //   );
-  // }, [
-  //   renewalForecastUpdateModal.isOpen,
-  //   renewalLikelihoodUpdateModal.isOpen,
-  //   renewalForecastInfoModal.isOpen,
-  //   renewalLikelihoodInfoModal.isOpen,
-  // ]);
+  const isModalOpen = useMemo(() => {
+    return arrForecastInfoModal.isOpen;
+  }, [arrForecastInfoModal.isOpen]);
 
-  if (isInitialLoading) {
+  if (isInitialLoading || !arrForecastInfoModal) {
     return <AccountPanelSkeleton />;
   }
 
@@ -66,9 +60,117 @@ export const AccountPanel = () => {
     <OrganizationPanel
       title='Account'
       withFade
-      // shouldBlockPanelScroll={isModalOpen}
+      actionItem={
+        <Box>
+          <Select
+            isSearchable={false}
+            isClearable={false}
+            isMulti={false}
+            value={{
+              label: 'Customer',
+              value: 'customer',
+            }}
+            onChange={(e) => {}}
+            options={[
+              {
+                label: 'Customer',
+                value: 'customer',
+              },
+              {
+                label: 'Prospect',
+                value: 'prospect',
+              },
+            ]}
+            chakraStyles={{
+              container: (props, state) => {
+                const isCustomer = state.getValue()[0]?.value === 'customer';
+
+                return {
+                  ...props,
+                  px: 2,
+                  py: '1px',
+                  border: '1px solid',
+                  borderColor: isCustomer ? 'success.200' : 'gray.300',
+                  backgroundColor: isCustomer ? 'success.50' : 'transparent',
+                  color: isCustomer ? 'success.700' : 'gray.500',
+
+                  borderRadius: '2xl',
+                  fontSize: 'xs',
+                  maxHeight: '22px',
+
+                  '& > div': {
+                    p: 0,
+                    border: 'none',
+                    fontSize: 'xs',
+                    maxHeight: '22px',
+                    minH: 'auto',
+                  },
+                };
+              },
+              valueContainer: (props, state) => {
+                const isCustomer = state.getValue()[0]?.value === 'customer';
+
+                return {
+                  ...props,
+                  p: 0,
+                  border: 'none',
+                  fontSize: 'xs',
+                  maxHeight: '22px',
+                  minH: 'auto',
+                  color: isCustomer ? 'success.700' : 'gray.500',
+                };
+              },
+              singleValue: (props) => {
+                return {
+                  ...props,
+                  maxHeight: '22px',
+                  p: 0,
+                  minH: 'auto',
+                  color: 'inherit',
+                };
+              },
+              input: (props) => {
+                return {
+                  ...props,
+                  maxHeight: '22px',
+                  minH: 'auto',
+                  p: 0,
+                };
+              },
+              inputContainer: (props) => {
+                return {
+                  ...props,
+                  maxHeight: '22px',
+                  minH: 'auto',
+                  p: 0,
+                };
+              },
+
+              control: (props) => {
+                return {
+                  ...props,
+                  w: '100%',
+                  border: 'none',
+                };
+              },
+
+              menuList: (props) => {
+                return {
+                  ...props,
+                  w: 'fit-content',
+                  left: '-32px',
+                  // top: '-10px',
+                };
+              },
+            }}
+            leftElement={<ActivityHeart color='success.500' mr='1' />}
+          />
+        </Box>
+      }
+      shouldBlockPanelScroll={isModalOpen}
     >
       <ARRForecast
+        infoModal={arrForecastInfoModal}
         name={data?.organization?.name || ''}
         isInitialLoading={isInitialLoading}
         renewalProbability={

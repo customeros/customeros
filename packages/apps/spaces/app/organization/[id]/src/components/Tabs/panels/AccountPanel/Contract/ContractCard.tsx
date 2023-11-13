@@ -12,6 +12,7 @@ import { Divider } from '@ui/presentation/Divider';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
 import { ContractDTO } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Contract.dto';
+import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServicesList';
 
 interface ContractCardProps {
   data?: null; // todo when BE contract is available
@@ -119,23 +120,20 @@ export const ContractCard = ({ data, name = '' }: ContractCardProps) => {
         <Divider my='2' />
       </CardBody>
 
-      <CardFooter
-        as={Flex}
-        p='0'
-        w='full'
-        alignItems='center'
-        justifyContent='space-between'
-      >
-        <Text fontWeight='semibold' fontSize='sm'>
-          No services
-        </Text>
-        <IconButton
-          size='xs'
-          variant='ghost'
-          aria-label='Add service'
-          color='gray.400'
-          icon={<Plus boxSize='4' />}
-        />
+      <CardFooter p='0' w='full'>
+        <Flex w='full' alignItems='center' justifyContent='space-between'>
+          <Text fontWeight='semibold' fontSize='sm'>
+            No services
+          </Text>
+          <IconButton
+            size='xs'
+            variant='ghost'
+            aria-label='Add service'
+            color='gray.400'
+            icon={<Plus boxSize='4' />}
+          />
+        </Flex>
+        <ServicesList />
       </CardFooter>
     </Card>
   );

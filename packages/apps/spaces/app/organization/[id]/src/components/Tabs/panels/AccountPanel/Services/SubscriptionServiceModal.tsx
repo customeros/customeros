@@ -35,13 +35,26 @@ export type SubscriptionServiceValue = {
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: 'create' | 'update';
   data: SubscriptionServiceValue;
 }
+
+const copy = {
+  create: {
+    title: 'Add a new subscription service',
+    submit: 'Add',
+  },
+  update: {
+    title: 'Update subscription service',
+    submit: 'Update',
+  },
+};
 
 export const SubscriptionServiceModal = ({
   data,
   isOpen,
   onClose,
+  mode = 'create',
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const formId = 'TODO';
@@ -78,7 +91,7 @@ export const SubscriptionServiceModal = ({
             <DotSingle color='primary.600' />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            Add a new subscription service
+            {copy[mode].title}
           </Heading>
         </ModalHeader>
         <ModalBody pb='0' mb={4}>
@@ -99,7 +112,7 @@ export const SubscriptionServiceModal = ({
               onChange={setLicenses}
               value={`${licenses}`}
               w='full'
-              placeholder='Licences'
+              placeholder='Quantity'
               isLabelVisible
               label='Licences'
               min={0}
@@ -117,7 +130,7 @@ export const SubscriptionServiceModal = ({
               onChange={setLicensePrice}
               value={`${licensePrice}`}
               w='full'
-              placeholder='Price'
+              placeholder='Per license'
               isLabelVisible
               label='Price/license'
               min={0}
@@ -152,7 +165,7 @@ export const SubscriptionServiceModal = ({
             colorScheme='primary'
             onClick={handleSetSubscriptionServiceData}
           >
-            Add
+            {copy[mode].submit}
           </Button>
         </ModalFooter>
       </ModalContent>
