@@ -7,7 +7,7 @@ import (
 type ContractEntity struct {
 	ID                   string
 	Name                 string
-	CreatedAt            *time.Time
+	CreatedAt            time.Time
 	UpdatedAt            time.Time
 	ServiceStartedAt     *time.Time
 	SignedAt             *time.Time

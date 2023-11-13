@@ -14,7 +14,7 @@ func MapEntityToContract(entity *entity.ContractEntity) *model.Contract {
 	return &model.Contract{
 		ID:               entity.ID,
 		Name:             entity.Name,
-		CreatedAt:        *entity.CreatedAt,
+		CreatedAt:        entity.CreatedAt,
 		UpdatedAt:        entity.UpdatedAt,
 		Source:           MapDataSourceToModel(entity.Source),
 		SourceOfTruth:    MapDataSourceToModel(entity.SourceOfTruth),
@@ -31,6 +31,7 @@ func MapEntityToContract(entity *entity.ContractEntity) *model.Contract {
 func MapContractInputToEntity(input model.ContractInput) *entity.ContractEntity {
 	contractEntity := entity.ContractEntity{
 		Name:             utils.IfNotNilString(input.Name),
+		ContractUrl:      utils.IfNotNilString(input.ContractURL),
 		SignedAt:         input.SignedAt,
 		ServiceStartedAt: input.ServiceStartedAt,
 		Source:           entity.DataSourceOpenline,
