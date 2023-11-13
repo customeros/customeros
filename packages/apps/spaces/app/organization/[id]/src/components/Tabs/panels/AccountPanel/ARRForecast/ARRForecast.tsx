@@ -110,6 +110,7 @@ export const ARRForecast = ({
           </Flex>
         </CardBody>
       </Card>
+
       <InfoDialog
         isOpen={infoModal.isOpen}
         onClose={infoModal.onClose}

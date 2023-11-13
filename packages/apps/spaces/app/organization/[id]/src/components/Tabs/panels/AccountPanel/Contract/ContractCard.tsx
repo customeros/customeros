@@ -5,6 +5,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
 import { Check } from '@ui/media/icons/Check';
+import { UseDisclosureReturn } from '@ui/utils';
 import { File02 } from '@ui/media/icons/File02';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
@@ -12,13 +13,19 @@ import { Divider } from '@ui/presentation/Divider';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
 import { ContractDTO } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Contract.dto';
+import { ServiceModal } from '@organization/src/components/Tabs/panels/AccountPanel/Services/ServiceModal';
 import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServicesList';
 
 interface ContractCardProps {
   data?: null; // todo when BE contract is available
   name?: string;
+  serviceModal: UseDisclosureReturn;
 }
-export const ContractCard = ({ data, name = '' }: ContractCardProps) => {
+export const ContractCard = ({
+  data,
+  serviceModal,
+  name = '',
+}: ContractCardProps) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const formId = 'contractForm';
@@ -130,11 +137,17 @@ export const ContractCard = ({ data, name = '' }: ContractCardProps) => {
             variant='ghost'
             aria-label='Add service'
             color='gray.400'
+            onClick={() => serviceModal.onOpen()}
             icon={<Plus boxSize='4' />}
           />
         </Flex>
         <ServicesList />
       </CardFooter>
+      <ServiceModal
+        isOpen={serviceModal.isOpen}
+        onClose={serviceModal.onClose}
+        data={{}}
+      />
     </Card>
   );
 };

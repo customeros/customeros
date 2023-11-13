@@ -30,6 +30,9 @@ export const AccountPanel = () => {
   const arrForecastInfoModal = useDisclosure({
     id: 'arr-forecast-info-modal',
   });
+  const addServiceInfoModal = useDisclosure({
+    id: 'add-service-info-modal',
+  });
 
   // const renewalForecastUpdateModal = useDisclosure({
   //   id: 'renewal-renewal-update-modal',
@@ -44,8 +47,8 @@ export const AccountPanel = () => {
     { id },
   );
   const isModalOpen = useMemo(() => {
-    return arrForecastInfoModal.isOpen;
-  }, [arrForecastInfoModal.isOpen]);
+    return arrForecastInfoModal.isOpen || addServiceInfoModal.isOpen;
+  }, [arrForecastInfoModal.isOpen, addServiceInfoModal.isOpen]);
 
   if (isInitialLoading || !arrForecastInfoModal) {
     return <AccountPanelSkeleton />;
@@ -182,7 +185,11 @@ export const AccountPanel = () => {
         }
       />
 
-      <ContractCard name={data?.organization?.name || ''} data={null} />
+      <ContractCard
+        name={data?.organization?.name || ''}
+        data={null}
+        serviceModal={addServiceInfoModal}
+      />
 
       <Notes id={id} data={data?.organization} />
     </OrganizationPanel>
