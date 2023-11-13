@@ -16,6 +16,7 @@ import (
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -31,44 +32,46 @@ import (
 )
 
 type GraphSubscriber struct {
-	log                      logger.Logger
-	db                       *esdb.Client
-	cfg                      *config.Config
-	repositories             *repository.Repositories
-	phoneNumberEventHandler  *GraphPhoneNumberEventHandler
-	contactEventHandler      *ContactEventHandler
-	organizationEventHandler *OrganizationEventHandler
-	emailEventHandler        *GraphEmailEventHandler
-	userEventHandler         *GraphUserEventHandler
-	locationEventHandler     *GraphLocationEventHandler
-	jobRoleEventHandler      *GraphJobRoleEventHandler
-	interactionEventHandler  *GraphInteractionEventHandler
-	logEntryEventHandler     *GraphLogEntryEventHandler
-	issueEventHandler        *GraphIssueEventHandler
-	commentEventHandler      *GraphCommentEventHandler
-	opportunityEventHandler  *OpportunityEventHandler
-	contractEventHandler     *ContractEventHandler
+	log                         logger.Logger
+	db                          *esdb.Client
+	cfg                         *config.Config
+	repositories                *repository.Repositories
+	phoneNumberEventHandler     *GraphPhoneNumberEventHandler
+	contactEventHandler         *ContactEventHandler
+	organizationEventHandler    *OrganizationEventHandler
+	emailEventHandler           *GraphEmailEventHandler
+	userEventHandler            *GraphUserEventHandler
+	locationEventHandler        *GraphLocationEventHandler
+	jobRoleEventHandler         *GraphJobRoleEventHandler
+	interactionEventHandler     *GraphInteractionEventHandler
+	logEntryEventHandler        *GraphLogEntryEventHandler
+	issueEventHandler           *GraphIssueEventHandler
+	commentEventHandler         *GraphCommentEventHandler
+	opportunityEventHandler     *OpportunityEventHandler
+	contractEventHandler        *ContractEventHandler
+	serviceLineItemEventHandler *ServiceLineItemEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, commandHandlers *command.CommandHandlers, cfg *config.Config) *GraphSubscriber {
 	return &GraphSubscriber{
-		log:                      log,
-		db:                       db,
-		repositories:             repositories,
-		cfg:                      cfg,
-		contactEventHandler:      &ContactEventHandler{repositories: repositories},
-		organizationEventHandler: &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commandHandlers.Organization},
-		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
-		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
-		userEventHandler:         &GraphUserEventHandler{repositories: repositories, log: log},
-		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
-		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
-		interactionEventHandler:  &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
-		logEntryEventHandler:     &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
-		issueEventHandler:        &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
-		commentEventHandler:      &GraphCommentEventHandler{repositories: repositories, log: log},
-		opportunityEventHandler:  &OpportunityEventHandler{repositories: repositories, log: log},
-		contractEventHandler:     &ContractEventHandler{repositories: repositories, log: log},
+		log:                         log,
+		db:                          db,
+		repositories:                repositories,
+		cfg:                         cfg,
+		contactEventHandler:         &ContactEventHandler{repositories: repositories},
+		organizationEventHandler:    &OrganizationEventHandler{log: log, repositories: repositories, organizationCommands: commandHandlers.Organization},
+		phoneNumberEventHandler:     &GraphPhoneNumberEventHandler{Repositories: repositories},
+		emailEventHandler:           &GraphEmailEventHandler{Repositories: repositories},
+		userEventHandler:            &GraphUserEventHandler{repositories: repositories, log: log},
+		locationEventHandler:        &GraphLocationEventHandler{Repositories: repositories},
+		jobRoleEventHandler:         &GraphJobRoleEventHandler{Repositories: repositories},
+		interactionEventHandler:     &GraphInteractionEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
+		logEntryEventHandler:        &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
+		issueEventHandler:           &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
+		commentEventHandler:         &GraphCommentEventHandler{repositories: repositories, log: log},
+		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log},
+		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log},
+		serviceLineItemEventHandler: &ServiceLineItemEventHandler{repositories: repositories, log: log},
 	}
 }
 
@@ -297,6 +300,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.contractEventHandler.OnCreate(ctx, evt)
 	case contractevent.ContractUpdateV1:
 		return s.contractEventHandler.OnUpdate(ctx, evt)
+
+	case servicelineitemevent.ServiceLineItemCreateV1:
+		return s.serviceLineItemEventHandler.OnCreate(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

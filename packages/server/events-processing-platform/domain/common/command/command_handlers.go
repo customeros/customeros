@@ -14,6 +14,7 @@ import (
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	phonenumbercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
+	servicelineitemcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/command_handler"
 	usercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -34,6 +35,7 @@ type CommandHandlers struct {
 	Comment          *commentcmdhandler.CommandHandlers
 	Opportunity      *opportunitycmdhandler.CommandHandlers
 	Contract         *contractcmdhandler.CommandHandlers
+	ServiceLineItem  *servicelineitemcmdhandler.CommandHandlers
 }
 
 func NewCommandHandlers(log logger.Logger,
@@ -55,5 +57,6 @@ func NewCommandHandlers(log logger.Logger,
 		Comment:          commentcmdhandler.NewCommandHandlers(log, aggregateStore),
 		Opportunity:      opportunitycmdhandler.NewCommandHandlers(log, aggregateStore),
 		Contract:         contractcmdhandler.NewCommandHandlers(log, aggregateStore),
+		ServiceLineItem:  servicelineitemcmdhandler.NewCommandHandlers(log, aggregateStore),
 	}
 }

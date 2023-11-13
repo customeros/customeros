@@ -76,7 +76,6 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "HAS_CONTRACT", contractId)
 	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, contractId, "IS_LINKED_WITH", "sf")
 
-	// Assert relationships and contract data in Neo4j
 	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
 	require.Nil(t, err)
 	require.NotNil(t, contractDbNode)

@@ -13,6 +13,7 @@ import (
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	service_line_item_pb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/service_line_item"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
@@ -106,4 +107,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	contractService := service.NewContractService(server.log, server.commandHandlers.Contract, server.aggregateStore)
 	contractpb.RegisterContractGrpcServiceServer(grpcServer, contractService)
+
+	serviceLineItemService := service.NewServiceLineItemService(server.log, server.commandHandlers.ServiceLineItem, server.aggregateStore)
+	service_line_item_pb.RegisterServiceLineItemGrpcServiceServer(grpcServer, serviceLineItemService)
 }
