@@ -84,6 +84,7 @@ type Organization implements Node {
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 
     lastTouchPointAt: Time
+    lastTouchPointType: LastTouchpointType
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true)
 
@@ -302,4 +303,20 @@ enum RenewalCycle {
     QUARTERLY
     BIANNUALLY
     ANNUALLY
+}
+
+enum LastTouchpointType {
+    PAGE_VIEW
+    INTERACTION_SESSION
+    NOTE
+    INTERACTION_EVENT_EMAIL_SENT
+    INTERACTION_EVENT_PHONE_CALL
+    INTERACTION_EVENT_CHAT
+    MEETING
+    ANALYSIS
+    ACTION_CREATED
+    ACTION
+    LOG_ENTRY
+    ISSUE_CREATED
+    ISSUE_UPDATED
 }

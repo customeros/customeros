@@ -452,7 +452,7 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 	response, err := r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: id,
-		UserId:         common.GetUserIdFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -474,7 +474,7 @@ func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string
 		_, err := r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			OrganizationId: orgId,
-			UserId:         common.GetUserIdFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -497,7 +497,7 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 	response, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
 		OrganizationId: id,
-		UserId:         common.GetUserIdFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -519,7 +519,7 @@ func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string
 		_, err := r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
 			Tenant:         common.GetTenantFromContext(ctx),
 			OrganizationId: orgId,
-			UserId:         common.GetUserIdFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

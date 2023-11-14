@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -23,20 +22,9 @@ type PageViewEntity struct {
 	DataloaderKey string
 }
 
-func (pageView PageViewEntity) ToString() string {
-	return fmt.Sprintf("id: %s\napplication: %s\nurl: %s", pageView.Id, pageView.Application, pageView.PageUrl)
+func (PageViewEntity) IsTimelineEvent() {
 }
 
-type PageViewEntities []PageViewEntity
-
-func (pageView *PageViewEntity) SetDataloaderKey(key string) {
-	pageView.DataloaderKey = key
-}
-
-func (pageView PageViewEntity) GetDataloaderKey() string {
-	return pageView.DataloaderKey
-}
-
-func (pageView PageViewEntity) Labels() []string {
-	return []string{"PageView", "TimelineEvent"}
+func (PageViewEntity) TimelineEventLabel() string {
+	return NodeLabel_PageView
 }

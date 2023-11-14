@@ -40,8 +40,8 @@ message UpsertOrganizationGrpcRequest {
 message OrganizationIdGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
-  string userId = 3 [deprecated = true];
-  string loggedInUserId = 4;
+  string loggedInUserId = 3;
+  string appSource = 4;
 }
 
 message LinkPhoneNumberToOrganizationGrpcRequest {
@@ -199,6 +199,7 @@ service organizationGrpcService {
   rpc RequestRenewNextCycleDate(RequestRenewNextCycleDateRequest) returns (OrganizationIdGrpcResponse);
   rpc HideOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RefreshLastTouchpoint(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

@@ -739,6 +739,17 @@ func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithC
 	})
 }
 
+func RefreshLastTouchpoint(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, timelineEventId string, timelineEventAt time.Time, timelineEventType model.LastTouchpointType) {
+	query := `MATCH (org:Organization {id:$organizationId})
+			SET org.lastTouchpointId=$timelineEventId, org.lastTouchpointAt = $timelineEventAt, org.lastTouchpointType=$timelineEventType`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId":    organizationId,
+		"timelineEventId":   timelineEventId,
+		"timelineEventAt":   timelineEventAt,
+		"timelineEventType": timelineEventType,
+	})
+}
+
 func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, primaryOrgId, orgId, suggestedBy string, suggestedAt time.Time, confidence float64) {
 	query := `MATCH (primary:Organization {id:$primaryOrgId}),
 					(org:Organization {id:$orgId})

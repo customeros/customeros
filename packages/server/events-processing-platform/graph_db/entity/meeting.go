@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -24,27 +23,9 @@ type MeetingEntity struct {
 	Status             *MeetingStatus
 }
 
-func (meeting MeetingEntity) ToString() string {
-	return fmt.Sprintf("id: %s\n", meeting.Id)
+func (MeetingEntity) IsTimelineEvent() {
 }
 
-type MeetingEntities []MeetingEntity
-
-func (MeetingEntity) IsAnalysisDescribe() {
-}
-
-func (MeetingEntity) AnalysisDescribeLabel() string {
+func (MeetingEntity) TimelineEventLabel() string {
 	return NodeLabel_Meeting
-}
-
-func (meeting *MeetingEntity) SetDataloaderKey(key string) {
-	meeting.DataloaderKey = key
-}
-
-func (meeting MeetingEntity) GetDataloaderKey() string {
-	return meeting.DataloaderKey
-}
-
-func (meeting MeetingEntity) Labels(tenant string) []string {
-	return []string{"Meeting", "TimelineEvent", "Meeting_" + tenant, "TimelineEvent_" + tenant}
 }

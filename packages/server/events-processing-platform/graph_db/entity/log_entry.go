@@ -15,3 +15,10 @@ type LogEntryEntity struct {
 	SourceOfTruth DataSource
 	AppSource     string
 }
+
+func (LogEntryEntity) IsTimelineEvent() {
+}
+
+func (LogEntryEntity) TimelineEventLabel() string {
+	return NodeLabel_LogEntry
+}

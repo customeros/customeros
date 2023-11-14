@@ -17,16 +17,9 @@ type NoteEntity struct {
 	DataloaderKey string
 }
 
-type NoteEntities []NoteEntity
-
-func (note *NoteEntity) SetDataloaderKey(key string) {
-	note.DataloaderKey = key
+func (NoteEntity) IsTimelineEvent() {
 }
 
-func (note NoteEntity) GetDataloaderKey() string {
-	return note.DataloaderKey
-}
-
-func (note NoteEntity) Labels(tenant string) []string {
-	return []string{"Note", "TimelineEvent", "Note_" + tenant, "TimelineEvent_" + tenant}
+func (NoteEntity) TimelineEventLabel() string {
+	return NodeLabel_Note
 }

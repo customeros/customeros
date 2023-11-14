@@ -38,12 +38,12 @@ type OrganizationService interface {
 	RemoveSubsidiary(ctx context.Context, parentOrganizationId, subOrganizationId string) error
 	ReplaceOwner(ctx context.Context, organizationId, userId string) (*entity.OrganizationEntity, error)
 	RemoveOwner(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
-	UpdateLastTouchpointSync(ctx context.Context, organizationId string)
-	UpdateLastTouchpointSyncByContactId(ctx context.Context, contactId string)
-	UpdateLastTouchpointSyncByEmailId(ctx context.Context, emailId string)
-	UpdateLastTouchpointSyncByPhoneNumberId(ctx context.Context, phoneNumberId string)
-	UpdateLastTouchpointSyncByEmail(ctx context.Context, email string)
-	UpdateLastTouchpointSyncByPhoneNumber(ctx context.Context, phoneNumber string)
+	UpdateLastTouchpoint(ctx context.Context, organizationId string)
+	UpdateLastTouchpointByContactId(ctx context.Context, contactId string)
+	UpdateLastTouchpointByEmailId(ctx context.Context, emailId string)
+	UpdateLastTouchpointByPhoneNumberId(ctx context.Context, phoneNumberId string)
+	UpdateLastTouchpointByEmail(ctx context.Context, email string)
+	UpdateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string)
 	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
@@ -255,7 +255,7 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 		return nil, nil
 	})
 
-	s.UpdateLastTouchpointSync(ctx, primaryOrganizationId)
+	s.UpdateLastTouchpoint(ctx, primaryOrganizationId)
 
 	return err
 }
@@ -555,8 +555,8 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 	return processedRecords, failedRecords, outputErr
 }
 
-func (s *organizationService) UpdateLastTouchpointSync(ctx context.Context, organizationID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSync")
+func (s *organizationService) UpdateLastTouchpoint(ctx context.Context, organizationID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpoint")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID))
@@ -567,8 +567,8 @@ func (s *organizationService) UpdateLastTouchpointSync(ctx context.Context, orga
 	s.updateLastTouchpoint(ctx, organizationID)
 }
 
-func (s *organizationService) UpdateLastTouchpointSyncByContactId(ctx context.Context, contactID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByContactId")
+func (s *organizationService) UpdateLastTouchpointByContactId(ctx context.Context, contactID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointByContactId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contactID", contactID))
@@ -579,8 +579,8 @@ func (s *organizationService) UpdateLastTouchpointSyncByContactId(ctx context.Co
 	s.updateLastTouchpointByContactId(ctx, contactID)
 }
 
-func (s *organizationService) UpdateLastTouchpointSyncByEmailId(ctx context.Context, emailID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByContactId")
+func (s *organizationService) UpdateLastTouchpointByEmailId(ctx context.Context, emailID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointByContactId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("emailID", emailID))
@@ -591,8 +591,8 @@ func (s *organizationService) UpdateLastTouchpointSyncByEmailId(ctx context.Cont
 	s.updateLastTouchpointByEmailId(ctx, emailID)
 }
 
-func (s *organizationService) UpdateLastTouchpointSyncByEmail(ctx context.Context, email string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByEmail")
+func (s *organizationService) UpdateLastTouchpointByEmail(ctx context.Context, email string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointByEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("email", email))
@@ -603,8 +603,8 @@ func (s *organizationService) UpdateLastTouchpointSyncByEmail(ctx context.Contex
 	s.updateLastTouchpointByEmail(ctx, email)
 }
 
-func (s *organizationService) UpdateLastTouchpointSyncByPhoneNumberId(ctx context.Context, phoneNumberID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByPhoneNumberId")
+func (s *organizationService) UpdateLastTouchpointByPhoneNumberId(ctx context.Context, phoneNumberID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointByPhoneNumberId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumberID", phoneNumberID))
@@ -615,8 +615,8 @@ func (s *organizationService) UpdateLastTouchpointSyncByPhoneNumberId(ctx contex
 	s.updateLastTouchpointByPhoneNumberId(ctx, phoneNumberID)
 }
 
-func (s *organizationService) UpdateLastTouchpointSyncByPhoneNumber(ctx context.Context, phoneNumber string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByPhoneNumber")
+func (s *organizationService) UpdateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointByPhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumber", phoneNumber))
@@ -762,22 +762,15 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID))
 
-	lastTouchpointAt, lastTouchpointId, err := s.repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID)
-
+	_, err := s.grpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: organizationID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	})
 	if err != nil {
-		s.log.Errorf("(organizationService.updateLastTouchpoint) Failed to calculate last touchpoint: {%v}", err.Error())
-		tracing.TraceErr(span, err)
-		return
-	}
-
-	if lastTouchpointAt == nil {
-		s.log.Infof("(organizationService.updateLastTouchpoint) Last touchpoint not available for organization: {%v}", organizationID)
-		return
-	}
-
-	if err = s.repositories.OrganizationRepository.UpdateLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID, *lastTouchpointAt, lastTouchpointId); err != nil {
-		s.log.Errorf("(organizationService.updateLastTouchpoint) Failed to update last touchpoint: {%v}", err.Error())
-		tracing.TraceErr(span, err)
+		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
+		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshLastTouchpoint"))
 	}
 }
 
@@ -785,32 +778,33 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 	props := utils.GetPropsFromNode(node)
 
 	output := entity.OrganizationEntity{
-		ID:                utils.GetStringPropOrEmpty(props, "id"),
-		CustomerOsId:      utils.GetStringPropOrEmpty(props, "customerOsId"),
-		ReferenceId:       utils.GetStringPropOrEmpty(props, "referenceId"),
-		Name:              utils.GetStringPropOrEmpty(props, "name"),
-		Description:       utils.GetStringPropOrEmpty(props, "description"),
-		Website:           utils.GetStringPropOrEmpty(props, "website"),
-		Industry:          utils.GetStringPropOrEmpty(props, "industry"),
-		IndustryGroup:     utils.GetStringPropOrEmpty(props, "industryGroup"),
-		SubIndustry:       utils.GetStringPropOrEmpty(props, "subIndustry"),
-		TargetAudience:    utils.GetStringPropOrEmpty(props, "targetAudience"),
-		ValueProposition:  utils.GetStringPropOrEmpty(props, "valueProposition"),
-		LastFundingRound:  utils.GetStringPropOrEmpty(props, "lastFundingRound"),
-		LastFundingAmount: utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
-		Note:              utils.GetStringPropOrEmpty(props, "note"),
-		IsPublic:          utils.GetBoolPropOrFalse(props, "isPublic"),
-		IsCustomer:        utils.GetBoolPropOrFalse(props, "isCustomer"),
-		Hide:              utils.GetBoolPropOrFalse(props, "hide"),
-		Employees:         utils.GetInt64PropOrZero(props, "employees"),
-		Market:            utils.GetStringPropOrEmpty(props, "market"),
-		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		LastTouchpointAt:  utils.GetTimePropOrNil(props, "lastTouchpointAt"),
-		LastTouchpointId:  utils.GetStringPropOrNil(props, "lastTouchpointId"),
+		ID:                 utils.GetStringPropOrEmpty(props, "id"),
+		CustomerOsId:       utils.GetStringPropOrEmpty(props, "customerOsId"),
+		ReferenceId:        utils.GetStringPropOrEmpty(props, "referenceId"),
+		Name:               utils.GetStringPropOrEmpty(props, "name"),
+		Description:        utils.GetStringPropOrEmpty(props, "description"),
+		Website:            utils.GetStringPropOrEmpty(props, "website"),
+		Industry:           utils.GetStringPropOrEmpty(props, "industry"),
+		IndustryGroup:      utils.GetStringPropOrEmpty(props, "industryGroup"),
+		SubIndustry:        utils.GetStringPropOrEmpty(props, "subIndustry"),
+		TargetAudience:     utils.GetStringPropOrEmpty(props, "targetAudience"),
+		ValueProposition:   utils.GetStringPropOrEmpty(props, "valueProposition"),
+		LastFundingRound:   utils.GetStringPropOrEmpty(props, "lastFundingRound"),
+		LastFundingAmount:  utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
+		Note:               utils.GetStringPropOrEmpty(props, "note"),
+		IsPublic:           utils.GetBoolPropOrFalse(props, "isPublic"),
+		IsCustomer:         utils.GetBoolPropOrFalse(props, "isCustomer"),
+		Hide:               utils.GetBoolPropOrFalse(props, "hide"),
+		Employees:          utils.GetInt64PropOrZero(props, "employees"),
+		Market:             utils.GetStringPropOrEmpty(props, "market"),
+		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
+		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
+		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
+		LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),
 		RenewalLikelihood: entity.RenewalLikelihood{
 			RenewalLikelihood:         utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
 			PreviousRenewalLikelihood: utils.GetStringPropOrEmpty(props, "renewalLikelihoodPrevious"),

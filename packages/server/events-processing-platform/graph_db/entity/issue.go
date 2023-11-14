@@ -15,4 +15,9 @@ type IssueEntity struct {
 	AppSource     string
 }
 
-type IssueEntities []IssueEntity
+func (IssueEntity) IsTimelineEvent() {
+}
+
+func (IssueEntity) TimelineEventLabel() string {
+	return NodeLabel_Issue
+}
