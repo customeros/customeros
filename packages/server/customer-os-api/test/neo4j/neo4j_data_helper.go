@@ -1628,3 +1628,16 @@ func contains(slice []string, value string) bool {
 	}
 	return false
 }
+
+func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contract entity.ContractEntity) string {
+	contractId := utils.NewUUIDIfEmpty(contract.ID)
+	query := `MATCH (t:Tenant {name: $tenant})`
+	//TODO: add other fields
+
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
+		"tenant":    tenant,
+		"contactId": contractId,
+		//TODO: add other fields
+	})
+	return contractId
+}

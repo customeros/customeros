@@ -15,7 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
@@ -89,7 +89,7 @@ func prepareClient() {
 
 	commonServices := commonService.InitServices(postgresGormDB, driver)
 	commonAuthServices := commonAuthService.InitServices(nil, postgresGormDB)
-	testDialFactory := events_paltform.NewTestDialFactory()
+	testDialFactory := events_platform.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	services = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpc_client.InitClients(gRPCconn))
 	graphResolver := NewResolver(appLogger, services, grpc_client.InitClients(gRPCconn))

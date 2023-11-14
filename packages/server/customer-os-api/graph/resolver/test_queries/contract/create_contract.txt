@@ -1,0 +1,9 @@
+mutation CreateContract() {
+contract_Create(
+    input: {
+      //TODO:
+    }
+  ) {
+    //TODO
+  }
+}

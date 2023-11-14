@@ -7,7 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -1266,7 +1266,7 @@ func mockContactCreation(ctx context.Context) {
 	emailPosition := -1
 	phoneNumberPosition := -1
 
-	contactServiceCallbacks := events_paltform.MockContactServiceCallbacks{
+	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
 		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
 			contactPosition++
 			neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
@@ -1289,7 +1289,7 @@ func mockContactCreation(ctx context.Context) {
 			}, nil
 		},
 	}
-	emailServiceCallbacks := events_paltform.MockEmailServiceCallbacks{
+	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
 		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
 			emailPosition++
 			neo4jt.CreateEmail(ctx, driver, tenantName, entity.EmailEntity{
@@ -1301,7 +1301,7 @@ func mockContactCreation(ctx context.Context) {
 			}, nil
 		},
 	}
-	phoneNumberServiceCallbacks := events_paltform.MockPhoneNumberServiceCallbacks{
+	phoneNumberServiceCallbacks := events_platform.MockPhoneNumberServiceCallbacks{
 		UpsertPhoneNumber: func(ctx context.Context, data *phonenumbergrpc.UpsertPhoneNumberGrpcRequest) (*phonenumbergrpc.PhoneNumberIdGrpcResponse, error) {
 			phoneNumberPosition++
 			neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
@@ -1313,7 +1313,7 @@ func mockContactCreation(ctx context.Context) {
 			}, nil
 		},
 	}
-	events_paltform.SetContactCallbacks(&contactServiceCallbacks)
-	events_paltform.SetEmailCallbacks(&emailServiceCallbacks)
-	events_paltform.SetPhoneNumberCallbacks(&phoneNumberServiceCallbacks)
+	events_platform.SetContactCallbacks(&contactServiceCallbacks)
+	events_platform.SetEmailCallbacks(&emailServiceCallbacks)
+	events_platform.SetPhoneNumberCallbacks(&phoneNumberServiceCallbacks)
 }

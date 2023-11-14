@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
@@ -232,7 +232,7 @@ func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
 	calledLinkJobRole := false
 
 	jobRoleId, _ := uuid.NewUUID()
-	jobRoleServiceCallbacks := events_paltform.MockJobRoleServiceCallbacks{
+	jobRoleServiceCallbacks := events_platform.MockJobRoleServiceCallbacks{
 		CreateJobRole: func(context context.Context, jobRole *jobRoleProto.CreateJobRoleGrpcRequest) (*jobRoleProto.JobRoleIdGrpcResponse, error) {
 			require.Equal(t, "openline", jobRole.Tenant)
 			require.Equal(t, "jobTitle", jobRole.JobTitle)
@@ -244,7 +244,7 @@ func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
 			}, nil
 		},
 	}
-	userServiceCallbacks := events_paltform.MockUserServiceCallbacks{
+	userServiceCallbacks := events_platform.MockUserServiceCallbacks{
 		LinkJobRoleToUser: func(context context.Context, request *userProto.LinkJobRoleToUserGrpcRequest) (*userProto.UserIdGrpcResponse, error) {
 			require.Equal(t, "openline", request.Tenant)
 			require.Equal(t, userId1, request.UserId)
@@ -255,8 +255,8 @@ func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
 			}, nil
 		},
 	}
-	events_paltform.SetJobRoleCallbacks(&jobRoleServiceCallbacks)
-	events_paltform.SetUserCallbacks(&userServiceCallbacks)
+	events_platform.SetJobRoleCallbacks(&jobRoleServiceCallbacks)
+	events_platform.SetUserCallbacks(&userServiceCallbacks)
 
 	title := "jobTitle"
 	isPrimary := true
