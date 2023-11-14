@@ -10,31 +10,33 @@ import (
 )
 
 type ContractUpdateEvent struct {
-	Tenant           string                     `json:"tenant" validate:"required"`
-	Name             string                     `json:"name"`
-	ContractUrl      string                     `json:"contractUrl"`
-	UpdatedAt        time.Time                  `json:"updatedAt"`
-	ServiceStartedAt *time.Time                 `json:"serviceStartedAt,omitempty"`
-	SignedAt         *time.Time                 `json:"signedAt,omitempty"`
-	EndedAt          *time.Time                 `json:"endedAt,omitempty"`
-	RenewalCycle     string                     `json:"renewalCycle"`
-	Status           string                     `json:"status"`
-	ExternalSystem   commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
-	Source           string                     `json:"source"`
+	Tenant               string                     `json:"tenant" validate:"required"`
+	Name                 string                     `json:"name"`
+	ContractUrl          string                     `json:"contractUrl"`
+	UpdatedAt            time.Time                  `json:"updatedAt"`
+	ServiceStartedAt     *time.Time                 `json:"serviceStartedAt,omitempty"`
+	SignedAt             *time.Time                 `json:"signedAt,omitempty"`
+	EndedAt              *time.Time                 `json:"endedAt,omitempty"`
+	RenewalCycle         string                     `json:"renewalCycle"`
+	PreviousRenewalCycle string                     `json:"previousRenewalCycle"`
+	Status               string                     `json:"status"`
+	ExternalSystem       commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
+	Source               string                     `json:"source"`
 }
 
-func NewContractUpdateEvent(aggregate eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time) (eventstore.Event, error) {
+func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, previousRenewalCycle string) (eventstore.Event, error) {
 	eventData := ContractUpdateEvent{
-		Tenant:           aggregate.GetTenant(),
-		Name:             dataFields.Name,
-		ContractUrl:      dataFields.ContractUrl,
-		ServiceStartedAt: dataFields.ServiceStartedAt,
-		SignedAt:         dataFields.SignedAt,
-		EndedAt:          dataFields.EndedAt,
-		RenewalCycle:     dataFields.RenewalCycle.String(),
-		Status:           dataFields.Status.String(),
-		UpdatedAt:        updatedAt,
-		Source:           source,
+		Tenant:               aggr.GetTenant(),
+		Name:                 dataFields.Name,
+		ContractUrl:          dataFields.ContractUrl,
+		ServiceStartedAt:     dataFields.ServiceStartedAt,
+		SignedAt:             dataFields.SignedAt,
+		EndedAt:              dataFields.EndedAt,
+		RenewalCycle:         dataFields.RenewalCycle.String(),
+		PreviousRenewalCycle: previousRenewalCycle,
+		Status:               dataFields.Status.String(),
+		UpdatedAt:            updatedAt,
+		Source:               source,
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem
@@ -44,7 +46,7 @@ func NewContractUpdateEvent(aggregate eventstore.Aggregate, dataFields model.Con
 		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContractUpdateEvent")
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContractUpdateV1)
+	event := eventstore.NewBaseEvent(aggr, ContractUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContractUpdateEvent")
 	}

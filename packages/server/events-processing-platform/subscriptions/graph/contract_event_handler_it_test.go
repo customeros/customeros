@@ -129,7 +129,8 @@ func TestContractEventHandler_OnUpdate(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		now)
+		now,
+		"")
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -195,7 +196,8 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 		},
 		commonmodel.ExternalSystem{},
 		"hubspot",
-		now)
+		now,
+		"")
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE

@@ -93,6 +93,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, cmd *command.Upd
 		cmd.ExternalSystem,
 		source,
 		updatedAtNotNil,
+		a.Contract.RenewalCycle,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)

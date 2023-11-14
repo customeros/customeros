@@ -13,7 +13,6 @@ var (
 	ErrInvalidAggregate    = errors.New("invalid aggregate")
 	ErrInvalidAggregateID  = errors.New("invalid aggregate id")
 	ErrInvalidEventVersion = errors.New("invalid event version")
-	ErrMissingTenant       = errors.New("missing tenant")
 )
 
 type InvalidEventTypeError struct {
