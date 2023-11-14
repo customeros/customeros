@@ -6,9 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	emailEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
@@ -26,10 +24,10 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 		Repositories: testDatabase.Repositories,
 	}
 	myMailId, _ := uuid.NewUUID()
-	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
+	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
 	curTime := time.Now().UTC()
-	event, err := events.NewEmailCreateEvent(emailAggregate, tenantName, email, cmnmod.Source{
+	event, err := emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "unit-test",
@@ -132,7 +130,7 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 
 	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
 	validationError := "Email validation failed with this custom message!"
-	event, err := events.NewEmailFailedValidationEvent(emailAggregate, tenantName, validationError)
+	event, err := emailEvents.NewEmailFailedValidationEvent(emailAggregate, tenantName, validationError)
 	require.Nil(t, err)
 
 	emailEventHandler := &GraphEmailEventHandler{
@@ -200,7 +198,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	domain := "emailUpdateDomain"
 	username := "emailUsername"
 	isValidSyntax := true
-	event, err := events.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, isValidSyntax)
+	event, err := emailEvents.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, isValidSyntax)
 	require.Nil(t, err)
 
 	emailEventHandler := &GraphEmailEventHandler{

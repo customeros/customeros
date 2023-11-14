@@ -266,3 +266,116 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, now, interactionEvent.UpdatedAt)
 }
+
+func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, entity.InteractionEventEntity{
+		Content:       "test content",
+		Channel:       "test channel",
+		Identifier:    "test identifier",
+		EventType:     "test event type",
+		ContentType:   "test content type",
+		ChannelData:   "test channel data",
+		Hide:          false,
+		SourceOfTruth: constants.SourceOpenline,
+	})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"InteractionEvent": 1, "TimelineEvent": 1})
+
+	interactionEvent, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName)
+	require.Nil(t, err)
+	interactionEventProps := utils.GetPropsFromNode(*interactionEvent)
+	interactionEventId = utils.GetStringPropOrEmpty(interactionEventProps, "id")
+	require.NotNil(t, interactionEventId)
+
+	// prepare event handler
+	interactionEventHandler := &GraphInteractionEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
+	summary := "AnalysisSummary"
+	contentType := "AnalysisContentType"
+	now := utils.Now()
+	summaryReplaceEvent, err := event.NewInteractionEventReplaceSummaryEvent(interactionEventAggregate, tenantName, summary, contentType, now)
+	require.Nil(t, err, "failed to create event")
+
+	err = interactionEventHandler.OnSummaryReplace(context.Background(), summaryReplaceEvent)
+	require.Nil(t, err, "failed to execute OnSummaryReplace for interactionEventHandler")
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "DESCRIBES"), "Incorrect number of DESCRIBES relationships in Neo4j")
+
+	analysis, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Analysis_"+tenantName)
+	require.Nil(t, err)
+	analysisProps := utils.GetPropsFromNode(*analysis)
+	require.Equal(t, 9, len(analysisProps))
+	analysisId := utils.GetStringPropOrEmpty(analysisProps, "id")
+	require.NotNil(t, analysisId)
+	require.Equal(t, now, utils.GetTimePropOrNow(analysisProps, "createdAt"))
+	require.Equal(t, now, utils.GetTimePropOrNow(analysisProps, "updatedAt"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(analysisProps, "source"))
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, utils.GetStringPropOrEmpty(analysisProps, "appSource"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(analysisProps, "sourceOfTruth"))
+	require.Equal(t, "summary", utils.GetStringPropOrEmpty(analysisProps, "analysisType"))
+	require.Equal(t, "AnalysisContentType", utils.GetStringPropOrEmpty(analysisProps, "contentType"))
+	require.Equal(t, "AnalysisSummary", utils.GetStringPropOrEmpty(analysisProps, "content"))
+}
+
+func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, testDatabase.Driver, tenantName, entity.InteractionEventEntity{
+		Content:       "test content",
+		Channel:       "test channel",
+		Identifier:    "test identifier",
+		EventType:     "test event type",
+		ContentType:   "test content type",
+		ChannelData:   "test channel data",
+		Hide:          false,
+		SourceOfTruth: constants.SourceOpenline,
+	})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"InteractionEvent": 1, "TimelineEvent": 1})
+
+	interactionEvent, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "InteractionEvent_"+tenantName)
+	require.Nil(t, err)
+	interactionEventProps := utils.GetPropsFromNode(*interactionEvent)
+	interactionEventId = utils.GetStringPropOrEmpty(interactionEventProps, "id")
+	require.NotNil(t, interactionEventId)
+
+	// prepare event handler
+	interactionEventHandler := &GraphInteractionEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
+
+	var actionItems = []string{"ActionItem1", "ActionItem2"}
+	now := utils.Now()
+	actionItemsReplaceEvent, err := event.NewInteractionEventReplaceActionItemsEvent(interactionEventAggregate, tenantName, actionItems, now)
+	require.Nil(t, err, "failed to create event")
+
+	err = interactionEventHandler.OnActionItemsReplace(context.Background(), actionItemsReplaceEvent)
+	require.Nil(t, err, "failed to execute OnActionItemsReplace for interactionEventHandler")
+
+	actionItem, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "ActionItem_"+tenantName)
+	require.Nil(t, err)
+	actionItemProps := utils.GetPropsFromNode(*actionItem)
+	require.Equal(t, 7, len(actionItemProps))
+	analysisId := utils.GetStringPropOrEmpty(actionItemProps, "id")
+	require.NotNil(t, analysisId)
+	require.Equal(t, now, utils.GetTimePropOrNow(actionItemProps, "createdAt"))
+	require.Equal(t, now, utils.GetTimePropOrNow(actionItemProps, "updatedAt"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(actionItemProps, "source"))
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, utils.GetStringPropOrEmpty(actionItemProps, "appSource"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(actionItemProps, "sourceOfTruth"))
+
+	//TODO update the following assertion when the implementation of the OnActionItemsReplace is fixed and the content contains the entire Array of ActionItems.
+	//TODO It is a known fact that at the moment, the content only returns the first element of the ActionItems array.
+	//TODO Won't be fixed right away as the event is not used in Prod
+	require.Equal(t, "ActionItem1", utils.GetStringPropOrEmpty(actionItemProps, "content"))
+}
