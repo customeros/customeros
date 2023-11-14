@@ -1,10 +1,18 @@
 'use client';
-import { useEffect, RefObject, useCallback } from 'react';
+import {
+  useState,
+  useEffect,
+  RefObject,
+  useCallback,
+  ChangeEvent,
+} from 'react';
 
 import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
+import { Text } from '@ui/typography/Text';
+import { Checkbox } from '@ui/form/Checkbox';
 import { Organization } from '@graphql/types';
 
 import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';
@@ -23,6 +31,7 @@ export const OrganizationFilter = ({
   onFilterValueChange,
 }: OrganizationFilterProps) => {
   const [filter, setFilter] = useOrganizationFilter();
+  const [displayValue, setDisplayValue] = useState<string>(() => filter.value);
   const filterValue = useRecoilValue(OrganizationFilterSelector);
 
   const toggle = useFilterToggle({
@@ -44,25 +53,48 @@ export const OrganizationFilter = ({
     (value: string) => {
       setFilter((prev) => {
         const next = produce(prev, (draft) => {
-          draft.value = value;
-          if (!value) {
-            draft.isActive = false;
-          } else {
-            draft.isActive = true;
+          const nextValue = value.trim();
+
+          draft.value = nextValue;
+          if (!draft.showEmpty) {
+            draft.isActive = !!nextValue;
           }
         });
-
-        toggle.setIsActive(next.isActive);
 
         return next;
       });
     },
-    [setFilter, toggle.setIsActive],
+    [setFilter],
+  );
+
+  const handleDisplayChange = useCallback(
+    (value: string) => {
+      setDisplayValue(value.trim());
+      !filter.showEmpty && toggle.setIsActive(!!value.trim());
+    },
+    [setDisplayValue, toggle.setIsActive, filter.showEmpty],
+  );
+
+  const handleShowEmpty = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const isChecked = event.target.checked;
+
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.showEmpty = isChecked;
+        });
+
+        toggle.setIsActive(isChecked);
+
+        return next;
+      });
+    },
+    [setFilter, setDisplayValue, toggle.setIsActive],
   );
 
   useEffect(() => {
-    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
-  }, [filterValue.value, filterValue.isActive]);
+    onFilterValueChange?.(filterValue.isActive ? filterValue : undefined);
+  }, [filterValue.value, filterValue.isActive, filterValue.showEmpty]);
 
   return (
     <>
@@ -73,10 +105,20 @@ export const OrganizationFilter = ({
       />
 
       <DebouncedSearchInput
+        value={displayValue}
         ref={initialFocusRef}
-        value={filter.value}
         onChange={handleChange}
+        onDisplayChange={handleDisplayChange}
       />
+
+      <Checkbox
+        mt='2'
+        size='md'
+        onChange={handleShowEmpty}
+        isChecked={filter.showEmpty}
+      >
+        <Text fontSize='sm'>Unnamed</Text>
+      </Checkbox>
     </>
   );
 };

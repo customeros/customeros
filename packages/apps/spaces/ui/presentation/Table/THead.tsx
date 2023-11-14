@@ -54,6 +54,8 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
     mx: '1',
     boxSize: '3',
     id: 'sort-icon',
+    cursor: 'pointer',
+    onClick: onToggleSort,
     w: isSorted ? '3' : '0',
     opacity: isSorted ? 1 : 0,
     color: !isSorted ? 'gray.400' : 'gray.700',
@@ -120,9 +122,9 @@ const THead = <InitialRefType extends { focus(): void } = HTMLButtonElement>({
             <Text
               fontSize='sm'
               color='gray.700'
-              cursor='pointer'
               onClick={onToggleSort}
               mt={isSorted ? '-2px' : '0px'}
+              cursor={canSort ? 'pointer' : 'default'}
               fontWeight={!isSorted ? 'normal' : 'medium'}
               letterSpacing={isSorted ? '-0.3px' : 'unset'}
             >

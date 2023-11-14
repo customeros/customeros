@@ -123,8 +123,8 @@ export const columns = [
         filterWidth='14rem'
         renderFilter={(initialFocusRef) => (
           <WebsiteFilter
-            column={props.column}
             initialFocusRef={initialFocusRef}
+            onFilterValueChange={props.column.setFilterValue}
           />
         )}
         {...getTHeadProps<Organization>(props)}
@@ -348,8 +348,8 @@ export const columns = [
         title='Last Touchpoint'
         renderFilter={(initialFocusRef) => (
           <LastTouchpointFilter
-            column={props.column}
             initialFocusRef={initialFocusRef}
+            onFilterValueChange={props.column.setFilterValue}
           />
         )}
         {...getTHeadProps<Organization>(props)}

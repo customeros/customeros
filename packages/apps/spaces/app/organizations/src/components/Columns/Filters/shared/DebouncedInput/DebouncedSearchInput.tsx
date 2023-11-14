@@ -2,10 +2,10 @@
 import {
   memo,
   useRef,
-  useState,
   useEffect,
   forwardRef,
   ChangeEvent,
+  useImperativeHandle,
 } from 'react';
 
 import { Input } from '@ui/form/Input';
@@ -21,24 +21,17 @@ import {
 interface DebouncedInputProps {
   value: string;
   onChange: (value: string) => void;
+  onDisplayChange?: (value: string) => void;
 }
 
 export const DebouncedSearchInput = memo(
   forwardRef<HTMLInputElement, DebouncedInputProps>(
-    ({ value: _value, onChange }, ref) => {
+    ({ value, onChange, onDisplayChange }, ref) => {
       const timeout = useRef<NodeJS.Timeout>();
-      const [value, setValue] = useState(() => _value);
-
-      useEffect(() => {
-        return () => {
-          if (timeout.current) {
-            clearTimeout(timeout.current);
-          }
-        };
-      }, []);
+      const innerRef = useRef<HTMLInputElement>(null);
 
       const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setValue(e.target.value);
+        onDisplayChange?.(e.target.value);
 
         if (timeout.current) {
           clearTimeout(timeout.current);
@@ -50,9 +43,20 @@ export const DebouncedSearchInput = memo(
       };
 
       const handleClear = () => {
-        setValue('');
         onChange('');
+        onDisplayChange?.('');
+        innerRef?.current?.focus();
       };
+
+      useImperativeHandle(ref, () => innerRef.current!, []);
+
+      useEffect(() => {
+        return () => {
+          if (timeout.current) {
+            clearTimeout(timeout.current);
+          }
+        };
+      }, []);
 
       return (
         <InputGroup>
@@ -61,9 +65,10 @@ export const DebouncedSearchInput = memo(
           </InputLeftElement>
           <Input
             pl='6'
-            ref={ref}
             value={value}
+            ref={innerRef}
             variant='flushed'
+            autoComplete='off'
             placeholder='Search'
             onChange={handleChange}
           />

@@ -10,41 +10,32 @@ import {
 
 export type TouchPoint =
   | 'CREATED'
-  | 'PAGE_VIEW'
   | 'ISSUE_CREATED'
   | 'ISSUE_UPDATED'
-  | 'NOTE'
   | 'LOG_ENTRY'
   | 'EMAIL'
-  | 'PHONE_CALL'
   | 'SLACK_MESSAGE'
   | 'INTERCOM_MESSAGE'
   | 'MEETING'
   | 'ANALYSIS';
 
 export const touchpoints: { label: string; value: TouchPoint }[] = [
-  { value: 'CREATED', label: 'Created' },
-  { value: 'PAGE_VIEW', label: 'Page View' },
-  { value: 'ISSUE_CREATED', label: 'Issue Created' },
-  { value: 'ISSUE_UPDATED', label: 'Issue Updated' },
-  { value: 'NOTE', label: 'Note' },
-  { value: 'LOG_ENTRY', label: 'Log Entry' },
-  { value: 'EMAIL', label: 'Email Sent' },
-  { value: 'PHONE_CALL', label: 'Phone Call' },
-  { value: 'SLACK_MESSAGE', label: 'Slack Message' },
-  { value: 'INTERCOM_MESSAGE', label: 'Intercom Message' },
+  { value: 'CREATED', label: 'Organization created' },
+  { value: 'ISSUE_CREATED', label: 'Issue created' },
+  { value: 'ISSUE_UPDATED', label: 'Issue updated' },
+  { value: 'LOG_ENTRY', label: 'Log entry' },
+  { value: 'EMAIL', label: 'Email sent' },
+  { value: 'SLACK_MESSAGE', label: 'Slack received' },
+  { value: 'INTERCOM_MESSAGE', label: 'Intercom received' },
   { value: 'MEETING', label: 'Meeting' },
 ];
 
 const touchPointPatterns: Record<TouchPoint, Partial<TimelineEvent>> = {
   CREATED: { __typename: 'Action', actionType: ActionType.Created },
-  PAGE_VIEW: { __typename: 'PageView' },
   ISSUE_CREATED: { __typename: 'Issue' },
   ISSUE_UPDATED: { __typename: 'Issue' },
-  NOTE: { __typename: 'Note' },
   LOG_ENTRY: { __typename: 'LogEntry' },
   EMAIL: { __typename: 'InteractionEvent', channel: 'EMAIL' },
-  PHONE_CALL: { __typename: 'InteractionEvent', channel: 'VOICE' },
   SLACK_MESSAGE: {
     __typename: 'InteractionEvent',
     channel: 'CHAT',

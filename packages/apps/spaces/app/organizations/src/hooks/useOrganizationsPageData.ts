@@ -87,22 +87,25 @@ export const useOrganizationsPageData = ({
         });
       }
 
-      if (organization?.isActive && organization?.value) {
+      if (
+        organization?.isActive &&
+        (organization?.value || organization?.showEmpty)
+      ) {
         draft.AND.push({
           filter: {
-            property: 'ORGANIZATION',
-            value: organization?.value,
+            property: 'NAME',
+            value: organization?.showEmpty ? '' : organization?.value,
             operation: ComparisonOperator.Contains,
             caseSensitive: false,
           },
         });
       }
 
-      if (website?.isActive && website?.value) {
+      if (website?.isActive && (website?.value || website?.showEmpty)) {
         draft.AND.push({
           filter: {
             property: 'WEBSITE',
-            value: website?.value,
+            value: website?.showEmpty ? '' : website?.value,
             operation: ComparisonOperator.Contains,
           },
         });
@@ -154,6 +157,7 @@ export const useOrganizationsPageData = ({
             property: 'OWNER_ID',
             value: owner.value,
             operation: ComparisonOperator.In,
+            // includeEmpty: owner.showEmpty,
           },
         });
       }
@@ -163,8 +167,10 @@ export const useOrganizationsPageData = ({
     globalCache?.global_Cache?.user.id,
     organization?.isActive,
     organization?.value,
+    organization?.showEmpty,
     website?.isActive,
     website.value,
+    website?.showEmpty,
     relationship.isActive,
     relationship?.value.length,
     renewalLikelihood?.isActive,

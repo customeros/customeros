@@ -53,18 +53,22 @@ export const OwnerFilter = ({
   });
 
   const users = useMemo(() => {
-    const items = data?.users.content ?? [];
+    const items = [
+      { value: '__EMPTY__', label: 'Unknown' },
+      ...(data?.users.content.map(({ id, name, firstName, lastName }) => ({
+        value: id,
+        label: name ? name : [firstName, lastName].filter(Boolean).join(' '),
+      })) ?? []),
+    ];
+
     if (!searchValue) return items;
 
-    return items.filter(
-      ({ name, firstName, lastName }) =>
-        name?.toLowerCase().includes(searchValue.toLowerCase()) ||
-        firstName?.toLowerCase().includes(searchValue.toLowerCase()) ||
-        lastName?.toLowerCase().includes(searchValue.toLowerCase()),
+    return items.filter(({ label }) =>
+      label?.toLowerCase().includes(searchValue.toLowerCase()),
     );
   }, [data?.users.content, searchValue]);
 
-  const userIds = users.map(({ id }) => id);
+  const userIds = users.map(({ value }) => value);
   const isAllSelected =
     intersection(filter.value, userIds).length === users.length &&
     users.length > 0;
@@ -121,8 +125,8 @@ export const OwnerFilter = ({
   };
 
   useEffect(() => {
-    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
-  }, [filterValue.value.length, filterValue.isActive]);
+    onFilterValueChange?.(filterValue.isActive ? filterValue : undefined);
+  }, [filterValue.value.length, filterValue.isActive, filterValue.showEmpty]);
 
   return (
     <>
@@ -136,12 +140,13 @@ export const OwnerFilter = ({
         value={searchValue}
         ref={initialFocusRef}
         onChange={(v) => setSearchValue(v)}
+        onDisplayChange={(v) => setSearchValue(v)}
       />
 
       <VStack
         spacing={2}
         align='flex-start'
-        maxH='11rem'
+        maxH='13rem'
         mt='2'
         px='4px'
         mx='-4px'
@@ -156,6 +161,8 @@ export const OwnerFilter = ({
               w='full'
               zIndex='10'
               bg='white'
+              gap='2'
+              flexDir='column'
               position='sticky'
               borderBottom='1px solid'
               borderColor='gray.200'
@@ -178,13 +185,16 @@ export const OwnerFilter = ({
               </Checkbox>
             </Flex>
           )}
+
           {users.length > 0 ? (
-            users.map(({ id, firstName, lastName, name }) => (
-              <Checkbox key={id} value={id} onChange={handleSelect(id)}>
+            users.map(({ value, label }) => (
+              <Checkbox
+                key={value}
+                value={value}
+                onChange={handleSelect(value)}
+              >
                 <Text fontSize='sm' noOfLines={1}>
-                  {name
-                    ? name
-                    : [firstName, lastName].filter(Boolean).join(' ')}
+                  {label}
                 </Text>
               </Checkbox>
             ))

@@ -3,6 +3,7 @@ import { atom, selector, useRecoilState } from 'recoil';
 interface OwnerFilterState {
   value: string[];
   isActive: boolean;
+  showEmpty: boolean;
 }
 
 export const OwnerFilterAtom = atom<OwnerFilterState>({
@@ -10,12 +11,21 @@ export const OwnerFilterAtom = atom<OwnerFilterState>({
   default: {
     value: [],
     isActive: false,
+    showEmpty: false,
   },
 });
 
 export const OwnerFilterSelector = selector({
   key: 'owner-filter-selector',
-  get: ({ get }) => get(OwnerFilterAtom),
+  get: ({ get }) => {
+    const state = get(OwnerFilterAtom);
+
+    return {
+      value: state.value.filter((v) => v !== '__EMPTY__'),
+      isActive: state.isActive,
+      showEmpty: state.value.includes('__EMPTY__'),
+    };
+  },
 });
 
 export const useOwnerFilter = () => {

@@ -1,7 +1,8 @@
 'use client';
-import { useMemo, useState, useEffect, RefObject } from 'react';
+import { useMemo, useEffect, RefObject } from 'react';
 
 import { produce } from 'immer';
+import addDays from 'date-fns/addDays';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
@@ -9,26 +10,26 @@ import { Flex } from '@ui/layout/Flex';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Organization } from '@graphql/types';
+import { Radio, RadioGroup } from '@ui/form/Radio';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
 
 import { TouchPoint, touchpoints } from './util';
-import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';
+import { FilterHeader, useFilterToggle } from '../shared';
 import {
   LastTouchpointSelector,
   useLastTouchpointFilter,
 } from './LastTouchpointFilter.atom';
 
 interface LastTouchpointFilterProps {
-  column: Column<Organization>;
   initialFocusRef: RefObject<HTMLInputElement>;
+  onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
 
 export const LastTouchpointFilter = ({
-  column,
   initialFocusRef,
+  onFilterValueChange,
 }: LastTouchpointFilterProps) => {
   const [filter, setFilter] = useLastTouchpointFilter();
-  const [searchValue, setSearchValue] = useState('');
   const filterValue = useRecoilValue(LastTouchpointSelector);
 
   const toggle = useFilterToggle({
@@ -46,31 +47,39 @@ export const LastTouchpointFilter = ({
     },
   });
 
-  const touchpointOptions = useMemo(() => {
-    if (!searchValue) return touchpoints;
+  const [week, month, quarter] = useMemo(
+    () =>
+      [7, 30, 90].map((value) => {
+        return addDays(new Date(), value).toISOString().split('T')[0];
+      }),
+    [],
+  );
 
-    return touchpoints.filter(({ label }) =>
-      label.toLowerCase().includes(searchValue.toLowerCase()),
-    );
-  }, [searchValue]);
+  const isAllSelected =
+    filter.value.length === touchpoints.length && filter.value.length > 0;
 
-  const handleSelect = (value: TouchPoint | 'ALL') => () => {
+  const handleSelectAll = () => {
+    setFilter((prev) => {
+      const next = produce(prev, (draft) => {
+        if (isAllSelected) {
+          draft.isActive = false;
+          draft.value = [];
+        } else {
+          draft.isActive = true;
+          draft.value = touchpoints.map(({ value }) => value);
+        }
+      });
+
+      toggle.setIsActive(next.isActive);
+
+      return next;
+    });
+  };
+
+  const handleSelect = (value: TouchPoint) => () => {
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
         draft.isActive = true;
-
-        if (value === 'ALL') {
-          if (
-            draft.value.length === touchpointOptions.length &&
-            draft.value.length > 0
-          ) {
-            draft.value = [];
-          } else {
-            draft.value = touchpointOptions.map(({ value }) => value);
-          }
-
-          return;
-        }
 
         if (draft.value.includes(value)) {
           draft.value = draft.value.filter((item) => item !== value);
@@ -85,8 +94,21 @@ export const LastTouchpointFilter = ({
     });
   };
 
+  const handleDateChange = (value: string) => {
+    setFilter((prev) => {
+      const next = produce(prev, (draft) => {
+        draft.isActive = true;
+        draft.before = value;
+      });
+
+      toggle.setIsActive(next.isActive);
+
+      return next;
+    });
+  };
+
   useEffect(() => {
-    column.setFilterValue(filterValue.isActive ? filterValue.value : undefined);
+    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
   }, [filterValue.value.length, filterValue.isActive]);
 
   return (
@@ -97,16 +119,32 @@ export const LastTouchpointFilter = ({
         onDisplayChange={toggle.handleClick}
       />
 
-      <DebouncedSearchInput
-        value={searchValue}
-        ref={initialFocusRef}
-        onChange={(v) => setSearchValue(v)}
-      />
+      <RadioGroup
+        pb='2'
+        name='last-touchpoint-before'
+        colorScheme='primary'
+        value={filter.before}
+        borderBottom='1px solid'
+        borderBottomColor='gray.200'
+        onChange={handleDateChange}
+        isDisabled={!filter.isActive}
+      >
+        <VStack spacing={2} align='flex-start'>
+          <Radio value={week}>
+            <Text fontSize='sm'>Next 7 days</Text>
+          </Radio>
+          <Radio value={month}>
+            <Text fontSize='sm'>Next 30 days</Text>
+          </Radio>
+          <Radio value={quarter}>
+            <Text fontSize='sm'>Next 90 days</Text>
+          </Radio>
+        </VStack>
+      </RadioGroup>
 
       <VStack
         spacing={2}
         align='flex-start'
-        maxH='11rem'
         mt='2'
         px='4px'
         mx='-4px'
@@ -115,56 +153,34 @@ export const LastTouchpointFilter = ({
         overflowY='auto'
       >
         <CheckboxGroup size='md' value={filter.value}>
-          {touchpointOptions.length > 1 && (
-            <Flex
+          <Flex
+            top='0'
+            w='full'
+            zIndex='10'
+            bg='white'
+            position='sticky'
+            borderBottom='1px solid'
+            borderColor='gray.200'
+            pb='2'
+          >
+            <Checkbox
               top='0'
-              w='full'
               zIndex='10'
-              bg='white'
-              position='sticky'
-              borderBottom='1px solid'
-              borderColor='gray.200'
-              pb='2'
+              isChecked={isAllSelected}
+              onChange={handleSelectAll}
             >
-              <Checkbox
-                top='0'
-                zIndex='10'
-                onChange={handleSelect('ALL')}
-                isChecked={
-                  filter.value.length > 0 &&
-                  filter.value.length === touchpointOptions.length
-                }
-                isIndeterminate={
-                  filter.value.length > 0 &&
-                  filter.value.length < touchpointOptions.length
-                }
-              >
-                <Text fontSize='sm'>
-                  {filter.value.length === touchpointOptions.length &&
-                  filter.value.length > 0
-                    ? 'Deselect All'
-                    : 'Select All'}
-                </Text>
-              </Checkbox>
-            </Flex>
-          )}
-          {touchpointOptions.length > 0 ? (
-            touchpointOptions.map(({ label, value }) => (
-              <Checkbox
-                key={value}
-                value={value}
-                onChange={handleSelect(value)}
-              >
-                <Text fontSize='sm' noOfLines={1}>
-                  {label}
-                </Text>
-              </Checkbox>
-            ))
-          ) : (
-            <Text fontSize='sm' color='gray.500'>
-              Empty here in <b>No Results ville</b>
-            </Text>
-          )}
+              <Text fontSize='sm'>
+                {isAllSelected ? 'Deselect all' : 'Select all'}
+              </Text>
+            </Checkbox>
+          </Flex>
+          {touchpoints.map(({ label, value }) => (
+            <Checkbox key={value} value={value} onChange={handleSelect(value)}>
+              <Text fontSize='sm' noOfLines={1}>
+                {label}
+              </Text>
+            </Checkbox>
+          ))}
         </CheckboxGroup>
       </VStack>
     </>

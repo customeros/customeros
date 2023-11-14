@@ -3,6 +3,7 @@ import { atom, selector, useRecoilState } from 'recoil';
 interface OrganizationFilterState {
   value: string;
   isActive: boolean;
+  showEmpty: boolean;
 }
 
 export const OrganizationFilterAtom = atom<OrganizationFilterState>({
@@ -10,6 +11,7 @@ export const OrganizationFilterAtom = atom<OrganizationFilterState>({
   default: {
     value: '',
     isActive: false,
+    showEmpty: false,
   },
 });
 
