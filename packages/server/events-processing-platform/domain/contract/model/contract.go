@@ -26,17 +26,15 @@ type Contract struct {
 }
 
 type ContractDataFields struct {
-	OrganizationId       string
-	Name                 string
-	ContractUrl          string
-	CreatedByUserId      string
-	ServiceStartedAt     *time.Time
-	SignedAt             *time.Time
-	EndedAt              *time.Time
-	RenewalCycle         RenewalCycle
-	Status               ContractStatus
-	Source               commonmodel.Source
-	ExternalSystemFields commonmodel.ExternalSystem
+	OrganizationId   string
+	Name             string
+	ContractUrl      string
+	CreatedByUserId  string
+	ServiceStartedAt *time.Time
+	SignedAt         *time.Time
+	EndedAt          *time.Time
+	RenewalCycle     RenewalCycle
+	Status           ContractStatus
 }
 
 // ContractStatus represents the status of a contract.
@@ -82,5 +80,16 @@ func (rc RenewalCycle) String() string {
 		return "ANNUALLY"
 	default:
 		return ""
+	}
+}
+
+func RenewalCycleFromString(renewalCycle string) RenewalCycle {
+	switch renewalCycle {
+	case "MONTHLY":
+		return MonthlyRenewal
+	case "ANNUALLY":
+		return AnnuallyRenewal
+	default:
+		return None
 	}
 }
