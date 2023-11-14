@@ -17,7 +17,10 @@ import { Calendar } from '@ui/media/icons/Calendar';
 interface DatePickerProps extends ReactDatePickerProps {
   name: string;
   label: string;
+  inset?: string;
   formId: string;
+  placeholder?: string;
+  calendarIconHidden?: boolean;
 }
 
 type DateInputValue = null | string | number | Date;
@@ -26,6 +29,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   label,
   name,
   formId,
+  placeholder,
+  calendarIconHidden,
+  inset,
 }) => {
   const { getInputProps } = useField(name, formId);
   const { id, onChange, value } = getInputProps();
@@ -56,6 +62,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           '& .react-date-picker__calendar-button': {
             pl: 0,
           },
+          '& .react-date-picker__calendar': {
+            inset: `${inset ?? '120% 0px auto auto'} !important`,
+          },
           '& .react-date-picker__clear-button': {
             top: '7px',
           },
@@ -79,19 +88,34 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             )
           }
           calendarIcon={
-            <Flex alignItems='center'>
-              <Box mr={3} color='gray.500'>
-                <Calendar />
-              </Box>
-              <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
+            calendarIconHidden ? (
+              <Text
+                color={value ? 'gray.700' : 'gray.400'}
+                role='button'
+                textAlign='left'
+              >
                 {value
                   ? DateTimeUtils.format(
                       value.toISOString(),
                       DateTimeUtils.dateWithAbreviatedMonth,
                     )
-                  : 'Start date'}
+                  : `${placeholder ? placeholder : 'Start date'}`}
               </Text>
-            </Flex>
+            ) : (
+              <Flex alignItems='center'>
+                <Box mr={3} color='gray.500'>
+                  <Calendar />
+                </Box>
+                <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
+                  {value
+                    ? DateTimeUtils.format(
+                        value.toISOString(),
+                        DateTimeUtils.dateWithAbreviatedMonth,
+                      )
+                    : `${placeholder ? placeholder : 'Start date'}`}
+                </Text>
+              </Flex>
+            )
           }
         />
       </Flex>
