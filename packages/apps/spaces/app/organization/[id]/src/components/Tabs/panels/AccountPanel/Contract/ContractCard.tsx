@@ -4,7 +4,6 @@ import React, { useRef, useEffect } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Plus } from '@ui/media/icons/Plus';
-import { Check } from '@ui/media/icons/Check';
 import { UseDisclosureReturn } from '@ui/utils';
 import { File02 } from '@ui/media/icons/File02';
 import { IconButton } from '@ui/form/IconButton';
@@ -15,6 +14,7 @@ import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
 import { ContractDTO } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Contract.dto';
 import { ServiceModal } from '@organization/src/components/Tabs/panels/AccountPanel/Services/ServiceModal';
 import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServicesList';
+import { ContractStatusSelect } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractStatusSelect';
 
 interface ContractCardProps {
   data?: null; // todo when BE contract is available
@@ -85,7 +85,7 @@ export const ContractCard = ({
         </Heading>
         <Flex>
           <File02 color='gray.400' mr={4} />
-          <Check color='gray.400' />
+          <ContractStatusSelect />
         </Flex>
       </CardHeader>
 
