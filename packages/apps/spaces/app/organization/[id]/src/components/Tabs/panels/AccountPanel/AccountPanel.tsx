@@ -12,12 +12,47 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 // import { EmptyContracts } from '@organization/src/components/Tabs/panels/AccountPanel/EmptyContracts';
 import { ContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractCard';
 import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
+// import {
+//   ExternalSystemType,
+//   ContractRenewalCycle,
+//   ExternalSystemReferenceInput,
+// } from '@graphql/types';
 import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
 import { Notes } from './Notes';
 import { RenewalForecastType } from './RenewalForecast';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
+
+// todo cleanup after integrationg with getContracts query
+// interface Contract {
+//   name: string;
+//   signedAt?: Date;
+//   appSource?: string;
+//   contractUrl?: string;
+//   organizationId: string;
+//   serviceStartedAt?: Date;
+//   renewalCycle?: ContractRenewalCycle;
+//   externalReference?: ExternalSystemReferenceInput;
+// }
+//
+// const dummyExternalReferenceInput: ExternalSystemReferenceInput = {
+//   externalId: '1234',
+//   externalSource: 'Dummy Source',
+//   externalUrl: 'https://dummy-url.com',
+//   syncDate: new Date().toISOString(),
+//   type: ExternalSystemType.ZendeskSupport,
+// };
+// const dummyContractData: Contract = {
+//   name: 'Dummy Contract',
+//   organizationId: '1234567890',
+//   renewalCycle: ContractRenewalCycle.AnnualRenewal,
+//   appSource: 'App Source Name',
+//   contractUrl: 'https://dummy-contract-url.com',
+//   serviceStartedAt: new Date('2021-01-01T00:00:00'),
+//   signedAt: new Date('2022-01-01T00:00:00'),
+//   externalReference: dummyExternalReferenceInput,
+// };
 
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
@@ -54,8 +89,8 @@ export const AccountPanel = () => {
     return <AccountPanelSkeleton />;
   }
 
-  // TODO uncomment after integrating with BE
-  // if (no contracts available) {
+  // // TODO uncomment after integrating with BE
+  // if (true) {
   //   return <EmptyContracts name={data?.organization?.name || ''} />;
   // }
 
