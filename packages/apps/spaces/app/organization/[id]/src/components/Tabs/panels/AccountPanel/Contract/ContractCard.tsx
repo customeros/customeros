@@ -7,11 +7,13 @@ import { Plus } from '@ui/media/icons/Plus';
 import { Check } from '@ui/media/icons/Check';
 import { UseDisclosureReturn } from '@ui/utils';
 import { File02 } from '@ui/media/icons/File02';
+import { FormSelect } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { Divider } from '@ui/presentation/Divider';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
+import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { ContractDTO } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Contract.dto';
 import { ServiceModal } from '@organization/src/components/Tabs/panels/AccountPanel/Services/ServiceModal';
 import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServicesList';
@@ -48,7 +50,7 @@ export const ContractCard = ({
     setDefaultValues(defaultValues);
   }, [
     defaultValues.contractSigned?.toISOString(),
-    defaultValues.contractRenews?.toISOString(),
+    defaultValues.renewalCycle,
     defaultValues.contractEnds?.toISOString(),
     defaultValues.serviceStarts?.toISOString(),
   ]);
@@ -116,12 +118,14 @@ export const ContractCard = ({
             calendarIconHidden
             inset='120% auto auto 0px'
           />
-          <DatePicker
+
+          <FormSelect
             label='Contract renews'
-            placeholder='Renewal date'
+            placeholder='Contract renews'
+            isLabelVisible
+            name='renewalCycle'
             formId={formId}
-            name='contractRenews'
-            calendarIconHidden
+            options={billingFrequencyOptions}
           />
         </Flex>
         <Divider my='2' />

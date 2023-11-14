@@ -1,18 +1,15 @@
 'use client';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
-import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input';
-import { RenewalCycle } from '@graphql/types';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { FormNumberInput } from '@ui/form/NumberInput';
 import { CurrencyInput } from '@ui/form/CurrencyInput';
 import { ClockCheck } from '@ui/media/icons/ClockCheck';
-import { SelectOption } from '@shared/types/SelectOptions';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
-import { frequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 interface SubscriptionServiceFromProps {
   data: {
@@ -27,9 +24,7 @@ export const SubscriptionServiceFrom = ({
 }: SubscriptionServiceFromProps) => {
   const initialRef = useRef(null);
   const formId = 'TODO';
-  const [billingFrequency, setBillingFrequency] = useState<
-    SelectOption<RenewalCycle>
-  >(frequencyOptions[2]);
+
   const [licensePrice, setLicensePrice] = useState<string>(
     data?.licensePrice || '',
   );
@@ -43,8 +38,8 @@ export const SubscriptionServiceFrom = ({
         formId='todo'
         value={name}
         onChange={(e) => setName(e.target.value)}
-        label='Service Name'
-        placeholder='What’s this service about?'
+        label='Service name'
+        placeholder="What's this service's name?"
         isLabelVisible
         labelProps={{
           fontSize: 'sm',
@@ -58,16 +53,13 @@ export const SubscriptionServiceFrom = ({
           onChange={setLicenses}
           value={`${licenses}`}
           w='full'
+          height='auto'
           placeholder='Quantity'
           isLabelVisible
           label='Licences'
           min={0}
           ref={initialRef}
-          leftElement={
-            <Box color='gray.500'>
-              <Certificate02 height='16px' />
-            </Box>
-          }
+          leftElement={<Certificate02 boxSize={4} color='gray.500' />}
           formId={formId}
           name='licences'
         />
@@ -81,21 +73,17 @@ export const SubscriptionServiceFrom = ({
           label='Price/license'
           min={0}
           ref={initialRef}
-          leftElement={
-            <Box color='gray.500'>
-              <CurrencyDollar height='16px' />
-            </Box>
-          }
+          leftElement={<CurrencyDollar boxSize={4} color='gray.500' />}
         />
+
         <FormSelect
           label='Billed'
+          placeholder='Frequency'
           isLabelVisible
           name='billingFrequency'
-          formId='tbd'
-          value={billingFrequency}
-          onChange={(d) => setBillingFrequency(d)}
-          options={frequencyOptions}
-          leftElement={<ClockCheck mr='3' color='gray.500' />}
+          formId={formId}
+          options={billingFrequencyOptions}
+          leftElement={<ClockCheck mr='3' color='gray.500' boxSize={4} />}
         />
       </Flex>
     </>
