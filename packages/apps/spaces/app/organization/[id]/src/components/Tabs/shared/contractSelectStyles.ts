@@ -32,6 +32,7 @@ export const contractButtonSelect = {
   control: (props: CSSWithMultiValues) => {
     return {
       ...props,
+      w: '100%',
       border: 'none',
     };
   },
