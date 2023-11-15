@@ -34,8 +34,9 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		Source:                        MapDataSourceToModel(entity.Source),
 		SourceOfTruth:                 MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:                     entity.AppSource,
-		LastTouchPointAt:              entity.LastTouchpointAt,
 		LastTouchPointTimelineEventID: entity.LastTouchpointId,
+		LastTouchPointAt:              entity.LastTouchpointAt,
+		LastTouchPointType:            MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 		AccountDetails: &model.OrgAccountDetails{
 			RenewalLikelihood: &model.RenewalLikelihood{
 				Probability:         MapRenewalLikelihoodToModel(entity.RenewalLikelihood.RenewalLikelihood),

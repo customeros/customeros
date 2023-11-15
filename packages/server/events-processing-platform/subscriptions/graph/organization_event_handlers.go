@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -23,6 +24,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"strings"
+	"time"
 )
 
 type ActionForecastMetadata struct {
@@ -523,7 +525,14 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	lastTouchpointAt, lastTouchpointId, err := h.repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, eventData.Tenant, organizationId)
+	//fetch the real touchpoint
+	//if it doesn't exist, check for the Created Action
+	var lastTouchpointId string
+	var lastTouchpointAt *time.Time
+	var timelineEventNode *dbtype.Node
+	var err error
+
+	lastTouchpointAt, lastTouchpointId, err = h.repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to calculate last touchpoint: %v", err.Error())
@@ -532,12 +541,81 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 	}
 
 	if lastTouchpointAt == nil {
+		timelineEventNode, err = h.repositories.ActionRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated)
+		propsFromNode := utils.GetPropsFromNode(*timelineEventNode)
+		lastTouchpointId = utils.GetStringPropOrEmpty(propsFromNode, "id")
+		lastTouchpointAt = utils.GetTimePropOrNil(propsFromNode, "createdAt")
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to get created action: %v", err.Error())
+			return nil
+		}
+	} else {
+		timelineEventNode, err = h.repositories.TimelineEventRepository.GetTimelineEvent(ctx, eventData.Tenant, lastTouchpointId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to get last touchpoint: %v", err.Error())
+			return nil
+		}
+	}
+
+	if timelineEventNode == nil {
 		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
 		span.LogFields(log.Bool("last touchpoint not found", true))
 		return nil
 	}
 
-	if err = h.repositories.OrganizationRepository.UpdateLastTouchpoint(ctx, eventData.Tenant, organizationId, *lastTouchpointAt, lastTouchpointId); err != nil {
+	timelineEvent := graph_db.MapDbNodeToTimelineEvent(timelineEventNode)
+	if timelineEvent == nil {
+		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
+		span.LogFields(log.Bool("last touchpoint not found", true))
+		return nil
+	}
+
+	var timelineEventType string
+	switch timelineEvent.TimelineEventLabel() {
+	case entity.NodeLabel_PageView:
+		timelineEventType = "PAGE_VIEW"
+	case entity.NodeLabel_InteractionSession:
+		timelineEventType = "INTERACTION_SESSION"
+	case entity.NodeLabel_Note:
+		timelineEventType = "NOTE"
+	case entity.NodeLabel_InteractionEvent:
+		timelineEventInteractionEvent := timelineEvent.(*entity.InteractionEventEntity)
+		if timelineEventInteractionEvent.Channel == "EMAIL" {
+			timelineEventType = "INTERACTION_EVENT_EMAIL_SENT"
+		} else if timelineEventInteractionEvent.Channel == "VOICE" {
+			timelineEventType = "INTERACTION_EVENT_PHONE_CALL"
+		} else if timelineEventInteractionEvent.Channel == "CHAT" {
+			timelineEventType = "INTERACTION_EVENT_CHAT"
+		} else if timelineEventInteractionEvent.EventType == "meeting" {
+			timelineEventType = "MEETING"
+		}
+	case entity.NodeLabel_Analysis:
+		timelineEventType = "ANALYSIS"
+	case entity.NodeLabel_Meeting:
+		timelineEventType = "MEETING"
+	case entity.NodeLabel_Action:
+		timelineEventAction := timelineEvent.(*entity.ActionEntity)
+		if timelineEventAction.Type == entity.ActionCreated {
+			timelineEventType = "ACTION_CREATED"
+		} else {
+			timelineEventType = "ACTION"
+		}
+	case entity.NodeLabel_LogEntry:
+		timelineEventType = "LOG_ENTRY"
+	case entity.NodeLabel_Issue:
+		timelineEventIssue := timelineEvent.(*entity.IssueEntity)
+		if timelineEventIssue.CreatedAt.Equal(timelineEventIssue.UpdatedAt) {
+			timelineEventType = "ISSUE_CREATED"
+		} else {
+			timelineEventType = "ISSUE_UPDATED"
+		}
+	default:
+		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
+	}
+
+	if err = h.repositories.OrganizationRepository.UpdateLastTouchpoint(ctx, eventData.Tenant, organizationId, *lastTouchpointAt, lastTouchpointId, timelineEventType); err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to update last touchpoint for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
 	}

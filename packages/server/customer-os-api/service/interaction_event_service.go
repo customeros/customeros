@@ -88,24 +88,24 @@ func (s *interactionEventService) Create(ctx context.Context, newInteractionEven
 
 	for _, v := range newInteractionEvent.SentBy {
 		if v.ContactId != nil {
-			s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, *v.ContactId)
+			s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, *v.ContactId)
 		}
 		if v.Email != nil {
-			s.services.OrganizationService.UpdateLastTouchpointSyncByEmail(ctx, *v.Email)
+			s.services.OrganizationService.UpdateLastTouchpointByEmail(ctx, *v.Email)
 		}
 		if v.PhoneNumber != nil {
-			s.services.OrganizationService.UpdateLastTouchpointSyncByPhoneNumber(ctx, *v.PhoneNumber)
+			s.services.OrganizationService.UpdateLastTouchpointByPhoneNumber(ctx, *v.PhoneNumber)
 		}
 	}
 	for _, v := range newInteractionEvent.SentTo {
 		if v.ContactId != nil {
-			s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, *v.ContactId)
+			s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, *v.ContactId)
 		}
 		if v.Email != nil {
-			s.services.OrganizationService.UpdateLastTouchpointSyncByEmail(ctx, *v.Email)
+			s.services.OrganizationService.UpdateLastTouchpointByEmail(ctx, *v.Email)
 		}
 		if v.PhoneNumber != nil {
-			s.services.OrganizationService.UpdateLastTouchpointSyncByPhoneNumber(ctx, *v.PhoneNumber)
+			s.services.OrganizationService.UpdateLastTouchpointByPhoneNumber(ctx, *v.PhoneNumber)
 		}
 	}
 

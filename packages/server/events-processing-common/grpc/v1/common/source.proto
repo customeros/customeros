@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 option go_package = "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common";
-//option go_package = "api/grpc/v1/common";
 
 message SourceFields {
   string appSource = 1;

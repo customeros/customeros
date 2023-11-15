@@ -475,7 +475,7 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 	})
 
 	if err != nil {
-		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, primaryContactId)
+		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, primaryContactId)
 	}
 
 	return err
@@ -517,7 +517,7 @@ func (s *contactService) AddOrganization(ctx context.Context, contactId, organiz
 	if err != nil {
 		return nil, err
 	}
-	s.services.OrganizationService.UpdateLastTouchpointSync(ctx, organizationId)
+	s.services.OrganizationService.UpdateLastTouchpoint(ctx, organizationId)
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 
@@ -531,7 +531,7 @@ func (s *contactService) RemoveOrganization(ctx context.Context, contactId, orga
 	if err != nil {
 		return nil, err
 	}
-	s.services.OrganizationService.UpdateLastTouchpointSync(ctx, organizationId)
+	s.services.OrganizationService.UpdateLastTouchpoint(ctx, organizationId)
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 

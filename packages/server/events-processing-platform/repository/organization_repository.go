@@ -29,7 +29,7 @@ type OrganizationRepository interface {
 	UpdateBillingDetails(ctx context.Context, orgId string, event events.OrganizationUpdateBillingDetailsEvent) error
 	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
-	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
+	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
 	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
 	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
@@ -488,14 +488,14 @@ func (r *organizationRepository) SetVisibility(ctx context.Context, tenant, orga
 	})
 }
 
-func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error {
+func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetVisibility")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))
 
 	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId`
+		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId, org.lastTouchpointType=$touchpointType`
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
@@ -506,6 +506,7 @@ func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenan
 		"organizationId": organizationId,
 		"touchpointAt":   touchpointAt,
 		"touchpointId":   touchpointId,
+		"touchpointType": touchpointType,
 	})
 }
 

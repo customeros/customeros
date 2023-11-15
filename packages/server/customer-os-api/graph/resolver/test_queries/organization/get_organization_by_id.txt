@@ -20,5 +20,6 @@ query GetOrganization($organizationId: ID!){
     createdAt
     lastTouchPointTimelineEventId
     lastTouchPointAt
+    lastTouchPointType
   }
 }

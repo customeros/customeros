@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -14,7 +13,6 @@ type ActionEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
-	DataloaderKey string
 }
 
 type ActionType string
@@ -48,25 +46,9 @@ func IsValidActionType(s string) bool {
 	return false
 }
 
-func (action ActionEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s", action.Id, action.Type)
+func (ActionEntity) IsTimelineEvent() {
 }
 
-func (action ActionEntity) GetDataloaderKey() string {
-	return action.DataloaderKey
-}
-
-func (action *ActionEntity) SetDataloaderKey(key string) {
-	action.DataloaderKey = key
-}
-
-type ActionEntities []ActionEntity
-
-func (action ActionEntity) Labels(tenant string) []string {
-	return []string{
-		NodeLabel_Action,
-		NodeLabel_Action + "_" + tenant,
-		NodeLabel_TimelineEvent,
-		NodeLabel_TimelineEvent + "_" + tenant,
-	}
+func (ActionEntity) TimelineEventLabel() string {
+	return NodeLabel_Action
 }

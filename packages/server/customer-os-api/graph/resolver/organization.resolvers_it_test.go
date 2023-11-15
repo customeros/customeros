@@ -922,6 +922,15 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 
+	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: parentOrgId,
+			}, nil
+		},
+	}
+	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
 	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
 		client.Var("parentOrganizationId", parentOrgId),
 		client.Var("mergedOrganizationId1", mergedOrgId1),
@@ -1047,6 +1056,23 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 
 	neo4jt.IssueReportedBy(ctx, driver, issueId1, mergedOrgId1)
 
+	calledRefreshLastTouchpoint := false
+
+	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, parentOrgId, org.OrganizationId)
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
+			require.Equal(t, testUserId, org.LoggedInUserId)
+			calledRefreshLastTouchpoint = true
+			neo4jt.RefreshLastTouchpoint(ctx, driver, parentOrgId, issueId1, secAgo60, model.LastTouchpointTypeIssueCreated)
+			return &organizationpb.OrganizationIdGrpcResponse{
+				Id: parentOrgId,
+			}, nil
+		},
+	}
+	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
 	callGraphQL(t, "organization/merge_organizations", map[string]interface{}{
 		"parentOrganizationId":  parentOrgId,
 		"mergedOrganizationId1": mergedOrgId1,
@@ -1062,12 +1088,14 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 	}
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	require.Nil(t, err)
+	require.True(t, calledRefreshLastTouchpoint)
 
 	organization := organizationStruct.Organization
 	require.NotNil(t, organization)
 
 	require.Equal(t, issueId1, *organization.LastTouchPointTimelineEventID)
 	require.Equal(t, secAgo60, *organization.LastTouchPointAt)
+	require.Equal(t, model.LastTouchpointTypeIssueCreated, *organization.LastTouchPointType)
 }
 
 func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {

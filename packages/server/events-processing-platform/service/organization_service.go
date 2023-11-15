@@ -266,7 +266,7 @@ func (s *organizationService) RequestRenewNextCycleDate(ctx context.Context, req
 func (s *organizationService) HideOrganization(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.HideOrganization")
 	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	// handle deadlines
@@ -274,7 +274,7 @@ func (s *organizationService) HideOrganization(ctx context.Context, request *org
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := command.NewHideOrganizationCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	command := command.NewHideOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
 	if err := s.organizationCommands.HideOrganizationCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed hide organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
@@ -289,7 +289,7 @@ func (s *organizationService) HideOrganization(ctx context.Context, request *org
 func (s *organizationService) ShowOrganization(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.ShowOrganization")
 	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
 
 	// handle deadlines
@@ -297,7 +297,7 @@ func (s *organizationService) ShowOrganization(ctx context.Context, request *org
 		return nil, status.Error(codes.Canceled, "Context canceled")
 	}
 
-	command := command.NewShowOrganizationCommand(request.Tenant, request.OrganizationId, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId))
+	command := command.NewShowOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
 	if err := s.organizationCommands.ShowOrganizationCommand.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed show organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
@@ -305,6 +305,29 @@ func (s *organizationService) ShowOrganization(ctx context.Context, request *org
 	}
 
 	s.log.Infof("Show organization with id %s for tenant %s", request.OrganizationId, request.Tenant)
+
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshLastTouchpoint")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	command := command.NewRefreshLastTouchpointCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource)
+	if err := s.organizationCommands.RefreshLastTouchpointCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed to refresh the last touchpoint for organization with id  %s in tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Refresh the last touchpoint for organization with id %s in tenant %s", request.OrganizationId, request.Tenant)
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }

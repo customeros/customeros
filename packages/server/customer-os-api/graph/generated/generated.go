@@ -712,6 +712,7 @@ type ComplexityRoot struct {
 		LastTouchPointAt              func(childComplexity int) int
 		LastTouchPointTimelineEvent   func(childComplexity int) int
 		LastTouchPointTimelineEventID func(childComplexity int) int
+		LastTouchPointType            func(childComplexity int) int
 		Locations                     func(childComplexity int) int
 		Market                        func(childComplexity int) int
 		Name                          func(childComplexity int) int
@@ -5547,6 +5548,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.LastTouchPointTimelineEventID(childComplexity), true
 
+	case "Organization.lastTouchPointType":
+		if e.complexity.Organization.LastTouchPointType == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastTouchPointType(childComplexity), true
+
 	case "Organization.locations":
 		if e.complexity.Organization.Locations == nil {
 			break
@@ -8774,6 +8782,7 @@ type Organization implements Node {
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 
     lastTouchPointAt: Time
+    lastTouchPointType: LastTouchpointType
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true)
 
@@ -8992,6 +9001,22 @@ enum RenewalCycle {
     QUARTERLY
     BIANNUALLY
     ANNUALLY
+}
+
+enum LastTouchpointType {
+    PAGE_VIEW
+    INTERACTION_SESSION
+    NOTE
+    INTERACTION_EVENT_EMAIL_SENT
+    INTERACTION_EVENT_PHONE_CALL
+    INTERACTION_EVENT_CHAT
+    MEETING
+    ANALYSIS
+    ACTION_CREATED
+    ACTION
+    LOG_ENTRY
+    ISSUE_CREATED
+    ISSUE_UPDATED
 }`, BuiltIn: false},
 	{Name: "../schemas/page_view.graphqls", Input: `type PageView implements Node & SourceFields {
     id: ID!
@@ -20452,6 +20477,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -25979,6 +26006,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -26722,6 +26751,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -34527,6 +34558,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -36718,6 +36751,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -36903,6 +36938,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -38112,6 +38149,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -38297,6 +38336,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -38482,6 +38523,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -38909,6 +38952,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -39094,6 +39139,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -39279,6 +39326,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -39464,6 +39513,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -39649,6 +39700,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -39834,6 +39887,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -45937,6 +45992,47 @@ func (ec *executionContext) fieldContext_Organization_lastTouchPointAt(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_lastTouchPointType(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastTouchPointType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.LastTouchpointType)
+	fc.Result = res
+	return ec.marshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpointType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastTouchPointType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type LastTouchpointType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_lastTouchPointTimelineEventId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 	if err != nil {
@@ -46247,6 +46343,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -46523,6 +46621,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -47989,6 +48089,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -50815,6 +50917,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -53317,6 +53421,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
 			case "lastTouchPointTimelineEventId":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
@@ -68574,6 +68680,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "lastTouchPointAt":
 			out.Values[i] = ec._Organization_lastTouchPointAt(ctx, field, obj)
+		case "lastTouchPointType":
+			out.Values[i] = ec._Organization_lastTouchPointType(ctx, field, obj)
 		case "lastTouchPointTimelineEventId":
 			out.Values[i] = ec._Organization_lastTouchPointTimelineEventId(ctx, field, obj)
 		case "lastTouchPointTimelineEvent":
@@ -75238,6 +75346,22 @@ func (ec *executionContext) unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenline
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpointType(ctx context.Context, v interface{}) (*model.LastTouchpointType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.LastTouchpointType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpointType(ctx context.Context, sel ast.SelectionSet, v *model.LastTouchpointType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx context.Context, v interface{}) (*model.Market, error) {
