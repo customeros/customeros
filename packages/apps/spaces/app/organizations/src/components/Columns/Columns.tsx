@@ -333,7 +333,7 @@ export const columns = [
     id: 'LAST_TOUCHPOINT',
     minSize: 250,
     filterFn: filterLastTouchpointFn,
-    enableColumnFilter: false,
+    // enableColumnFilter: false,
     cell: (props) => (
       <LastTouchpointCell
         lastTouchPointAt={props.row.original.lastTouchPointAt}

@@ -8,6 +8,7 @@ import { GridItem } from '@ui/layout/Grid';
 import { Organization } from '@graphql/types';
 import { Table, SortingState } from '@ui/presentation/Table';
 
+import { KMenu } from './src/components/KMenu';
 import { Search } from './src/components/Search';
 import { useOrganizationsPageData } from './src/hooks';
 import { TableActions } from './src/components/Actions';
@@ -61,6 +62,8 @@ export default function OrganizationsPage() {
           />
         )}
       />
+
+      <KMenu />
     </GridItem>
   );
 }
