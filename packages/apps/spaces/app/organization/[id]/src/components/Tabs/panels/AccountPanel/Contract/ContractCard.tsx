@@ -14,7 +14,7 @@ import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
 import { ContractDTO } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Contract.dto';
 import { ServiceModal } from '@organization/src/components/Tabs/panels/AccountPanel/Services/ServiceModal';
 import { ServicesList } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ServicesList';
-import { ContractStatusSelect } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractStatusSelect';
+import { ContractStatusSelect } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/contractStatuses/ContractStatusSelect';
 
 interface ContractCardProps {
   data?: null; // todo when BE contract is available

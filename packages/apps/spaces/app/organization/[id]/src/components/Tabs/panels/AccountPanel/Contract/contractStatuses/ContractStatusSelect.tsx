@@ -3,12 +3,11 @@ import React from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Select } from '@ui/form/SyncSelect';
-import { Edit03 } from '@ui/media/icons/Edit03';
 import { ContractStatus } from '@graphql/types';
-import { DotLive } from '@ui/media/icons/DotLive';
-import { XSquare } from '@ui/media/icons/XSquare';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
+
+import { contractOptionIcon } from './utils';
 
 interface ContractStatusSelectProps {}
 
@@ -17,13 +16,6 @@ export const contractStatusOptions: SelectOption<ContractStatus>[] = [
   { label: 'Ended', value: ContractStatus.Ended },
   { label: 'Live', value: ContractStatus.Live },
 ];
-
-const contractOptionIcon: Record<ContractStatus, JSX.Element | null> = {
-  [ContractStatus.Draft]: <Edit03 color='gray.500' boxSize='inherit' />,
-  [ContractStatus.Ended]: <XSquare color='gray.500' boxSize='inherit' />,
-  [ContractStatus.Live]: <DotLive color='inherit' boxSize='inherit' />,
-  [ContractStatus.Undefined]: null,
-};
 
 export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = () => {
   return (
