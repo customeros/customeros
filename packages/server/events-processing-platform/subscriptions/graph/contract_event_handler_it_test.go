@@ -9,8 +9,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
+	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
+	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -19,6 +24,8 @@ import (
 func TestContractEventHandler_OnCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// Prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -29,8 +36,9 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
 	}
 
 	// Create a ContractCreateEvent
@@ -94,11 +102,33 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, contract.EndedAt)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, contract.AppSource)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+
+	generatedEvent1 := eventList[0]
+	require.Equal(t, opportunityevent.OpportunityCreateRenewalV1, generatedEvent1.EventType)
+	var eventData1 opportunityevent.OpportunityCreateRenewalEvent
+	err = generatedEvent1.GetJsonData(&eventData1)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData1.Tenant)
+	require.Equal(t, contractId, eventData1.ContractId)
+	require.Equal(t, constants.SourceOpenline, eventData1.Source.Source)
+	test.AssertRecentTime(t, eventData1.CreatedAt)
+	test.AssertRecentTime(t, eventData1.UpdatedAt)
 }
 
 func TestContractEventHandler_OnUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -110,7 +140,8 @@ func TestContractEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		repositories: testDatabase.Repositories,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
 	}
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
@@ -129,8 +160,7 @@ func TestContractEventHandler_OnUpdate(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
-		now,
-		"")
+		now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -155,6 +185,59 @@ func TestContractEventHandler_OnUpdate(t *testing.T) {
 	require.True(t, daysAgo2.Equal(*contract.SignedAt))
 	require.True(t, tomorrow.Equal(*contract.EndedAt))
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+
+	generatedEvent1 := eventList[0]
+	require.Equal(t, opportunityevent.OpportunityCreateRenewalV1, generatedEvent1.EventType)
+	var eventData1 opportunityevent.OpportunityCreateRenewalEvent
+	err = generatedEvent1.GetJsonData(&eventData1)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData1.Tenant)
+	require.Equal(t, contractId, eventData1.ContractId)
+	require.Equal(t, constants.SourceOpenline, eventData1.Source.Source)
+	test.AssertRecentTime(t, eventData1.CreatedAt)
+	test.AssertRecentTime(t, eventData1.UpdatedAt)
+}
+
+func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
+	}
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			Name: "test contract updated",
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		utils.Now())
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	// Check no create renewal opportunity command was generated
+	require.Equal(t, 0, len(aggregateStore.GetEventMap()))
 }
 
 func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline(t *testing.T) {
@@ -196,8 +279,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 		},
 		commonmodel.ExternalSystem{},
 		"hubspot",
-		now,
-		"")
+		now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE

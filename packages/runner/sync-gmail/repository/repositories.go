@@ -28,7 +28,6 @@ type Repositories struct {
 	ActionRepository           ActionRepository
 	ActionPointRepository      ActionPointRepository
 	DomainRepository           DomainRepository
-	TimelineEventRepository    TimelineEventRepository
 	MeetingRepository          MeetingRepository
 }
 
@@ -53,7 +52,6 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		ActionRepository:           NewActionRepository(driver),
 		ActionPointRepository:      NewActionPointRepository(driver),
 		DomainRepository:           NewDomainRepository(driver),
-		TimelineEventRepository:    NewTimelineEventRepository(driver),
 		MeetingRepository:          NewMeetingRepository(driver),
 	}
 

@@ -32,6 +32,8 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.OpportunityCreateV1:
 		return a.onOpportunityCreate(evt)
+	case event.OpportunityCreateRenewalV1:
+		return a.onRenewalOpportunityCreate(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -65,6 +67,24 @@ func (a *OpportunityAggregate) onOpportunityCreate(evt eventstore.Event) error {
 	if eventData.ExternalSystem.Available() {
 		a.Opportunity.ExternalSystems = []commonmodel.ExternalSystem{eventData.ExternalSystem}
 	}
+
+	return nil
+}
+
+func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) error {
+	var eventData event.OpportunityCreateRenewalEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Opportunity.ID = a.ID
+	a.Opportunity.Tenant = a.Tenant
+	a.Opportunity.ContractId = eventData.ContractId
+	a.Opportunity.InternalType = model.OpportunityInternalTypeStringDecode(eventData.InternalType)
+	a.Opportunity.InternalStage = model.OpportunityInternalStageStringDecode(eventData.InternalStage)
+	a.Opportunity.CreatedAt = eventData.CreatedAt
+	a.Opportunity.UpdatedAt = eventData.UpdatedAt
+	a.Opportunity.Source = eventData.Source
 
 	return nil
 }

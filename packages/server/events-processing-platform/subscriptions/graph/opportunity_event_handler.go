@@ -57,3 +57,25 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 
 	return nil
 }
+
+func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCreateRenewal")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.OpportunityCreateRenewalEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
+	err := h.repositories.OpportunityRepository.CreateRenewalOpportunity(ctx, eventData.Tenant, opportunityId, eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while saving renewal opportunity %s: %s", opportunityId, err.Error())
+		return err
+	}
+
+	return nil
+}

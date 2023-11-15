@@ -26,6 +26,12 @@ type Config struct {
 		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	}
 
+	EventsProcessingConfig struct {
+		EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"true"`
+		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
+		EventsProcessingPlatformApiKey  string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY"`
+	}
+
 	Anthropic struct {
 		ApiPath          string `env:"ANTHROPIC_API_PATH,required" envDefault:"WARN"`
 		ApiKey           string `env:"ANTHROPIC_API_KEY,required" envDefault:"WARN"`

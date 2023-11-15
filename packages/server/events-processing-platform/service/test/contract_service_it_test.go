@@ -270,7 +270,6 @@ func TestContractService_UpdateContract(t *testing.T) {
 	require.Equal(t, "Updated Contract", eventData.Name)
 	require.Equal(t, "http://new.contract.url", eventData.ContractUrl)
 	require.Equal(t, model.MonthlyRenewal.String(), eventData.RenewalCycle)
-	require.Equal(t, "", eventData.PreviousRenewalCycle)
 	require.Equal(t, model.Live.String(), eventData.Status)
 	require.True(t, timeNow.Equal(eventData.UpdatedAt))
 	require.True(t, timeNow.Equal(*eventData.ServiceStartedAt))

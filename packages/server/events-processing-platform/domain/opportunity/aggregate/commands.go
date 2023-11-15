@@ -21,6 +21,8 @@ func (a *OpportunityAggregate) HandleCommand(ctx context.Context, cmd eventstore
 	switch c := cmd.(type) {
 	case *command.CreateOpportunityCommand:
 		return a.createOpportunity(ctx, c)
+	case *command.CreateRenewalOpportunityCommand:
+		return a.createRenewalOpportunity(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -34,9 +36,9 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, cmd *comma
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	// Assuming you have a utility function to get the current time if the passed time is nil
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+	cmd.Source.SetDefaultValues()
 
 	createEvent, err := event.NewOpportunityCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
@@ -50,4 +52,29 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, cmd *comma
 	})
 
 	return a.Apply(createEvent)
+}
+
+func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, cmd *command.CreateRenewalOpportunityCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.createRenewalOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+	cmd.Source.SetDefaultValues()
+
+	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, cmd.ContractId, cmd.Source, createdAtNotNil, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOpportunityCreateRenewalEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&createRenewalEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.Source.AppSource,
+	})
+
+	return a.Apply(createRenewalEvent)
 }
