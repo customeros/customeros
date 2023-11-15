@@ -1448,6 +1448,35 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
+type ServiceLineItem struct {
+	ID            string            `json:"id"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	Name          string            `json:"name"`
+	Billed        BilledType        `json:"billed"`
+	Price         float64           `json:"price"`
+	Quantity      int               `json:"quantity"`
+	CreatedBy     *User             `json:"createdBy,omitempty"`
+	Source        DataSource        `json:"source"`
+	SourceOfTruth DataSource        `json:"sourceOfTruth"`
+	AppSource     string            `json:"appSource"`
+	ExternalLinks []*ExternalSystem `json:"externalLinks"`
+}
+
+func (ServiceLineItem) IsNode()            {}
+func (this ServiceLineItem) GetID() string { return this.ID }
+
+type ServiceLineItemInput struct {
+	Name              *string                       `json:"name,omitempty"`
+	ContractID        string                        `json:"contractId"`
+	RenewalCycle      *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
+	Billed            *BilledType                   `json:"billed,omitempty"`
+	Price             *float64                      `json:"price,omitempty"`
+	Quantity          *int                          `json:"quantity,omitempty"`
+	AppSource         *string                       `json:"appSource,omitempty"`
+	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+}
+
 type Social struct {
 	ID            string     `json:"id"`
 	PlatformName  *string    `json:"platformName,omitempty"`
@@ -1711,6 +1740,49 @@ func (e *ActionType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ActionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type BilledType string
+
+const (
+	BilledTypeMonthlyBilled  BilledType = "MONTHLY_BILLED"
+	BilledTypeAnnuallyBilled BilledType = "ANNUALLY_BILLED"
+	BilledTypeOnceBilled     BilledType = "ONCE_BILLED"
+)
+
+var AllBilledType = []BilledType{
+	BilledTypeMonthlyBilled,
+	BilledTypeAnnuallyBilled,
+	BilledTypeOnceBilled,
+}
+
+func (e BilledType) IsValid() bool {
+	switch e {
+	case BilledTypeMonthlyBilled, BilledTypeAnnuallyBilled, BilledTypeOnceBilled:
+		return true
+	}
+	return false
+}
+
+func (e BilledType) String() string {
+	return string(e)
+}
+
+func (e *BilledType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = BilledType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid BilledType", str)
+	}
+	return nil
+}
+
+func (e BilledType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
