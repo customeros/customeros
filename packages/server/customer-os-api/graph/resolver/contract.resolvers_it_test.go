@@ -19,6 +19,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
 
 	createdContractId := uuid.New().String()
 
@@ -26,7 +27,11 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 
 	contractServiceCallbacks := events_platform.MockContractServiceCallbacks{
 		CreateContract: func(context context.Context, contact *contractgrpc.CreateContractGrpcRequest) (*contractgrpc.ContractIdGrpcResponse, error) {
-			require.Equal(t, "full name", contact.Name)
+			require.Equal(t, "name", contact.Name)
+			require.Equal(t, "MONTHLY_RENEWAL", contact.RenewalCycle)
+			require.Equal(t, organizationId, organizationId)
+			require.Equal(t, "", contact.SignedAt)
+			require.Equal(t, "", contact.SignedAt)
 			require.Equal(t, tenantName, contact.Tenant)
 			require.Equal(t, string(entity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)

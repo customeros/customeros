@@ -1635,8 +1635,8 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	//TODO: add other fields
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":    tenant,
-		"contactId": contractId,
+		"tenant":     tenant,
+		"contractId": contractId,
 		//TODO: add other fields
 	})
 	return contractId
