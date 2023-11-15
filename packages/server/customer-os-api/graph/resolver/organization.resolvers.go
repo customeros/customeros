@@ -807,6 +807,19 @@ func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization
 	return mapper.MapEntitiesToTags(tagEntities), nil
 }
 
+// Contracts is the resolver for the contracts field.
+func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	contractEntities, err := dataloader.For(ctx).GetContractsForOrganization(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get contracts for organization %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get contracts for organization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToContracts(contractEntities), nil
+}
+
 // Emails is the resolver for the emails field.
 func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))

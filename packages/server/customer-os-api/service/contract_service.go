@@ -23,6 +23,7 @@ import (
 type ContractService interface {
 	Create(ctx context.Context, contract *ContractCreateData) (string, error)
 	GetById(ctx context.Context, id string) (*entity.ContractEntity, error)
+	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*entity.ContractEntities, error)
 }
 type contractService struct {
 	log          logger.Logger
@@ -136,10 +137,28 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*enti
 	}
 }
 
+func (s *contractService) GetContractsForOrganizations(ctx context.Context, organizationIDs []string) (*entity.ContractEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractsForOrganizations")
+	defer span.Finish()
+	span.LogFields(log.Object("organizationIDs", organizationIDs))
+
+	contracts, err := s.repositories.ContractRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	if err != nil {
+		return nil, err
+	}
+	contractEntities := make(entity.ContractEntities, 0, len(contracts))
+	for _, v := range contracts {
+		contractEntity := s.mapDbNodeToContractEntity(*v.Node)
+		contractEntity.DataloaderKey = v.LinkedNodeId
+		contractEntities = append(contractEntities, *contractEntity)
+	}
+	return &contractEntities, nil
+}
+
 func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.ContractEntity {
 	props := utils.GetPropsFromNode(dbNode)
-	contractStatus := entity.GetContractStatus(utils.GetStringPropOrEmpty(props, "ContractStatus"))
-	contractRenewalCycle := entity.GetContractRenewalCycle(utils.GetStringPropOrEmpty(props, "ContractRenewalCycle"))
+	contractStatus := entity.GetContractStatus(utils.GetStringPropOrEmpty(props, "status"))
+	contractRenewalCycle := entity.GetContractRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
 
 	contract := entity.ContractEntity{
 		ID:                   utils.GetStringPropOrEmpty(props, "id"),

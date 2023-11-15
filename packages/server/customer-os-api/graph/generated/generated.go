@@ -690,6 +690,7 @@ type ComplexityRoot struct {
 		AccountDetails                func(childComplexity int) int
 		AppSource                     func(childComplexity int) int
 		Contacts                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Contracts                     func(childComplexity int) int
 		CreatedAt                     func(childComplexity int) int
 		CustomFields                  func(childComplexity int) int
 		CustomerOsID                  func(childComplexity int) int
@@ -1203,6 +1204,7 @@ type OrganizationResolver interface {
 	JobRoles(ctx context.Context, obj *model.Organization) ([]*model.JobRole, error)
 	Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error)
 	Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error)
+	Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error)
 	Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
 	Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
@@ -5394,6 +5396,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Contacts(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
+	case "Organization.contracts":
+		if e.complexity.Organization.Contracts == nil {
+			break
+		}
+
+		return e.complexity.Organization.Contracts(childComplexity), true
+
 	case "Organization.createdAt":
 		if e.complexity.Organization.CreatedAt == nil {
 			break
@@ -8766,6 +8775,7 @@ type Organization implements Node {
     jobRoles: [JobRole!]! @goField(forceResolver: true)
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
     tags: [Tag!] @goField(forceResolver: true)
+    contracts: [Contract!] @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)
@@ -20447,6 +20457,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -25976,6 +25988,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -26721,6 +26735,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -34528,6 +34544,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -36721,6 +36739,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -36908,6 +36928,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -38119,6 +38141,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -38306,6 +38330,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -38493,6 +38519,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -38922,6 +38950,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -39109,6 +39139,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -39296,6 +39328,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -39483,6 +39517,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -39670,6 +39706,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -39857,6 +39895,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -45127,6 +45167,81 @@ func (ec *executionContext) fieldContext_Organization_tags(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_contracts(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_contracts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().Contracts(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Contract)
+	fc.Result = res
+	return ec.marshalOContract2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contract_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contract_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contract_updatedAt(ctx, field)
+			case "serviceStartedAt":
+				return ec.fieldContext_Contract_serviceStartedAt(ctx, field)
+			case "signedAt":
+				return ec.fieldContext_Contract_signedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Contract_endedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Contract_name(ctx, field)
+			case "renewalCycle":
+				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "status":
+				return ec.fieldContext_Contract_status(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contract_owner(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Contract_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_Contract_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contract_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contract_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Contract_externalLinks(ctx, field)
+			case "contractUrl":
+				return ec.fieldContext_Contract_contractUrl(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contract", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_emails(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_emails(ctx, field)
 	if err != nil {
@@ -46313,6 +46428,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -46591,6 +46708,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -48059,6 +48178,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -50887,6 +51008,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -53391,6 +53514,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_notes(ctx, field)
 			case "tags":
 				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
 			case "emails":
 				return ec.fieldContext_Organization_emails(ctx, field)
 			case "phoneNumbers":
@@ -68180,6 +68305,39 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "contracts":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_contracts(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "emails":
 			field := field
 
@@ -74873,6 +75031,53 @@ func (ec *executionContext) marshalOContactsPage2ᚖgithubᚗcomᚋopenlineᚑai
 		return graphql.Null
 	}
 	return ec._ContactsPage(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOContract2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contract) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContract(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx context.Context, v interface{}) (*model.ContractRenewalCycle, error) {

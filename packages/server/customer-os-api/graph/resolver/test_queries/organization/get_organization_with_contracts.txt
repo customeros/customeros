@@ -1,0 +1,22 @@
+query GetOrganization($organizationId: ID!) {
+  organization(id: $organizationId) {
+    id
+    contracts {
+      id
+      name
+      createdAt
+      updatedAt
+      appSource
+      serviceStartedAt
+      signedAt
+      endedAt
+      name
+      renewalCycle
+      status
+      source
+      sourceOfTruth
+      appSource
+      contractUrl
+    }
+  }
+}

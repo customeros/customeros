@@ -68,6 +68,7 @@ type Organization implements Node {
     jobRoles: [JobRole!]! @goField(forceResolver: true)
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
     tags: [Tag!] @goField(forceResolver: true)
+    contracts: [Contract!] @goField(forceResolver: true)
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)

@@ -47,3 +47,11 @@ func MapContractInputToEntity(input model.ContractInput) *entity.ContractEntity 
 	}
 	return &contractEntity
 }
+
+func MapEntitiesToContracts(entities *entity.ContractEntities) []*model.Contract {
+	var contracts []*model.Contract
+	for _, contractEntity := range *entities {
+		contracts = append(contracts, MapEntityToContract(&contractEntity))
+	}
+	return contracts
+}
