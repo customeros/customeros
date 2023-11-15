@@ -1565,6 +1565,46 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return actionId.String()
 }
 
+func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, contract entity.ContractEntity) string {
+	contractId := utils.NewUUIDIfEmpty(contract.ID)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$orgId})
+				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
+				SET 
+					c:Contract_%s,
+					c.name=$name,
+					c.contractUrl=$contractUrl,
+					c.source=$source,
+					c.sourceOfTruth=$sourceOfTruth,
+					c.appSource=$appSource,
+					c.status=$status,
+					c.renewalCycle=$renewalCycle,
+					c.signedAt=$signedAt,
+					c.serviceStartedAt=$serviceStartedAt,
+					c.endedAt=$endedAt,
+					c.createdAt=$createdAt,
+					c.updatedAt=$updatedAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":               contractId,
+		"orgId":            orgId,
+		"tenant":           tenant,
+		"name":             contract.Name,
+		"contractUrl":      contract.ContractUrl,
+		"source":           contract.Source,
+		"sourceOfTruth":    contract.SourceOfTruth,
+		"appSource":        contract.AppSource,
+		"status":           contract.ContractStatus,
+		"renewalCycle":     contract.ContractRenewalCycle,
+		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
+		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
+		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),
+		"createdAt":        contract.CreatedAt,
+		"updatedAt":        contract.UpdatedAt,
+	})
+	return contractId
+}
+
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})

@@ -1480,3 +1480,96 @@ func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
 }
+
+func TestQueryResolver_Organization_WithContracts(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+	yesterday := now.Add(time.Duration(-24) * time.Hour)
+	hoursAgo1 := now.Add(time.Duration(-1) * time.Hour)
+	hoursAgo2 := now.Add(time.Duration(-2) * time.Hour)
+	hoursAgo3 := now.Add(time.Duration(-3) * time.Hour)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "just another org")
+	contractId1 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		Name:                 "contract 1",
+		CreatedAt:            now,
+		UpdatedAt:            now,
+		ServiceStartedAt:     &hoursAgo3,
+		SignedAt:             &hoursAgo2,
+		EndedAt:              &hoursAgo1,
+		ContractRenewalCycle: entity.ContractRenewalCycleMonthlyRenewal,
+		ContractStatus:       entity.ContractStatusDraft,
+		ContractUrl:          "url1",
+		Source:               entity.DataSourceOpenline,
+		AppSource:            "test1",
+	})
+	contractId2 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
+		Name:                 "contract 2",
+		CreatedAt:            yesterday,
+		UpdatedAt:            yesterday,
+		ServiceStartedAt:     &hoursAgo1,
+		SignedAt:             &hoursAgo3,
+		EndedAt:              &hoursAgo2,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractUrl:          "url2",
+		Source:               entity.DataSourceOpenline,
+		AppSource:            "test2",
+	})
+	contractId3 := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId2, entity.ContractEntity{})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization":           2,
+		"Contract":               3,
+		"Contract_" + tenantName: 3,
+	})
+	assertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId1)
+	assertRelationship(ctx, t, driver, orgId, "HAS_CONTRACT", contractId2)
+	assertRelationship(ctx, t, driver, orgId2, "HAS_CONTRACT", contractId3)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_contracts",
+		map[string]interface{}{"organizationId": orgId})
+
+	var orgStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
+	require.Nil(t, err)
+
+	organization := orgStruct.Organization
+	require.NotNil(t, organization)
+	require.Equal(t, 2, len(organization.Contracts))
+
+	firstContract := organization.Contracts[0]
+	require.Equal(t, contractId1, firstContract.ID)
+	require.Equal(t, "contract 1", firstContract.Name)
+	require.Equal(t, now, firstContract.CreatedAt)
+	require.Equal(t, now, firstContract.UpdatedAt)
+	require.Equal(t, hoursAgo3, *firstContract.ServiceStartedAt)
+	require.Equal(t, hoursAgo2, *firstContract.SignedAt)
+	require.Equal(t, hoursAgo1, *firstContract.EndedAt)
+	require.Equal(t, model.ContractRenewalCycleMonthlyRenewal, firstContract.RenewalCycle)
+	require.Equal(t, model.ContractStatusDraft, firstContract.Status)
+	require.Equal(t, "url1", *firstContract.ContractURL)
+	require.Equal(t, model.DataSourceOpenline, firstContract.Source)
+	require.Equal(t, "test1", firstContract.AppSource)
+
+	secondContract := organization.Contracts[1]
+	require.Equal(t, contractId2, secondContract.ID)
+	require.Equal(t, "contract 2", secondContract.Name)
+	require.Equal(t, yesterday, secondContract.CreatedAt)
+	require.Equal(t, yesterday, secondContract.UpdatedAt)
+	require.Equal(t, hoursAgo1, *secondContract.ServiceStartedAt)
+	require.Equal(t, hoursAgo3, *secondContract.SignedAt)
+	require.Equal(t, hoursAgo2, *secondContract.EndedAt)
+	require.Equal(t, model.ContractRenewalCycleAnnualRenewal, secondContract.RenewalCycle)
+	require.Equal(t, model.ContractStatusLive, secondContract.Status)
+	require.Equal(t, "url2", *secondContract.ContractURL)
+	require.Equal(t, model.DataSourceOpenline, secondContract.Source)
+	require.Equal(t, "test2", secondContract.AppSource)
+}

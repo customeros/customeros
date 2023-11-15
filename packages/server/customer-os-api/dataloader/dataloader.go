@@ -82,6 +82,7 @@ type Loaders struct {
 	ReporterParticipantsForIssue                *dataloader.Loader
 	AssigneeParticipantsForIssue                *dataloader.Loader
 	FollowerParticipantsForIssue                *dataloader.Loader
+	ContractsForOrganization                    *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -167,6 +168,9 @@ type issueParticipantBatcher struct {
 }
 type commentBatcher struct {
 	commentService service.CommentService
+}
+type contractBatcher struct {
+	contractService service.ContractService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -255,6 +259,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	actionItemBatcher := actionItemBatcher{
 		actionItemService: services.ActionItemService,
 	}
+	contractBatcher := &contractBatcher{
+		contractService: services.ContractService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -323,6 +330,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		AssigneeParticipantsForIssue:                dataloader.NewBatchedLoader(issueParticipantBatcher.getAssigneeParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FollowerParticipantsForIssue:                dataloader.NewBatchedLoader(issueParticipantBatcher.getFollowerParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		CommentsForIssue:                            dataloader.NewBatchedLoader(commentBatcher.getCommentsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ContractsForOrganization:                    dataloader.NewBatchedLoader(contractBatcher.getContractsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

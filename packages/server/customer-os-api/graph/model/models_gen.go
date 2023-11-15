@@ -1173,6 +1173,7 @@ type Organization struct {
 	JobRoles                      []*JobRole                       `json:"jobRoles"`
 	Notes                         *NotePage                        `json:"notes"`
 	Tags                          []*Tag                           `json:"tags,omitempty"`
+	Contracts                     []*Contract                      `json:"contracts,omitempty"`
 	Emails                        []*Email                         `json:"emails"`
 	PhoneNumbers                  []*PhoneNumber                   `json:"phoneNumbers"`
 	Subsidiaries                  []*LinkedOrganization            `json:"subsidiaries"`

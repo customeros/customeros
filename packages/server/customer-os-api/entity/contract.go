@@ -21,3 +21,5 @@ type ContractEntity struct {
 
 	DataloaderKey string
 }
+
+type ContractEntities []ContractEntity
