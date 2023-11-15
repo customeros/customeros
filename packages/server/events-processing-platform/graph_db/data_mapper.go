@@ -200,6 +200,9 @@ func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		RenewalDetails: entity.RenewalDetails{
+			RenewedAt: utils.GetTimePropOrNil(props, "renewedAt"),
+		},
 	}
 	return &opportunity
 }

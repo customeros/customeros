@@ -69,7 +69,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		logEntryEventHandler:        &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
 		issueEventHandler:           &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
 		commentEventHandler:         &GraphCommentEventHandler{repositories: repositories, log: log},
-		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log},
+		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
 		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
 		serviceLineItemEventHandler: &ServiceLineItemEventHandler{repositories: repositories, log: log},
 	}
@@ -297,11 +297,15 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.opportunityEventHandler.OnCreate(ctx, evt)
 	case opportunityevent.OpportunityCreateRenewalV1:
 		return s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
+	case opportunityevent.OpportunityUpdateNextCycleDateV1:
+		return s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
 
 	case contractevent.ContractCreateV1:
 		return s.contractEventHandler.OnCreate(ctx, evt)
 	case contractevent.ContractUpdateV1:
 		return s.contractEventHandler.OnUpdate(ctx, evt)
+	case contractevent.ContractRequestNextCycleDateV1:
+		return nil
 
 	case servicelineitemevent.ServiceLineItemCreateV1:
 		return s.serviceLineItemEventHandler.OnCreate(ctx, evt)
