@@ -4,6 +4,10 @@ import (
 	"time"
 )
 
+type RenewalDetails struct {
+	RenewedAt *time.Time
+}
+
 type OpportunityEntity struct {
 	Id                string
 	CreatedAt         time.Time
@@ -22,4 +26,5 @@ type OpportunityEntity struct {
 	CreatedByUserId   string
 	GeneralNotes      string
 	NextSteps         string
+	RenewalDetails    RenewalDetails
 }

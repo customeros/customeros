@@ -7,13 +7,15 @@ import (
 
 // CommandHandlers acts as a container for all command handlers.
 type CommandHandlers struct {
-	CreateOpportunity        CreateOpportunityCommandHandler
-	CreateRenewalOpportunity CreateRenewalOpportunityCommandHandler
+	CreateOpportunity                     CreateOpportunityCommandHandler
+	CreateRenewalOpportunity              CreateRenewalOpportunityCommandHandler
+	UpdateRenewalOpportunityNextCycleDate UpdateRenewalOpportunityNextCycleDateCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
-		CreateOpportunity:        NewCreateOpportunityCommandHandler(log, es),
-		CreateRenewalOpportunity: NewCreateRenewalOpportunityCommandHandler(log, es),
+		CreateOpportunity:                     NewCreateOpportunityCommandHandler(log, es),
+		CreateRenewalOpportunity:              NewCreateRenewalOpportunityCommandHandler(log, es),
+		UpdateRenewalOpportunityNextCycleDate: NewUpdateRenewalOpportunityNextCycleDateCommandHandler(log, es),
 	}
 }

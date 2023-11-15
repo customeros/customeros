@@ -6,6 +6,10 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 )
 
+type RenewalDetails struct {
+	RenewedAt *time.Time `json:"renewedAt,omitempty"`
+}
+
 // Opportunity represents the state of an opportunity aggregate.
 type Opportunity struct {
 	ID                string                         `json:"id"`
@@ -27,6 +31,7 @@ type Opportunity struct {
 	NextSteps         string                         `json:"nextSteps"`
 	CreatedAt         time.Time                      `json:"createdAt"`
 	UpdatedAt         time.Time                      `json:"updatedAt"`
+	RenewalDetails    RenewalDetails                 `json:"renewal,omitempty"`
 }
 
 // OpportunityDataFields contains all the fields that may be used to create or update an opportunity.
