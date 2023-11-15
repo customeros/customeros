@@ -70,7 +70,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		issueEventHandler:           &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
 		commentEventHandler:         &GraphCommentEventHandler{repositories: repositories, log: log},
 		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log},
-		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log},
+		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
 		serviceLineItemEventHandler: &ServiceLineItemEventHandler{repositories: repositories, log: log},
 	}
 }
@@ -295,6 +295,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	case opportunityevent.OpportunityCreateV1:
 		return s.opportunityEventHandler.OnCreate(ctx, evt)
+	case opportunityevent.OpportunityCreateRenewalV1:
+		return s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
 
 	case contractevent.ContractCreateV1:
 		return s.contractEventHandler.OnCreate(ctx, evt)

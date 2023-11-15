@@ -3,9 +3,14 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
+	opportunitycmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
+	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -14,8 +19,9 @@ import (
 )
 
 type ContractEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
+	log                 logger.Logger
+	repositories        *repository.Repositories
+	opportunityCommands *opportunitycmdhandler.CommandHandlers
 }
 
 func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -46,6 +52,14 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		}
 	}
 
+	if model.IsFrequencyBasedRenewalCycle(eventData.RenewalCycle) {
+		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, eventData.Source, nil, nil))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -59,9 +73,16 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.ContractRepository.Update(ctx, eventData.Tenant, contractId, eventData)
+
+	contractDbNode, err := h.repositories.ContractRepository.GetContract(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+
+	err = h.repositories.ContractRepository.Update(ctx, eventData.Tenant, contractId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
@@ -74,6 +95,14 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link contract %s with external system %s: %s", contractId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 			return err
+		}
+	}
+
+	if contractEntity.RenewalCycle == "" && model.IsFrequencyBasedRenewalCycle(eventData.RenewalCycle) {
+		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, commonmodel.Source{Source: eventData.Source}, nil, nil))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
 		}
 	}
 
