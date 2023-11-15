@@ -766,6 +766,7 @@ func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, pr
 
 func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
+	now := time.Now().UTC()
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
 			ON CREATE SET 	org.name=$name, 
@@ -780,6 +781,8 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.valueProposition=$valueProposition,
 							org.lastFundingRound=$lastFundingRound,
 							org.lastFundingAmount=$lastFundingAmount,
+							org.lastTouchpointAt=$lastTouchpointAt,
+							org.lastTouchpointType=$lastTouchpointType,
 							org.note=$note,
 							org.isPublic=$isPublic, 
 							org.isCustomer=$isCustomer, 
@@ -818,6 +821,8 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"targetAudience":                  organization.TargetAudience,
 		"valueProposition":                organization.ValueProposition,
 		"hide":                            organization.Hide,
+		"lastTouchpointAt":                utils.TimePtrFirstNonNilNillableAsAny(organization.LastTouchpointAt, &now),
+		"lastTouchpointType":              organization.LastTouchpointType,
 		"lastFundingRound":                organization.LastFundingRound,
 		"lastFundingAmount":               organization.LastFundingAmount,
 		"note":                            organization.Note,

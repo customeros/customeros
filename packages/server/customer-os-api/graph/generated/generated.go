@@ -8143,6 +8143,7 @@ input FilterItem {
     operation: ComparisonOperator! = EQ
     value: Any!
     caseSensitive: Boolean = false
+    includeEmpty: Boolean = true
 }
 
 enum ComparisonOperator {
@@ -58831,8 +58832,11 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 	if _, present := asMap["caseSensitive"]; !present {
 		asMap["caseSensitive"] = false
 	}
+	if _, present := asMap["includeEmpty"]; !present {
+		asMap["includeEmpty"] = true
+	}
 
-	fieldsInOrder := [...]string{"property", "operation", "value", "caseSensitive"}
+	fieldsInOrder := [...]string{"property", "operation", "value", "caseSensitive", "includeEmpty"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -58875,6 +58879,15 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj in
 				return it, err
 			}
 			it.CaseSensitive = data
+		case "includeEmpty":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("includeEmpty"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IncludeEmpty = data
 		}
 	}
 

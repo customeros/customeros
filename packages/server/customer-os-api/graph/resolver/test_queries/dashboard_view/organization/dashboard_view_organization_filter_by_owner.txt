@@ -1,4 +1,4 @@
-query dashboardView_Organizations($page: Int!, $limit: Int!, $ownerId: Any!) {
+query dashboardView_Organizations($page: Int!, $limit: Int!, $ownerIdList: Any!, $ownerIdEmpty: Boolean!) {
   dashboardView_Organizations(
   pagination: { page: $page, limit: $limit },
   where: {
@@ -6,8 +6,9 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $ownerId: Any!) {
          {
              filter: {
                  property: "OWNER_ID",
-                 operation: EQ,
-                 value: $ownerId
+                 operation: IN,
+                 value: $ownerIdList
+                 includeEmpty: $ownerIdEmpty
              }
          }
      ]
@@ -15,21 +16,8 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $ownerId: Any!) {
     sort: {by: "OWNER"}) {
     content {
        id
-        name
-        description
-        source
-        industry
-        locations {
-            id
-            name
-            country
-            region
-            locality
-        }
-        website
-        domains
-        updatedAt
     }
+    totalAvailable
     totalElements
   }
 }
