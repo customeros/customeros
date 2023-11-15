@@ -14,6 +14,7 @@ import (
 
 type OpportunityRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, opportunityId string, evt event.OpportunityCreateEvent) error
+	CreateRenewalOpportunity(ctx context.Context, tenant, opportunityId string, evt event.OpportunityCreateRenewalEvent) error
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
 }
 
@@ -78,6 +79,44 @@ func (r *opportunityRepository) CreateForOrganization(ctx context.Context, tenan
 		"generalNotes":      evt.GeneralNotes,
 		"nextSteps":         evt.NextSteps,
 		"createdByUserId":   evt.CreatedByUserId,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *opportunityRepository) CreateRenewalOpportunity(ctx context.Context, tenant, opportunityId string, evt event.OpportunityCreateRenewalEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.CreateRenewalOpportunity")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("opportunityId", opportunityId), log.Object("event", evt))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
+							MERGE (c)-[:HAS_OPPORTUNITY]->(op:Opportunity {id:$opportunityId})
+							ON CREATE SET 
+								op:Opportunity_%s,
+								op:RenewalOpportunity,
+								op.createdAt=$createdAt,
+								op.updatedAt=$updatedAt,
+								op.source=$source,
+								op.sourceOfTruth=$sourceOfTruth,
+								op.appSource=$appSource,
+								op.internalType=$internalType,
+								op.internalStage=$internalStage
+							WITH op, c
+							MERGE (c)-[:ACTIVE_RENEWAL]->(op)
+							`, tenant)
+	params := map[string]any{
+		"tenant":        tenant,
+		"opportunityId": opportunityId,
+		"contractId":    evt.ContractId,
+		"createdAt":     evt.CreatedAt,
+		"updatedAt":     evt.UpdatedAt,
+		"source":        helper.GetSource(evt.Source.Source),
+		"sourceOfTruth": helper.GetSourceOfTruth(evt.Source.Source),
+		"appSource":     helper.GetAppSource(evt.Source.AppSource),
+		"internalType":  evt.InternalType,
+		"internalStage": evt.InternalStage,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 

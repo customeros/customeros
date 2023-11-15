@@ -556,6 +556,33 @@ func GetRelationship(ctx context.Context, driver *neo4j.DriverWithContext, fromN
 	return &node, nil
 }
 
+func GetRelationships(ctx context.Context, driver *neo4j.DriverWithContext, fromNodeId, toNodeId string) ([]dbtype.Relationship, error) {
+	session := utils.NewNeo4jReadSession(ctx, *driver)
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, `MATCH (n {id:$fromNodeId})-[rel]->(m {id:$toNodeId}) RETURN rel`,
+			map[string]interface{}{
+				"fromNodeId": fromNodeId,
+				"toNodeId":   toNodeId,
+			})
+		records, err := result.Collect(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return records, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var relationships []dbtype.Relationship
+	for _, record := range queryResult.([]*db.Record) {
+		relationships = append(relationships, record.Values[0].(dbtype.Relationship))
+	}
+	return relationships, nil
+}
+
 func GetFirstNodeByLabel(ctx context.Context, driver *neo4j.DriverWithContext, label string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *driver)
 	defer session.Close(ctx)
@@ -649,6 +676,16 @@ func AssertRelationship(ctx context.Context, t *testing.T, driver *neo4j.DriverW
 	require.Nil(t, err)
 	require.NotNil(t, rel)
 	require.Equal(t, relationshipType, rel.Type)
+}
+
+func AssertRelationships(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId string, relationshipTypes []string, toNodeId string) {
+	rels, err := GetRelationships(ctx, driver, fromNodeId, toNodeId)
+	require.Nil(t, err)
+	require.NotNil(t, rels)
+	require.Equal(t, len(relationshipTypes), len(rels))
+	for _, rel := range rels {
+		require.Contains(t, relationshipTypes, rel.Type)
+	}
 }
 
 func AssertRelationshipWithProperties(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, fromNodeId, relationshipType, toNodeId string, expectedProperties map[string]any) {

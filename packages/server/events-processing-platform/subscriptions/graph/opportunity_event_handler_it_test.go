@@ -99,10 +99,71 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
 	require.Equal(t, opportunityData.Name, opportunity.Name)
 	require.Equal(t, opportunityData.Amount, opportunity.Amount)
-	require.Equal(t, string(opportunityData.InternalType.StrValue()), opportunity.InternalType)
+	require.Equal(t, string(opportunityData.InternalType.StringValue()), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
-	require.Equal(t, string(opportunityData.InternalStage.StrValue()), opportunity.InternalStage)
+	require.Equal(t, string(opportunityData.InternalStage.StringValue()), opportunity.InternalStage)
 	require.Equal(t, opportunityData.ExternalStage, opportunity.ExternalStage)
 	require.Equal(t, opportunityData.GeneralNotes, opportunity.GeneralNotes)
 	require.Equal(t, opportunityData.NextSteps, opportunity.NextSteps)
+}
+
+func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract": 1, "Opportunity": 0})
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// Create an OpportunityCreateEvent
+	opportunityId := uuid.New().String()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	timeNow := utils.Now()
+	createEvent, err := event.NewOpportunityCreateRenewalEvent(
+		opportunityAggregate,
+		contractId,
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		timeNow,
+		timeNow,
+	)
+	require.Nil(t, err, "failed to create opportunity create renewal event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnCreateRenewal(context.Background(), createEvent)
+	require.Nil(t, err, "failed to execute opportunity create event handler")
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":    1,
+		"Opportunity": 1, "Opportunity_" + tenantName: 1})
+	neo4jt.AssertRelationships(ctx, t, testDatabase.Driver, contractId, []string{"HAS_OPPORTUNITY", "ACTIVE_RENEWAL"}, opportunityId)
+
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Opportunity_"+tenantName, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), opportunity.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), opportunity.SourceOfTruth)
+	require.Equal(t, timeNow, opportunity.CreatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
+	require.Nil(t, opportunity.EstimatedClosedAt)
+	require.Equal(t, "", opportunity.Name)
+	require.Equal(t, "", opportunity.ExternalType)
+	require.Equal(t, "", opportunity.ExternalStage)
+	require.Equal(t, string(model.OpportunityInternalTypeStringRenewal), opportunity.InternalType)
+	require.Equal(t, string(model.OpportunityInternalStageStringOpen), opportunity.InternalStage)
 }

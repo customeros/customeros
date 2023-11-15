@@ -24,6 +24,7 @@ type Subscriptions struct {
 	OrganizationSubscription          OrganizationSubscription
 	OrganizationWebscrapeSubscription OrganizationWebscrapeSubscription
 	InteractionEventSubscription      InteractionEventSubscription
+	ContractSubscription              ContractSubscription
 }
 
 type GraphSubscription struct {
@@ -87,6 +88,15 @@ type InteractionEventSubscription struct {
 	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
 	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
 	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
+}
+
+type ContractSubscription struct {
+	Enabled           bool   `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_ENABLED" envDefault:"true"`
+	GroupName         string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_GROUP_NAME" envDefault:"contract-v1" validate:"required"`
+	Prefix            string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_PREFIX" envDefault:"contract-" validate:"required"`
+	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
+	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
+	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
 }
 
 type Services struct {

@@ -193,6 +193,18 @@ func (server *server) Run(parentCtx context.Context) error {
 		}()
 	}
 
+	// TODO
+	//if server.cfg.Subscriptions.ContractSubscription.Enabled {
+	//	contractSubscriber := contract_subscription.NewContractSubscriber(server.log, esdb, server.cfg, server.commandHandlers.InteractionEvent, server.repositories)
+	//	go func() {
+	//		err := contractSubscriber.Connect(ctx, contractSubscriber.ProcessEvents)
+	//		if err != nil {
+	//			server.log.Errorf("(interactionEventSubscriber.Connect) err: {%v}", err)
+	//			cancel()
+	//		}
+	//	}()
+	//}
+
 	//server.runMetrics(cancel)
 	//server.runHealthCheck(ctx)
 

@@ -83,6 +83,13 @@ func (rc RenewalCycle) String() string {
 	}
 }
 
+type RenewalCycleString string
+
+const (
+	MonthlyRenewalCycleString  RenewalCycleString = "MONTHLY"
+	AnnuallyRenewalCycleString RenewalCycleString = "ANNUALLY"
+)
+
 func RenewalCycleFromString(renewalCycle string) RenewalCycle {
 	switch renewalCycle {
 	case "MONTHLY":
@@ -92,4 +99,8 @@ func RenewalCycleFromString(renewalCycle string) RenewalCycle {
 	default:
 		return None
 	}
+}
+
+func IsFrequencyBasedRenewalCycle(renewalCycle string) bool {
+	return renewalCycle == "MONTHLY" || renewalCycle == "ANNUALLY"
 }

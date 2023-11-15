@@ -75,9 +75,9 @@ func (s *opportunityService) CreateOpportunity(ctx context.Context, request *opp
 		model.OpportunityDataFields{
 			Name:              request.Name,
 			Amount:            request.Amount,
-			InternalType:      model.OpportunityInternalTypeEnum(request.InternalType),
+			InternalType:      model.OpportunityInternalType(request.InternalType),
 			ExternalType:      request.ExternalType,
-			InternalStage:     model.OpportunityInternalStageEnum(request.InternalStage),
+			InternalStage:     model.OpportunityInternalStage(request.InternalStage),
 			ExternalStage:     request.ExternalStage,
 			EstimatedClosedAt: estimatedClosedAt,
 			OwnerUserId:       request.OwnerUserId,
