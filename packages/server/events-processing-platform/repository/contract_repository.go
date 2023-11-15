@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
@@ -16,6 +17,7 @@ import (
 type ContractRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, contractId string, evt event.ContractCreateEvent) error
 	Update(ctx context.Context, tenant, contractId string, evt event.ContractUpdateEvent) error
+	GetContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 }
 
 type contractRepository struct {
@@ -114,4 +116,33 @@ func (r *contractRepository) Update(ctx context.Context, tenant, contractId stri
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *contractRepository) GetContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContract")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id}) RETURN c`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     contractId,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }
