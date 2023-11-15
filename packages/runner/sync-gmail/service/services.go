@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"gorm.io/gorm"
 )
@@ -10,6 +11,8 @@ import (
 type Services struct {
 	cfg          *config.Config
 	Repositories *repository.Repositories
+
+	grpcClients *grpc_client.Clients
 
 	TenantService TenantService
 	UserService   UserService
@@ -20,11 +23,12 @@ type Services struct {
 	MeetingService MeetingService
 }
 
-func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.Config) *Services {
+func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver, gormDb)
 
 	services := new(Services)
 	services.cfg = cfg
+	services.grpcClients = grpcClients
 	services.Repositories = repositories
 
 	services.TenantService = NewTenantService(repositories)
