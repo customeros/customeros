@@ -1,20 +1,20 @@
+/* eslint-disable */
+//TODO: fix any and remove eslint disable - this will be fixed then update mutation input type will be available
 interface TimeToRenewalForm {
+  renewalCycle: any | null;
   contractEnds: Date | null;
   serviceStarts: Date | null;
   contractSigned: Date | null;
-  contractRenews: Date | null;
 }
 
 export class ContractDTO implements TimeToRenewalForm {
   contractSigned: Date | null;
   contractEnds: Date | null;
   serviceStarts: Date | null;
-  contractRenews: Date | null;
+  renewalCycle: any | null;
 
   constructor(data?: TimeToRenewalForm | null) {
-    this.contractRenews = data?.contractRenews
-      ? new Date(data.contractRenews)
-      : null;
+    this.renewalCycle = data?.renewalCycle ? new Date(data.renewalCycle) : null;
     this.contractSigned = data?.contractSigned
       ? new Date(data.contractSigned)
       : null;
@@ -28,12 +28,12 @@ export class ContractDTO implements TimeToRenewalForm {
     return new ContractDTO(data);
   }
 
-  static toPayload(data: TimeToRenewalForm): TimeToRenewalForm {
+  static toPayload(data: TimeToRenewalForm): any {
     return {
+      serviceStartedAt: data?.serviceStarts,
+      signedAt: data?.contractSigned,
       contractEnds: data?.contractEnds,
-      serviceStarts: data?.serviceStarts,
-      contractSigned: data?.contractSigned,
-      contractRenews: data?.contractRenews,
+      renewalCycle: data?.renewalCycle,
     };
   }
 }
