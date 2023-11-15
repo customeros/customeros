@@ -33,7 +33,7 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	case event.OpportunityCreateV1:
 		return a.onOpportunityCreate(evt)
 	case event.OpportunityCreateRenewalV1:
-		return a.onOpportunityCreateRenewal(evt)
+		return a.onRenewalOpportunityCreate(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -71,7 +71,7 @@ func (a *OpportunityAggregate) onOpportunityCreate(evt eventstore.Event) error {
 	return nil
 }
 
-func (a *OpportunityAggregate) onOpportunityCreateRenewal(evt eventstore.Event) error {
+func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) error {
 	var eventData event.OpportunityCreateRenewalEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
@@ -79,7 +79,7 @@ func (a *OpportunityAggregate) onOpportunityCreateRenewal(evt eventstore.Event) 
 
 	a.Opportunity.ID = a.ID
 	a.Opportunity.Tenant = a.Tenant
-	a.Opportunity.OrganizationId = eventData.ContractId
+	a.Opportunity.ContractId = eventData.ContractId
 	a.Opportunity.InternalType = model.OpportunityInternalTypeStringDecode(eventData.InternalType)
 	a.Opportunity.InternalStage = model.OpportunityInternalStageStringDecode(eventData.InternalStage)
 	a.Opportunity.CreatedAt = eventData.CreatedAt
