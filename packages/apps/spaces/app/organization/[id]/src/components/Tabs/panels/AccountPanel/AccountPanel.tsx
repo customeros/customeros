@@ -16,6 +16,7 @@ import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPan
 //   ExternalSystemType,
 //   ContractRenewalCycle,
 //   ExternalSystemReferenceInput,
+import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
 // } from '@graphql/types';
 import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
@@ -120,6 +121,7 @@ export const AccountPanel = () => {
               },
             ]}
             chakraStyles={{
+              ...contractButtonSelect,
               container: (props, state) => {
                 const isCustomer = state.getValue()[0]?.value === 'customer';
 
@@ -167,37 +169,11 @@ export const AccountPanel = () => {
                   color: 'inherit',
                 };
               },
-              input: (props) => {
-                return {
-                  ...props,
-                  maxHeight: '22px',
-                  minH: 'auto',
-                  p: 0,
-                };
-              },
-              inputContainer: (props) => {
-                return {
-                  ...props,
-                  maxHeight: '22px',
-                  minH: 'auto',
-                  p: 0,
-                };
-              },
-
-              control: (props) => {
-                return {
-                  ...props,
-                  w: '100%',
-                  border: 'none',
-                };
-              },
-
               menuList: (props) => {
                 return {
                   ...props,
                   w: 'fit-content',
                   left: '-32px',
-                  // top: '-10px',
                 };
               },
             }}
