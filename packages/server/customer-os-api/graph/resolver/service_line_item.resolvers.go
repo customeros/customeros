@@ -7,6 +7,12 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -14,7 +20,29 @@ import (
 
 // ServiceLineItemCreate is the resolver for the serviceLineItem_Create field.
 func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error) {
-	panic(fmt.Errorf("not implemented: ServiceLineItemCreate - serviceLineItem_Create"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	serviceLineItemId, err := r.Services.ServiceLineItemService.Create(ctx, &service.ServiceLineItemCreateData{
+		ServiceLineItemEntity: mapper.MapServiceLineItemInputToEntity(input),
+		ContractId:            input.ContractID,
+		ExternalReference:     mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
+		Source:                entity.DataSourceOpenline,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create service line item")
+		return &model.ServiceLineItem{ID: serviceLineItemId}, err
+	}
+	createdServiceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Service line item details not yet available. Service line item id: %s", serviceLineItemId)
+		return &model.ServiceLineItem{ID: serviceLineItemId}, nil
+	}
+	span.LogFields(log.String("response.serviceLineItemID", serviceLineItemId))
+	return mapper.MapEntityToServiceLineItem(createdServiceLineItemEntity), nil
 }
 
 // ServiceLineItem is the resolver for the serviceLineItem field.

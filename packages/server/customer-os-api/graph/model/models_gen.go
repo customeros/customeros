@@ -1469,7 +1469,6 @@ func (this ServiceLineItem) GetID() string { return this.ID }
 type ServiceLineItemInput struct {
 	Name              *string                       `json:"name,omitempty"`
 	ContractID        string                        `json:"contractId"`
-	RenewalCycle      *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
 	Billed            *BilledType                   `json:"billed,omitempty"`
 	Price             *float64                      `json:"price,omitempty"`
 	Quantity          *int                          `json:"quantity,omitempty"`
@@ -1746,12 +1745,14 @@ func (e ActionType) MarshalGQL(w io.Writer) {
 type BilledType string
 
 const (
+	BilledTypeNone           BilledType = "NONE"
 	BilledTypeMonthlyBilled  BilledType = "MONTHLY_BILLED"
 	BilledTypeAnnuallyBilled BilledType = "ANNUALLY_BILLED"
 	BilledTypeOnceBilled     BilledType = "ONCE_BILLED"
 )
 
 var AllBilledType = []BilledType{
+	BilledTypeNone,
 	BilledTypeMonthlyBilled,
 	BilledTypeAnnuallyBilled,
 	BilledTypeOnceBilled,
@@ -1759,7 +1760,7 @@ var AllBilledType = []BilledType{
 
 func (e BilledType) IsValid() bool {
 	switch e {
-	case BilledTypeMonthlyBilled, BilledTypeAnnuallyBilled, BilledTypeOnceBilled:
+	case BilledTypeNone, BilledTypeMonthlyBilled, BilledTypeAnnuallyBilled, BilledTypeOnceBilled:
 		return true
 	}
 	return false

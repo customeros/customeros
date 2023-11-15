@@ -9417,7 +9417,6 @@ type ServiceLineItem implements Node {
 input ServiceLineItemInput {
     name:               String
     contractId:         String!
-    renewalCycle:       ContractRenewalCycle
     billed:             BilledType
     price:              Float
     quantity:           Int
@@ -9426,6 +9425,7 @@ input ServiceLineItemInput {
 }
 
 enum BilledType {
+    NONE
     MONTHLY_BILLED
     ANNUALLY_BILLED
     ONCE_BILLED
@@ -62013,7 +62013,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "contractId", "renewalCycle", "billed", "price", "quantity", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"name", "contractId", "billed", "price", "quantity", "appSource", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -62038,15 +62038,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 				return it, err
 			}
 			it.ContractID = data
-		case "renewalCycle":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
-			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContractRenewalCycle(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.RenewalCycle = data
 		case "billed":
 			var err error
 

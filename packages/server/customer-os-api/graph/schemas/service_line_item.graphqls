@@ -23,7 +23,6 @@ type ServiceLineItem implements Node {
 input ServiceLineItemInput {
     name:               String
     contractId:         String!
-    renewalCycle:       ContractRenewalCycle
     billed:             BilledType
     price:              Float
     quantity:           Int
@@ -32,6 +31,7 @@ input ServiceLineItemInput {
 }
 
 enum BilledType {
+    NONE
     MONTHLY_BILLED
     ANNUALLY_BILLED
     ONCE_BILLED
