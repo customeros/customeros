@@ -678,6 +678,7 @@ type FilterItem struct {
 	Operation     ComparisonOperator `json:"operation"`
 	Value         AnyTypeValue       `json:"value"`
 	CaseSensitive *bool              `json:"caseSensitive,omitempty"`
+	IncludeEmpty  *bool              `json:"includeEmpty,omitempty"`
 }
 
 type GCliAttributeKeyValuePair struct {

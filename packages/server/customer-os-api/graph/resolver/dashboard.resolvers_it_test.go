@@ -422,7 +422,7 @@ func assert_Search_Organization_By_Name_And_Regions(t *testing.T, region1 string
 	return responseRaw.DashboardView_Organizations
 }
 
-func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
+func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyFalse(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -430,10 +430,11 @@ func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
 	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
 
-	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org for portfolio 1")
-	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "second org for portfolio 1")
-	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org for portfolio 2")
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1 for owner 1")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 2 for owner 1")
+	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1 for owner 2")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "org without owner")
+
 	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
 	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId2)
 	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
@@ -442,7 +443,7 @@ func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
 
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_owner", map[string]interface{}{"ownerId": []string{userId1}, "page": 1, "limit": 10})
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_owner", map[string]interface{}{"ownerIdList": []string{userId1}, "ownerIdEmpty": false, "page": 1, "limit": 10})
 
 	var organizationsPageStruct struct {
 		DashboardView_Organizations model.OrganizationPage
@@ -451,13 +452,133 @@ func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
 	require.Nil(t, err)
 
+	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
 	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_Organizations.TotalElements)
 	require.Equal(t, 2, len(organizationsPageStruct.DashboardView_Organizations.Content))
 	require.ElementsMatch(t, []string{organizationId1, organizationId2},
 		[]string{organizationsPageStruct.DashboardView_Organizations.Content[0].ID, organizationsPageStruct.DashboardView_Organizations.Content[1].ID})
 }
 
-func TestQueryResolver_DashboardView_SortByForecastAmount(t *testing.T) {
+func TestQueryResolver_Search_Organizations_By_Owner_In_IncludeEmptyTrue(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1 for owner 1")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 2 for owner 1")
+	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 1 for owner 2")
+	organizationId4 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org without owner")
+
+	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
+	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId2)
+	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
+
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_owner", map[string]interface{}{"ownerIdList": []string{userId1}, "ownerIdEmpty": true, "page": 1, "limit": 10})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
+	require.Equal(t, int64(3), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+	require.Equal(t, 3, len(organizationsPageStruct.DashboardView_Organizations.Content))
+	require.ElementsMatch(t, []string{organizationId1, organizationId2, organizationId4},
+		[]string{organizationsPageStruct.DashboardView_Organizations.Content[0].ID, organizationsPageStruct.DashboardView_Organizations.Content[1].ID, organizationsPageStruct.DashboardView_Organizations.Content[2].ID})
+}
+
+func TestQueryResolver_Sort_Organizations_ByLastTouchpointAt(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	now := time.Now().UTC()
+	secAgo60 := now.Add(-60 * time.Second)
+
+	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name:             "org1",
+		LastTouchpointAt: &secAgo60,
+	})
+	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name:             "org2",
+		LastTouchpointAt: &now,
+	})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort",
+		map[string]interface{}{
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "LAST_TOUCHPOINT_AT",
+			"sortDir": "ASC",
+		})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
+	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
+}
+
+func TestQueryResolver_Sort_Organizations_ByLastTouchpointType(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	created := "CREATED"
+	updated := "UPDATED"
+
+	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name:               "org1",
+		LastTouchpointType: &updated,
+	})
+	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
+		Name:               "org2",
+		LastTouchpointType: &created,
+	})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort",
+		map[string]interface{}{
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "LAST_TOUCHPOINT_TYPE",
+			"sortDir": "ASC",
+		})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
+	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
+}
+
+func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -486,10 +607,13 @@ func TestQueryResolver_DashboardView_SortByForecastAmount(t *testing.T) {
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 4})
 
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort_by_forecast_amount",
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort",
 		map[string]interface{}{
-			"page":  1,
-			"limit": 10})
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "FORECAST_AMOUNT",
+			"sortDir": "ASC",
+		})
 
 	var organizationsPageStruct struct {
 		DashboardView_Organizations model.OrganizationPage
@@ -498,22 +622,16 @@ func TestQueryResolver_DashboardView_SortByForecastAmount(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
 	require.Nil(t, err)
 
+	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
 	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalElements)
 
 	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
-	require.Equal(t, float64(100.5), *organizationsPageStruct.DashboardView_Organizations.Content[0].AccountDetails.RenewalForecast.Amount)
-
 	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
-	require.Equal(t, float64(200), *organizationsPageStruct.DashboardView_Organizations.Content[1].AccountDetails.RenewalForecast.Amount)
-
 	require.Equal(t, organizationId4, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
-	require.Equal(t, float64(300), *organizationsPageStruct.DashboardView_Organizations.Content[2].AccountDetails.RenewalForecast.Amount)
-
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
-	require.Nil(t, organizationsPageStruct.DashboardView_Organizations.Content[3].AccountDetails.RenewalForecast.Amount)
 }
 
-func TestQueryResolver_DashboardView_SortByRenewalLikelihood(t *testing.T) {
+func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -542,10 +660,13 @@ func TestQueryResolver_DashboardView_SortByRenewalLikelihood(t *testing.T) {
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 4})
 
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort_by_renewal_likelihood",
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort",
 		map[string]interface{}{
-			"page":  1,
-			"limit": 10})
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "RENEWAL_LIKELIHOOD",
+			"sortDir": "ASC",
+		})
 
 	var organizationsPageStruct struct {
 		DashboardView_Organizations model.OrganizationPage
@@ -554,22 +675,16 @@ func TestQueryResolver_DashboardView_SortByRenewalLikelihood(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
 	require.Nil(t, err)
 
+	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
 	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalElements)
 
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
-	require.Nil(t, organizationsPageStruct.DashboardView_Organizations.Content[0].AccountDetails.RenewalLikelihood.Probability)
-
 	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
-	require.Equal(t, model.RenewalLikelihoodProbabilityHigh, *organizationsPageStruct.DashboardView_Organizations.Content[1].AccountDetails.RenewalLikelihood.Probability)
-
 	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
-	require.Equal(t, model.RenewalLikelihoodProbabilityMedium, *organizationsPageStruct.DashboardView_Organizations.Content[2].AccountDetails.RenewalLikelihood.Probability)
-
 	require.Equal(t, organizationId4, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
-	require.Equal(t, model.RenewalLikelihoodProbabilityLow, *organizationsPageStruct.DashboardView_Organizations.Content[3].AccountDetails.RenewalLikelihood.Probability)
 }
 
-func TestQueryResolver_DashboardView_SortByRenewalCycleNext(t *testing.T) {
+func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -595,10 +710,13 @@ func TestQueryResolver_DashboardView_SortByRenewalCycleNext(t *testing.T) {
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3})
 
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort_by_renewal_cycle_next",
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort",
 		map[string]interface{}{
-			"page":  1,
-			"limit": 10})
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "RENEWAL_CYCLE_NEXT",
+			"sortDir": "ASC",
+		})
 
 	var organizationsPageStruct struct {
 		DashboardView_Organizations model.OrganizationPage
@@ -607,6 +725,7 @@ func TestQueryResolver_DashboardView_SortByRenewalCycleNext(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
 	require.Nil(t, err)
 
+	require.Equal(t, int64(3), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
 	require.Equal(t, int64(3), organizationsPageStruct.DashboardView_Organizations.TotalElements)
 
 	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
@@ -614,7 +733,7 @@ func TestQueryResolver_DashboardView_SortByRenewalCycleNext(t *testing.T) {
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
 }
 
-func TestQueryResolver_DashboardView_SortByOrganizationName_WithOrganizationHierarchy(t *testing.T) {
+func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHierarchy(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -647,10 +766,13 @@ func TestQueryResolver_DashboardView_SortByOrganizationName_WithOrganizationHier
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 7})
 
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort_by_organization_name_in_hierarchy",
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_sort",
 		map[string]interface{}{
-			"page":  1,
-			"limit": 10})
+			"page":    1,
+			"limit":   10,
+			"sortBy":  "ORGANIZATION",
+			"sortDir": "ASC",
+		})
 
 	var organizationsPageStruct struct {
 		DashboardView_Organizations model.OrganizationPage

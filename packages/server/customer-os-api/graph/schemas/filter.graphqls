@@ -54,6 +54,7 @@ input FilterItem {
     operation: ComparisonOperator! = EQ
     value: Any!
     caseSensitive: Boolean = false
+    includeEmpty: Boolean = true
 }
 
 enum ComparisonOperator {
