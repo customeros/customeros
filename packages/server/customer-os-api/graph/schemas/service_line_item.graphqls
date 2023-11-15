@@ -1,0 +1,38 @@
+extend type Query {
+    serviceLineItem(id: ID!): ServiceLineItem!
+}
+extend type Mutation {
+    serviceLineItem_Create(input: ServiceLineItemInput!): ServiceLineItem!
+}
+
+type ServiceLineItem implements Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    billed:             BilledType!
+    price:              Float!
+    quantity:           Int!
+    createdBy:          User @goField(forceResolver: true)
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+}
+
+input ServiceLineItemInput {
+    name:               String
+    contractId:         String!
+    renewalCycle:       ContractRenewalCycle
+    billed:             BilledType
+    price:              Float
+    quantity:           Int
+    appSource:          String
+    externalReference:  ExternalSystemReferenceInput
+}
+
+enum BilledType {
+    MONTHLY_BILLED
+    ANNUALLY_BILLED
+    ONCE_BILLED
+}
