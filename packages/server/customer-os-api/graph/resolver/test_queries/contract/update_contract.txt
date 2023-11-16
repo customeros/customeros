@@ -1,0 +1,17 @@
+mutation UpdateContract($contractId: ID!) {
+contract_Update(
+    input: {
+        contractId: $contractId
+        name: "Updated Contract"
+        renewalCycle: ANNUAL_RENEWAL
+        contractUrl: "https://contract.com/updated"
+        serviceStartedAt: "2019-01-01T00:00:00Z"
+        signedAt: "2019-02-01T00:00:00Z"
+        endedAt: "2019-03-01T00:00:00Z"
+        appSource: "test app source"
+    }
+  ) {
+    id
+    name
+  }
+}

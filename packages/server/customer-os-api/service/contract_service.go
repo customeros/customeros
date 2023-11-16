@@ -22,6 +22,7 @@ import (
 
 type ContractService interface {
 	Create(ctx context.Context, contract *ContractCreateData) (string, error)
+	Update(ctx context.Context, contract *entity.ContractEntity) error
 	GetById(ctx context.Context, id string) (*entity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*entity.ContractEntities, error)
 }
@@ -70,6 +71,65 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 
 	span.LogFields(log.String("output - createdContractId", contractId))
 	return contractId, nil
+}
+
+func (s *contractService) Update(ctx context.Context, contract *entity.ContractEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("contract", contract))
+
+	if contract == nil {
+		err := fmt.Errorf("(ContractService.Update) contract entity is nil")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	} else if contract.Id == "" {
+		err := fmt.Errorf("(ContractService.Update) contract id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	contractExists, _ := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), contract.Id, entity.NodeLabel_Contract)
+	if !contractExists {
+		err := fmt.Errorf("(ContractService.Update) contract with id {%s} not found", contract.Id)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	contractUpdateRequest := contractpb.UpdateContractGrpcRequest{
+		Tenant:           common.GetTenantFromContext(ctx),
+		Id:               contract.Id,
+		LoggedInUserId:   common.GetUserIdFromContext(ctx),
+		Name:             contract.Name,
+		ContractUrl:      contract.ContractUrl,
+		SignedAt:         utils.ConvertTimeToTimestampPtr(contract.SignedAt),
+		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(contract.ServiceStartedAt),
+		EndedAt:          utils.ConvertTimeToTimestampPtr(contract.EndedAt),
+		SourceFields: &commonpb.SourceFields{
+			Source:    string(contract.Source),
+			AppSource: utils.StringFirstNonEmpty(contract.AppSource, constants.AppSourceCustomerOsApi),
+		},
+	}
+	switch contract.ContractRenewalCycle {
+	case entity.ContractRenewalCycleMonthlyRenewal:
+		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+	case entity.ContractRenewalCycleAnnualRenewal:
+		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
+	default:
+		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
+	}
+
+	_, err := s.grpcClients.ContractClient.UpdateContract(ctx, &contractUpdateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (s *contractService) createContractWithEvents(ctx context.Context, contractDetails *ContractCreateData) (string, error) {
@@ -161,7 +221,7 @@ func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.
 	contractRenewalCycle := entity.GetContractRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
 
 	contract := entity.ContractEntity{
-		ID:                   utils.GetStringPropOrEmpty(props, "id"),
+		Id:                   utils.GetStringPropOrEmpty(props, "id"),
 		Name:                 utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:            utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:            utils.GetTimePropOrEpochStart(props, "updatedAt"),
