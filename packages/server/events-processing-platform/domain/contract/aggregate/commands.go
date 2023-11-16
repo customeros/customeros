@@ -44,6 +44,7 @@ func (a *ContractAggregate) createContract(ctx context.Context, cmd *command.Cre
 	// Assuming you have a utility function to get the current time if the passed time is nil
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+	cmd.Source.SetDefaultValues()
 
 	// Determine contract status based start and end dates
 	status := determineContractStatus(cmd.DataFields.ServiceStartedAt, cmd.DataFields.EndedAt)

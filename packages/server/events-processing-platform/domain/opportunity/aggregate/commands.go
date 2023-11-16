@@ -69,7 +69,12 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, cmd
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
 	cmd.Source.SetDefaultValues()
 
-	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, cmd.ContractId, cmd.Source, createdAtNotNil, updatedAtNotNil)
+	renewalLikelihood := model.RenewalLikelihoodStringDecode(cmd.RenewalLikelihood)
+	if string(renewalLikelihood) == "" {
+		renewalLikelihood = model.RenewalLikelihoodStringHigh
+	}
+
+	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, cmd.ContractId, string(renewalLikelihood), cmd.Source, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCreateRenewalEvent")

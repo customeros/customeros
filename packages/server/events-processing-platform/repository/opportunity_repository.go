@@ -53,7 +53,8 @@ func (r *opportunityRepository) GetOpenRenewalOpportunityForContract(ctx context
 	}
 
 	if result.Next(ctx) {
-		return result.Record().Values[0].(*dbtype.Node), nil
+		node := result.Record().Values[0].(dbtype.Node)
+		return &node, nil
 	}
 
 	return nil, nil
@@ -138,21 +139,23 @@ func (r *opportunityRepository) CreateRenewalOpportunity(ctx context.Context, te
 								op.sourceOfTruth=$sourceOfTruth,
 								op.appSource=$appSource,
 								op.internalType=$internalType,
-								op.internalStage=$internalStage
+								op.internalStage=$internalStage,
+								op.renewalLikelihood=$renewalLikelihood
 							WITH op, c
 							MERGE (c)-[:ACTIVE_RENEWAL]->(op)
 							`, tenant)
 	params := map[string]any{
-		"tenant":        tenant,
-		"opportunityId": opportunityId,
-		"contractId":    evt.ContractId,
-		"createdAt":     evt.CreatedAt,
-		"updatedAt":     evt.UpdatedAt,
-		"source":        helper.GetSource(evt.Source.Source),
-		"sourceOfTruth": helper.GetSourceOfTruth(evt.Source.Source),
-		"appSource":     helper.GetAppSource(evt.Source.AppSource),
-		"internalType":  evt.InternalType,
-		"internalStage": evt.InternalStage,
+		"tenant":            tenant,
+		"opportunityId":     opportunityId,
+		"contractId":        evt.ContractId,
+		"createdAt":         evt.CreatedAt,
+		"updatedAt":         evt.UpdatedAt,
+		"source":            helper.GetSource(evt.Source.Source),
+		"sourceOfTruth":     helper.GetSourceOfTruth(evt.Source.Source),
+		"appSource":         helper.GetAppSource(evt.Source.AppSource),
+		"internalType":      evt.InternalType,
+		"internalStage":     evt.InternalStage,
+		"renewalLikelihood": evt.RenewalLikelihood,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 

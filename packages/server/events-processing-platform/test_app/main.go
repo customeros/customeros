@@ -7,10 +7,12 @@ import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/comment"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/log_entry"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
@@ -32,6 +34,8 @@ type Clients struct {
 	IssueClient            issuepb.IssueGrpcServiceClient
 	CommentClient          commentpb.CommentGrpcServiceClient
 	UserClient             userpb.UserGrpcServiceClient
+	ContractClient         contractpb.ContractGrpcServiceClient
+	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
 }
 
 var clients *Clients
@@ -63,7 +67,8 @@ func main() {
 	//testCreateIssue()
 	//testUpdateIssue()
 	//testCreateComment()
-	testUserLinkWithEmail()
+	//testUserLinkWithEmail()
+	testCreateContract()
 }
 
 func InitClients() {
@@ -81,6 +86,8 @@ func InitClients() {
 		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
 		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
 		UserClient:             userpb.NewUserGrpcServiceClient(conn),
+		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
+		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
 	}
 }
 
@@ -88,7 +95,7 @@ func testRequestGenerateSummaryRequest() {
 	tenant := "openline"
 	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
 
-	result, _ := clients.InteractionEventClient.RequestGenerateSummary(context.TODO(), &iepb.RequestGenerateSummaryGrpcRequest{
+	result, _ := clients.InteractionEventClient.RequestGenerateSummary(context.Background(), &iepb.RequestGenerateSummaryGrpcRequest{
 		Tenant:             tenant,
 		InteractionEventId: interactionEventId,
 	})
@@ -99,7 +106,7 @@ func testRequestGenerateActionItemsRequest() {
 	tenant := "openline"
 	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
 
-	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.TODO(), &iepb.RequestGenerateActionItemsGrpcRequest{
+	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.Background(), &iepb.RequestGenerateActionItemsGrpcRequest{
 		Tenant:             tenant,
 		InteractionEventId: interactionEventId,
 	})
@@ -109,16 +116,17 @@ func testRequestGenerateActionItemsRequest() {
 func testCreateOrganization() {
 	tenant := "openline"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	organizationId := "ccc"
 	website := ""
 
-	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organizationpb.UpsertOrganizationGrpcRequest{
+	result, err := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:         tenant,
-		Id:             organizationId,
 		Website:        website,
 		LoggedInUserId: userId,
 	})
-	print(result)
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result)
 }
 
 func testUpdateOrganization() {
@@ -128,7 +136,7 @@ func testUpdateOrganization() {
 	lastFoundingAmont := "1Million"
 	partial := true
 
-	result, _ := clients.OrganizationClient.UpsertOrganization(context.TODO(), &organizationpb.UpsertOrganizationGrpcRequest{
+	result, _ := clients.OrganizationClient.UpsertOrganization(context.Background(), &organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:            tenant,
 		Id:                organizationId,
 		Website:           website,
@@ -142,7 +150,7 @@ func testHideOrganization() {
 	tenant := "openline"
 	organizationId := "ccc"
 
-	result, _ := clients.OrganizationClient.HideOrganization(context.TODO(), &organizationpb.OrganizationIdGrpcRequest{
+	result, _ := clients.OrganizationClient.HideOrganization(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: organizationId,
 	})
@@ -153,7 +161,7 @@ func testShowOrganization() {
 	tenant := "openline"
 	organizationId := "ccc"
 
-	result, _ := clients.OrganizationClient.ShowOrganization(context.TODO(), &organizationpb.OrganizationIdGrpcRequest{
+	result, _ := clients.OrganizationClient.ShowOrganization(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: organizationId,
 	})
@@ -166,7 +174,7 @@ func testCreateLogEntry() {
 	userId := "development@openline.ai"
 	authorId := "c61f8af2-0e46-4464-a5db-ded8e4fe242f"
 
-	result, _ := clients.LogEntryClient.UpsertLogEntry(context.TODO(), &logentrypb.UpsertLogEntryGrpcRequest{
+	result, _ := clients.LogEntryClient.UpsertLogEntry(context.Background(), &logentrypb.UpsertLogEntryGrpcRequest{
 		Tenant:               tenant,
 		LoggedOrganizationId: utils.StringPtr(organizationId),
 		SourceFields: &commonpb.SourceFields{
@@ -185,7 +193,7 @@ func testUpdateLogEntry() {
 	userId := "development@openline.ai"
 	logEntryId := "ccffe134-4bcd-4fa0-955f-c79b9e1a985f"
 
-	result, _ := clients.LogEntryClient.UpsertLogEntry(context.TODO(), &logentrypb.UpsertLogEntryGrpcRequest{
+	result, _ := clients.LogEntryClient.UpsertLogEntry(context.Background(), &logentrypb.UpsertLogEntryGrpcRequest{
 		Tenant:      tenant,
 		Id:          logEntryId,
 		Content:     "new content",
@@ -200,7 +208,7 @@ func testAddCustomField() {
 	tenant := "openline"
 	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
 	userId := "development@openline.ai"
-	result, _ := clients.OrganizationClient.UpsertCustomFieldToOrganization(context.TODO(), &organizationpb.CustomFieldForOrganizationGrpcRequest{
+	result, _ := clients.OrganizationClient.UpsertCustomFieldToOrganization(context.Background(), &organizationpb.CustomFieldForOrganizationGrpcRequest{
 		Tenant:                tenant,
 		OrganizationId:        organizationId,
 		UserId:                userId,
@@ -219,7 +227,7 @@ func testCreateEmail() {
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	rawEmail := "aa@test.com"
 
-	result, _ := clients.EmailClient.UpsertEmail(context.TODO(), &emailpb.UpsertEmailGrpcRequest{
+	result, _ := clients.EmailClient.UpsertEmail(context.Background(), &emailpb.UpsertEmailGrpcRequest{
 		Tenant:         tenant,
 		RawEmail:       rawEmail,
 		LoggedInUserId: userId,
@@ -235,7 +243,7 @@ func testCreatePhoneNumber() {
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	rawPhoneNumber := "+1234"
 
-	result, _ := clients.PhoneNumberClient.UpsertPhoneNumber(context.TODO(), &phonenumberpb.UpsertPhoneNumberGrpcRequest{
+	result, _ := clients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phonenumberpb.UpsertPhoneNumberGrpcRequest{
 		Tenant:         tenant,
 		PhoneNumber:    rawPhoneNumber,
 		LoggedInUserId: userId,
@@ -249,7 +257,7 @@ func testAddParentOrganization() {
 	parentOrgId := ""
 	relType := "store"
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	result, err := clients.OrganizationClient.AddParentOrganization(context.TODO(), &organizationpb.AddParentOrganizationGrpcRequest{
+	result, err := clients.OrganizationClient.AddParentOrganization(context.Background(), &organizationpb.AddParentOrganizationGrpcRequest{
 		Tenant:               tenant,
 		OrganizationId:       orgId,
 		ParentOrganizationId: parentOrgId,
@@ -267,7 +275,7 @@ func testRemoveParentOrganization() {
 	tenant := "openline"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	parentOrgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	result, err := clients.OrganizationClient.RemoveParentOrganization(context.TODO(), &organizationpb.RemoveParentOrganizationGrpcRequest{
+	result, err := clients.OrganizationClient.RemoveParentOrganization(context.Background(), &organizationpb.RemoveParentOrganizationGrpcRequest{
 		Tenant:               tenant,
 		OrganizationId:       orgId,
 		ParentOrganizationId: parentOrgId,
@@ -283,7 +291,7 @@ func testCreateContact() {
 	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
 	name := "hubspot contact 3"
 
-	result, _ := clients.ContactClient.UpsertContact(context.TODO(), &contactpb.UpsertContactGrpcRequest{
+	result, _ := clients.ContactClient.UpsertContact(context.Background(), &contactpb.UpsertContactGrpcRequest{
 		Tenant:         tenant,
 		LoggedInUserId: userId,
 		Name:           name,
@@ -300,7 +308,7 @@ func testUpdateContact() {
 	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
 	name := "hubspot contact 4"
 
-	result, _ := clients.ContactClient.UpsertContact(context.TODO(), &contactpb.UpsertContactGrpcRequest{
+	result, _ := clients.ContactClient.UpsertContact(context.Background(), &contactpb.UpsertContactGrpcRequest{
 		Tenant: tenant,
 		Name:   name,
 		Id:     contactId,
@@ -317,7 +325,7 @@ func testContactLinkWithLocation() {
 	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
 	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
 
-	result, _ := clients.ContactClient.LinkLocationToContact(context.TODO(), &contactpb.LinkLocationToContactGrpcRequest{
+	result, _ := clients.ContactClient.LinkLocationToContact(context.Background(), &contactpb.LinkLocationToContactGrpcRequest{
 		Tenant:     tenant,
 		ContactId:  contactId,
 		LocationId: locationId,
@@ -331,7 +339,7 @@ func testContactLinkWithPhoneNumber() {
 	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
 	phoneNumberId := "c21c0352-14d8-474a-afcd-167daa99e321"
 
-	result, _ := clients.ContactClient.LinkPhoneNumberToContact(context.TODO(), &contactpb.LinkPhoneNumberToContactGrpcRequest{
+	result, _ := clients.ContactClient.LinkPhoneNumberToContact(context.Background(), &contactpb.LinkPhoneNumberToContactGrpcRequest{
 		Tenant:        tenant,
 		ContactId:     contactId,
 		PhoneNumberId: phoneNumberId,
@@ -347,7 +355,7 @@ func testContactLinkWithEmail() {
 	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
 	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
 
-	result, _ := clients.ContactClient.LinkEmailToContact(context.TODO(), &contactpb.LinkEmailToContactGrpcRequest{
+	result, _ := clients.ContactClient.LinkEmailToContact(context.Background(), &contactpb.LinkEmailToContactGrpcRequest{
 		Tenant:    tenant,
 		ContactId: contactId,
 		EmailId:   emailId,
@@ -363,7 +371,7 @@ func testOrganizationLinkWithLocation() {
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
 
-	result, _ := clients.OrganizationClient.LinkLocationToOrganization(context.TODO(), &organizationpb.LinkLocationToOrganizationGrpcRequest{
+	result, _ := clients.OrganizationClient.LinkLocationToOrganization(context.Background(), &organizationpb.LinkLocationToOrganizationGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: orgId,
 		LocationId:     locationId,
@@ -376,7 +384,7 @@ func testOrganizationLinkWithPhoneNumber() {
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	phoneNumberId := "c21c0352-14d8-474a-afcd-167daa99e321"
 
-	result, _ := clients.OrganizationClient.LinkPhoneNumberToOrganization(context.TODO(), &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
+	result, _ := clients.OrganizationClient.LinkPhoneNumberToOrganization(context.Background(), &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: orgId,
 		PhoneNumberId:  phoneNumberId,
@@ -391,7 +399,7 @@ func testOrganizationLinkWithEmail() {
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
 
-	result, _ := clients.OrganizationClient.LinkEmailToOrganization(context.TODO(), &organizationpb.LinkEmailToOrganizationGrpcRequest{
+	result, _ := clients.OrganizationClient.LinkEmailToOrganization(context.Background(), &organizationpb.LinkEmailToOrganizationGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: orgId,
 		EmailId:        emailId,
@@ -407,7 +415,7 @@ func testContactLinkWithOrganization() {
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
 	jobRole := "CTO"
 
-	result, _ := clients.ContactClient.LinkWithOrganization(context.TODO(), &contactpb.LinkWithOrganizationGrpcRequest{
+	result, _ := clients.ContactClient.LinkWithOrganization(context.Background(), &contactpb.LinkWithOrganizationGrpcRequest{
 		Tenant:         tenant,
 		ContactId:      contactId,
 		OrganizationId: orgId,
@@ -428,7 +436,7 @@ func testCreateIssue() {
 	priority := "high"
 	orgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 
-	result, err := clients.IssueClient.UpsertIssue(context.TODO(), &issuepb.UpsertIssueGrpcRequest{
+	result, err := clients.IssueClient.UpsertIssue(context.Background(), &issuepb.UpsertIssueGrpcRequest{
 		Tenant:                   tenant,
 		Subject:                  subject,
 		Description:              description,
@@ -456,7 +464,7 @@ func testUpdateIssue() {
 	issueId := "ed17dbab-e79b-4e87-8914-2d93ed55324b"
 	desription := "updated description"
 
-	result, err := clients.IssueClient.UpsertIssue(context.TODO(), &issuepb.UpsertIssueGrpcRequest{
+	result, err := clients.IssueClient.UpsertIssue(context.Background(), &issuepb.UpsertIssueGrpcRequest{
 		Tenant:         tenant,
 		Id:             issueId,
 		LoggedInUserId: userId,
@@ -485,7 +493,7 @@ func testCreateComment() {
 	contentType := "text/plain"
 	issueId := "ed17dbab-e79b-4e87-8914-2d93ed55324b"
 
-	result, err := clients.CommentClient.UpsertComment(context.TODO(), &commentpb.UpsertCommentGrpcRequest{
+	result, err := clients.CommentClient.UpsertComment(context.Background(), &commentpb.UpsertCommentGrpcRequest{
 		Tenant:           tenant,
 		Content:          content,
 		ContentType:      contentType,
@@ -512,7 +520,7 @@ func testUserLinkWithEmail() {
 	appSource := "integration.app"
 	loggedInUserid := ""
 
-	result, err := clients.UserClient.LinkEmailToUser(context.TODO(), &userpb.LinkEmailToUserGrpcRequest{
+	result, err := clients.UserClient.LinkEmailToUser(context.Background(), &userpb.LinkEmailToUserGrpcRequest{
 		Tenant:         tenant,
 		UserId:         userId,
 		LoggedInUserId: loggedInUserid,
@@ -520,6 +528,26 @@ func testUserLinkWithEmail() {
 		Primary:        true,
 		Label:          "work",
 		AppSource:      appSource,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testCreateContract() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	organizationId := "7442738e-65df-41aa-854b-556ee2f3bc3d"
+	yesterday := utils.Now().AddDate(0, 0, -1)
+
+	result, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
+		Tenant:           tenant,
+		OrganizationId:   organizationId,
+		LoggedInUserId:   userId,
+		Name:             "contract 5",
+		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
+		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&yesterday),
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
