@@ -53,7 +53,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	}
 
 	if model.IsFrequencyBasedRenewalCycle(eventData.RenewalCycle) {
-		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, eventData.Source, nil, nil))
+		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, "", eventData.Source, nil, nil))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
@@ -99,7 +99,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 
 	if contractEntity.RenewalCycle == "" && model.IsFrequencyBasedRenewalCycle(eventData.RenewalCycle) {
-		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, commonmodel.Source{Source: eventData.Source}, nil, nil))
+		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, "", commonmodel.Source{Source: eventData.Source}, nil, nil))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())

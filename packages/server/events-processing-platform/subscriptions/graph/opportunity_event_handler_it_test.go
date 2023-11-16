@@ -6,11 +6,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
+	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
+	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -20,6 +22,8 @@ import (
 func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -32,8 +36,9 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
 	}
 
 	// Create an OpportunityCreateEvent
@@ -111,6 +116,8 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
@@ -119,8 +126,9 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
 	}
 
 	// Create an OpportunityCreateEvent
@@ -130,6 +138,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	createEvent, err := event.NewOpportunityCreateRenewalEvent(
 		opportunityAggregate,
 		contractId,
+		string(model.RenewalLikelihoodStringLow),
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatform,
@@ -166,4 +175,47 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, "", opportunity.ExternalStage)
 	require.Equal(t, string(model.OpportunityInternalTypeStringRenewal), opportunity.InternalType)
 	require.Equal(t, string(model.OpportunityInternalStageStringOpen), opportunity.InternalStage)
+	require.Equal(t, string(model.RenewalLikelihoodStringLow), opportunity.RenewalDetails.RenewalLikelihood)
+}
+
+func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Prepare test data in Neo4j
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalStage: string(model.OpportunityInternalStageStringOpen),
+	})
+	updatedAt := utils.Now()
+	renewedAt := updatedAt.AddDate(0, 6, 0) // 6 months later
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	// Create an OpportunityUpdateNextCycleDateEvent
+	updateEvent, err := event.NewOpportunityUpdateNextCycleDateEvent(
+		aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId),
+		updatedAt,
+		&renewedAt,
+	)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = opportunityEventHandler.OnUpdateNextCycleDate(ctx, updateEvent)
+	require.Nil(t, err)
+
+	// Assert Neo4j Node
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// Validate that the opportunity next cycle date is updated in the repository
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, updatedAt, opportunity.UpdatedAt)
+	require.Equal(t, renewedAt, *opportunity.RenewalDetails.RenewedAt)
 }

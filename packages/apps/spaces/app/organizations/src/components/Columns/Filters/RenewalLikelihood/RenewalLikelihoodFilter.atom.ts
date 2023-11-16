@@ -7,17 +7,19 @@ interface RenewalLiklihoodFilterState {
   value: RenewalLikelihoodProbability[];
 }
 
+export const defaultState: RenewalLiklihoodFilterState = {
+  value: [
+    RenewalLikelihoodProbability.High,
+    RenewalLikelihoodProbability.Medium,
+    RenewalLikelihoodProbability.Low,
+    RenewalLikelihoodProbability.Zero,
+  ],
+  isActive: false,
+};
+
 export const RenewalLikelihoodFilterAtom = atom<RenewalLiklihoodFilterState>({
   key: 'renewal-likelihood-filter',
-  default: {
-    value: [
-      RenewalLikelihoodProbability.High,
-      RenewalLikelihoodProbability.Medium,
-      RenewalLikelihoodProbability.Low,
-      RenewalLikelihoodProbability.Zero,
-    ],
-    isActive: false,
-  },
+  default: defaultState,
 });
 
 export const RenewalLikelihoodFilterSelector = selector({

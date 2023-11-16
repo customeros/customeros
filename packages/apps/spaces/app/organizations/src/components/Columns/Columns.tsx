@@ -123,8 +123,8 @@ export const columns = [
         filterWidth='14rem'
         renderFilter={(initialFocusRef) => (
           <WebsiteFilter
-            column={props.column}
             initialFocusRef={initialFocusRef}
+            onFilterValueChange={props.column.setFilterValue}
           />
         )}
         {...getTHeadProps<Organization>(props)}
@@ -333,7 +333,7 @@ export const columns = [
     id: 'LAST_TOUCHPOINT',
     minSize: 250,
     filterFn: filterLastTouchpointFn,
-    enableColumnFilter: false,
+    // enableColumnFilter: false,
     cell: (props) => (
       <LastTouchpointCell
         lastTouchPointAt={props.row.original.lastTouchPointAt}
@@ -346,10 +346,9 @@ export const columns = [
       <THead<HTMLInputElement>
         id='lastTouchpoint'
         title='Last Touchpoint'
-        renderFilter={(initialFocusRef) => (
+        renderFilter={() => (
           <LastTouchpointFilter
-            column={props.column}
-            initialFocusRef={initialFocusRef}
+            onFilterValueChange={props.column.setFilterValue}
           />
         )}
         {...getTHeadProps<Organization>(props)}

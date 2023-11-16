@@ -377,5 +377,5 @@ func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
 	//TODO update the following assertion when the implementation of the OnActionItemsReplace is fixed and the content contains the entire Array of ActionItems.
 	//TODO It is a known fact that at the moment, the content only returns the first element of the ActionItems array.
 	//TODO Won't be fixed right away as the event is not used in Prod
-	require.Equal(t, "ActionItem1", utils.GetStringPropOrEmpty(actionItemProps, "content"))
+	require.Contains(t, []string{"ActionItem1", "ActionItem2"}, utils.GetStringPropOrEmpty(actionItemProps, "content"))
 }

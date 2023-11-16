@@ -1,14 +1,13 @@
-query dashboardView_Organizations($page: Int!, $limit: Int!, $searchTerm: Any!, $includeEmpty: Boolean!) {
+query dashboardView_Organizations($page: Int!, $limit: Int!, $searchTerm: Any!) {
   dashboardView_Organizations(
   pagination: { page: $page, limit: $limit },
   where: {
      AND: [
          {
              filter: {
-                 property: "NAME",
+                 property: "ORGANIZATION",
                  operation: EQ,
-                 value: $searchTerm,
-                 includeEmpty: $includeEmpty
+                 value: $searchTerm
              }
          }
      ]

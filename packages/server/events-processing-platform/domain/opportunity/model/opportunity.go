@@ -6,6 +6,11 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 )
 
+type RenewalDetails struct {
+	RenewedAt         *time.Time `json:"renewedAt,omitempty"`
+	RenewalLikelihood string     `json:"renewalLikelihood,omitempty"`
+}
+
 // Opportunity represents the state of an opportunity aggregate.
 type Opportunity struct {
 	ID                string                         `json:"id"`
@@ -27,6 +32,7 @@ type Opportunity struct {
 	NextSteps         string                         `json:"nextSteps"`
 	CreatedAt         time.Time                      `json:"createdAt"`
 	UpdatedAt         time.Time                      `json:"updatedAt"`
+	RenewalDetails    RenewalDetails                 `json:"renewal,omitempty"`
 }
 
 // OpportunityDataFields contains all the fields that may be used to create or update an opportunity.
@@ -140,6 +146,30 @@ func OpportunityInternalStageStringDecode(val string) OpportunityInternalStageSt
 		return OpportunityInternalStageStringClosedWon
 	case "CLOSED_LOST":
 		return OpportunityInternalStageStringClosedLost
+	default:
+		return ""
+	}
+}
+
+type RenewalLikelihoodString string
+
+const (
+	RenewalLikelihoodStringHigh   RenewalLikelihoodString = "HIGH"
+	RenewalLikelihoodStringMedium RenewalLikelihoodString = "MEDIUM"
+	RenewalLikelihoodStringLow    RenewalLikelihoodString = "LOW"
+	RenewalLikelihoodStringZero   RenewalLikelihoodString = "ZERO"
+)
+
+func RenewalLikelihoodStringDecode(val string) RenewalLikelihoodString {
+	switch val {
+	case "HIGH":
+		return RenewalLikelihoodStringHigh
+	case "MEDIUM":
+		return RenewalLikelihoodStringMedium
+	case "LOW":
+		return RenewalLikelihoodStringLow
+	case "ZERO":
+		return RenewalLikelihoodStringZero
 	default:
 		return ""
 	}

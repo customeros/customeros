@@ -9,7 +9,9 @@ export const filterOrganizationFn: FilterFn<Organization> = (
 ) => {
   const value = row.getValue<Organization>(id);
 
-  return value.name.toLowerCase().includes(filterValue.toLowerCase());
+  if (filterValue.showEmpty && !value.name) return true;
+
+  return value.name.toLowerCase().includes(filterValue.value.toLowerCase());
 };
 
 filterOrganizationFn.autoRemove = (filterValue) => !filterValue;

@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -16,11 +18,46 @@ type OpportunityRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, opportunityId string, evt event.OpportunityCreateEvent) error
 	CreateRenewalOpportunity(ctx context.Context, tenant, opportunityId string, evt event.OpportunityCreateRenewalEvent) error
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
+	UpdateNextCycleDate(ctx context.Context, tenant, opportunityId string, evt event.OpportunityUpdateNextCycleDateEvent) error
+	GetOpenRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 }
 
 type opportunityRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func (r *opportunityRepository) GetOpenRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetOpenRenewalOpportunityForContract")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
+				MATCH (c)-[:ACTIVE_RENEWAL]->(op:Opportunity)
+				WHERE op:RenewalOpportunity AND op.internalStage=$internalStage
+				RETURN op`
+	params := map[string]any{
+		"tenant":        tenant,
+		"contractId":    contractId,
+		"internalStage": string(model.OpportunityInternalStageStringOpen),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, cypher, params)
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Next(ctx) {
+		node := result.Record().Values[0].(dbtype.Node)
+		return &node, nil
+	}
+
+	return nil, nil
 }
 
 func NewOpportunityRepository(driver *neo4j.DriverWithContext, database string) OpportunityRepository {
@@ -102,21 +139,23 @@ func (r *opportunityRepository) CreateRenewalOpportunity(ctx context.Context, te
 								op.sourceOfTruth=$sourceOfTruth,
 								op.appSource=$appSource,
 								op.internalType=$internalType,
-								op.internalStage=$internalStage
+								op.internalStage=$internalStage,
+								op.renewalLikelihood=$renewalLikelihood
 							WITH op, c
 							MERGE (c)-[:ACTIVE_RENEWAL]->(op)
 							`, tenant)
 	params := map[string]any{
-		"tenant":        tenant,
-		"opportunityId": opportunityId,
-		"contractId":    evt.ContractId,
-		"createdAt":     evt.CreatedAt,
-		"updatedAt":     evt.UpdatedAt,
-		"source":        helper.GetSource(evt.Source.Source),
-		"sourceOfTruth": helper.GetSourceOfTruth(evt.Source.Source),
-		"appSource":     helper.GetAppSource(evt.Source.AppSource),
-		"internalType":  evt.InternalType,
-		"internalStage": evt.InternalStage,
+		"tenant":            tenant,
+		"opportunityId":     opportunityId,
+		"contractId":        evt.ContractId,
+		"createdAt":         evt.CreatedAt,
+		"updatedAt":         evt.UpdatedAt,
+		"source":            helper.GetSource(evt.Source.Source),
+		"sourceOfTruth":     helper.GetSourceOfTruth(evt.Source.Source),
+		"appSource":         helper.GetAppSource(evt.Source.AppSource),
+		"internalType":      evt.InternalType,
+		"internalStage":     evt.InternalStage,
+		"renewalLikelihood": evt.RenewalLikelihood,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
@@ -147,4 +186,25 @@ func (r *opportunityRepository) ReplaceOwner(ctx context.Context, tenant, opport
 		"userId":        userId,
 		"now":           utils.Now(),
 	})
+}
+
+func (r *opportunityRepository) UpdateNextCycleDate(ctx context.Context, tenant, opportunityId string, evt event.OpportunityUpdateNextCycleDateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.UpdateNextCycleDate")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("opportunityId", opportunityId), log.Object("event", evt))
+
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
+							WHERE op:Opportunity_%s AND op.internalStage=$internalStage
+							SET op.updatedAt=$updatedAt, op.renewedAt=$renewedAt`, tenant)
+	params := map[string]any{
+		"tenant":        tenant,
+		"opportunityId": opportunityId,
+		"updatedAt":     evt.UpdatedAt,
+		"internalStage": string(model.OpportunityInternalStageStringOpen),
+		"renewedAt":     utils.TimePtrFirstNonNilNillableAsAny(evt.RenewedAt),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 }

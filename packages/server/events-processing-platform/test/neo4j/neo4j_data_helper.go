@@ -239,6 +239,32 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return contractId
 }
 
+func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
+	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
+	query := fmt.Sprintf(`
+				MERGE (op:Opportunity {id:$id})
+				SET 
+					op:Opportunity_%s,
+					op.name=$name,
+					op.source=$source,
+					op.sourceOfTruth=$sourceOfTruth,
+					op.internalStage=$internalStage,
+					op.internalType=$internalType,
+					op.renewedAt=$renewedAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":            opportunityId,
+		"name":          opportunity.Name,
+		"source":        opportunity.Source,
+		"sourceOfTruth": opportunity.SourceOfTruth,
+		"internalStage": opportunity.InternalStage,
+		"internalType":  opportunity.InternalType,
+		"renewedAt":     utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+	})
+	return opportunityId
+}
+
 func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
 	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.Id)
 	query := fmt.Sprintf(`MATCH (c:Contract {id:$contractId})

@@ -10,24 +10,26 @@ import (
 )
 
 type OpportunityCreateRenewalEvent struct {
-	Tenant        string             `json:"tenant" validate:"required"`
-	CreatedAt     time.Time          `json:"createdAt"`
-	UpdatedAt     time.Time          `json:"updatedAt"`
-	Source        commonmodel.Source `json:"source"`
-	ContractId    string             `json:"contractId" validate:"required"`
-	InternalType  string             `json:"internalType"`
-	InternalStage string             `json:"internalStage"`
+	Tenant            string             `json:"tenant" validate:"required"`
+	CreatedAt         time.Time          `json:"createdAt"`
+	UpdatedAt         time.Time          `json:"updatedAt"`
+	Source            commonmodel.Source `json:"source"`
+	ContractId        string             `json:"contractId" validate:"required"`
+	InternalType      string             `json:"internalType"`
+	InternalStage     string             `json:"internalStage"`
+	RenewalLikelihood string             `json:"renewalLikelihood"`
 }
 
-func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId string, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId, renewalLikelihood string, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OpportunityCreateRenewalEvent{
-		Tenant:        aggregate.GetTenant(),
-		CreatedAt:     createdAt,
-		UpdatedAt:     updatedAt,
-		Source:        source,
-		ContractId:    contractId,
-		InternalType:  string(model.OpportunityInternalTypeStringRenewal),
-		InternalStage: string(model.OpportunityInternalStageStringOpen),
+		Tenant:            aggregate.GetTenant(),
+		CreatedAt:         createdAt,
+		UpdatedAt:         updatedAt,
+		Source:            source,
+		ContractId:        contractId,
+		InternalType:      string(model.OpportunityInternalTypeStringRenewal),
+		InternalStage:     string(model.OpportunityInternalStageStringOpen),
+		RenewalLikelihood: renewalLikelihood,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

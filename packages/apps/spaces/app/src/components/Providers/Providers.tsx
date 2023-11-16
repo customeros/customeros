@@ -11,7 +11,6 @@ import { createIDBPersister } from '@shared/util/indexedDBPersister';
 import { AnalyticsProvider } from '@shared/components/Providers/AnalyticsProvider';
 
 import { NextAuthProvider } from './SessionProvider';
-
 interface ProvidersProps {
   children: React.ReactNode;
   sessionEmail?: string | null;

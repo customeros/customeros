@@ -8,12 +8,14 @@ interface TimeToRenewalState {
 
 const defaultValue = addDays(new Date(), 7).toISOString().split('T')[0];
 
+export const defaultState: TimeToRenewalState = {
+  value: defaultValue,
+  isActive: false,
+};
+
 export const TimeToRenewalAtom = atom<TimeToRenewalState>({
   key: 'time-to-renewal-filter',
-  default: {
-    value: defaultValue,
-    isActive: false,
-  },
+  default: defaultState,
 });
 
 export const TimeToRenewalFilterSelector = selector({

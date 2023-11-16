@@ -34,6 +34,8 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 		return a.onOpportunityCreate(evt)
 	case event.OpportunityCreateRenewalV1:
 		return a.onRenewalOpportunityCreate(evt)
+	case event.OpportunityUpdateNextCycleDateV1:
+		return a.onOpportunityUpdateNextCycleDate(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -85,6 +87,18 @@ func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) 
 	a.Opportunity.CreatedAt = eventData.CreatedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	a.Opportunity.Source = eventData.Source
+	a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
+
+	return nil
+}
+
+func (a *OpportunityAggregate) onOpportunityUpdateNextCycleDate(evt eventstore.Event) error {
+	var eventData event.OpportunityUpdateNextCycleDateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Opportunity.RenewalDetails.RenewedAt = eventData.RenewedAt
 
 	return nil
 }

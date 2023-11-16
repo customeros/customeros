@@ -102,5 +102,5 @@ func RenewalCycleFromString(renewalCycle string) RenewalCycle {
 }
 
 func IsFrequencyBasedRenewalCycle(renewalCycle string) bool {
-	return renewalCycle == "MONTHLY" || renewalCycle == "ANNUALLY"
+	return renewalCycle == string(MonthlyRenewalCycleString) || renewalCycle == string(AnnuallyRenewalCycleString)
 }
