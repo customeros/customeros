@@ -145,7 +145,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
 			} else if filter.Filter.Property == "LAST_TOUCHPOINT_AT" && filter.Filter.Value.Time != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.LTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
 			} else if filter.Filter.Property == "LAST_TOUCHPOINT_TYPE" && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
 			}
