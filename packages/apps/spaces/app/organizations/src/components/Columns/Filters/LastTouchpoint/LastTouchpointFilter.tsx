@@ -107,7 +107,7 @@ export const LastTouchpointFilter = ({
 
   useEffect(() => {
     onFilterValueChange?.(filterValue.isActive ? filterValue : undefined);
-  }, [filterValue.value.length, filterValue.isActive, filterValue.after]);
+  }, [filterValue.value, filterValue.isActive, filterValue.after]);
 
   return (
     <>

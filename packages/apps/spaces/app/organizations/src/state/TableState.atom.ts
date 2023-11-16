@@ -31,13 +31,13 @@ const tableStateSelector = selector({
 
     const lastTouchpoint = (() => {
       const state = get(LastTouchpointSelector);
-      const before = state.after
+      const after = state.after
         ? new Date(state.after).toISOString()
         : undefined;
 
       return {
         ...state,
-        before,
+        after,
       };
     })();
 

@@ -7,11 +7,11 @@ interface LastTouchpointState {
   isActive: boolean;
 }
 
-const defaultValue = subDays(new Date(), 7).toISOString().split('T')[0];
+const defaultAfter = subDays(new Date(), 7).toISOString().split('T')[0];
 
 export const defaultState: LastTouchpointState = {
   value: [],
-  after: defaultValue,
+  after: defaultAfter,
   isActive: false,
 };
 

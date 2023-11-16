@@ -173,7 +173,7 @@ export const useOrganizationsPageData = ({
             },
           });
         }
-        if (lastTouchpoint.before) {
+        if (lastTouchpoint.after) {
           draft.AND.push({
             filter: {
               property: 'LAST_TOUCHPOINT_AT',
@@ -206,7 +206,7 @@ export const useOrganizationsPageData = ({
     owner?.value.length,
     owner?.showEmpty,
     lastTouchpoint?.isActive,
-    lastTouchpoint?.value.length,
+    lastTouchpoint?.value,
     lastTouchpoint?.after,
   ]);
 
