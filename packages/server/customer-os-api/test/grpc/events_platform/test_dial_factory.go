@@ -1,4 +1,4 @@
-package events_paltform
+package events_platform
 
 import (
 	"context"
@@ -9,7 +9,9 @@ import (
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/service_line_item"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"log"
@@ -42,6 +44,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientCo
 	userpb.RegisterUserGrpcServiceServer(server, &MockUserService{})
 	organizationpb.RegisterOrganizationGrpcServiceServer(server, &MockOrganizationService{})
 	contractpb.RegisterContractGrpcServiceServer(server, &MockContractService{})
+	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(server, &MockServiceLineItemService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {
