@@ -149,15 +149,14 @@ func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Con
 
 func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.Node) *entity.ServiceLineItemEntity {
 	props := utils.GetPropsFromNode(dbNode)
-	billedType := entity.GetBilledType(utils.GetStringPropOrEmpty(props, "billed"))
 	serviceLineItem := entity.ServiceLineItemEntity{
 		ID:            utils.GetStringPropOrEmpty(props, "id"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Billed:        billedType,
+		Billed:        entity.GetBilledType(utils.GetStringPropOrEmpty(props, "billed")),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
-		Quantity:      int64(int(utils.GetInt64PropOrZero(props, "quantity"))),
+		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

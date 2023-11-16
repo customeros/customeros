@@ -708,6 +708,13 @@ func TagOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organ
 	})
 }
 
+func CreateDefaultOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
+	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
+		Name: "Default org",
+	})
+}
+
+// Deprecated, use CreateOrg
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
 	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
 		Name: organizationName,
@@ -1565,7 +1572,7 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 }
 
 func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, contract entity.ContractEntity) string {
-	contractId := utils.NewUUIDIfEmpty(contract.ID)
+	contractId := utils.NewUUIDIfEmpty(contract.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$orgId})
 				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
 				SET 
