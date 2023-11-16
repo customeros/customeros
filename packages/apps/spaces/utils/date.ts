@@ -3,7 +3,10 @@ import {
   isBefore,
   differenceInMinutes,
   formatDistanceToNow,
+  isFuture as isFutureDateFns,
+  addYears as addYearsDateFns,
   isSameDay as isSameDayDateFns,
+  addMonths as addMonthsDateFns,
   formatDuration as formatDurationDateFns,
 } from 'date-fns';
 
@@ -74,6 +77,18 @@ export class DateTimeUtils {
     const duration = this.toHoursAndMinutes(seconds);
 
     return formatDurationDateFns(duration, options);
+  }
+
+  public static isFuture(date: string): boolean {
+    return isFutureDateFns(this.getDate(date));
+  }
+
+  public static addYears(date: string, yearsCount: number): Date {
+    return addYearsDateFns(this.getDate(date), yearsCount);
+  }
+
+  public static addMonth(date: string, yearsCount: number): Date {
+    return addMonthsDateFns(this.getDate(date), yearsCount);
   }
 
   public static isSameDay(dateLeft: string, dateRight: string): boolean {

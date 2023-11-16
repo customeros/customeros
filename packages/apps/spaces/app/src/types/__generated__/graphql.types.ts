@@ -96,6 +96,13 @@ export type AttachmentInput = {
   size: Scalars['Int64'];
 };
 
+export enum BilledType {
+  AnnuallyBilled = 'ANNUALLY_BILLED',
+  MonthlyBilled = 'MONTHLY_BILLED',
+  None = 'NONE',
+  OnceBilled = 'ONCE_BILLED',
+}
+
 export type BillingDetails = {
   __typename?: 'BillingDetails';
   amount?: Maybe<Scalars['Float']>;
@@ -1419,6 +1426,7 @@ export type Mutation = {
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
   player_Merge: Result;
+  serviceLineItem_Create: ServiceLineItem;
   social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
@@ -1966,6 +1974,10 @@ export type MutationPlayer_MergeArgs = {
   userId: Scalars['ID'];
 };
 
+export type MutationServiceLineItem_CreateArgs = {
+  input: ServiceLineItemInput;
+};
+
 export type MutationSocial_RemoveArgs = {
   socialId: Scalars['ID'];
 };
@@ -2481,8 +2493,6 @@ export type Query = {
    */
   contacts: ContactsPage;
   contract: Contract;
-  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
-  dashboardView_Contacts?: Maybe<ContactsPage>;
   /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
@@ -2502,6 +2512,7 @@ export type Query = {
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
   player_ByAuthIdProvider: Player;
+  serviceLineItem: ServiceLineItem;
   tags: Array<Tag>;
   tenant: Scalars['String'];
   tenant_ByEmail?: Maybe<Scalars['String']>;
@@ -2540,12 +2551,6 @@ export type QueryContactsArgs = {
 
 export type QueryContractArgs = {
   id: Scalars['ID'];
-};
-
-export type QueryDashboardView_ContactsArgs = {
-  pagination: Pagination;
-  sort?: InputMaybe<SortBy>;
-  where?: InputMaybe<Filter>;
 };
 
 export type QueryDashboardView_OrganizationsArgs = {
@@ -2620,6 +2625,10 @@ export type QueryPhoneNumberArgs = {
 export type QueryPlayer_ByAuthIdProviderArgs = {
   authId: Scalars['String'];
   provider: Scalars['String'];
+};
+
+export type QueryServiceLineItemArgs = {
+  id: Scalars['ID'];
 };
 
 export type QueryTenant_ByEmailArgs = {
@@ -2715,6 +2724,32 @@ export enum Role {
   Owner = 'OWNER',
   User = 'USER',
 }
+
+export type ServiceLineItem = Node & {
+  __typename?: 'ServiceLineItem';
+  appSource: Scalars['String'];
+  billed: BilledType;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  externalLinks: Array<ExternalSystem>;
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  price: Scalars['Float'];
+  quantity: Scalars['Int64'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time'];
+};
+
+export type ServiceLineItemInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  billed?: InputMaybe<BilledType>;
+  contractId: Scalars['String'];
+  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  name?: InputMaybe<Scalars['String']>;
+  price?: InputMaybe<Scalars['Float']>;
+  quantity?: InputMaybe<Scalars['Int64']>;
+};
 
 export type Social = Node &
   SourceFields & {

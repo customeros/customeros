@@ -9,10 +9,11 @@ import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-interface RenewalARRCardProps {
-  data?: null; // todo when BE contract is available
-}
-export const RenewalARRCard = ({ data }: RenewalARRCardProps) => {
+// todo uncomment when BE contract with services is available
+// interface RenewalARRCardProps {
+//    withMultipleServices: boolean;
+// }
+export const RenewalARRCard = () => {
   const renewalForecast = '10000'; // remove todo when BE contract is available
   const renewalProbability = 'HIGH'; // remove todo when BE contract is available
 
@@ -28,22 +29,25 @@ export const RenewalARRCard = ({ data }: RenewalARRCardProps) => {
       border='1px solid'
       borderColor='gray.200'
       position='relative'
-      sx={{
-        '&:after': {
-          // todo after integrating with BE this should be visible only for contracts that renewed at least once
-          content: "''",
-          width: 2,
-          height: '80%',
-          left: -2,
-          top: '7px',
-          bg: 'white',
-          position: 'absolute',
-          borderTopLeftRadius: 'md',
-          borderBottomLeftRadius: 'md',
-          border: '1px solid',
-          borderColor: 'gray.200',
-        },
-      }}
+      // sx={
+      //   withMultipleServices
+      //     ? {
+      //         '&:after': {
+      //           content: "''",
+      //           width: 2,
+      //           height: '80%',
+      //           left: -2,
+      //           top: '7px',
+      //           bg: 'white',
+      //           position: 'absolute',
+      //           borderTopLeftRadius: 'md',
+      //           borderBottomLeftRadius: 'md',
+      //           border: '1px solid',
+      //           borderColor: 'gray.200',
+      //         },
+      //       }
+      //     : {}
+      // }
     >
       <CardHeader as={Flex} p='0' w='full' alignItems='center' gap={4}>
         <FeaturedIcon

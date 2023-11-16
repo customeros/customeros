@@ -1,43 +1,31 @@
 'use client';
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { FormNumberInput } from '@ui/form/NumberInput';
-import { CurrencyInput } from '@ui/form/CurrencyInput';
 import { ClockCheck } from '@ui/media/icons/ClockCheck';
+import { FormCurrencyInput } from '@ui/form/CurrencyInput';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
-import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 interface SubscriptionServiceFromProps {
-  data: {
-    name?: string | null;
-    licenses?: string | null;
-    licensePrice?: string | null;
-  };
+  formId: string;
 }
 
+const [_, ...subscriptionOptions] = billedTypeOptions;
 export const SubscriptionServiceFrom = ({
-  data,
+  formId,
 }: SubscriptionServiceFromProps) => {
   const initialRef = useRef(null);
-  const formId = 'TODO';
-
-  const [licensePrice, setLicensePrice] = useState<string>(
-    data?.licensePrice || '',
-  );
-  const [licenses, setLicenses] = useState<string>(data?.licenses || '');
-  const [name, setName] = useState<string>(data?.name || '');
 
   return (
     <>
       <FormInput
         name='name'
-        formId='todo'
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        formId={formId}
         label='Service name'
         placeholder="What's this service's name?"
         isLabelVisible
@@ -50,8 +38,6 @@ export const SubscriptionServiceFrom = ({
       />
       <Flex gap={4} mt={2} justifyContent='space-between'>
         <FormNumberInput
-          onChange={setLicenses}
-          value={`${licenses}`}
           w='full'
           height='auto'
           placeholder='Quantity'
@@ -61,18 +47,17 @@ export const SubscriptionServiceFrom = ({
           ref={initialRef}
           leftElement={<Certificate02 boxSize={4} color='gray.500' />}
           formId={formId}
-          name='licences'
+          name='quantity'
         />
 
-        <CurrencyInput
-          onChange={setLicensePrice}
-          value={`${licensePrice}`}
+        <FormCurrencyInput
+          formId={formId}
+          name='price'
           w='full'
           placeholder='Per license'
           isLabelVisible
           label='Price/license'
           min={0}
-          ref={initialRef}
           leftElement={<CurrencyDollar boxSize={4} color='gray.500' />}
         />
 
@@ -80,9 +65,9 @@ export const SubscriptionServiceFrom = ({
           label='Billed'
           placeholder='Frequency'
           isLabelVisible
-          name='billingFrequency'
+          name='billed'
           formId={formId}
-          options={billingFrequencyOptions}
+          options={subscriptionOptions}
           leftElement={<ClockCheck mr='3' color='gray.500' boxSize={4} />}
         />
       </Flex>

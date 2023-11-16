@@ -71,6 +71,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = () => {
             borderRadius: 'md',
             fontSize: 'xs',
             maxHeight: '22px',
+            minW: 'fit-content',
 
             '& > div': {
               p: 0,

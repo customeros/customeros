@@ -4,6 +4,7 @@ import { SelectOption } from '@shared/types/SelectOptions';
 import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 import {
   Maybe,
+  BilledType,
   RenewalCycle,
   ContractRenewalCycle,
   RenewalLikelihoodProbability,
@@ -45,4 +46,11 @@ export const frequencyOptions: SelectOption<RenewalCycle>[] = [
 export const billingFrequencyOptions: SelectOption<ContractRenewalCycle>[] = [
   { label: 'Monthly', value: ContractRenewalCycle.AnnualRenewal },
   { label: 'Annually', value: ContractRenewalCycle.MonthlyRenewal },
+];
+
+export const billedTypeOptions: SelectOption<BilledType>[] = [
+  { label: 'Once', value: BilledType.OnceBilled },
+
+  { label: 'Monthly', value: BilledType.MonthlyBilled },
+  { label: 'Annually', value: BilledType.AnnuallyBilled },
 ];

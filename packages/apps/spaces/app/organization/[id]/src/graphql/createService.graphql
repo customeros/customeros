@@ -1,0 +1,5 @@
+mutation createService($input: ServiceLineItemInput!) {
+    serviceLineItem_Create(input: $input) {
+        id
+    }
+}

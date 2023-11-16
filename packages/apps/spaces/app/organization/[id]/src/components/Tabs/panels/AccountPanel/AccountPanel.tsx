@@ -1,64 +1,28 @@
 'use client';
 
 import React, { useMemo } from 'react';
-// import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 
 import { Box } from '@ui/layout/Box';
+import { Contract } from '@graphql/types';
 import { useDisclosure } from '@ui/utils';
 import { Select } from '@ui/form/SyncSelect';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-// import { EmptyContracts } from '@organization/src/components/Tabs/panels/AccountPanel/EmptyContracts';
+import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
+import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
+import { EmptyContracts } from '@organization/src/components/Tabs/panels/AccountPanel/EmptyContracts';
 import { ContractCard } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractCard';
 import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
-// import {
-//   ExternalSystemType,
-//   ContractRenewalCycle,
-//   ExternalSystemReferenceInput,
-import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
-// } from '@graphql/types';
-import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
 import { Notes } from './Notes';
-import { RenewalForecastType } from './RenewalForecast';
+// import { RenewalForecastType } from './RenewalForecast';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
-
-// todo cleanup after integrationg with getContracts query
-// interface Contract {
-//   name: string;
-//   signedAt?: Date;
-//   appSource?: string;
-//   contractUrl?: string;
-//   organizationId: string;
-//   serviceStartedAt?: Date;
-//   renewalCycle?: ContractRenewalCycle;
-//   externalReference?: ExternalSystemReferenceInput;
-// }
-//
-// const dummyExternalReferenceInput: ExternalSystemReferenceInput = {
-//   externalId: '1234',
-//   externalSource: 'Dummy Source',
-//   externalUrl: 'https://dummy-url.com',
-//   syncDate: new Date().toISOString(),
-//   type: ExternalSystemType.ZendeskSupport,
-// };
-// const dummyContractData: Contract = {
-//   name: 'Dummy Contract',
-//   organizationId: '1234567890',
-//   renewalCycle: ContractRenewalCycle.AnnualRenewal,
-//   appSource: 'App Source Name',
-//   contractUrl: 'https://dummy-contract-url.com',
-//   serviceStartedAt: new Date('2021-01-01T00:00:00'),
-//   signedAt: new Date('2022-01-01T00:00:00'),
-//   externalReference: dummyExternalReferenceInput,
-// };
 
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
   // Moved to upperscope due to error in safari https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
-
   // Todo modify and connect modals
   // const renewalLikelihoodUpdateModal = useDisclosure({
   //   id: 'renewal-likelihood-update-modal',
@@ -78,22 +42,18 @@ export const AccountPanel = () => {
   // });
 
   const client = getGraphQLClient();
-  const { data, isInitialLoading } = useOrganizationAccountDetailsQuery(
-    client,
-    { id },
-  );
+  const { data, isInitialLoading } = useGetContractsQuery(client, { id });
   const isModalOpen = useMemo(() => {
     return arrForecastInfoModal.isOpen || addServiceInfoModal.isOpen;
   }, [arrForecastInfoModal.isOpen, addServiceInfoModal.isOpen]);
 
-  if (isInitialLoading || !arrForecastInfoModal) {
+  if (isInitialLoading) {
     return <AccountPanelSkeleton />;
   }
 
-  // // TODO uncomment after integrating with BE
-  // if (true) {
-  //   return <EmptyContracts name={data?.organization?.name || ''} />;
-  // }
+  if (!data?.organization?.contracts?.length) {
+    return <EmptyContracts name={data?.organization?.name || ''} />;
+  }
 
   return (
     <OrganizationPanel
@@ -187,20 +147,18 @@ export const AccountPanel = () => {
         infoModal={arrForecastInfoModal}
         name={data?.organization?.name || ''}
         isInitialLoading={isInitialLoading}
-        renewalProbability={
-          data?.organization?.accountDetails?.renewalLikelihood?.probability
-        }
-        aRRForecast={
-          data?.organization?.accountDetails
-            ?.renewalForecast as RenewalForecastType
-        }
+        renewalProbability={undefined}
+        aRRForecast={undefined}
       />
 
-      <ContractCard
-        name={data?.organization?.name || ''}
-        data={null}
-        serviceModal={addServiceInfoModal}
-      />
+      {!!data?.organization?.contracts &&
+        data?.organization?.contracts.map((contract) => (
+          <ContractCard
+            key={`contract-card-${contract.id}`}
+            data={(contract as Contract) ?? undefined}
+            serviceModal={addServiceInfoModal}
+          />
+        ))}
 
       <Notes id={id} data={data?.organization} />
     </OrganizationPanel>
