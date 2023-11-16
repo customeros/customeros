@@ -93,6 +93,7 @@ export const KMenu = () => {
         {
           text: 'who messaged recently',
           perform: () => {
+            resetFilters();
             setTouchpointFilter((prev) =>
               produce(prev, (draft) => {
                 draft.isActive = true;
@@ -104,6 +105,7 @@ export const KMenu = () => {
         {
           text: 'who did we met recently',
           perform: () => {
+            resetFilters();
             setTouchpointFilter((prev) =>
               produce(prev, (draft) => {
                 draft.isActive = true;
@@ -115,6 +117,7 @@ export const KMenu = () => {
         {
           text: 'who emailed recently',
           perform: () => {
+            resetFilters();
             setTouchpointFilter((prev) =>
               produce(prev, (draft) => {
                 draft.isActive = true;
@@ -126,6 +129,7 @@ export const KMenu = () => {
         {
           text: 'who was created recently',
           perform: () => {
+            resetFilters();
             setTouchpointFilter((prev) =>
               produce(prev, (draft) => {
                 draft.isActive = true;
