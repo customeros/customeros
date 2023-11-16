@@ -87,6 +87,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) 
 	a.Opportunity.CreatedAt = eventData.CreatedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	a.Opportunity.Source = eventData.Source
+	a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
 
 	return nil
 }

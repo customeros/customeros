@@ -5,7 +5,8 @@ import (
 )
 
 type RenewalDetails struct {
-	RenewedAt *time.Time
+	RenewedAt         *time.Time
+	RenewalLikelihood string
 }
 
 type OpportunityEntity struct {

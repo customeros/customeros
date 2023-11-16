@@ -64,7 +64,7 @@ func (h *contractHandler) UpdateRenewalNextCycleDate(ctx context.Context, tenant
 	}
 	// if there is no renewal opportunity, create one
 	if currentRenewalOpportunityDbNode == nil {
-		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", tenant, "", contractId, commonmodel.Source{}, nil, nil))
+		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", tenant, "", contractId, "", commonmodel.Source{}, nil, nil))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("CreateRenewalOpportunity command failed: %v", err.Error())
@@ -77,13 +77,11 @@ func (h *contractHandler) UpdateRenewalNextCycleDate(ctx context.Context, tenant
 
 	// renewal opportunity exists, calculate next cycle date
 	renewedAt := h.calculateNextCycleDate(contract.ServiceStartedAt, contract.RenewalCycle)
-	if contract.ServiceStartedAt == nil {
-		err = h.opportunityCommands.UpdateRenewalOpportunityNextCycleDate.Handle(ctx, opportunitycmd.NewUpdateRenewalOpportunityNextCycleDateCommand(currentRenewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, renewedAt))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("UpdateRenewalOpportunityNextCycleDate command failed: %v", err.Error())
-			return nil
-		}
+	err = h.opportunityCommands.UpdateRenewalOpportunityNextCycleDate.Handle(ctx, opportunitycmd.NewUpdateRenewalOpportunityNextCycleDateCommand(currentRenewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, renewedAt))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("UpdateRenewalOpportunityNextCycleDate command failed: %v", err.Error())
+		return nil
 	}
 
 	return nil

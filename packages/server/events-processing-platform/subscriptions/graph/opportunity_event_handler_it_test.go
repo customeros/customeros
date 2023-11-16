@@ -138,6 +138,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	createEvent, err := event.NewOpportunityCreateRenewalEvent(
 		opportunityAggregate,
 		contractId,
+		string(model.RenewalLikelihoodStringLow),
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatform,
@@ -174,6 +175,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.Equal(t, "", opportunity.ExternalStage)
 	require.Equal(t, string(model.OpportunityInternalTypeStringRenewal), opportunity.InternalType)
 	require.Equal(t, string(model.OpportunityInternalStageStringOpen), opportunity.InternalStage)
+	require.Equal(t, string(model.RenewalLikelihoodStringLow), opportunity.RenewalDetails.RenewalLikelihood)
 }
 
 func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
