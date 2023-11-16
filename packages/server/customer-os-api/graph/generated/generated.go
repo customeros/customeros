@@ -9406,7 +9406,7 @@ type ServiceLineItem implements Node {
     name:               String!
     billed:             BilledType!
     price:              Float!
-    quantity:           Int!
+    quantity:           Int64!
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!
     sourceOfTruth:      DataSource!
@@ -9419,7 +9419,7 @@ input ServiceLineItemInput {
     contractId:         String!
     billed:             BilledType
     price:              Float
-    quantity:           Int
+    quantity:           Int64
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
 }
@@ -53533,9 +53533,9 @@ func (ec *executionContext) _ServiceLineItem_quantity(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(int64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_quantity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53545,7 +53545,7 @@ func (ec *executionContext) fieldContext_ServiceLineItem_quantity(ctx context.Co
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -62060,7 +62060,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}

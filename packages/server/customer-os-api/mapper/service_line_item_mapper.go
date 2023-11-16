@@ -29,7 +29,7 @@ func MapServiceLineItemInputToEntity(input model.ServiceLineItemInput) *entity.S
 	serviceLineItemEntity := entity.ServiceLineItemEntity{
 		Name:          utils.IfNotNilString(input.Name),
 		Price:         utils.IfNotNilFloat64(input.Price),
-		Quantity:      int(utils.IfNotNilInt64(input.Quantity)),
+		Quantity:      utils.IfNotNilInt64(input.Quantity),
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),

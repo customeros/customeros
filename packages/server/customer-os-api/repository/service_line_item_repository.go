@@ -33,8 +33,8 @@ func (r *serviceLineItemRepository) GetById(ctx context.Context, tenant, service
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:SERVICE_LINE_ITEM_BELONGS_TO_TENANT]-(s:ServiceLineItem {id:$serviceLineItemId}) 
-		RETURN s`
+	cypher := `MATCH (sli:ServiceLineItem {id:$serviceLineItemId}) 
+		RETURN sli`
 	params := map[string]any{
 		"tenant":            tenant,
 		"serviceLineItemId": serviceLineItemId,
@@ -58,9 +58,9 @@ func (r *serviceLineItemRepository) GetForContracts(ctx context.Context, tenant 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE_LINE_ITEM]->(serviceLineItem:ServiceLineItem)-[:SERVICE_LINE_ITEM_BELONGS_TO_TENANT]->(t)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$serviceLineItemId})
 			WHERE c.id IN $contractIds
-			RETURN serviceLineItem, c.id ORDER BY serviceLineItem.createdAt DESC`
+			RETURN sli, c.id ORDER BY sli.createdAt DESC`
 	params := map[string]any{
 		"tenant":      tenant,
 		"contractIds": contractIds,

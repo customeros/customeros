@@ -1455,7 +1455,7 @@ type ServiceLineItem struct {
 	Name          string            `json:"name"`
 	Billed        BilledType        `json:"billed"`
 	Price         float64           `json:"price"`
-	Quantity      int               `json:"quantity"`
+	Quantity      int64             `json:"quantity"`
 	CreatedBy     *User             `json:"createdBy,omitempty"`
 	Source        DataSource        `json:"source"`
 	SourceOfTruth DataSource        `json:"sourceOfTruth"`
@@ -1471,7 +1471,7 @@ type ServiceLineItemInput struct {
 	ContractID        string                        `json:"contractId"`
 	Billed            *BilledType                   `json:"billed,omitempty"`
 	Price             *float64                      `json:"price,omitempty"`
-	Quantity          *int                          `json:"quantity,omitempty"`
+	Quantity          *int64                        `json:"quantity,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }

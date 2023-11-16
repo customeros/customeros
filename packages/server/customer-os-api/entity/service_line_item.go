@@ -9,7 +9,7 @@ type ServiceLineItemEntity struct {
 	UpdatedAt     time.Time
 	Billed        BilledType
 	Price         float64
-	Quantity      int
+	Quantity      int64
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string

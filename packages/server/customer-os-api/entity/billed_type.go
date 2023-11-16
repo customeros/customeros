@@ -4,9 +4,9 @@ type BilledType string
 
 const (
 	BilledTypeNone     BilledType = ""
-	BilledTypeMonthly  BilledType = "MONTHLY_BILLED"
-	BilledTypeAnnually BilledType = "ANNUALLY_BILLED"
-	BilledTypeOnce     BilledType = "ONCE_BILLED"
+	BilledTypeMonthly  BilledType = "MONTHLY"
+	BilledTypeAnnually BilledType = "ANNUALLY"
+	BilledTypeOnce     BilledType = "ONCE"
 )
 
 var AllBilledTypes = []BilledType{
