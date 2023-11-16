@@ -2399,6 +2399,11 @@ escalade@^3.1.1:
   resolved "https://registry.yarnpkg.com/escalade/-/escalade-3.1.1.tgz#d8cfdc7000965c5a0174b4a82eaa5c0552742e40"
   integrity sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==
 
+escape-html@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/escape-html/-/escape-html-1.0.3.tgz#0258eae4d3d0c0974de1c169188ef0051d1d1988"
+  integrity sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow==
+
 escape-string-regexp@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
@@ -5332,16 +5337,17 @@ sass-formatter@^0.7.5:
   dependencies:
     suf-log "^2.5.3"
 
-satori@^0.8.1:
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/satori/-/satori-0.8.1.tgz#85793a3f9ab44f6f2ec8e54ec963b257bfc82560"
-  integrity sha512-XboyousIz6IThWkKtPu3EyPAYV9ALH2pyC6bXeWKqYt7zAy11Qv40nro9Oozn+DSdaloSzGxnqy3Z7iFOHrX2Q==
+satori@^0.10.9:
+  version "0.10.9"
+  resolved "https://registry.yarnpkg.com/satori/-/satori-0.10.9.tgz#efde2898ab4a5b09c072f0f4e112ac4a7d6a499c"
+  integrity sha512-XU9EELUEZuioT4acLIpCXxHcFzrsC8muvg0MY28d+TlqwxbkTzBmWbw+3+hnCzXT7YZ0Qm8k3eXktDaEu+qmEw==
   dependencies:
     "@shuding/opentype.js" "1.4.0-beta.0"
     css-background-parser "^0.1.0"
     css-box-shadow "1.0.0-3"
     css-to-react-native "^3.0.0"
     emoji-regex "^10.2.1"
+    escape-html "^1.0.3"
     linebreak "^1.1.0"
     parse-css-color "^0.2.1"
     postcss-value-parser "^4.2.0"
