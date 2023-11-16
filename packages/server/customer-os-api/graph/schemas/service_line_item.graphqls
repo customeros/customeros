@@ -2,7 +2,7 @@ extend type Query {
     serviceLineItem(id: ID!): ServiceLineItem!
 }
 extend type Mutation {
-    serviceLineItem_Create(input: ServiceLineItemInput!): ServiceLineItem!
+    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem!
 }
 
 type ServiceLineItem implements Node {
@@ -21,8 +21,8 @@ type ServiceLineItem implements Node {
 }
 
 input ServiceLineItemInput {
+    contractId:         ID!
     name:               String
-    contractId:         String!
     billed:             BilledType
     price:              Float
     quantity:           Int64
@@ -32,7 +32,7 @@ input ServiceLineItemInput {
 
 enum BilledType {
     NONE
-    MONTHLY_BILLED
-    ANNUALLY_BILLED
-    ONCE_BILLED
+    MONTHLY
+    ANNUALLY
+    ONCE
 }

@@ -50,7 +50,7 @@ type ServiceLineItemCreateData struct {
 }
 
 func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDetails *ServiceLineItemCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Create")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItem.Create")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("serviceLineItemDetails", serviceLineItemDetails))
@@ -81,7 +81,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		Tenant:         common.GetTenantFromContext(ctx),
 		ContractId:     serviceLineItemDetails.ContractId,
 		Name:           serviceLineItemDetails.ServiceLineItemEntity.Name,
-		Quantity:       int64(serviceLineItemDetails.ServiceLineItemEntity.Quantity),
+		Quantity:       serviceLineItemDetails.ServiceLineItemEntity.Quantity,
 		Price:          float32(serviceLineItemDetails.ServiceLineItemEntity.Price),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
@@ -102,7 +102,10 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	}
 
 	response, err := s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
-
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
 	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
 		serviceLineItemFound, findErr := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), response.Id, entity.NodeLabel_ServiceLineItem)
 		if serviceLineItemFound && findErr == nil {
