@@ -1,0 +1,137 @@
+name: customer-os-platform-admin-api
+
+on:
+  push:
+    branches: [ "otter" ]
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
+      - packages/server/events-processing-common/**
+      - packages/server/customer-os-platform-admin-api/**
+      - .github/workflows/build-customer-os-platform-admin-api.yml
+  pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-common-auth/**
+      - packages/server/events-processing-common/**
+      - packages/server/customer-os-platform-admin-api/**
+      - .github/workflows/build-customer-os-platform-admin-api.yml
+  release:
+    types: [ created, edited ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/customer-os-platform-admin-api
+
+permissions:
+  contents: read
+  pull-requests: read
+  packages: write
+
+defaults:
+  run:
+    working-directory: ./packages/server/customer-os-platform-admin-api
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20.5'
+
+      - name: Build
+        run: make all
+
+      - name: Test
+        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
+
+      - name: Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()    # run this step even if previous step failed
+        with:
+          report_paths: ./packages/server/customer-os-platform-admin-api/unit-tests.xml    # Path to test results
+          include_passed: true
+          annotate_only: true
+          detailed_summary: true
+
+      - name: Compute Code Coverage
+        id: compute_code_coverage
+        run: |
+          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
+          coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
+          echo "::set-output name=computed_coverage::$coverage"
+
+      - name: Send Output to Slack
+        run: |
+          computed_coverage="${{ steps.compute_code_coverage.outputs.computed_coverage }}"
+          warning_threshold=80.0
+          critical_threshold=50.0
+          if (( $(echo "$computed_coverage > $warning_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": "${{ github.workflow }} coverage ${{ steps.compute_code_coverage.outputs.computed_coverage }}: '$(cat test-coverage.txt)'"
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          elif (( $(echo "$computed_coverage < $warning_threshold && $computed_coverage > $critical_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": ":warning: ${{ github.workflow }} coverage is lower than the warning threshold of 80%: '$(cat test-coverage.txt)'"
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          elif (( $(echo "$computed_coverage < $critical_threshold" | bc -l) )); then
+            curl -X POST -H 'Content-type: application/json' --data '{
+              "text": ":no_entry: ${{ github.workflow }} coverage is lower than the critical threshold of 50%: '$(cat test-coverage.txt)'"
+            }' ${{ secrets.TEST_COVERAGE_SLACK_WEBHOOK_URL }}
+          fi
+
+
+  build-publish:
+    needs:
+      - test
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare sources for docker build
+        run: |
+          mkdir tmp-sources
+          mkdir tmp-sources/customer-os-common-module
+          mkdir tmp-sources/customer-os-common-auth
+          mkdir tmp-sources/events-processing-common
+          mkdir tmp-sources/customer-os-platform-admin-api
+          
+          rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer-os-platform-admin-api
+          cp .env tmp-sources/customer-os-platform-admin-api/.env
+          cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
+          cp -r ../customer-os-common-auth/* tmp-sources/customer-os-common-auth
+          cp -r ../events-processing-common/* tmp-sources/events-processing-common
+          
+          cp Dockerfile tmp-sources/Dockerfile
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
+          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5.0.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v5.0.0
+        with:
+          context: packages/server/customer-os-platform-admin-api/tmp-sources/.
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
