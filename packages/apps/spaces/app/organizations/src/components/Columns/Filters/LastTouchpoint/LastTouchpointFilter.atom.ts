@@ -1,21 +1,23 @@
-import addDays from 'date-fns/addDays';
+import subDays from 'date-fns/subDays';
 import { atom, selector, useRecoilState } from 'recoil';
 
 interface LastTouchpointState {
+  after?: string;
   value: string[];
-  before?: string;
   isActive: boolean;
 }
 
-const defaultValue = addDays(new Date(), 7).toISOString().split('T')[0];
+const defaultValue = subDays(new Date(), 7).toISOString().split('T')[0];
+
+export const defaultState: LastTouchpointState = {
+  value: [],
+  after: defaultValue,
+  isActive: false,
+};
 
 export const LastTouchpointAtom = atom<LastTouchpointState>({
   key: 'last-touchpoint-filter',
-  default: {
-    value: [],
-    before: defaultValue,
-    isActive: false,
-  },
+  default: defaultState,
 });
 
 export const LastTouchpointSelector = selector({

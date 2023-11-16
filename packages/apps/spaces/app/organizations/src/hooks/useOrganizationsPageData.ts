@@ -44,7 +44,7 @@ export const useOrganizationsPageData = ({
     organization,
     relationship,
     timeToRenewal,
-    // lastTouchpoint,
+    lastTouchpoint,
     renewalLikelihood,
   } = columnFilters;
 
@@ -94,9 +94,10 @@ export const useOrganizationsPageData = ({
         draft.AND.push({
           filter: {
             property: 'NAME',
-            value: organization?.showEmpty ? '' : organization?.value,
+            value: organization?.value,
             operation: ComparisonOperator.Contains,
             caseSensitive: false,
+            includeEmpty: organization?.showEmpty,
           },
         });
       }
@@ -105,8 +106,9 @@ export const useOrganizationsPageData = ({
         draft.AND.push({
           filter: {
             property: 'WEBSITE',
-            value: website?.showEmpty ? '' : website?.value,
+            value: website?.value,
             operation: ComparisonOperator.Contains,
+            includeEmpty: website?.showEmpty,
           },
         });
       }
@@ -157,9 +159,29 @@ export const useOrganizationsPageData = ({
             property: 'OWNER_ID',
             value: owner.value,
             operation: ComparisonOperator.In,
-            // includeEmpty: owner.showEmpty,
+            includeEmpty: owner.showEmpty,
           },
         });
+      }
+      if (lastTouchpoint.isActive) {
+        if (lastTouchpoint.value.length) {
+          draft.AND.push({
+            filter: {
+              property: 'LAST_TOUCHPOINT_TYPE',
+              value: lastTouchpoint.value,
+              operation: ComparisonOperator.In,
+            },
+          });
+        }
+        if (lastTouchpoint.before) {
+          draft.AND.push({
+            filter: {
+              property: 'LAST_TOUCHPOINT_AT',
+              value: lastTouchpoint.after,
+              operation: ComparisonOperator.Gte,
+            },
+          });
+        }
       }
     });
   }, [
@@ -182,6 +204,10 @@ export const useOrganizationsPageData = ({
     forecast?.value[1],
     owner?.isActive,
     owner?.value.length,
+    owner?.showEmpty,
+    lastTouchpoint?.isActive,
+    lastTouchpoint?.value.length,
+    lastTouchpoint?.after,
   ]);
 
   const sortBy: SortBy | undefined = useMemo(() => {
@@ -225,8 +251,10 @@ export const useOrganizationsPageData = ({
       data,
       organization?.isActive,
       organization?.value,
+      organization?.showEmpty,
       website?.isActive,
-      website.value,
+      website?.value,
+      website?.showEmpty,
       relationship.isActive,
       relationship?.value.length,
       renewalLikelihood?.isActive,
@@ -238,6 +266,10 @@ export const useOrganizationsPageData = ({
       forecast?.value[1],
       owner?.isActive,
       owner?.value.length,
+      owner?.showEmpty,
+      lastTouchpoint?.isActive,
+      lastTouchpoint?.value.length,
+      lastTouchpoint?.after,
     ],
   );
 

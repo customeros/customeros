@@ -46,6 +46,7 @@ export type GetOrganizationsQuery = {
       isCustomer?: boolean | null;
       lastTouchPointTimelineEventId?: string | null;
       lastTouchPointAt?: any | null;
+      lastTouchPointType?: Types.LastTouchpointType | null;
       subsidiaryOf: Array<{
         __typename?: 'LinkedOrganization';
         organization: { __typename?: 'Organization'; id: string; name: string };
@@ -299,6 +300,7 @@ export const GetOrganizationsDocument = `
       }
       lastTouchPointTimelineEventId
       lastTouchPointAt
+      lastTouchPointType
       lastTouchPointTimelineEvent {
         __typename
         ... on PageView {

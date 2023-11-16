@@ -15,7 +15,6 @@ const tableStateSelector = selector({
     const owner = get(OwnerFilterSelector);
     const website = get(WebsiteFilterSelector);
     const forecast = get(ForecastFilterSelector);
-    const lastTouchpoint = get(LastTouchpointSelector);
     const organization = get(OrganizationFilterSelector);
     const relationship = get(RelationshipFilterSelector);
     const renewalLikelihood = get(RenewalLikelihoodFilterSelector);
@@ -27,6 +26,18 @@ const tableStateSelector = selector({
       return {
         ...state,
         value,
+      };
+    })();
+
+    const lastTouchpoint = (() => {
+      const state = get(LastTouchpointSelector);
+      const before = state.after
+        ? new Date(state.after).toISOString()
+        : undefined;
+
+      return {
+        ...state,
+        before,
       };
     })();
 

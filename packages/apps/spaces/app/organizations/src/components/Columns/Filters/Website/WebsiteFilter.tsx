@@ -81,7 +81,9 @@ export const WebsiteFilter = ({
           draft.showEmpty = isChecked;
         });
 
-        toggle.setIsActive(isChecked);
+        if (!next.value) {
+          toggle.setIsActive(isChecked);
+        }
 
         return next;
       });

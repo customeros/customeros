@@ -5,12 +5,14 @@ interface ForecastFilterState {
   value: [number, number];
 }
 
+export const defaultState: ForecastFilterState = {
+  isActive: false,
+  value: [0, 10000],
+};
+
 export const ForecastFilterAtom = atom<ForecastFilterState>({
   key: 'forecast-filter',
-  default: {
-    value: [0, 10000],
-    isActive: false,
-  },
+  default: defaultState,
 });
 
 export const ForecastFilterSelector = selector({

@@ -346,9 +346,8 @@ export const columns = [
       <THead<HTMLInputElement>
         id='lastTouchpoint'
         title='Last Touchpoint'
-        renderFilter={(initialFocusRef) => (
+        renderFilter={() => (
           <LastTouchpointFilter
-            initialFocusRef={initialFocusRef}
             onFilterValueChange={props.column.setFilterValue}
           />
         )}

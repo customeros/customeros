@@ -1,19 +1,19 @@
 'use client';
-import { useMemo, useEffect, RefObject } from 'react';
+import { useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
-import addDays from 'date-fns/addDays';
+import subDays from 'date-fns/subDays';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
 import { Flex } from '@ui/layout/Flex';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
-import { Organization } from '@graphql/types';
 import { Radio, RadioGroup } from '@ui/form/Radio';
 import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
+import { Organization, LastTouchpointType } from '@graphql/types';
 
-import { TouchPoint, touchpoints } from './util';
+import { touchpoints } from './util';
 import { FilterHeader, useFilterToggle } from '../shared';
 import {
   LastTouchpointSelector,
@@ -21,12 +21,10 @@ import {
 } from './LastTouchpointFilter.atom';
 
 interface LastTouchpointFilterProps {
-  initialFocusRef: RefObject<HTMLInputElement>;
   onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
 
 export const LastTouchpointFilter = ({
-  initialFocusRef,
   onFilterValueChange,
 }: LastTouchpointFilterProps) => {
   const [filter, setFilter] = useLastTouchpointFilter();
@@ -50,7 +48,7 @@ export const LastTouchpointFilter = ({
   const [week, month, quarter] = useMemo(
     () =>
       [7, 30, 90].map((value) => {
-        return addDays(new Date(), value).toISOString().split('T')[0];
+        return subDays(new Date(), value).toISOString().split('T')[0];
       }),
     [],
   );
@@ -76,7 +74,7 @@ export const LastTouchpointFilter = ({
     });
   };
 
-  const handleSelect = (value: TouchPoint) => () => {
+  const handleSelect = (value: LastTouchpointType) => () => {
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
         draft.isActive = true;
@@ -98,7 +96,7 @@ export const LastTouchpointFilter = ({
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
         draft.isActive = true;
-        draft.before = value;
+        draft.after = value;
       });
 
       toggle.setIsActive(next.isActive);
@@ -108,8 +106,8 @@ export const LastTouchpointFilter = ({
   };
 
   useEffect(() => {
-    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
-  }, [filterValue.value.length, filterValue.isActive]);
+    onFilterValueChange?.(filterValue.isActive ? filterValue : undefined);
+  }, [filterValue.value.length, filterValue.isActive, filterValue.after]);
 
   return (
     <>
@@ -123,7 +121,7 @@ export const LastTouchpointFilter = ({
         pb='2'
         name='last-touchpoint-before'
         colorScheme='primary'
-        value={filter.before}
+        value={filter.after}
         borderBottom='1px solid'
         borderBottomColor='gray.200'
         onChange={handleDateChange}
@@ -131,13 +129,13 @@ export const LastTouchpointFilter = ({
       >
         <VStack spacing={2} align='flex-start'>
           <Radio value={week}>
-            <Text fontSize='sm'>Next 7 days</Text>
+            <Text fontSize='sm'>Last 7 days</Text>
           </Radio>
           <Radio value={month}>
-            <Text fontSize='sm'>Next 30 days</Text>
+            <Text fontSize='sm'>Last 30 days</Text>
           </Radio>
           <Radio value={quarter}>
-            <Text fontSize='sm'>Next 90 days</Text>
+            <Text fontSize='sm'>Last 90 days</Text>
           </Radio>
         </VStack>
       </RadioGroup>

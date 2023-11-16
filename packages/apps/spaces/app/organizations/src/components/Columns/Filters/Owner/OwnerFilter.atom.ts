@@ -6,13 +6,15 @@ interface OwnerFilterState {
   showEmpty: boolean;
 }
 
+export const defaultState: OwnerFilterState = {
+  value: [],
+  isActive: false,
+  showEmpty: false,
+};
+
 export const OwnerFilterAtom = atom<OwnerFilterState>({
   key: 'owner-filter',
-  default: {
-    value: [],
-    isActive: false,
-    showEmpty: false,
-  },
+  default: defaultState,
 });
 
 export const OwnerFilterSelector = selector({

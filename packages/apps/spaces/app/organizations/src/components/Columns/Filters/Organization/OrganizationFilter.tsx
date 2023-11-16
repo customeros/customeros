@@ -84,7 +84,9 @@ export const OrganizationFilter = ({
           draft.showEmpty = isChecked;
         });
 
-        toggle.setIsActive(isChecked);
+        if (!next.value.trim()) {
+          toggle.setIsActive(isChecked);
+        }
 
         return next;
       });

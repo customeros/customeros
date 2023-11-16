@@ -18,7 +18,7 @@ import { EmptyState } from './src/components/EmptyState/EmptyState';
 export default function OrganizationsPage() {
   const isRestoring = useIsRestoring();
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'LAST_TOUCHPOINT', desc: false },
+    { id: 'LAST_TOUCHPOINT', desc: true },
   ]);
 
   const {
