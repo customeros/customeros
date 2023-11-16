@@ -359,6 +359,7 @@ type Contract struct {
 	Name             string               `json:"name"`
 	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
 	Status           ContractStatus       `json:"status"`
+	ServiceLineItems []*ServiceLineItem   `json:"serviceLineItems,omitempty"`
 	Owner            *User                `json:"owner,omitempty"`
 	CreatedBy        *User                `json:"createdBy,omitempty"`
 	Source           DataSource           `json:"source"`

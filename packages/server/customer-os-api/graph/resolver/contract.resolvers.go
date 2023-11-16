@@ -18,6 +18,11 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
+// ServiceLineItems is the resolver for the serviceLineItems field.
+func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
+	panic(fmt.Errorf("not implemented: ServiceLineItems - serviceLineItems"))
+}
+
 // Owner is the resolver for the owner field.
 func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: Owner - owner"))

@@ -204,6 +204,7 @@ type ComplexityRoot struct {
 		Name             func(childComplexity int) int
 		Owner            func(childComplexity int) int
 		RenewalCycle     func(childComplexity int) int
+		ServiceLineItems func(childComplexity int) int
 		ServiceStartedAt func(childComplexity int) int
 		SignedAt         func(childComplexity int) int
 		Source           func(childComplexity int) int
@@ -1002,6 +1003,7 @@ type ContactResolver interface {
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error)
 }
 type ContractResolver interface {
+	ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error)
 	Owner(ctx context.Context, obj *model.Contract) (*model.User, error)
 	CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error)
 
@@ -2052,6 +2054,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.RenewalCycle(childComplexity), true
+
+	case "Contract.serviceLineItems":
+		if e.complexity.Contract.ServiceLineItems == nil {
+			break
+		}
+
+		return e.complexity.Contract.ServiceLineItems(childComplexity), true
 
 	case "Contract.serviceStartedAt":
 		if e.complexity.Contract.ServiceStartedAt == nil {
@@ -7746,6 +7755,7 @@ type Contract implements Node {
     name:               String!
     renewalCycle:       ContractRenewalCycle!
     status:             ContractStatus!
+    serviceLineItems: [ServiceLineItem!] @goField(forceResolver: true)
     owner:              User @goField(forceResolver: true)
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!
@@ -18133,6 +18143,73 @@ func (ec *executionContext) fieldContext_Contract_status(ctx context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ContractStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_serviceLineItems(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_serviceLineItems(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contract().ServiceLineItems(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ServiceLineItem)
+	fc.Result = res
+	return ec.marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ServiceLineItem_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_ServiceLineItem_name(ctx, field)
+			case "billed":
+				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
+			case "price":
+				return ec.fieldContext_ServiceLineItem_price(ctx, field)
+			case "quantity":
+				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_ServiceLineItem_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
 	}
 	return fc, nil
@@ -31501,6 +31578,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
+			case "serviceLineItems":
+				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
 			case "createdBy":
@@ -45454,6 +45533,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
+			case "serviceLineItems":
+				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
 			case "createdBy":
@@ -49969,6 +50050,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
+			case "serviceLineItems":
+				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
 			case "createdBy":
@@ -64369,6 +64452,39 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "serviceLineItems":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contract_serviceLineItems(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "owner":
 			field := field
 
@@ -76897,6 +77013,53 @@ func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 		return graphql.Null
 	}
 	return ec._Result(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ServiceLineItem) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx context.Context, v interface{}) ([]*model.SortBy, error) {
