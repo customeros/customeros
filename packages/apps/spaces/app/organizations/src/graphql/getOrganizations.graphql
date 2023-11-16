@@ -80,6 +80,7 @@ query getOrganizations(
       }
       lastTouchPointTimelineEventId
       lastTouchPointAt
+      lastTouchPointType
       lastTouchPointTimelineEvent {
         __typename
         ... on PageView {

@@ -44,7 +44,7 @@ export const useOrganizationsPageData = ({
     organization,
     relationship,
     timeToRenewal,
-    // lastTouchpoint,
+    lastTouchpoint,
     renewalLikelihood,
   } = columnFilters;
 
@@ -87,23 +87,28 @@ export const useOrganizationsPageData = ({
         });
       }
 
-      if (organization?.isActive && organization?.value) {
+      if (
+        organization?.isActive &&
+        (organization?.value || organization?.showEmpty)
+      ) {
         draft.AND.push({
           filter: {
-            property: 'ORGANIZATION',
+            property: 'NAME',
             value: organization?.value,
             operation: ComparisonOperator.Contains,
             caseSensitive: false,
+            includeEmpty: organization?.showEmpty,
           },
         });
       }
 
-      if (website?.isActive && website?.value) {
+      if (website?.isActive && (website?.value || website?.showEmpty)) {
         draft.AND.push({
           filter: {
             property: 'WEBSITE',
             value: website?.value,
             operation: ComparisonOperator.Contains,
+            includeEmpty: website?.showEmpty,
           },
         });
       }
@@ -154,8 +159,29 @@ export const useOrganizationsPageData = ({
             property: 'OWNER_ID',
             value: owner.value,
             operation: ComparisonOperator.In,
+            includeEmpty: owner.showEmpty,
           },
         });
+      }
+      if (lastTouchpoint.isActive) {
+        if (lastTouchpoint.value.length) {
+          draft.AND.push({
+            filter: {
+              property: 'LAST_TOUCHPOINT_TYPE',
+              value: lastTouchpoint.value,
+              operation: ComparisonOperator.In,
+            },
+          });
+        }
+        if (lastTouchpoint.after) {
+          draft.AND.push({
+            filter: {
+              property: 'LAST_TOUCHPOINT_AT',
+              value: lastTouchpoint.after,
+              operation: ComparisonOperator.Gte,
+            },
+          });
+        }
       }
     });
   }, [
@@ -163,8 +189,10 @@ export const useOrganizationsPageData = ({
     globalCache?.global_Cache?.user.id,
     organization?.isActive,
     organization?.value,
+    organization?.showEmpty,
     website?.isActive,
     website.value,
+    website?.showEmpty,
     relationship.isActive,
     relationship?.value.length,
     renewalLikelihood?.isActive,
@@ -176,6 +204,10 @@ export const useOrganizationsPageData = ({
     forecast?.value[1],
     owner?.isActive,
     owner?.value.length,
+    owner?.showEmpty,
+    lastTouchpoint?.isActive,
+    lastTouchpoint?.value,
+    lastTouchpoint?.after,
   ]);
 
   const sortBy: SortBy | undefined = useMemo(() => {
@@ -219,8 +251,10 @@ export const useOrganizationsPageData = ({
       data,
       organization?.isActive,
       organization?.value,
+      organization?.showEmpty,
       website?.isActive,
-      website.value,
+      website?.value,
+      website?.showEmpty,
       relationship.isActive,
       relationship?.value.length,
       renewalLikelihood?.isActive,
@@ -232,6 +266,10 @@ export const useOrganizationsPageData = ({
       forecast?.value[1],
       owner?.isActive,
       owner?.value.length,
+      owner?.showEmpty,
+      lastTouchpoint?.isActive,
+      lastTouchpoint?.value.length,
+      lastTouchpoint?.after,
     ],
   );
 

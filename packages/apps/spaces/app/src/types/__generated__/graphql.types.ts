@@ -378,6 +378,50 @@ export type ContactsPage = Pages & {
   totalPages: Scalars['Int'];
 };
 
+export type Contract = Node & {
+  __typename?: 'Contract';
+  appSource: Scalars['String'];
+  contractUrl?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  endedAt?: Maybe<Scalars['Time']>;
+  externalLinks: Array<ExternalSystem>;
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  owner?: Maybe<User>;
+  renewalCycle: ContractRenewalCycle;
+  serviceStartedAt?: Maybe<Scalars['Time']>;
+  signedAt?: Maybe<Scalars['Time']>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  status: ContractStatus;
+  updatedAt: Scalars['Time'];
+};
+
+export type ContractInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  contractUrl?: InputMaybe<Scalars['String']>;
+  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  name?: InputMaybe<Scalars['String']>;
+  organizationId: Scalars['String'];
+  renewalCycle?: InputMaybe<ContractRenewalCycle>;
+  serviceStartedAt?: InputMaybe<Scalars['Time']>;
+  signedAt?: InputMaybe<Scalars['Time']>;
+};
+
+export enum ContractRenewalCycle {
+  AnnualRenewal = 'ANNUAL_RENEWAL',
+  MonthlyRenewal = 'MONTHLY_RENEWAL',
+  None = 'NONE',
+}
+
+export enum ContractStatus {
+  Draft = 'DRAFT',
+  Ended = 'ENDED',
+  Live = 'LIVE',
+  Undefined = 'UNDEFINED',
+}
+
 export type Country = {
   __typename?: 'Country';
   codeA2: Scalars['String'];
@@ -772,6 +816,7 @@ export type Filter = {
 
 export type FilterItem = {
   caseSensitive?: InputMaybe<Scalars['Boolean']>;
+  includeEmpty?: InputMaybe<Scalars['Boolean']>;
   operation?: ComparisonOperator;
   property: Scalars['String'];
   value: Scalars['Any'];
@@ -1035,6 +1080,22 @@ export type JobRoleUpdateInput = {
   startedAt?: InputMaybe<Scalars['Time']>;
 };
 
+export enum LastTouchpointType {
+  Action = 'ACTION',
+  ActionCreated = 'ACTION_CREATED',
+  Analysis = 'ANALYSIS',
+  InteractionEventChat = 'INTERACTION_EVENT_CHAT',
+  InteractionEventEmailSent = 'INTERACTION_EVENT_EMAIL_SENT',
+  InteractionEventPhoneCall = 'INTERACTION_EVENT_PHONE_CALL',
+  InteractionSession = 'INTERACTION_SESSION',
+  IssueCreated = 'ISSUE_CREATED',
+  IssueUpdated = 'ISSUE_UPDATED',
+  LogEntry = 'LOG_ENTRY',
+  Meeting = 'MEETING',
+  Note = 'NOTE',
+  PageView = 'PAGE_VIEW',
+}
+
 export type LinkOrganizationsInput = {
   organizationId: Scalars['ID'];
   subOrganizationId: Scalars['ID'];
@@ -1253,6 +1314,7 @@ export type Mutation = {
   contact_RemoveTagById: Contact;
   contact_RestoreFromArchive: Result;
   contact_Update: Contact;
+  contract_Create: Contract;
   customFieldDeleteFromContactById: Result;
   customFieldDeleteFromContactByName: Result;
   customFieldDeleteFromFieldSetById: Result;
@@ -1436,6 +1498,10 @@ export type MutationContact_RestoreFromArchiveArgs = {
 
 export type MutationContact_UpdateArgs = {
   input: ContactUpdateInput;
+};
+
+export type MutationContract_CreateArgs = {
+  input: ContractInput;
 };
 
 export type MutationCustomFieldDeleteFromContactByIdArgs = {
@@ -2024,6 +2090,7 @@ export type Organization = Node & {
   accountDetails?: Maybe<OrgAccountDetails>;
   appSource: Scalars['String'];
   contacts: ContactsPage;
+  contracts?: Maybe<Array<Contract>>;
   createdAt: Scalars['Time'];
   customFields: Array<CustomField>;
   customerOsId: Scalars['String'];
@@ -2046,6 +2113,7 @@ export type Organization = Node & {
   lastTouchPointAt?: Maybe<Scalars['Time']>;
   lastTouchPointTimelineEvent?: Maybe<TimelineEvent>;
   lastTouchPointTimelineEventId?: Maybe<Scalars['ID']>;
+  lastTouchPointType?: Maybe<LastTouchpointType>;
   locations: Array<Location>;
   market?: Maybe<Market>;
   name: Scalars['String'];
@@ -2412,6 +2480,7 @@ export type Query = {
    * - CREATED_AT
    */
   contacts: ContactsPage;
+  contract: Contract;
   /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
   dashboardView_Contacts?: Maybe<ContactsPage>;
   /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
@@ -2467,6 +2536,10 @@ export type QueryContactsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
+};
+
+export type QueryContractArgs = {
+  id: Scalars['ID'];
 };
 
 export type QueryDashboardView_ContactsArgs = {

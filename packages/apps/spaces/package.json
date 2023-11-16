@@ -46,6 +46,7 @@
     "html-to-text": "^9.0.5",
     "immer": "^10.0.2",
     "jsonwebtoken": "^9.0.2",
+    "kmenu": "^1.4.32",
     "linkify-html": "^4.1.0",
     "linkifyjs": "^4.1.0",
     "lodash": "^4.17.21",

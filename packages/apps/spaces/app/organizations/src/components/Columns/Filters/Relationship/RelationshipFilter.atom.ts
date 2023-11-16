@@ -5,12 +5,14 @@ interface RelationshipFilterState {
   isActive: boolean;
 }
 
+export const defaultState: RelationshipFilterState = {
+  value: [true, false],
+  isActive: false,
+};
+
 export const RelationshipFilterAtom = atom<RelationshipFilterState>({
   key: 'relationship-filter',
-  default: {
-    value: [true, false],
-    isActive: false,
-  },
+  default: defaultState,
 });
 
 export const RelationshipFilterSelector = selector({

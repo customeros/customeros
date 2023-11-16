@@ -3,6 +3,7 @@ import { atom, selector, useRecoilState } from 'recoil';
 interface WebsiteFilterState {
   value: string;
   isActive: boolean;
+  showEmpty: boolean;
 }
 
 export const WebsiteFilterAtom = atom<WebsiteFilterState>({
@@ -10,6 +11,7 @@ export const WebsiteFilterAtom = atom<WebsiteFilterState>({
   default: {
     value: '',
     isActive: false,
+    showEmpty: false,
   },
 });
 
