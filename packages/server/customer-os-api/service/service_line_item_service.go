@@ -98,7 +98,6 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	case entity.BilledTypeOnce:
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_ONCE_BILLED
 	default:
-		//TODO add to service_line_item proto billed type NONE_BILLED and use it as default here
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
 	}
 
@@ -158,7 +157,7 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Billed:        billedType,
 		Price:         utils.GetFloatPropOrZero(props, "price"),
-		Quantity:      int(utils.GetInt64PropOrZero(props, "quantity")),
+		Quantity:      int64(int(utils.GetInt64PropOrZero(props, "quantity"))),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

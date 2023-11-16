@@ -7,15 +7,15 @@ package resolver
 import (
 	"context"
 	"fmt"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/opentracing/opentracing-go/log"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
 // ServiceLineItemCreate is the resolver for the serviceLineItem_Create field.

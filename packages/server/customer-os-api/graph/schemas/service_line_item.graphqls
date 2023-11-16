@@ -12,7 +12,7 @@ type ServiceLineItem implements Node {
     name:               String!
     billed:             BilledType!
     price:              Float!
-    quantity:           Int!
+    quantity:           Int64!
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!
     sourceOfTruth:      DataSource!
@@ -25,7 +25,7 @@ input ServiceLineItemInput {
     contractId:         String!
     billed:             BilledType
     price:              Float
-    quantity:           Int
+    quantity:           Int64
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
 }
