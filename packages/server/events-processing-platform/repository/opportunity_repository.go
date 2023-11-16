@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
@@ -20,6 +21,7 @@ type OpportunityRepository interface {
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
 	UpdateNextCycleDate(ctx context.Context, tenant, opportunityId string, evt event.OpportunityUpdateNextCycleDateEvent) error
 	GetOpenRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
+	Update(ctx context.Context, tenant, opportunityId string, evt event.OpportunityUpdateEvent) error
 }
 
 type opportunityRepository struct {
@@ -204,6 +206,39 @@ func (r *opportunityRepository) UpdateNextCycleDate(ctx context.Context, tenant,
 		"internalStage": string(model.OpportunityInternalStageStringOpen),
 		"renewedAt":     utils.TimePtrFirstNonNilNillableAsAny(evt.RenewedAt),
 	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *opportunityRepository) Update(ctx context.Context, tenant, opportunityId string, evt event.OpportunityUpdateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.Update")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("opportunityId", opportunityId), log.Object("event", evt))
+
+	params := map[string]any{
+		"tenant":        tenant,
+		"opportunityId": opportunityId,
+		"updatedAt":     evt.UpdatedAt,
+		"sourceOfTruth": helper.GetSourceOfTruth(evt.Source),
+		"overwrite":     helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
+	}
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s SET `, tenant)
+	if evt.UpdateName() {
+		cypher += ` op.name = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR op.name = '' THEN $name ELSE op.name END, `
+		params["name"] = evt.Name
+	}
+	if evt.UpdateAmount() {
+		cypher += ` op.amount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $amount ELSE op.amount END, `
+		params["amount"] = evt.Amount
+	}
+	if evt.UpdateMaxAmount() {
+		cypher += ` op.maxAmount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $maxAmount ELSE op.maxAmount END, `
+		params["maxAmount"] = evt.MaxAmount
+	}
+	cypher += ` op.updatedAt = $updatedAt,
+				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)

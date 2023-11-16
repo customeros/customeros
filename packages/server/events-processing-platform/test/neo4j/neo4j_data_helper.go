@@ -266,19 +266,41 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					op.sourceOfTruth=$sourceOfTruth,
 					op.internalStage=$internalStage,
 					op.internalType=$internalType,
-					op.renewedAt=$renewedAt
+					op.renewedAt=$renewedAt,
+					op.amount=$amount,
+					op.maxAmount=$maxAmount,
+					op.renewalLikelihood=$renewalLikelihood
 				`, tenant)
 
+	if opportunity.InternalType == "RENEWAL" {
+		query += `, op:RenewalOpportunity`
+	}
+
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":            opportunityId,
-		"name":          opportunity.Name,
-		"source":        opportunity.Source,
-		"sourceOfTruth": opportunity.SourceOfTruth,
-		"internalStage": opportunity.InternalStage,
-		"internalType":  opportunity.InternalType,
-		"renewedAt":     utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+		"id":                opportunityId,
+		"name":              opportunity.Name,
+		"source":            opportunity.Source,
+		"sourceOfTruth":     opportunity.SourceOfTruth,
+		"internalStage":     opportunity.InternalStage,
+		"internalType":      opportunity.InternalType,
+		"amount":            opportunity.Amount,
+		"maxAmount":         opportunity.MaxAmount,
+		"renewedAt":         utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+		"renewalLikelihood": opportunity.RenewalDetails.RenewalLikelihood,
 	})
 	return opportunityId
+}
+
+func LinkContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, contractId, opportunityId string, renewal bool) {
+	query := `MATCH (c:Contract {id:$contractId}), (o:Opportunity {id:$opportunityId})
+				MERGE (c)-[:HAS_OPPORTUNITY]->(o) `
+	if renewal {
+		query += `MERGE (c)-[:ACTIVE_RENEWAL]->(o)`
+	}
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"contractId":    contractId,
+		"opportunityId": opportunityId,
+	})
 }
 
 func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {

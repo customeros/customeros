@@ -16,3 +16,5 @@ type ServiceLineItemEntity struct {
 	Price         float64
 	Quantity      int64
 }
+
+type ServiceLineItemEntities []ServiceLineItemEntity

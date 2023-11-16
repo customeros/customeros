@@ -18,6 +18,7 @@ type OpportunityEntity struct {
 	AppSource         string
 	Name              string
 	Amount            float64
+	MaxAmount         float64
 	InternalType      string
 	ExternalType      string
 	InternalStage     string

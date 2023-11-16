@@ -6,6 +6,12 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 )
 
+const (
+	FieldMaskName      = "name"
+	FieldMaskAmount    = "amount"
+	FieldMaskMaxAmount = "maxAmount"
+)
+
 type RenewalDetails struct {
 	RenewedAt         *time.Time `json:"renewedAt,omitempty"`
 	RenewalLikelihood string     `json:"renewalLikelihood,omitempty"`
@@ -19,6 +25,7 @@ type Opportunity struct {
 	Tenant            string                         `json:"tenant"`
 	Name              string                         `json:"name"`
 	Amount            float64                        `json:"amount"`
+	MaxAmount         float64                        `json:"maxAmount"`
 	InternalType      OpportunityInternalTypeString  `json:"internalType"`
 	ExternalType      string                         `json:"externalType"`
 	InternalStage     OpportunityInternalStageString `json:"internalStage"`
@@ -39,6 +46,7 @@ type Opportunity struct {
 type OpportunityDataFields struct {
 	Name              string
 	Amount            float64
+	MaxAmount         float64
 	InternalType      OpportunityInternalType
 	ExternalType      string
 	InternalStage     OpportunityInternalStage

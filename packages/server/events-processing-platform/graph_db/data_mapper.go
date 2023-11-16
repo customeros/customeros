@@ -188,6 +188,7 @@ func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
 		Id:                utils.GetStringPropOrEmpty(props, "id"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
 		Amount:            utils.GetFloatPropOrZero(props, "amount"),
+		MaxAmount:         utils.GetFloatPropOrZero(props, "maxAmount"),
 		InternalType:      utils.GetStringPropOrEmpty(props, "internalType"),
 		ExternalType:      utils.GetStringPropOrEmpty(props, "externalType"),
 		InternalStage:     utils.GetStringPropOrEmpty(props, "internalStage"),
