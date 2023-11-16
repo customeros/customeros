@@ -28,7 +28,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
   ...rest
 }) => {
   const linkifiedContent = sanitizeHtml(
-    linkifyHtml(htmlContent, {
+    linkifyHtml(htmlContent.replace(/&zwnj;/g, ''), {
       defaultProtocol: 'https',
       rel: 'noopener noreferrer',
     }),
