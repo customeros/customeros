@@ -5,7 +5,7 @@ import (
 )
 
 type ContractEntity struct {
-	ID                   string
+	Id                   string
 	Name                 string
 	CreatedAt            time.Time
 	UpdatedAt            time.Time

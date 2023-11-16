@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -33,10 +34,10 @@ func (r *serviceLineItemRepository) GetById(ctx context.Context, tenant, service
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := `MATCH (sli:ServiceLineItem {id:$serviceLineItemId}) 
-		RETURN sli`
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId}) 
+		WHERE sli:ServiceLineItem_%s
+		RETURN sli`, tenant)
 	params := map[string]any{
-		"tenant":            tenant,
 		"serviceLineItemId": serviceLineItemId,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
@@ -58,7 +59,7 @@ func (r *serviceLineItemRepository) GetForContracts(ctx context.Context, tenant 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$serviceLineItemId})
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE c.id IN $contractIds
 			RETURN sli, c.id ORDER BY sli.createdAt DESC`
 	params := map[string]any{

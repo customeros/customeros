@@ -1,0 +1,15 @@
+mutation CreateContract($orgId: ID!) {
+contract_Create(
+    input: {
+        organizationId: $orgId
+        name: "Contract 1"
+        renewalCycle: MONTHLY_RENEWAL
+        contractUrl: "https://contract.com"
+        serviceStartedAt: "2019-01-01T00:00:00Z"
+        signedAt: "2019-02-01T00:00:00Z"
+    }
+  ) {
+    id
+    name
+  }
+}

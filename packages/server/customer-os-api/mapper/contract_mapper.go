@@ -12,7 +12,7 @@ func MapEntityToContract(entity *entity.ContractEntity) *model.Contract {
 		return nil
 	}
 	return &model.Contract{
-		ID:               entity.ID,
+		ID:               entity.Id,
 		Name:             entity.Name,
 		CreatedAt:        entity.CreatedAt,
 		UpdatedAt:        entity.UpdatedAt,
@@ -44,6 +44,26 @@ func MapContractInputToEntity(input model.ContractInput) *entity.ContractEntity 
 	} else {
 		contractRenewalCycle := entity.ContractRenewalCycleNone
 		contractEntity.ContractRenewalCycle = contractRenewalCycle
+	}
+	return &contractEntity
+}
+
+func MapContractUpdateInputToEntity(input model.ContractUpdateInput) *entity.ContractEntity {
+	contractEntity := entity.ContractEntity{
+		Id:               input.ContractID,
+		Name:             utils.IfNotNilString(input.Name),
+		ContractUrl:      utils.IfNotNilString(input.ContractURL),
+		ServiceStartedAt: input.ServiceStartedAt,
+		SignedAt:         input.SignedAt,
+		EndedAt:          input.EndedAt,
+		Source:           entity.DataSourceOpenline,
+		SourceOfTruth:    entity.DataSourceOpenline,
+		AppSource:        utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+	}
+	if input.RenewalCycle != nil {
+		contractEntity.ContractRenewalCycle = MapContractRenewalCycleFromModel(*input.RenewalCycle)
+	} else {
+		contractEntity.ContractRenewalCycle = entity.ContractRenewalCycleNone
 	}
 	return &contractEntity
 }

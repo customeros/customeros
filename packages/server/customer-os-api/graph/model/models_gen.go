@@ -373,14 +373,25 @@ func (Contract) IsNode()            {}
 func (this Contract) GetID() string { return this.ID }
 
 type ContractInput struct {
-	Name              *string                       `json:"name,omitempty"`
 	OrganizationID    string                        `json:"organizationId"`
+	Name              *string                       `json:"name,omitempty"`
 	RenewalCycle      *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ContractURL       *string                       `json:"contractUrl,omitempty"`
 	ServiceStartedAt  *time.Time                    `json:"serviceStartedAt,omitempty"`
 	SignedAt          *time.Time                    `json:"signedAt,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+}
+
+type ContractUpdateInput struct {
+	ContractID       string                `json:"contractId"`
+	Name             *string               `json:"name,omitempty"`
+	ContractURL      *string               `json:"contractUrl,omitempty"`
+	RenewalCycle     *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	ServiceStartedAt *time.Time            `json:"serviceStartedAt,omitempty"`
+	SignedAt         *time.Time            `json:"signedAt,omitempty"`
+	EndedAt          *time.Time            `json:"endedAt,omitempty"`
+	AppSource        *string               `json:"appSource,omitempty"`
 }
 
 type Country struct {

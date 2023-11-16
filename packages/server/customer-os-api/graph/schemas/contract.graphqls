@@ -2,7 +2,8 @@ extend type Query {
     contract(id: ID!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 extend type Mutation {
-    contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, OWNER]) @hasTenant
+    contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contract_Update(input: ContractUpdateInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Contract implements Node {
@@ -26,14 +27,25 @@ type Contract implements Node {
 }
 
 input ContractInput {
+    organizationId:     ID!
     name:               String
-    organizationId:     String!
     renewalCycle:       ContractRenewalCycle
     appSource:          String
     contractUrl:        String
     serviceStartedAt:   Time
     signedAt:           Time
     externalReference:  ExternalSystemReferenceInput
+}
+
+input ContractUpdateInput {
+    contractId:         ID!
+    name:               String
+    contractUrl:        String
+    renewalCycle:       ContractRenewalCycle
+    serviceStartedAt:   Time
+    signedAt:           Time
+    endedAt:            Time
+    appSource:          String
 }
 
 enum ContractRenewalCycle {

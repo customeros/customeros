@@ -65,6 +65,29 @@ func (r *mutationResolver) ContractCreate(ctx context.Context, input model.Contr
 	return mapper.MapEntityToContract(createdContractEntity), nil
 }
 
+// ContractUpdate is the resolver for the contract_Update field.
+func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.ContractUpdateInput) (*model.Contract, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contractId", input.ContractID))
+
+	err := r.Services.ContractService.Update(ctx, mapper.MapContractUpdateInputToEntity(input))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update contract %s", input.ContractID)
+		return &model.Contract{ID: input.ContractID}, nil
+	}
+	contractEntity, err := r.Services.ContractService.GetById(ctx, input.ContractID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching contract details. Contract id: %s", input.ContractID)
+		return &model.Contract{ID: input.ContractID}, nil
+	}
+
+	return mapper.MapEntityToContract(contractEntity), nil
+}
+
 // Contract is the resolver for the contract field.
 func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contract, error) {
 	panic(fmt.Errorf("not implemented: Contract - contract"))
