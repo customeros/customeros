@@ -5,7 +5,7 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $searchTerm: Any!, 
      AND: [
          {
              filter: {
-                 property: "NAME",
+                 property: "WEBSITE",
                  operation: EQ,
                  value: $searchTerm,
                  includeEmpty: $includeEmpty

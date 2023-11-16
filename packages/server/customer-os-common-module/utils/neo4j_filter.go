@@ -15,6 +15,7 @@ type LogicalOperator int
 
 const (
 	C_NONE ComparisonOperator = iota
+	IS_NULL
 	EQUALS
 	CONTAINS
 	STARTS_WITH
@@ -28,6 +29,8 @@ func (c ComparisonOperator) String() string {
 	switch c {
 	case C_NONE:
 		return "NONE"
+	case IS_NULL:
+		return "IS_NULL"
 	case EQUALS:
 		return "EQUALS"
 	case CONTAINS:
@@ -51,6 +54,8 @@ func (c ComparisonOperator) CypherString() string {
 	switch c {
 	case C_NONE:
 		return ""
+	case IS_NULL:
+		return "is null"
 	case EQUALS:
 		return "="
 	case CONTAINS:
@@ -193,13 +198,16 @@ func (f *CypherFilter) BuildCypherFilterFragmentWithParamName(nodeAlias string, 
 		if toLower {
 			cypherStr.WriteString("toLower(")
 		}
-		f.paramCount++
-		paramSuffix := strconv.Itoa(f.paramCount)
-		cypherStr.WriteString("$" + customParamPrefix + paramSuffix)
-		if params == nil {
-			params = map[string]any{customParamPrefix + paramSuffix: f.Details.Value}
-		} else {
-			params[customParamPrefix+paramSuffix] = f.Details.Value
+
+		if f.Details.ComparisonOperator != IS_NULL {
+			f.paramCount++
+			paramSuffix := strconv.Itoa(f.paramCount)
+			cypherStr.WriteString("$" + customParamPrefix + paramSuffix)
+			if params == nil {
+				params = map[string]any{customParamPrefix + paramSuffix: f.Details.Value}
+			} else {
+				params[customParamPrefix+paramSuffix] = f.Details.Value
+			}
 		}
 
 		if toLower {
