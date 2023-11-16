@@ -19,26 +19,37 @@ export const EmptyState = () => {
     createOrganization.mutate({ input: { name: '' } });
   };
 
-  const options =
-    preset === 'portfolio'
-      ? {
-          title: "Let's get started",
-          description:
-            'Start seeing your customer conversations all in one place by adding an organization',
-          buttonLabel: 'Add Organization',
-          onClick: handleCreateOrganization,
-        }
-      : {
-          title: 'No organizations assigned to you yet',
-          description:
-            'Currently, you have not been assigned to any organizations.\n' +
-            '\n' +
-            'Head to your list of organizations and assign yourself as an owner to one of them.',
-          buttonLabel: 'Go to Organizations',
-          onClick: () => {
-            router.push(`/organizations`);
-          },
-        };
+  const options = !preset
+    ? {
+        title: "Let's get started",
+        description:
+          'Start seeing your customer conversations all in one place by adding an organization',
+        buttonLabel: 'Add Organization',
+        onClick: handleCreateOrganization,
+      }
+    : preset === 'portfolio'
+    ? {
+        title: 'No organizations assigned to you yet',
+        description:
+          'Currently, you have not been assigned to any organizations.\n' +
+          '\n' +
+          'Head to your list of organizations and assign yourself as an owner to one of them.',
+        buttonLabel: 'Go to Organizations',
+        onClick: () => {
+          router.push(`/organizations`);
+        },
+      }
+    : {
+        title: 'No organizations created yet',
+        description:
+          'Currently, there are no organizations created yet.\n' +
+          '\n' +
+          'Head to your list of organizations and create one.',
+        buttonLabel: 'Go to Organizations',
+        onClick: () => {
+          router.push(`/organizations`);
+        },
+      };
 
   return (
     <Center
