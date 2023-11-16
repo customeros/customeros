@@ -16,7 +16,6 @@ import (
 )
 
 type DashboardRepository interface {
-	GetDashboardViewContactsData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 }
 
@@ -50,185 +49,19 @@ func createCypherFilter(propertyName string, searchTerm any, comparator utils.Co
 	return &filter
 }
 
-func (r *dashboardRepository) GetDashboardViewContactsData(ctx context.Context, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactsData")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
+func createStringCypherFilterWithValueOrEmpty(filter *model.FilterItem, propertyName string) *utils.CypherFilter {
+	if filter.IncludeEmpty != nil && *filter.IncludeEmpty {
+		orFilter := utils.CypherFilter{}
+		orFilter.LogicalOperator = utils.OR
+		orFilter.Details = new(utils.CypherFilterItem)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
-
-	contactFilterCypher, contactFilterParams := "", make(map[string]interface{})
-	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
-	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
-
-	//CONTACT, EMAIL, COUNTRY, REGION, LOCALITY
-	//region organization filters
-	if where != nil {
-
-		contactFilter := new(utils.CypherFilter)
-		contactFilter.Negate = false
-		contactFilter.LogicalOperator = utils.OR
-		contactFilter.Filters = make([]*utils.CypherFilter, 0)
-
-		emailFilter := new(utils.CypherFilter)
-		emailFilter.Negate = false
-		emailFilter.LogicalOperator = utils.OR
-		emailFilter.Filters = make([]*utils.CypherFilter, 0)
-
-		locationFilter := new(utils.CypherFilter)
-		locationFilter.Negate = false
-		locationFilter.LogicalOperator = utils.OR
-		locationFilter.Filters = make([]*utils.CypherFilter, 0)
-
-		for _, filter := range where.And {
-			if filter.Filter.Property == "CONTACT" {
-				contactFilter.Filters = append(contactFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
-				contactFilter.Filters = append(contactFilter.Filters, createStringCypherFilter("firstName", *filter.Filter.Value.Str, utils.CONTAINS))
-				contactFilter.Filters = append(contactFilter.Filters, createStringCypherFilter("lastName", *filter.Filter.Value.Str, utils.CONTAINS))
-			} else if filter.Filter.Property == "EMAIL" {
-				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
-				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
-			} else if filter.Filter.Property == "COUNTRY" {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
-			} else if filter.Filter.Property == "REGION" {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
-			} else if filter.Filter.Property == "LOCALITY" {
-				locationFilter.Filters = append(locationFilter.Filters, createStringCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
-			}
-		}
-
-		if len(contactFilter.Filters) > 0 {
-			contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
-		}
-		if len(emailFilter.Filters) > 0 {
-			emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
-		}
-		if len(locationFilter.Filters) > 0 {
-			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
-		}
+		orFilter.Filters = append(orFilter.Filters, createStringCypherFilter(propertyName, *filter.Value.Str, utils.CONTAINS))
+		orFilter.Filters = append(orFilter.Filters, createCypherFilter(propertyName, "", utils.EQUALS, false))
+		orFilter.Filters = append(orFilter.Filters, createCypherFilter(propertyName, nil, utils.IS_NULL, false))
+		return &orFilter
+	} else {
+		return createStringCypherFilter(propertyName, *filter.Value.Str, utils.CONTAINS)
 	}
-	//endregion
-
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		params := map[string]any{
-			"tenant": tenant,
-			"skip":   skip,
-			"limit":  limit,
-		}
-		utils.MergeMapToMap(contactFilterParams, params)
-		utils.MergeMapToMap(emailFilterParams, params)
-		utils.MergeMapToMap(locationFilterParams, params)
-
-		//region count query
-		countQuery := fmt.Sprintf(`MATCH (c:Contact_%s)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH c`, tenant)
-		if emailFilterCypher != "" {
-			countQuery += fmt.Sprintf(` MATCH (c)-[:HAS]->(e:Email_%s)  WITH c`, tenant)
-		}
-		if locationFilterCypher != "" {
-			countQuery += fmt.Sprintf(` MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s)  WITH c`, tenant)
-		}
-		if contactFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
-			countQuery += " WHERE "
-		}
-
-		countQueryParts := []string{}
-		if contactFilterCypher != "" {
-			countQueryParts = append(countQueryParts, contactFilterCypher)
-		}
-		if emailFilterCypher != "" {
-			countQueryParts = append(countQueryParts, emailFilterCypher)
-		}
-		if locationFilterCypher != "" {
-			countQueryParts = append(countQueryParts, locationFilterCypher)
-		}
-
-		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(c))`)
-
-		countQueryResult, err := tx.Run(ctx, countQuery, params)
-		if err != nil {
-			return nil, err
-		}
-
-		countRecord, err := countQueryResult.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		dbNodesWithTotalCount.Count = countRecord.Values[0].(int64)
-		//endregion
-
-		//region query to fetch data
-		query := fmt.Sprintf(`MATCH (c:Contact_%s)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH *`, tenant)
-		query += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS]->(e:Email_%s) WITH *`, tenant)
-		query += fmt.Sprintf(` OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
-		query += fmt.Sprintf(` OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole_%s)-[:ROLE_IN]->(o:Organization_%s) WITH *`, tenant, tenant)
-
-		if contactFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
-			query += " WHERE "
-		}
-
-		queryWhereParts := []string{}
-		if contactFilterCypher != "" {
-			queryWhereParts = append(queryWhereParts, contactFilterCypher)
-		}
-		if emailFilterCypher != "" {
-			queryWhereParts = append(queryWhereParts, emailFilterCypher)
-		}
-		if locationFilterCypher != "" {
-			queryWhereParts = append(queryWhereParts, locationFilterCypher)
-		}
-
-		//endregion
-		query += strings.Join(queryWhereParts, " AND ")
-
-		// sort region
-		query += " WITH c, e, o, l "
-		cypherSort := new(utils.CypherSort)
-		if sort != nil {
-			if sort.By == "CONTACT" {
-				cypherSort.NewSortRule("FIRST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
-				cypherSort.NewSortRule("LAST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
-				query += string(cypherSort.SortingCypherFragment("c"))
-			} else if sort.By == "EMAIL" {
-				cypherSort.NewSortRule("EMAIL", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.EmailEntity{}))
-				cypherSort.NewSortRule("RAW_EMAIL", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.EmailEntity{}))
-				query += string(cypherSort.SortingCypherFragment("e"))
-			} else if sort.By == "ORGANIZATION" {
-				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
-				query += string(cypherSort.SortingCypherFragment("o"))
-			} else if sort.By == "LOCATION" {
-				cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
-				cypherSort.NewSortRule("REGION", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
-				cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
-				query += string(cypherSort.SortingCypherFragment("l"))
-			}
-		} else {
-			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.ContactEntity{}))
-			query += string(cypherSort.SortingCypherFragment("c"))
-		}
-		// end sort region
-		query += fmt.Sprintf(` RETURN distinct(c) `)
-		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
-
-		queryResult, err := tx.Run(ctx, query, params)
-		if err != nil {
-			return nil, err
-		} else {
-			return queryResult.Collect(ctx)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
-	}
-	return dbNodesWithTotalCount, nil
 }
 
 func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
@@ -283,9 +116,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 				organizationFilter.Filters = append(organizationFilter.Filters, &orFilter)
 			} else if filter.Filter.Property == "NAME" {
-				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "name"))
 			} else if filter.Filter.Property == "WEBSITE" {
-				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
+				organizationFilter.Filters = append(organizationFilter.Filters, createStringCypherFilterWithValueOrEmpty(filter.Filter, "website"))
 			} else if filter.Filter.Property == "EMAIL" {
 				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
 				emailFilter.Filters = append(emailFilter.Filters, createStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
@@ -312,7 +145,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
 			} else if filter.Filter.Property == "LAST_TOUCHPOINT_AT" && filter.Filter.Value.Time != nil {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == "LAST_TOUCHPOINT_TYPE" && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointType", *filter.Filter.Value.ArrayStr, utils.IN, false))
 			}

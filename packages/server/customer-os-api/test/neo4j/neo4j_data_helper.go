@@ -708,12 +708,6 @@ func TagOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organ
 	})
 }
 
-func CreateDefaultOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
-		Name: "Default org",
-	})
-}
-
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
 	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
 		Name: organizationName,

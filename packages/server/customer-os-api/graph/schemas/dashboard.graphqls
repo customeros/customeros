@@ -1,9 +1,5 @@
 extend type Query {
     """
-    sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION
-    """
-    dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
-    """
     sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
