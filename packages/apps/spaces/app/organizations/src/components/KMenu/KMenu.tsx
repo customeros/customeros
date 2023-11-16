@@ -154,7 +154,8 @@ export const KMenu = () => {
   const [mainCommands] = useCommands(main);
   const { data } = useTenantNameQuery(client);
 
-  if (data?.tenant !== 'openlineai') return null;
+  if (!data?.tenant || !['openlineai', 'openline'].includes(data?.tenant))
+    return null;
 
   return (
     <CommandWrapper>
