@@ -59,7 +59,7 @@ func (r *serviceLineItemRepository) GetForContracts(ctx context.Context, tenant 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_SERVICE]->(sli:ServiceLineItem)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE c.id IN $contractIds
 			RETURN sli, c.id ORDER BY sli.createdAt DESC`
 	params := map[string]any{
