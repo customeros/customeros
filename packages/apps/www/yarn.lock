@@ -161,16 +161,16 @@
   resolved "https://registry.yarnpkg.com/@astrojs/compiler/-/compiler-1.8.2.tgz#f305d5724c45a9932a8ef4e87b2e7227d15d1c2b"
   integrity sha512-o/ObKgtMzl8SlpIdzaxFnt7SATKPxu4oIP/1NL+HDJRzxfJcAkOTAb/ZKMRyULbz4q+1t2/DAebs2Z1QairkZw==
 
-"@astrojs/image@^0.16.8":
-  version "0.16.9"
-  resolved "https://registry.yarnpkg.com/@astrojs/image/-/image-0.16.9.tgz#4981a518943fb6fa4672f4a35b714f29fdc8313c"
-  integrity sha512-8RfGGd1MAIQ6xCHgmu+xXBKWE14gvWYcIv61PxWlToEBgMUbmFdN5ICBQ1bea24rx6o5WvsvRjfOnkjPpf2eew==
+"@astrojs/image@^0.18.0":
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/@astrojs/image/-/image-0.18.0.tgz#db457da3667a58782f0e099033d9740a0072ff6c"
+  integrity sha512-IAsECAGG5s0u7KItQMVVfhU8gAkIeIlzoSga6LymLvWvTWJacjxtnRYjct5uR03kuxIYAdjZhwQowKR1bYpwDA==
   dependencies:
     "@altano/tiny-async-pool" "^1.0.2"
-    http-cache-semantics "^4.1.0"
+    http-cache-semantics "^4.1.1"
     image-size "^1.0.2"
     kleur "^4.1.5"
-    magic-string "^0.27.0"
+    magic-string "^0.30.2"
     mime "^3.0.0"
 
 "@astrojs/internal-helpers@^0.1.2":
@@ -885,7 +885,7 @@
   resolved "https://registry.yarnpkg.com/@jridgewell/set-array/-/set-array-1.1.2.tgz#7c6cf998d6d20b914c0a55a91ae928ff25965e72"
   integrity sha512-xnkseuNADM0gt2bs+BvhO0p78Mk762YnZdsuzFV018NoG1Sj1SCQvpSqa7XUaTam5vAGasABV9qXASMKnFMwMw==
 
-"@jridgewell/sourcemap-codec@^1.4.10", "@jridgewell/sourcemap-codec@^1.4.13", "@jridgewell/sourcemap-codec@^1.4.14", "@jridgewell/sourcemap-codec@^1.4.15":
+"@jridgewell/sourcemap-codec@^1.4.10", "@jridgewell/sourcemap-codec@^1.4.14", "@jridgewell/sourcemap-codec@^1.4.15":
   version "1.4.15"
   resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz#d7c6e6755c78567a951e04ab52ef0fd26de59f32"
   integrity sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==
@@ -3178,7 +3178,7 @@ html-void-elements@^2.0.0:
   resolved "https://registry.yarnpkg.com/html-void-elements/-/html-void-elements-2.0.1.tgz#29459b8b05c200b6c5ee98743c41b979d577549f"
   integrity sha512-0quDb7s97CfemeJAnW9wC0hw78MtW7NU3hqtCD75g2vFlDLt36llsYD7uB7SUzojLMP24N5IatXf7ylGXiGG9A==
 
-http-cache-semantics@^4.1.0, http-cache-semantics@^4.1.1:
+http-cache-semantics@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/http-cache-semantics/-/http-cache-semantics-4.1.1.tgz#abe02fcb2985460bf0323be664436ec3476a6d5a"
   integrity sha512-er295DKPVsV82j5kw1Gjt+ADA/XYHsajl82cGNQG2eyoPkvgUhX+nDIyelzhIWbbsXP39EHcI6l5tYs2FYqYXQ==
@@ -3721,13 +3721,6 @@ lru-cache@^6.0.0:
   integrity sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==
   dependencies:
     yallist "^4.0.0"
-
-magic-string@^0.27.0:
-  version "0.27.0"
-  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.27.0.tgz#e4a3413b4bab6d98d2becffd48b4a257effdbbf3"
-  integrity sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==
-  dependencies:
-    "@jridgewell/sourcemap-codec" "^1.4.13"
 
 magic-string@^0.30.2:
   version "0.30.5"
