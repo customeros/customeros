@@ -219,3 +219,110 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	require.Equal(t, updatedAt, opportunity.UpdatedAt)
 	require.Equal(t, renewedAt, *opportunity.RenewalDetails.RenewedAt)
 }
+
+func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		Name:      "test opportunity",
+		Amount:    10000,
+		MaxAmount: 20000,
+	})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1})
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
+	}
+
+	now := utils.Now()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	updateEvent, err := event.NewOpportunityUpdateEvent(opportunityAggregate,
+		model.OpportunityDataFields{
+			Name:      "updated opportunity",
+			Amount:    30000,
+			MaxAmount: 40000,
+		},
+		constants.SourceOpenline,
+		commonmodel.ExternalSystem{},
+		now,
+		nil)
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, "updated opportunity", opportunity.Name)
+	require.Equal(t, float64(30000), opportunity.Amount)
+	require.Equal(t, float64(40000), opportunity.MaxAmount)
+}
+
+func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		Name:   "test opportunity",
+		Amount: 10000,
+	})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1})
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
+	}
+
+	now := utils.Now()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
+	updateEvent, err := event.NewOpportunityUpdateEvent(opportunityAggregate,
+		model.OpportunityDataFields{
+			Name:   "updated opportunity",
+			Amount: 20000,
+		},
+		constants.SourceOpenline,
+		commonmodel.ExternalSystem{},
+		now,
+		[]string{"amount"})
+	require.Nil(t, err, "failed to create event")
+
+	// EXECUTE
+	err = opportunityEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{constants.NodeLabel_Opportunity: 1, constants.NodeLabel_Opportunity + "_" + tenantName: 1})
+
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Opportunity_"+tenantName, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// verify opportunity
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, "test opportunity", opportunity.Name)
+	require.Equal(t, float64(20000), opportunity.Amount)
+}

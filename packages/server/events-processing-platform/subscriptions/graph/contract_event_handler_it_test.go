@@ -124,7 +124,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	test.AssertRecentTime(t, eventData1.UpdatedAt)
 }
 
-func TestContractEventHandler_OnUpdate(t *testing.T) {
+func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -215,7 +215,9 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		RenewalCycle: string(model.MonthlyRenewalCycleString),
+	})
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
@@ -244,6 +246,8 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	now := utils.Now()
@@ -261,7 +265,8 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		repositories: testDatabase.Repositories,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
 	}
 	yesterday := now.AddDate(0, 0, -1)
 	daysAgo2 := now.AddDate(0, 0, -2)

@@ -10,6 +10,7 @@ type CommandHandlers struct {
 	CreateOpportunity                     CreateOpportunityCommandHandler
 	CreateRenewalOpportunity              CreateRenewalOpportunityCommandHandler
 	UpdateRenewalOpportunityNextCycleDate UpdateRenewalOpportunityNextCycleDateCommandHandler
+	UpdateOpportunity                     UpdateOpportunityCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
@@ -17,5 +18,6 @@ func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *Comman
 		CreateOpportunity:                     NewCreateOpportunityCommandHandler(log, es),
 		CreateRenewalOpportunity:              NewCreateRenewalOpportunityCommandHandler(log, es),
 		UpdateRenewalOpportunityNextCycleDate: NewUpdateRenewalOpportunityNextCycleDateCommandHandler(log, es),
+		UpdateOpportunity:                     NewUpdateOpportunityCommandHandler(log, es),
 	}
 }

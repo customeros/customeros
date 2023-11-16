@@ -7,22 +7,22 @@ import (
 	"time"
 )
 
-// UpdateOpportunityCommand contains the data needed to update an opportunity.
 type UpdateOpportunityCommand struct {
 	eventstore.BaseCommand
 	DataFields     model.OpportunityDataFields
 	ExternalSystem commonmodel.ExternalSystem
 	Source         commonmodel.Source
 	UpdatedAt      *time.Time
+	FieldsMask     []string
 }
 
-// NewUpdateOpportunityCommand creates a new UpdateOpportunityCommand.
-func NewUpdateOpportunityCommand(opportunityId, tenant, loggedInUserId string, dataFields model.OpportunityDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, updatedAt *time.Time) *UpdateOpportunityCommand {
+func NewUpdateOpportunityCommand(opportunityId, tenant, loggedInUserId string, dataFields model.OpportunityDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, updatedAt *time.Time, fieldsMask []string) *UpdateOpportunityCommand {
 	return &UpdateOpportunityCommand{
 		BaseCommand:    eventstore.NewBaseCommand(opportunityId, tenant, loggedInUserId),
-		DataFields:     dataFields,
 		ExternalSystem: externalSystem,
 		UpdatedAt:      updatedAt,
 		Source:         source,
+		DataFields:     dataFields,
+		FieldsMask:     fieldsMask,
 	}
 }

@@ -5,11 +5,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
+	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -18,6 +20,8 @@ import (
 func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
 
 	// Setup test environment
 	serviceLineItemId := "service-line-item-id-1"
@@ -31,8 +35,9 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -84,6 +89,8 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
 	// Prepare test data in Neo4j
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
@@ -98,8 +105,9 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
 	}
 
 	// Create a ServiceLineItemUpdateEvent

@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -75,7 +76,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	contractDbNode, err := h.repositories.ContractRepository.GetContract(ctx, eventData.Tenant, contractId)
+	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -103,6 +104,14 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
+		}
+	} else {
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		err = contractHandler.UpdateRenewalArrForecast(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
+			return nil
 		}
 	}
 

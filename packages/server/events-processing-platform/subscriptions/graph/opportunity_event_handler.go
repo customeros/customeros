@@ -80,7 +80,14 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		return err
 	}
 
-	err = contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands).UpdateRenewalNextCycleDate(ctx, eventData.Tenant, eventData.ContractId)
+	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+	err = contractHandler.UpdateRenewalNextCycleDate(ctx, eventData.Tenant, eventData.ContractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
+		return nil
+	}
+	err = contractHandler.UpdateRenewalArrForecast(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
@@ -106,6 +113,37 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
+	}
+
+	return nil
+}
+
+func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnUpdate")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.OpportunityUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
+	err := h.repositories.OpportunityRepository.Update(ctx, eventData.Tenant, opportunityId, eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
+		return err
+	}
+
+	if eventData.ExternalSystem.Available() {
+		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, constants.NodeLabel_Opportunity, eventData.ExternalSystem)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())
+			return err
+		}
 	}
 
 	return nil

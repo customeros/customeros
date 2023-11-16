@@ -37,9 +37,17 @@ const (
 )
 
 func (bt BilledType) String() string {
-	return [...]string{"MONTHLY", "ANNUALLY", "ONCE"}[bt]
+	return [...]string{string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString)}[bt]
 }
 
 func (bt BilledType) IsOneTime() bool {
 	return bt == OnceBilled
 }
+
+type BilledString string
+
+const (
+	MonthlyBilledString  BilledString = "MONTHLY"
+	AnnuallyBilledString BilledString = "ANNUALLY"
+	OnceBilledString     BilledString = "ONCE"
+)
