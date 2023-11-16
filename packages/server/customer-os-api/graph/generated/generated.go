@@ -7771,7 +7771,7 @@ type Contract implements Node {
     name:               String!
     renewalCycle:       ContractRenewalCycle!
     status:             ContractStatus!
-    serviceLineItems: [ServiceLineItem!] @goField(forceResolver: true)
+    serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true)
     owner:              User @goField(forceResolver: true)
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!
@@ -31741,6 +31741,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
+			case "serviceLineItems":
+				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
 			case "createdBy":
