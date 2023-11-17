@@ -102,7 +102,7 @@ func (r *actionRepository) GetSingleAction(ctx context.Context, tenant, entityId
 
 	query += `WITH n
 			  MATCH (n)<-[:ACTION_ON]-(a:Action {type:$type})
-			  return a`
+			  return a limit 1`
 
 	span.LogFields(log.String("query", query))
 

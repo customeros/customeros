@@ -542,13 +542,15 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 
 	if lastTouchpointAt == nil {
 		timelineEventNode, err = h.repositories.ActionRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated)
-		propsFromNode := utils.GetPropsFromNode(*timelineEventNode)
-		lastTouchpointId = utils.GetStringPropOrEmpty(propsFromNode, "id")
-		lastTouchpointAt = utils.GetTimePropOrNil(propsFromNode, "createdAt")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get created action: %v", err.Error())
 			return nil
+		}
+		if timelineEventNode != nil {
+			propsFromNode := utils.GetPropsFromNode(*timelineEventNode)
+			lastTouchpointId = utils.GetStringPropOrEmpty(propsFromNode, "id")
+			lastTouchpointAt = utils.GetTimePropOrNil(propsFromNode, "createdAt")
 		}
 	} else {
 		timelineEventNode, err = h.repositories.TimelineEventRepository.GetTimelineEvent(ctx, eventData.Tenant, lastTouchpointId)
