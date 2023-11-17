@@ -561,10 +561,10 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
 	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalElements)
 
-	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
-	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
-	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
-	require.Equal(t, organizationId4, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
+	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
+	require.Equal(t, organizationId4, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
 }
 
 func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {

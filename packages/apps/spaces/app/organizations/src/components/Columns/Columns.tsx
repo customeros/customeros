@@ -64,7 +64,7 @@ export const columns = [
     ),
   }),
   columnHelper.accessor((row) => row, {
-    id: 'ORGANIZATION',
+    id: 'NAME',
     minSize: 200,
     filterFn: filterOrganizationFn,
     cell: (props) => {
