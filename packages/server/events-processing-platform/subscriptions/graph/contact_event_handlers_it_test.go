@@ -207,9 +207,9 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	contactAggregate := contactAggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	emailLabel := "emailLabel"
 	updateTime := utils.Now()
-	event, err := contactEvents.NewContactLinkEmailEvent(contactAggregate, emailId, emailLabel, true, updateTime)
+	userLinkEmailEvent, err := contactEvents.NewContactLinkEmailEvent(contactAggregate, emailId, emailLabel, true, updateTime)
 	require.Nil(t, err)
-	err = contactEventHandler.OnEmailLinkToContact(context.Background(), event)
+	err = contactEventHandler.OnEmailLinkToContact(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")

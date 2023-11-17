@@ -85,7 +85,8 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 			  MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id})
 				SET u:User_%s,
 					u.firstName=$firstName,
-					u.lastName=$lastName
+					u.lastName=$lastName,
+					u.roles=$roles
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -93,6 +94,7 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 		"id":        userId,
 		"firstName": user.FirstName,
 		"lastName":  user.LastName,
+		"roles":     user.Roles,
 	})
 	return userId
 }
@@ -131,6 +133,20 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"lastName":  contact.LastName,
 	})
 	return contactId
+}
+
+func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, jobRole entity.JobRoleEntity) string {
+	jobRoleId := jobRole.Id
+	if jobRoleId == "" {
+		jobRoleId = uuid.New().String()
+	}
+	query := fmt.Sprintf(`CREATE (jobRole:JobRole:JobRole_%s {id:$jobRoleId})`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"jobRoleId": jobRoleId,
+	})
+	return jobRoleId
+
 }
 
 func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
