@@ -269,30 +269,67 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		aliases := " o, d, l"
 		query += " WITH o, d, l "
 		if sort != nil && sort.By == "OWNER" {
-			query += ", owner"
-			aliases += ", owner "
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_FIRST_NAME_FOR_SORTING "
+				query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'ZZZZZZZZZZZZZZZZZZZ' END as OWNER_LAST_NAME_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN owner.firstName <> \"\" and not owner.firstName is null THEN owner.firstName ELSE 'AAAAAAAAAAAAAAAAAAA' END as OWNER_FIRST_NAME_FOR_SORTING "
+				query += ", CASE WHEN owner.lastName <> \"\" and not owner.lastName is null THEN owner.lastName ELSE 'AAAAAAAAAAAAAAAAAAA' END as OWNER_LAST_NAME_FOR_SORTING "
+			}
+			aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
 		}
+		if sort != nil && sort.Direction == model.SortingDirectionAsc && sort.By == "NAME" {
+			query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
+			aliases += ", NAME_FOR_SORTING "
+		}
+		if sort != nil && sort.By == "RENEWAL_LIKELIHOOD" {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.renewalLikelihood <> \"\" and o.renewalLikelihood IS NOT NULL THEN o.renewalLikelihood ELSE '9999-ZZZZZ' END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.renewalLikelihood <> \"\" and o.renewalLikelihood IS NOT NULL THEN o.renewalLikelihood ELSE '0-AAAAAAAA' END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+			}
+			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
+		}
+		if sort != nil && sort.By == "RENEWAL_CYCLE_NEXT" {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
+			}
+			aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
+		}
+		if sort != nil && sort.By == "FORECAST_AMOUNT" {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.renewalForecastAmount <> \"\" and o.renewalForecastAmount IS NOT NULL THEN o.renewalForecastAmount ELSE 9999999999999999 END as FORECAST_AMOUNT_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.renewalForecastAmount <> \"\" and o.renewalForecastAmount IS NOT NULL THEN o.renewalForecastAmount ELSE 0 END as FORECAST_AMOUNT_FOR_SORTING "
+			}
+			aliases += ", FORECAST_AMOUNT_FOR_SORTING "
+		}
+
+		//RENEWAL_CYCLE_NEXT
+
 		if sort != nil && sort.By == "ORGANIZATION" {
 			query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
 			query += aliases + ", parent "
 		}
+
 		cypherSort := utils.CypherSort{}
 		if sort != nil {
-			if sort.By == "NAME" || sort.By == "ORGANIZATION" {
+			if sort.By == "NAME" {
+				query += " ORDER BY NAME_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == "ORGANIZATION" {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{})).WithCoalesce()
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "FORECAST_AMOUNT" {
-				cypherSort.NewSortRule("FORECAST_AMOUNT", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.RenewalForecast{}))
-				query += string(cypherSort.SortingCypherFragment("o"))
+				query += " ORDER BY FORECAST_AMOUNT_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_LIKELIHOOD" {
-				cypherSort.NewSortRule("RENEWAL_LIKELIHOOD", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.RenewalLikelihood{}))
-				query += string(cypherSort.SortingCypherFragment("o"))
+				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_CYCLE_NEXT" {
-				cypherSort.NewSortRule("RENEWAL_CYCLE_NEXT", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.BillingDetails{}))
-				query += string(cypherSort.SortingCypherFragment("o"))
+				query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "LAST_TOUCHPOINT" {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
@@ -305,9 +342,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("l"))
 			} else if sort.By == "OWNER" {
-				cypherSort.NewSortRule("FIRST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.UserEntity{}))
-				cypherSort.NewSortRule("LAST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.UserEntity{}))
-				query += string(cypherSort.SortingCypherFragment("owner"))
+				query += " ORDER BY OWNER_FIRST_NAME_FOR_SORTING " + string(sort.Direction) + ", OWNER_LAST_NAME_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "LAST_TOUCHPOINT_AT" {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
