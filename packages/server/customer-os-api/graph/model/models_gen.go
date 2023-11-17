@@ -1488,6 +1488,16 @@ type ServiceLineItemInput struct {
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }
 
+type ServiceLineItemUpdateInput struct {
+	ContractID        string                        `json:"contractId"`
+	Name              *string                       `json:"name,omitempty"`
+	Billed            *BilledType                   `json:"billed,omitempty"`
+	Price             *float64                      `json:"price,omitempty"`
+	Quantity          *int64                        `json:"quantity,omitempty"`
+	AppSource         *string                       `json:"appSource,omitempty"`
+	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+}
+
 type Social struct {
 	ID            string     `json:"id"`
 	PlatformName  *string    `json:"platformName,omitempty"`

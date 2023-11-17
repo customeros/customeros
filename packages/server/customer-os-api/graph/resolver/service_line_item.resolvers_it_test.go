@@ -64,3 +64,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.True(t, calledCreateServiceLineItem)
 }
+
+func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
+	//TODO: Implement
+}

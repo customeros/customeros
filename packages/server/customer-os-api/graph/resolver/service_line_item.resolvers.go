@@ -45,6 +45,11 @@ func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input mode
 	return mapper.MapEntityToServiceLineItem(createdServiceLineItemEntity), nil
 }
 
+// ServiceLineItemUpdate is the resolver for the serviceLineItemUpdate field.
+func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error) {
+	panic(fmt.Errorf("not implemented: ServiceLineItemUpdate - serviceLineItemUpdate"))
+}
+
 // ServiceLineItem is the resolver for the serviceLineItem field.
 func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error) {
 	panic(fmt.Errorf("not implemented: ServiceLineItem - serviceLineItem"))

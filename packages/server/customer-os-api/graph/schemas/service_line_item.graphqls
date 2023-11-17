@@ -3,6 +3,7 @@ extend type Query {
 }
 extend type Mutation {
     serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem!
+    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem!
 }
 
 type ServiceLineItem implements Node {
@@ -21,6 +22,16 @@ type ServiceLineItem implements Node {
 }
 
 input ServiceLineItemInput {
+    contractId:         ID!
+    name:               String
+    billed:             BilledType
+    price:              Float
+    quantity:           Int64
+    appSource:          String
+    externalReference:  ExternalSystemReferenceInput
+}
+
+input ServiceLineItemUpdateInput {
     contractId:         ID!
     name:               String
     billed:             BilledType

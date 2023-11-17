@@ -646,6 +646,7 @@ type ComplexityRoot struct {
 		PhoneNumberUpdateInUser                  func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
 		PlayerMerge                              func(childComplexity int, userID string, input model.PlayerInput) int
 		ServiceLineItemCreate                    func(childComplexity int, input model.ServiceLineItemInput) int
+		ServiceLineItemUpdate                    func(childComplexity int, input model.ServiceLineItemUpdateInput) int
 		SocialRemove                             func(childComplexity int, socialID string) int
 		SocialUpdate                             func(childComplexity int, input model.SocialUpdateInput) int
 		TagCreate                                func(childComplexity int, input model.TagInput) int
@@ -1194,6 +1195,7 @@ type MutationResolver interface {
 	PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error)
 	PlayerMerge(ctx context.Context, userID string, input model.PlayerInput) (*model.Result, error)
 	ServiceLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error)
+	ServiceLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error)
 	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
 	SocialRemove(ctx context.Context, socialID string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
@@ -5117,6 +5119,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ServiceLineItemCreate(childComplexity, args["input"].(model.ServiceLineItemInput)), true
 
+	case "Mutation.serviceLineItemUpdate":
+		if e.complexity.Mutation.ServiceLineItemUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_serviceLineItemUpdate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ServiceLineItemUpdate(childComplexity, args["input"].(model.ServiceLineItemUpdateInput)), true
+
 	case "Mutation.social_Remove":
 		if e.complexity.Mutation.SocialRemove == nil {
 			break
@@ -7181,6 +7195,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRenewalForecastInput,
 		ec.unmarshalInputRenewalLikelihoodInput,
 		ec.unmarshalInputServiceLineItemInput,
+		ec.unmarshalInputServiceLineItemUpdateInput,
 		ec.unmarshalInputSocialInput,
 		ec.unmarshalInputSocialUpdateInput,
 		ec.unmarshalInputSortBy,
@@ -9416,6 +9431,7 @@ enum GCliSearchResultType {
 }
 extend type Mutation {
     serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem!
+    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem!
 }
 
 type ServiceLineItem implements Node {
@@ -9434,6 +9450,16 @@ type ServiceLineItem implements Node {
 }
 
 input ServiceLineItemInput {
+    contractId:         ID!
+    name:               String
+    billed:             BilledType
+    price:              Float
+    quantity:           Int64
+    appSource:          String
+    externalReference:  ExternalSystemReferenceInput
+}
+
+input ServiceLineItemUpdateInput {
     contractId:         ID!
     name:               String
     billed:             BilledType
@@ -12304,6 +12330,21 @@ func (ec *executionContext) field_Mutation_serviceLineItemCreate_args(ctx contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNServiceLineItemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_serviceLineItemUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ServiceLineItemUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -41737,6 +41778,87 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_serviceLineItemUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_serviceLineItemUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ServiceLineItemUpdate(rctx, fc.Args["input"].(model.ServiceLineItemUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ServiceLineItem)
+	fc.Result = res
+	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ServiceLineItem_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_ServiceLineItem_name(ctx, field)
+			case "billed":
+				return ec.fieldContext_ServiceLineItem_billed(ctx, field)
+			case "price":
+				return ec.fieldContext_ServiceLineItem_price(ctx, field)
+			case "quantity":
+				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
+			case "source":
+				return ec.fieldContext_ServiceLineItem_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_ServiceLineItem_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_serviceLineItemUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_social_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_social_Update(ctx, field)
 	if err != nil {
@@ -62316,6 +62438,89 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context.Context, obj interface{}) (model.ServiceLineItemUpdateInput, error) {
+	var it model.ServiceLineItemUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "contractId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContractID = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "billed":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billed"))
+			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐBilledType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Billed = data
+		case "price":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Price = data
+		case "quantity":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Quantity = data
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppSource = data
+		case "externalReference":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalReference = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSocialInput(ctx context.Context, obj interface{}) (model.SocialInput, error) {
 	var it model.SocialInput
 	asMap := map[string]interface{}{}
@@ -68891,6 +69096,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "serviceLineItemCreate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_serviceLineItemCreate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "serviceLineItemUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_serviceLineItemUpdate(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -75745,6 +75957,11 @@ func (ec *executionContext) marshalNServiceLineItem2ᚖgithubᚗcomᚋopenline�
 
 func (ec *executionContext) unmarshalNServiceLineItemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemInput(ctx context.Context, v interface{}) (model.ServiceLineItemInput, error) {
 	res, err := ec.unmarshalInputServiceLineItemInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemUpdateInput(ctx context.Context, v interface{}) (model.ServiceLineItemUpdateInput, error) {
+	res, err := ec.unmarshalInputServiceLineItemUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
