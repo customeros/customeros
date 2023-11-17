@@ -7,6 +7,7 @@ import (
 
 type MockServiceLineItemServiceCallbacks struct {
 	CreateServiceLineItem func(context.Context, *servicelineitempb.CreateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error)
+	UpdateServiceLineItem func(context.Context, *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error)
 }
 
 var serviceLineItemCallbacks = &MockServiceLineItemServiceCallbacks{}
@@ -24,4 +25,11 @@ func (MockServiceLineItemService) CreateServiceLineItem(context context.Context,
 		panic("serviceLineItemCallbacks.CreateServiceLineItem is not set")
 	}
 	return serviceLineItemCallbacks.CreateServiceLineItem(context, proto)
+}
+
+func (MockServiceLineItemService) UpdateServiceLineItem(context context.Context, proto *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+	if serviceLineItemCallbacks.UpdateServiceLineItem == nil {
+		panic("serviceLineItemCallbacks.UpdateServiceLineItem is not set")
+	}
+	return serviceLineItemCallbacks.UpdateServiceLineItem(context, proto)
 }
