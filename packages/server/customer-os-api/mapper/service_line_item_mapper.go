@@ -51,3 +51,21 @@ func MapEntitiesToServiceLineItems(entities *entity.ServiceLineItemEntities) []*
 	}
 	return ServiceLineItems
 }
+
+func MapServiceLineItemUpdateInputToEntity(input model.ServiceLineItemUpdateInput) *entity.ServiceLineItemEntity {
+	serviceLineItemEntity := entity.ServiceLineItemEntity{
+		ID:            input.ServiceLineItemID,
+		Name:          utils.IfNotNilString(input.Name),
+		Price:         utils.IfNotNilFloat64(input.Price),
+		Quantity:      utils.IfNotNilInt64(input.Quantity),
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+	}
+	if input.Billed != nil {
+		serviceLineItemEntity.Billed = MapBilledTypeFromModel(*input.Billed)
+	} else {
+		serviceLineItemEntity.Billed = entity.BilledTypeMonthly
+	}
+	return &serviceLineItemEntity
+}

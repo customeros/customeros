@@ -45,6 +45,29 @@ func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input mode
 	return mapper.MapEntityToServiceLineItem(createdServiceLineItemEntity), nil
 }
 
+// ServiceLineItemUpdate is the resolver for the serviceLineItemUpdate field.
+func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.serviceLineItemId", input.ServiceLineItemID))
+
+	err := r.Services.ServiceLineItemService.Update(ctx, mapper.MapServiceLineItemUpdateInputToEntity(input))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update service line item %s", input.ServiceLineItemID)
+		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, nil
+	}
+	serviceLineItemEntity, err := r.Services.ServiceLineItemService.GetById(ctx, input.ServiceLineItemID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed fetching service line item details. Service line item id: %s", input.ServiceLineItemID)
+		return &model.ServiceLineItem{ID: input.ServiceLineItemID}, nil
+	}
+
+	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
+}
+
 // ServiceLineItem is the resolver for the serviceLineItem field.
 func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error) {
 	panic(fmt.Errorf("not implemented: ServiceLineItem - serviceLineItem"))
