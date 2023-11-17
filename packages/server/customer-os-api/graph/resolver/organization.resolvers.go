@@ -505,6 +505,17 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 		return response.Id, nil
 	}
 
+	_, err = r.Clients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: id,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to refresh the last touchpoint %s", id)
+		return response.Id, nil
+	}
+
 	return response.Id, nil
 }
 
