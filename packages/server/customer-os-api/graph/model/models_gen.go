@@ -1489,7 +1489,7 @@ type ServiceLineItemInput struct {
 }
 
 type ServiceLineItemUpdateInput struct {
-	ContractID        string                        `json:"contractId"`
+	ServiceLineItemID string                        `json:"serviceLineItemId"`
 	Name              *string                       `json:"name,omitempty"`
 	Billed            *BilledType                   `json:"billed,omitempty"`
 	Price             *float64                      `json:"price,omitempty"`

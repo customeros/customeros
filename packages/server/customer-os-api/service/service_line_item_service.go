@@ -22,6 +22,7 @@ import (
 
 type ServiceLineItemService interface {
 	Create(ctx context.Context, serviceLineItem *ServiceLineItemCreateData) (string, error)
+	Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity) error
 	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
 }
@@ -115,6 +116,64 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		time.Sleep(utils.BackOffIncrementalDelay(i))
 	}
 	return response.Id, err
+}
+func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("serviceLineItem", serviceLineItem))
+
+	if serviceLineItem == nil {
+		err := fmt.Errorf("(ServiceLineItemService.Update) service line item entity is nil")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	} else if serviceLineItem.ID == "" {
+		err := fmt.Errorf("(ServiceLineItemService.Update) service line item id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	serviceLineItemExists, _ := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID, entity.NodeLabel_ServiceLineItem)
+	if !serviceLineItemExists {
+		err := fmt.Errorf("(ServiceLineItemService.Update) service line item with id {%s} not found", serviceLineItem.ID)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             serviceLineItem.ID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Name:           serviceLineItem.Name,
+		Quantity:       serviceLineItem.Quantity,
+		Price:          float32(serviceLineItem.Price),
+		SourceFields: &commonpb.SourceFields{
+			Source:    string(serviceLineItem.Source),
+			AppSource: utils.StringFirstNonEmpty(serviceLineItem.AppSource, constants.AppSourceCustomerOsApi),
+		},
+	}
+	switch serviceLineItem.Billed {
+	case entity.BilledTypeMonthly:
+		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
+	case entity.BilledTypeAnnually:
+		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
+	case entity.BilledTypeOnce:
+		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ONCE_BILLED
+	default:
+		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
+	}
+
+	_, err := s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (s *serviceLineItemService) GetById(ctx context.Context, serviceLineItemId string) (*entity.ServiceLineItemEntity, error) {

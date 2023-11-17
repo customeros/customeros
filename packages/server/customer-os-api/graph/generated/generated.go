@@ -9460,7 +9460,7 @@ input ServiceLineItemInput {
 }
 
 input ServiceLineItemUpdateInput {
-    contractId:         ID!
+    serviceLineItemId:  ID!
     name:               String
     billed:             BilledType
     price:              Float
@@ -62445,22 +62445,22 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "appSource", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "contractId":
+		case "serviceLineItemId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceLineItemId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ContractID = data
+			it.ServiceLineItemID = data
 		case "name":
 			var err error
 

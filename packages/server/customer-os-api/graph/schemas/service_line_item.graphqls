@@ -32,7 +32,7 @@ input ServiceLineItemInput {
 }
 
 input ServiceLineItemUpdateInput {
-    contractId:         ID!
+    serviceLineItemId:  ID!
     name:               String
     billed:             BilledType
     price:              Float
