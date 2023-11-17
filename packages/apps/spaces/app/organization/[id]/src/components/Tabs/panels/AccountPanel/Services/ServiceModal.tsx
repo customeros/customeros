@@ -1,11 +1,17 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import { useForm } from 'react-inverted-form';
 
 import { Button } from '@ui/form/Button';
 import { FeaturedIcon } from '@ui/media/Icon';
+import { ServiceLineItem } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
 import { DotSingle } from '@ui/media/icons/DotSingle';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Tab, Tabs, TabList, TabPanel, TabPanels } from '@ui/disclosure/Tabs';
+import { useCreateServiceMutation } from '@organization/src/graphql/createService.generated';
+import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { OneTimeServiceForm } from '@organization/src/components/Tabs/panels/AccountPanel/Services/OneTimeServiceForm';
 import {
   Modal,
   ModalBody,
@@ -14,24 +20,19 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal';
-import { SubscriptionServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Services/SubscriptionServiceForm';
 import {
-  OneTimeServiceForm,
-  OneTimeServiceValue,
-} from '@organization/src/components/Tabs/panels/AccountPanel/Services/OneTimeServiceForm';
-
-export type SubscriptionServiceValue = {
-  licenses?: string | null;
-  description?: string | null;
-  licensePrice?: string | null;
-};
+  ServiceDTO,
+  ServiceForm,
+} from '@organization/src/components/Tabs/panels/AccountPanel/Services/Service.dto';
+import { SubscriptionServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Services/SubscriptionServiceForm';
 
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
+  contractId: string;
   onClose: () => void;
+  data?: ServiceLineItem;
   isSubscription?: boolean;
   mode?: 'create' | 'update';
-  data: SubscriptionServiceValue | OneTimeServiceValue;
 }
 
 const copy = {
@@ -52,12 +53,40 @@ export const ServiceModal = ({
   onClose,
   mode = 'create',
   isSubscription,
+  contractId,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
+  const client = getGraphQLClient();
+  const formId = `${mode}-service-item`;
+  const createService = useCreateServiceMutation(client, {
+    onSuccess: () => {
+      onClose();
+    },
+  });
 
+  const defaultValues = ServiceDTO.toForm(data);
+  const { setDefaultValues, state } = useForm<ServiceForm>({
+    formId,
+    defaultValues,
+    stateReducer: (_, action, next) => {
+      return next;
+    },
+  });
+
+  useEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [
+    defaultValues.renewalCycle,
+    defaultValues.billed,
+    defaultValues.appSource,
+    defaultValues.quantity,
+    defaultValues.serviceStartedAt,
+    defaultValues.externalReference,
+  ]);
   const handleSetSubscriptionServiceData = () => {
-    // todo COS-857
-    onClose();
+    createService.mutate({
+      input: { ...ServiceDTO.toPayload(state.values, contractId) },
+    });
   };
 
   return (
@@ -107,6 +136,11 @@ export const ServiceModal = ({
                   bg: 'white',
                   fontWeight: 'semibold',
                 }}
+                onClick={() => {
+                  setDefaultValues({
+                    ...defaultValues,
+                  });
+                }}
               >
                 Subscription
               </Tab>
@@ -124,6 +158,12 @@ export const ServiceModal = ({
                   bg: 'white',
                   fontWeight: 'semibold',
                 }}
+                onClick={() => {
+                  setDefaultValues({
+                    ...defaultValues,
+                    billed: billedTypeOptions[0],
+                  });
+                }}
               >
                 One-time
               </Tab>
@@ -131,10 +171,10 @@ export const ServiceModal = ({
 
             <TabPanels>
               <TabPanel px={0} pb={2}>
-                <SubscriptionServiceFrom data={data} />
+                <SubscriptionServiceFrom formId={formId} />
               </TabPanel>
               <TabPanel px={0} pb={2}>
-                <OneTimeServiceForm data={data as OneTimeServiceValue} />
+                <OneTimeServiceForm formId={formId} />
               </TabPanel>
             </TabPanels>
           </Tabs>
