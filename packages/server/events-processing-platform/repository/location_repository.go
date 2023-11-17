@@ -120,7 +120,7 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, locationId stri
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
-		 SET l.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE l.sourceOfTruth END,,
+		 SET l.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE l.sourceOfTruth END,
 			l.updatedAt = $updatedAt,
 			l.syncedWithEventStore = true,
 			l.rawAddress = $rawAddress,
