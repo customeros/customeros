@@ -1,5 +1,5 @@
 run: build
-	go run main.go
+	go run integrity_checker_main.go
 
 generate:
 	export PATH="${PATH}:$(shell go env GOPATH)/bin";
