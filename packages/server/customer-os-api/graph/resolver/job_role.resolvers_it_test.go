@@ -5,7 +5,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -22,14 +22,14 @@ func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "LLC LLC")
 
-	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: organizationId,
 			}, nil
 		},
 	}
-	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("job_role/create_job_role_for_organization"),
 		client.Var("contactId", contactId),

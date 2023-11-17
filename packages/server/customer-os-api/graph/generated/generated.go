@@ -5096,12 +5096,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PlayerMerge(childComplexity, args["userId"].(string), args["input"].(model.PlayerInput)), true
 
-	case "Mutation.serviceLineItem_Create":
+	case "Mutation.serviceLineItemCreate":
 		if e.complexity.Mutation.ServiceLineItemCreate == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_serviceLineItem_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_serviceLineItemCreate_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -9405,7 +9405,7 @@ enum GCliSearchResultType {
     serviceLineItem(id: ID!): ServiceLineItem!
 }
 extend type Mutation {
-    serviceLineItem_Create(input: ServiceLineItemInput!): ServiceLineItem!
+    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem!
 }
 
 type ServiceLineItem implements Node {
@@ -9424,8 +9424,8 @@ type ServiceLineItem implements Node {
 }
 
 input ServiceLineItemInput {
+    contractId:         ID!
     name:               String
-    contractId:         String!
     billed:             BilledType
     price:              Float
     quantity:           Int64
@@ -9435,9 +9435,9 @@ input ServiceLineItemInput {
 
 enum BilledType {
     NONE
-    MONTHLY_BILLED
-    ANNUALLY_BILLED
-    ONCE_BILLED
+    MONTHLY
+    ANNUALLY
+    ONCE
 }`, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
     social_Update(input: SocialUpdateInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -12287,7 +12287,7 @@ func (ec *executionContext) field_Mutation_player_Merge_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_serviceLineItem_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_serviceLineItemCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.ServiceLineItemInput
@@ -41575,8 +41575,8 @@ func (ec *executionContext) fieldContext_Mutation_player_Merge(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_serviceLineItem_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_serviceLineItem_Create(ctx, field)
+func (ec *executionContext) _Mutation_serviceLineItemCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_serviceLineItemCreate(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -41606,7 +41606,7 @@ func (ec *executionContext) _Mutation_serviceLineItem_Create(ctx context.Context
 	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_serviceLineItem_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -41649,7 +41649,7 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItem_Create(ctx con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_serviceLineItem_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_serviceLineItemCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -62155,13 +62155,22 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "contractId", "billed", "price", "quantity", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "contractId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContractID = data
 		case "name":
 			var err error
 
@@ -62171,15 +62180,6 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 				return it, err
 			}
 			it.Name = data
-		case "contractId":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ContractID = data
 		case "billed":
 			var err error
 
@@ -68770,9 +68770,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "serviceLineItem_Create":
+		case "serviceLineItemCreate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_serviceLineItem_Create(ctx, field)
+				return ec._Mutation_serviceLineItemCreate(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

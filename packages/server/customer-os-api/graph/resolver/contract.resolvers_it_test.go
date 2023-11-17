@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
@@ -26,7 +26,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 	contractId := uuid.New().String()
 	calledCreateContract := false
 
-	contractServiceCallbacks := events_paltform.MockContractServiceCallbacks{
+	contractServiceCallbacks := events_platform.MockContractServiceCallbacks{
 		CreateContract: func(context context.Context, contract *contractpb.CreateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
 			require.Equal(t, tenantName, contract.Tenant)
 			require.Equal(t, orgId, contract.OrganizationId)
@@ -55,7 +55,7 @@ func TestMutationResolver_ContractCreate(t *testing.T) {
 			}, nil
 		},
 	}
-	events_paltform.SetContractCallbacks(&contractServiceCallbacks)
+	events_platform.SetContractCallbacks(&contractServiceCallbacks)
 
 	rawResponse := callGraphQL(t, "contract/create_contract", map[string]interface{}{
 		"orgId": orgId,
@@ -84,7 +84,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
 	calledUpdateContract := false
 
-	contractServiceCallbacks := events_paltform.MockContractServiceCallbacks{
+	contractServiceCallbacks := events_platform.MockContractServiceCallbacks{
 		UpdateContract: func(context context.Context, contract *contractpb.UpdateContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
 			require.Equal(t, tenantName, contract.Tenant)
 			require.Equal(t, contractId, contract.Id)
@@ -115,7 +115,7 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 			}, nil
 		},
 	}
-	events_paltform.SetContractCallbacks(&contractServiceCallbacks)
+	events_platform.SetContractCallbacks(&contractServiceCallbacks)
 
 	rawResponse := callGraphQL(t, "contract/update_contract", map[string]interface{}{
 		"contractId": contractId,

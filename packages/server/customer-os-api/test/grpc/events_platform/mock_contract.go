@@ -1,4 +1,4 @@
-package events_paltform
+package events_platform
 
 import (
 	"context"

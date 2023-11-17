@@ -1611,6 +1611,40 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 	return contractId
 }
 
+func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
+	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.ID)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
+				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(sli:ServiceLineItem {id:$id})<-[:HAS_SERVICE]-(c)
+				SET 
+					sli:ServiceLineItem_%s,
+					sli.name=$name,
+					sli.source=$source,
+					sli.sourceOfTruth=$sourceOfTruth,
+					sli.appSource=$appSource,
+					sli.billed=$billed,	
+					sli.quantity=$quantity,	
+					sli.price=$price,
+					sli.createdAt=$createdAt,
+					sli.updatedAt=$updatedAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":            serviceLineItemId,
+		"contractId":    contractId,
+		"tenant":        tenant,
+		"name":          serviceLineItem.Name,
+		"source":        serviceLineItem.Source,
+		"sourceOfTruth": serviceLineItem.SourceOfTruth,
+		"appSource":     serviceLineItem.AppSource,
+		"billed":        serviceLineItem.Billed,
+		"quantity":      serviceLineItem.Quantity,
+		"price":         serviceLineItem.Price,
+		"createdAt":     serviceLineItem.CreatedAt,
+		"updatedAt":     serviceLineItem.UpdatedAt,
+	})
+	return serviceLineItemId
+}
+
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})

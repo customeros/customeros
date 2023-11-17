@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -214,14 +214,14 @@ func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
 
-	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: organizationId,
 			}, nil
 		},
 	}
-	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("phone_number/merge_phone_number_to_organization"),
 		client.Var("organizationId", organizationId),
