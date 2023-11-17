@@ -712,6 +712,8 @@ type GlobalCache struct {
 	IsGoogleActive       bool        `json:"isGoogleActive"`
 	IsGoogleTokenExpired bool        `json:"isGoogleTokenExpired"`
 	GCliCache            []*GCliItem `json:"gCliCache"`
+	MinARRForecastValue  float64     `json:"minARRForecastValue"`
+	MaxARRForecastValue  float64     `json:"maxARRForecastValue"`
 }
 
 type InteractionEvent struct {

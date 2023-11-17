@@ -96,6 +96,13 @@ export type AttachmentInput = {
   size: Scalars['Int64'];
 };
 
+export enum BilledType {
+  Annually = 'ANNUALLY',
+  Monthly = 'MONTHLY',
+  None = 'NONE',
+  Once = 'ONCE',
+}
+
 export type BillingDetails = {
   __typename?: 'BillingDetails';
   amount?: Maybe<Scalars['Float']>;
@@ -390,6 +397,7 @@ export type Contract = Node & {
   name: Scalars['String'];
   owner?: Maybe<User>;
   renewalCycle: ContractRenewalCycle;
+  serviceLineItems?: Maybe<Array<ServiceLineItem>>;
   serviceStartedAt?: Maybe<Scalars['Time']>;
   signedAt?: Maybe<Scalars['Time']>;
   source: DataSource;
@@ -403,7 +411,7 @@ export type ContractInput = {
   contractUrl?: InputMaybe<Scalars['String']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   name?: InputMaybe<Scalars['String']>;
-  organizationId: Scalars['String'];
+  organizationId: Scalars['ID'];
   renewalCycle?: InputMaybe<ContractRenewalCycle>;
   serviceStartedAt?: InputMaybe<Scalars['Time']>;
   signedAt?: InputMaybe<Scalars['Time']>;
@@ -421,6 +429,17 @@ export enum ContractStatus {
   Live = 'LIVE',
   Undefined = 'UNDEFINED',
 }
+
+export type ContractUpdateInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  contractId: Scalars['ID'];
+  contractUrl?: InputMaybe<Scalars['String']>;
+  endedAt?: InputMaybe<Scalars['Time']>;
+  name?: InputMaybe<Scalars['String']>;
+  renewalCycle?: InputMaybe<ContractRenewalCycle>;
+  serviceStartedAt?: InputMaybe<Scalars['Time']>;
+  signedAt?: InputMaybe<Scalars['Time']>;
+};
 
 export type Country = {
   __typename?: 'Country';
@@ -872,6 +891,8 @@ export type GlobalCache = {
   isGoogleActive: Scalars['Boolean'];
   isGoogleTokenExpired: Scalars['Boolean'];
   isOwner: Scalars['Boolean'];
+  maxARRForecastValue: Scalars['Int64'];
+  minARRForecastValue: Scalars['Int64'];
   user: User;
 };
 
@@ -1315,6 +1336,7 @@ export type Mutation = {
   contact_RestoreFromArchive: Result;
   contact_Update: Contact;
   contract_Create: Contract;
+  contract_Update: Contract;
   customFieldDeleteFromContactById: Result;
   customFieldDeleteFromContactByName: Result;
   customFieldDeleteFromFieldSetById: Result;
@@ -1419,6 +1441,8 @@ export type Mutation = {
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
   player_Merge: Result;
+  serviceLineItemCreate: ServiceLineItem;
+  serviceLineItemUpdate: ServiceLineItem;
   social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
@@ -1502,6 +1526,10 @@ export type MutationContact_UpdateArgs = {
 
 export type MutationContract_CreateArgs = {
   input: ContractInput;
+};
+
+export type MutationContract_UpdateArgs = {
+  input: ContractUpdateInput;
 };
 
 export type MutationCustomFieldDeleteFromContactByIdArgs = {
@@ -1964,6 +1992,14 @@ export type MutationPhoneNumberUpdateInUserArgs = {
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
   userId: Scalars['ID'];
+};
+
+export type MutationServiceLineItemCreateArgs = {
+  input: ServiceLineItemInput;
+};
+
+export type MutationServiceLineItemUpdateArgs = {
+  input: ServiceLineItemUpdateInput;
 };
 
 export type MutationSocial_RemoveArgs = {
@@ -2481,8 +2517,6 @@ export type Query = {
    */
   contacts: ContactsPage;
   contract: Contract;
-  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
-  dashboardView_Contacts?: Maybe<ContactsPage>;
   /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
@@ -2502,6 +2536,7 @@ export type Query = {
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
   player_ByAuthIdProvider: Player;
+  serviceLineItem: ServiceLineItem;
   tags: Array<Tag>;
   tenant: Scalars['String'];
   tenant_ByEmail?: Maybe<Scalars['String']>;
@@ -2540,12 +2575,6 @@ export type QueryContactsArgs = {
 
 export type QueryContractArgs = {
   id: Scalars['ID'];
-};
-
-export type QueryDashboardView_ContactsArgs = {
-  pagination: Pagination;
-  sort?: InputMaybe<SortBy>;
-  where?: InputMaybe<Filter>;
 };
 
 export type QueryDashboardView_OrganizationsArgs = {
@@ -2620,6 +2649,10 @@ export type QueryPhoneNumberArgs = {
 export type QueryPlayer_ByAuthIdProviderArgs = {
   authId: Scalars['String'];
   provider: Scalars['String'];
+};
+
+export type QueryServiceLineItemArgs = {
+  id: Scalars['ID'];
 };
 
 export type QueryTenant_ByEmailArgs = {
@@ -2715,6 +2748,42 @@ export enum Role {
   Owner = 'OWNER',
   User = 'USER',
 }
+
+export type ServiceLineItem = Node & {
+  __typename?: 'ServiceLineItem';
+  appSource: Scalars['String'];
+  billed: BilledType;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  externalLinks: Array<ExternalSystem>;
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  price: Scalars['Float'];
+  quantity: Scalars['Int64'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time'];
+};
+
+export type ServiceLineItemInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  billed?: InputMaybe<BilledType>;
+  contractId: Scalars['ID'];
+  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  name?: InputMaybe<Scalars['String']>;
+  price?: InputMaybe<Scalars['Float']>;
+  quantity?: InputMaybe<Scalars['Int64']>;
+};
+
+export type ServiceLineItemUpdateInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  billed?: InputMaybe<BilledType>;
+  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  name?: InputMaybe<Scalars['String']>;
+  price?: InputMaybe<Scalars['Float']>;
+  quantity?: InputMaybe<Scalars['Int64']>;
+  serviceLineItemId: Scalars['ID'];
+};
 
 export type Social = Node &
   SourceFields & {
