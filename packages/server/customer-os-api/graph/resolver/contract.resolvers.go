@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -17,6 +18,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/opentracing/opentracing-go/log"
 )
+
+// ServiceLineItems is the resolver for the serviceLineItems field.
+func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	serviceLineItemEntities, err := dataloader.For(ctx).GetServiceLineItemsForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get service line items for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get service line items for contract %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToServiceLineItems(serviceLineItemEntities), nil
+}
 
 // Owner is the resolver for the owner field.
 func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*model.User, error) {
@@ -85,7 +99,23 @@ func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.Contr
 
 // Contract is the resolver for the contract field.
 func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contract, error) {
-	panic(fmt.Errorf("not implemented: Contract - contract"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contract", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contractID", id))
+
+	if id == "" {
+		graphql.AddErrorf(ctx, "Missing contract input id")
+		return nil, nil
+	}
+
+	contractEntityPtr, err := r.Services.ContractService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get contract by id %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToContract(contractEntityPtr), nil
 }
 
 // Contract returns generated.ContractResolver implementation.

@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -132,4 +133,80 @@ func TestMutationResolver_ContractUpdate(t *testing.T) {
 	require.Equal(t, contractId, contract.ID)
 
 	require.True(t, calledUpdateContract)
+}
+
+func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+	yesterday := now.Add(time.Duration(-24) * time.Hour)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+
+	serviceLineItemId1 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Name:      "service line item 1",
+		CreatedAt: now,
+		UpdatedAt: now,
+		Billed:    entity.BilledTypeAnnually,
+		Price:     13,
+		Quantity:  2,
+		Source:    entity.DataSourceOpenline,
+		AppSource: "test1",
+	})
+	serviceLineItemId2 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Name:      "service line item 2",
+		CreatedAt: yesterday,
+		UpdatedAt: yesterday,
+		Billed:    entity.BilledTypeAnnually,
+		Price:     255,
+		Quantity:  23,
+		Source:    entity.DataSourceOpenline,
+		AppSource: "test2",
+	})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization":    1,
+		"Contract":        1,
+		"ServiceLineItem": 2,
+	})
+	assertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId1)
+	assertRelationship(ctx, t, driver, contractId, "HAS_SERVICE", serviceLineItemId2)
+
+	rawResponse := callGraphQL(t, "contract/get_contract_with_service_line_items",
+		map[string]interface{}{"contractId": contractId})
+
+	var contractStruct struct {
+		Contract model.Contract
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contractStruct)
+	require.Nil(t, err)
+
+	contract := contractStruct.Contract
+	require.NotNil(t, contract)
+	require.Equal(t, 2, len(contract.ServiceLineItems))
+
+	firstServiceLineItem := contract.ServiceLineItems[0]
+	require.Equal(t, serviceLineItemId1, firstServiceLineItem.ID)
+	require.Equal(t, "service line item 1", firstServiceLineItem.Name)
+	require.Equal(t, now, firstServiceLineItem.CreatedAt)
+	require.Equal(t, now, firstServiceLineItem.UpdatedAt)
+	require.Equal(t, model.BilledTypeAnnually, firstServiceLineItem.Billed)
+	require.Equal(t, float64(13), firstServiceLineItem.Price)
+	require.Equal(t, int64(2), firstServiceLineItem.Quantity)
+	require.Equal(t, model.DataSourceOpenline, firstServiceLineItem.Source)
+	require.Equal(t, "test1", firstServiceLineItem.AppSource)
+
+	secondServiceLineItem := contract.ServiceLineItems[1]
+	require.Equal(t, serviceLineItemId2, secondServiceLineItem.ID)
+	require.Equal(t, "service line item 2", secondServiceLineItem.Name)
+	require.Equal(t, yesterday, secondServiceLineItem.CreatedAt)
+	require.Equal(t, yesterday, secondServiceLineItem.UpdatedAt)
+	require.Equal(t, model.BilledTypeAnnually, secondServiceLineItem.Billed)
+	require.Equal(t, float64(255), secondServiceLineItem.Price)
+	require.Equal(t, int64(23), secondServiceLineItem.Quantity)
+	require.Equal(t, model.DataSourceOpenline, secondServiceLineItem.Source)
+	require.Equal(t, "test2", secondServiceLineItem.AppSource)
 }
