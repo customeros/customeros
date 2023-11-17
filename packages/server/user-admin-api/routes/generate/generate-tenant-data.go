@@ -2,6 +2,7 @@ package generate
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -13,7 +14,51 @@ import (
 )
 
 func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
-	rg.GET("/demo-tenant", func(context *gin.Context) {
+	appSource := "user-admin-api"
+
+	rg.GET("/demo-tenant-users", func(context *gin.Context) {
+		apiKey := context.GetHeader("X-Openline-Api-Key")
+		if apiKey != config.Service.ApiKey {
+			context.JSON(http.StatusUnauthorized, gin.H{
+				"result": fmt.Sprintf("invalid api key"),
+			})
+			return
+		}
+
+		sourceData, err := validateRequestAndGetFileBytes(context)
+		if err != nil {
+			context.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		tenant := context.GetHeader("TENANT_NAME")
+
+		//users creation
+		for _, user := range sourceData.Users {
+			_, err := services.CustomerOsClient.CreateUser(&cosModel.UserInput{
+				FirstName: user.FirstName,
+				LastName:  user.LastName,
+				Email: cosModel.EmailInput{
+					Email: user.Email,
+				},
+				AppSource: &appSource,
+			}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
+			if err != nil {
+				context.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+		}
+
+		context.JSON(200, gin.H{
+			"OK": "users initiated",
+		})
+	})
+
+	rg.GET("/demo-tenant-data", func(context *gin.Context) {
 
 		apiKey := context.GetHeader("X-Openline-Api-Key")
 		if apiKey != config.Service.ApiKey {
@@ -33,65 +78,26 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 		//match (n:Note_LightBlok) detach delete n;
 		//match (n:Action_LightBlok) detach delete n;
 		//match (n:Meeting_LightBlok) detach delete n;
+		//match (n:Issue_LightBlok) detach delete n;
+		//match (n:LogEntry_LightBlok) detach delete n;
 
-		appSource := "user-admin-api"
+		sourceData, err := validateRequestAndGetFileBytes(context)
+		if err != nil {
+			context.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 
 		tenant := context.GetHeader("TENANT_NAME")
-		if tenant == "" {
-			context.JSON(http.StatusBadRequest, gin.H{
-				"result": fmt.Sprintf("tenant is required"),
-			})
-			return
-		}
-
 		username := context.GetHeader("MASTER_USERNAME")
-		if username == "" {
-			context.JSON(http.StatusBadRequest, gin.H{
-				"result": fmt.Sprintf("username is required"),
-			})
-			return
-		}
-
-		multipartFileHeader, err := context.FormFile("file")
-		if err != nil {
-			context.JSON(http.StatusBadRequest, gin.H{
-				"result": fmt.Sprintf("file is required"),
-			})
-			return
-		}
-
-		multipartFile, err := multipartFileHeader.Open()
-		if err != nil {
-			context.JSON(http.StatusBadRequest, gin.H{
-				"result": fmt.Sprintf("file is required"),
-			})
-			return
-		}
-
-		bytes, err := ioutil.ReadAll(multipartFile)
-		if err != nil {
-			panic(err)
-		}
-
-		// Parse the JSON file into the User struct
-		var sourceData SourceData
-		if err := json.Unmarshal(bytes, &sourceData); err != nil {
-			panic(err)
-		}
 
 		var userIds = make([]EmailAddressWithId, len(sourceData.Users))
 		var contactIds = make([]EmailAddressWithId, len(sourceData.Contacts))
 
-		//users creation
+		//read users
 		for _, user := range sourceData.Users {
-			storedUser, err := services.CustomerOsClient.CreateUser(&cosModel.UserInput{
-				FirstName: user.FirstName,
-				LastName:  user.LastName,
-				Email: cosModel.EmailInput{
-					Email: user.Email,
-				},
-				AppSource: &appSource,
-			}, tenant, []cosModel.Role{cosModel.RoleUser})
+			userResponse, err := services.CustomerOsClient.GetUserByEmail(tenant, user.Email)
 			if err != nil {
 				context.JSON(500, gin.H{
 					"error": err.Error(),
@@ -101,7 +107,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 
 			userIds = append(userIds, EmailAddressWithId{
 				Email: user.Email,
-				Id:    storedUser.ID,
+				Id:    userResponse.ID,
 			})
 		}
 
@@ -303,11 +309,96 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					return
 				}
 			}
+
+			//log entries
+			for _, logEntry := range organization.LogEntry {
+
+				interactionEventId, err := services.CustomerOsClient.CreateLogEntry(tenant, username, organizationId, logEntry.CreatedBy, logEntry.Content, logEntry.ContentType, logEntry.Date)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+
+				if interactionEventId == nil {
+					context.JSON(500, gin.H{
+						"error": "interactionEventId is nil",
+					})
+					return
+				}
+			}
+
+			////issues
+			//issueGrpcRequest := issuepb.UpsertIssueGrpcRequest{
+			//	Tenant:      tenant,
+			//	Subject:     "bunica are mere",
+			//	Status:      "",
+			//	Priority:    "",
+			//	Description: "ce faci?",
+			//	CreatedAt:   timestamppb.New(now),
+			//	UpdatedAt:   timestamppb.New(now),
+			//	SourceFields: &commonpb.SourceFields{
+			//		Source:    "zendesk_support",
+			//		AppSource: appSource,
+			//	},
+			//	ExternalSystemFields: &commonpb.ExternalSystemFields{
+			//		ExternalSystemId: "zendesk_support",
+			//		ExternalId:       "random-thing",
+			//		ExternalUrl:      "https://random-thing.zendesk.com/agent/tickets/1",
+			//		SyncDate:         timestamppb.New(now),
+			//	},
+			//}
+			//
+			//s := "b7c85888-388b-4425-a7da-5c4401e9947b"
+			//issueGrpcRequest.SubmittedByUserId = &s
+			//issueGrpcRequest.ReportedByOrganizationId = &organizationId
+			//
+			//_, err = services.GrpcClients.IssueClient.UpsertIssue(context, &issueGrpcRequest)
+			//if err != nil {
+			//	context.JSON(500, gin.H{
+			//		"error": err.Error(),
+			//	})
+			//	return
+			//}
 		}
 		context.JSON(200, gin.H{
 			"tenant": "tenant initiated",
 		})
 	})
+}
+
+func validateRequestAndGetFileBytes(context *gin.Context) (*SourceData, error) {
+	tenant := context.GetHeader("TENANT_NAME")
+	if tenant == "" {
+		return nil, errors.New("tenant is required")
+	}
+
+	username := context.GetHeader("MASTER_USERNAME")
+	if username == "" {
+		return nil, errors.New("username is required")
+	}
+
+	multipartFileHeader, err := context.FormFile("file")
+	if err != nil {
+		return nil, err
+	}
+
+	multipartFile, err := multipartFileHeader.Open()
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := ioutil.ReadAll(multipartFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var sourceData SourceData
+	if err := json.Unmarshal(bytes, &sourceData); err != nil {
+		return nil, err
+	}
+
+	return &sourceData, nil
 }
 
 func toParticipantInputArr(from []string, participantType *string) []cosModel.InteractionEventParticipantInput {

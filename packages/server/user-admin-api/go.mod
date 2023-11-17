@@ -11,12 +11,15 @@ require (
 	github.com/lucasepe/codename v0.2.0
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231118063333-4ba30212f1ba
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231118063640-f0de224e076b
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231120145804-10b6738ad211
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231120145804-10b6738ad211
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231120151307-3cff2d3076b6
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/oauth2 v0.14.0
 	golang.org/x/text v0.14.0
 	google.golang.org/api v0.151.0
+	google.golang.org/grpc v1.59.0
+	google.golang.org/protobuf v1.31.0
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
 )
@@ -71,7 +74,5 @@ require (
 	golang.org/x/sys v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231106174013-bbf56f31fb17 // indirect
-	google.golang.org/grpc v1.59.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
