@@ -168,3 +168,23 @@ func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys 
 
 	return results
 }
+
+func (i *Loaders) GetExternalSystemsForContract(ctx context.Context, contractId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForContract.Load(ctx, dataloader.StringKey(contractId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.ExternalSystemEntities)
+	return &resultObj, nil
+}
+
+func (i *Loaders) GetExternalSystemsForServiceLineItem(ctx context.Context, serviceLineItemId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForServiceLineItem.Load(ctx, dataloader.StringKey(serviceLineItemId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.ExternalSystemEntities)
+	return &resultObj, nil
+}

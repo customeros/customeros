@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -80,7 +81,15 @@ func (r *serviceLineItemResolver) CreatedBy(ctx context.Context, obj *model.Serv
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *serviceLineItemResolver) ExternalLinks(ctx context.Context, obj *model.ServiceLineItem) ([]*model.ExternalSystem, error) {
-	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForServiceLineItem(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get external system for service line item %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get external system for service line item %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
 // ServiceLineItem returns generated.ServiceLineItemResolver implementation.
