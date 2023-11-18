@@ -535,6 +535,18 @@ type DashboardNewCustomersPerMonth struct {
 	Count int `json:"count"`
 }
 
+type DashboardRetentionRate struct {
+	RetentionRate      int                               `json:"retentionRate"`
+	IncreasePercentage float64                           `json:"increasePercentage"`
+	PerMonth           []*DashboardRetentionRatePerMonth `json:"perMonth"`
+}
+
+type DashboardRetentionRatePerMonth struct {
+	Month      int `json:"month"`
+	RenewCount int `json:"renewCount"`
+	ChurnCount int `json:"churnCount"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {

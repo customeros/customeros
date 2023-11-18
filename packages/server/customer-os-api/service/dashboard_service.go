@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"math/rand"
 )
 
 type DashboardViewOrganizationsRequest struct {
@@ -25,7 +26,8 @@ type DashboardViewOrganizationsRequest struct {
 type DashboardService interface {
 	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
 
-	GetDashboardNewCustomersData(ctx context.Context, year int) (entityDashboard.DashboardNewCustomersData, error)
+	GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error)
+	GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error)
 }
 
 type dashboardService struct {
@@ -79,7 +81,7 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	return &paginatedResult, nil
 }
 
-func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, year int) (entityDashboard.DashboardNewCustomersData, error) {
+func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -97,5 +99,29 @@ func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, yea
 		})
 	}
 
-	return response, nil
+	return &response, nil
+}
+
+func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("year", year))
+
+	response := entityDashboard.DashboardRetentionRateData{}
+
+	response.RetentionRate = 86
+	response.IncreasePercentage = 2.6
+
+	min := 2
+	max := 5
+	for i := 1; i <= 12; i++ {
+		response.Months = append(response.Months, &entityDashboard.DashboardRetentionRatePerMonthData{
+			Month:      i,
+			RenewCount: i*(rand.Intn(max-min)+min) + 7,
+			ChurnCount: i + 2,
+		})
+	}
+
+	return &response, nil
 }
