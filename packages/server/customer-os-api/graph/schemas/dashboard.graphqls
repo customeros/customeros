@@ -3,4 +3,17 @@ extend type Query {
     sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
+
+    dashboard_NewCustomers(year: Int!): DashboardNewCustomers
+}
+
+type DashboardNewCustomers {
+    thisMonthCount: Int!
+    thisMonthIncreasePercentage: Float!
+    perMonth: [DashboardNewCustomersPerMonth]!
+}
+
+type DashboardNewCustomersPerMonth {
+    month: Int!
+    count: Int!
 }

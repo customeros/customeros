@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	entityDashboard "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity/dashboard"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -23,6 +24,8 @@ type DashboardViewOrganizationsRequest struct {
 
 type DashboardService interface {
 	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
+
+	GetDashboardNewCustomersData(ctx context.Context, year int) (entityDashboard.DashboardNewCustomersData, error)
 }
 
 type dashboardService struct {
@@ -74,4 +77,25 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 
 	paginatedResult.SetRows(&organizationEntities)
 	return &paginatedResult, nil
+}
+
+func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, year int) (entityDashboard.DashboardNewCustomersData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("year", year))
+
+	response := entityDashboard.DashboardNewCustomersData{}
+
+	response.ThisMonthCount = 127
+	response.ThisMonthIncreasePercentage = 3.1
+
+	for i := 1; i <= 12; i++ {
+		response.Months = append(response.Months, &entityDashboard.DashboardNewCustomerMonthData{
+			Month: i,
+			Count: i*10 + 7,
+		})
+	}
+
+	return response, nil
 }

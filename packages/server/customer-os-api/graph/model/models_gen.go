@@ -524,6 +524,17 @@ type CustomerUser struct {
 	JobRole *CustomerJobRole `json:"jobRole"`
 }
 
+type DashboardNewCustomers struct {
+	ThisMonthCount              int                              `json:"thisMonthCount"`
+	ThisMonthIncreasePercentage float64                          `json:"thisMonthIncreasePercentage"`
+	PerMonth                    []*DashboardNewCustomersPerMonth `json:"perMonth"`
+}
+
+type DashboardNewCustomersPerMonth struct {
+	Month int `json:"month"`
+	Count int `json:"count"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
