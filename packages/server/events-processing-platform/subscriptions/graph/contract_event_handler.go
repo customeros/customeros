@@ -107,7 +107,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		}
 	} else {
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		err = contractHandler.UpdateRenewalArrForecast(ctx, eventData.Tenant, contractId)
+		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
