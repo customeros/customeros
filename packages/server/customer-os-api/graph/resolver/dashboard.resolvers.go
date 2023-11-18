@@ -122,3 +122,20 @@ func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, year int) (*m
 
 	return mapper.MapDashboardARRBreakdownData(newCustomersData), nil
 }
+
+// DashboardGrossRevenueRetention is the resolver for the dashboard_GrossRevenueRetention field.
+func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, year int) (*model.DashboardGrossRevenueRetention, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardGrossRevenueRetention", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("year", year))
+
+	newCustomersData, err := r.Services.QueryService.GetDashboardGrossRevenueRetentionData(ctx, year)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for year %d", year)
+		return nil, nil
+	}
+
+	return mapper.MapDashboardGrossRevenueRetentionData(newCustomersData), nil
+}

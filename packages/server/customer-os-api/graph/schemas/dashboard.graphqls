@@ -8,6 +8,7 @@ extend type Query {
     dashboard_RetentionRate(year: Int!): DashboardRetentionRate
     dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
     dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
+    dashboard_GrossRevenueRetention(year: Int!): DashboardGrossRevenueRetention
 }
 
 type DashboardNewCustomers {
@@ -49,4 +50,14 @@ type DashboardARRBreakdownPerMonth {
     downgrades: Int!
     cancellations: Int!
     churned: Int!
+}
+
+type DashboardGrossRevenueRetention {
+    grossRevenueRetention: Float!
+    increasePercentage: Float!
+    perMonth: [DashboardGrossRevenueRetentionPerMonth]!
+}
+type DashboardGrossRevenueRetentionPerMonth {
+    month: Int!
+    percentage: Float!
 }

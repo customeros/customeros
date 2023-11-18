@@ -41,3 +41,13 @@ type DashboardARRBreakdownPerMonthData struct {
 	Cancellations   int
 	Churned         int
 }
+
+type DashboardGrossRevenueRetentionData struct {
+	GrossRevenueRetention float64
+	IncreasePercentage    float64
+	Months                []*DashboardGrossRevenueRetentionPerMonthData
+}
+type DashboardGrossRevenueRetentionPerMonthData struct {
+	Month      int
+	Percentage float64
+}
