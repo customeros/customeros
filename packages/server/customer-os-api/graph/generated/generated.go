@@ -274,6 +274,18 @@ type ComplexityRoot struct {
 		Month func(childComplexity int) int
 	}
 
+	DashboardRetentionRate struct {
+		IncreasePercentage func(childComplexity int) int
+		PerMonth           func(childComplexity int) int
+		RetentionRate      func(childComplexity int) int
+	}
+
+	DashboardRetentionRatePerMonth struct {
+		ChurnCount func(childComplexity int) int
+		Month      func(childComplexity int) int
+		RenewCount func(childComplexity int) int
+	}
+
 	Email struct {
 		AppSource              func(childComplexity int) int
 		Contacts               func(childComplexity int) int
@@ -841,6 +853,7 @@ type ComplexityRoot struct {
 		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contract                              func(childComplexity int, id string) int
 		DashboardNewCustomers                 func(childComplexity int, year int) int
+		DashboardRetentionRate                func(childComplexity int, year int) int
 		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Email                                 func(childComplexity int, id string) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
@@ -1283,6 +1296,7 @@ type QueryResolver interface {
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	DashboardNewCustomers(ctx context.Context, year int) (*model.DashboardNewCustomers, error)
+	DashboardRetentionRate(ctx context.Context, year int) (*model.DashboardRetentionRate, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
@@ -2360,6 +2374,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardNewCustomersPerMonth.Month(childComplexity), true
+
+	case "DashboardRetentionRate.increasePercentage":
+		if e.complexity.DashboardRetentionRate.IncreasePercentage == nil {
+			break
+		}
+
+		return e.complexity.DashboardRetentionRate.IncreasePercentage(childComplexity), true
+
+	case "DashboardRetentionRate.perMonth":
+		if e.complexity.DashboardRetentionRate.PerMonth == nil {
+			break
+		}
+
+		return e.complexity.DashboardRetentionRate.PerMonth(childComplexity), true
+
+	case "DashboardRetentionRate.retentionRate":
+		if e.complexity.DashboardRetentionRate.RetentionRate == nil {
+			break
+		}
+
+		return e.complexity.DashboardRetentionRate.RetentionRate(childComplexity), true
+
+	case "DashboardRetentionRatePerMonth.churnCount":
+		if e.complexity.DashboardRetentionRatePerMonth.ChurnCount == nil {
+			break
+		}
+
+		return e.complexity.DashboardRetentionRatePerMonth.ChurnCount(childComplexity), true
+
+	case "DashboardRetentionRatePerMonth.month":
+		if e.complexity.DashboardRetentionRatePerMonth.Month == nil {
+			break
+		}
+
+		return e.complexity.DashboardRetentionRatePerMonth.Month(childComplexity), true
+
+	case "DashboardRetentionRatePerMonth.renewCount":
+		if e.complexity.DashboardRetentionRatePerMonth.RenewCount == nil {
+			break
+		}
+
+		return e.complexity.DashboardRetentionRatePerMonth.RenewCount(childComplexity), true
 
 	case "Email.appSource":
 		if e.complexity.Email.AppSource == nil {
@@ -6329,6 +6385,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DashboardNewCustomers(childComplexity, args["year"].(int)), true
 
+	case "Query.dashboard_RetentionRate":
+		if e.complexity.Query.DashboardRetentionRate == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboard_RetentionRate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardRetentionRate(childComplexity, args["year"].(int)), true
+
 	case "Query.dashboardView_Organizations":
 		if e.complexity.Query.DashboardViewOrganizations == nil {
 			break
@@ -8110,6 +8178,7 @@ enum CustomFieldTemplateType {
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
     dashboard_NewCustomers(year: Int!): DashboardNewCustomers
+    dashboard_RetentionRate(year: Int!): DashboardRetentionRate
 }
 
 type DashboardNewCustomers {
@@ -8117,10 +8186,20 @@ type DashboardNewCustomers {
     thisMonthIncreasePercentage: Float!
     perMonth: [DashboardNewCustomersPerMonth]!
 }
-
 type DashboardNewCustomersPerMonth {
     month: Int!
     count: Int!
+}
+
+type DashboardRetentionRate {
+    retentionRate: Int!
+    increasePercentage: Float!
+    perMonth: [DashboardRetentionRatePerMonth]!
+}
+type DashboardRetentionRatePerMonth {
+    month: Int!
+    renewCount: Int!
+    churnCount: Int!
 }`, BuiltIn: false},
 	{Name: "../schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
@@ -13024,6 +13103,21 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_args(ctx con
 }
 
 func (ec *executionContext) field_Query_dashboard_NewCustomers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["year"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["year"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dashboard_RetentionRate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -20305,6 +20399,278 @@ func (ec *executionContext) _DashboardNewCustomersPerMonth_count(ctx context.Con
 func (ec *executionContext) fieldContext_DashboardNewCustomersPerMonth_count(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DashboardNewCustomersPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardRetentionRate_retentionRate(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardRetentionRate_retentionRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RetentionRate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardRetentionRate_retentionRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardRetentionRate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardRetentionRate_increasePercentage(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardRetentionRate_increasePercentage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IncreasePercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardRetentionRate_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardRetentionRate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardRetentionRate_perMonth(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardRetentionRate_perMonth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerMonth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DashboardRetentionRatePerMonth)
+	fc.Result = res
+	return ec.marshalNDashboardRetentionRatePerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRatePerMonth(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardRetentionRate_perMonth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardRetentionRate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "month":
+				return ec.fieldContext_DashboardRetentionRatePerMonth_month(ctx, field)
+			case "renewCount":
+				return ec.fieldContext_DashboardRetentionRatePerMonth_renewCount(ctx, field)
+			case "churnCount":
+				return ec.fieldContext_DashboardRetentionRatePerMonth_churnCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardRetentionRatePerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardRetentionRatePerMonth_month(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRatePerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardRetentionRatePerMonth_month(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Month, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardRetentionRatePerMonth_month(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardRetentionRatePerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardRetentionRatePerMonth_renewCount(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRatePerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardRetentionRatePerMonth_renewCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardRetentionRatePerMonth_renewCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardRetentionRatePerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardRetentionRatePerMonth_churnCount(ctx context.Context, field graphql.CollectedField, obj *model.DashboardRetentionRatePerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardRetentionRatePerMonth_churnCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChurnCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardRetentionRatePerMonth_churnCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardRetentionRatePerMonth",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -50915,6 +51281,66 @@ func (ec *executionContext) fieldContext_Query_dashboard_NewCustomers(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_dashboard_RetentionRate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboard_RetentionRate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardRetentionRate(rctx, fc.Args["year"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DashboardRetentionRate)
+	fc.Result = res
+	return ec.marshalODashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboard_RetentionRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "retentionRate":
+				return ec.fieldContext_DashboardRetentionRate_retentionRate(ctx, field)
+			case "increasePercentage":
+				return ec.fieldContext_DashboardRetentionRate_increasePercentage(ctx, field)
+			case "perMonth":
+				return ec.fieldContext_DashboardRetentionRate_perMonth(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardRetentionRate", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboard_RetentionRate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_email(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_email(ctx, field)
 	if err != nil {
@@ -66066,6 +66492,104 @@ func (ec *executionContext) _DashboardNewCustomersPerMonth(ctx context.Context, 
 	return out
 }
 
+var dashboardRetentionRateImplementors = []string{"DashboardRetentionRate"}
+
+func (ec *executionContext) _DashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardRetentionRate) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardRetentionRateImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardRetentionRate")
+		case "retentionRate":
+			out.Values[i] = ec._DashboardRetentionRate_retentionRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "increasePercentage":
+			out.Values[i] = ec._DashboardRetentionRate_increasePercentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "perMonth":
+			out.Values[i] = ec._DashboardRetentionRate_perMonth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var dashboardRetentionRatePerMonthImplementors = []string{"DashboardRetentionRatePerMonth"}
+
+func (ec *executionContext) _DashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardRetentionRatePerMonth) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardRetentionRatePerMonthImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardRetentionRatePerMonth")
+		case "month":
+			out.Values[i] = ec._DashboardRetentionRatePerMonth_month(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "renewCount":
+			out.Values[i] = ec._DashboardRetentionRatePerMonth_renewCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "churnCount":
+			out.Values[i] = ec._DashboardRetentionRatePerMonth_churnCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var emailImplementors = []string{"Email"}
 
 func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, obj *model.Email) graphql.Marshaler {
@@ -71947,6 +72471,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dashboard_RetentionRate":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboard_RetentionRate(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "email":
 			field := field
 
@@ -74672,6 +75215,44 @@ func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithub�
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalODashboardNewCustomersPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardNewCustomersPerMonth(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardRetentionRatePerMonth) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalODashboardRetentionRatePerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRatePerMonth(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -77571,6 +78152,20 @@ func (ec *executionContext) marshalODashboardNewCustomersPerMonth2ᚖgithubᚗco
 		return graphql.Null
 	}
 	return ec._DashboardNewCustomersPerMonth(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRate) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardRetentionRate(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardRetentionRatePerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRatePerMonth) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardRetentionRatePerMonth(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {
