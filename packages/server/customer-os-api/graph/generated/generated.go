@@ -354,6 +354,8 @@ type ComplexityRoot struct {
 		IsGoogleActive       func(childComplexity int) int
 		IsGoogleTokenExpired func(childComplexity int) int
 		IsOwner              func(childComplexity int) int
+		MaxARRForecastValue  func(childComplexity int) int
+		MinARRForecastValue  func(childComplexity int) int
 		User                 func(childComplexity int) int
 	}
 
@@ -2751,6 +2753,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalCache.IsOwner(childComplexity), true
+
+	case "GlobalCache.maxARRForecastValue":
+		if e.complexity.GlobalCache.MaxARRForecastValue == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.MaxARRForecastValue(childComplexity), true
+
+	case "GlobalCache.minARRForecastValue":
+		if e.complexity.GlobalCache.MinARRForecastValue == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.MinARRForecastValue(childComplexity), true
 
 	case "GlobalCache.user":
 		if e.complexity.GlobalCache.User == nil {
@@ -7406,6 +7422,8 @@ type GlobalCache {
     isGoogleActive: Boolean!
     isGoogleTokenExpired: Boolean!
     gCliCache: [GCliItem!]!
+    minARRForecastValue: Float!
+    maxARRForecastValue: Float!
 }`, BuiltIn: false},
 	{Name: "../schemas/calendar.graphqls", Input: `"""
 Describes the relationship a Contact has with a Organization.
@@ -23134,6 +23152,94 @@ func (ec *executionContext) fieldContext_GlobalCache_gCliCache(ctx context.Conte
 				return ec.fieldContext_GCliItem_data(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_minARRForecastValue(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_minARRForecastValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MinARRForecastValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_minARRForecastValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_maxARRForecastValue(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_maxARRForecastValue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxARRForecastValue, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_maxARRForecastValue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -49830,6 +49936,10 @@ func (ec *executionContext) fieldContext_Query_global_Cache(ctx context.Context,
 				return ec.fieldContext_GlobalCache_isGoogleTokenExpired(ctx, field)
 			case "gCliCache":
 				return ec.fieldContext_GlobalCache_gCliCache(ctx, field)
+			case "minARRForecastValue":
+				return ec.fieldContext_GlobalCache_minARRForecastValue(ctx, field)
+			case "maxARRForecastValue":
+				return ec.fieldContext_GlobalCache_maxARRForecastValue(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalCache", field.Name)
 		},
@@ -66305,6 +66415,16 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 			}
 		case "gCliCache":
 			out.Values[i] = ec._GlobalCache_gCliCache(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "minARRForecastValue":
+			out.Values[i] = ec._GlobalCache_minARRForecastValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "maxARRForecastValue":
+			out.Values[i] = ec._GlobalCache_maxARRForecastValue(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

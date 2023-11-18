@@ -278,8 +278,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", OWNER_FIRST_NAME_FOR_SORTING, OWNER_LAST_NAME_FOR_SORTING "
 		}
-		if sort != nil && sort.Direction == model.SortingDirectionAsc && sort.By == "NAME" {
-			query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
+		if sort != nil && sort.By == "NAME" {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.name <> \"\" and not o.name is null THEN o.name ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as NAME_FOR_SORTING "
+			} else {
+				query += ", o.name as NAME_FOR_SORTING "
+			}
 			aliases += ", NAME_FOR_SORTING "
 		}
 		if sort != nil && sort.By == "RENEWAL_LIKELIHOOD" {

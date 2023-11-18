@@ -32,6 +32,8 @@ export type GlobalCacheQuery = {
     isGoogleActive: boolean;
     isGoogleTokenExpired: boolean;
     isOwner: boolean;
+    minARRForecastValue: any;
+    maxARRForecastValue: any;
     user: {
       __typename?: 'User';
       id: string;
@@ -85,6 +87,8 @@ export const GlobalCacheDocument = `
         display
       }
     }
+    minARRForecastValue
+    maxARRForecastValue
   }
 }
     `;

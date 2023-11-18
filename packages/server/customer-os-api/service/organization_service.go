@@ -45,6 +45,7 @@ type OrganizationService interface {
 	UpdateLastTouchpointByEmail(ctx context.Context, email string)
 	UpdateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string)
 	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
+	GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -449,6 +450,20 @@ func (s *organizationService) GetSuggestedMergeToForOrganizations(ctx context.Co
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
+}
+
+func (s *organizationService) GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetMinMaxRenewalForecastAmount")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	min, max, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastAmount(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting suggested merge primary organizations: {%v}", err.Error())
+		return 0, 0, err
+	}
+	return min, max, nil
 }
 
 func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error) {

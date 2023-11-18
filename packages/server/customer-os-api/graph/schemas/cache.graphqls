@@ -8,4 +8,6 @@ type GlobalCache {
     isGoogleActive: Boolean!
     isGoogleTokenExpired: Boolean!
     gCliCache: [GCliItem!]!
+    minARRForecastValue: Float!
+    maxARRForecastValue: Float!
 }
