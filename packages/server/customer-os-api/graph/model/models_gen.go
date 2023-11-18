@@ -524,6 +524,22 @@ type CustomerUser struct {
 	JobRole *CustomerJobRole `json:"jobRole"`
 }
 
+type DashboardARRBreakdown struct {
+	ArrBreakdown       float64                          `json:"arrBreakdown"`
+	IncreasePercentage float64                          `json:"increasePercentage"`
+	PerMonth           []*DashboardARRBreakdownPerMonth `json:"perMonth"`
+}
+
+type DashboardARRBreakdownPerMonth struct {
+	Month           int `json:"month"`
+	NewlyContracted int `json:"newlyContracted"`
+	Renewals        int `json:"renewals"`
+	Upsells         int `json:"upsells"`
+	Downgrades      int `json:"downgrades"`
+	Cancellations   int `json:"cancellations"`
+	Churned         int `json:"churned"`
+}
+
 type DashboardNewCustomers struct {
 	ThisMonthCount              int                              `json:"thisMonthCount"`
 	ThisMonthIncreasePercentage float64                          `json:"thisMonthIncreasePercentage"`

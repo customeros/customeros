@@ -26,3 +26,18 @@ type DashboardRevenueAtRiskData struct {
 	HighConfidence float64
 	AtRisk         float64
 }
+
+type DashboardARRBreakdownData struct {
+	ArrBreakdown       float64
+	IncreasePercentage float64
+	Months             []*DashboardARRBreakdownPerMonthData
+}
+type DashboardARRBreakdownPerMonthData struct {
+	Month           int
+	NewlyContracted int
+	Renewals        int
+	Upsells         int
+	Downgrades      int
+	Cancellations   int
+	Churned         int
+}

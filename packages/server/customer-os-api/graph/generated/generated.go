@@ -263,6 +263,22 @@ type ComplexityRoot struct {
 		JobRole func(childComplexity int) int
 	}
 
+	DashboardARRBreakdown struct {
+		ArrBreakdown       func(childComplexity int) int
+		IncreasePercentage func(childComplexity int) int
+		PerMonth           func(childComplexity int) int
+	}
+
+	DashboardARRBreakdownPerMonth struct {
+		Cancellations   func(childComplexity int) int
+		Churned         func(childComplexity int) int
+		Downgrades      func(childComplexity int) int
+		Month           func(childComplexity int) int
+		NewlyContracted func(childComplexity int) int
+		Renewals        func(childComplexity int) int
+		Upsells         func(childComplexity int) int
+	}
+
 	DashboardNewCustomers struct {
 		PerMonth                    func(childComplexity int) int
 		ThisMonthCount              func(childComplexity int) int
@@ -857,6 +873,7 @@ type ComplexityRoot struct {
 		ContactByPhone                        func(childComplexity int, e164 string) int
 		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contract                              func(childComplexity int, id string) int
+		DashboardARRBreakdown                 func(childComplexity int, year int) int
 		DashboardNewCustomers                 func(childComplexity int, year int) int
 		DashboardRetentionRate                func(childComplexity int, year int) int
 		DashboardRevenueAtRisk                func(childComplexity int, year int) int
@@ -1304,6 +1321,7 @@ type QueryResolver interface {
 	DashboardNewCustomers(ctx context.Context, year int) (*model.DashboardNewCustomers, error)
 	DashboardRetentionRate(ctx context.Context, year int) (*model.DashboardRetentionRate, error)
 	DashboardRevenueAtRisk(ctx context.Context, year int) (*model.DashboardRevenueAtRisk, error)
+	DashboardARRBreakdown(ctx context.Context, year int) (*model.DashboardARRBreakdown, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
@@ -2346,6 +2364,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CustomerUser.JobRole(childComplexity), true
+
+	case "DashboardARRBreakdown.arrBreakdown":
+		if e.complexity.DashboardARRBreakdown.ArrBreakdown == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdown.ArrBreakdown(childComplexity), true
+
+	case "DashboardARRBreakdown.increasePercentage":
+		if e.complexity.DashboardARRBreakdown.IncreasePercentage == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdown.IncreasePercentage(childComplexity), true
+
+	case "DashboardARRBreakdown.perMonth":
+		if e.complexity.DashboardARRBreakdown.PerMonth == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdown.PerMonth(childComplexity), true
+
+	case "DashboardARRBreakdownPerMonth.cancellations":
+		if e.complexity.DashboardARRBreakdownPerMonth.Cancellations == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.Cancellations(childComplexity), true
+
+	case "DashboardARRBreakdownPerMonth.churned":
+		if e.complexity.DashboardARRBreakdownPerMonth.Churned == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.Churned(childComplexity), true
+
+	case "DashboardARRBreakdownPerMonth.downgrades":
+		if e.complexity.DashboardARRBreakdownPerMonth.Downgrades == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.Downgrades(childComplexity), true
+
+	case "DashboardARRBreakdownPerMonth.month":
+		if e.complexity.DashboardARRBreakdownPerMonth.Month == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.Month(childComplexity), true
+
+	case "DashboardARRBreakdownPerMonth.newlyContracted":
+		if e.complexity.DashboardARRBreakdownPerMonth.NewlyContracted == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.NewlyContracted(childComplexity), true
+
+	case "DashboardARRBreakdownPerMonth.renewals":
+		if e.complexity.DashboardARRBreakdownPerMonth.Renewals == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.Renewals(childComplexity), true
+
+	case "DashboardARRBreakdownPerMonth.upsells":
+		if e.complexity.DashboardARRBreakdownPerMonth.Upsells == nil {
+			break
+		}
+
+		return e.complexity.DashboardARRBreakdownPerMonth.Upsells(childComplexity), true
 
 	case "DashboardNewCustomers.perMonth":
 		if e.complexity.DashboardNewCustomers.PerMonth == nil {
@@ -6394,6 +6482,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Contract(childComplexity, args["id"].(string)), true
 
+	case "Query.dashboard_ARRBreakdown":
+		if e.complexity.Query.DashboardARRBreakdown == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboard_ARRBreakdown_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardARRBreakdown(childComplexity, args["year"].(int)), true
+
 	case "Query.dashboard_NewCustomers":
 		if e.complexity.Query.DashboardNewCustomers == nil {
 			break
@@ -8213,6 +8313,7 @@ enum CustomFieldTemplateType {
     dashboard_NewCustomers(year: Int!): DashboardNewCustomers
     dashboard_RetentionRate(year: Int!): DashboardRetentionRate
     dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
+    dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
 }
 
 type DashboardNewCustomers {
@@ -8239,6 +8340,21 @@ type DashboardRetentionRatePerMonth {
 type DashboardRevenueAtRisk {
     highConfidence: Float!
     atRisk: Float!
+}
+
+type DashboardARRBreakdown {
+    arrBreakdown: Float!
+    increasePercentage: Float!
+    perMonth: [DashboardARRBreakdownPerMonth]!
+}
+type DashboardARRBreakdownPerMonth {
+    month: Int!
+    newlyContracted: Int!
+    renewals: Int!
+    upsells: Int!
+    downgrades: Int!
+    cancellations: Int!
+    churned: Int!
 }`, BuiltIn: false},
 	{Name: "../schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
@@ -13138,6 +13254,21 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_args(ctx con
 		}
 	}
 	args["sort"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dashboard_ARRBreakdown_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["year"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["year"] = arg0
 	return args, nil
 }
 
@@ -20232,6 +20363,462 @@ func (ec *executionContext) fieldContext_CustomerUser_jobRole(ctx context.Contex
 				return ec.fieldContext_CustomerJobRole_id(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type CustomerJobRole", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdown_arrBreakdown(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdown) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdown_arrBreakdown(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ArrBreakdown, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdown_arrBreakdown(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdown_increasePercentage(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdown) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdown_increasePercentage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IncreasePercentage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdown_increasePercentage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdown_perMonth(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdown) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdown_perMonth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerMonth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DashboardARRBreakdownPerMonth)
+	fc.Result = res
+	return ec.marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardARRBreakdownPerMonth(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdown_perMonth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "month":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_month(ctx, field)
+			case "newlyContracted":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_newlyContracted(ctx, field)
+			case "renewals":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_renewals(ctx, field)
+			case "upsells":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_upsells(ctx, field)
+			case "downgrades":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_downgrades(ctx, field)
+			case "cancellations":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_cancellations(ctx, field)
+			case "churned":
+				return ec.fieldContext_DashboardARRBreakdownPerMonth_churned(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardARRBreakdownPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_month(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_month(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Month, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_month(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_newlyContracted(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_newlyContracted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NewlyContracted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_newlyContracted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_renewals(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_renewals(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Renewals, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_renewals(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_upsells(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_upsells(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Upsells, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_upsells(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_downgrades(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_downgrades(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Downgrades, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_downgrades(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_cancellations(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_cancellations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cancellations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_cancellations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth_churned(ctx context.Context, field graphql.CollectedField, obj *model.DashboardARRBreakdownPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardARRBreakdownPerMonth_churned(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Churned, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_churned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardARRBreakdownPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -51541,6 +52128,66 @@ func (ec *executionContext) fieldContext_Query_dashboard_RevenueAtRisk(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_dashboard_ARRBreakdown(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboard_ARRBreakdown(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardARRBreakdown(rctx, fc.Args["year"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DashboardARRBreakdown)
+	fc.Result = res
+	return ec.marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardARRBreakdown(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboard_ARRBreakdown(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "arrBreakdown":
+				return ec.fieldContext_DashboardARRBreakdown_arrBreakdown(ctx, field)
+			case "increasePercentage":
+				return ec.fieldContext_DashboardARRBreakdown_increasePercentage(ctx, field)
+			case "perMonth":
+				return ec.fieldContext_DashboardARRBreakdown_perMonth(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardARRBreakdown", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboard_ARRBreakdown_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_email(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_email(ctx, field)
 	if err != nil {
@@ -66599,6 +67246,124 @@ func (ec *executionContext) _CustomerUser(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var dashboardARRBreakdownImplementors = []string{"DashboardARRBreakdown"}
+
+func (ec *executionContext) _DashboardARRBreakdown(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardARRBreakdown) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardARRBreakdownImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardARRBreakdown")
+		case "arrBreakdown":
+			out.Values[i] = ec._DashboardARRBreakdown_arrBreakdown(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "increasePercentage":
+			out.Values[i] = ec._DashboardARRBreakdown_increasePercentage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "perMonth":
+			out.Values[i] = ec._DashboardARRBreakdown_perMonth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var dashboardARRBreakdownPerMonthImplementors = []string{"DashboardARRBreakdownPerMonth"}
+
+func (ec *executionContext) _DashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardARRBreakdownPerMonthImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardARRBreakdownPerMonth")
+		case "month":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_month(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "newlyContracted":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_newlyContracted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "renewals":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_renewals(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "upsells":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_upsells(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "downgrades":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_downgrades(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cancellations":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_cancellations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "churned":
+			out.Values[i] = ec._DashboardARRBreakdownPerMonth_churned(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var dashboardNewCustomersImplementors = []string{"DashboardNewCustomers"}
 
 func (ec *executionContext) _DashboardNewCustomers(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardNewCustomers) graphql.Marshaler {
@@ -72753,6 +73518,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dashboard_ARRBreakdown":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboard_ARRBreakdown(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "email":
 			field := field
 
@@ -75451,6 +76235,44 @@ func (ec *executionContext) marshalNCustomerUser2ᚖgithubᚗcomᚋopenlineᚑai
 		return graphql.Null
 	}
 	return ec._CustomerUser(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalODashboardARRBreakdownPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardARRBreakdownPerMonth(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
 }
 
 func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardNewCustomersPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardNewCustomersPerMonth) graphql.Marshaler {
@@ -78401,6 +79223,20 @@ func (ec *executionContext) unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗco
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardARRBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdown) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardARRBreakdown(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardARRBreakdownPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DashboardARRBreakdownPerMonth(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalODashboardNewCustomers2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardNewCustomers(ctx context.Context, sel ast.SelectionSet, v *model.DashboardNewCustomers) graphql.Marshaler {

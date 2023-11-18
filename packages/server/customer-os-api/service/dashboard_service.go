@@ -29,6 +29,7 @@ type DashboardService interface {
 	GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error)
 	GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error)
 	GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error)
+	GetDashboardARRBreakdownData(ctx context.Context, year int) (*entityDashboard.DashboardARRBreakdownData, error)
 }
 
 type dashboardService struct {
@@ -137,6 +138,34 @@ func (s *dashboardService) GetDashboardRevenueAtRiskData(ctx context.Context, ye
 
 	response.HighConfidence = 1504990
 	response.AtRisk = 355300
+
+	return &response, nil
+}
+
+func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, year int) (*entityDashboard.DashboardARRBreakdownData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardARRBreakdownData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("year", year))
+
+	response := entityDashboard.DashboardARRBreakdownData{}
+
+	response.ArrBreakdown = 1830990
+	response.IncreasePercentage = 2.3
+
+	min := 1
+	max := 50
+	for i := 1; i <= 12; i++ {
+		response.Months = append(response.Months, &entityDashboard.DashboardARRBreakdownPerMonthData{
+			Month:           i,
+			NewlyContracted: rand.Intn(max-min) + min,
+			Renewals:        rand.Intn(max-min) + min,
+			Upsells:         rand.Intn(max-min) + min,
+			Downgrades:      rand.Intn(max-min) + min,
+			Cancellations:   rand.Intn(max-min) + min,
+			Churned:         rand.Intn(max-min) + min,
+		})
+	}
 
 	return &response, nil
 }
