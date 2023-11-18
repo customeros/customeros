@@ -4,37 +4,32 @@ extend type Query {
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
-    dashboard_NewCustomers(year: Int!): DashboardNewCustomers
-    dashboard_RetentionRate(year: Int!): DashboardRetentionRate
-    dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
-    dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
+    dashboard_MRRPerCustomer(year: Int!): DashboardMRRPerCustomer
     dashboard_GrossRevenueRetention(year: Int!): DashboardGrossRevenueRetention
+    dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
+    dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
+    dashboard_RetentionRate(year: Int!): DashboardRetentionRate
+    dashboard_NewCustomers(year: Int!): DashboardNewCustomers
 }
 
-type DashboardNewCustomers {
-    thisMonthCount: Int!
-    thisMonthIncreasePercentage: Float!
-    perMonth: [DashboardNewCustomersPerMonth]!
-}
-type DashboardNewCustomersPerMonth {
-    month: Int!
-    count: Int!
-}
-
-type DashboardRetentionRate {
-    retentionRate: Int!
+type DashboardMRRPerCustomer {
+    mrrPerCustomer: Float!
     increasePercentage: Float!
-    perMonth: [DashboardRetentionRatePerMonth]!
+    perMonth: [DashboardMRRPerCustomerPerMonth]!
 }
-type DashboardRetentionRatePerMonth {
+type DashboardMRRPerCustomerPerMonth {
     month: Int!
-    renewCount: Int!
-    churnCount: Int!
+    value: Int!
 }
 
-type DashboardRevenueAtRisk {
-    highConfidence: Float!
-    atRisk: Float!
+type DashboardGrossRevenueRetention {
+    grossRevenueRetention: Float!
+    increasePercentage: Float!
+    perMonth: [DashboardGrossRevenueRetentionPerMonth]!
+}
+type DashboardGrossRevenueRetentionPerMonth {
+    month: Int!
+    percentage: Float!
 }
 
 type DashboardARRBreakdown {
@@ -52,12 +47,28 @@ type DashboardARRBreakdownPerMonth {
     churned: Int!
 }
 
-type DashboardGrossRevenueRetention {
-    grossRevenueRetention: Float!
-    increasePercentage: Float!
-    perMonth: [DashboardGrossRevenueRetentionPerMonth]!
+type DashboardRevenueAtRisk {
+    highConfidence: Float!
+    atRisk: Float!
 }
-type DashboardGrossRevenueRetentionPerMonth {
+
+type DashboardRetentionRate {
+    retentionRate: Int!
+    increasePercentage: Float!
+    perMonth: [DashboardRetentionRatePerMonth]!
+}
+type DashboardRetentionRatePerMonth {
     month: Int!
-    percentage: Float!
+    renewCount: Int!
+    churnCount: Int!
+}
+
+type DashboardNewCustomers {
+    thisMonthCount: Int!
+    thisMonthIncreasePercentage: Float!
+    perMonth: [DashboardNewCustomersPerMonth]!
+}
+type DashboardNewCustomersPerMonth {
+    month: Int!
+    count: Int!
 }
