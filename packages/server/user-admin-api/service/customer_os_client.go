@@ -79,7 +79,7 @@ func (s *customerOsClient) GetTenantByWorkspace(workspace *model.WorkspaceInput)
 	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, err
 	}
-	return graphqlResponse.Workspace, nil
+	return graphqlResponse.Name, nil
 }
 
 func (s *customerOsClient) GetTenantByUserEmail(email string) (*string, error) {
