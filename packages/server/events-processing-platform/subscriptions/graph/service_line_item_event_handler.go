@@ -41,7 +41,7 @@ func (h *ServiceLineItemEventHandler) OnCreate(ctx context.Context, evt eventsto
 	}
 
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-	err = contractHandler.UpdateRenewalArrForecast(ctx, eventData.Tenant, eventData.ContractId)
+	err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())
@@ -79,7 +79,7 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	if contractDbNode != nil {
 		contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		err = contractHandler.UpdateRenewalArrForecast(ctx, eventData.Tenant, contract.Id)
+		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())

@@ -80,8 +80,8 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 	return &renewalCycleNext
 }
 
-func (h *contractHandler) UpdateRenewalArrForecast(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateRenewalArrForecast")
+func (h *contractHandler) UpdateRenewalArr(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateRenewalArr")
 	defer span.Finish()
 	span.LogFields(log.String("contractId", contractId))
 
@@ -95,18 +95,19 @@ func (h *contractHandler) UpdateRenewalArrForecast(ctx context.Context, tenant, 
 		return nil
 	}
 
-	maxArrForecast, err := h.calculateMaxArr(ctx, span, tenant, contract)
+	maxArr, err := h.calculateMaxArr(ctx, tenant, contract, renewalOpportunity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while calculating ARR for contract %s: %s", contractId, err.Error())
 		return nil
 	}
-	currentArrForecast := h.calculateCurrentArrByLikelihood(maxArrForecast, renewalOpportunity.RenewalDetails.RenewalLikelihood)
+	// adjust with likelihood
+	currentArr := h.calculateCurrentArrByLikelihood(maxArr, renewalOpportunity.RenewalDetails.RenewalLikelihood)
 
 	err = h.opportunityCommands.UpdateOpportunity.Handle(ctx, opportunitycmd.NewUpdateOpportunityCommand(renewalOpportunity.Id, tenant, "",
 		opportunitymodel.OpportunityDataFields{
-			Amount:    currentArrForecast,
-			MaxAmount: maxArrForecast,
+			Amount:    currentArr,
+			MaxAmount: maxArr,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -124,7 +125,7 @@ func (h *contractHandler) UpdateRenewalArrForecast(ctx context.Context, tenant, 
 	return nil
 }
 
-func (h *contractHandler) calculateMaxArr(ctx context.Context, span opentracing.Span, tenant string, contract *entity.ContractEntity) (float64, error) {
+func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity) (float64, error) {
 	var arr float64
 
 	// Fetch service line items for the contract from the database
@@ -152,11 +153,14 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, span opentracing.
 		arr += annualPrice
 	}
 
-	// Prorate if the contract has an end date
+	// Adjust with end date
 	currentDate := utils.Now()
-	if contract.EndedAt != nil && contract.EndedAt.After(currentDate) {
-		monthsRemaining := monthsUntilContractEnd(currentDate, *contract.EndedAt)
-		arr = prorateArr(arr, monthsRemaining)
+	if contract.EndedAt != nil {
+		// if end date before next renewal cycle, return set current arr to 0
+		if renewalOpportunity.RenewalDetails.RenewedAt != nil && contract.EndedAt.Before(*renewalOpportunity.RenewalDetails.RenewedAt) {
+			arr = 0
+		}
+		arr = prorateArr(arr, monthsUntilContractEnd(currentDate, *contract.EndedAt))
 	}
 
 	return arr, nil
@@ -182,6 +186,9 @@ func monthsUntilContractEnd(start, end time.Time) int {
 }
 
 func prorateArr(arr float64, monthsRemaining int) float64 {
+	if monthsRemaining > 12 {
+		return arr
+	}
 	monthlyRate := arr / 12
 	return monthlyRate * float64(monthsRemaining)
 }
