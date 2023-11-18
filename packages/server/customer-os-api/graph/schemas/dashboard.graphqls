@@ -4,12 +4,21 @@ extend type Query {
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
+    dashboard_CustomerMap: [DashboardCustomerMap!]
     dashboard_MRRPerCustomer(year: Int!): DashboardMRRPerCustomer
     dashboard_GrossRevenueRetention(year: Int!): DashboardGrossRevenueRetention
     dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
     dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
     dashboard_RetentionRate(year: Int!): DashboardRetentionRate
     dashboard_NewCustomers(year: Int!): DashboardNewCustomers
+}
+
+type DashboardCustomerMap {
+    organizationId: ID!
+    organization: Organization! @goField(forceResolver: true)
+    state: DashboardCustomerMapState!
+    arr: Int!
+    contractSignedDate: Time!
 }
 
 type DashboardMRRPerCustomer {
@@ -71,4 +80,10 @@ type DashboardNewCustomers {
 type DashboardNewCustomersPerMonth {
     month: Int!
     count: Int!
+}
+
+enum DashboardCustomerMapState {
+    OK
+    AT_RISK
+    CHURNED
 }

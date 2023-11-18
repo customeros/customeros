@@ -540,6 +540,14 @@ type DashboardARRBreakdownPerMonth struct {
 	Churned         int `json:"churned"`
 }
 
+type DashboardCustomerMap struct {
+	OrganizationID     string                    `json:"organizationId"`
+	Organization       *Organization             `json:"organization"`
+	State              DashboardCustomerMapState `json:"state"`
+	Arr                int                       `json:"arr"`
+	ContractSignedDate time.Time                 `json:"contractSignedDate"`
+}
+
 type DashboardGrossRevenueRetention struct {
 	GrossRevenueRetention float64                                   `json:"grossRevenueRetention"`
 	IncreasePercentage    float64                                   `json:"increasePercentage"`
@@ -2142,6 +2150,49 @@ func (e *CustomFieldTemplateType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type DashboardCustomerMapState string
+
+const (
+	DashboardCustomerMapStateOk      DashboardCustomerMapState = "OK"
+	DashboardCustomerMapStateAtRisk  DashboardCustomerMapState = "AT_RISK"
+	DashboardCustomerMapStateChurned DashboardCustomerMapState = "CHURNED"
+)
+
+var AllDashboardCustomerMapState = []DashboardCustomerMapState{
+	DashboardCustomerMapStateOk,
+	DashboardCustomerMapStateAtRisk,
+	DashboardCustomerMapStateChurned,
+}
+
+func (e DashboardCustomerMapState) IsValid() bool {
+	switch e {
+	case DashboardCustomerMapStateOk, DashboardCustomerMapStateAtRisk, DashboardCustomerMapStateChurned:
+		return true
+	}
+	return false
+}
+
+func (e DashboardCustomerMapState) String() string {
+	return string(e)
+}
+
+func (e *DashboardCustomerMapState) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DashboardCustomerMapState(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DashboardCustomerMapState", str)
+	}
+	return nil
+}
+
+func (e DashboardCustomerMapState) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

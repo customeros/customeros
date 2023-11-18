@@ -1,5 +1,9 @@
 package entity
 
+import (
+	"time"
+)
+
 type DashboardNewCustomersData struct {
 	ThisMonthCount              int
 	ThisMonthIncreasePercentage float64
@@ -60,4 +64,25 @@ type DashboardDashboardMRRPerCustomerData struct {
 type DashboardDashboardMRRPerCustomerPerMonthData struct {
 	Month int
 	Value int
+}
+
+type DashboardCustomerMapState string
+
+const (
+	DashboardCustomerMapStateOk      DashboardCustomerMapState = "OK"
+	DashboardCustomerMapStateAtRisk  DashboardCustomerMapState = "AT_RISK"
+	DashboardCustomerMapStateChurned DashboardCustomerMapState = "CHURNED"
+)
+
+var DashboardCustomerMapStates = []DashboardCustomerMapState{
+	DashboardCustomerMapStateOk,
+	DashboardCustomerMapStateAtRisk,
+	DashboardCustomerMapStateChurned,
+}
+
+type DashboardCustomerMapData struct {
+	OrganizationId     string
+	State              DashboardCustomerMapState
+	Arr                int
+	ContractSignedDate time.Time
 }

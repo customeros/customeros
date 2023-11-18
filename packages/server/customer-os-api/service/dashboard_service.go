@@ -14,6 +14,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"math/rand"
+	"time"
 )
 
 type DashboardViewOrganizationsRequest struct {
@@ -26,6 +27,7 @@ type DashboardViewOrganizationsRequest struct {
 type DashboardService interface {
 	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
 
+	GetDashboardCustomerMapData(ctx context.Context) ([]*entityDashboard.DashboardCustomerMapData, error)
 	GetDashboardMRRPerCustomerData(ctx context.Context, year int) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error)
 	GetDashboardGrossRevenueRetentionData(ctx context.Context, year int) (*entityDashboard.DashboardGrossRevenueRetentionData, error)
 	GetDashboardARRBreakdownData(ctx context.Context, year int) (*entityDashboard.DashboardARRBreakdownData, error)
@@ -83,6 +85,35 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 
 	paginatedResult.SetRows(&organizationEntities)
 	return &paginatedResult, nil
+}
+
+func (s *dashboardService) GetDashboardCustomerMapData(ctx context.Context) ([]*entityDashboard.DashboardCustomerMapData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardCustomerMapData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	orgPage, err := s.services.OrganizationService.FindAll(ctx, 0, 10, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response := make([]*entityDashboard.DashboardCustomerMapData, 0)
+
+	min := 0
+	max := 10000
+	for i := 1; i <= len(*orgPage.Rows.(*entity.OrganizationEntities)); i++ {
+		rand.Seed(time.Now().UnixNano())
+		randomIndex := rand.Intn(len(entityDashboard.DashboardCustomerMapStates))
+
+		response = append(response, &entityDashboard.DashboardCustomerMapData{
+			OrganizationId:     (*orgPage.Rows.(*entity.OrganizationEntities))[i-1].ID,
+			State:              entityDashboard.DashboardCustomerMapStates[randomIndex],
+			Arr:                rand.Intn(max-min) + min,
+			ContractSignedDate: time.Now(),
+		})
+	}
+
+	return response, nil
 }
 
 func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, year int) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error) {
