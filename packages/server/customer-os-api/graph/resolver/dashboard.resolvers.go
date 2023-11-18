@@ -55,55 +55,38 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 	}, err
 }
 
-// DashboardNewCustomers is the resolver for the dashboard_NewCustomers field.
-func (r *queryResolver) DashboardNewCustomers(ctx context.Context, year int) (*model.DashboardNewCustomers, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardNewCustomers", graphql.GetOperationContext(ctx))
+// DashboardMRRPerCustomer is the resolver for the dashboard_MRRPerCustomer field.
+func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, year int) (*model.DashboardMRRPerCustomer, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardMRRPerCustomer", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("year", year))
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardNewCustomersData(ctx, year)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get new customers data for year %d", year)
-		return nil, nil
-	}
-
-	return mapper.MapDashboardNewCustomersData(newCustomersData), nil
-}
-
-// DashboardRetentionRate is the resolver for the dashboard_RetentionRate field.
-func (r *queryResolver) DashboardRetentionRate(ctx context.Context, year int) (*model.DashboardRetentionRate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardRetentionRate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("year", year))
-
-	newCustomersData, err := r.Services.QueryService.GetDashboardRetentionRateData(ctx, year)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get the retention rate for year %d", year)
-		return nil, nil
-	}
-
-	return mapper.MapDashboardRetentionRateData(newCustomersData), nil
-}
-
-// DashboardRevenueAtRisk is the resolver for the dashboard_RevenueAtRisk field.
-func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, year int) (*model.DashboardRevenueAtRisk, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardRevenueAtRisk", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("year", year))
-
-	newCustomersData, err := r.Services.QueryService.GetDashboardRevenueAtRiskData(ctx, year)
+	newCustomersData, err := r.Services.QueryService.GetDashboardMRRPerCustomerData(ctx, year)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for year %d", year)
 		return nil, nil
 	}
 
-	return mapper.MapDashboardRevenueAtRiskData(newCustomersData), nil
+	return mapper.MapDashboardMRRPerCustomerData(newCustomersData), nil
+}
+
+// DashboardGrossRevenueRetention is the resolver for the dashboard_GrossRevenueRetention field.
+func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, year int) (*model.DashboardGrossRevenueRetention, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardGrossRevenueRetention", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("year", year))
+
+	newCustomersData, err := r.Services.QueryService.GetDashboardGrossRevenueRetentionData(ctx, year)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for year %d", year)
+		return nil, nil
+	}
+
+	return mapper.MapDashboardGrossRevenueRetentionData(newCustomersData), nil
 }
 
 // DashboardARRBreakdown is the resolver for the dashboard_ARRBreakdown field.
@@ -123,19 +106,53 @@ func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, year int) (*m
 	return mapper.MapDashboardARRBreakdownData(newCustomersData), nil
 }
 
-// DashboardGrossRevenueRetention is the resolver for the dashboard_GrossRevenueRetention field.
-func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, year int) (*model.DashboardGrossRevenueRetention, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardGrossRevenueRetention", graphql.GetOperationContext(ctx))
+// DashboardRevenueAtRisk is the resolver for the dashboard_RevenueAtRisk field.
+func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, year int) (*model.DashboardRevenueAtRisk, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardRevenueAtRisk", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("year", year))
 
-	newCustomersData, err := r.Services.QueryService.GetDashboardGrossRevenueRetentionData(ctx, year)
+	newCustomersData, err := r.Services.QueryService.GetDashboardRevenueAtRiskData(ctx, year)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for year %d", year)
 		return nil, nil
 	}
 
-	return mapper.MapDashboardGrossRevenueRetentionData(newCustomersData), nil
+	return mapper.MapDashboardRevenueAtRiskData(newCustomersData), nil
+}
+
+// DashboardRetentionRate is the resolver for the dashboard_RetentionRate field.
+func (r *queryResolver) DashboardRetentionRate(ctx context.Context, year int) (*model.DashboardRetentionRate, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardRetentionRate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("year", year))
+
+	newCustomersData, err := r.Services.QueryService.GetDashboardRetentionRateData(ctx, year)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get the retention rate for year %d", year)
+		return nil, nil
+	}
+
+	return mapper.MapDashboardRetentionRateData(newCustomersData), nil
+}
+
+// DashboardNewCustomers is the resolver for the dashboard_NewCustomers field.
+func (r *queryResolver) DashboardNewCustomers(ctx context.Context, year int) (*model.DashboardNewCustomers, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardNewCustomers", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("year", year))
+
+	newCustomersData, err := r.Services.QueryService.GetDashboardNewCustomersData(ctx, year)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get new customers data for year %d", year)
+		return nil, nil
+	}
+
+	return mapper.MapDashboardNewCustomersData(newCustomersData), nil
 }

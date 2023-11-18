@@ -26,11 +26,12 @@ type DashboardViewOrganizationsRequest struct {
 type DashboardService interface {
 	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
 
-	GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error)
-	GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error)
-	GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error)
-	GetDashboardARRBreakdownData(ctx context.Context, year int) (*entityDashboard.DashboardARRBreakdownData, error)
+	GetDashboardMRRPerCustomerData(ctx context.Context, year int) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error)
 	GetDashboardGrossRevenueRetentionData(ctx context.Context, year int) (*entityDashboard.DashboardGrossRevenueRetentionData, error)
+	GetDashboardARRBreakdownData(ctx context.Context, year int) (*entityDashboard.DashboardARRBreakdownData, error)
+	GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error)
+	GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error)
+	GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error)
 }
 
 type dashboardService struct {
@@ -84,61 +85,48 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	return &paginatedResult, nil
 }
 
-func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
+func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, year int) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardMRRPerCustomerData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("year", year))
 
-	response := entityDashboard.DashboardNewCustomersData{}
+	response := entityDashboard.DashboardDashboardMRRPerCustomerData{}
 
-	response.ThisMonthCount = 127
-	response.ThisMonthIncreasePercentage = 3.1
+	response.MrrPerCustomer = 4280
+	response.IncreasePercentage = -1.2
 
+	min := 0
+	max := 10000
 	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardNewCustomerMonthData{
+		response.Months = append(response.Months, &entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData{
 			Month: i,
-			Count: i*10 + 7,
+			Value: rand.Intn(max-min) + min,
 		})
 	}
 
 	return &response, nil
 }
 
-func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
+func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Context, year int) (*entityDashboard.DashboardGrossRevenueRetentionData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardGrossRevenueRetentionData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("year", year))
 
-	response := entityDashboard.DashboardRetentionRateData{}
+	response := entityDashboard.DashboardGrossRevenueRetentionData{}
 
-	response.RetentionRate = 86
-	response.IncreasePercentage = 2.6
+	response.GrossRevenueRetention = 85
+	response.IncreasePercentage = 5.4
 
-	min := 2
-	max := 5
+	min := float64(0)
+	max := float64(1)
 	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardRetentionRatePerMonthData{
+		response.Months = append(response.Months, &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
 			Month:      i,
-			RenewCount: i*(rand.Intn(max-min)+min) + 7,
-			ChurnCount: i + 2,
+			Percentage: rand.Float64()*(max-min) + min,
 		})
 	}
-
-	return &response, nil
-}
-
-func (s *dashboardService) GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardRevenueAtRiskData")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("year", year))
-
-	response := entityDashboard.DashboardRevenueAtRiskData{}
-
-	response.HighConfidence = 1504990
-	response.AtRisk = 355300
 
 	return &response, nil
 }
@@ -171,23 +159,59 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, yea
 	return &response, nil
 }
 
-func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Context, year int) (*entityDashboard.DashboardGrossRevenueRetentionData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardGrossRevenueRetentionData")
+func (s *dashboardService) GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardRevenueAtRiskData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Int("year", year))
 
-	response := entityDashboard.DashboardGrossRevenueRetentionData{}
+	response := entityDashboard.DashboardRevenueAtRiskData{}
 
-	response.GrossRevenueRetention = 85
-	response.IncreasePercentage = 5.4
+	response.HighConfidence = 1504990
+	response.AtRisk = 355300
 
-	min := float64(0)
-	max := float64(1)
+	return &response, nil
+}
+
+func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("year", year))
+
+	response := entityDashboard.DashboardRetentionRateData{}
+
+	response.RetentionRate = 86
+	response.IncreasePercentage = 2.6
+
+	min := 2
+	max := 5
 	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
+		response.Months = append(response.Months, &entityDashboard.DashboardRetentionRatePerMonthData{
 			Month:      i,
-			Percentage: rand.Float64()*(max-min) + min,
+			RenewCount: i*(rand.Intn(max-min)+min) + 7,
+			ChurnCount: i + 2,
+		})
+	}
+
+	return &response, nil
+}
+
+func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("year", year))
+
+	response := entityDashboard.DashboardNewCustomersData{}
+
+	response.ThisMonthCount = 127
+	response.ThisMonthIncreasePercentage = 3.1
+
+	for i := 1; i <= 12; i++ {
+		response.Months = append(response.Months, &entityDashboard.DashboardNewCustomerMonthData{
+			Month: i,
+			Count: i*10 + 7,
 		})
 	}
 

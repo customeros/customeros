@@ -104,3 +104,24 @@ func MapDashboardGrossRevenueRetentionPerMonthData(months []*entityDashboard.Das
 	}
 	return result
 }
+
+func MapDashboardMRRPerCustomerData(grossRevenueRetentionData *entityDashboard.DashboardDashboardMRRPerCustomerData) *model.DashboardMRRPerCustomer {
+	if grossRevenueRetentionData == nil {
+		return nil
+	}
+	return &model.DashboardMRRPerCustomer{
+		MrrPerCustomer:     grossRevenueRetentionData.MrrPerCustomer,
+		IncreasePercentage: grossRevenueRetentionData.IncreasePercentage,
+		PerMonth:           MapDashboardMRRPerCustomerPerMonthData(grossRevenueRetentionData.Months),
+	}
+}
+func MapDashboardMRRPerCustomerPerMonthData(months []*entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData) []*model.DashboardMRRPerCustomerPerMonth {
+	var result []*model.DashboardMRRPerCustomerPerMonth
+	for _, month := range months {
+		result = append(result, &model.DashboardMRRPerCustomerPerMonth{
+			Month: month.Month,
+			Value: month.Value,
+		})
+	}
+	return result
+}
