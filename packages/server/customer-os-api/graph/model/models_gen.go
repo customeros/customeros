@@ -547,6 +547,11 @@ type DashboardRetentionRatePerMonth struct {
 	ChurnCount int `json:"churnCount"`
 }
 
+type DashboardRevenueAtRisk struct {
+	HighConfidence float64 `json:"highConfidence"`
+	AtRisk         float64 `json:"atRisk"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {

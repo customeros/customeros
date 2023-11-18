@@ -47,3 +47,13 @@ func MapDashboardRetentionRatePerMonthData(months []*entityDashboard.DashboardRe
 	}
 	return result
 }
+
+func MapDashboardRevenueAtRiskData(retentionRateData *entityDashboard.DashboardRevenueAtRiskData) *model.DashboardRevenueAtRisk {
+	if retentionRateData == nil {
+		return nil
+	}
+	return &model.DashboardRevenueAtRisk{
+		HighConfidence: retentionRateData.HighConfidence,
+		AtRisk:         retentionRateData.AtRisk,
+	}
+}

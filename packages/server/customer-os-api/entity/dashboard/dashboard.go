@@ -21,3 +21,8 @@ type DashboardRetentionRatePerMonthData struct {
 	ChurnCount    int
 	RetentionRate int
 }
+
+type DashboardRevenueAtRiskData struct {
+	HighConfidence float64
+	AtRisk         float64
+}

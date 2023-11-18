@@ -6,6 +6,7 @@ extend type Query {
 
     dashboard_NewCustomers(year: Int!): DashboardNewCustomers
     dashboard_RetentionRate(year: Int!): DashboardRetentionRate
+    dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
 }
 
 type DashboardNewCustomers {
@@ -27,4 +28,9 @@ type DashboardRetentionRatePerMonth {
     month: Int!
     renewCount: Int!
     churnCount: Int!
+}
+
+type DashboardRevenueAtRisk {
+    highConfidence: Float!
+    atRisk: Float!
 }

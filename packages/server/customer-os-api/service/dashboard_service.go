@@ -28,6 +28,7 @@ type DashboardService interface {
 
 	GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error)
 	GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error)
+	GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error)
 }
 
 type dashboardService struct {
@@ -122,6 +123,20 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, ye
 			ChurnCount: i + 2,
 		})
 	}
+
+	return &response, nil
+}
+
+func (s *dashboardService) GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardRevenueAtRiskData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("year", year))
+
+	response := entityDashboard.DashboardRevenueAtRiskData{}
+
+	response.HighConfidence = 1504990
+	response.AtRisk = 355300
 
 	return &response, nil
 }

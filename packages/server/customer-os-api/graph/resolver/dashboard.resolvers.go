@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -83,9 +82,26 @@ func (r *queryResolver) DashboardRetentionRate(ctx context.Context, year int) (*
 	newCustomersData, err := r.Services.QueryService.GetDashboardRetentionRateData(ctx, year)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get new customers data for year %d", year)
+		graphql.AddErrorf(ctx, "Failed to get the retention rate for year %d", year)
 		return nil, nil
 	}
 
 	return mapper.MapDashboardRetentionRateData(newCustomersData), nil
+}
+
+// DashboardRevenueAtRisk is the resolver for the dashboard_RevenueAtRisk field.
+func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, year int) (*model.DashboardRevenueAtRisk, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardRevenueAtRisk", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("year", year))
+
+	newCustomersData, err := r.Services.QueryService.GetDashboardRevenueAtRiskData(ctx, year)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for year %d", year)
+		return nil, nil
+	}
+
+	return mapper.MapDashboardRevenueAtRiskData(newCustomersData), nil
 }
