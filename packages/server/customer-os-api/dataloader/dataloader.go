@@ -71,6 +71,8 @@ type Loaders struct {
 	ExternalSystemsForLogEntry                  *dataloader.Loader
 	ExternalSystemsForMeeting                   *dataloader.Loader
 	ExternalSystemsForInteractionEvent          *dataloader.Loader
+	ExternalSystemsForContract                  *dataloader.Loader
+	ExternalSystemsForServiceLineItem           *dataloader.Loader
 	TimelineEventForTimelineEventId             *dataloader.Loader
 	OrganizationForJobRole                      *dataloader.Loader
 	ContactForJobRole                           *dataloader.Loader

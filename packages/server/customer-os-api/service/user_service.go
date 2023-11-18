@@ -47,6 +47,7 @@ type UserService interface {
 	RemoveRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
 	RemoveRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
 	ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool
+	GetContractOwner(ctx context.Context, contractId string) (*entity.UserEntity, error)
 
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
 	addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity)
@@ -618,4 +619,24 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 func (s *userService) addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	userEntity.DefaultForPlayer = utils.GetBoolPropOrFalse(props, "default")
+}
+
+func (s *userService) GetContractOwner(parentCtx context.Context, contractId string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetContractOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	ownerDbNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return s.repositories.UserRepository.GetOwnerForContract(ctx, tx, common.GetContext(ctx).Tenant, contractId)
+	})
+	if err != nil {
+		return nil, err
+	} else if ownerDbNode.(*dbtype.Node) == nil {
+		return nil, nil
+	} else {
+		return s.mapDbNodeToUserEntity(*ownerDbNode.(*dbtype.Node)), nil
+	}
 }

@@ -34,7 +34,21 @@ func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Cont
 
 // Owner is the resolver for the owner field.
 func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: Owner - owner"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContractResolver.Owner", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contractID", obj.ID))
+
+	owner, err := r.Services.UserService.GetContactOwner(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get owner for contact %s", obj.ID)
+		return nil, err
+	}
+	if owner == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(owner), err
 }
 
 // CreatedBy is the resolver for the createdBy field.
@@ -44,7 +58,15 @@ func (r *contractResolver) CreatedBy(ctx context.Context, obj *model.Contract) (
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contract) ([]*model.ExternalSystem, error) {
-	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get external system for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get external system for contract %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
 // ContractCreate is the resolver for the contract_Create field.

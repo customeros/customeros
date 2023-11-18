@@ -25,6 +25,7 @@ type UserRepository interface {
 	GetAllAuthorsForComments(ctx context.Context, tenant string, commentIds []string) ([]*utils.DbNodeAndId, error)
 	GetDistinctOrganizationOwners(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetUsers(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
+	GetOwnerForContract(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contractId string) (*dbtype.Node, error)
 }
 
 type userRepository struct {
@@ -410,6 +411,31 @@ func (r *userRepository) GetUsers(ctx context.Context, tenant string, ids []stri
 		return nil, err
 	}
 	return dbRecords.([]*dbtype.Node), err
+}
+
+func (r *userRepository) GetOwnerForContract(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, contractId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetOwnerForContract")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})<-[:OWNS]-(u:User)
+			RETURN u`,
+		map[string]any{
+			"tenant":     tenant,
+			"contractId": contractId,
+		}); err != nil {
+		return nil, err
+	} else {
+		dbRecords, err := queryResult.Collect(ctx)
+		if err != nil {
+			return nil, err
+		} else if len(dbRecords) == 0 {
+			return nil, nil
+		} else {
+			return utils.NodePtr(dbRecords[0].Values[0].(dbtype.Node)), nil
+		}
+	}
 }
 
 func (r *userRepository) executeQuery(ctx context.Context, cypher string, params map[string]any) (*neo4j.EagerResult, error) {
