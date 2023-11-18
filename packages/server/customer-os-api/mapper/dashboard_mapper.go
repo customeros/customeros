@@ -83,3 +83,24 @@ func MapDashboardARRBreakdownPerMonthData(months []*entityDashboard.DashboardARR
 	}
 	return result
 }
+
+func MapDashboardGrossRevenueRetentionData(grossRevenueRetentionData *entityDashboard.DashboardGrossRevenueRetentionData) *model.DashboardGrossRevenueRetention {
+	if grossRevenueRetentionData == nil {
+		return nil
+	}
+	return &model.DashboardGrossRevenueRetention{
+		GrossRevenueRetention: grossRevenueRetentionData.GrossRevenueRetention,
+		IncreasePercentage:    grossRevenueRetentionData.IncreasePercentage,
+		PerMonth:              MapDashboardGrossRevenueRetentionPerMonthData(grossRevenueRetentionData.Months),
+	}
+}
+func MapDashboardGrossRevenueRetentionPerMonthData(months []*entityDashboard.DashboardGrossRevenueRetentionPerMonthData) []*model.DashboardGrossRevenueRetentionPerMonth {
+	var result []*model.DashboardGrossRevenueRetentionPerMonth
+	for _, month := range months {
+		result = append(result, &model.DashboardGrossRevenueRetentionPerMonth{
+			Month:      month.Month,
+			Percentage: month.Percentage,
+		})
+	}
+	return result
+}

@@ -540,6 +540,17 @@ type DashboardARRBreakdownPerMonth struct {
 	Churned         int `json:"churned"`
 }
 
+type DashboardGrossRevenueRetention struct {
+	GrossRevenueRetention float64                                   `json:"grossRevenueRetention"`
+	IncreasePercentage    float64                                   `json:"increasePercentage"`
+	PerMonth              []*DashboardGrossRevenueRetentionPerMonth `json:"perMonth"`
+}
+
+type DashboardGrossRevenueRetentionPerMonth struct {
+	Month      int     `json:"month"`
+	Percentage float64 `json:"percentage"`
+}
+
 type DashboardNewCustomers struct {
 	ThisMonthCount              int                              `json:"thisMonthCount"`
 	ThisMonthIncreasePercentage float64                          `json:"thisMonthIncreasePercentage"`

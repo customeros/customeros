@@ -30,6 +30,7 @@ type DashboardService interface {
 	GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error)
 	GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error)
 	GetDashboardARRBreakdownData(ctx context.Context, year int) (*entityDashboard.DashboardARRBreakdownData, error)
+	GetDashboardGrossRevenueRetentionData(ctx context.Context, year int) (*entityDashboard.DashboardGrossRevenueRetentionData, error)
 }
 
 type dashboardService struct {
@@ -164,6 +165,29 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, yea
 			Downgrades:      rand.Intn(max-min) + min,
 			Cancellations:   rand.Intn(max-min) + min,
 			Churned:         rand.Intn(max-min) + min,
+		})
+	}
+
+	return &response, nil
+}
+
+func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Context, year int) (*entityDashboard.DashboardGrossRevenueRetentionData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardGrossRevenueRetentionData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("year", year))
+
+	response := entityDashboard.DashboardGrossRevenueRetentionData{}
+
+	response.GrossRevenueRetention = 85
+	response.IncreasePercentage = 5.4
+
+	min := float64(0)
+	max := float64(1)
+	for i := 1; i <= 12; i++ {
+		response.Months = append(response.Months, &entityDashboard.DashboardGrossRevenueRetentionPerMonthData{
+			Month:      i,
+			Percentage: rand.Float64()*(max-min) + min,
 		})
 	}
 
