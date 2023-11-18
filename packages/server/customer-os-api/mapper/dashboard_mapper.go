@@ -57,3 +57,29 @@ func MapDashboardRevenueAtRiskData(retentionRateData *entityDashboard.DashboardR
 		AtRisk:         retentionRateData.AtRisk,
 	}
 }
+
+func MapDashboardARRBreakdownData(retentionRateData *entityDashboard.DashboardARRBreakdownData) *model.DashboardARRBreakdown {
+	if retentionRateData == nil {
+		return nil
+	}
+	return &model.DashboardARRBreakdown{
+		ArrBreakdown:       retentionRateData.ArrBreakdown,
+		IncreasePercentage: retentionRateData.IncreasePercentage,
+		PerMonth:           MapDashboardARRBreakdownPerMonthData(retentionRateData.Months),
+	}
+}
+func MapDashboardARRBreakdownPerMonthData(months []*entityDashboard.DashboardARRBreakdownPerMonthData) []*model.DashboardARRBreakdownPerMonth {
+	var result []*model.DashboardARRBreakdownPerMonth
+	for _, month := range months {
+		result = append(result, &model.DashboardARRBreakdownPerMonth{
+			Month:           month.Month,
+			NewlyContracted: month.NewlyContracted,
+			Renewals:        month.Renewals,
+			Upsells:         month.Upsells,
+			Downgrades:      month.Downgrades,
+			Cancellations:   month.Cancellations,
+			Churned:         month.Churned,
+		})
+	}
+	return result
+}

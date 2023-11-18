@@ -105,3 +105,20 @@ func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, year int) (*
 
 	return mapper.MapDashboardRevenueAtRiskData(newCustomersData), nil
 }
+
+// DashboardARRBreakdown is the resolver for the dashboard_ARRBreakdown field.
+func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, year int) (*model.DashboardARRBreakdown, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardARRBreakdown", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("year", year))
+
+	newCustomersData, err := r.Services.QueryService.GetDashboardARRBreakdownData(ctx, year)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for year %d", year)
+		return nil, nil
+	}
+
+	return mapper.MapDashboardARRBreakdownData(newCustomersData), nil
+}
