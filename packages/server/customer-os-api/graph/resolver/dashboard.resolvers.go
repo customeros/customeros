@@ -55,3 +55,20 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 		TotalAvailable: countOrganizations,
 	}, err
 }
+
+// DashboardNewCustomers is the resolver for the dashboard_NewCustomers field.
+func (r *queryResolver) DashboardNewCustomers(ctx context.Context, year int) (*model.DashboardNewCustomers, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardNewCustomers", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("year", year))
+
+	newCustomersData, err := r.Services.QueryService.GetDashboardNewCustomersData(ctx, year)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get new customers data for year %d", year)
+		return nil, nil
+	}
+
+	return mapper.MapDashboardNewCustomersData(newCustomersData), nil
+}
