@@ -44,6 +44,7 @@ type ResolverRoot interface {
 	Contact() ContactResolver
 	Contract() ContractResolver
 	CustomField() CustomFieldResolver
+	DashboardCustomerMap() DashboardCustomerMapResolver
 	Email() EmailResolver
 	EntityTemplate() EntityTemplateResolver
 	FieldSet() FieldSetResolver
@@ -277,6 +278,14 @@ type ComplexityRoot struct {
 		NewlyContracted func(childComplexity int) int
 		Renewals        func(childComplexity int) int
 		Upsells         func(childComplexity int) int
+	}
+
+	DashboardCustomerMap struct {
+		Arr                func(childComplexity int) int
+		ContractSignedDate func(childComplexity int) int
+		Organization       func(childComplexity int) int
+		OrganizationID     func(childComplexity int) int
+		State              func(childComplexity int) int
 	}
 
 	DashboardGrossRevenueRetention struct {
@@ -896,6 +905,7 @@ type ComplexityRoot struct {
 		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contract                              func(childComplexity int, id string) int
 		DashboardARRBreakdown                 func(childComplexity int, year int) int
+		DashboardCustomerMap                  func(childComplexity int) int
 		DashboardGrossRevenueRetention        func(childComplexity int, year int) int
 		DashboardMRRPerCustomer               func(childComplexity int, year int) int
 		DashboardNewCustomers                 func(childComplexity int, year int) int
@@ -1087,6 +1097,9 @@ type ContractResolver interface {
 }
 type CustomFieldResolver interface {
 	Template(ctx context.Context, obj *model.CustomField) (*model.CustomFieldTemplate, error)
+}
+type DashboardCustomerMapResolver interface {
+	Organization(ctx context.Context, obj *model.DashboardCustomerMap) (*model.Organization, error)
 }
 type EmailResolver interface {
 	Users(ctx context.Context, obj *model.Email) ([]*model.User, error)
@@ -1342,6 +1355,7 @@ type QueryResolver interface {
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
+	DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error)
 	DashboardMRRPerCustomer(ctx context.Context, year int) (*model.DashboardMRRPerCustomer, error)
 	DashboardGrossRevenueRetention(ctx context.Context, year int) (*model.DashboardGrossRevenueRetention, error)
 	DashboardARRBreakdown(ctx context.Context, year int) (*model.DashboardARRBreakdown, error)
@@ -2460,6 +2474,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardARRBreakdownPerMonth.Upsells(childComplexity), true
+
+	case "DashboardCustomerMap.arr":
+		if e.complexity.DashboardCustomerMap.Arr == nil {
+			break
+		}
+
+		return e.complexity.DashboardCustomerMap.Arr(childComplexity), true
+
+	case "DashboardCustomerMap.contractSignedDate":
+		if e.complexity.DashboardCustomerMap.ContractSignedDate == nil {
+			break
+		}
+
+		return e.complexity.DashboardCustomerMap.ContractSignedDate(childComplexity), true
+
+	case "DashboardCustomerMap.organization":
+		if e.complexity.DashboardCustomerMap.Organization == nil {
+			break
+		}
+
+		return e.complexity.DashboardCustomerMap.Organization(childComplexity), true
+
+	case "DashboardCustomerMap.organizationId":
+		if e.complexity.DashboardCustomerMap.OrganizationID == nil {
+			break
+		}
+
+		return e.complexity.DashboardCustomerMap.OrganizationID(childComplexity), true
+
+	case "DashboardCustomerMap.state":
+		if e.complexity.DashboardCustomerMap.State == nil {
+			break
+		}
+
+		return e.complexity.DashboardCustomerMap.State(childComplexity), true
 
 	case "DashboardGrossRevenueRetention.grossRevenueRetention":
 		if e.complexity.DashboardGrossRevenueRetention.GrossRevenueRetention == nil {
@@ -6590,6 +6639,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DashboardARRBreakdown(childComplexity, args["year"].(int)), true
 
+	case "Query.dashboard_CustomerMap":
+		if e.complexity.Query.DashboardCustomerMap == nil {
+			break
+		}
+
+		return e.complexity.Query.DashboardCustomerMap(childComplexity), true
+
 	case "Query.dashboard_GrossRevenueRetention":
 		if e.complexity.Query.DashboardGrossRevenueRetention == nil {
 			break
@@ -8430,12 +8486,21 @@ enum CustomFieldTemplateType {
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
+    dashboard_CustomerMap: [DashboardCustomerMap!]
     dashboard_MRRPerCustomer(year: Int!): DashboardMRRPerCustomer
     dashboard_GrossRevenueRetention(year: Int!): DashboardGrossRevenueRetention
     dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
     dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
     dashboard_RetentionRate(year: Int!): DashboardRetentionRate
     dashboard_NewCustomers(year: Int!): DashboardNewCustomers
+}
+
+type DashboardCustomerMap {
+    organizationId: ID!
+    organization: Organization! @goField(forceResolver: true)
+    state: DashboardCustomerMapState!
+    arr: Int!
+    contractSignedDate: Time!
 }
 
 type DashboardMRRPerCustomer {
@@ -8497,6 +8562,12 @@ type DashboardNewCustomers {
 type DashboardNewCustomersPerMonth {
     month: Int!
     count: Int!
+}
+
+enum DashboardCustomerMapState {
+    OK
+    AT_RISK
+    CHURNED
 }`, BuiltIn: false},
 	{Name: "../schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
@@ -20991,6 +21062,330 @@ func (ec *executionContext) fieldContext_DashboardARRBreakdownPerMonth_churned(c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardCustomerMap_organizationId(ctx context.Context, field graphql.CollectedField, obj *model.DashboardCustomerMap) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardCustomerMap_organizationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OrganizationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardCustomerMap_organizationId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardCustomerMap",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardCustomerMap_organization(ctx context.Context, field graphql.CollectedField, obj *model.DashboardCustomerMap) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardCustomerMap_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.DashboardCustomerMap().Organization(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardCustomerMap",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "relationships":
+				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardCustomerMap_state(ctx context.Context, field graphql.CollectedField, obj *model.DashboardCustomerMap) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardCustomerMap_state(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.State, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DashboardCustomerMapState)
+	fc.Result = res
+	return ec.marshalNDashboardCustomerMapState2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardCustomerMapState(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardCustomerMap_state(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardCustomerMap",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DashboardCustomerMapState does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardCustomerMap_arr(ctx context.Context, field graphql.CollectedField, obj *model.DashboardCustomerMap) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardCustomerMap_arr(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Arr, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardCustomerMap_arr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardCustomerMap",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardCustomerMap_contractSignedDate(ctx context.Context, field graphql.CollectedField, obj *model.DashboardCustomerMap) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardCustomerMap_contractSignedDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContractSignedDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardCustomerMap_contractSignedDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardCustomerMap",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -52574,6 +52969,59 @@ func (ec *executionContext) fieldContext_Query_dashboardView_Organizations(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_dashboard_CustomerMap(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboard_CustomerMap(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardCustomerMap(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.DashboardCustomerMap)
+	fc.Result = res
+	return ec.marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardCustomerMapᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboard_CustomerMap(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organizationId":
+				return ec.fieldContext_DashboardCustomerMap_organizationId(ctx, field)
+			case "organization":
+				return ec.fieldContext_DashboardCustomerMap_organization(ctx, field)
+			case "state":
+				return ec.fieldContext_DashboardCustomerMap_state(ctx, field)
+			case "arr":
+				return ec.fieldContext_DashboardCustomerMap_arr(ctx, field)
+			case "contractSignedDate":
+				return ec.fieldContext_DashboardCustomerMap_contractSignedDate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DashboardCustomerMap", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_dashboard_MRRPerCustomer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_dashboard_MRRPerCustomer(ctx, field)
 	if err != nil {
@@ -68108,6 +68556,96 @@ func (ec *executionContext) _DashboardARRBreakdownPerMonth(ctx context.Context, 
 	return out
 }
 
+var dashboardCustomerMapImplementors = []string{"DashboardCustomerMap"}
+
+func (ec *executionContext) _DashboardCustomerMap(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardCustomerMap) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dashboardCustomerMapImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DashboardCustomerMap")
+		case "organizationId":
+			out.Values[i] = ec._DashboardCustomerMap_organizationId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "organization":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._DashboardCustomerMap_organization(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "state":
+			out.Values[i] = ec._DashboardCustomerMap_state(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "arr":
+			out.Values[i] = ec._DashboardCustomerMap_arr(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "contractSignedDate":
+			out.Values[i] = ec._DashboardCustomerMap_contractSignedDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var dashboardGrossRevenueRetentionImplementors = []string{"DashboardGrossRevenueRetention"}
 
 func (ec *executionContext) _DashboardGrossRevenueRetention(ctx context.Context, sel ast.SelectionSet, obj *model.DashboardGrossRevenueRetention) graphql.Marshaler {
@@ -74391,6 +74929,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dashboard_CustomerMap":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboard_CustomerMap(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "dashboard_MRRPerCustomer":
 			field := field
 
@@ -77241,6 +77798,26 @@ func (ec *executionContext) marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithub�
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNDashboardCustomerMap2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardCustomerMap(ctx context.Context, sel ast.SelectionSet, v *model.DashboardCustomerMap) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DashboardCustomerMap(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNDashboardCustomerMapState2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardCustomerMapState(ctx context.Context, v interface{}) (model.DashboardCustomerMapState, error) {
+	var res model.DashboardCustomerMapState
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDashboardCustomerMapState2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardCustomerMapState(ctx context.Context, sel ast.SelectionSet, v model.DashboardCustomerMapState) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNDashboardGrossRevenueRetentionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardGrossRevenueRetentionPerMonth) graphql.Marshaler {
@@ -80281,6 +80858,53 @@ func (ec *executionContext) marshalODashboardARRBreakdownPerMonth2ᚖgithubᚗco
 		return graphql.Null
 	}
 	return ec._DashboardARRBreakdownPerMonth(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardCustomerMapᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardCustomerMap) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNDashboardCustomerMap2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardCustomerMap(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalODashboardGrossRevenueRetention2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardGrossRevenueRetention(ctx context.Context, sel ast.SelectionSet, v *model.DashboardGrossRevenueRetention) graphql.Marshaler {

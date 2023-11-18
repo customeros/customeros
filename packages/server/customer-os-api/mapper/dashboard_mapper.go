@@ -125,3 +125,34 @@ func MapDashboardMRRPerCustomerPerMonthData(months []*entityDashboard.DashboardD
 	}
 	return result
 }
+
+func MapDashboardCustomerMapDataList(grossRevenueRetentionData []*entityDashboard.DashboardCustomerMapData) []*model.DashboardCustomerMap {
+	var result []*model.DashboardCustomerMap
+	for _, month := range grossRevenueRetentionData {
+		result = append(result, MapDashboardCustomerMapData(month))
+	}
+	return result
+}
+func MapDashboardCustomerMapData(dashboardCustomerMapData *entityDashboard.DashboardCustomerMapData) *model.DashboardCustomerMap {
+	if dashboardCustomerMapData == nil {
+		return nil
+	}
+	return &model.DashboardCustomerMap{
+		OrganizationID:     dashboardCustomerMapData.OrganizationId,
+		State:              MapDashboardCustomerMapState(dashboardCustomerMapData.State),
+		Arr:                dashboardCustomerMapData.Arr,
+		ContractSignedDate: dashboardCustomerMapData.ContractSignedDate,
+	}
+}
+func MapDashboardCustomerMapState(state entityDashboard.DashboardCustomerMapState) model.DashboardCustomerMapState {
+	switch state {
+	case entityDashboard.DashboardCustomerMapStateOk:
+		return model.DashboardCustomerMapStateOk
+	case entityDashboard.DashboardCustomerMapStateAtRisk:
+		return model.DashboardCustomerMapStateAtRisk
+	case entityDashboard.DashboardCustomerMapStateChurned:
+		return model.DashboardCustomerMapStateChurned
+	default:
+		return ""
+	}
+}

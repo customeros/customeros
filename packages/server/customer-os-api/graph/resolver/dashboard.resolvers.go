@@ -6,15 +6,38 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/opentracing/opentracing-go/log"
 )
+
+// Organization is the resolver for the organization field.
+func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *model.DashboardCustomerMap) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Organization", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", obj.OrganizationID))
+
+	if obj.OrganizationID == "" {
+		graphql.AddErrorf(ctx, "Missing organization input id")
+		return nil, nil
+	}
+
+	organizationEntityPtr, err := r.Services.OrganizationService.GetById(ctx, obj.OrganizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get organization by id %s", obj.OrganizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToOrganization(organizationEntityPtr), nil
+}
 
 // DashboardViewOrganizations is the resolver for the dashboardView_Organizations field.
 func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
@@ -53,6 +76,22 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 		TotalElements:  paginatedResult.TotalRows,
 		TotalAvailable: countOrganizations,
 	}, err
+}
+
+// DashboardCustomerMap is the resolver for the dashboard_CustomerMap field.
+func (r *queryResolver) DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardCustomerMap", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	newCustomersData, err := r.Services.QueryService.GetDashboardCustomerMapData(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get the customer map")
+		return nil, nil
+	}
+
+	return mapper.MapDashboardCustomerMapDataList(newCustomersData), nil
 }
 
 // DashboardMRRPerCustomer is the resolver for the dashboard_MRRPerCustomer field.
@@ -156,3 +195,10 @@ func (r *queryResolver) DashboardNewCustomers(ctx context.Context, year int) (*m
 
 	return mapper.MapDashboardNewCustomersData(newCustomersData), nil
 }
+
+// DashboardCustomerMap returns generated.DashboardCustomerMapResolver implementation.
+func (r *Resolver) DashboardCustomerMap() generated.DashboardCustomerMapResolver {
+	return &dashboardCustomerMapResolver{r}
+}
+
+type dashboardCustomerMapResolver struct{ *Resolver }
