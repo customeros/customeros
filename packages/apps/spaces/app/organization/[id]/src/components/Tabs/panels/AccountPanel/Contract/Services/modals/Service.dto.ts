@@ -5,6 +5,7 @@ import {
   ServiceLineItem,
   ContractRenewalCycle,
   ServiceLineItemInput,
+  ServiceLineItemUpdateInput,
 } from '@graphql/types';
 
 export interface ServiceForm {
@@ -50,6 +51,17 @@ export class ServiceDTO implements ServiceForm {
   ): ServiceLineItemInput {
     return {
       contractId,
+      quantity: data?.quantity,
+      name: data?.name,
+      price: data?.price,
+      appSource: data?.appSource,
+      billed: data?.billed?.value,
+    };
+  }
+  static toUpdatePayload(
+    data: ServiceForm,
+  ): Omit<ServiceLineItemUpdateInput, 'serviceLineItemId'> {
+    return {
       quantity: data?.quantity,
       name: data?.name,
       price: data?.price,

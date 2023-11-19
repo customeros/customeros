@@ -33,6 +33,17 @@ export type GetContractsQuery = {
     __typename?: 'Organization';
     id: string;
     name: string;
+    accountDetails?: {
+      __typename?: 'OrgAccountDetails';
+      renewalForecast?: {
+        __typename?: 'RenewalForecast';
+        amount?: number | null;
+      } | null;
+      renewalLikelihood?: {
+        __typename?: 'RenewalLikelihood';
+        probability?: Types.RenewalLikelihoodProbability | null;
+      } | null;
+    } | null;
     contracts?: Array<{
       __typename?: 'Contract';
       id: string;
@@ -44,6 +55,19 @@ export type GetContractsQuery = {
       renewalCycle: Types.ContractRenewalCycle;
       status: Types.ContractStatus;
       contractUrl?: string | null;
+      serviceLineItems?: Array<{
+        __typename?: 'ServiceLineItem';
+        id: string;
+        createdAt: any;
+        updatedAt: any;
+        name: string;
+        billed: Types.BilledType;
+        price: number;
+        quantity: any;
+        source: Types.DataSource;
+        sourceOfTruth: Types.DataSource;
+        appSource: string;
+      }> | null;
     }> | null;
   } | null;
 };
@@ -53,6 +77,14 @@ export const GetContractsDocument = `
   organization(id: $id) {
     id
     name
+    accountDetails {
+      renewalForecast {
+        amount
+      }
+      renewalLikelihood {
+        probability
+      }
+    }
     contracts {
       id
       name
@@ -63,6 +95,18 @@ export const GetContractsDocument = `
       renewalCycle
       status
       contractUrl
+      serviceLineItems {
+        id
+        createdAt
+        updatedAt
+        name
+        billed
+        price
+        quantity
+        source
+        sourceOfTruth
+        appSource
+      }
     }
   }
 }

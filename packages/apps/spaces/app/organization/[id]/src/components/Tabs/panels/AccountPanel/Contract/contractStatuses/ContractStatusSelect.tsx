@@ -9,7 +9,9 @@ import { contractButtonSelect } from '@organization/src/components/Tabs/shared/c
 
 import { contractOptionIcon } from './utils';
 
-interface ContractStatusSelectProps {}
+interface ContractStatusSelectProps {
+  status: ContractStatus;
+}
 
 export const contractStatusOptions: SelectOption<ContractStatus>[] = [
   { label: 'Draft', value: ContractStatus.Draft },
@@ -17,12 +19,15 @@ export const contractStatusOptions: SelectOption<ContractStatus>[] = [
   { label: 'Live', value: ContractStatus.Live },
 ];
 
-export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = () => {
+export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = ({
+  status,
+}) => {
   return (
     <Select
       isSearchable={false}
       isClearable={false}
       isMulti={false}
+      value={contractStatusOptions.find((e) => e.value === status)}
       placeholder='Status'
       options={contractStatusOptions}
       formatOptionLabel={(
@@ -61,6 +66,7 @@ export const ContractStatusSelect: React.FC<ContractStatusSelectProps> = () => {
 
           return {
             ...props,
+            pointerEvents: 'none', // todo uncomment when update status mutation is ready
             px: 2,
             py: '1px',
             border: '1px solid',

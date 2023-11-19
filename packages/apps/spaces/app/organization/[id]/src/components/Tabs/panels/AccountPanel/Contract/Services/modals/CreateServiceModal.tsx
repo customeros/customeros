@@ -1,17 +1,25 @@
 'use client';
 import { useRef, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
 
+import { produce } from 'immer';
+import { useQueryClient } from '@tanstack/react-query';
+
 import { Button } from '@ui/form/Button';
+import { DataSource } from '@graphql/types';
 import { FeaturedIcon } from '@ui/media/Icon';
-import { ServiceLineItem } from '@graphql/types';
 import { Heading } from '@ui/typography/Heading';
+import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Tab, Tabs, TabList, TabPanel, TabPanels } from '@ui/disclosure/Tabs';
 import { useCreateServiceMutation } from '@organization/src/graphql/createService.generated';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { OneTimeServiceForm } from '@organization/src/components/Tabs/panels/AccountPanel/Services/OneTimeServiceForm';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
 import {
   Modal,
   ModalBody,
@@ -20,51 +28,97 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal';
+import { useAddServiceModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
+import { OneTimeServiceForm } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/OneTimeServiceForm';
 import {
   ServiceDTO,
   ServiceForm,
-} from '@organization/src/components/Tabs/panels/AccountPanel/Services/Service.dto';
-import { SubscriptionServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Services/SubscriptionServiceForm';
+} from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/Service.dto';
+import { SubscriptionServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/SubscriptionServiceForm';
 
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
   contractId: string;
   onClose: () => void;
-  data?: ServiceLineItem;
-  isSubscription?: boolean;
-  mode?: 'create' | 'update';
 }
 
-const copy = {
-  create: {
-    title: 'Add a new service',
-    submit: 'Add',
-  },
-  update: {
-    subscriptionTitle: 'Update subscription service', // todo
-    oneTimeTitle: 'Update one-time service', // todo
-    submit: 'Update',
-  },
-};
-
-export const ServiceModal = ({
-  data,
+export const CreateServiceModal = ({
   isOpen,
   onClose,
-  mode = 'create',
-  isSubscription,
   contractId,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
+  const formId = `create-service-item`;
+  const defaultValues = ServiceDTO.toForm();
+
   const client = getGraphQLClient();
-  const formId = `${mode}-service-item`;
+  const queryClient = useQueryClient();
+  const id = useParams()?.id as string;
+  const { modal } = useAddServiceModalContext();
+  const queryKey = useGetContractsQuery.getKey({ id });
+
   const createService = useCreateServiceMutation(client, {
+    onMutate: ({ input }) => {
+      queryClient.cancelQueries({ queryKey });
+      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
+        return produce(currentCache, (draft) => {
+          const previousContracts = draft?.['organization']?.['contracts'];
+          const updatedContractIndex = previousContracts?.findIndex(
+            (contract) => contract.id === input.contractId,
+          );
+          if (!draft) return;
+
+          const newItem = {
+            id: Math.random().toString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            name: input.name,
+            billed: input.billed,
+            price: input.price,
+            quantity: input.quantity,
+            createdBy: '',
+            source: DataSource.Openline,
+            sourceOfTruth: '',
+            appSource: DataSource.Openline,
+            externalLinks: [],
+          };
+
+          if (draft?.['organization']?.['contracts']) {
+            draft['organization']['contracts']?.map((contractData, index) => {
+              if (index !== updatedContractIndex) {
+                return contractData;
+              }
+
+              return {
+                ...contractData,
+                serviceLineItems: [
+                  ...(contractData.serviceLineItems ?? []),
+                  newItem,
+                ],
+              };
+            });
+          }
+        });
+      });
+      const previousEntries =
+        queryClient.getQueryData<GetContractsQuery>(queryKey);
+
+      return { previousEntries };
+    },
+    onError: (_, __, context) => {
+      queryClient.setQueryData<GetContractsQuery>(
+        queryKey,
+        context?.previousEntries,
+      );
+      toastError('Failed to update contract', 'update-contract-error');
+    },
     onSuccess: () => {
-      onClose();
+      modal.onClose();
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(queryKey);
     },
   });
-
-  const defaultValues = ServiceDTO.toForm(data);
   const { setDefaultValues, state } = useForm<ServiceForm>({
     formId,
     defaultValues,
@@ -72,7 +126,6 @@ export const ServiceModal = ({
       return next;
     },
   });
-
   useEffect(() => {
     setDefaultValues(defaultValues);
   }, [
@@ -83,7 +136,8 @@ export const ServiceModal = ({
     defaultValues.serviceStartedAt,
     defaultValues.externalReference,
   ]);
-  const handleSetSubscriptionServiceData = () => {
+
+  const handleCreateService = () => {
     createService.mutate({
       input: { ...ServiceDTO.toPayload(state.values, contractId) },
     });
@@ -106,11 +160,7 @@ export const ServiceModal = ({
             <DotSingle color='primary.600' />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            {mode === 'create'
-              ? copy[mode].title
-              : isSubscription
-              ? copy.update.subscriptionTitle
-              : copy.update.oneTimeTitle}
+            Add a new service
           </Heading>
         </ModalHeader>
         <ModalBody pb='0'>
@@ -188,9 +238,9 @@ export const ServiceModal = ({
             w='full'
             variant='outline'
             colorScheme='primary'
-            onClick={handleSetSubscriptionServiceData}
+            onClick={handleCreateService}
           >
-            {copy[mode].submit}
+            Create
           </Button>
         </ModalFooter>
       </ModalContent>

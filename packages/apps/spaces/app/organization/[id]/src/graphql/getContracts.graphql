@@ -12,13 +12,18 @@ query getContracts($id: ID!) {
       renewalCycle
       status
       contractUrl
-#      externalLinks {
-#        type
-#        syncDate
-#        externalId
-#        externalUrl
-#        externalSource
-#      }
+      serviceLineItems {
+        id
+        createdAt
+        updatedAt
+        name
+        billed
+        price
+        quantity
+        source
+        sourceOfTruth
+        appSource
+      }
     }
   }
 }

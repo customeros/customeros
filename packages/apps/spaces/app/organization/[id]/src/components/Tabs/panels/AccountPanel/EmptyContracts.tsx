@@ -1,12 +1,12 @@
 'use client';
 
-import { FC, useRef } from 'react';
+import { FC } from 'react';
 import { useParams } from 'next/navigation';
 
+import { produce } from 'immer';
 import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { User } from '@graphql/types';
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
@@ -15,13 +15,17 @@ import { Star06 } from '@ui/media/icons/Star06';
 import { Heading } from '@ui/typography/Heading';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
-import { NEW_DATE } from '@organization/src/components/Timeline/OrganizationTimeline';
-import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
 import { useCreateContractMutation } from '@organization/src/graphql/createContract.generated';
 import {
-  OrganizationQuery,
-  useOrganizationQuery,
-} from '@organization/src/graphql/organization.generated';
+  User,
+  DataSource,
+  ContractStatus,
+  ContractRenewalCycle,
+} from '@graphql/types';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
 export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
@@ -29,104 +33,41 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const id = useParams()?.id as string;
-  const queryKey = useOrganizationQuery.getKey({ id });
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const queryKey = useGetContractsQuery.getKey({ id });
 
   const createContract = useCreateContractMutation(client, {
-    onMutate: ({ input }) => {
-      // todo uncomment when contract field is added to organization query
-      // const contract = {
-      //   __typename: 'Contract',
-      //   appSource: '',
-      //   contractUrl: '',
-      //   createdAt: new Date().toISOString(),
-      //   createdBy: [session?.user] as unknown as User,
-      //   endedAt: new Date().toISOString(),
-      //   externalLinks: [],
-      //   id: 'abcd1234',
-      //   name: '',
-      //   owner: null,
-      //   renewalCycle: ContractRenewalCycle.None,
-      //   serviceStartedAt: new Date().toISOString(),
-      //   signedAt: new Date().toISOString(),
-      //   source: DataSource.Openline,
-      //   sourceOfTruth: DataSource.Openline,
-      //   status: ContractStatus.Draft,
-      //   updatedAt: new Date().toISOString(),
-      // };
+    onMutate: () => {
+      const contract = {
+        appSource: DataSource.Openline,
+        contractUrl: '',
+        createdAt: new Date().toISOString(),
+        createdBy: [session?.user] as unknown as User,
+        externalLinks: [],
+        renewalCycle: ContractRenewalCycle.None,
+        id: `created-contract-${Math.random().toString()}`,
+        name: '',
+        owner: null,
+        source: DataSource.Openline,
+        sourceOfTruth: DataSource.Openline,
+        status: ContractStatus.Draft,
+        updatedAt: new Date().toISOString(),
+        serviceLineItems: [],
+      };
       queryClient.cancelQueries({ queryKey });
-      // todo uncomment when organization query will contain contracts
-      // queryClient.setQueryData<OrganizationQuery>(queryKey, (currentCache) => {
-      //   return produce(currentCache, (draft) => {
-      //     if (draft?.['organization']?.['contracts']) {
-      //       draft['organization']['contracts'] = [contract];
-      //     }
-      //   });
-      // });
+      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
+        return produce(currentCache, (draft) => {
+          if (draft?.['organization']?.['contracts']) {
+            draft['organization']['contracts'] = [contract];
+          }
+        });
+      });
       const previousEntries =
-        queryClient.getQueryData<OrganizationQuery>(queryKey);
+        queryClient.getQueryData<GetContractsQuery>(queryKey);
 
       return { previousEntries };
     },
 
-    onSuccess: (data, variables, context) => {
-      queryClient.setQueryData(
-        useInfiniteGetTimelineQuery.getKey({
-          organizationId: id,
-          from: NEW_DATE,
-          size: 50,
-        }),
-        (oldData) => {
-          const newEvent = {
-            __typename: 'Action',
-            id: `timeline-event-action-new-id-${new Date()}`,
-            actionType: 'CONTRACT_UPDATED',
-            appSource: 'customer-os-api',
-            createdAt: new Date().toISOString(),
-            actionCreatedBy: [session?.user] as unknown as User,
-            content: `Contract created`,
-          };
-
-          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
-          if (!oldData || !oldData.pages?.length) {
-            return {
-              pages: [
-                {
-                  organization: {
-                    id,
-                    timelineEventsTotalCount: 1,
-                    timelineEvents: [newEvent],
-                  },
-                },
-              ],
-            };
-          }
-
-          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
-          const firstPage = oldData.pages[0] ?? {};
-          // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
-          const pages = oldData.pages?.slice(1);
-
-          const firstPageWithEvent = {
-            ...firstPage,
-            organization: {
-              ...firstPage?.organization,
-              timelineEvents: [
-                ...(firstPage?.organization?.timelineEvents ?? []),
-                newEvent,
-              ],
-              timelineEventsTotalCount:
-                (firstPage?.organization?.timelineEventsTotalCount ?? 0) + 1,
-            },
-          };
-
-          return {
-            ...oldData,
-            pages: [firstPageWithEvent, ...pages],
-          };
-        },
-      );
-
+    onSuccess: (_, variables) => {
       toastSuccess(
         'Contract created',
         `${variables?.input?.organizationId}-contract-created`,
@@ -140,12 +81,7 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
       );
     },
     onSettled: () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
-      }, 1000);
+      queryClient.invalidateQueries(queryKey);
     },
   });
 
