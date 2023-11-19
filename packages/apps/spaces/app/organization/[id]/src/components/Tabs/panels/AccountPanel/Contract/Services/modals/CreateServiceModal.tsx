@@ -128,7 +128,7 @@ export const CreateServiceModal = ({
   });
   useEffect(() => {
     setDefaultValues(defaultValues);
-  }, []);
+  }, [isOpen]);
 
   const handleCreateService = () => {
     createService.mutate({

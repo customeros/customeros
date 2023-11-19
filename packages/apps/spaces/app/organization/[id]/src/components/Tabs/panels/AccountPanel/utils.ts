@@ -79,8 +79,8 @@ export function calculateNextRenewalDate(
         serviceStartedAt,
       );
       let nextRenewal = DateTimeUtils.addMonth(serviceStartedAt, difference);
-      if (DateTimeUtils.isBeforeNow(nextRenewal.toISOString())) {
-        nextRenewal = DateTimeUtils.addMonth(serviceStartedAt, 1);
+      if (!DateTimeUtils.isBeforeNow(nextRenewal.toISOString())) {
+        nextRenewal = DateTimeUtils.addMonth(nextRenewal.toISOString(), 1);
       }
 
       return nextRenewal.toISOString();

@@ -41,7 +41,7 @@ export const AccountPanel = () => {
         title='Account'
         withFade
         actionItem={
-          <Box>
+          <Box display='none'>
             <Select
               isSearchable={false}
               isClearable={false}
@@ -50,7 +50,6 @@ export const AccountPanel = () => {
                 label: 'Customer',
                 value: 'customer',
               }}
-              onChange={(e) => {}}
               options={[
                 {
                   label: 'Customer',
