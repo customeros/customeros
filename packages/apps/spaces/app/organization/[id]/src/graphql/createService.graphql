@@ -1,5 +1,5 @@
 mutation createService($input: ServiceLineItemInput!) {
-    serviceLineItem_Create(input: $input) {
+    serviceLineItemCreate(input: $input) {
         id
     }
 }

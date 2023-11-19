@@ -24,12 +24,12 @@ export type CreateServiceMutationVariables = Types.Exact<{
 
 export type CreateServiceMutation = {
   __typename?: 'Mutation';
-  serviceLineItem_Create: { __typename?: 'ServiceLineItem'; id: string };
+  serviceLineItemCreate: { __typename?: 'ServiceLineItem'; id: string };
 };
 
 export const CreateServiceDocument = `
     mutation createService($input: ServiceLineItemInput!) {
-  serviceLineItem_Create(input: $input) {
+  serviceLineItemCreate(input: $input) {
     id
   }
 }
