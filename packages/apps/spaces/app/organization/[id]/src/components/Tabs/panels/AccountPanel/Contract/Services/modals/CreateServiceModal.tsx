@@ -128,14 +128,7 @@ export const CreateServiceModal = ({
   });
   useEffect(() => {
     setDefaultValues(defaultValues);
-  }, [
-    defaultValues.renewalCycle,
-    defaultValues.billed,
-    defaultValues.appSource,
-    defaultValues.quantity,
-    defaultValues.serviceStartedAt,
-    defaultValues.externalReference,
-  ]);
+  }, []);
 
   const handleCreateService = () => {
     createService.mutate({

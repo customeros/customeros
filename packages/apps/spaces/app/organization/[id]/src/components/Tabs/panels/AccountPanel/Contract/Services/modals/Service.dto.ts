@@ -34,7 +34,7 @@ export class ServiceDTO implements ServiceForm {
 
   constructor(data?: ServiceItem) {
     this.quantity = data?.quantity;
-    this.name = data?.name;
+    this.name = data?.name ?? '';
     this.price = data?.price;
     this.appSource = data?.appSource;
     this.billed =
