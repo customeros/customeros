@@ -360,6 +360,7 @@ type Contract struct {
 	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
 	Status           ContractStatus       `json:"status"`
 	ServiceLineItems []*ServiceLineItem   `json:"serviceLineItems,omitempty"`
+	Opportunities    []*Opportunity       `json:"opportunities,omitempty"`
 	Owner            *User                `json:"owner,omitempty"`
 	CreatedBy        *User                `json:"createdBy,omitempty"`
 	Source           DataSource           `json:"source"`
@@ -1224,6 +1225,31 @@ type NoteUpdateInput struct {
 	Content     *string `json:"content,omitempty"`
 	ContentType *string `json:"contentType,omitempty"`
 }
+
+type Opportunity struct {
+	ID                string            `json:"id"`
+	CreatedAt         time.Time         `json:"createdAt"`
+	UpdatedAt         time.Time         `json:"updatedAt"`
+	Name              string            `json:"name"`
+	Amount            float64           `json:"amount"`
+	MaxAmount         float64           `json:"maxAmount"`
+	InternalType      InternalType      `json:"internalType"`
+	ExternalType      string            `json:"externalType"`
+	InternalStage     InternalStage     `json:"internalStage"`
+	ExternalStage     string            `json:"externalStage"`
+	EstimatedClosedAt time.Time         `json:"estimatedClosedAt"`
+	GeneralNotes      string            `json:"generalNotes"`
+	NextSteps         string            `json:"nextSteps"`
+	CreatedBy         *User             `json:"createdBy,omitempty"`
+	Owner             *User             `json:"owner,omitempty"`
+	Source            DataSource        `json:"source"`
+	SourceOfTruth     DataSource        `json:"sourceOfTruth"`
+	AppSource         string            `json:"appSource"`
+	ExternalLinks     []*ExternalSystem `json:"externalLinks"`
+}
+
+func (Opportunity) IsNode()            {}
+func (this Opportunity) GetID() string { return this.ID }
 
 type OrgAccountDetails struct {
 	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
@@ -2579,6 +2605,94 @@ func (e *GCliSearchResultType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e GCliSearchResultType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type InternalStage string
+
+const (
+	InternalStageOpen       InternalStage = "OPEN"
+	InternalStageEvaluating InternalStage = "EVALUATING"
+	InternalStageClosedWon  InternalStage = "CLOSED_WON"
+	InternalStageClosedLost InternalStage = "CLOSED_LOST"
+)
+
+var AllInternalStage = []InternalStage{
+	InternalStageOpen,
+	InternalStageEvaluating,
+	InternalStageClosedWon,
+	InternalStageClosedLost,
+}
+
+func (e InternalStage) IsValid() bool {
+	switch e {
+	case InternalStageOpen, InternalStageEvaluating, InternalStageClosedWon, InternalStageClosedLost:
+		return true
+	}
+	return false
+}
+
+func (e InternalStage) String() string {
+	return string(e)
+}
+
+func (e *InternalStage) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = InternalStage(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid InternalStage", str)
+	}
+	return nil
+}
+
+func (e InternalStage) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type InternalType string
+
+const (
+	InternalTypeNbo       InternalType = "NBO"
+	InternalTypeUpsell    InternalType = "UPSELL"
+	InternalTypeCrossSell InternalType = "CROSS_SELL"
+)
+
+var AllInternalType = []InternalType{
+	InternalTypeNbo,
+	InternalTypeUpsell,
+	InternalTypeCrossSell,
+}
+
+func (e InternalType) IsValid() bool {
+	switch e {
+	case InternalTypeNbo, InternalTypeUpsell, InternalTypeCrossSell:
+		return true
+	}
+	return false
+}
+
+func (e InternalType) String() string {
+	return string(e)
+}
+
+func (e *InternalType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = InternalType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid InternalType", str)
+	}
+	return nil
+}
+
+func (e InternalType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

@@ -210,3 +210,50 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, secondServiceLineItem.Source)
 	require.Equal(t, "test2", secondServiceLineItem.AppSource)
 }
+
+func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	now := utils.Now()
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+
+	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		Name:      "oppo 1",
+		CreatedAt: now,
+		UpdatedAt: now,
+		Source:    entity.DataSourceOpenline,
+		AppSource: "test1",
+	})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization": 1,
+		"Contract":     1,
+		"Opportunity":  1,
+	})
+	assertRelationship(ctx, t, driver, contractId, "HAS_OPPORTUNITY", opportunityId1)
+
+	rawResponse := callGraphQL(t, "contract/get_contract_with_opportunities",
+		map[string]interface{}{"contractId": contractId})
+
+	var contractStruct struct {
+		Contract model.Contract
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contractStruct)
+	require.Nil(t, err)
+
+	contract := contractStruct.Contract
+	require.NotNil(t, contract)
+	require.Equal(t, 2, len(contract.Opportunities))
+
+	firstOpportunity := contract.Opportunities[0]
+	require.Equal(t, opportunityId1, firstOpportunity.ID)
+	require.Equal(t, "opportunity 1", firstOpportunity.Name)
+	require.Equal(t, now, firstOpportunity.CreatedAt)
+	require.Equal(t, now, firstOpportunity.UpdatedAt)
+	require.Equal(t, model.DataSourceOpenline, firstOpportunity.Source)
+	require.Equal(t, "test1", firstOpportunity.AppSource)
+}

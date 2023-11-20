@@ -1645,6 +1645,50 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 	return serviceLineItemId
 }
 
+func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
+	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
+				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c)
+				SET 
+                    op:Opportunity_%s,
+					op.name=$name,
+					op.source=$source,
+					op.sourceOfTruth=$sourceOfTruth,
+					op.appSource=$appSource,
+					op.amount=$amount,
+                    op.internalType=$internalType,
+					op.externalType=$externalType,
+					op.internalStage=$internalStage,
+					op.externalStage=$externalStage,
+					op.estimatedClosedAt=$estimatedClosedAt,
+					op.generalNotes=$generalNotes,
+					op.nextSteps=$nextSteps
+					op.createdAt=$createdAt,
+					op.updatedAt=$updatedAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":                opportunityId,
+		"contractId":        contractId,
+		"tenant":            tenant,
+		"name":              opportunity.Name,
+		"source":            opportunity.Source,
+		"sourceOfTruth":     opportunity.SourceOfTruth,
+		"appSource":         opportunity.AppSource,
+		"amount":            opportunity.Amount,
+		"internalType":      opportunity.InternalType,
+		"externalType":      opportunity.ExternalType,
+		"internalStage":     opportunity.InternalStage,
+		"externalStage":     opportunity.ExternalStage,
+		"estimatedClosedAt": opportunity.EstimatedClosedAt,
+		"generalNotes":      opportunity.GeneralNotes,
+		"nextSteps":         opportunity.NextSteps,
+		"createdAt":         opportunity.CreatedAt,
+		"updatedAt":         opportunity.UpdatedAt,
+	})
+	return opportunityId
+}
+
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})

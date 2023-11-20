@@ -1,0 +1,38 @@
+extend type Query {
+    opportunity(id: ID!): Opportunity!
+}
+
+type Opportunity implements Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    amount:             Float!
+    maxAmount:          Float!
+    internalType:       InternalType!
+    externalType:       String!
+    internalStage:      InternalStage!
+    externalStage:      String!
+    estimatedClosedAt:  Time!
+    generalNotes:       String!
+    nextSteps:          String!
+    createdBy:          User @goField(forceResolver: true)
+    owner:              User @goField(forceResolver: true)
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+}
+
+enum InternalType {
+    NBO
+    UPSELL
+    CROSS_SELL
+}
+
+enum InternalStage {
+    OPEN
+    EVALUATING
+    CLOSED_WON
+    CLOSED_LOST
+}

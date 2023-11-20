@@ -56,6 +56,7 @@ type Services struct {
 	CommentService             CommentService
 	ContractService            ContractService
 	ServiceLineItemService     ServiceLineItemService
+	OpportunityService         OpportunityService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients) *Services {
