@@ -13,6 +13,10 @@ type Config struct {
 		CorsUrl       string `env:"USER_ADMIN_API_CORS_URL,required"`
 		ApiKey        string `env:"USER_ADMIN_API_KEY,required"`
 	}
+	EventsProcessingPlatform struct {
+		EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
+		EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
+	}
 	GoogleOAuth struct {
 		ClientId     string `env:"GOOGLE_OAUTH_CLIENT_ID,required"`
 		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET,required"`

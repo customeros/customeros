@@ -31,11 +31,17 @@ type SourceData struct {
 		} `json:"emails"`
 		Meetings []struct {
 			CreatedBy string    `json:"createdBy"`
-			Subject   string    `json:"subject"`
 			Attendees []string  `json:"attendees"`
+			Subject   string    `json:"subject"`
 			Agenda    string    `json:"agenda"`
 			StartedAt time.Time `json:"startedAt"`
 			EndedAt   time.Time `json:"endedAt"`
 		} `json:"meetings"`
+		LogEntry []struct {
+			CreatedBy   string    `json:"createdBy"`
+			Content     string    `json:"content"`
+			ContentType string    `json:"contentType"`
+			Date        time.Time `json:"date"`
+		} `json:"logEntry"`
 	} `json:"organizations"`
 }
