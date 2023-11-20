@@ -156,10 +156,16 @@ github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-a
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231010053057-7f0277709731/go.mod h1:K1eh+fWPK7zFNCrcvqICb3JNa/fDNmnUcOa8809xNhM=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231118063333-4ba30212f1ba h1:/TmTa3VweXSi9dzvy1sNZpHxBIXqTcI6H4Bg2OInBJc=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231118063333-4ba30212f1ba/go.mod h1:H9g1bMNSvYuL+yY+vnmdWglM8Y9StsmmfFeD6dZz3yM=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231120145804-10b6738ad211 h1:CcFpwGjjecrJ9PM5h15JCn5JGc4djM2YVHq+hJPPtI4=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231120145804-10b6738ad211/go.mod h1:H9g1bMNSvYuL+yY+vnmdWglM8Y9StsmmfFeD6dZz3yM=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231010053057-7f0277709731 h1:Fa0nqYTuP9XXUdXG248ToOeOKW8X4HBxS66fPNA8y+Y=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231010053057-7f0277709731/go.mod h1:6lpIEyKcm/7JlxY185rAsEOPOagkEaVi2YthY8oIJ2w=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231118063640-f0de224e076b h1:01Wb2CIepskmHlNbb8e3YunDkzMLhhuSV3jZKrF66K4=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231118063640-f0de224e076b/go.mod h1:iTjZ3NwPYWUpCdtKAaUT1PSAyB1vL4JxIPUgTS/LX1Q=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231120145804-10b6738ad211 h1:XiC+81f0kE9KpSBflBZYtdaoezEhSOt7mmf648rWODg=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231120145804-10b6738ad211/go.mod h1:iTjZ3NwPYWUpCdtKAaUT1PSAyB1vL4JxIPUgTS/LX1Q=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231120151307-3cff2d3076b6 h1:82K6x6XcReQ/4mvFUl58DSd5+aGOGroumenZm0ENKUw=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231120151307-3cff2d3076b6/go.mod h1:YL4o7UVK+9YuQYWv2ZyAqXjWOYzyNH+roBULFXGPj+w=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pelletier/go-toml/v2 v2.0.1/go.mod h1:r9LEWfGN8R5k0VXJ+0BkIe7MYkRdwZOjgMj2KwnJFUo=

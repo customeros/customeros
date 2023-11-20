@@ -13,7 +13,7 @@ import (
 type Config struct {
 	Neo4j  commonConfig.Neo4jConfig
 	Logger logger.Config
-	Jaeger tracing.Config
+	Jaeger tracing.JaegerConfig
 	Cron   cronconfig.Config
 
 	AWS struct {

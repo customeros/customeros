@@ -33,6 +33,7 @@ type CustomerOsClient interface {
 
 	CreateInteractionSession(tenant, username string, options ...InteractionSessionBuilderOption) (*string, error)
 	CreateInteractionEvent(tenant, username string, options ...InteractionEventBuilderOption) (*string, error)
+	CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error)
 
 	AddOrganizationToContact(tenant, username, contactId, organizationId string) error
 }
@@ -660,6 +661,40 @@ func (s *customerOsClient) CreateInteractionEvent(tenant, username string, optio
 		return nil, fmt.Errorf("CreateInteractionSession: %w", err)
 	}
 	id := graphqlResponse["interactionEvent_Create"]["id"]
+	return &id, nil
+}
+
+func (s *customerOsClient) CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateLogEntry($organizationId: ID!, $content: String, $contentType: String, $startedAt: Time) {
+			  logEntry_CreateForOrganization(
+				organizationId: $organizationId
+				input: {content: $content, contentType: $contentType, startedAt: $startedAt}
+			  )
+			}`)
+
+	graphqlRequest.Var("organizationId", organizationId)
+	graphqlRequest.Var("content", content)
+	graphqlRequest.Var("contentType", contentType)
+	graphqlRequest.Var("contentType", contentType)
+	graphqlRequest.Var("startedAt", startedAt)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &author)
+
+	if err != nil {
+		return nil, fmt.Errorf("error while adding headers to graph request: %w", err)
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, fmt.Errorf("GetInteractionEvent: %w", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]string
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("Error logEntry_CreateForOrganization: %w", err)
+	}
+	id := graphqlResponse["logEntry_CreateForOrganization"]
 	return &id, nil
 }
 

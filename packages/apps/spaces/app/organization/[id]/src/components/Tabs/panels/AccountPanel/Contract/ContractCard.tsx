@@ -1,7 +1,6 @@
 import { useForm } from 'react-inverted-form';
 import React, { useRef, useState, useEffect } from 'react';
 
-import { produce } from 'immer';
 import { debounce } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -14,11 +13,11 @@ import { FormSelect } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { toastError } from '@ui/presentation/Toast';
 import { ChevronUp } from '@ui/media/icons/ChevronUp';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
+import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
 import {
   Contract,
@@ -26,10 +25,6 @@ import {
   ContractUpdateInput,
   ContractRenewalCycle,
 } from '@graphql/types';
-import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/src/graphql/getContracts.generated';
 
 import { UrlInput } from './UrlInput';
 import { Services } from './Services/Services';
@@ -67,38 +62,39 @@ export const ContractCard = ({
   const client = getGraphQLClient();
 
   const updateContract = useUpdateContractMutation(client, {
-    onMutate: ({ input }) => {
-      queryClient.cancelQueries({ queryKey });
-
-      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
-        return produce(currentCache, (draft) => {
-          const previousContracts = draft?.['organization']?.['contracts'];
-          const updatedContractIndex = previousContracts?.findIndex(
-            (contract) => contract.id === data?.id,
-          );
-          if (draft?.['organization']?.['contracts']) {
-            draft['organization']['contracts']?.map((contractData, index) => {
-              if (index !== updatedContractIndex) {
-                return contractData;
-              }
-
-              return { ...contractData, ...input };
-            });
-          }
-        });
-      });
-      const previousEntries =
-        queryClient.getQueryData<GetContractsQuery>(queryKey);
-
-      return { previousEntries };
-    },
-    onError: (_, __, context) => {
-      queryClient.setQueryData<GetContractsQuery>(
-        queryKey,
-        context?.previousEntries,
-      );
-      toastError('Failed to update contract', 'update-contract-error');
-    },
+    // todo fix https://linear.app/customer-os/issue/COS-985/fix-optimitsic-update-for-update-contract-mutation
+    // onMutate: ({ input }) => {
+    //   queryClient.cancelQueries({ queryKey });
+    //
+    //   queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
+    //     return produce(currentCache, (draft) => {
+    //       const previousContracts = draft?.['organization']?.['contracts'];
+    //       const updatedContractIndex = previousContracts?.findIndex(
+    //         (contract) => contract.id === data?.id,
+    //       );
+    //       if (draft?.['organization']?.['contracts']) {
+    //         draft['organization']['contracts']?.map((contractData, index) => {
+    //           if (index !== updatedContractIndex) {
+    //             return contractData;
+    //           }
+    //
+    //           return { ...contractData, ...input };
+    //         });
+    //       }
+    //     });
+    //   });
+    //   const previousEntries =
+    //     queryClient.getQueryData<GetContractsQuery>(queryKey);
+    //
+    //   return { previousEntries };
+    // },
+    // onError: (_, __, context) => {
+    //   queryClient.setQueryData<GetContractsQuery>(
+    //     queryKey,
+    //     context?.previousEntries,
+    //   );
+    //   toastError('Failed to update contract', 'update-contract-error');
+    // },
     onSettled: () => {
       queryClient.invalidateQueries(queryKey);
     },

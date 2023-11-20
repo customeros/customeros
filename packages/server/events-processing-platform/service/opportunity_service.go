@@ -102,6 +102,44 @@ func (s *opportunityService) CreateOpportunity(ctx context.Context, request *opp
 	return &opportunitypb.OpportunityIdGrpcResponse{Id: opportunityId}, nil
 }
 
+func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, request *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.UpdateRenewalOpportunity")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Check if the opportunity ID is valid
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	// Convert any protobuf timestamp to time.Time, if necessary
+	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
+
+	source := commonmodel.Source{}
+	source.FromGrpc(request.SourceFields)
+
+	updateRenewalOpportunityCommand := command.NewUpdateRenewalOpportunityCommand(
+		request.Id,
+		request.Tenant,
+		request.LoggedInUserId,
+		request.Comments,
+		model.RenewalLikelihood(request.RenewalLikelihood).StringValue(),
+		request.Amount,
+		source,
+		updatedAt,
+	)
+
+	if err := s.opportunityCommandHandlers.UpdateRenewalOpportunity.Handle(ctx, updateRenewalOpportunityCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateRenewalOpportunity.Handle) tenant:{%v}, opportunityId:{%v}, err: %v", request.Tenant, request.Id, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the newly created opportunity
+	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.Id}, nil
+}
+
 func (s *opportunityService) checkOrganizationExists(ctx context.Context, tenant, organizationId string) (bool, error) {
 	organizationAggregate := organizationaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
 	err := s.aggregateStore.Exists(ctx, organizationAggregate.GetID())

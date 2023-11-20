@@ -7,22 +7,22 @@ import (
 	"time"
 )
 
-type CreateRenewalOpportunityCommand struct {
+type UpdateRenewalOpportunityCommand struct {
 	eventstore.BaseCommand
 	Source            commonmodel.Source
-	ContractId        string
-	RenewalLikelihood model.RenewalLikelihoodString
-	CreatedAt         *time.Time
 	UpdatedAt         *time.Time
+	RenewalLikelihood model.RenewalLikelihoodString
+	Comments          string
+	Amount            float64
 }
 
-func NewCreateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, contractId string, renewalLikelihood model.RenewalLikelihoodString, source commonmodel.Source, createdAt, updatedAt *time.Time) *CreateRenewalOpportunityCommand {
-	return &CreateRenewalOpportunityCommand{
+func NewUpdateRenewalOpportunityCommand(opportunityId, tenant, loggedInUserId, comments string, renewalLikelihood model.RenewalLikelihoodString, amount float64, source commonmodel.Source, updatedAt *time.Time) *UpdateRenewalOpportunityCommand {
+	return &UpdateRenewalOpportunityCommand{
 		BaseCommand:       eventstore.NewBaseCommand(opportunityId, tenant, loggedInUserId),
 		Source:            source,
-		ContractId:        contractId,
 		RenewalLikelihood: renewalLikelihood,
-		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
+		Comments:          comments,
+		Amount:            amount,
 	}
 }

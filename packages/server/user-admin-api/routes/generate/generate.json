@@ -9,29 +9,9 @@
       "firstName": "Matt",
       "lastName": "Brown",
       "email": "matt@demo.com"
-    },
-    {
-      "firstName": "Antoine",
-      "lastName": "Valot",
-      "email": "antoine@demo.com"
-    },
-    {
-      "firstName": "Sarah",
-      "lastName": "Green",
-      "email": "sarah@demo.com"
-    },
-    {
-      "firstName": "Lucas",
-      "lastName": "Ford",
-      "email": "lucas@demo.com"
     }
   ],
   "contacts": [
-    {
-      "firstName": "Eduard",
-      "lastName": "Burasky",
-      "email": "eduard.burasky@flexport.com"
-    },
     {
       "firstName": "Adam",
       "lastName": "Miller",
@@ -46,132 +26,59 @@
       "firstName": "David",
       "lastName": "Thompson",
       "email": "david.thompson@airbnb.com"
-    },
-    {
-      "firstName": "Rachel",
-      "lastName": "Smith",
-      "email": "rachel.smith@airbnb.com"
     }
   ],
   "organizations": [
     {
-      "name": "Flexport",
-      "domain": "flexport.com",
-      "people": [
-        {
-          "email": "eduard.burasky@flexport.com"
-        },
-        {
-          "email": "adam.miller@flexport.com"
-        }
-      ],
-      "emails": [
-        {
-          "from": "jonty@demo.com",
-          "to": ["eduard.burasky@flexport.com"],
-          "cc": ["adam.miller@flexport.com"],
-          "bcc": ["firut.eduard@gmail.com"],
-          "subject": "Hey Brian, I'm a big fan of Flexport",
-          "body": "Hey Brian, I'm a big fan of Flexport. I've been using it for years and I love it. I'm a software engineer and I'd love to work for you guys. I'm attaching my resume. Thanks, Jonty",
-          "contentType": "text/plain",
-          "date": "2017-01-01T00:00:00Z"
-        }
-      ],
-      "meetings": [
-        {
-          "createdBy": "jonty@demo.com",
-          "attendees": [
-            "eduard.burasky@flexport.com",
-            "adam.miller@flexport.com"
-          ],
-          "subject": "Flexport Meeting",
-          "agenda": "Discussing the future of Flexport",
-          "startedAt": "2015-01-01T12:00:00Z",
-          "endedAt": "2015-01-01T13:00:00Z"
-        }
-      ]
-    },
-    {
       "name": "Airbnb",
       "domain": "airbnb.com",
       "people": [
-        {"email": "emily.johnson@airbnb.com"},
-        {"email": "david.thompson@airbnb.com"},
-        {"email": "rachel.smith@airbnb.com"}
+        {
+          "email": "emily.johnson@airbnb.com"
+        },
+        {
+          "email": "david.thompson@airbnb.com"
+        }
       ],
       "emails": [
         {
           "from": "matt@demo.com",
-          "to": ["emily.johnson@airbnb.com"],
-          "cc": ["david.thompson@airbnb.com"],
-          "bcc": ["private.mail@airbnb.com"],
+          "to": [
+            "emily.johnson@airbnb.com"
+          ],
+          "cc": [
+            "david.thompson@airbnb.com"
+          ],
+          "bcc": [
+            "private.mail@airbnb.com"
+          ],
           "subject": "Potential Collaboration with Airbnb",
           "body": "Hello Emily, We've been impressed with Airbnb's approach...",
           "contentType": "text/plain",
           "date": "2023-06-10T10:30:00Z"
-        },
-        {
-          "from": "sarah@demo.com",
-          "to": ["rachel.smith@airbnb.com"],
-          "cc": [],
-          "bcc": [],
-          "subject": "Inquiry about Airbnb's New Initiatives",
-          "body": "Hi Rachel, I'm interested in understanding more about Airbnb's new initiatives...",
-          "contentType": "text/plain",
-          "date": "2023-06-11T14:00:00Z"
-        },
-        {
-          "from": "lucas@demo.com",
-          "to": ["david.thompson@airbnb.com"],
-          "cc": [],
-          "bcc": [],
-          "subject": "Question about Airbnb Listing Features",
-          "body": "David, I had a question regarding the new features on Airbnb listings...",
-          "contentType": "text/plain",
-          "date": "2023-06-12T09:00:00Z"
-        },
-        {
-          "from": "antoine@demo.com",
-          "to": ["emily.johnson@airbnb.com"],
-          "cc": ["rachel.smith@airbnb.com"],
-          "bcc": [],
-          "subject": "Suggestions for Airbnb's Platform",
-          "body": "Dear Emily, I've been an Airbnb user for years and had some suggestions...",
-          "contentType": "text/plain",
-          "date": "2023-06-13T16:00:00Z"
-        },
-        {
-          "from": "jonty@demo.com",
-          "to": ["david.thompson@airbnb.com"],
-          "cc": ["rachel.smith@airbnb.com"],
-          "bcc": [],
-          "subject": "Partnership Opportunities",
-          "body": "David, Let's explore potential partnership opportunities between our companies...",
-          "contentType": "text/plain",
-          "date": "2023-06-14T11:00:00Z"
-        },
-        {
-          "from": "sarah@demo.com",
-          "to": ["emily.johnson@airbnb.com"],
-          "cc": ["rachel.smith@airbnb.com"],
-          "bcc": [],
-          "subject": "Follow-up on Previous Conversation",
-          "body": "Hi Emily, Following up on our discussion about Airbnb's initiatives...",
-          "contentType": "text/plain",
-          "date": "2023-06-15T10:00:00Z"
         }
       ],
       "meetings": [
         {
-          "createdBy": "lucas@demo.com",
-          "attendees": ["emily.johnson@airbnb.com", "david.thompson@airbnb.com"],
+          "createdBy": "matt@demo.com",
+          "attendees": [
+            "emily.johnson@airbnb.com",
+            "david.thompson@airbnb.com"
+          ],
           "subject": "Partnership Discussion with Airbnb",
           "agenda": "Exploring potential areas of partnership.",
           "startedAt": "2023-06-15T15:00:00Z",
           "endedAt": "2023-06-15T16:30:00Z"
         }
+      ],
+      "logEntry": [
+        {
+          "createdBy": "jonty@demo.com",
+          "content": "<div>Hey Brian, I'm a big fan of Flexport. I've been using it for years and I love it. I'm a software engineer and I'd love to work for you guys. I'm attaching my resume. Thanks, Jonty</div>",
+          "contentType": "text/html",
+          "date": "2020-01-01T00:00:00Z"
+        }
       ]
     }
-
   ]
 }
