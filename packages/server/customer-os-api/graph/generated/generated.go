@@ -9673,6 +9673,7 @@ enum InternalType {
     NBO
     UPSELL
     CROSS_SELL
+    RENEWAL
 }
 
 enum InternalStage {

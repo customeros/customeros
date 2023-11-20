@@ -2664,17 +2664,19 @@ const (
 	InternalTypeNbo       InternalType = "NBO"
 	InternalTypeUpsell    InternalType = "UPSELL"
 	InternalTypeCrossSell InternalType = "CROSS_SELL"
+	InternalTypeRenewal   InternalType = "RENEWAL"
 )
 
 var AllInternalType = []InternalType{
 	InternalTypeNbo,
 	InternalTypeUpsell,
 	InternalTypeCrossSell,
+	InternalTypeRenewal,
 }
 
 func (e InternalType) IsValid() bool {
 	switch e {
-	case InternalTypeNbo, InternalTypeUpsell, InternalTypeCrossSell:
+	case InternalTypeNbo, InternalTypeUpsell, InternalTypeCrossSell, InternalTypeRenewal:
 		return true
 	}
 	return false

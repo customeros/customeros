@@ -10,6 +10,7 @@ var internalTypeByModel = map[model.InternalType]entity.InternalType{
 	model.InternalTypeNbo:       entity.InternalTypeNbo,
 	model.InternalTypeUpsell:    entity.InternalTypeUpsell,
 	model.InternalTypeCrossSell: entity.InternalTypeCrossSell,
+	model.InternalTypeRenewal:   entity.InternalTypeRenewal,
 }
 
 var internalTypeByValue = utils.ReverseMap(internalTypeByModel)

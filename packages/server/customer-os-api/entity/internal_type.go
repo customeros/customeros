@@ -6,12 +6,14 @@ const (
 	InternalTypeNbo       InternalType = "NBO"
 	InternalTypeUpsell    InternalType = "UPSELL"
 	InternalTypeCrossSell InternalType = "CROSS_SELL"
+	InternalTypeRenewal   InternalType = "RENEWAL"
 )
 
 var AllInternalTypes = []InternalType{
 	InternalTypeNbo,
 	InternalTypeUpsell,
 	InternalTypeCrossSell,
+	InternalTypeRenewal,
 }
 
 func GetInternalType(s string) InternalType {
