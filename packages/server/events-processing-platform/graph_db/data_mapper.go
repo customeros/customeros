@@ -196,14 +196,17 @@ func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
 		EstimatedClosedAt: utils.GetTimePropOrNil(props, "estimatedClosedAt"),
 		GeneralNotes:      utils.GetStringPropOrEmpty(props, "generalNotes"),
 		NextSteps:         utils.GetStringPropOrEmpty(props, "nextSteps"),
+		Comments:          utils.GetStringPropOrEmpty(props, "comments"),
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		RenewalDetails: entity.RenewalDetails{
-			RenewedAt:         utils.GetTimePropOrNil(props, "renewedAt"),
-			RenewalLikelihood: utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
+			RenewedAt:              utils.GetTimePropOrNil(props, "renewedAt"),
+			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
+			RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
+			RenewalUpdatedByUserAt: utils.GetTimePropOrNil(props, "renewalUpdatedByUserAt"),
 		},
 	}
 	return &opportunity

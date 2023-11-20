@@ -91,6 +91,10 @@
     {
       "name": "Check for contracts without organization",
       "query": "MATCH (c:Contract) WHERE NOT (c)<-[:HAS_CONTRACT]-(:Organization) return count(c)"
+    },
+    {
+      "name": "Check for multiple renewal opportunities for same contract",
+      "query": "CALL {MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt UNION MATCH (c:Contract)-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity) WHERE op.internalStage='OPEN' WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt} return sum(cnt)"
     }
   ]
 }

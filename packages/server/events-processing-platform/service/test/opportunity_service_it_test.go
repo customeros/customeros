@@ -3,13 +3,16 @@ package servicet
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -102,7 +105,7 @@ func TestOpportunityService_CreateOpportunity(t *testing.T) {
 	require.True(t, timeNow.Equal(*eventData.ExternalSystem.SyncDate))
 }
 
-func TestCreateOpportunity_MissingOrganizationId(t *testing.T) {
+func TestOpportunityService_CreateOpportunity_MissingOrganizationId(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -126,7 +129,7 @@ func TestCreateOpportunity_MissingOrganizationId(t *testing.T) {
 	require.Contains(t, st.Message(), "missing required field: organizationId")
 }
 
-func TestCreateOpportunity_OrganizationAggregateDoesNotExists(t *testing.T) {
+func TestOpportunityService_CreateOpportunity_OrganizationAggregateDoesNotExists(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -149,4 +152,66 @@ func TestCreateOpportunity_OrganizationAggregateDoesNotExists(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, codes.NotFound, st.Code())
 	require.Contains(t, st.Message(), fmt.Sprintf("organization with ID %s not found", orgId))
+}
+
+func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	tenant := "ziggy"
+	opportunityId := uuid.New().String()
+
+	// Setup opportunity store and create initial opportunity event
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenant, opportunityId)
+	createEvent, err := event.NewOpportunityCreateEvent(opportunityAggregate, model.OpportunityDataFields{
+		OrganizationId: "org-123",
+	}, commonmodel.Source{}, commonmodel.ExternalSystem{}, utils.Now(), utils.Now())
+	require.Nil(t, err)
+	opportunityAggregate.UncommittedEvents = append(opportunityAggregate.UncommittedEvents, createEvent)
+	aggregateStore.Save(ctx, opportunityAggregate)
+
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	opportunityClient := opportunitypb.NewOpportunityGrpcServiceClient(grpcConnection)
+
+	// Update opportunity request
+	response, err := opportunityClient.UpdateRenewalOpportunity(ctx, &opportunitypb.UpdateRenewalOpportunityGrpcRequest{
+		Tenant:            tenant,
+		Id:                opportunityId,
+		Amount:            10000,
+		RenewalLikelihood: opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL,
+		SourceFields: &commonpb.SourceFields{
+			Source:    "openline",
+			AppSource: "unit-test",
+		},
+		LoggedInUserId: "user-id-123",
+		Comments:       "Some comments",
+	})
+	require.Nil(t, err, "Failed to update opportunity")
+
+	// Assert response
+	require.NotNil(t, response)
+	require.Equal(t, opportunityId, response.Id)
+
+	// Retrieve and assert events
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[opportunityAggregate.ID]
+	require.Equal(t, 2, len(eventList))
+
+	require.Equal(t, event.OpportunityUpdateRenewalV1, eventList[1].GetEventType())
+	require.Equal(t, string(aggregate.OpportunityAggregateType)+"-"+tenant+"-"+opportunityId, eventList[0].GetAggregateID())
+
+	var eventData event.OpportunityUpdateRenewalEvent
+	err = eventList[1].GetJsonData(&eventData)
+	require.Nil(t, err, "Failed to unmarshal event data")
+
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, 10000.0, eventData.Amount)
+	test.AssertRecentTime(t, eventData.UpdatedAt)
+	require.Equal(t, "user-id-123", eventData.UpdatedByUserId)
+	require.Equal(t, "Some comments", eventData.Comments)
+	require.Equal(t, string(model.RenewalLikelihoodStringMedium), eventData.RenewalLikelihood)
+	require.Equal(t, "openline", eventData.Source)
 }

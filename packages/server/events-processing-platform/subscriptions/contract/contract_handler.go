@@ -140,14 +140,11 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, co
 
 	for _, sli := range serviceLineItems {
 		annualPrice := float64(0)
-
-		if sli.Billed == string(servicelineitemmodel.OnceBilledString) {
-			annualPrice = sli.Price
-		} else {
+		if sli.Billed == string(servicelineitemmodel.AnnuallyBilledString) {
 			annualPrice = float64(sli.Price) * float64(sli.Quantity)
-			if sli.Billed == string(servicelineitemmodel.MonthlyBilledString) {
-				annualPrice *= 12
-			}
+		} else if sli.Billed == string(servicelineitemmodel.MonthlyBilledString) {
+			annualPrice = float64(sli.Price) * float64(sli.Quantity)
+			annualPrice *= 12
 		}
 		// Add to total ARR
 		arr += annualPrice

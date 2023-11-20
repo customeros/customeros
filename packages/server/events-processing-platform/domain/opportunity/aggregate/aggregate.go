@@ -33,12 +33,14 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.OpportunityCreateV1:
 		return a.onOpportunityCreate(evt)
-	case event.OpportunityCreateRenewalV1:
-		return a.onRenewalOpportunityCreate(evt)
-	case event.OpportunityUpdateNextCycleDateV1:
-		return a.onOpportunityUpdateNextCycleDate(evt)
 	case event.OpportunityUpdateV1:
 		return a.onOpportunityUpdate(evt)
+	case event.OpportunityCreateRenewalV1:
+		return a.onRenewalOpportunityCreate(evt)
+	case event.OpportunityUpdateRenewalV1:
+		return a.onRenewalOpportunityUpdate(evt)
+	case event.OpportunityUpdateNextCycleDateV1:
+		return a.onOpportunityUpdateNextCycleDate(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -152,6 +154,28 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 		if !found {
 			a.Opportunity.ExternalSystems = append(a.Opportunity.ExternalSystems, eventData.ExternalSystem)
 		}
+	}
+
+	return nil
+}
+
+func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) error {
+	var eventData event.OpportunityUpdateRenewalEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Opportunity.UpdatedAt = eventData.UpdatedAt
+	a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
+	if eventData.UpdatedByUserId != "" &&
+		(eventData.Amount != a.Opportunity.Amount || eventData.RenewalLikelihood != a.Opportunity.RenewalDetails.RenewalLikelihood) {
+		a.Opportunity.RenewalDetails.RenewalUpdatedByUserAt = &eventData.UpdatedAt
+		a.Opportunity.RenewalDetails.RenewalUpdatedByUserId = eventData.UpdatedByUserId
+	}
+	a.Opportunity.Comments = eventData.Comments
+	a.Opportunity.Amount = eventData.Amount
+	if eventData.Source == constants.SourceOpenline {
+		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 
 	return nil
