@@ -13,10 +13,12 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 	"strings"
+	"time"
 )
 
 type DashboardRepository interface {
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[time.Time]int64, error)
 }
 
 type dashboardRepository struct {
@@ -377,4 +379,58 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
 	return dbNodesWithTotalCount, nil
+}
+
+func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[time.Time]int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardNewCustomersData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					WITH datetime({ year: $startYear, month: $startMonth, day: 1, hour: 0, minute: 0, second: 0 }) as startDate,
+						 datetime({ year: $endYear, month: $endMonth, day: $endDay, hour: 23, minute: 59, second: 59 }) as endDate
+					WITH range(0, duration.inMonths(startDate, endDate).months) as months, startDate, endDate
+					UNWIND months as monthOffset
+					WITH startDate + duration({months: monthOffset}) as currentDate
+					
+					OPTIONAL MATCH (i:Contract_%s) 
+					WHERE 
+					i.serviceStartedAt.year = currentDate.year and 
+					i.serviceStartedAt.month = currentDate.month and 
+					(i.endedAt is null or i.endedAt > datetime(currentDate.year + '-' + currentDate.month + '-01'))
+					RETURN currentDate, count(i)
+				`, tenant),
+			map[string]any{
+				"startYear":  startDate.Year(),
+				"endYear":    startDate.Year(),
+				"startMonth": startDate.Month(),
+				"endMonth":   endDate.Month(),
+				"endDay":     endDate.Day(),
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := []map[time.Time]int64{}
+
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			month := v.Values[0].(time.Time)
+			count := v.Values[1].(int64)
+			result = append(result, map[time.Time]int64{month: count})
+		}
+	}
+
+	return result, nil
 }

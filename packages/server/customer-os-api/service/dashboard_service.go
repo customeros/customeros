@@ -71,7 +71,7 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 		Page:  requestDetails.Page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
+	dbNodes, err := s.repositories.DashboardRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
 	if err != nil {
 		return nil, err
 	}
@@ -239,11 +239,20 @@ func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, yea
 	response.ThisMonthCount = 127
 	response.ThisMonthIncreasePercentage = 3.1
 
-	for i := 1; i <= 12; i++ {
-		response.Months = append(response.Months, &entityDashboard.DashboardNewCustomerMonthData{
-			Month: i,
-			Count: i*10 + 7,
-		})
+	startDate := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(year, time.December, 31, 23, 59, 59, 999999999, time.UTC)
+	data, err := s.repositories.DashboardRepository.GetDashboardNewCustomersData(ctx, common.GetContext(ctx).Tenant, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range data {
+		for key, value := range v {
+			response.Months = append(response.Months, &entityDashboard.DashboardNewCustomerMonthData{
+				Month: int(key.Month()),
+				Count: int(value),
+			})
+		}
 	}
 
 	return &response, nil
