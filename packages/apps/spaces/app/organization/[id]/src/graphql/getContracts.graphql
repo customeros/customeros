@@ -1,0 +1,29 @@
+query getContracts($id: ID!) {
+  organization(id: $id) {
+    id
+    name
+    contracts {
+      id
+      name
+      createdAt
+      serviceStartedAt
+      signedAt
+      endedAt
+      renewalCycle
+      status
+      contractUrl
+      serviceLineItems {
+        id
+        createdAt
+        updatedAt
+        name
+        billed
+        price
+        quantity
+        source
+        sourceOfTruth
+        appSource
+      }
+    }
+  }
+}
