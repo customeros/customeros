@@ -37,11 +37,19 @@ type SourceData struct {
 			StartedAt time.Time `json:"startedAt"`
 			EndedAt   time.Time `json:"endedAt"`
 		} `json:"meetings"`
-		LogEntry []struct {
+		LogEntries []struct {
 			CreatedBy   string    `json:"createdBy"`
 			Content     string    `json:"content"`
 			ContentType string    `json:"contentType"`
 			Date        time.Time `json:"date"`
-		} `json:"logEntry"`
+		} `json:"logEntries"`
+		Issues []struct {
+			CreatedBy   string    `json:"createdBy"`
+			CreatedAt   time.Time `json:"createdAt"`
+			Subject     string    `json:"subject"`
+			Status      string    `json:"status"`
+			Priority    string    `json:"priority"`
+			Description string    `json:"description"`
+		} `json:"issues"`
 	} `json:"organizations"`
 }

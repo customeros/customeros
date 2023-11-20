@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/issue"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"io/ioutil"
 	"net/http"
 )
@@ -311,7 +314,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 			}
 
 			//log entries
-			for _, logEntry := range organization.LogEntry {
+			for _, logEntry := range organization.LogEntries {
 
 				interactionEventId, err := services.CustomerOsClient.CreateLogEntry(tenant, username, organizationId, logEntry.CreatedBy, logEntry.Content, logEntry.ContentType, logEntry.Date)
 				if err != nil {
@@ -329,38 +332,46 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				}
 			}
 
-			////issues
-			//issueGrpcRequest := issuepb.UpsertIssueGrpcRequest{
-			//	Tenant:      tenant,
-			//	Subject:     "bunica are mere",
-			//	Status:      "",
-			//	Priority:    "",
-			//	Description: "ce faci?",
-			//	CreatedAt:   timestamppb.New(now),
-			//	UpdatedAt:   timestamppb.New(now),
-			//	SourceFields: &commonpb.SourceFields{
-			//		Source:    "zendesk_support",
-			//		AppSource: appSource,
-			//	},
-			//	ExternalSystemFields: &commonpb.ExternalSystemFields{
-			//		ExternalSystemId: "zendesk_support",
-			//		ExternalId:       "random-thing",
-			//		ExternalUrl:      "https://random-thing.zendesk.com/agent/tickets/1",
-			//		SyncDate:         timestamppb.New(now),
-			//	},
-			//}
-			//
-			//s := "b7c85888-388b-4425-a7da-5c4401e9947b"
-			//issueGrpcRequest.SubmittedByUserId = &s
-			//issueGrpcRequest.ReportedByOrganizationId = &organizationId
-			//
-			//_, err = services.GrpcClients.IssueClient.UpsertIssue(context, &issueGrpcRequest)
-			//if err != nil {
-			//	context.JSON(500, gin.H{
-			//		"error": err.Error(),
-			//	})
-			//	return
-			//}
+			//issues
+			for index, issue := range organization.Issues {
+				issueGrpcRequest := issuepb.UpsertIssueGrpcRequest{
+					Tenant:      tenant,
+					Subject:     issue.Subject,
+					Status:      issue.Status,
+					Priority:    issue.Priority,
+					Description: issue.Description,
+					CreatedAt:   timestamppb.New(issue.CreatedAt),
+					UpdatedAt:   timestamppb.New(issue.CreatedAt),
+					SourceFields: &commonpb.SourceFields{
+						Source:    "zendesk_support",
+						AppSource: appSource,
+					},
+					ExternalSystemFields: &commonpb.ExternalSystemFields{
+						ExternalSystemId: "zendesk_support",
+						ExternalId:       "random-thing-" + fmt.Sprintf("%d", index),
+						ExternalUrl:      "https://random-thing.zendesk.com/agent/tickets/" + fmt.Sprintf("%d", index),
+						SyncDate:         timestamppb.New(issue.CreatedAt),
+					},
+				}
+
+				issueGrpcRequest.ReportedByOrganizationId = &organizationId
+
+				for _, userWithId := range userIds {
+					if userWithId.Email == issue.CreatedBy {
+						issueGrpcRequest.SubmittedByUserId = &userWithId.Id
+						break
+					}
+				}
+
+				_, err = services.GrpcClients.IssueClient.UpsertIssue(context, &issueGrpcRequest)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+			}
+
 		}
 		context.JSON(200, gin.H{
 			"tenant": "tenant initiated",
