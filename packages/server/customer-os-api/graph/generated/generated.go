@@ -972,7 +972,9 @@ type ComplexityRoot struct {
 
 	RenewalForecast struct {
 		Amount          func(childComplexity int) int
+		Arr             func(childComplexity int) int
 		Comment         func(childComplexity int) int
+		MaxArr          func(childComplexity int) int
 		PotentialAmount func(childComplexity int) int
 		UpdatedAt       func(childComplexity int) int
 		UpdatedBy       func(childComplexity int) int
@@ -7242,12 +7244,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RenewalForecast.Amount(childComplexity), true
 
+	case "RenewalForecast.arr":
+		if e.complexity.RenewalForecast.Arr == nil {
+			break
+		}
+
+		return e.complexity.RenewalForecast.Arr(childComplexity), true
+
 	case "RenewalForecast.comment":
 		if e.complexity.RenewalForecast.Comment == nil {
 			break
 		}
 
 		return e.complexity.RenewalForecast.Comment(childComplexity), true
+
+	case "RenewalForecast.maxArr":
+		if e.complexity.RenewalForecast.MaxArr == nil {
+			break
+		}
+
+		return e.complexity.RenewalForecast.MaxArr(childComplexity), true
 
 	case "RenewalForecast.potentialAmount":
 		if e.complexity.RenewalForecast.PotentialAmount == nil {
@@ -9800,6 +9816,8 @@ type RenewalForecast {
     updatedAt: Time
     updatedById: String
     updatedBy: User @goField(forceResolver: true)
+    arr: Float
+    maxArr: Float
 }
 
 type BillingDetails {
@@ -48334,6 +48352,10 @@ func (ec *executionContext) fieldContext_OrgAccountDetails_renewalForecast(ctx c
 				return ec.fieldContext_RenewalForecast_updatedById(ctx, field)
 			case "updatedBy":
 				return ec.fieldContext_RenewalForecast_updatedBy(ctx, field)
+			case "arr":
+				return ec.fieldContext_RenewalForecast_arr(ctx, field)
+			case "maxArr":
+				return ec.fieldContext_RenewalForecast_maxArr(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RenewalForecast", field.Name)
 		},
@@ -57745,6 +57767,88 @@ func (ec *executionContext) fieldContext_RenewalForecast_updatedBy(ctx context.C
 				return ec.fieldContext_User_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RenewalForecast_arr(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalForecast_arr(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Arr, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalForecast_arr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalForecast",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RenewalForecast_maxArr(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalForecast_maxArr(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxArr, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalForecast_maxArr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalForecast",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -77622,6 +77726,10 @@ func (ec *executionContext) _RenewalForecast(ctx context.Context, sel ast.Select
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "arr":
+			out.Values[i] = ec._RenewalForecast_arr(ctx, field, obj)
+		case "maxArr":
+			out.Values[i] = ec._RenewalForecast_maxArr(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

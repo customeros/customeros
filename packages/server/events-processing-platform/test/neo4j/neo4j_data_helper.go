@@ -255,6 +255,21 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return contractId
 }
 
+func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {
+	contractId := CreateContract(ctx, driver, tenant, contract)
+	LinkContractWithOrganization(ctx, driver, contractId, organizationId)
+	return contractId
+}
+
+func LinkContractWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contractId, organizationId string) {
+	query := `MATCH (c:Contract {id:$contractId}), (o:Organization {id:$organizationId})
+				MERGE (o)-[:HAS_CONTRACT]->(c) `
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"contractId":     contractId,
+		"organizationId": organizationId,
+	})
+}
+
 func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`

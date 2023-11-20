@@ -51,6 +51,8 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
 			UpdatedBy:       utils.GetStringPropOrEmpty(props, "renewalForecastUpdatedBy"),
 			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
+			Arr:             utils.GetFloatPropOrNil(props, "renewalForecastArr"),
+			MaxArr:          utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
 		},
 		BillingDetails: entity.BillingDetails{
 			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),

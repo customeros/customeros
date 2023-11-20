@@ -55,7 +55,7 @@ func NewCommandHandlers(log logger.Logger,
 		LogEntry:         logentrycmdhandler.NewCommandHandlers(log, aggregateStore),
 		Issue:            issuecmdhandler.NewCommandHandlers(log, aggregateStore),
 		Comment:          commentcmdhandler.NewCommandHandlers(log, aggregateStore),
-		Opportunity:      opportunitycmdhandler.NewCommandHandlers(log, aggregateStore),
+		Opportunity:      opportunitycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		Contract:         contractcmdhandler.NewCommandHandlers(log, aggregateStore),
 		ServiceLineItem:  servicelineitemcmdhandler.NewCommandHandlers(log, aggregateStore),
 	}

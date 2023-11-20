@@ -116,6 +116,8 @@ type RenewalForecast {
     updatedAt: Time
     updatedById: String
     updatedBy: User @goField(forceResolver: true)
+    arr: Float
+    maxArr: Float
 }
 
 type BillingDetails {

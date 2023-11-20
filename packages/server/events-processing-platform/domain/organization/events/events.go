@@ -31,6 +31,7 @@ const (
 	OrganizationUpsertCustomFieldV1       = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
 	OrganizationAddParentV1               = "V1_ORGANIZATION_ADD_PARENT"
 	OrganizationRemoveParentV1            = "V1_ORGANIZATION_REMOVE_PARENT"
+	OrganizationRefreshArrV1              = "V1_ORGANIZATION_REFRESH_ARR"
 )
 
 type OrganizationCreateEvent struct {
@@ -527,6 +528,26 @@ func NewOrganizationRefreshLastTouchpointEvent(aggregate eventstore.Aggregate) (
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshLastTouchpointV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRefreshLastTouchpointEvent")
+	}
+	return event, nil
+}
+
+type OrganizationRefreshArrEvent struct {
+	Tenant string `json:"tenant" validate:"required"`
+}
+
+func NewOrganizationRefreshArrEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
+	eventData := OrganizationRefreshArrEvent{
+		Tenant: aggregate.GetTenant(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRefreshArrEvent")
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshArrV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRefreshArrEvent")
 	}
 	return event, nil
 }
