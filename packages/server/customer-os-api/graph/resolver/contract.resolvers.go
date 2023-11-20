@@ -32,6 +32,19 @@ func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Cont
 	return mapper.MapEntitiesToServiceLineItems(serviceLineItemEntities), nil
 }
 
+// Opportunities is the resolver for the opportunities field.
+func (r *contractResolver) Opportunities(ctx context.Context, obj *model.Contract) ([]*model.Opportunity, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get opportunities for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get opportunities for contract %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToOpportunities(opportunityEntities), nil
+}
+
 // Owner is the resolver for the owner field.
 func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContractResolver.Owner", graphql.GetOperationContext(ctx))

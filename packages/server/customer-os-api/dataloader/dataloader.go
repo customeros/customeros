@@ -86,6 +86,7 @@ type Loaders struct {
 	FollowerParticipantsForIssue                *dataloader.Loader
 	ContractsForOrganization                    *dataloader.Loader
 	ServiceLineItemsForContract                 *dataloader.Loader
+	OpportunitiesForContract                    *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -177,6 +178,9 @@ type contractBatcher struct {
 }
 type serviceLineItemBatcher struct {
 	serviceLineItemService service.ServiceLineItemService
+}
+type opportunityBatcher struct {
+	opportunityService service.OpportunityService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -271,6 +275,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	serviceLineItemBatcher := &serviceLineItemBatcher{
 		serviceLineItemService: services.ServiceLineItemService,
 	}
+	opportunityBatcher := &opportunityBatcher{
+		opportunityService: services.OpportunityService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -341,6 +348,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		CommentsForIssue:                            dataloader.NewBatchedLoader(commentBatcher.getCommentsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContractsForOrganization:                    dataloader.NewBatchedLoader(contractBatcher.getContractsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ServiceLineItemsForContract:                 dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		OpportunitiesForContract:                    dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 
