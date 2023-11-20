@@ -11,6 +11,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { Trash01 } from '@ui/media/icons/Trash01';
 import { Divider } from '@ui/presentation/Divider';
 import { ContractUpdateInput } from '@graphql/types';
+import { FileCheck02 } from '@ui/media/icons/FileCheck02';
 import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import {
   Popover,
@@ -42,11 +43,7 @@ export const UrlInput: FC<UrlInputProps> = ({
     formId,
   });
 
-  const handleCancel = () => {
-    setHref(url ?? '');
-    onClose();
-  };
-  const handleUpdateContractUrl = () => {
+  const handleUpdateContractUrl = (value: string) => {
     if (!contractId) return;
 
     onSubmit({
@@ -54,6 +51,7 @@ export const UrlInput: FC<UrlInputProps> = ({
         contractId,
         ...ContractDTO.toPayload({
           ...state.values,
+          contractUrl: value,
         }),
       },
     });
@@ -77,7 +75,7 @@ export const UrlInput: FC<UrlInputProps> = ({
             variant='ghost'
             color='gray.400'
             aria-label='Add link to contract'
-            icon={<File02 />}
+            icon={url ? <FileCheck02 /> : <File02 />}
             onClick={onOpen}
           />
         </PopoverTrigger>
@@ -126,11 +124,11 @@ export const UrlInput: FC<UrlInputProps> = ({
               onKeyDown={(event) => {
                 const { key } = event;
                 if (key === 'Enter') {
-                  handleUpdateContractUrl();
+                  handleUpdateContractUrl(href);
                 }
 
                 if (key === 'Escape') {
-                  handleCancel();
+                  handleUpdateContractUrl('');
                 }
               }}
             />
@@ -140,7 +138,7 @@ export const UrlInput: FC<UrlInputProps> = ({
                   size='xs'
                   variant='ghost'
                   aria-label='Save'
-                  onClick={handleUpdateContractUrl}
+                  onClick={() => handleUpdateContractUrl(href)}
                   color='gray.400'
                   icon={<Check color='inherit' />}
                   mr={2}
@@ -162,7 +160,7 @@ export const UrlInput: FC<UrlInputProps> = ({
                   size='xs'
                   variant='ghost'
                   aria-label='Remove link'
-                  onClick={handleCancel}
+                  onClick={() => handleUpdateContractUrl('')}
                   color='gray.400'
                   icon={<Trash01 color='inherit' />}
                   _hover={{ background: 'gray.600', color: 'gray.25' }}

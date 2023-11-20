@@ -162,11 +162,11 @@ export const CreateServiceModal = ({
               bg='white'
               border='1px solid'
               borderColor='gray.300'
-              borderRadius='md'
+              borderRadius='8px'
             >
               <Tab
-                borderTopLeftRadius='md'
-                borderBottomLeftRadius='md'
+                borderTopLeftRadius='8px'
+                borderBottomLeftRadius='8px'
                 borderBottom='none'
                 flex={1}
                 borderRight='1px solid'
@@ -188,8 +188,8 @@ export const CreateServiceModal = ({
                 Subscription
               </Tab>
               <Tab
-                borderTopRightRadius='md'
-                borderBottomRightRadius='md'
+                borderTopRightRadius='8px'
+                borderBottomRightRadius='8px'
                 borderRadius='md'
                 borderBottom='none'
                 flex={1}
