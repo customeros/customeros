@@ -96,6 +96,37 @@
           "priority": "urgent",
           "description": "Flexport is down again. Please fix it"
         }
+      ],
+      "slack": [
+        [
+          {
+            "createdBy": "matt@demo.com",
+            "createdAt": "2023-08-10T14:11:12Z",
+            "message": "Hey guys, I'm going to be late to the meeting today. I'll be there in 10 minutes."
+          },
+          {
+            "createdBy": "emily.johnson@airbnb.com",
+            "createdAt": "2023-08-10T14:32:47Z",
+            "message": "No problem, Matt. See you soon."
+          }
+        ],
+        [
+          {
+            "createdBy": "emily.johnson@airbnb.com",
+            "createdAt": "2023-11-10T08:01:00Z",
+            "message": "Good morning. Can we meet at 10am today?"
+          },
+          {
+            "createdBy": "matt@demo.com",
+            "createdAt": "2023-11-10T08:07:00Z",
+            "message": "Sure, that works for me."
+          },
+          {
+            "createdBy": "david.thompson@airbnb.com",
+            "createdAt": "2023-11-10T08:12:00Z",
+            "message": "I'm free then too."
+          }
+        ]
       ]
     }
   ]

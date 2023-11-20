@@ -51,5 +51,10 @@ type SourceData struct {
 			Priority    string    `json:"priority"`
 			Description string    `json:"description"`
 		} `json:"issues"`
+		Slack [][]struct {
+			CreatedBy string    `json:"createdBy"`
+			CreatedAt time.Time `json:"createdAt"`
+			Message   string    `json:"message"`
+		} `json:"slack"`
 	} `json:"organizations"`
 }

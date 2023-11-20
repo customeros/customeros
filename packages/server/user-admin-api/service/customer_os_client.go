@@ -595,6 +595,8 @@ func (s *customerOsClient) CreateInteractionEvent(tenant, username string, optio
 				$sessionId: ID, 
 				$meetingId: ID,
 				$eventIdentifier: String,
+				$externalId: String,
+				$externalSystemId: String,
 				$channel: String,
 				$channelData: String,
 				$sentBy: [InteractionEventParticipantInput!]!, 
@@ -609,6 +611,8 @@ func (s *customerOsClient) CreateInteractionEvent(tenant, username string, optio
     					event: {interactionSession: $sessionId, 
 								meetingId: $meetingId,
 								eventIdentifier: $eventIdentifier,
+								externalId: $externalId,
+								externalSystemId: $externalSystemId,
 								channel: $channel, 
 								channelData: $channelData,
 								sentBy: $sentBy, 
@@ -634,6 +638,8 @@ func (s *customerOsClient) CreateInteractionEvent(tenant, username string, optio
 
 	graphqlRequest.Var("sessionId", params.sessionId)
 	graphqlRequest.Var("eventIdentifier", params.eventIdentifier)
+	graphqlRequest.Var("externalId", params.externalId)
+	graphqlRequest.Var("externalSystemId", params.externalSystemId)
 	graphqlRequest.Var("content", params.content)
 	graphqlRequest.Var("contentType", params.contentType)
 	graphqlRequest.Var("channelData", params.channelData)
