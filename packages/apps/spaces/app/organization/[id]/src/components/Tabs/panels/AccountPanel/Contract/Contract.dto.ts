@@ -1,5 +1,5 @@
-import { ContractRenewalCycle } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { ContractUpdateInput, ContractRenewalCycle } from '@graphql/types';
 import { billingFrequencyOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
 export interface TimeToRenewalData {
@@ -7,6 +7,7 @@ export interface TimeToRenewalData {
   endedAt?: Date;
   signedAt?: Date;
   serviceStartedAt?: Date;
+  contractUrl?: string | null;
   renewalCycle?: ContractRenewalCycle;
 }
 export interface TimeToRenewalForm {
@@ -14,6 +15,7 @@ export interface TimeToRenewalForm {
   endedAt?: Date;
   signedAt?: Date;
   serviceStartedAt?: Date;
+  contractUrl?: string | null;
   renewalCycle?: SelectOption<ContractRenewalCycle> | null;
 }
 
@@ -23,6 +25,7 @@ export class ContractDTO implements TimeToRenewalForm {
   serviceStartedAt?: Date;
   renewalCycle?: SelectOption<ContractRenewalCycle> | null;
   name?: string;
+  contractUrl?: string | null;
 
   constructor(data?: TimeToRenewalData | null) {
     this.renewalCycle =
@@ -33,19 +36,23 @@ export class ContractDTO implements TimeToRenewalForm {
     this.serviceStartedAt =
       data?.serviceStartedAt && new Date(data.serviceStartedAt);
     this.name = data?.name ?? '';
+    this.contractUrl = data?.contractUrl ?? '';
   }
 
   static toForm(data?: TimeToRenewalData | null): TimeToRenewalForm {
     return new ContractDTO(data);
   }
 
-  static toPayload(data: TimeToRenewalForm): TimeToRenewalForm {
+  static toPayload(
+    data: TimeToRenewalForm,
+  ): Omit<ContractUpdateInput, 'contractId'> {
     return {
       serviceStartedAt: data?.serviceStartedAt,
       signedAt: data?.signedAt,
       endedAt: data?.endedAt,
-      renewalCycle: data?.renewalCycle,
+      renewalCycle: data?.renewalCycle?.value,
       name: data?.name,
+      contractUrl: data?.contractUrl,
     };
   }
 }

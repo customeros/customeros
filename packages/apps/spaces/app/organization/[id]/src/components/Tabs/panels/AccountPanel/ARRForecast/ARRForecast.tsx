@@ -3,7 +3,6 @@ import { useIsMutating, useIsRestoring } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
-import { UseDisclosureReturn } from '@ui/utils';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
@@ -15,11 +14,11 @@ import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { RenewalForecastType } from '@organization/src/components/Tabs/panels/AccountPanel/RenewalForecast';
 import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
+import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 interface ARRForecastProps {
   name: string;
   isInitialLoading?: boolean;
-  infoModal: UseDisclosureReturn;
   aRRForecast?: RenewalForecastType;
   renewalProbability?: RenewalLikelihoodProbability | null;
 }
@@ -28,11 +27,10 @@ export const ARRForecast = ({
   isInitialLoading,
   aRRForecast,
   renewalProbability,
-  infoModal,
   name,
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
-
+  const { modal } = useARRInfoModalContext();
   const isMutating = useIsMutating({
     mutationKey: useUpdateRenewalLikelihoodMutation.getKey(),
   });
@@ -95,7 +93,7 @@ export const ARRForecast = ({
                   aria-label='Help'
                   onClick={(e) => {
                     e.stopPropagation();
-                    infoModal.onOpen();
+                    modal.onOpen();
                   }}
                   icon={<Icons.HelpCircle color='gray.400' />}
                 />
@@ -112,9 +110,9 @@ export const ARRForecast = ({
       </Card>
 
       <InfoDialog
-        isOpen={infoModal.isOpen}
-        onClose={infoModal.onClose}
-        onConfirm={infoModal.onClose}
+        isOpen={modal.isOpen}
+        onClose={modal.onClose}
+        onConfirm={modal.onClose}
         confirmButtonLabel='Got it'
         label='ARR forecast'
       >
