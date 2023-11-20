@@ -1,97 +1,149 @@
 'use client';
 
-import { useMemo } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 
-import { useDisclosure } from '@ui/utils';
+import { Box } from '@ui/layout/Box';
+import { Contract } from '@graphql/types';
+import { Select } from '@ui/form/SyncSelect';
+import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
+import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
+import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
 
 import { Notes } from './Notes';
-import { TimeToRenewal } from './TimeToRenewal';
+import { EmptyContracts } from './EmptyContracts';
+import { ContractCard } from './Contract/ContractCard';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
-import { RenewalForecast, RenewalForecastType } from './RenewalForecast';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
-import { BillingDetailsCard } from './BillingDetailsCard/BillingDetailsCard';
-import { RenewalLikelihood, RenewalLikelihoodType } from './RenewalLikelihood';
+import {
+  useAccountPanelStateContext,
+  AccountModalsContextProvider,
+} from './context/AccountModalsContext';
 
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
-  // Moved to upperscope due to error in safari https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
-  const renewalLikelihoodUpdateModal = useDisclosure({
-    id: 'renewal-likelihood-update-modal',
-  });
-  const renewalLikelihoodInfoModal = useDisclosure({
-    id: 'renewal-likelihood-info-modal',
-  });
 
-  const renewalForecastUpdateModal = useDisclosure({
-    id: 'renewal-renewal-update-modal',
-  });
-  const renewalForecastInfoModal = useDisclosure({
-    id: 'renewal-renewal-info-modal',
-  });
-
+  const { isModalOpen } = useAccountPanelStateContext();
   const client = getGraphQLClient();
-  const { data, isInitialLoading } = useOrganizationAccountDetailsQuery(
-    client,
-    { id },
-  );
-  const isModalOpen = useMemo(() => {
-    return (
-      renewalForecastUpdateModal.isOpen ||
-      renewalLikelihoodUpdateModal.isOpen ||
-      renewalForecastInfoModal.isOpen ||
-      renewalLikelihoodInfoModal.isOpen
-    );
-  }, [
-    renewalForecastUpdateModal.isOpen,
-    renewalLikelihoodUpdateModal.isOpen,
-    renewalForecastInfoModal.isOpen,
-    renewalLikelihoodInfoModal.isOpen,
-  ]);
+  const { data, isInitialLoading } = useGetContractsQuery(client, { id });
 
   if (isInitialLoading) {
     return <AccountPanelSkeleton />;
   }
+  if (!data?.organization?.contracts?.length) {
+    return <EmptyContracts name={data?.organization?.name || ''} />;
+  }
 
   return (
-    <OrganizationPanel
-      title='Account'
-      withFade
-      shouldBlockPanelScroll={isModalOpen}
-    >
-      <RenewalLikelihood
-        infoModal={renewalLikelihoodInfoModal}
-        updateModal={renewalLikelihoodUpdateModal}
-        name={data?.organization?.name || ''}
-        data={
-          data?.organization?.accountDetails
-            ?.renewalLikelihood as RenewalLikelihoodType
+    <AccountModalsContextProvider>
+      <OrganizationPanel
+        title='Account'
+        withFade
+        actionItem={
+          <Box display='none'>
+            <Select
+              isSearchable={false}
+              isClearable={false}
+              isMulti={false}
+              value={{
+                label: 'Customer',
+                value: 'customer',
+              }}
+              options={[
+                {
+                  label: 'Customer',
+                  value: 'customer',
+                },
+                {
+                  label: 'Prospect',
+                  value: 'prospect',
+                },
+              ]}
+              chakraStyles={{
+                ...contractButtonSelect,
+                container: (props, state) => {
+                  const isCustomer = state.getValue()[0]?.value === 'customer';
+
+                  return {
+                    ...props,
+                    px: 2,
+                    pointerEvents: 'none',
+                    py: '1px',
+                    border: '1px solid',
+                    borderColor: isCustomer ? 'success.200' : 'gray.300',
+                    backgroundColor: isCustomer ? 'success.50' : 'transparent',
+                    color: isCustomer ? 'success.700' : 'gray.500',
+
+                    borderRadius: '2xl',
+                    fontSize: 'xs',
+                    maxHeight: '22px',
+
+                    '& > div': {
+                      p: 0,
+                      border: 'none',
+                      fontSize: 'xs',
+                      maxHeight: '22px',
+                      minH: 'auto',
+                    },
+                  };
+                },
+                valueContainer: (props, state) => {
+                  const isCustomer = state.getValue()[0]?.value === 'customer';
+
+                  return {
+                    ...props,
+                    p: 0,
+                    border: 'none',
+                    fontSize: 'xs',
+                    maxHeight: '22px',
+                    minH: 'auto',
+                    color: isCustomer ? 'success.700' : 'gray.500',
+                  };
+                },
+                singleValue: (props) => {
+                  return {
+                    ...props,
+                    maxHeight: '22px',
+                    p: 0,
+                    minH: 'auto',
+                    color: 'inherit',
+                  };
+                },
+                menuList: (props) => {
+                  return {
+                    ...props,
+                    w: 'fit-content',
+                    left: '-32px',
+                  };
+                },
+              }}
+              leftElement={<ActivityHeart color='success.500' mr='1' />}
+            />
+          </Box>
         }
-      />
-      <RenewalForecast
-        infoModal={renewalForecastInfoModal}
-        updateModal={renewalForecastUpdateModal}
-        isInitialLoading={isInitialLoading}
-        name={data?.organization?.name || ''}
-        renewalProbability={
-          data?.organization?.accountDetails?.renewalLikelihood?.probability
-        }
-        renewalForecast={
-          data?.organization?.accountDetails
-            ?.renewalForecast as RenewalForecastType
-        }
-      />
-      <TimeToRenewal
-        id={data?.organization?.id || ''}
-        data={data?.organization?.accountDetails?.billingDetails}
-      />
-      <BillingDetailsCard
-        id={id}
-        data={data?.organization?.accountDetails?.billingDetails}
-      />
-      <Notes id={id} data={data?.organization} />
-    </OrganizationPanel>
+        shouldBlockPanelScroll={isModalOpen}
+      >
+        {/*Todo uncomment when forecast is calculated*/}
+        {/*<ARRForecast*/}
+        {/*  name={data?.organization?.name || ''}*/}
+        {/*  isInitialLoading={isInitialLoading}*/}
+        {/*  renewalProbability={undefined}*/}
+        {/*  aRRForecast={undefined}*/}
+        {/*/>*/}
+
+        {!!data?.organization?.contracts &&
+          data?.organization?.contracts.map((contract) => (
+            <ContractCard
+              organizationId={id}
+              organizationName={data?.organization?.name ?? ''}
+              key={`contract-card-${contract.id}`}
+              data={(contract as Contract) ?? undefined}
+            />
+          ))}
+
+        <Notes id={id} data={data?.organization} />
+      </OrganizationPanel>
+    </AccountModalsContextProvider>
   );
 };
