@@ -295,12 +295,14 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	case opportunityevent.OpportunityCreateV1:
 		return s.opportunityEventHandler.OnCreate(ctx, evt)
-	case opportunityevent.OpportunityCreateRenewalV1:
-		return s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
 	case opportunityevent.OpportunityUpdateNextCycleDateV1:
 		return s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
 	case opportunityevent.OpportunityUpdateV1:
 		return s.opportunityEventHandler.OnUpdate(ctx, evt)
+	case opportunityevent.OpportunityCreateRenewalV1:
+		return s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
+	case opportunityevent.OpportunityUpdateRenewalV1:
+		return s.opportunityEventHandler.OnUpdateRenewal(ctx, evt)
 
 	case contractevent.ContractCreateV1:
 		return s.contractEventHandler.OnCreate(ctx, evt)

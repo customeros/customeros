@@ -269,7 +269,9 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					op.renewedAt=$renewedAt,
 					op.amount=$amount,
 					op.maxAmount=$maxAmount,
-					op.renewalLikelihood=$renewalLikelihood
+					op.renewalLikelihood=$renewalLikelihood,
+					op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
+					op.comments=$comments
 				`, tenant)
 
 	if opportunity.InternalType == "RENEWAL" {
@@ -277,16 +279,18 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                opportunityId,
-		"name":              opportunity.Name,
-		"source":            opportunity.Source,
-		"sourceOfTruth":     opportunity.SourceOfTruth,
-		"internalStage":     opportunity.InternalStage,
-		"internalType":      opportunity.InternalType,
-		"amount":            opportunity.Amount,
-		"maxAmount":         opportunity.MaxAmount,
-		"renewedAt":         utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
-		"renewalLikelihood": opportunity.RenewalDetails.RenewalLikelihood,
+		"id":                     opportunityId,
+		"name":                   opportunity.Name,
+		"source":                 opportunity.Source,
+		"sourceOfTruth":          opportunity.SourceOfTruth,
+		"internalStage":          opportunity.InternalStage,
+		"internalType":           opportunity.InternalType,
+		"amount":                 opportunity.Amount,
+		"maxAmount":              opportunity.MaxAmount,
+		"renewedAt":              utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
+		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
+		"comments":               opportunity.Comments,
 	})
 	return opportunityId
 }

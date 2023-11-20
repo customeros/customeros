@@ -18,7 +18,8 @@ type ContractRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, contractId string, evt event.ContractCreateEvent) error
 	Update(ctx context.Context, tenant, contractId string, evt event.ContractUpdateEvent) error
 	GetContractById(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
-	GetContractByServiceLineItemId(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
+	GetContractByServiceLineItemId(ctx context.Context, tenant string, serviceLineItemId string) (*dbtype.Node, error)
+	GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error)
 }
 
 type contractRepository struct {
@@ -156,6 +157,39 @@ func (r *contractRepository) GetContractByServiceLineItemId(ctx context.Context,
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$id})<-[:HAS_SERVICE]-(c:Contract:Contract_%s) RETURN c limit 1`, tenant)
 	params := map[string]any{
 		"id": serviceLineItemId,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	records := result.([]*dbtype.Node)
+	if len(records) == 0 {
+		return nil, nil
+	} else {
+		return records[0], nil
+	}
+}
+
+func (r *contractRepository) GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractByServiceLineItemId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("opportunityId", opportunityId))
+
+	cypher := fmt.Sprintf(`MATCH (:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c:Contract:Contract_%s) RETURN c limit 1`, tenant)
+	params := map[string]any{
+		"id": opportunityId,
 	}
 	span.LogFields(log.String("query", cypher), log.Object("params", params))
 
