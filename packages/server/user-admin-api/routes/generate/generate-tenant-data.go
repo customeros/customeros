@@ -372,6 +372,87 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				}
 			}
 
+			//slack
+			for _, slackThread := range organization.Slack {
+
+				sig, err := uuid.NewUUID()
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+				sigs := sig.String()
+
+				channelValue := "CHAT"
+				appSource := appSource
+				sessionStatus := "ACTIVE"
+				sessionType := "THREAD"
+				sessionName := slackThread[0].Message
+				sessionOpts := []service.InteractionSessionBuilderOption{
+					service.WithSessionIdentifier(&sigs),
+					service.WithSessionChannel(&channelValue),
+					service.WithSessionName(&sessionName),
+					service.WithSessionAppSource(&appSource),
+					service.WithSessionStatus(&sessionStatus),
+					service.WithSessionType(&sessionType),
+				}
+
+				sessionId, err := services.CustomerOsClient.CreateInteractionSession(tenant, username, sessionOpts...)
+				if sessionId == nil {
+					context.JSON(500, gin.H{
+						"error": "sessionId is nil",
+					})
+					return
+				}
+
+				for _, slackMessage := range slackThread {
+
+					sentBy := toParticipantInputArr([]string{slackMessage.CreatedBy}, nil)
+
+					iig, err := uuid.NewUUID()
+					if err != nil {
+						context.JSON(500, gin.H{
+							"error": err.Error(),
+						})
+						return
+					}
+					iigs := iig.String()
+					eventType := "MESSAGE"
+					contentType := "text/plain"
+					eventOpts := []service.InteractionEventBuilderOption{
+						service.WithCreatedAt(&slackMessage.CreatedAt),
+						service.WithSessionId(sessionId),
+						service.WithEventIdentifier(iigs),
+						service.WithExternalId(iigs),
+						service.WithExternalSystemId("slack"),
+						service.WithChannel(&channelValue),
+						service.WithEventType(&eventType),
+						service.WithContent(&slackMessage.Message),
+						service.WithContentType(&contentType),
+						service.WithSentBy(sentBy),
+						service.WithAppSource(&appSource),
+					}
+
+					interactionEventId, err := services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
+					if err != nil {
+						context.JSON(500, gin.H{
+							"error": err.Error(),
+						})
+						return
+					}
+
+					if interactionEventId == nil {
+						context.JSON(500, gin.H{
+							"error": "interactionEventId is nil",
+						})
+						return
+					}
+
+				}
+
+			}
+
 		}
 		context.JSON(200, gin.H{
 			"tenant": "tenant initiated",
