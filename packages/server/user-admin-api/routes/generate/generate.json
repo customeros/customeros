@@ -71,12 +71,30 @@
           "endedAt": "2023-06-15T16:30:00Z"
         }
       ],
-      "logEntry": [
+      "logEntries": [
         {
           "createdBy": "jonty@demo.com",
           "content": "<div>Hey Brian, I'm a big fan of Flexport. I've been using it for years and I love it. I'm a software engineer and I'd love to work for you guys. I'm attaching my resume. Thanks, Jonty</div>",
           "contentType": "text/html",
           "date": "2020-01-01T00:00:00Z"
+        }
+      ],
+      "issues": [
+        {
+          "createdBy": "jonty@demo.com",
+          "createdAt": "2020-01-01T00:00:00Z",
+          "subject": "Flexport is down",
+          "status": "closed",
+          "priority": "high",
+          "description": "Flexport is down. I can't log in."
+        },
+        {
+          "createdBy": "matt@demo.com",
+          "createdAt": "2021-01-01T00:00:00Z",
+          "subject": "Flexport is down again",
+          "status": "open",
+          "priority": "urgent",
+          "description": "Flexport is down again. Please fix it"
         }
       ]
     }
