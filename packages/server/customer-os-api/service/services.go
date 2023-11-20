@@ -105,6 +105,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.PlayerService = NewPlayerService(repositories, &services)
 	services.ContractService = NewContractService(log, repositories, grpcClients, &services)
 	services.ServiceLineItemService = NewServiceLineItemService(log, repositories, grpcClients, &services)
+	services.OpportunityService = NewOpportunityService(log, repositories, grpcClients, &services)
 
 	log.Info("Init cache service")
 	services.Cache = NewCacheService(&services)

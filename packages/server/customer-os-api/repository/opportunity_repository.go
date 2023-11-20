@@ -59,9 +59,9 @@ func (r *opportunityRepository) GetForContracts(ctx context.Context, tenant stri
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_OPPORTUNITY]->(o:Opportunity)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_OPPORTUNITY]->(op:Opportunity)
 			WHERE c.id IN $contractIds
-			RETURN o, c.id ORDER BY o.createdAt DESC`
+			RETURN op, c.id ORDER BY op.createdAt DESC`
 	params := map[string]any{
 		"tenant":      tenant,
 		"contractIds": contractIds,

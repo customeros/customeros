@@ -216,22 +216,40 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	now := utils.Now()
+	yesterday := now.Add(time.Duration(-24) * time.Hour)
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
 
 	opportunityId1 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
-		Name:      "oppo 1",
-		CreatedAt: now,
-		UpdatedAt: now,
-		Source:    entity.DataSourceOpenline,
-		AppSource: "test1",
+		Name:          "oppo 1",
+		CreatedAt:     now,
+		UpdatedAt:     now,
+		Amount:        49,
+		InternalType:  entity.InternalTypeUpsell,
+		InternalStage: entity.InternalStageOpen,
+		Source:        entity.DataSourceOpenline,
+		GeneralNotes:  "test notes 1",
+		Comments:      "test comments 1",
+		AppSource:     "test1",
+	})
+	opportunityId2 := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
+		Name:          "oppo 2",
+		CreatedAt:     yesterday,
+		UpdatedAt:     yesterday,
+		Amount:        1239,
+		InternalType:  entity.InternalTypeNbo,
+		InternalStage: entity.InternalStageEvaluating,
+		Source:        entity.DataSourceOpenline,
+		GeneralNotes:  "test notes 2",
+		Comments:      "test comments 2",
+		AppSource:     "test2",
 	})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization": 1,
 		"Contract":     1,
-		"Opportunity":  1,
+		"Opportunity":  2,
 	})
 	assertRelationship(ctx, t, driver, contractId, "HAS_OPPORTUNITY", opportunityId1)
 
@@ -251,9 +269,27 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 
 	firstOpportunity := contract.Opportunities[0]
 	require.Equal(t, opportunityId1, firstOpportunity.ID)
-	require.Equal(t, "opportunity 1", firstOpportunity.Name)
+	require.Equal(t, "oppo 1", firstOpportunity.Name)
 	require.Equal(t, now, firstOpportunity.CreatedAt)
 	require.Equal(t, now, firstOpportunity.UpdatedAt)
+	require.Equal(t, float64(49), firstOpportunity.Amount)
+	require.Equal(t, model.InternalStageOpen, firstOpportunity.InternalStage)
+	require.Equal(t, model.InternalTypeUpsell, firstOpportunity.InternalType)
 	require.Equal(t, model.DataSourceOpenline, firstOpportunity.Source)
+	require.Equal(t, "test notes 1", firstOpportunity.GeneralNotes)
+	require.Equal(t, "test comments 1", firstOpportunity.Comments)
 	require.Equal(t, "test1", firstOpportunity.AppSource)
+
+	secondOpportunity := contract.Opportunities[1]
+	require.Equal(t, opportunityId2, secondOpportunity.ID)
+	require.Equal(t, "oppo 2", secondOpportunity.Name)
+	require.Equal(t, yesterday, secondOpportunity.CreatedAt)
+	require.Equal(t, yesterday, secondOpportunity.UpdatedAt)
+	require.Equal(t, float64(1239), secondOpportunity.Amount)
+	require.Equal(t, model.InternalStageEvaluating, secondOpportunity.InternalStage)
+	require.Equal(t, model.InternalTypeNbo, secondOpportunity.InternalType)
+	require.Equal(t, model.DataSourceOpenline, secondOpportunity.Source)
+	require.Equal(t, "test notes 2", secondOpportunity.GeneralNotes)
+	require.Equal(t, "test comments 2", secondOpportunity.Comments)
+	require.Equal(t, "test2", secondOpportunity.AppSource)
 }

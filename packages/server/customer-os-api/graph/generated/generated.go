@@ -765,25 +765,30 @@ type ComplexityRoot struct {
 	}
 
 	Opportunity struct {
-		Amount            func(childComplexity int) int
-		AppSource         func(childComplexity int) int
-		CreatedAt         func(childComplexity int) int
-		CreatedBy         func(childComplexity int) int
-		EstimatedClosedAt func(childComplexity int) int
-		ExternalLinks     func(childComplexity int) int
-		ExternalStage     func(childComplexity int) int
-		ExternalType      func(childComplexity int) int
-		GeneralNotes      func(childComplexity int) int
-		ID                func(childComplexity int) int
-		InternalStage     func(childComplexity int) int
-		InternalType      func(childComplexity int) int
-		MaxAmount         func(childComplexity int) int
-		Name              func(childComplexity int) int
-		NextSteps         func(childComplexity int) int
-		Owner             func(childComplexity int) int
-		Source            func(childComplexity int) int
-		SourceOfTruth     func(childComplexity int) int
-		UpdatedAt         func(childComplexity int) int
+		Amount                 func(childComplexity int) int
+		AppSource              func(childComplexity int) int
+		Comments               func(childComplexity int) int
+		CreatedAt              func(childComplexity int) int
+		CreatedBy              func(childComplexity int) int
+		EstimatedClosedAt      func(childComplexity int) int
+		ExternalLinks          func(childComplexity int) int
+		ExternalStage          func(childComplexity int) int
+		ExternalType           func(childComplexity int) int
+		GeneralNotes           func(childComplexity int) int
+		ID                     func(childComplexity int) int
+		InternalStage          func(childComplexity int) int
+		InternalType           func(childComplexity int) int
+		MaxAmount              func(childComplexity int) int
+		Name                   func(childComplexity int) int
+		NextSteps              func(childComplexity int) int
+		Owner                  func(childComplexity int) int
+		RenewalLikelihood      func(childComplexity int) int
+		RenewalUpdatedByUserAt func(childComplexity int) int
+		RenewalUpdatedByUserID func(childComplexity int) int
+		RenewedAt              func(childComplexity int) int
+		Source                 func(childComplexity int) int
+		SourceOfTruth          func(childComplexity int) int
+		UpdatedAt              func(childComplexity int) int
 	}
 
 	OrgAccountDetails struct {
@@ -5849,6 +5854,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Opportunity.AppSource(childComplexity), true
 
+	case "Opportunity.comments":
+		if e.complexity.Opportunity.Comments == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.Comments(childComplexity), true
+
 	case "Opportunity.createdAt":
 		if e.complexity.Opportunity.CreatedAt == nil {
 			break
@@ -5946,6 +5958,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Opportunity.Owner(childComplexity), true
+
+	case "Opportunity.renewalLikelihood":
+		if e.complexity.Opportunity.RenewalLikelihood == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewalLikelihood(childComplexity), true
+
+	case "Opportunity.renewalUpdatedByUserAt":
+		if e.complexity.Opportunity.RenewalUpdatedByUserAt == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewalUpdatedByUserAt(childComplexity), true
+
+	case "Opportunity.renewalUpdatedByUserId":
+		if e.complexity.Opportunity.RenewalUpdatedByUserID == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewalUpdatedByUserID(childComplexity), true
+
+	case "Opportunity.renewedAt":
+		if e.complexity.Opportunity.RenewedAt == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewedAt(childComplexity), true
 
 	case "Opportunity.source":
 		if e.complexity.Opportunity.Source == nil {
@@ -9616,6 +9656,11 @@ type Opportunity implements Node {
     estimatedClosedAt:  Time!
     generalNotes:       String!
     nextSteps:          String!
+    renewedAt:          Time!
+    renewalLikelihood:  String!
+    renewalUpdatedByUserId: String!
+    renewalUpdatedByUserAt: Time!
+    comments:           String!
     createdBy:          User @goField(forceResolver: true)
     owner:              User @goField(forceResolver: true)
     source:             DataSource!
@@ -19227,6 +19272,16 @@ func (ec *executionContext) fieldContext_Contract_opportunities(ctx context.Cont
 				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
 			case "nextSteps":
 				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Opportunity_createdBy(ctx, field)
 			case "owner":
@@ -47605,6 +47660,226 @@ func (ec *executionContext) fieldContext_Opportunity_nextSteps(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Opportunity_renewedAt(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_renewalLikelihood(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalLikelihood, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewalLikelihood(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_renewalUpdatedByUserId(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalUpdatedByUserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewalUpdatedByUserId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_renewalUpdatedByUserAt(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalUpdatedByUserAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewalUpdatedByUserAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_comments(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_comments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Comments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Opportunity_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Opportunity_createdBy(ctx, field)
 	if err != nil {
@@ -55592,6 +55867,16 @@ func (ec *executionContext) fieldContext_Query_opportunity(ctx context.Context, 
 				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
 			case "nextSteps":
 				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_Opportunity_createdBy(ctx, field)
 			case "owner":
@@ -74511,6 +74796,31 @@ func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionS
 			}
 		case "nextSteps":
 			out.Values[i] = ec._Opportunity_nextSteps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "renewedAt":
+			out.Values[i] = ec._Opportunity_renewedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "renewalLikelihood":
+			out.Values[i] = ec._Opportunity_renewalLikelihood(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "renewalUpdatedByUserId":
+			out.Values[i] = ec._Opportunity_renewalUpdatedByUserId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "renewalUpdatedByUserAt":
+			out.Values[i] = ec._Opportunity_renewalUpdatedByUserAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "comments":
+			out.Values[i] = ec._Opportunity_comments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

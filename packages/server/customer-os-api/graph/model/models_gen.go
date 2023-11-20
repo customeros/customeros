@@ -1227,25 +1227,30 @@ type NoteUpdateInput struct {
 }
 
 type Opportunity struct {
-	ID                string            `json:"id"`
-	CreatedAt         time.Time         `json:"createdAt"`
-	UpdatedAt         time.Time         `json:"updatedAt"`
-	Name              string            `json:"name"`
-	Amount            float64           `json:"amount"`
-	MaxAmount         float64           `json:"maxAmount"`
-	InternalType      InternalType      `json:"internalType"`
-	ExternalType      string            `json:"externalType"`
-	InternalStage     InternalStage     `json:"internalStage"`
-	ExternalStage     string            `json:"externalStage"`
-	EstimatedClosedAt time.Time         `json:"estimatedClosedAt"`
-	GeneralNotes      string            `json:"generalNotes"`
-	NextSteps         string            `json:"nextSteps"`
-	CreatedBy         *User             `json:"createdBy,omitempty"`
-	Owner             *User             `json:"owner,omitempty"`
-	Source            DataSource        `json:"source"`
-	SourceOfTruth     DataSource        `json:"sourceOfTruth"`
-	AppSource         string            `json:"appSource"`
-	ExternalLinks     []*ExternalSystem `json:"externalLinks"`
+	ID                     string            `json:"id"`
+	CreatedAt              time.Time         `json:"createdAt"`
+	UpdatedAt              time.Time         `json:"updatedAt"`
+	Name                   string            `json:"name"`
+	Amount                 float64           `json:"amount"`
+	MaxAmount              float64           `json:"maxAmount"`
+	InternalType           InternalType      `json:"internalType"`
+	ExternalType           string            `json:"externalType"`
+	InternalStage          InternalStage     `json:"internalStage"`
+	ExternalStage          string            `json:"externalStage"`
+	EstimatedClosedAt      time.Time         `json:"estimatedClosedAt"`
+	GeneralNotes           string            `json:"generalNotes"`
+	NextSteps              string            `json:"nextSteps"`
+	RenewedAt              time.Time         `json:"renewedAt"`
+	RenewalLikelihood      string            `json:"renewalLikelihood"`
+	RenewalUpdatedByUserID string            `json:"renewalUpdatedByUserId"`
+	RenewalUpdatedByUserAt time.Time         `json:"renewalUpdatedByUserAt"`
+	Comments               string            `json:"comments"`
+	CreatedBy              *User             `json:"createdBy,omitempty"`
+	Owner                  *User             `json:"owner,omitempty"`
+	Source                 DataSource        `json:"source"`
+	SourceOfTruth          DataSource        `json:"sourceOfTruth"`
+	AppSource              string            `json:"appSource"`
+	ExternalLinks          []*ExternalSystem `json:"externalLinks"`
 }
 
 func (Opportunity) IsNode()            {}

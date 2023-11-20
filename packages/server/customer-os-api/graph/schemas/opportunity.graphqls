@@ -16,6 +16,11 @@ type Opportunity implements Node {
     estimatedClosedAt:  Time!
     generalNotes:       String!
     nextSteps:          String!
+    renewedAt:          Time!
+    renewalLikelihood:  String!
+    renewalUpdatedByUserId: String!
+    renewalUpdatedByUserAt: Time!
+    comments:           String!
     createdBy:          User @goField(forceResolver: true)
     owner:              User @goField(forceResolver: true)
     source:             DataSource!

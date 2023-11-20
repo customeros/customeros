@@ -1,0 +1,19 @@
+query GetContract($contractId: ID!) {
+  contract(id: $contractId) {
+    id
+    opportunities {
+      id
+      createdAt
+      updatedAt
+      internalStage
+      internalType
+      amount
+      generalNotes
+      comments
+      name
+      source
+      sourceOfTruth
+      appSource
+    }
+  }
+}
