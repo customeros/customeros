@@ -148,8 +148,8 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 
 	serviceLineItemId1 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
 		Name:      "service line item 1",
-		CreatedAt: now,
-		UpdatedAt: now,
+		CreatedAt: yesterday,
+		UpdatedAt: yesterday,
 		Billed:    entity.BilledTypeAnnually,
 		Price:     13,
 		Quantity:  2,
@@ -158,8 +158,8 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	})
 	serviceLineItemId2 := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
 		Name:      "service line item 2",
-		CreatedAt: yesterday,
-		UpdatedAt: yesterday,
+		CreatedAt: now,
+		UpdatedAt: now,
 		Billed:    entity.BilledTypeAnnually,
 		Price:     255,
 		Quantity:  23,
@@ -191,8 +191,8 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	firstServiceLineItem := contract.ServiceLineItems[0]
 	require.Equal(t, serviceLineItemId1, firstServiceLineItem.ID)
 	require.Equal(t, "service line item 1", firstServiceLineItem.Name)
-	require.Equal(t, now, firstServiceLineItem.CreatedAt)
-	require.Equal(t, now, firstServiceLineItem.UpdatedAt)
+	require.Equal(t, yesterday, firstServiceLineItem.CreatedAt)
+	require.Equal(t, yesterday, firstServiceLineItem.UpdatedAt)
 	require.Equal(t, model.BilledTypeAnnually, firstServiceLineItem.Billed)
 	require.Equal(t, float64(13), firstServiceLineItem.Price)
 	require.Equal(t, int64(2), firstServiceLineItem.Quantity)
@@ -202,8 +202,8 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	secondServiceLineItem := contract.ServiceLineItems[1]
 	require.Equal(t, serviceLineItemId2, secondServiceLineItem.ID)
 	require.Equal(t, "service line item 2", secondServiceLineItem.Name)
-	require.Equal(t, yesterday, secondServiceLineItem.CreatedAt)
-	require.Equal(t, yesterday, secondServiceLineItem.UpdatedAt)
+	require.Equal(t, now, secondServiceLineItem.CreatedAt)
+	require.Equal(t, now, secondServiceLineItem.UpdatedAt)
 	require.Equal(t, model.BilledTypeAnnually, secondServiceLineItem.Billed)
 	require.Equal(t, float64(255), secondServiceLineItem.Price)
 	require.Equal(t, int64(23), secondServiceLineItem.Quantity)

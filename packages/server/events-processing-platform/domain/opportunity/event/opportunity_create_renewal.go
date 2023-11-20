@@ -17,7 +17,7 @@ type OpportunityCreateRenewalEvent struct {
 	ContractId        string             `json:"contractId" validate:"required"`
 	InternalType      string             `json:"internalType"`
 	InternalStage     string             `json:"internalStage"`
-	RenewalLikelihood string             `json:"renewalLikelihood"`
+	RenewalLikelihood string             `json:"renewalLikelihood" validate:"required" enums:"HIGH,MEDIUM,LOW,ZERO"`
 }
 
 func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId, renewalLikelihood string, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {

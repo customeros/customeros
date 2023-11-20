@@ -240,8 +240,8 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 	err = updateNextCycleDateEvent.GetJsonData(&eventData)
 	require.Nil(t, err)
 	require.Equal(t, tenantName, eventData.Tenant)
-	require.Equal(t, float64(10), eventData.Amount)
-	require.Equal(t, float64(10), eventData.MaxAmount)
+	require.Equal(t, float64(0), eventData.Amount)
+	require.Equal(t, float64(0), eventData.MaxAmount)
 	require.Equal(t, []string{opportunitymodel.FieldMaskAmount, opportunitymodel.FieldMaskMaxAmount}, eventData.FieldsMask)
 }
 
@@ -267,7 +267,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 	})
 	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
 	neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
-		Price:     float64(1),
+		Price:     float64(1000000),
 		Billed:    string(servicelineitemmodel.OnceBilledString),
 		CreatedAt: utils.Now(),
 	})
@@ -308,8 +308,8 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 	err = updateNextCycleDateEvent.GetJsonData(&eventData)
 	require.Nil(t, err)
 	require.Equal(t, tenantName, eventData.Tenant)
-	require.Equal(t, float64(2601), eventData.Amount)
-	require.Equal(t, float64(2601), eventData.MaxAmount)
+	require.Equal(t, float64(2600), eventData.Amount)
+	require.Equal(t, float64(2600), eventData.MaxAmount)
 	require.Equal(t, []string{opportunitymodel.FieldMaskAmount, opportunitymodel.FieldMaskMaxAmount}, eventData.FieldsMask)
 }
 
