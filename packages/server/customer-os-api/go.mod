@@ -1,6 +1,6 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-api
 
-go 1.20
+go 1.21
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 

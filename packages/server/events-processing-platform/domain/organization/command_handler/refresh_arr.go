@@ -4,60 +4,53 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"time"
 )
 
-type UpdateOpportunityCommandHandler interface {
-	Handle(ctx context.Context, cmd *command.UpdateOpportunityCommand) error
+type RefreshArrCommandHandler interface {
+	Handle(ctx context.Context, command *command.RefreshArrCommand) error
 }
 
-type updateOpportunityCommandHandler struct {
+type refreshArrCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
 }
 
-func NewUpdateOpportunityCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) UpdateOpportunityCommandHandler {
-	return &updateOpportunityCommandHandler{
-		log: log,
-		es:  es,
-		cfg: cfg,
-	}
+func NewRefreshArrCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) RefreshArrCommandHandler {
+	return &refreshArrCommandHandler{log: log, es: es, cfg: cfg}
 }
 
-func (h *updateOpportunityCommandHandler) Handle(ctx context.Context, cmd *command.UpdateOpportunityCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOpportunityCommandHandler.Handle")
+func (h *refreshArrCommandHandler) Handle(ctx context.Context, cmd *command.RefreshArrCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RefreshArrCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, cmd.Tenant, cmd.LoggedInUserId)
 	span.LogFields(log.Object("command", cmd))
 
-	// Validate the command fields
 	validationError, done := validator.Validate(cmd, span)
 	if done {
 		return validationError
 	}
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
-		opportunityAggregate, err := aggregate.LoadOpportunityAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
+		organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, h.es, cmd.Tenant, cmd.ObjectID)
 		if err != nil {
-			tracing.TraceErr(span, err)
 			return err
 		}
-		// Apply the command to the aggregate
-		if err = opportunityAggregate.HandleCommand(ctx, cmd); err != nil {
-			tracing.TraceErr(span, err)
+		if err = organizationAggregate.HandleCommand(ctx, cmd); err != nil {
 			return err
 		}
 
-		err = h.es.Save(ctx, opportunityAggregate)
+		err = h.es.Save(ctx, organizationAggregate)
 		if err == nil {
 			return nil // Save successful
 		}
@@ -74,5 +67,7 @@ func (h *updateOpportunityCommandHandler) Handle(ctx context.Context, cmd *comma
 		}
 	}
 
-	return nil
+	err := errors.New("reached maximum number of retries")
+	tracing.TraceErr(span, err)
+	return err
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
+	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -17,9 +19,10 @@ import (
 )
 
 type OpportunityEventHandler struct {
-	log                 logger.Logger
-	repositories        *repository.Repositories
-	opportunityCommands *opportunitycmdhandler.CommandHandlers
+	log                  logger.Logger
+	repositories         *repository.Repositories
+	opportunityCommands  *opportunitycmdhandler.CommandHandlers
+	organizationCommands *organizationcmdhandler.CommandHandlers
 }
 
 func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -131,7 +134,18 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.OpportunityRepository.Update(ctx, eventData.Tenant, opportunityId, eventData)
+
+	opportunityDbNode, err := h.repositories.OpportunityRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
+		return err
+	}
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	amountChanged := ((opportunity.Amount != eventData.Amount) && eventData.UpdateAmount()) ||
+		((opportunity.MaxAmount != eventData.MaxAmount) && eventData.UpdateMaxAmount())
+
+	err = h.repositories.OpportunityRepository.Update(ctx, eventData.Tenant, opportunityId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
@@ -144,6 +158,26 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 			return err
+		}
+	}
+
+	// if amount changed, recalculate organization combined ARR forecast
+	if amountChanged {
+		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
+			return nil
+		}
+		if organizationDbNode == nil {
+			return nil
+		}
+		organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+
+		err = h.organizationCommands.RefreshArr.Handle(ctx, cmd.NewRefreshArrCommand(eventData.Tenant, organization.ID, "", constants.AppSourceEventProcessingPlatform))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("NewRefreshArrCommand failed: %v", err.Error())
 		}
 	}
 
@@ -198,6 +232,24 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
 			return nil
+		}
+	} else if amountChanged {
+		// if amount changed, recalculate organization combined ARR forecast
+		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
+			return nil
+		}
+		if organizationDbNode == nil {
+			return nil
+		}
+		organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+
+		err = h.organizationCommands.RefreshArr.Handle(ctx, cmd.NewRefreshArrCommand(eventData.Tenant, organization.ID, "", constants.AppSourceEventProcessingPlatform))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("NewRefreshArrCommand failed: %v", err.Error())
 		}
 	}
 

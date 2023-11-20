@@ -3,6 +3,7 @@ package contract
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	opportunityaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
@@ -35,7 +36,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_CreateRenewalOpportunit
 	})
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
@@ -84,7 +85,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
@@ -130,7 +131,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
@@ -219,7 +220,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
@@ -287,7 +288,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
@@ -344,7 +345,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
@@ -405,7 +406,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
@@ -466,7 +467,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)
@@ -527,7 +528,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore))
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
 
 	// EXECUTE
 	err := handler.UpdateRenewalArr(ctx, tenantName, contractId)

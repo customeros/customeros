@@ -1,6 +1,7 @@
 package command_handler
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
@@ -14,12 +15,12 @@ type CommandHandlers struct {
 	UpdateRenewalOpportunityNextCycleDate UpdateRenewalOpportunityNextCycleDateCommandHandler
 }
 
-func NewCommandHandlers(log logger.Logger, es eventstore.AggregateStore) *CommandHandlers {
+func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
 		CreateOpportunity:                     NewCreateOpportunityCommandHandler(log, es),
-		UpdateOpportunity:                     NewUpdateOpportunityCommandHandler(log, es),
+		UpdateOpportunity:                     NewUpdateOpportunityCommandHandler(log, es, cfg.Utils),
 		CreateRenewalOpportunity:              NewCreateRenewalOpportunityCommandHandler(log, es),
-		UpdateRenewalOpportunity:              NewUpdateRenewalOpportunityCommandHandler(log, es),
-		UpdateRenewalOpportunityNextCycleDate: NewUpdateRenewalOpportunityNextCycleDateCommandHandler(log, es),
+		UpdateRenewalOpportunity:              NewUpdateRenewalOpportunityCommandHandler(log, es, cfg.Utils),
+		UpdateRenewalOpportunityNextCycleDate: NewUpdateRenewalOpportunityNextCycleDateCommandHandler(log, es, cfg.Utils),
 	}
 }

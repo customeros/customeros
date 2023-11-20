@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 )
 
+// CommandHandlers acts as a container for all command handlers.
 type CommandHandlers struct {
 	UpsertOrganization             UpsertOrganizationCommandHandler
 	UpdateOrganization             UpdateOrganizationCommandHandler
@@ -26,6 +27,7 @@ type CommandHandlers struct {
 	UpsertCustomFieldCommand       UpsertCustomFieldCommandHandler
 	AddParentCommand               AddParentCommandHandler
 	RemoveParentCommand            RemoveParentCommandHandler
+	RefreshArr                     RefreshArrCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *CommandHandlers {
@@ -48,5 +50,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		UpsertCustomFieldCommand:       NewUpsertCustomFieldCommandHandler(log, es),
 		AddParentCommand:               NewAddParentCommandHandler(log, es),
 		RemoveParentCommand:            NewRemoveParentCommandHandler(log, es),
+		RefreshArr:                     NewRefreshArrCommandHandler(log, es, cfg.Utils),
 	}
 }

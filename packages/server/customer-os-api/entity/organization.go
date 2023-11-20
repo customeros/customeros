@@ -94,6 +94,8 @@ type RenewalForecast struct {
 	Comment         *string
 	UpdatedAt       *time.Time
 	UpdatedById     *string
+	Arr             *float64
+	MaxArr          *float64
 }
 
 func (r RenewalForecast) String() string {

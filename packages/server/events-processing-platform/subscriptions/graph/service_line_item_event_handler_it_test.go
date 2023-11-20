@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
@@ -37,7 +38,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
 		log:                 testLogger,
 		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -107,7 +108,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
 		log:                 testLogger,
 		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, aggregateStore),
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 	}
 
 	// Create a ServiceLineItemUpdateEvent

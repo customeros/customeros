@@ -833,6 +833,8 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
 			UpdatedById:     utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
 			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
+			Arr:             utils.GetFloatPropOrNil(props, "renewalForecastArr"),
+			MaxArr:          utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
 		},
 		BillingDetails: entity.BillingDetails{
 			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),

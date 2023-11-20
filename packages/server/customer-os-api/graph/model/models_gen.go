@@ -1536,6 +1536,8 @@ type RenewalForecast struct {
 	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
 	UpdatedByID     *string    `json:"updatedById,omitempty"`
 	UpdatedBy       *User      `json:"updatedBy,omitempty"`
+	Arr             *float64   `json:"arr,omitempty"`
+	MaxArr          *float64   `json:"maxArr,omitempty"`
 }
 
 type RenewalForecastInput struct {

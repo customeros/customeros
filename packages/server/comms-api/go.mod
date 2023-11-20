@@ -1,6 +1,8 @@
 module github.com/openline-ai/openline-customer-os/packages/server/comms-api
 
-go 1.20
+go 1.21
+
+toolchain go1.21.3
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 
