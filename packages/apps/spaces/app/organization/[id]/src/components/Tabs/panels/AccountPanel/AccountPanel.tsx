@@ -130,7 +130,7 @@ export const AccountPanel = () => {
           data?.organization?.contracts.map((contract) => (
             <React.Fragment key={`contract-card-${contract.id}`}>
               <ARRForecast
-                opportunity={contract.opportunities?.[0] as Opportunity}
+                opportunity={contract.opportunities?.[0]}
                 name={data?.organization?.name || ''}
                 isInitialLoading={isInitialLoading}
               />
