@@ -395,6 +395,7 @@ export type Contract = Node & {
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID'];
   name: Scalars['String'];
+  opportunities?: Maybe<Array<Opportunity>>;
   owner?: Maybe<User>;
   renewalCycle: ContractRenewalCycle;
   serviceLineItems?: Maybe<Array<ServiceLineItem>>;
@@ -1003,6 +1004,20 @@ export type InteractionSessionParticipantInput = {
   type?: InputMaybe<Scalars['String']>;
   userID?: InputMaybe<Scalars['ID']>;
 };
+
+export enum InternalStage {
+  ClosedLost = 'CLOSED_LOST',
+  ClosedWon = 'CLOSED_WON',
+  Evaluating = 'EVALUATING',
+  Open = 'OPEN',
+}
+
+export enum InternalType {
+  CrossSell = 'CROSS_SELL',
+  Nbo = 'NBO',
+  Renewal = 'RENEWAL',
+  Upsell = 'UPSELL',
+}
 
 export type Issue = Node &
   SourceFields & {
@@ -2114,6 +2129,34 @@ export type NoteUpdateInput = {
 
 export type NotedEntity = Contact | Organization;
 
+export type Opportunity = Node & {
+  __typename?: 'Opportunity';
+  amount: Scalars['Float'];
+  appSource: Scalars['String'];
+  comments: Scalars['String'];
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<User>;
+  estimatedClosedAt: Scalars['Time'];
+  externalLinks: Array<ExternalSystem>;
+  externalStage: Scalars['String'];
+  externalType: Scalars['String'];
+  generalNotes: Scalars['String'];
+  id: Scalars['ID'];
+  internalStage: InternalStage;
+  internalType: InternalType;
+  maxAmount: Scalars['Float'];
+  name: Scalars['String'];
+  nextSteps: Scalars['String'];
+  owner?: Maybe<User>;
+  renewalLikelihood: Scalars['String'];
+  renewalUpdatedByUserAt: Scalars['Time'];
+  renewalUpdatedByUserId: Scalars['String'];
+  renewedAt: Scalars['Time'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time'];
+};
+
 export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
   billingDetails?: Maybe<BillingDetails>;
@@ -2531,6 +2574,7 @@ export type Query = {
   issue: Issue;
   logEntry: LogEntry;
   meeting: Meeting;
+  opportunity: Opportunity;
   organization?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
@@ -2632,6 +2676,10 @@ export type QueryMeetingArgs = {
   id: Scalars['ID'];
 };
 
+export type QueryOpportunityArgs = {
+  id: Scalars['ID'];
+};
+
 export type QueryOrganizationArgs = {
   id: Scalars['ID'];
 };
@@ -2693,7 +2741,9 @@ export enum RenewalCycle {
 export type RenewalForecast = {
   __typename?: 'RenewalForecast';
   amount?: Maybe<Scalars['Float']>;
+  arr?: Maybe<Scalars['Float']>;
   comment?: Maybe<Scalars['String']>;
+  maxArr?: Maybe<Scalars['Float']>;
   potentialAmount?: Maybe<Scalars['Float']>;
   updatedAt?: Maybe<Scalars['Time']>;
   updatedBy?: Maybe<User>;
