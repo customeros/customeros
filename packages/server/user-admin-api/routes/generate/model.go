@@ -18,7 +18,9 @@ type SourceData struct {
 		Name   string `json:"name"`
 		Domain string `json:"domain"`
 		People []struct {
-			Email string `json:"email"`
+			Email       string `json:"email"`
+			JobRole     string `json:"jobRole"`
+			Description string `json:"description"`
 		} `json:"people"`
 		Emails []struct {
 			From        string    `json:"from"`

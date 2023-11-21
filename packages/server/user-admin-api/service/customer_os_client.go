@@ -35,7 +35,7 @@ type CustomerOsClient interface {
 	CreateInteractionEvent(tenant, username string, options ...InteractionEventBuilderOption) (*string, error)
 	CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error)
 
-	AddOrganizationToContact(tenant, username, contactId, organizationId string) error
+	AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error
 }
 
 type customerOsClient struct {
@@ -401,20 +401,18 @@ func (s *customerOsClient) CreateOrganization(tenant, username, organizationName
 	return graphqlResponse.OrganizationCreate.Id, nil
 }
 
-func (s *customerOsClient) AddOrganizationToContact(tenant, username, contactId, organizationId string) error {
+func (s *customerOsClient) AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error {
 	graphqlRequest := graphql.NewRequest(
-		`mutation AddOrganizationToContact($contactId: ID!, $organizationId: ID!) {
-			  contact_AddOrganizationById(
-			  input: {
-				contactId: $contactId
-				organizationId: $organizationId
-			  }) {
+		`mutation AddOrganizationToContact($contactId: ID!, $organizationId: ID!, $jobTitle: String, $description: String) {
+			  jobRole_Create(contactId : $contactId, input: {organizationId: $organizationId, jobTitle: $jobTitle, description: $description}) {
 				id
 			  }
 			}`)
 
 	graphqlRequest.Var("contactId", contactId)
 	graphqlRequest.Var("organizationId", organizationId)
+	graphqlRequest.Var("jobTitle", jobTitle)
+	graphqlRequest.Var("description", description)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
 	if err != nil {
