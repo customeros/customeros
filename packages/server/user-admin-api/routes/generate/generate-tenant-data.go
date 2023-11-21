@@ -453,6 +453,94 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 
 			}
 
+			//intercom
+			for _, intercomThread := range organization.Intercom {
+
+				sig, err := uuid.NewUUID()
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
+				sigs := sig.String()
+
+				channelValue := "CHAT"
+				appSource := appSource
+				sessionStatus := "ACTIVE"
+				sessionType := "THREAD"
+				sessionName := intercomThread[0].Message
+				sessionOpts := []service.InteractionSessionBuilderOption{
+					service.WithSessionIdentifier(&sigs),
+					service.WithSessionChannel(&channelValue),
+					service.WithSessionName(&sessionName),
+					service.WithSessionAppSource(&appSource),
+					service.WithSessionStatus(&sessionStatus),
+					service.WithSessionType(&sessionType),
+				}
+
+				sessionId, err := services.CustomerOsClient.CreateInteractionSession(tenant, username, sessionOpts...)
+				if sessionId == nil {
+					context.JSON(500, gin.H{
+						"error": "sessionId is nil",
+					})
+					return
+				}
+
+				for _, intercomMessage := range intercomThread {
+
+					sentById := ""
+					for _, contactWithId := range contactIds {
+						if contactWithId.Email == intercomMessage.CreatedBy {
+							sentById = contactWithId.Id
+							break
+						}
+					}
+					sentBy := toContactParticipantInputArr([]string{sentById})
+
+					iig, err := uuid.NewUUID()
+					if err != nil {
+						context.JSON(500, gin.H{
+							"error": err.Error(),
+						})
+						return
+					}
+					iigs := iig.String()
+					eventType := "MESSAGE"
+					contentType := "text/html"
+					eventOpts := []service.InteractionEventBuilderOption{
+						service.WithCreatedAt(&intercomMessage.CreatedAt),
+						service.WithSessionId(sessionId),
+						service.WithEventIdentifier(iigs),
+						service.WithExternalId(iigs),
+						service.WithExternalSystemId("intercom"),
+						service.WithChannel(&channelValue),
+						service.WithEventType(&eventType),
+						service.WithContent(&intercomMessage.Message),
+						service.WithContentType(&contentType),
+						service.WithSentBy(sentBy),
+						service.WithAppSource(&appSource),
+					}
+
+					interactionEventId, err := services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
+					if err != nil {
+						context.JSON(500, gin.H{
+							"error": err.Error(),
+						})
+						return
+					}
+
+					if interactionEventId == nil {
+						context.JSON(500, gin.H{
+							"error": "interactionEventId is nil",
+						})
+						return
+					}
+
+				}
+
+			}
+
 		}
 		context.JSON(200, gin.H{
 			"tenant": "tenant initiated",
@@ -499,6 +587,17 @@ func toParticipantInputArr(from []string, participantType *string) []cosModel.In
 		participantInput := cosModel.InteractionEventParticipantInput{
 			Email: &a,
 			Type:  participantType,
+		}
+		to = append(to, participantInput)
+	}
+	return to
+}
+
+func toContactParticipantInputArr(from []string) []cosModel.InteractionEventParticipantInput {
+	var to []cosModel.InteractionEventParticipantInput
+	for _, a := range from {
+		participantInput := cosModel.InteractionEventParticipantInput{
+			ContactID: &a,
 		}
 		to = append(to, participantInput)
 	}

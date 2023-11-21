@@ -56,5 +56,10 @@ type SourceData struct {
 			CreatedAt time.Time `json:"createdAt"`
 			Message   string    `json:"message"`
 		} `json:"slack"`
+		Intercom [][]struct {
+			CreatedBy string    `json:"createdBy"`
+			CreatedAt time.Time `json:"createdAt"`
+			Message   string    `json:"message"`
+		} `json:"intercom"`
 	} `json:"organizations"`
 }
