@@ -1656,6 +1656,7 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 					op.sourceOfTruth=$sourceOfTruth,
 					op.appSource=$appSource,
 					op.amount=$amount,
+					op.maxAmount=$maxAmount,
                     op.internalType=$internalType,
 					op.externalType=$externalType,
 					op.internalStage=$internalStage,
@@ -1681,6 +1682,7 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 		"sourceOfTruth":          opportunity.SourceOfTruth,
 		"appSource":              opportunity.AppSource,
 		"amount":                 opportunity.Amount,
+		"maxAmount":              opportunity.MaxAmount,
 		"internalType":           opportunity.InternalType,
 		"externalType":           opportunity.ExternalType,
 		"internalStage":          opportunity.InternalStage,
@@ -1697,6 +1699,24 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 		"updatedAt":              opportunity.UpdatedAt,
 	})
 	return opportunityId
+}
+
+func OpportunityCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, opportunityId, entityId string) {
+	query := `MATCH (e:User {id:$entityId}), (op:Opportunity {id:$opportunityId})
+			MERGE (e)<-[:CREATED_BY]-(op)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"opportunityId": opportunityId,
+		"entityId":      entityId,
+	})
+}
+
+func OpportunityOwnedBy(ctx context.Context, driver *neo4j.DriverWithContext, opportunityId, entityId string) {
+	query := `MATCH (e:User {id:$entityId}), (op:Opportunity {id:$opportunityId})
+			MERGE (e)-[:OWNS]->(op)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"opportunityId": opportunityId,
+		"entityId":      entityId,
+	})
 }
 
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {

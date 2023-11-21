@@ -54,6 +54,30 @@ func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationI
 	return result.(*entity.UserEntity), nil
 }
 
+func (i *Loaders) GetUserOwnerForOpportunity(ctx context.Context, opportunityId string) (*entity.UserEntity, error) {
+	thunk := i.UserOwnerForOpportunity.Load(ctx, dataloader.StringKey(opportunityId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.UserEntity), nil
+}
+
+func (i *Loaders) GetUserCreatorForOpportunity(ctx context.Context, opportunityId string) (*entity.UserEntity, error) {
+	thunk := i.UserCreatorForOpportunity.Load(ctx, dataloader.StringKey(opportunityId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.UserEntity), nil
+}
+
 func (i *Loaders) GetUser(ctx context.Context, userId string) (*entity.UserEntity, error) {
 	thunk := i.User.Load(ctx, dataloader.StringKey(userId))
 	result, err := thunk()
@@ -266,6 +290,104 @@ func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys da
 			val := userEntityByOrganizationId[organizationID]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}
 			delete(keyOrder, organizationID)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
+
+	return results
+}
+
+func (b *userBatcher) getUserOwnersForOpportunities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserOwnersForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	userEntities, err := b.userService.GetUserOwnersForOpportunities(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	userEntityByOpportunityId := make(map[string]entity.UserEntity)
+	for _, val := range *userEntities {
+		userEntityByOpportunityId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for opportunityID, _ := range userEntityByOpportunityId {
+		if ix, ok := keyOrder[opportunityID]; ok {
+			val := userEntityByOpportunityId[opportunityID]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, opportunityID)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
+
+	return results
+}
+
+func (b *userBatcher) getUserCreatorsForOpportunities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserOwnersForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	userEntities, err := b.userService.GetUserCreatorsForOpportunities(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	userEntityByOpportunityId := make(map[string]entity.UserEntity)
+	for _, val := range *userEntities {
+		userEntityByOpportunityId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for opportunityID, _ := range userEntityByOpportunityId {
+		if ix, ok := keyOrder[opportunityID]; ok {
+			val := userEntityByOpportunityId[opportunityID]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, opportunityID)
 		}
 	}
 	for _, ix := range keyOrder {
