@@ -34,7 +34,6 @@ const ServiceItem = ({
   return (
     <>
       <Box
-        cursor='pointer'
         onClick={() => onOpen(data)}
         _hover={{ '& button': { opacity: 1 } }}
         sx={{ '& button': { opacity: 0 } }}

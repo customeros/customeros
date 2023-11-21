@@ -68,30 +68,22 @@ export function calculateNextRenewalDate(
     case ContractRenewalCycle.AnnualRenewal: {
       const differenceInYears = Math.ceil(difference / 12);
 
-      let nextRenewal = DateTimeUtils.addYears(
+      return DateTimeUtils.addYears(
         serviceStartedAt,
         differenceInYears,
       ).toISOString();
-      if (!DateTimeUtils.isBeforeNow(nextRenewal)) {
-        nextRenewal = DateTimeUtils.addYears(nextRenewal, 1).toISOString();
-      }
-
-      return nextRenewal;
     }
-    case ContractRenewalCycle.MonthlyRenewal: {
+    default: {
       const difference = DateTimeUtils.differenceInMonths(
         new Date().toISOString(),
         serviceStartedAt,
       );
       let nextRenewal = DateTimeUtils.addMonth(serviceStartedAt, difference);
-
       if (!DateTimeUtils.isBeforeNow(nextRenewal.toISOString())) {
         nextRenewal = DateTimeUtils.addMonth(nextRenewal.toISOString(), 1);
       }
 
       return nextRenewal.toISOString();
     }
-    default:
-      return '';
   }
 }

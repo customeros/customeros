@@ -43,7 +43,7 @@ export const SubscriptionServiceFrom = ({
           placeholder='Quantity'
           isLabelVisible
           label='Licences'
-          min={1}
+          min={0}
           ref={initialRef}
           leftElement={<Certificate02 boxSize={4} color='gray.500' />}
           formId={formId}
@@ -57,7 +57,7 @@ export const SubscriptionServiceFrom = ({
           placeholder='Per license'
           isLabelVisible
           label='Price/license'
-          min={1}
+          min={0}
           leftElement={<CurrencyDollar boxSize={4} color='gray.500' />}
         />
 
