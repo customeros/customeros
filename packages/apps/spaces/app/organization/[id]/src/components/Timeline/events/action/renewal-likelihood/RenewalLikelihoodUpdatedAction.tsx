@@ -4,7 +4,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Action, RenewalLikelihoodProbability } from '@graphql/types';
-import { getARRColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
 import { getLikelihoodDisplayData } from '../utils';
@@ -31,7 +31,7 @@ export const RenewalLikelihoodUpdatedAction: React.FC<
       <FeaturedIcon
         size='md'
         minW='10'
-        colorScheme={getARRColor(
+        colorScheme={getFeatureIconColor(
           likelihood.toUpperCase() as RenewalLikelihoodProbability,
         )}
       >

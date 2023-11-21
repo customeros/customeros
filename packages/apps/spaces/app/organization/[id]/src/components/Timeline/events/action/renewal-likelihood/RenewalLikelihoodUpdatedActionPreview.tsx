@@ -6,7 +6,7 @@ import { Divider } from '@ui/presentation/Divider';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { Action, RenewalLikelihoodProbability } from '@graphql/types';
-import { getARRColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { TimelineEventPreviewHeader } from '@organization/src/components/Timeline/preview/header/TimelineEventPreviewHeader';
 import {
   useTimelineEventPreviewStateContext,
@@ -40,7 +40,7 @@ export const RenewalLikelihoodUpdatedActionPreview = () => {
           <FeaturedIcon
             size='md'
             minW='10'
-            colorScheme={getARRColor(likelihoodFormatted)}
+            colorScheme={getFeatureIconColor(likelihoodFormatted)}
           >
             <Icons.HeartActivity />
           </FeaturedIcon>
