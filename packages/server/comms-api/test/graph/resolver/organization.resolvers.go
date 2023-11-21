@@ -173,6 +173,11 @@ func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization
 	panic(fmt.Errorf("not implemented: Tags - tags"))
 }
 
+// Contracts is the resolver for the contracts field.
+func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error) {
+	panic(fmt.Errorf("not implemented: Contracts - contracts"))
+}
+
 // Emails is the resolver for the emails field.
 func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error) {
 	panic(fmt.Errorf("not implemented: Emails - emails"))
