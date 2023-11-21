@@ -35,8 +35,6 @@ func (a *ContractAggregate) When(evt eventstore.Event) error {
 		return a.onContractCreate(evt)
 	case event.ContractUpdateV1:
 		return a.onContractUpdate(evt)
-	case event.ContractRequestNextCycleDateV1:
-		return nil
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
