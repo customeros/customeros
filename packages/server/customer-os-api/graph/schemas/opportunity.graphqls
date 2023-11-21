@@ -1,5 +1,5 @@
 extend type Query {
-    opportunity(id: ID!): Opportunity!
+    opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Opportunity implements Node {
@@ -21,12 +21,12 @@ type Opportunity implements Node {
     renewalUpdatedByUserId: String!
     renewalUpdatedByUserAt: Time!
     comments:           String!
-    createdBy:          User @goField(forceResolver: true)
-    owner:              User @goField(forceResolver: true)
+    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
-    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 enum InternalType {

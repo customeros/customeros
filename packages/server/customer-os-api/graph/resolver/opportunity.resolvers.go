@@ -7,19 +7,40 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *opportunityResolver) CreatedBy(ctx context.Context, obj *model.Opportunity) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForOpportunity(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("error fetching user creator for opportunity %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching user creator for opportunity %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
 }
 
 // Owner is the resolver for the owner field.
 func (r *opportunityResolver) Owner(ctx context.Context, obj *model.Opportunity) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: Owner - owner"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOpportunity(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("error fetching user owner for opportunity %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching user owner for opportunity %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.
@@ -29,7 +50,18 @@ func (r *opportunityResolver) ExternalLinks(ctx context.Context, obj *model.Oppo
 
 // Opportunity is the resolver for the opportunity field.
 func (r *queryResolver) Opportunity(ctx context.Context, id string) (*model.Opportunity, error) {
-	panic(fmt.Errorf("not implemented: Opportunity - opportunity"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Opportunity", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.issueID", id))
+
+	opportunityEntity, err := r.Services.OpportunityService.GetById(ctx, id)
+	if err != nil || opportunityEntity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Opportunity with id %s not found", id)
+		return nil, err
+	}
+	return mapper.MapEntityToOpportunity(opportunityEntity), nil
 }
 
 // Opportunity returns generated.OpportunityResolver implementation.
