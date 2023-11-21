@@ -10,6 +10,7 @@ import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { contractButtonSelect } from '@organization/src/components/Tabs/shared/contractSelectStyles';
+import { ARRForecast } from '@organization/src/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast';
 
 import { Notes } from './Notes';
 import { EmptyContracts } from './EmptyContracts';
@@ -26,12 +27,13 @@ export const AccountPanel = () => {
 
   const { isModalOpen } = useAccountPanelStateContext();
   const client = getGraphQLClient();
-  const { data, isInitialLoading } = useGetContractsQuery(client, { id });
-
+  const { data, isInitialLoading, error } = useGetContractsQuery(client, {
+    id,
+  });
   if (isInitialLoading) {
     return <AccountPanelSkeleton />;
   }
-  if (!data?.organization?.contracts?.length) {
+  if (!data?.organization?.contracts?.length && error) {
     return <EmptyContracts name={data?.organization?.name || ''} />;
   }
 
@@ -124,22 +126,21 @@ export const AccountPanel = () => {
         }
         shouldBlockPanelScroll={isModalOpen}
       >
-        {/*Todo uncomment when forecast is calculated*/}
-        {/*<ARRForecast*/}
-        {/*  name={data?.organization?.name || ''}*/}
-        {/*  isInitialLoading={isInitialLoading}*/}
-        {/*  renewalProbability={undefined}*/}
-        {/*  aRRForecast={undefined}*/}
-        {/*/>*/}
-
         {!!data?.organization?.contracts &&
           data?.organization?.contracts.map((contract) => (
-            <ContractCard
-              organizationId={id}
-              organizationName={data?.organization?.name ?? ''}
-              key={`contract-card-${contract.id}`}
-              data={(contract as Contract) ?? undefined}
-            />
+            <>
+              <ARRForecast
+                opportunity={contract.opportunities?.[0]}
+                name={data?.organization?.name || ''}
+                isInitialLoading={isInitialLoading}
+              />
+              <ContractCard
+                organizationId={id}
+                organizationName={data?.organization?.name ?? ''}
+                key={`contract-card-${contract.id}`}
+                data={(contract as Contract) ?? undefined}
+              />
+            </>
           ))}
 
         <Notes id={id} data={data?.organization} />

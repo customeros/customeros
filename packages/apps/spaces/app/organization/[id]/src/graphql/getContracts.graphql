@@ -12,6 +12,18 @@ query getContracts($id: ID!) {
       renewalCycle
       status
       contractUrl
+      opportunities {
+        comments
+        internalStage
+        internalType
+        amount
+        maxAmount
+        name
+        renewalLikelihood
+        renewalUpdatedByUserId
+        renewalUpdatedByUserAt
+        renewedAt
+      }
       serviceLineItems {
         id
         createdAt

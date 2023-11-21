@@ -1,5 +1,5 @@
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { debounce } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
@@ -56,11 +56,9 @@ export const ContractCard = ({
   const queryKey = useGetContractsQuery.getKey({ id: organizationId });
   const queryClient = useQueryClient();
 
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
   const formId = 'contractForm';
   const client = getGraphQLClient();
-
   const updateContract = useUpdateContractMutation(client, {
     // todo fix https://linear.app/customer-os/issue/COS-985/fix-optimitsic-update-for-update-contract-mutation
     // onMutate: ({ input }) => {
@@ -157,9 +155,7 @@ export const ContractCard = ({
 
   useEffect(() => {
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      updateContractDebounced.flush();
     };
   }, []);
 
@@ -267,7 +263,8 @@ export const ContractCard = ({
                   </Text>
                   <Text>
                     {data?.renewalCycle &&
-                      !DateTimeUtils.isFuture(data.serviceStartedAt) &&
+                      data?.serviceStartedAt &&
+                      !DateTimeUtils.isFuture(data?.serviceStartedAt) &&
                       data.status !== ContractStatus.Ended &&
                       `Renews ${getLabelFromValue(
                         data.renewalCycle,
@@ -362,11 +359,12 @@ export const ContractCard = ({
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
-        {data?.serviceStartedAt && data?.renewalCycle && (
+        {data?.opportunities && (
           <RenewalARRCard
             hasEnded={data.status === ContractStatus.Ended}
             startedAt={data.serviceStartedAt}
             renewCycle={data.renewalCycle}
+            opportunity={data.opportunities?.[0]}
           />
         )}
         <Services contractId={data.id} data={data?.serviceLineItems} />
