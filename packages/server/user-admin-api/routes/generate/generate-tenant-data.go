@@ -163,7 +163,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 					return
 				}
 
-				err = services.CustomerOsClient.AddOrganizationToContact(tenant, username, contactId, organizationId)
+				err = services.CustomerOsClient.AddContactToOrganization(tenant, username, contactId, organizationId, people.JobRole, people.Description)
 				if err != nil {
 					context.JSON(500, gin.H{
 						"error": err.Error(),

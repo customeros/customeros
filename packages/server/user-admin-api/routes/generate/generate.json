@@ -35,10 +35,14 @@
       "domain": "airbnb.com",
       "people": [
         {
-          "email": "emily.johnson@airbnb.com"
+          "email": "emily.johnson@airbnb.com",
+          "jobRole": "VP of Marketing",
+          "description": "Decision maker"
         },
         {
-          "email": "david.thompson@airbnb.com"
+          "email": "david.thompson@airbnb.com",
+          "jobRole": "CTO",
+          "description": "Decision maker,Champion,Influencer"
         }
       ],
       "emails": [
