@@ -5,18 +5,23 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
 type OpportunityService interface {
+	Update(ctx context.Context, opportunity *entity.OpportunityEntity) error
+	UpdateRenewal(ctx context.Context, opportunity *entity.OpportunityRenewalEntity) error
 	GetById(ctx context.Context, id string) (*entity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*entity.OpportunityEntities, error)
 }
@@ -95,4 +100,117 @@ func (s *opportunityService) mapDbNodeToOpportunityEntity(dbNode dbtype.Node) *e
 		AppSource:              utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &opportunity
+}
+
+func (s *opportunityService) Update(ctx context.Context, opportunity *entity.OpportunityEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("opportunity", opportunity))
+
+	if opportunity == nil {
+		err := fmt.Errorf("(OpportunityService.Update) opportunity entity is nil")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	} else if opportunity.Id == "" {
+		err := fmt.Errorf("(OpportunityService.Update) opportunity id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	opportunityExists, _ := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunity.Id, entity.NodeLabel_Opportunity)
+	if !opportunityExists {
+		err := fmt.Errorf("(OpportunityService.Update) opportunity with id {%s} not found", opportunity.Id)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	opportunityUpdateRequest := opportunitypb.UpdateOpportunityGrpcRequest{
+		Tenant:             common.GetTenantFromContext(ctx),
+		Id:                 opportunity.Id,
+		LoggedInUserId:     common.GetUserIdFromContext(ctx),
+		Name:               opportunity.Name,
+		Amount:             opportunity.Amount,
+		ExternalType:       opportunity.ExternalType,
+		ExternalStage:      opportunity.ExternalStage,
+		GeneralNotes:       opportunity.GeneralNotes,
+		NextSteps:          opportunity.NextSteps,
+		EstimatedCloseDate: utils.ConvertTimeToTimestampPtr(&opportunity.EstimatedClosedAt),
+		SourceFields: &commonpb.SourceFields{
+			Source:    string(opportunity.Source),
+			AppSource: utils.StringFirstNonEmpty(opportunity.AppSource, constants.AppSourceCustomerOsApi),
+		},
+	}
+
+	_, err := s.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunityUpdateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityRenewal *entity.OpportunityRenewalEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.UpdateRenewal")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("opportunityRenewal", opportunityRenewal))
+
+	if opportunityRenewal == nil {
+		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity entity is nil")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	} else if opportunityRenewal.Id == "" {
+		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity id is missing")
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	opportunityExists, _ := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityRenewal.Id, entity.NodeLabel_Opportunity)
+	if !opportunityExists {
+		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity with id {%s} not found", opportunityRenewal.Id)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	opportunityRenewalUpdateRequest := opportunitypb.UpdateRenewalOpportunityGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             opportunityRenewal.Id,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Amount:         opportunityRenewal.Amount,
+		Comments:       opportunityRenewal.Comments,
+		SourceFields: &commonpb.SourceFields{
+			Source:    string(opportunityRenewal.Source),
+			AppSource: utils.StringFirstNonEmpty(opportunityRenewal.AppSource, constants.AppSourceCustomerOsApi),
+		},
+	}
+	switch opportunityRenewal.RenewalLikelihood {
+	case entity.OpportunityRenewalLikelihoodHigh:
+		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_HIGH_RENEWAL
+	case entity.OpportunityRenewalLikelihoodMedium:
+		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL
+	case entity.OpportunityRenewalLikelihoodLow:
+		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_LOW_RENEWAL
+	case entity.OpportunityRenewalLikelihoodZero:
+		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
+	default:
+		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
+	}
+
+	_, err := s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunityRenewalUpdateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
 }

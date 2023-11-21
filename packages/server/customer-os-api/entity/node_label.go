@@ -26,4 +26,5 @@ const (
 	NodeLabel_Comment            = "Comment"
 	NodeLabel_Contract           = "Contract"
 	NodeLabel_ServiceLineItem    = "ServiceLineItem"
+	NodeLabel_Opportunity        = "Opportunity"
 )

@@ -7,6 +7,7 @@ import (
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/service_line_item"
@@ -45,6 +46,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientCo
 	organizationpb.RegisterOrganizationGrpcServiceServer(server, &MockOrganizationService{})
 	contractpb.RegisterContractGrpcServiceServer(server, &MockContractService{})
 	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(server, &MockServiceLineItemService{})
+	opportunitypb.RegisterOpportunityGrpcServiceServer(server, &MockOpportunityService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {

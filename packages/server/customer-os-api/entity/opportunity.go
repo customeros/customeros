@@ -30,4 +30,21 @@ type OpportunityEntity struct {
 	DataloaderKey string
 }
 
+type OpportunityRenewalEntity struct {
+	Id                     string
+	Name                   string
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	Amount                 float64
+	RenewalLikelihood      OpportunityRenewalLikelihood
+	RenewalUpdatedByUserId string
+	RenewalUpdatedByUserAt time.Time
+	Comments               string
+	Source                 DataSource
+	SourceOfTruth          DataSource
+	AppSource              string
+
+	DataloaderKey string
+}
+
 type OpportunityEntities []OpportunityEntity

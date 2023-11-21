@@ -1256,6 +1256,28 @@ type Opportunity struct {
 func (Opportunity) IsNode()            {}
 func (this Opportunity) GetID() string { return this.ID }
 
+type OpportunityRenewalUpdateInput struct {
+	OpportunityID     string                        `json:"opportunityId"`
+	Name              *string                       `json:"name,omitempty"`
+	Amount            *float64                      `json:"amount,omitempty"`
+	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	Comments          *string                       `json:"comments,omitempty"`
+	AppSource         *string                       `json:"appSource,omitempty"`
+}
+
+type OpportunityUpdateInput struct {
+	OpportunityID       string                        `json:"opportunityId"`
+	Name                *string                       `json:"name,omitempty"`
+	Amount              *float64                      `json:"amount,omitempty"`
+	ExternalType        *string                       `json:"externalType,omitempty"`
+	ExternalStage       *string                       `json:"externalStage,omitempty"`
+	EstimatedClosedDate *time.Time                    `json:"estimatedClosedDate,omitempty"`
+	GeneralNotes        *string                       `json:"generalNotes,omitempty"`
+	NextSteps           *string                       `json:"nextSteps,omitempty"`
+	AppSource           *string                       `json:"appSource,omitempty"`
+	ExternalReference   *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+}
+
 type OrgAccountDetails struct {
 	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
 	RenewalForecast   *RenewalForecast   `json:"renewalForecast,omitempty"`
@@ -2851,6 +2873,51 @@ func (e *MeetingStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e MeetingStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OpportunityRenewalLikelihood string
+
+const (
+	OpportunityRenewalLikelihoodHighRenewal   OpportunityRenewalLikelihood = "HIGH_RENEWAL"
+	OpportunityRenewalLikelihoodMediumRenewal OpportunityRenewalLikelihood = "MEDIUM_RENEWAL"
+	OpportunityRenewalLikelihoodLowRenewal    OpportunityRenewalLikelihood = "LOW_RENEWAL"
+	OpportunityRenewalLikelihoodZeroRenewal   OpportunityRenewalLikelihood = "ZERO_RENEWAL"
+)
+
+var AllOpportunityRenewalLikelihood = []OpportunityRenewalLikelihood{
+	OpportunityRenewalLikelihoodHighRenewal,
+	OpportunityRenewalLikelihoodMediumRenewal,
+	OpportunityRenewalLikelihoodLowRenewal,
+	OpportunityRenewalLikelihoodZeroRenewal,
+}
+
+func (e OpportunityRenewalLikelihood) IsValid() bool {
+	switch e {
+	case OpportunityRenewalLikelihoodHighRenewal, OpportunityRenewalLikelihoodMediumRenewal, OpportunityRenewalLikelihoodLowRenewal, OpportunityRenewalLikelihoodZeroRenewal:
+		return true
+	}
+	return false
+}
+
+func (e OpportunityRenewalLikelihood) String() string {
+	return string(e)
+}
+
+func (e *OpportunityRenewalLikelihood) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OpportunityRenewalLikelihood(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OpportunityRenewalLikelihood", str)
+	}
+	return nil
+}
+
+func (e OpportunityRenewalLikelihood) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
