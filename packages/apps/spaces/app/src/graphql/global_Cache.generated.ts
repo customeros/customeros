@@ -32,8 +32,8 @@ export type GlobalCacheQuery = {
     isGoogleActive: boolean;
     isGoogleTokenExpired: boolean;
     isOwner: boolean;
-    minARRForecastValue: number;
-    maxARRForecastValue: number;
+    minARRForecastValue: any;
+    maxARRForecastValue: any;
     user: {
       __typename?: 'User';
       id: string;
