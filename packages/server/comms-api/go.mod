@@ -2,8 +2,6 @@ module github.com/openline-ai/openline-customer-os/packages/server/comms-api
 
 go 1.21
 
-toolchain go1.21.3
-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ./../customer-os-api
@@ -23,7 +21,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20230928134243-77b704310d37
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231104122705-6b76a1af1686
-	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231109125649-25f5840406d6
+	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231121071452-bc2751469f9f
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/sirupsen/logrus v1.9.3
