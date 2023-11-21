@@ -132,12 +132,18 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 
 		//create orgs
 		for _, organization := range sourceData.Organizations {
-			organizationId, err := services.CustomerOsClient.CreateOrganization(tenant, username, organization.Name, organization.Domain)
-			if err != nil {
-				context.JSON(500, gin.H{
-					"error": err.Error(),
-				})
-				return
+
+			var organizationId string
+			if organization.Id != "" {
+				organizationId = organization.Id
+			} else {
+				organizationId, err = services.CustomerOsClient.CreateOrganization(tenant, username, organization.Name, organization.Domain)
+				if err != nil {
+					context.JSON(500, gin.H{
+						"error": err.Error(),
+					})
+					return
+				}
 			}
 
 			//create people in org
