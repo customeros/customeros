@@ -16,7 +16,7 @@ export const invalidateAccountDetailsQuery = (
     useOrganizationAccountDetailsQuery.getKey({ id }),
   );
 
-export function getARRColor(
+export function getFeatureIconColor(
   renewalLikelihood?: Maybe<RenewalLikelihoodProbability> | undefined,
 ) {
   switch (renewalLikelihood) {
