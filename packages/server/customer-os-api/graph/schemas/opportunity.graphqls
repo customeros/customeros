@@ -1,6 +1,10 @@
 extend type Query {
     opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
+extend type Mutation {
+    opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
+    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!): Opportunity!
+}
 
 type Opportunity implements Node {
     id:                 ID!
@@ -41,4 +45,33 @@ enum InternalStage {
     EVALUATING
     CLOSED_WON
     CLOSED_LOST
+}
+
+enum OpportunityRenewalLikelihood {
+    HIGH_RENEWAL
+    MEDIUM_RENEWAL
+    LOW_RENEWAL
+    ZERO_RENEWAL
+}
+
+input OpportunityRenewalUpdateInput {
+    opportunityId:      ID!
+    name:               String
+    amount:             Float
+    renewalLikelihood:  OpportunityRenewalLikelihood
+    comments:           String
+    appSource:          String
+}
+
+input OpportunityUpdateInput {
+    opportunityId:       ID!
+    name:                String
+    amount:              Float
+    externalType:        String
+    externalStage:       String
+    estimatedClosedDate: Time
+    generalNotes:        String
+    nextSteps:           String
+    appSource:           String
+    externalReference:   ExternalSystemReferenceInput
 }

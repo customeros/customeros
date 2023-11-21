@@ -686,6 +686,8 @@ type ComplexityRoot struct {
 		NoteLinkAttachment                       func(childComplexity int, noteID string, attachmentID string) int
 		NoteUnlinkAttachment                     func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                               func(childComplexity int, input model.NoteUpdateInput) int
+		OpportunityRenewalUpdate                 func(childComplexity int, input model.OpportunityRenewalUpdateInput) int
+		OpportunityUpdate                        func(childComplexity int, input model.OpportunityUpdateInput) int
 		OrganizationAddNewLocation               func(childComplexity int, organizationID string) int
 		OrganizationAddRelationship              func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
 		OrganizationAddSocial                    func(childComplexity int, organizationID string, input model.SocialInput) int
@@ -1276,6 +1278,8 @@ type MutationResolver interface {
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
+	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
+	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput) (*model.Opportunity, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationUpdateRenewalLikelihood(ctx context.Context, input model.RenewalLikelihoodInput) (string, error)
@@ -5072,6 +5076,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.NoteUpdate(childComplexity, args["input"].(model.NoteUpdateInput)), true
 
+	case "Mutation.opportunityRenewalUpdate":
+		if e.complexity.Mutation.OpportunityRenewalUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_opportunityRenewalUpdate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OpportunityRenewalUpdate(childComplexity, args["input"].(model.OpportunityRenewalUpdateInput)), true
+
+	case "Mutation.opportunityUpdate":
+		if e.complexity.Mutation.OpportunityUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_opportunityUpdate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OpportunityUpdate(childComplexity, args["input"].(model.OpportunityUpdateInput)), true
+
 	case "Mutation.organization_AddNewLocation":
 		if e.complexity.Mutation.OrganizationAddNewLocation == nil {
 			break
@@ -7879,6 +7907,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputMeetingUpdateInput,
 		ec.unmarshalInputNoteInput,
 		ec.unmarshalInputNoteUpdateInput,
+		ec.unmarshalInputOpportunityRenewalUpdateInput,
+		ec.unmarshalInputOpportunityUpdateInput,
 		ec.unmarshalInputOrganizationInput,
 		ec.unmarshalInputOrganizationUpdateInput,
 		ec.unmarshalInputPagination,
@@ -9657,6 +9687,10 @@ input NoteUpdateInput {
 	{Name: "../schemas/opportunity.graphqls", Input: `extend type Query {
     opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
+extend type Mutation {
+    opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
+    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!): Opportunity!
+}
 
 type Opportunity implements Node {
     id:                 ID!
@@ -9697,7 +9731,37 @@ enum InternalStage {
     EVALUATING
     CLOSED_WON
     CLOSED_LOST
-}`, BuiltIn: false},
+}
+
+enum OpportunityRenewalLikelihood {
+    HIGH_RENEWAL
+    MEDIUM_RENEWAL
+    LOW_RENEWAL
+    ZERO_RENEWAL
+}
+
+input OpportunityRenewalUpdateInput {
+    opportunityId:      ID!
+    name:               String
+    amount:             Float
+    renewalLikelihood:  OpportunityRenewalLikelihood
+    comments:           String
+    appSource:          String
+}
+
+input OpportunityUpdateInput {
+    opportunityId:       ID!
+    name:                String
+    amount:              Float
+    externalType:        String
+    externalStage:       String
+    estimatedClosedDate: Time
+    generalNotes:        String
+    nextSteps:           String
+    appSource:           String
+    externalReference:   ExternalSystemReferenceInput
+}
+`, BuiltIn: false},
 	{Name: "../schemas/organization.graphqls", Input: `extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -12373,6 +12437,36 @@ func (ec *executionContext) field_Mutation_note_Update_args(ctx context.Context,
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNNoteUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_opportunityRenewalUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OpportunityRenewalUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_opportunityUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OpportunityUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOpportunityUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -39977,6 +40071,216 @@ func (ec *executionContext) fieldContext_Mutation_note_UnlinkAttachment(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_opportunityUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_opportunityUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OpportunityUpdate(rctx, fc.Args["input"].(model.OpportunityUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Opportunity)
+	fc.Result = res
+	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_opportunityUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Opportunity_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Opportunity_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Opportunity_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_Opportunity_amount(ctx, field)
+			case "maxAmount":
+				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
+			case "internalType":
+				return ec.fieldContext_Opportunity_internalType(ctx, field)
+			case "externalType":
+				return ec.fieldContext_Opportunity_externalType(ctx, field)
+			case "internalStage":
+				return ec.fieldContext_Opportunity_internalStage(ctx, field)
+			case "externalStage":
+				return ec.fieldContext_Opportunity_externalStage(ctx, field)
+			case "estimatedClosedAt":
+				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
+			case "generalNotes":
+				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
+			case "nextSteps":
+				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Opportunity_createdBy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Opportunity_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Opportunity_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Opportunity_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_opportunityUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_opportunityRenewalUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_opportunityRenewalUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OpportunityRenewalUpdate(rctx, fc.Args["input"].(model.OpportunityRenewalUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Opportunity)
+	fc.Result = res
+	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_opportunityRenewalUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Opportunity_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Opportunity_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Opportunity_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_Opportunity_amount(ctx, field)
+			case "maxAmount":
+				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
+			case "internalType":
+				return ec.fieldContext_Opportunity_internalType(ctx, field)
+			case "externalType":
+				return ec.fieldContext_Opportunity_externalType(ctx, field)
+			case "internalStage":
+				return ec.fieldContext_Opportunity_internalStage(ctx, field)
+			case "externalStage":
+				return ec.fieldContext_Opportunity_externalStage(ctx, field)
+			case "estimatedClosedAt":
+				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
+			case "generalNotes":
+				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
+			case "nextSteps":
+				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Opportunity_createdBy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Opportunity_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Opportunity_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Opportunity_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_opportunityRenewalUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_organization_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_organization_Create(ctx, field)
 	if err != nil {
@@ -66445,6 +66749,190 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx context.Context, obj interface{}) (model.OpportunityRenewalUpdateInput, error) {
+	var it model.OpportunityRenewalUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "opportunityId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OpportunityID = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "amount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "renewalLikelihood":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalLikelihood"))
+			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalLikelihood = data
+		case "comments":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Comments = data
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppSource = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Context, obj interface{}) (model.OpportunityUpdateInput, error) {
+	var it model.OpportunityUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "externalType", "externalStage", "estimatedClosedDate", "generalNotes", "nextSteps", "appSource", "externalReference"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "opportunityId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OpportunityID = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "amount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "externalType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalType"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalType = data
+		case "externalStage":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalStage"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalStage = data
+		case "estimatedClosedDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("estimatedClosedDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EstimatedClosedDate = data
+		case "generalNotes":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("generalNotes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GeneralNotes = data
+		case "nextSteps":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextSteps"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextSteps = data
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppSource = data
+		case "externalReference":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalReference = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context, obj interface{}) (model.OrganizationInput, error) {
 	var it model.OrganizationInput
 	asMap := map[string]interface{}{}
@@ -74319,6 +74807,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "opportunityUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_opportunityUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "opportunityRenewalUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_opportunityRenewalUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "organization_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_Create(ctx, field)
@@ -81595,6 +82097,10 @@ func (ec *executionContext) marshalNNotedEntity2ᚕgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
+func (ec *executionContext) marshalNOpportunity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v model.Opportunity) graphql.Marshaler {
+	return ec._Opportunity(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v *model.Opportunity) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -81603,6 +82109,16 @@ func (ec *executionContext) marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._Opportunity(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalUpdateInput(ctx context.Context, v interface{}) (model.OpportunityRenewalUpdateInput, error) {
+	res, err := ec.unmarshalInputOpportunityRenewalUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNOpportunityUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityUpdateInput(ctx context.Context, v interface{}) (model.OpportunityUpdateInput, error) {
+	res, err := ec.unmarshalInputOpportunityUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNOrganization2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v model.Organization) graphql.Marshaler {
@@ -83686,6 +84202,22 @@ func (ec *executionContext) marshalOOpportunity2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._Opportunity(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, v interface{}) (*model.OpportunityRenewalLikelihood, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.OpportunityRenewalLikelihood)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v *model.OpportunityRenewalLikelihood) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOOrgAccountDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrgAccountDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrgAccountDetails) graphql.Marshaler {
