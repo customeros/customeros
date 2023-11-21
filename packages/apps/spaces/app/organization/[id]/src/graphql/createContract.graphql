@@ -1,5 +1,0 @@
-mutation createContract($input: ContractInput!) {
-    contract_Create(input: $input) {
-        id
-    }
-}
