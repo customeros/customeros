@@ -127,6 +127,15 @@
             "message": "I'm free then too."
           }
         ]
+      ],
+      "intercom": [
+        [
+          {
+            "createdBy": "david.thompson@airbnb.com",
+            "createdAt": "2023-11-20T08:12:00Z",
+            "message": "<div>hello world</div>"
+          }
+        ]
       ]
     }
   ]
