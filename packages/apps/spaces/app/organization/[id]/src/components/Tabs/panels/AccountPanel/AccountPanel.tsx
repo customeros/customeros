@@ -128,18 +128,19 @@ export const AccountPanel = () => {
       >
         {!!data?.organization?.contracts &&
           data?.organization?.contracts.map((contract) => (
-            <React.Fragment key={`contract-card-${contract.id}`}>
+            <>
               <ARRForecast
-                opportunity={contract.opportunities?.[0]}
+                opportunity={contract.opportunities?.[0] as Opportunity}
                 name={data?.organization?.name || ''}
                 isInitialLoading={isInitialLoading}
               />
               <ContractCard
                 organizationId={id}
                 organizationName={data?.organization?.name ?? ''}
+                key={`contract-card-${contract.id}`}
                 data={(contract as Contract) ?? undefined}
               />
-            </React.Fragment>
+            </>
           ))}
 
         <Notes id={id} data={data?.organization} />

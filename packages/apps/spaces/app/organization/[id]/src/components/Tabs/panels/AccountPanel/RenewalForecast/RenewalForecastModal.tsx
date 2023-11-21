@@ -5,22 +5,21 @@ import { useRef, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Dot } from '@ui/media/Dot';
+import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
+import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { Heading } from '@ui/typography/Heading';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
-import { Button, ButtonGroup } from '@ui/form/Button';
 import { AutoresizeTextarea } from '@ui/form/Textarea';
+import { CurrencyInput } from '@ui/form/CurrencyInput';
+import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { User, RenewalLikelihoodProbability } from '@graphql/types';
 import { NEW_DATE } from '@organization/src/components/Timeline/OrganizationTimeline';
-import {
-  User,
-  RenewalLikelihood,
-  RenewalLikelihoodProbability,
-} from '@graphql/types';
 import { useInfiniteGetTimelineQuery } from '@organization/src/graphql/getTimeline.generated';
-import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
+import { invalidateAccountDetailsQuery } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { useUpdateRenewalForecastMutation } from '@organization/src/graphql/updateRenewalForecast.generated';
 import {
   Modal,
   ModalBody,
@@ -35,40 +34,43 @@ import {
   useOrganizationAccountDetailsQuery,
 } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
-interface RenewalLikelihoodModalProps {
+export type RenewalForecastValue = {
+  amount?: string | null;
+  comment?: string | null;
+};
+
+interface RenewalForecastModalProps {
   name: string;
   isOpen: boolean;
   onClose: () => void;
-  renewalLikelihood: RenewalLikelihood;
+  renewalForecast: RenewalForecastValue;
+  renewalProbability?: RenewalLikelihoodProbability | null;
 }
 
-export const RenewalLikelihoodModal = ({
-  renewalLikelihood,
+export const RenewalForecastModal = ({
+  renewalForecast,
+  renewalProbability,
   isOpen,
   onClose,
   name,
-}: RenewalLikelihoodModalProps) => {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+}: RenewalForecastModalProps) => {
   const id = useParams()?.id as string;
-  const [probability, setLikelihood] = useState<
-    RenewalLikelihoodProbability | undefined | null
-  >(renewalLikelihood?.probability);
-  const [reason, setReason] = useState<string>(
-    renewalLikelihood?.comment || '',
-  );
+  const initialRef = useRef(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { data: session } = useSession();
 
+  const [amount, setAmount] = useState<string>(renewalForecast?.amount || '');
+  const [reason, setReason] = useState<string>(renewalForecast?.comment || '');
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-
-  const getOrganizationQueryKey = useOrganizationAccountDetailsQuery.getKey({
-    id,
-  });
-
-  const updateRenewalLikelihood = useUpdateRenewalLikelihoodMutation(client, {
+  const updateRenewalForecast = useUpdateRenewalForecastMutation(client, {
     onSuccess: () => {
+      timeoutRef.current = setTimeout(
+        () => invalidateAccountDetailsQuery(queryClient, id),
+        500,
+      );
       queryClient.setQueryData<OrganizationAccountDetailsQuery>(
-        getOrganizationQueryKey,
+        useOrganizationAccountDetailsQuery.getKey({ id }),
         (oldData) => {
           if (!oldData || !oldData?.organization) return;
 
@@ -77,10 +79,10 @@ export const RenewalLikelihoodModal = ({
               ...(oldData?.organization ?? {}),
               accountDetails: {
                 ...(oldData?.organization?.accountDetails ?? {}),
-                renewalLikelihood: {
+                renewalForecast: {
                   comment: reason,
-                  previousProbability: renewalLikelihood?.probability,
-                  probability: probability,
+                  amount: amount as unknown as number,
+                  potentialAmount: null,
                   updatedAt: new Date(),
                   updatedBy: [session?.user] as unknown as User,
                 },
@@ -100,15 +102,15 @@ export const RenewalLikelihoodModal = ({
           const newEvent = {
             __typename: 'Action',
             id: `timeline-event-action-new-id-${new Date()}`,
-            actionType: 'RENEWAL_LIKELIHOOD_UPDATED',
+            actionType: 'RENEWAL_FORECAST_UPDATED',
             appSource: 'customer-os-api',
             createdAt: new Date(),
             metadata: JSON.stringify({
-              likelihood: probability,
-              reason,
+              likelihood: renewalProbability,
+              reason: reason,
             }),
             actionCreatedBy: null,
-            content: `Renewal likelihood set to ${probability} by ${session?.user?.name}`,
+            content: `ARR forecast set to $${amount} by ${session?.user?.name}`,
           };
 
           // @ts-expect-error TODO: queryClient.setQueryClient should be typed in order to fix this line
@@ -151,19 +153,15 @@ export const RenewalLikelihoodModal = ({
         },
       );
     },
-    onSettled: () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(getOrganizationQueryKey);
-      }, 1000);
-    },
   });
 
   const handleSet = () => {
-    updateRenewalLikelihood.mutate({
-      input: { id, probability: probability, comment: reason },
+    updateRenewalForecast.mutate({
+      input: {
+        id,
+        amount: (amount as unknown as number) || null,
+        comment: reason,
+      },
     });
     onClose();
   };
@@ -177,7 +175,7 @@ export const RenewalLikelihoodModal = ({
   }, []);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={initialRef}>
       <ModalOverlay />
       <ModalContent
         borderRadius='2xl'
@@ -194,73 +192,42 @@ export const RenewalLikelihoodModal = ({
             <Icons.AlertTriangle />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            {`${
-              !renewalLikelihood?.probability ? 'Set' : 'Update'
-            } renewal likelihood`}
+            {`${!renewalForecast.amount ? 'Set' : 'Update'} ARR forecast`}
           </Heading>
           <Text mt='1' fontSize='sm' fontWeight='normal'>
-            {!renewalLikelihood?.probability ? 'Setting' : 'Updating'}{' '}
-            <b>{name}</b> renewal likelihood will change how its renewal
-            estimates are calculated and actions are prioritised.
+            {!renewalForecast.amount ? 'Setting' : 'Updating'} <b>{name}</b> ARR
+            forecast will change how expected revenue is reported.
           </Text>
         </ModalHeader>
         <ModalBody as={Flex} flexDir='column' pb='0'>
-          <ButtonGroup w='full' isAttached>
-            <Button
-              w='full'
-              variant='outline'
-              leftIcon={<Dot colorScheme='success' />}
-              onClick={() => setLikelihood(RenewalLikelihoodProbability.High)}
-              bg={probability === 'HIGH' ? 'gray.100' : 'white'}
-            >
-              High
-            </Button>
-            <Button
-              w='full'
-              variant='outline'
-              leftIcon={<Dot colorScheme='warning' />}
-              onClick={() => setLikelihood(RenewalLikelihoodProbability.Medium)}
-              bg={probability === 'MEDIUM' ? 'gray.100' : 'white'}
-            >
-              Medium
-            </Button>
-            <Button
-              w='full'
-              variant='outline'
-              leftIcon={<Dot colorScheme='error' />}
-              onClick={() => setLikelihood(RenewalLikelihoodProbability.Low)}
-              bg={probability === 'LOW' ? 'gray.100' : 'white'}
-            >
-              Low
-            </Button>
-            <Button
-              variant='outline'
-              w='full'
-              leftIcon={<Dot />}
-              onClick={() => setLikelihood(RenewalLikelihoodProbability.Zero)}
-              bg={probability === 'ZERO' ? 'gray.100' : 'white'}
-            >
-              Zero
-            </Button>
-          </ButtonGroup>
+          <CurrencyInput
+            onChange={setAmount}
+            value={`${amount}`}
+            w='full'
+            placeholder='Amount'
+            label='Amount'
+            min={0}
+            ref={initialRef}
+            leftElement={
+              <Box color='gray.500'>
+                <CurrencyDollar height='16px' />
+              </Box>
+            }
+          />
 
-          {!!probability && (
-            <>
-              <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
-                <b>Reason for change</b> (optional)
-              </Text>
-              <AutoresizeTextarea
-                pt='0'
-                id='reason'
-                value={reason}
-                spellCheck='false'
-                onChange={(e) => setReason(e.target.value)}
-                placeholder={`What is the reason for ${
-                  !renewalLikelihood?.probability ? 'setting' : 'updating'
-                } the renewal likelihood?`}
-              />
-            </>
-          )}
+          <Text as='label' htmlFor='reason' mt='4' fontSize='sm'>
+            <b>Reason for change</b> (optional)
+          </Text>
+          <AutoresizeTextarea
+            pt='0'
+            id='reason'
+            value={reason}
+            spellCheck='false'
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={`What is the reason for ${
+              !renewalForecast.amount ? 'setting' : 'updating'
+            } the ARR forecast?`}
+          />
         </ModalBody>
         <ModalFooter p='6'>
           <Button variant='outline' w='full' onClick={onClose}>
@@ -273,7 +240,7 @@ export const RenewalLikelihoodModal = ({
             colorScheme='primary'
             onClick={handleSet}
           >
-            {!renewalLikelihood?.probability ? 'Set' : 'Update'}
+            {!renewalForecast.amount ? 'Set' : 'Update'}
           </Button>
         </ModalFooter>
       </ModalContent>
