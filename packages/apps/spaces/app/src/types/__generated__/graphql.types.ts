@@ -610,98 +610,6 @@ export type CustomerUser = {
   jobRole: CustomerJobRole;
 };
 
-export type DashboardArrBreakdown = {
-  __typename?: 'DashboardARRBreakdown';
-  arrBreakdown: Scalars['Float'];
-  increasePercentage: Scalars['Float'];
-  perMonth: Array<Maybe<DashboardArrBreakdownPerMonth>>;
-};
-
-export type DashboardArrBreakdownPerMonth = {
-  __typename?: 'DashboardARRBreakdownPerMonth';
-  cancellations: Scalars['Int'];
-  churned: Scalars['Int'];
-  downgrades: Scalars['Int'];
-  month: Scalars['Int'];
-  newlyContracted: Scalars['Int'];
-  renewals: Scalars['Int'];
-  upsells: Scalars['Int'];
-};
-
-export type DashboardCustomerMap = {
-  __typename?: 'DashboardCustomerMap';
-  arr: Scalars['Int'];
-  contractSignedDate: Scalars['Time'];
-  organization: Organization;
-  organizationId: Scalars['ID'];
-  state: DashboardCustomerMapState;
-};
-
-export enum DashboardCustomerMapState {
-  AtRisk = 'AT_RISK',
-  Churned = 'CHURNED',
-  Ok = 'OK',
-}
-
-export type DashboardGrossRevenueRetention = {
-  __typename?: 'DashboardGrossRevenueRetention';
-  grossRevenueRetention: Scalars['Float'];
-  increasePercentage: Scalars['Float'];
-  perMonth: Array<Maybe<DashboardGrossRevenueRetentionPerMonth>>;
-};
-
-export type DashboardGrossRevenueRetentionPerMonth = {
-  __typename?: 'DashboardGrossRevenueRetentionPerMonth';
-  month: Scalars['Int'];
-  percentage: Scalars['Float'];
-};
-
-export type DashboardMrrPerCustomer = {
-  __typename?: 'DashboardMRRPerCustomer';
-  increasePercentage: Scalars['Float'];
-  mrrPerCustomer: Scalars['Float'];
-  perMonth: Array<Maybe<DashboardMrrPerCustomerPerMonth>>;
-};
-
-export type DashboardMrrPerCustomerPerMonth = {
-  __typename?: 'DashboardMRRPerCustomerPerMonth';
-  month: Scalars['Int'];
-  value: Scalars['Int'];
-};
-
-export type DashboardNewCustomers = {
-  __typename?: 'DashboardNewCustomers';
-  perMonth: Array<Maybe<DashboardNewCustomersPerMonth>>;
-  thisMonthCount: Scalars['Int'];
-  thisMonthIncreasePercentage: Scalars['Float'];
-};
-
-export type DashboardNewCustomersPerMonth = {
-  __typename?: 'DashboardNewCustomersPerMonth';
-  count: Scalars['Int'];
-  month: Scalars['Int'];
-};
-
-export type DashboardRetentionRate = {
-  __typename?: 'DashboardRetentionRate';
-  increasePercentage: Scalars['Float'];
-  perMonth: Array<Maybe<DashboardRetentionRatePerMonth>>;
-  retentionRate: Scalars['Int'];
-};
-
-export type DashboardRetentionRatePerMonth = {
-  __typename?: 'DashboardRetentionRatePerMonth';
-  churnCount: Scalars['Int'];
-  month: Scalars['Int'];
-  renewCount: Scalars['Int'];
-};
-
-export type DashboardRevenueAtRisk = {
-  __typename?: 'DashboardRevenueAtRisk';
-  atRisk: Scalars['Float'];
-  highConfidence: Scalars['Float'];
-};
-
 export enum DataSource {
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
@@ -984,8 +892,8 @@ export type GlobalCache = {
   isGoogleActive: Scalars['Boolean'];
   isGoogleTokenExpired: Scalars['Boolean'];
   isOwner: Scalars['Boolean'];
-  maxARRForecastValue: Scalars['Float'];
-  minARRForecastValue: Scalars['Float'];
+  maxARRForecastValue: Scalars['Int64'];
+  minARRForecastValue: Scalars['Int64'];
   user: User;
 };
 
@@ -2654,13 +2562,6 @@ export type Query = {
   contract: Contract;
   /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
-  dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
-  dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;
-  dashboard_GrossRevenueRetention?: Maybe<DashboardGrossRevenueRetention>;
-  dashboard_MRRPerCustomer?: Maybe<DashboardMrrPerCustomer>;
-  dashboard_NewCustomers?: Maybe<DashboardNewCustomers>;
-  dashboard_RetentionRate?: Maybe<DashboardRetentionRate>;
-  dashboard_RevenueAtRisk?: Maybe<DashboardRevenueAtRisk>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
@@ -2724,30 +2625,6 @@ export type QueryDashboardView_OrganizationsArgs = {
   pagination: Pagination;
   sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
-};
-
-export type QueryDashboard_ArrBreakdownArgs = {
-  year: Scalars['Int'];
-};
-
-export type QueryDashboard_GrossRevenueRetentionArgs = {
-  year: Scalars['Int'];
-};
-
-export type QueryDashboard_MrrPerCustomerArgs = {
-  year: Scalars['Int'];
-};
-
-export type QueryDashboard_NewCustomersArgs = {
-  year: Scalars['Int'];
-};
-
-export type QueryDashboard_RetentionRateArgs = {
-  year: Scalars['Int'];
-};
-
-export type QueryDashboard_RevenueAtRiskArgs = {
-  year: Scalars['Int'];
 };
 
 export type QueryEmailArgs = {

@@ -1,5 +1,0 @@
-mutation updateService($input: ServiceLineItemUpdateInput!) {
-    serviceLineItemUpdate(input: $input) {
-        id
-    }
-}
