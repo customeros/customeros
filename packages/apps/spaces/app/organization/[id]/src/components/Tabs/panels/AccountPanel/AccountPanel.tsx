@@ -4,8 +4,8 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 
 import { Box } from '@ui/layout/Box';
-import { Contract } from '@graphql/types';
 import { Select } from '@ui/form/SyncSelect';
+import { Contract, Opportunity } from '@graphql/types';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
@@ -128,7 +128,7 @@ export const AccountPanel = () => {
       >
         {!!data?.organization?.contracts &&
           data?.organization?.contracts.map((contract) => (
-            <>
+            <React.Fragment key={`contract-card-${contract.id}`}>
               <ARRForecast
                 opportunity={contract.opportunities?.[0]}
                 name={data?.organization?.name || ''}
@@ -137,10 +137,9 @@ export const AccountPanel = () => {
               <ContractCard
                 organizationId={id}
                 organizationName={data?.organization?.name ?? ''}
-                key={`contract-card-${contract.id}`}
                 data={(contract as Contract) ?? undefined}
               />
-            </>
+            </React.Fragment>
           ))}
 
         <Notes id={id} data={data?.organization} />

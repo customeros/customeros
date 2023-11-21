@@ -6,7 +6,7 @@ import { Text } from '@ui/typography/Text';
 import { Divider } from '@ui/presentation/Divider';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { getARRColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
   getMetadata,
   getCurrencyString,
@@ -27,7 +27,7 @@ export const RenewalForecastUpdatedActionPreview = () => {
   const isCreatedBySystem = event.content?.includes('default');
   const colorScheme =
     forecastedAmount && isCreatedBySystem
-      ? getFeatureIconColor(metadata.likelihood)
+      ? getARRColor(metadata.likelihood)
       : 'gray';
 
   const [preText, postText] = event.content?.split('by ') ?? [];

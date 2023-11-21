@@ -4,7 +4,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Action } from '@graphql/types';
 import { Text } from '@ui/typography/Text';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { getARRColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
   getMetadata,
   getCurrencyString,
@@ -26,7 +26,7 @@ export const RenewalForecastUpdatedAction: React.FC<
   const metadata = getMetadata(data?.metadata);
   const colorScheme =
     forecastedAmount && isCreatedBySystem
-      ? getFeatureIconColor(metadata?.likelihood)
+      ? getARRColor(metadata?.likelihood)
       : DEFAULT_COLOR_SCHEME;
 
   const authorText = isCreatedBySystem ? data.content : `${preText} by`;

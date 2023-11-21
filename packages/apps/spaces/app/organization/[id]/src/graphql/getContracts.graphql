@@ -13,6 +13,7 @@ query getContracts($id: ID!) {
       status
       contractUrl
       opportunities {
+        id
         comments
         internalStage
         internalType
