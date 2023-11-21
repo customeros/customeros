@@ -5,32 +5,41 @@ import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { ContractRenewalCycle } from '@graphql/types';
 import { Card, CardHeader } from '@ui/presentation/Card';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
-import { calculateNextRenewalDate } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-// import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalDetailsModal';
-// import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import {
+  Opportunity,
+  ContractRenewalCycle,
+  RenewalLikelihoodProbability,
+} from '@graphql/types';
+
+import { getARRColor } from '../utils';
 
 interface RenewalARRCardProps {
   hasEnded: boolean;
   startedAt: string;
+  opportunity: Opportunity;
   renewCycle: ContractRenewalCycle;
 }
 export const RenewalARRCard = ({
   startedAt,
   hasEnded,
   renewCycle,
+  opportunity,
 }: RenewalARRCardProps) => {
-  const nextRenewal = calculateNextRenewalDate(startedAt, renewCycle);
   const differenceInMonths = DateTimeUtils.differenceInMonths(
     new Date().toISOString(),
     startedAt,
   );
+
   const hasRenewed =
     renewCycle === ContractRenewalCycle.AnnualRenewal
       ? differenceInMonths > 12
       : differenceInMonths > 1;
+
+  const hasRewenewChanged =
+    opportunity.amount !== opportunity.maxAmount || hasEnded;
 
   return (
     <>
@@ -76,61 +85,70 @@ export const RenewalARRCard = ({
           justifyContent='center'
           gap={4}
         >
-          <FeaturedIcon
-            size='md'
-            minW='10'
-            colorScheme={
-              'gray'
-              // renewalForecast
-              //   ? getFeatureIconColor(
-              //       renewalProbability as
-              //         | RenewalLikelihoodProbability
-              //         | undefined,
-              //     )
-              //   :
-            }
-          >
+          <FeaturedIcon size='md' minW='10' colorScheme='primary'>
             <ClockFastForward />
           </FeaturedIcon>
-          <Flex
-            alignItems='center'
-            justifyContent='space-between'
-            w='full'
-            // mt={-4}
-          >
-            <Flex flex={1} alignItems='center'>
-              <Heading size='sm' color='gray.700' noOfLines={1}>
-                Renewal ARR
-              </Heading>
+          <Flex alignItems='center' justifyContent='space-between' w='full'>
+            <Flex flexDir='column' gap='1px'>
+              <Flex flex={1} alignItems='center'>
+                <Heading size='sm' color='gray.700' noOfLines={1}>
+                  Renewal ARR
+                </Heading>
 
-              {!hasEnded && (
-                <Text color='gray.500' ml={1} fontSize='sm'>
-                  {DateTimeUtils.isToday(nextRenewal)
-                    ? 'today'
-                    : DateTimeUtils.timeAgo(nextRenewal, { addSuffix: true })}
+                {!hasEnded && opportunity.renewedAt && (
+                  <Text color='gray.500' ml={1} fontSize='sm'>
+                    {DateTimeUtils.isToday(opportunity.renewedAt)
+                      ? 'today'
+                      : DateTimeUtils.timeAgo(opportunity.renewedAt, {
+                          addSuffix: true,
+                        })}
+                  </Text>
+                )}
+              </Flex>
+
+              <Text w='full' color='gray.500' fontSize='sm' lineHeight={1}>
+                {!hasEnded ? (
+                  <>
+                    Likelihood{' '}
+                    <Text
+                      as='span'
+                      fontWeight='medium'
+                      color={`${getARRColor(
+                        opportunity.renewalLikelihood as RenewalLikelihoodProbability,
+                      )}.500`}
+                      textTransform='capitalize'
+                    >
+                      {opportunity?.renewalLikelihood.toLowerCase()}
+                    </Text>
+                  </>
+                ) : (
+                  'Closed lost'
+                )}
+              </Text>
+            </Flex>
+
+            <Flex flexDir='column'>
+              <Text
+                fontWeight='semibold'
+                textDecoration={hasRewenewChanged ? 'line-through' : 'none'}
+              >
+                {formatCurrency(opportunity.maxAmount)}
+              </Text>
+
+              {hasRewenewChanged && (
+                <Text
+                  fontSize='sm'
+                  textAlign='right'
+                  textDecoration={hasRewenewChanged ? 'strikethrough' : 'none'}
+                >
+                  {formatCurrency(hasEnded ? 0 : opportunity.amount)}
                 </Text>
               )}
             </Flex>
-            {/*TODO swap with real data after integrating with BE*/}
-            {/*<Text fontWeight='semibold'>$24,000</Text>*/}
           </Flex>
         </CardHeader>
-
-        {/*<CardBody*/}
-        {/*  as={Text}*/}
-        {/*  w='full'*/}
-        {/*  color='gray.500'*/}
-        {/*  fontSize='sm'*/}
-        {/*  p={0}*/}
-        {/*  pl={14}*/}
-        {/*  mt={-5}*/}
-        {/*>*/}
-        {/*  Likelihood{' '}*/}
-        {/*  <Text as='span' color='success.500'>*/}
-        {/*    High*/}
-        {/*  </Text>*/}
-        {/*</CardBody>*/}
       </Card>
+      {/*todo uncomment when update mutation will be available*/}
       {/*<RenewalDetailsModal*/}
       {/*  isOpen={modal.isOpen}*/}
       {/*  onClose={modal.onClose}*/}

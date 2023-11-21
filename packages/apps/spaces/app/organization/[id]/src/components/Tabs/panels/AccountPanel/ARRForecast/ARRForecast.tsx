@@ -7,26 +7,23 @@ import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
-import { RenewalLikelihoodProbability } from '@graphql/types';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
-import { RenewalForecastType } from '@organization/src/components/Tabs/panels/AccountPanel/RenewalForecast';
+import { Opportunity, RenewalLikelihoodProbability } from '@graphql/types';
+import { getARRColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
 import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 interface ARRForecastProps {
   name: string;
   isInitialLoading?: boolean;
-  aRRForecast?: RenewalForecastType;
-  renewalProbability?: RenewalLikelihoodProbability | null;
+  opportunity?: Opportunity | null;
 }
 
 export const ARRForecast = ({
   isInitialLoading,
-  aRRForecast,
-  renewalProbability,
+  opportunity,
   name,
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
@@ -62,8 +59,10 @@ export const ARRForecast = ({
             size='md'
             minW='10'
             colorScheme={
-              aRRForecast?.amount && !aRRForecast?.updatedBy
-                ? getFeatureIconColor(renewalProbability)
+              opportunity?.renewalLikelihood
+                ? getARRColor(
+                    opportunity.renewalLikelihood as RenewalLikelihoodProbability,
+                  )
                 : 'gray'
             }
           >
@@ -103,7 +102,7 @@ export const ARRForecast = ({
             <Heading fontSize='2xl' color='gray.700'>
               {isMutating && (!isInitialLoading || !isRestoring)
                 ? 'Calculating...'
-                : formatCurrency(aRRForecast?.amount ?? 0)}
+                : formatCurrency(opportunity?.amount ?? 0)}
             </Heading>
           </Flex>
         </CardBody>
