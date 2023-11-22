@@ -38,6 +38,7 @@ message UpdateServiceLineItemGrpcRequest {
   BilledType billed = 7;
   google.protobuf.Timestamp updatedAt = 8;
   SourceFields sourceFields = 9;
+  string comments = 10;
 }
 
 // Service line item response message

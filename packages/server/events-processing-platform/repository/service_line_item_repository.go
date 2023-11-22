@@ -84,7 +84,8 @@ func (r *serviceLineItemRepository) Update(ctx context.Context, tenant, serviceL
 								sli.quantity = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $quantity ELSE sli.quantity END,
 								sli.billed = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billed ELSE sli.billed END,
 								sli.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE sli.sourceOfTruth END,
-								sli.updatedAt=$updatedAt
+								sli.updatedAt=$updatedAt,
+				                sli.comments=$comments
 							`, tenant)
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
@@ -93,6 +94,7 @@ func (r *serviceLineItemRepository) Update(ctx context.Context, tenant, serviceL
 		"quantity":          evt.Quantity,
 		"name":              evt.Name,
 		"billed":            evt.Billed,
+		"comments":          evt.Comments,
 		"sourceOfTruth":     helper.GetSourceOfTruth(evt.Source.Source),
 		"overwrite":         helper.GetSourceOfTruth(evt.Source.Source) == constants.SourceOpenline,
 	}

@@ -377,6 +377,7 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 		Billed:        utils.GetStringPropOrEmpty(props, "billed"),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
+		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
 	}
 	return &serviceLineItem
 }

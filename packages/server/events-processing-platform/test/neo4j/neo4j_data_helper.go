@@ -331,7 +331,8 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.name=$name,
 					sli.price=$price,
 					sli.quantity=$quantity,
-					sli.billed=$billed
+					sli.billed=$billed,
+					sli.comments=$comments
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -341,6 +342,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"name":       serviceLineItem.Name,
 		"quantity":   serviceLineItem.Quantity,
 		"billed":     serviceLineItem.Billed,
+		"comments":   serviceLineItem.Comments,
 	})
 	return serviceLineItemId
 }

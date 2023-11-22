@@ -22,6 +22,7 @@ func MapEntityToServiceLineItem(entity *entity.ServiceLineItemEntity) *model.Ser
 		Billed:        MapBilledTypeToModel(entity.Billed),
 		Price:         entity.Price,
 		Quantity:      entity.Quantity,
+		Comments:      entity.Comments,
 	}
 }
 
@@ -58,6 +59,7 @@ func MapServiceLineItemUpdateInputToEntity(input model.ServiceLineItemUpdateInpu
 		Name:          utils.IfNotNilString(input.Name),
 		Price:         utils.IfNotNilFloat64(input.Price),
 		Quantity:      utils.IfNotNilInt64(input.Quantity),
+		Comments:      utils.IfNotNilString(input.Comments),
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),

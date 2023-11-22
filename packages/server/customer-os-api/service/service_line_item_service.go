@@ -152,6 +152,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		Name:           serviceLineItem.Name,
 		Quantity:       serviceLineItem.Quantity,
 		Price:          float32(serviceLineItem.Price),
+		Comments:       serviceLineItem.Comments,
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(serviceLineItem.Source),
 			AppSource: utils.StringFirstNonEmpty(serviceLineItem.AppSource, constants.AppSourceCustomerOsApi),
@@ -223,6 +224,7 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 		Billed:        entity.GetBilledType(utils.GetStringPropOrEmpty(props, "billed")),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
+		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

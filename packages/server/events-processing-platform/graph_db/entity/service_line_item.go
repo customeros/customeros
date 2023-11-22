@@ -15,6 +15,7 @@ type ServiceLineItemEntity struct {
 	Billed        string
 	Price         float64
 	Quantity      int64
+	Comments      string
 }
 
 type ServiceLineItemEntities []ServiceLineItemEntity
