@@ -1,5 +1,4 @@
 'use client';
-// TODO uncomment when forecast
 import { useParams } from 'next/navigation';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
@@ -22,11 +21,11 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { Opportunity, OpportunityRenewalLikelihood } from '@graphql/types';
 import { useGetUsersQuery } from '@organizations/graphql/getUsers.generated';
-import { useUpdateOpportunityMutation } from '@organization/src/graphql/updateOpportunity.generated';
 import {
   GetContractsQuery,
   useGetContractsQuery,
 } from '@organization/src/graphql/getContracts.generated';
+import { useUpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
 import {
   Modal,
   ModalBody,
@@ -55,11 +54,11 @@ export const RenewalDetailsModal = ({
 
   const formId = 'renewalDetailsForm';
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [probability, setLikelihood] = useState<
+  const [likelihood, setLikelihood] = useState<
     OpportunityRenewalLikelihood | undefined | null
   >((data?.renewalLikelihood as OpportunityRenewalLikelihood) ?? null);
   const [amount, setAmount] = useState<string>(data?.amount?.toString() || '');
-  const [reason, setReason] = useState<string>(data?.generalNotes || '');
+  const [reason, setReason] = useState<string>(data?.comments || '');
   const [owner, setOwner] = useState<null | { value: string; label: string }>(
     null,
   );
@@ -83,67 +82,76 @@ export const RenewalDetailsModal = ({
     id: orgId,
   });
 
-  const updateOpportunityMutation = useUpdateOpportunityMutation(client, {
-    onMutate: ({ input }) => {
-      queryClient.cancelQueries(getContractsQueryKey);
+  const updateOpportunityMutation = useUpdateOpportunityRenewalMutation(
+    client,
+    {
+      onMutate: ({ input }) => {
+        queryClient.cancelQueries(getContractsQueryKey);
 
-      queryClient.setQueryData<GetContractsQuery>(
-        getContractsQueryKey,
-        (currentCache) => {
-          if (!currentCache || !currentCache?.organization) return;
+        queryClient.setQueryData<GetContractsQuery>(
+          getContractsQueryKey,
+          (currentCache) => {
+            if (!currentCache || !currentCache?.organization) return;
 
-          return produce(currentCache, (draft) => {
-            if (draft?.['organization']?.['contracts']) {
-              draft['organization']['contracts']?.map((contractData, index) => {
-                return (contractData.opportunities ?? []).map((opportunity) => {
-                  if ((opportunity as Opportunity).id === input.opportunityId) {
-                    return {
-                      ...opportunity,
-                      amount: input.amount,
-                      renewalUpdatedByUserAt: new Date().toISOString(),
-                    };
-                  }
+            return produce(currentCache, (draft) => {
+              if (draft?.['organization']?.['contracts']) {
+                draft['organization']['contracts']?.map(
+                  (contractData, index) => {
+                    return (contractData.opportunities ?? []).map(
+                      (opportunity) => {
+                        const { opportunityId, ...rest } = input;
+                        if ((opportunity as Opportunity).id === opportunityId) {
+                          return {
+                            ...opportunity,
+                            ...rest,
+                            renewalUpdatedByUserAt: new Date().toISOString(),
+                          };
+                        }
 
-                  return opportunity;
-                });
-              });
-            }
-          });
-        },
-      );
-      const previousEntries =
-        queryClient.getQueryData<GetContractsQuery>(getContractsQueryKey);
+                        return opportunity;
+                      },
+                    );
+                  },
+                );
+              }
+            });
+          },
+        );
+        const previousEntries =
+          queryClient.getQueryData<GetContractsQuery>(getContractsQueryKey);
 
-      return { previousEntries };
+        return { previousEntries };
+      },
+      onError: (_, __, context) => {
+        queryClient.setQueryData<GetContractsQuery>(
+          getContractsQueryKey,
+          context?.previousEntries,
+        );
+        toastError(
+          'Failed to update renewal details',
+          'update-renewal-details-error',
+        );
+      },
+      onSettled: () => {
+        onClose();
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(() => {
+          queryClient.invalidateQueries(getContractsQueryKey);
+        }, 1000);
+      },
     },
-    onError: (_, __, context) => {
-      queryClient.setQueryData<GetContractsQuery>(
-        getContractsQueryKey,
-        context?.previousEntries,
-      );
-      toastError(
-        'Failed to update renewal details',
-        'update-renewal-details-error',
-      );
-    },
-    onSettled: () => {
-      onClose();
-
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(getContractsQueryKey);
-      }, 1000);
-    },
-  });
+  );
 
   const handleSet = () => {
     updateOpportunityMutation.mutate({
       input: {
         opportunityId: data.id,
-        generalNotes: reason,
+        comments: reason,
         amount: parseFloat(amount),
+        renewalLikelihood: likelihood,
       },
     });
   };
@@ -215,7 +223,7 @@ export const RenewalDetailsModal = ({
                   setLikelihood(OpportunityRenewalLikelihood.ZeroRenewal)
                 }
                 bg={
-                  probability === OpportunityRenewalLikelihood.ZeroRenewal
+                  likelihood === OpportunityRenewalLikelihood.ZeroRenewal
                     ? 'gray.100'
                     : 'white'
                 }
@@ -230,7 +238,7 @@ export const RenewalDetailsModal = ({
                   setLikelihood(OpportunityRenewalLikelihood.LowRenewal)
                 }
                 bg={
-                  probability === OpportunityRenewalLikelihood.LowRenewal
+                  likelihood === OpportunityRenewalLikelihood.LowRenewal
                     ? 'gray.100'
                     : 'white'
                 }
@@ -245,7 +253,7 @@ export const RenewalDetailsModal = ({
                   setLikelihood(OpportunityRenewalLikelihood.MediumRenewal)
                 }
                 bg={
-                  probability === OpportunityRenewalLikelihood.MediumRenewal
+                  likelihood === OpportunityRenewalLikelihood.MediumRenewal
                     ? 'gray.100'
                     : 'white'
                 }
@@ -260,7 +268,7 @@ export const RenewalDetailsModal = ({
                   setLikelihood(OpportunityRenewalLikelihood.HighRenewal)
                 }
                 bg={
-                  probability === OpportunityRenewalLikelihood.HighRenewal
+                  likelihood === OpportunityRenewalLikelihood.HighRenewal
                     ? 'gray.100'
                     : 'white'
                 }
@@ -292,7 +300,7 @@ export const RenewalDetailsModal = ({
             />
           )}
 
-          {!!probability && (
+          {!!likelihood && (
             <div>
               <Text as='label' htmlFor='reason' fontSize='sm'>
                 <b>Reason for change</b> (optional)
