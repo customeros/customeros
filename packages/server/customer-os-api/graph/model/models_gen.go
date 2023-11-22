@@ -1902,6 +1902,7 @@ const (
 	BilledTypeMonthly  BilledType = "MONTHLY"
 	BilledTypeAnnually BilledType = "ANNUALLY"
 	BilledTypeOnce     BilledType = "ONCE"
+	BilledTypeUsage    BilledType = "USAGE"
 )
 
 var AllBilledType = []BilledType{
@@ -1909,11 +1910,12 @@ var AllBilledType = []BilledType{
 	BilledTypeMonthly,
 	BilledTypeAnnually,
 	BilledTypeOnce,
+	BilledTypeUsage,
 }
 
 func (e BilledType) IsValid() bool {
 	switch e {
-	case BilledTypeNone, BilledTypeMonthly, BilledTypeAnnually, BilledTypeOnce:
+	case BilledTypeNone, BilledTypeMonthly, BilledTypeAnnually, BilledTypeOnce, BilledTypeUsage:
 		return true
 	}
 	return false

@@ -33,11 +33,12 @@ type BilledType int32
 const (
 	MonthlyBilled BilledType = iota
 	AnnuallyBilled
-	OnceBilled // For One-Time
+	OnceBilled  // For One-Time
+	UsageBilled // For Usage-Based
 )
 
 func (bt BilledType) String() string {
-	return [...]string{string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString)}[bt]
+	return [...]string{string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString), string(UsageBilledString)}[bt]
 }
 
 func (bt BilledType) IsOneTime() bool {
@@ -50,4 +51,5 @@ const (
 	MonthlyBilledString  BilledString = "MONTHLY"
 	AnnuallyBilledString BilledString = "ANNUALLY"
 	OnceBilledString     BilledString = "ONCE"
+	UsageBilledString    BilledString = "USAGE"
 )

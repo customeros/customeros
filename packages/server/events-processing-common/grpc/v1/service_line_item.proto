@@ -11,6 +11,7 @@ enum BilledType {
   MONTHLY_BILLED = 0;
   ANNUALLY_BILLED = 1;
   ONCE_BILLED = 2; // For One-Time
+  USAGE_BILLED = 3; // For Usage
 }
 
 message CreateServiceLineItemGrpcRequest {
