@@ -99,7 +99,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), opportunity.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
@@ -167,7 +167,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), opportunity.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, opportunity.AppSource)
@@ -219,7 +219,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// Validate that the opportunity next cycle date is updated in the repository
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, updatedAt, opportunity.UpdatedAt)
 	require.Equal(t, renewedAt, *opportunity.RenewalDetails.RenewedAt)
@@ -272,7 +272,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, "updated opportunity", opportunity.Name)
@@ -325,7 +325,7 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, "test opportunity", opportunity.Name)
@@ -385,7 +385,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, "MEDIUM", opportunity.RenewalDetails.RenewalLikelihood)
@@ -460,7 +460,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, "HIGH", opportunity.RenewalDetails.RenewalLikelihood)
@@ -528,7 +528,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	require.NotNil(t, opportunityDbNode)
 
 	// verify opportunity
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
 	require.Equal(t, now, opportunity.UpdatedAt)
 	require.Equal(t, "MEDIUM", opportunity.RenewalDetails.RenewalLikelihood)
@@ -554,4 +554,78 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 	require.Equal(t, tenantName, eventData1.Tenant)
 	require.Equal(t, float64(0), eventData1.Amount)
 	require.Equal(t, float64(0), eventData1.MaxAmount)
+}
+
+func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Prepare test data in Neo4j
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalStage: string(model.OpportunityInternalStageStringOpen),
+	})
+	now := utils.Now()
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	closeOpportunityEvent, err := event.NewOpportunityCloseWinEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now, now)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = opportunityEventHandler.OnCloseWin(ctx, closeOpportunityEvent)
+	require.Nil(t, err)
+
+	// Assert Neo4j Node
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// Validate that the opportunity next cycle date is updated in the repository
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, now, *opportunity.ClosedAt)
+	require.Equal(t, string(model.OpportunityInternalStageStringClosedWon), opportunity.InternalStage)
+}
+
+func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Prepare test data in Neo4j
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalStage: string(model.OpportunityInternalStageStringOpen),
+	})
+	now := utils.Now()
+
+	// Prepare the event handler
+	opportunityEventHandler := &OpportunityEventHandler{
+		log:          testLogger,
+		repositories: testDatabase.Repositories,
+	}
+
+	closeOpportunityEvent, err := event.NewOpportunityCloseLooseEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now, now)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = opportunityEventHandler.OnCloseLoose(ctx, closeOpportunityEvent)
+	require.Nil(t, err)
+
+	// Assert Neo4j Node
+	opportunityDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, constants.NodeLabel_Opportunity, opportunityId)
+	require.Nil(t, err)
+	require.NotNil(t, opportunityDbNode)
+
+	// Validate that the opportunity next cycle date is updated in the repository
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	require.Equal(t, opportunityId, opportunity.Id)
+	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, now, *opportunity.ClosedAt)
+	require.Equal(t, string(model.OpportunityInternalStageStringClosedLost), opportunity.InternalStage)
 }

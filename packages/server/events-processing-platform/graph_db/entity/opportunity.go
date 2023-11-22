@@ -26,6 +26,7 @@ type OpportunityEntity struct {
 	InternalStage     string
 	ExternalStage     string
 	EstimatedClosedAt *time.Time
+	ClosedAt          *time.Time
 	OwnerUserId       string
 	CreatedByUserId   string
 	GeneralNotes      string
