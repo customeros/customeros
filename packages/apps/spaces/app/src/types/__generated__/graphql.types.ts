@@ -101,6 +101,7 @@ export enum BilledType {
   Monthly = 'MONTHLY',
   None = 'NONE',
   Once = 'ONCE',
+  Usage = 'USAGE',
 }
 
 export type BillingDetails = {
@@ -2965,6 +2966,7 @@ export type ServiceLineItem = Node & {
   __typename?: 'ServiceLineItem';
   appSource: Scalars['String'];
   billed: BilledType;
+  comments: Scalars['String'];
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
   externalLinks: Array<ExternalSystem>;
@@ -2990,6 +2992,7 @@ export type ServiceLineItemInput = {
 export type ServiceLineItemUpdateInput = {
   appSource?: InputMaybe<Scalars['String']>;
   billed?: InputMaybe<BilledType>;
+  comments?: InputMaybe<Scalars['String']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Float']>;

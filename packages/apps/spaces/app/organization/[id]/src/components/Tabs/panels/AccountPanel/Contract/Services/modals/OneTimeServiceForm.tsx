@@ -1,14 +1,19 @@
 'use client';
 
+import { BilledType } from '@graphql/types';
 import { FormInput, FormControl } from '@ui/form/Input';
 import { FormCurrencyInput } from '@ui/form/CurrencyInput';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 
 interface OneTimeServiceModalProps {
   formId: string;
+  billedType: BilledType;
 }
 
-export const OneTimeServiceForm = ({ formId }: OneTimeServiceModalProps) => {
+export const OneTimeServiceForm = ({
+  formId,
+  billedType,
+}: OneTimeServiceModalProps) => {
   return (
     <>
       <FormControl>
@@ -34,9 +39,11 @@ export const OneTimeServiceForm = ({ formId }: OneTimeServiceModalProps) => {
         formId={formId}
         w='full'
         height='auto'
-        placeholder='Price'
+        placeholder={
+          billedType === BilledType.Once ? 'One-time price' : 'Price'
+        }
         isLabelVisible
-        label='Price'
+        label={billedType === BilledType.Once ? 'Price' : 'Price/usage'}
         min={0}
         leftElement={<CurrencyDollar boxSize={4} color='gray.500' />}
       />
