@@ -11,6 +11,9 @@ const (
 	ISSUE             EntityType = "ISSUE"
 	LOG_ENTRY         EntityType = "LOG_ENTRY"
 	INTERACTION_EVENT EntityType = "INTERACTION_EVENT"
+	CONTRACT          EntityType = "CONTRACT"
+	OPPORTUNITY       EntityType = "OPPORTUNITY"
+	SERVICE_LINE_ITEM EntityType = "SERVICE_LINE_ITEM"
 )
 
 func (entityType EntityType) String() string {

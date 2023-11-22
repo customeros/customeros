@@ -98,6 +98,33 @@ func (b *externalSystemBatcher) getExternalSystemsForOrganizations(ctx context.C
 	return b.getExternalSystemsFor(ctx, keys, entity.ORGANIZATION, span)
 }
 
+func (b *externalSystemBatcher) getExternalSystemsForContracts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForContracts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	return b.getExternalSystemsFor(ctx, keys, entity.CONTRACT, span)
+}
+
+func (b *externalSystemBatcher) getExternalSystemsForOpportunities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	return b.getExternalSystemsFor(ctx, keys, entity.OPPORTUNITY, span)
+}
+
+func (b *externalSystemBatcher) getExternalSystemsForServiceLineItems(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForServiceLineItems")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	return b.getExternalSystemsFor(ctx, keys, entity.SERVICE_LINE_ITEM, span)
+}
+
 func (b *externalSystemBatcher) getExternalSystemsForLogEntries(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemDataLoader.getExternalSystemsForLogEntries")
 	defer span.Finish()
@@ -171,6 +198,16 @@ func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys 
 
 func (i *Loaders) GetExternalSystemsForContract(ctx context.Context, contractId string) (*entity.ExternalSystemEntities, error) {
 	thunk := i.ExternalSystemsForContract.Load(ctx, dataloader.StringKey(contractId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.ExternalSystemEntities)
+	return &resultObj, nil
+}
+
+func (i *Loaders) GetExternalSystemsForOpportunity(ctx context.Context, opportunityId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForOpportunity.Load(ctx, dataloader.StringKey(opportunityId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
