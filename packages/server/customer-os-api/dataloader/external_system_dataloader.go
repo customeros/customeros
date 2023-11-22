@@ -207,7 +207,7 @@ func (i *Loaders) GetExternalSystemsForContract(ctx context.Context, contractId 
 }
 
 func (i *Loaders) GetExternalSystemsForOpportunity(ctx context.Context, opportunityId string) (*entity.ExternalSystemEntities, error) {
-	thunk := i.ExternalSystemsForContract.Load(ctx, dataloader.StringKey(opportunityId))
+	thunk := i.ExternalSystemsForOpportunity.Load(ctx, dataloader.StringKey(opportunityId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err

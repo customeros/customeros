@@ -91,7 +91,7 @@ func (r *opportunityResolver) Owner(ctx context.Context, obj *model.Opportunity)
 func (r *opportunityResolver) ExternalLinks(ctx context.Context, obj *model.Opportunity) ([]*model.ExternalSystem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetExternalSystemsForContract(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetExternalSystemsForOpportunity(ctx, obj.ID)
 	if err != nil {
 		r.log.Errorf("Failed to get external system for opportunity %s: %s", obj.ID, err.Error())
 		graphql.AddErrorf(ctx, "Failed to get external system for opportunity %s", obj.ID)
