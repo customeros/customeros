@@ -41,6 +41,10 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 		return a.onRenewalOpportunityUpdate(evt)
 	case event.OpportunityUpdateNextCycleDateV1:
 		return a.onOpportunityUpdateNextCycleDate(evt)
+	case event.OpportunityCloseWinV1:
+		return a.onOpportunityCloseWin(evt)
+	case event.OpportunityCloseLooseV1:
+		return a.onOpportunityCloseLoose(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -178,5 +182,27 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 
+	return nil
+}
+
+func (a *OpportunityAggregate) onOpportunityCloseWin(evt eventstore.Event) error {
+	var eventData event.OpportunityCloseWinEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Opportunity.InternalStage = model.OpportunityInternalStageStringClosedWon
+	a.Opportunity.ClosedAt = &eventData.ClosedAt
+	a.Opportunity.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *OpportunityAggregate) onOpportunityCloseLoose(evt eventstore.Event) error {
+	var eventData event.OpportunityCloseLooseEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Opportunity.InternalStage = model.OpportunityInternalStageStringClosedLost
+	a.Opportunity.ClosedAt = &eventData.ClosedAt
+	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	return nil
 }

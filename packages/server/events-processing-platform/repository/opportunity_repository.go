@@ -26,6 +26,8 @@ type OpportunityRepository interface {
 
 	GetOpenRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetOpportunityById(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
+	CloseWin(ctx context.Context, tenant, opportunityId string, data event.OpportunityCloseWinEvent) error
+	CloseLoose(ctx context.Context, tenant, opportunityId string, data event.OpportunityCloseLooseEvent) error
 }
 
 type opportunityRepository struct {
@@ -305,6 +307,48 @@ func (r *opportunityRepository) UpdateRenewal(ctx context.Context, tenant, oppor
 	cypher += ` op.updatedAt = $updatedAt,
 				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
 
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *opportunityRepository) CloseWin(ctx context.Context, tenant, opportunityId string, data event.OpportunityCloseWinEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.CloseWin")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("opportunityId", opportunityId), log.Object("data", data))
+
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s SET 
+							op.closedAt=$closedAt, 
+							op.internalStage=$internalStage,
+							op.updatedAt=$updatedAt`, tenant)
+	params := map[string]any{
+		"opportunityId": opportunityId,
+		"updatedAt":     data.UpdatedAt,
+		"closedAt":      data.ClosedAt,
+		"internalStage": string(model.OpportunityInternalStageStringClosedWon),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *opportunityRepository) CloseLoose(ctx context.Context, tenant, opportunityId string, data event.OpportunityCloseLooseEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.CloseLoose")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("opportunityId", opportunityId), log.Object("data", data))
+
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s SET 
+							op.closedAt=$closedAt, 
+							op.internalStage=$internalStage,
+							op.updatedAt=$updatedAt`, tenant)
+	params := map[string]any{
+		"opportunityId": opportunityId,
+		"updatedAt":     data.UpdatedAt,
+		"closedAt":      data.ClosedAt,
+		"internalStage": string(model.OpportunityInternalStageStringClosedLost),
+	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)

@@ -46,6 +46,16 @@ func (h *contractHandler) UpdateRenewalNextCycleDate(ctx context.Context, tenant
 		return nil
 	}
 
+	if contract.IsEnded() && renewalOpportunity != nil {
+		err := h.opportunityCommands.CloseLooseOpportunity.Handle(ctx, opportunitycmd.NewCloseLooseOpportunityCommand(renewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, nil))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("CloseLooseOpportunityCommand command failed: %v", err.Error())
+			return nil
+		}
+		return nil
+	}
+
 	renewedAt := h.calculateNextCycleDate(contract.ServiceStartedAt, contract.RenewalCycle)
 	err := h.opportunityCommands.UpdateRenewalOpportunityNextCycleDate.Handle(ctx, opportunitycmd.NewUpdateRenewalOpportunityNextCycleDateCommand(renewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, renewedAt))
 	if err != nil {
@@ -234,18 +244,21 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
+
 	// if there is no renewal opportunity, create one
 	if currentRenewalOpportunityDbNode == nil {
-		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", tenant, "", contractId, "", commonmodel.Source{}, nil, nil))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("CreateRenewalOpportunity command failed: %v", err.Error())
-			return nil, nil, true
+		if !contract.IsEnded() {
+			err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", tenant, "", contractId, "", commonmodel.Source{}, nil, nil))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("CreateRenewalOpportunity command failed: %v", err.Error())
+				return nil, nil, true
+			}
 		}
 		return nil, nil, true
 	}
 
-	currentRenewalOpportunity := graph_db.MapDbNodeToOpportunityEntity(*currentRenewalOpportunityDbNode)
+	currentRenewalOpportunity := graph_db.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
 
 	return contract, currentRenewalOpportunity, false
 }

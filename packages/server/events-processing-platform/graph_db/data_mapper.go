@@ -184,8 +184,11 @@ func MapDbNodeToCommentEntity(node dbtype.Node) *entity.CommentEntity {
 	return &comment
 }
 
-func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
-	props := utils.GetPropsFromNode(node)
+func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
 	opportunity := entity.OpportunityEntity{
 		Id:                utils.GetStringPropOrEmpty(props, "id"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
@@ -196,6 +199,7 @@ func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
 		InternalStage:     utils.GetStringPropOrEmpty(props, "internalStage"),
 		ExternalStage:     utils.GetStringPropOrEmpty(props, "externalStage"),
 		EstimatedClosedAt: utils.GetTimePropOrNil(props, "estimatedClosedAt"),
+		ClosedAt:          utils.GetTimePropOrNil(props, "closedAt"),
 		GeneralNotes:      utils.GetStringPropOrEmpty(props, "generalNotes"),
 		NextSteps:         utils.GetStringPropOrEmpty(props, "nextSteps"),
 		Comments:          utils.GetStringPropOrEmpty(props, "comments"),
