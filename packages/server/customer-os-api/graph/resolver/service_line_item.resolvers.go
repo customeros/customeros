@@ -71,7 +71,23 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 
 // ServiceLineItem is the resolver for the serviceLineItem field.
 func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error) {
-	panic(fmt.Errorf("not implemented: ServiceLineItem - serviceLineItem"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ServiceLineItem", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.serviceLineItemID", id))
+
+	if id == "" {
+		graphql.AddErrorf(ctx, "Missing service line item input id")
+		return nil, nil
+	}
+
+	serviceLineItemEntityPtr, err := r.Services.ServiceLineItemService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get service line item by id %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToServiceLineItem(serviceLineItemEntityPtr), nil
 }
 
 // CreatedBy is the resolver for the createdBy field.
