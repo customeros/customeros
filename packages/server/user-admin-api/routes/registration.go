@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	commonPostgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
@@ -21,6 +22,12 @@ import (
 const APP_SOURCE = "user-admin-api"
 
 func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
+
+	personalEmailProviders, err := services.CommonServices.CommonRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	if err != nil {
+		panic(err)
+	}
+
 	rg.POST("/signin", func(ginContext *gin.Context) {
 		log.Printf("Sign in User")
 		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
@@ -50,7 +57,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			return
 		}
 
-		tenantName, err := getTenant(services.CustomerOsClient, signInRequest, ginContext)
+		tenantName, err := getTenant(services.CustomerOsClient, personalEmailProviders, signInRequest, ginContext)
 		if err != nil {
 			log.Printf("unable to get tenant: %v", err.Error())
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -149,35 +156,62 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	})
 }
 
-func getTenant(cosClient service.CustomerOsClient, signInRequest model.SignInRequest, ginContext *gin.Context) (*string, error) {
+func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commonPostgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context) (*string, error) {
 	domain := commonUtils.ExtractDomain(signInRequest.Email)
-	tenantName, err := cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
-		Name:     domain,
-		Provider: signInRequest.Provider,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if tenantName != nil {
-		return tenantName, nil
+
+	var tenantName *string
+	var err error
+
+	isPersonalEmail := false
+	//check if the user is using a personal email provider
+	for _, personalEmailProvider := range personalEmailProvider {
+		if strings.Contains(domain, personalEmailProvider.ProviderDomain) {
+			isPersonalEmail = true
+			break
+		}
 	}
 
-	//tenant not found by the requested login info, try to find it by another workspace with the same domain
-	var provider string
-	if signInRequest.Provider == "google" {
-		provider = "azure-ad"
-	} else if signInRequest.Provider == "azure-ad" {
-		provider = "google"
-	}
-	tenantName, err = cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
-		Name:     domain,
-		Provider: provider,
-	})
-	if err != nil {
-		return nil, err
+	if isPersonalEmail {
+		player, err := cosClient.GetPlayer(signInRequest.Email, signInRequest.Provider)
+		if err != nil {
+			return nil, err
+		}
+		if player != nil && player.PlayerByAuthIdProvider.Users != nil && len(*player.PlayerByAuthIdProvider.Users) > 0 {
+			for _, user := range *player.PlayerByAuthIdProvider.Users {
+				if user.Tenant != "" {
+					tenantName = &user.Tenant
+					break
+				}
+			}
+		}
+	} else {
+		tenantName, err = cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
+			Name:     domain,
+			Provider: signInRequest.Provider,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if tenantName != nil {
+			return tenantName, nil
+		}
+
+		//tenant not found by the requested login info, try to find it by another workspace with the same domain
+		var provider string
+		if signInRequest.Provider == "google" {
+			provider = "azure-ad"
+		} else if signInRequest.Provider == "azure-ad" {
+			provider = "google"
+		}
+		tenantName, err = cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
+			Name:     domain,
+			Provider: provider,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	//if not other workspace with the same domain, create tenant
 	if tenantName == nil {
 		tenantStr := utils.GenerateName()
 		tenantName, err = createTenant(cosClient, tenantStr, APP_SOURCE)
@@ -186,9 +220,11 @@ func getTenant(cosClient service.CustomerOsClient, signInRequest model.SignInReq
 		}
 	}
 
-	err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
-	if err != nil {
-		return nil, err
+	if !isPersonalEmail {
+		err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return tenantName, nil
@@ -307,7 +343,7 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 	if err != nil {
 		return nil, err
 	}
-	if player != nil && player.Id != "" {
+	if player != nil && player.PlayerByAuthIdProvider.Id != "" {
 		playerExists = true
 	}
 
