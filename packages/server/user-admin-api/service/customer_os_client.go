@@ -234,7 +234,12 @@ func (s *customerOsClient) GetPlayer(authId string, provider string) (*model.Get
 				player_ByAuthIdProvider(
 					  authId: $authId,
 					  provider: $provider
-				) { id }
+				) { 
+					id
+					users {
+						tenant
+					}
+				   }
 		}
 	`)
 	graphqlRequest.Var("authId", authId)
