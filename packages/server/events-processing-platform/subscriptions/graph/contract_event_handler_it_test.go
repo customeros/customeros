@@ -10,8 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
+	opportunityaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -90,7 +92,7 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// Verify contract
-	contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "New Contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
@@ -175,7 +177,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract updated", contract.Name)
 	require.Equal(t, "http://contract.url/updated", contract.ContractUrl)
@@ -219,6 +221,13 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
 		RenewalCycle: string(model.MonthlyRenewalCycleString),
 	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
@@ -228,7 +237,8 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
 		model.ContractDataFields{
-			Name: "test contract updated",
+			Name:         "test contract updated",
+			RenewalCycle: model.MonthlyRenewal,
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
@@ -239,8 +249,127 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
 	require.Nil(t, err)
 
-	// Check no create renewal opportunity command was generated
-	require.Equal(t, 0, len(aggregateStore.GetEventMap()))
+	// Check renew ARR event was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 2, len(eventList))
+	generatedEvent1 := eventList[1]
+	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent1.EventType)
+}
+
+func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		RenewalCycle: string(model.MonthlyRenewalCycleString),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			Name:         "test contract updated",
+			RenewalCycle: model.AnnuallyRenewal,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		utils.Now())
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 3, len(eventList))
+	generatedEvent1 := eventList[1]
+	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent1.EventType)
+	generatedEvent2 := eventList[2]
+	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, generatedEvent2.EventType)
+}
+
+func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	now := utils.Now()
+	yesterday := now.AddDate(0, 0, -1)
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		RenewalCycle:     string(model.MonthlyRenewalCycleString),
+		ServiceStartedAt: &yesterday,
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
+		model.ContractDataFields{
+			Name:             "test contract updated",
+			RenewalCycle:     model.MonthlyRenewal,
+			ServiceStartedAt: &now,
+		},
+		commonmodel.ExternalSystem{},
+		constants.SourceOpenline,
+		utils.Now())
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdate(context.Background(), updateEvent)
+	require.Nil(t, err)
+
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 3, len(eventList))
+	generatedEvent1 := eventList[1]
+	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent1.EventType)
+	generatedEvent2 := eventList[2]
+	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, generatedEvent2.EventType)
 }
 
 func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline(t *testing.T) {
@@ -299,7 +428,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	require.NotNil(t, contractDbNode)
 
 	// verify contract
-	contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 	require.Equal(t, contractId, contract.Id)
 	require.Equal(t, "test contract", contract.Name)
 	require.Equal(t, "http://contract.url", contract.ContractUrl)
@@ -310,4 +439,22 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 	require.True(t, now.Equal(*contract.SignedAt))
 	require.True(t, now.Equal(*contract.EndedAt))
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), contract.SourceOfTruth)
+}
+
+func prepareRenewalOpportunity(t *testing.T, tenant, opportunityId string, aggregateStore *eventstoret.TestAggregateStore) {
+	// prepare aggregate
+	opportunityAggregate := opportunityaggregate.NewOpportunityAggregateWithTenantAndID(tenant, opportunityId)
+	createEvent := eventstore.NewBaseEvent(opportunityAggregate, opportunityevent.OpportunityCreateRenewalV1)
+	preconfiguredEventData := opportunityevent.OpportunityCreateRenewalEvent{
+		Tenant:        tenant,
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+	}
+	err := createEvent.SetJsonData(&preconfiguredEventData)
+	require.Nil(t, err)
+	opportunityAggregate.UncommittedEvents = []eventstore.Event{
+		createEvent,
+	}
+	err = aggregateStore.Save(context.Background(), opportunityAggregate)
+	require.Nil(t, err)
 }

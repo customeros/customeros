@@ -221,7 +221,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
-	contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 
 	// if contract is not frequency based, return
 	if !model.IsFrequencyBasedRenewalCycle(contract.RenewalCycle) {
