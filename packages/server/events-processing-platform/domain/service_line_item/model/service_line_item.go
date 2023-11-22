@@ -16,6 +16,7 @@ type ServiceLineItem struct {
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAt"`
 	Source     commonmodel.Source
+	Comments   string `json:"comments,omitempty"`
 }
 
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.
@@ -25,6 +26,7 @@ type ServiceLineItemDataFields struct {
 	Price      float64    `json:"price"`
 	Name       string     `json:"name"`
 	ContractId string     `json:"contractId"`
+	Comments   string     `json:"comments,omitempty"`
 }
 
 // BilledType enum represents the billing type for a service line item.

@@ -999,6 +999,7 @@ type ComplexityRoot struct {
 	ServiceLineItem struct {
 		AppSource     func(childComplexity int) int
 		Billed        func(childComplexity int) int
+		Comments      func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		CreatedBy     func(childComplexity int) int
 		ExternalLinks func(childComplexity int) int
@@ -7384,6 +7385,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.Billed(childComplexity), true
 
+	case "ServiceLineItem.comments":
+		if e.complexity.ServiceLineItem.Comments == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.Comments(childComplexity), true
+
 	case "ServiceLineItem.createdAt":
 		if e.complexity.ServiceLineItem.CreatedAt == nil {
 			break
@@ -10332,6 +10340,7 @@ type ServiceLineItem implements Node {
     billed:             BilledType!
     price:              Float!
     quantity:           Int64!
+    comments:           String!
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!
     sourceOfTruth:      DataSource!
@@ -10355,6 +10364,7 @@ input ServiceLineItemUpdateInput {
     billed:             BilledType
     price:              Float
     quantity:           Int64
+    comments:           String
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
 }
@@ -19307,6 +19317,8 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.C
 				return ec.fieldContext_ServiceLineItem_price(ctx, field)
 			case "quantity":
 				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "source":
@@ -44987,6 +44999,8 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx cont
 				return ec.fieldContext_ServiceLineItem_price(ctx, field)
 			case "quantity":
 				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "source":
@@ -45068,6 +45082,8 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx cont
 				return ec.fieldContext_ServiceLineItem_price(ctx, field)
 			case "quantity":
 				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "source":
@@ -57081,6 +57097,8 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_price(ctx, field)
 			case "quantity":
 				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "source":
@@ -58909,6 +58927,50 @@ func (ec *executionContext) fieldContext_ServiceLineItem_quantity(ctx context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceLineItem_comments(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_comments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Comments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -67735,7 +67797,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "comments", "appSource", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -67787,6 +67849,15 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 				return it, err
 			}
 			it.Quantity = data
+		case "comments":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Comments = data
 		case "appSource":
 			var err error
 
@@ -78529,6 +78600,11 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			}
 		case "quantity":
 			out.Values[i] = ec._ServiceLineItem_quantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "comments":
+			out.Values[i] = ec._ServiceLineItem_comments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

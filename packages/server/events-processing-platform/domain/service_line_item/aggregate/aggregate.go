@@ -76,6 +76,7 @@ func (a *ServiceLineItemAggregate) onServiceLineItemUpdate(evt eventstore.Event)
 	if constants.SourceOpenline == eventData.Source.Source {
 		a.ServiceLineItem.Source.SourceOfTruth = eventData.Source.Source
 	}
+	a.ServiceLineItem.Comments = eventData.Comments
 
 	return nil
 }

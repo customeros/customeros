@@ -17,6 +17,7 @@ type ServiceLineItemUpdateEvent struct {
 	UpdatedAt time.Time          `json:"updatedAt"`
 	Billed    string             `json:"billed"`
 	Source    commonmodel.Source `json:"source"`
+	Comments  string             `json:"comments"`
 }
 
 func NewServiceLineItemUpdateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, updatedAt time.Time) (eventstore.Event, error) {
@@ -28,6 +29,7 @@ func NewServiceLineItemUpdateEvent(aggregate eventstore.Aggregate, dataFields mo
 		UpdatedAt: updatedAt,
 		Billed:    dataFields.Billed.String(),
 		Source:    source,
+		Comments:  dataFields.Comments,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

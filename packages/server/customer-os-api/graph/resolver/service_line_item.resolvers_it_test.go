@@ -85,6 +85,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 			require.Equal(t, servicelineitempb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)
 			require.Equal(t, int64(2), serviceLineItem.Quantity)
 			require.Equal(t, float32(30), serviceLineItem.Price)
+			require.Equal(t, "test comments", serviceLineItem.Comments)
 			calledUpdateServiceLineItem = true
 			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
 				Id: serviceLineItemId,

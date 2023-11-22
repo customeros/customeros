@@ -6,6 +6,7 @@ mutation UpdateServiceLineItem($serviceLineItemId: ID!) {
       billed: MONTHLY
       price: 30
       quantity: 2
+      comments: "test comments"
     }
   ) {
     id

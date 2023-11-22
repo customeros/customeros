@@ -1599,6 +1599,7 @@ type ServiceLineItem struct {
 	Billed        BilledType        `json:"billed"`
 	Price         float64           `json:"price"`
 	Quantity      int64             `json:"quantity"`
+	Comments      string            `json:"comments"`
 	CreatedBy     *User             `json:"createdBy,omitempty"`
 	Source        DataSource        `json:"source"`
 	SourceOfTruth DataSource        `json:"sourceOfTruth"`
@@ -1625,6 +1626,7 @@ type ServiceLineItemUpdateInput struct {
 	Billed            *BilledType                   `json:"billed,omitempty"`
 	Price             *float64                      `json:"price,omitempty"`
 	Quantity          *int64                        `json:"quantity,omitempty"`
+	Comments          *string                       `json:"comments,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }

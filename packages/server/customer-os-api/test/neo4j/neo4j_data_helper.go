@@ -1624,6 +1624,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.billed=$billed,	
 					sli.quantity=$quantity,	
 					sli.price=$price,
+                    sli.comments=$comments,
 					sli.createdAt=$createdAt,
 					sli.updatedAt=$updatedAt
 				`, tenant)
@@ -1638,6 +1639,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"appSource":     serviceLineItem.AppSource,
 		"billed":        serviceLineItem.Billed,
 		"quantity":      serviceLineItem.Quantity,
+		"comments":      serviceLineItem.Comments,
 		"price":         serviceLineItem.Price,
 		"createdAt":     serviceLineItem.CreatedAt,
 		"updatedAt":     serviceLineItem.UpdatedAt,

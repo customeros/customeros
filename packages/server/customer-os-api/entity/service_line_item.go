@@ -10,6 +10,7 @@ type ServiceLineItemEntity struct {
 	Billed        BilledType
 	Price         float64
 	Quantity      int64
+	Comments      string
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string

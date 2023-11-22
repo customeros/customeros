@@ -108,6 +108,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 		Name:           "Updated Service Line Item",
 		Quantity:       10,
 		Price:          150.0,
+		Comments:       "Some comments",
 		UpdatedAt:      timestamppb.New(updatedAt),
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
@@ -136,6 +137,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 	require.Equal(t, model.MonthlyBilled.String(), eventData.Billed)
 	require.Equal(t, int64(10), eventData.Quantity)
 	require.Equal(t, float64(150.0), eventData.Price)
+	require.Equal(t, "Some comments", eventData.Comments)
 	require.Equal(t, "Updated Service Line Item", eventData.Name)
 	require.Equal(t, tenant, eventData.Tenant)
 }
