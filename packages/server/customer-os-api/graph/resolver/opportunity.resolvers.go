@@ -6,8 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -91,7 +89,15 @@ func (r *opportunityResolver) Owner(ctx context.Context, obj *model.Opportunity)
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *opportunityResolver) ExternalLinks(ctx context.Context, obj *model.Opportunity) ([]*model.ExternalSystem, error) {
-	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get external system for opportunity %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get external system for opportunity %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
 // Opportunity is the resolver for the opportunity field.

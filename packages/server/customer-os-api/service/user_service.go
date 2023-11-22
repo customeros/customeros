@@ -40,6 +40,8 @@ type UserService interface {
 	GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error)
 	GetUserOwnersForOpportunities(ctx context.Context, opportunityIds []string) (*entity.UserEntities, error)
 	GetUserCreatorsForOpportunities(ctx context.Context, opportunityIds []string) (*entity.UserEntities, error)
+	GetUserCreatorsForServiceLineItems(ctx context.Context, serviceLineItemIds []string) (*entity.UserEntities, error)
+	GetUserCreatorsForContracts(ctx context.Context, contractIds []string) (*entity.UserEntities, error)
 	GetUserAuthorsForLogEntries(ctx context.Context, logEntryIDs []string) (*entity.UserEntities, error)
 	GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*entity.UserEntities, error)
 	GetUsers(ctx context.Context, userIds []string) (*entity.UserEntities, error)
@@ -511,6 +513,42 @@ func (s *userService) GetUserCreatorsForOpportunities(parentCtx context.Context,
 	span.LogFields(log.Object("opportunityIds", opportunityIds))
 
 	users, err := s.repositories.UserRepository.GetAllCreatorsForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+func (s *userService) GetUserCreatorsForServiceLineItems(parentCtx context.Context, serviceLineItemIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("serviceLineItemIds", serviceLineItemIds))
+
+	users, err := s.repositories.UserRepository.GetAllCreatorsForServiceLineItems(ctx, common.GetTenantFromContext(ctx), serviceLineItemIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+func (s *userService) GetUserCreatorsForContracts(parentCtx context.Context, contractIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForContracts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("contractIds", contractIds))
+
+	users, err := s.repositories.UserRepository.GetAllCreatorsForContracts(ctx, common.GetTenantFromContext(ctx), contractIds)
 	if err != nil {
 		return nil, err
 	}
