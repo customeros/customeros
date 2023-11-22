@@ -214,8 +214,11 @@ func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
 	return &opportunity
 }
 
-func MapDbNodeToContractEntity(node dbtype.Node) *entity.ContractEntity {
-	props := utils.GetPropsFromNode(node)
+func MapDbNodeToContractEntity(node *dbtype.Node) *entity.ContractEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
 	contract := entity.ContractEntity{
 		Id:               utils.GetStringPropOrEmpty(props, "id"),
 		Name:             utils.GetStringPropOrEmpty(props, "name"),
