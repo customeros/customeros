@@ -225,7 +225,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		if contractDbNode == nil {
 			return nil
 		}
-		contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
 		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
