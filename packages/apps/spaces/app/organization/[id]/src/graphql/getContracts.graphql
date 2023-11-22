@@ -13,6 +13,7 @@ query getContracts($id: ID!) {
       status
       contractUrl
       opportunities {
+        id
         comments
         internalStage
         internalType
@@ -23,6 +24,7 @@ query getContracts($id: ID!) {
         renewalUpdatedByUserId
         renewalUpdatedByUserAt
         renewedAt
+
       }
       serviceLineItems {
         id
