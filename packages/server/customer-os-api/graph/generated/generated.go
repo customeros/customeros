@@ -10364,6 +10364,7 @@ enum BilledType {
     MONTHLY
     ANNUALLY
     ONCE
+    USAGE
 }`, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
     social_Update(input: SocialUpdateInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant

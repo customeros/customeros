@@ -11,6 +11,7 @@ var billedTypeByModel = map[model.BilledType]entity.BilledType{
 	model.BilledTypeMonthly:  entity.BilledTypeMonthly,
 	model.BilledTypeAnnually: entity.BilledTypeAnnually,
 	model.BilledTypeOnce:     entity.BilledTypeOnce,
+	model.BilledTypeUsage:    entity.BilledTypeUsage,
 }
 
 var billedTypeByValue = utils.ReverseMap(billedTypeByModel)

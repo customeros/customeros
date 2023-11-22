@@ -160,7 +160,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 		Name:      "service line item 2",
 		CreatedAt: now,
 		UpdatedAt: now,
-		Billed:    entity.BilledTypeAnnually,
+		Billed:    entity.BilledTypeUsage,
 		Price:     255,
 		Quantity:  23,
 		Source:    entity.DataSourceOpenline,
@@ -204,7 +204,7 @@ func TestQueryResolver_Contract_WithServiceLineItems(t *testing.T) {
 	require.Equal(t, "service line item 2", secondServiceLineItem.Name)
 	require.Equal(t, now, secondServiceLineItem.CreatedAt)
 	require.Equal(t, now, secondServiceLineItem.UpdatedAt)
-	require.Equal(t, model.BilledTypeAnnually, secondServiceLineItem.Billed)
+	require.Equal(t, model.BilledTypeUsage, secondServiceLineItem.Billed)
 	require.Equal(t, float64(255), secondServiceLineItem.Price)
 	require.Equal(t, int64(23), secondServiceLineItem.Quantity)
 	require.Equal(t, model.DataSourceOpenline, secondServiceLineItem.Source)
