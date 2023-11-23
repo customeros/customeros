@@ -20,6 +20,7 @@ type ContractRepository interface {
 	GetContractById(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetContractByServiceLineItemId(ctx context.Context, tenant string, serviceLineItemId string) (*dbtype.Node, error)
 	GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error)
+	UpdateStatus(ctx context.Context, tenant, contractId, status string) error
 }
 
 type contractRepository struct {
@@ -226,4 +227,26 @@ func (r *contractRepository) GetContractByOpportunityId(ctx context.Context, ten
 	} else {
 		return records[0], nil
 	}
+}
+
+func (r *contractRepository) UpdateStatus(ctx context.Context, tenant, contractId, status string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.UpdateStatus")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId), log.Object("status", status))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET 
+					ct.status=$status,
+					ct.updatedAt=$updatedAt
+							`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+		"status":     status,
+		"updatedAt":  utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 }

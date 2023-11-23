@@ -62,7 +62,7 @@ func (s *organizationService) UpdateNextCycleDate() {
 			return
 		}
 
-		// not organizations found for next cycle date renew
+		// no organizations found for next cycle date renew
 		if len(records) == 0 {
 			return
 		}

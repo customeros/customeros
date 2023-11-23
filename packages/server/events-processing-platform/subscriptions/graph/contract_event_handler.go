@@ -148,3 +148,82 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 
 	return nil
 }
+
+func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnRolloutRenewalOpportunity")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContractUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
+
+	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+
+	if model.IsFrequencyBasedRenewalCycle(contractEntity.RenewalCycle) {
+		currentRenewalOpportunityDbNode, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
+		}
+
+		if currentRenewalOpportunityDbNode != nil {
+			currentOpportunity := graph_db.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
+			err := h.opportunityCommands.CloseWinOpportunity.Handle(ctx, opportunitycmd.NewCloseWinOpportunityCommand(currentOpportunity.Id, eventData.Tenant, "", constants.AppSourceEventProcessingPlatform, nil, nil))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("CloseWinOpportunity failed: %v", err.Error())
+			}
+		}
+
+		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, "", commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		}, nil, nil))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
+		}
+	}
+
+	return nil
+}
+
+func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnUpdateStatus")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContractUpdateStatusEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
+
+	err := h.repositories.ContractRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData.Status)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
+		return nil
+	}
+
+	if eventData.Status == string(model.ContractStatusStringEnded) {
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		err := contractHandler.UpdateRenewalNextCycleDate(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
+		}
+	}
+
+	return nil
+}
