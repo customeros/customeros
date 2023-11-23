@@ -38,8 +38,7 @@ export class ServiceDTO implements ServiceForm {
     this.price = data?.price;
     this.appSource = data?.appSource;
     this.billed =
-      billedTypeOptions.find((o) => o.value === data?.billed) ??
-      billedTypeOptions[2];
+      billedTypeOptions.find((o) => o.value === data?.billed) ?? null;
   }
 
   static toForm(data?: ServiceItem): ServiceForm {

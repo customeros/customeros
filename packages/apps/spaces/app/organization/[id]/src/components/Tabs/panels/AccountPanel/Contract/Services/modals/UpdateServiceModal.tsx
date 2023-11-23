@@ -6,16 +6,12 @@ import { useForm } from 'react-inverted-form';
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { BilledType, ServiceLineItem } from '@graphql/types';
-import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useUpdateServiceMutation } from '@organization/src/graphql/updateService.generated';
 import {
@@ -31,11 +27,11 @@ import {
   ModalOverlay,
 } from '@ui/overlay/Modal';
 import { OneTimeServiceForm } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/OneTimeServiceForm';
-import { RecurringServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/RecurringService';
 import {
   ServiceDTO,
   ServiceForm,
 } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/Service.dto';
+import { SubscriptionServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/SubscriptionServiceForm';
 
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
@@ -144,47 +140,17 @@ export const UpdateServiceModal = ({
             <DotSingle color='primary.600' />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            Modify this
-            {data?.billed === BilledType.Once && ' one-time service'}
-            {data?.billed === BilledType.Usage && ' service'}
-            {data?.billed !== BilledType.Once &&
-              data?.billed !== BilledType.Usage &&
-              ' recurring service'}
+            {data?.billed === BilledType.Once
+              ? 'Update one-time service'
+              : 'Update subscription service'}
           </Heading>
         </ModalHeader>
         <ModalBody pb='0'>
-          {data?.billed === BilledType.Once ||
-          data?.billed === BilledType.Usage ? (
-            <OneTimeServiceForm formId={formId} billedType={data.billed} />
+          {data?.billed === BilledType.Once ? (
+            <OneTimeServiceForm formId={formId} />
           ) : (
-            <RecurringServiceFrom formId={formId} />
+            <SubscriptionServiceFrom formId={formId} />
           )}
-          <Box
-            p={2}
-            my={2}
-            border='1px solid'
-            borderColor='gray.100'
-            bg='gray.25'
-            borderRadius='md'
-          >
-            <FormCheckbox formId={formId} name='todo'>
-              <Text fontSize='sm'>This is a retroactive correction</Text>
-            </FormCheckbox>
-          </Box>
-
-          <div>
-            <Text as='label' htmlFor='reason' fontSize='sm'>
-              <b>Reason for change</b> (optional)
-            </Text>
-            <FormAutoresizeTextarea
-              pt='0'
-              formId={formId}
-              name='reason'
-              id='reason'
-              spellCheck='false'
-              placeholder={`What this modification about?`}
-            />
-          </div>
         </ModalBody>
         <ModalFooter p='6'>
           <Button variant='outline' w='full' onClick={onClose}>
@@ -193,13 +159,11 @@ export const UpdateServiceModal = ({
           <Button
             ml='3'
             w='full'
-            isLoading={updateService.status === 'loading'}
-            loadingText='Modifying service...'
             variant='outline'
             colorScheme='primary'
             onClick={updateServiceData}
           >
-            Modify
+            Update
           </Button>
         </ModalFooter>
       </ModalContent>

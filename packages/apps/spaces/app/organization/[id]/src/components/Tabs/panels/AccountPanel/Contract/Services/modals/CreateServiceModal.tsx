@@ -1,20 +1,21 @@
 'use client';
+import { useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
-import { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@ui/form/Button';
+import { DataSource } from '@graphql/types';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
-import { BilledType, DataSource } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Tab, Tabs, TabList, TabPanel, TabPanels } from '@ui/disclosure/Tabs';
 import { useCreateServiceMutation } from '@organization/src/graphql/createService.generated';
+import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -29,11 +30,11 @@ import {
 } from '@ui/overlay/Modal';
 import { useAddServiceModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 import { OneTimeServiceForm } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/OneTimeServiceForm';
-import { RecurringServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/RecurringService';
 import {
   ServiceDTO,
   ServiceForm,
 } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/Service.dto';
+import { SubscriptionServiceFrom } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/SubscriptionServiceForm';
 
 interface SubscriptionServiceModalProps {
   isOpen: boolean;
@@ -49,7 +50,6 @@ export const CreateServiceModal = ({
   const initialRef = useRef(null);
   const formId = `create-service-item`;
   const defaultValues = ServiceDTO.toForm();
-  const [activeTab, setActiveTab] = useState('RECURRING');
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -143,32 +143,10 @@ export const CreateServiceModal = ({
     setDefaultValues(defaultValues);
   }, [isOpen]);
 
-  const determineBillingDetails = () => {
-    if (activeTab !== 'RECURRING') {
-      const billedTypeValue =
-        activeTab === 'ONE-TIME' ? BilledType.Once : BilledType.Usage;
-
-      return {
-        quantity: undefined,
-        billed: {
-          value: billedTypeValue,
-          label: '',
-        },
-      };
-    }
-
-    return {};
-  };
-
-  const handleServiceCreation = () => {
-    const billingDetails = determineBillingDetails();
-
-    const serviceInputPayload = ServiceDTO.toPayload(
-      { ...state.values, ...billingDetails },
-      contractId,
-    );
-
-    createService.mutate({ input: serviceInputPayload });
+  const handleCreateService = () => {
+    createService.mutate({
+      input: { ...ServiceDTO.toPayload(state.values, contractId) },
+    });
   };
 
   return (
@@ -215,29 +193,12 @@ export const CreateServiceModal = ({
                   fontWeight: 'semibold',
                 }}
                 onClick={() => {
-                  setActiveTab('RECURRING');
+                  setDefaultValues({
+                    ...defaultValues,
+                  });
                 }}
               >
-                Recurring
-              </Tab>
-              <Tab
-                borderRight='1px solid'
-                borderRightColor='gray.300 !important'
-                borderBottom='none'
-                flex={1}
-                mb={0}
-                color='gray.500'
-                bg='gray.50'
-                _selected={{
-                  color: 'gray.500',
-                  bg: 'white',
-                  fontWeight: 'semibold',
-                }}
-                onClick={() => {
-                  setActiveTab('USAGE');
-                }}
-              >
-                Per use
+                Subscription
               </Tab>
               <Tab
                 borderTopRightRadius='8px'
@@ -254,7 +215,10 @@ export const CreateServiceModal = ({
                   fontWeight: 'semibold',
                 }}
                 onClick={() => {
-                  setActiveTab('ONE_TIME');
+                  setDefaultValues({
+                    ...defaultValues,
+                    billed: billedTypeOptions[0],
+                  });
                 }}
               >
                 One-time
@@ -263,19 +227,10 @@ export const CreateServiceModal = ({
 
             <TabPanels>
               <TabPanel px={0} pb={2}>
-                <RecurringServiceFrom formId={formId} />
+                <SubscriptionServiceFrom formId={formId} />
               </TabPanel>
               <TabPanel px={0} pb={2}>
-                <OneTimeServiceForm
-                  formId={formId}
-                  billedType={BilledType.Usage}
-                />
-              </TabPanel>
-              <TabPanel px={0} pb={2}>
-                <OneTimeServiceForm
-                  formId={formId}
-                  billedType={BilledType.Once}
-                />
+                <OneTimeServiceForm formId={formId} />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -289,9 +244,7 @@ export const CreateServiceModal = ({
             w='full'
             variant='outline'
             colorScheme='primary'
-            isLoading={createService.status === 'loading'}
-            loadingText='Creating service...'
-            onClick={handleServiceCreation}
+            onClick={handleCreateService}
           >
             Create
           </Button>

@@ -123,8 +123,6 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
         <Button
           fontSize='sm'
           size='sm'
-          isLoading={createContract.status === 'loading'}
-          loadingText='Creating contract...'
           colorScheme='primary'
           mt={6}
           variant='outline'

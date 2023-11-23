@@ -8,7 +8,7 @@ import {
   useMultiStyleConfig,
 } from '@chakra-ui/react';
 
-export interface CustomCheckboxProps extends Omit<CheckboxProps, 'onChange'> {
+interface CustomCheckboxProps extends Omit<CheckboxProps, 'onChange'> {
   onChange?: (value: string) => void;
 }
 
