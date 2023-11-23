@@ -46,6 +46,7 @@ export type GetContractsQuery = {
       contractUrl?: string | null;
       opportunities?: Array<{
         __typename?: 'Opportunity';
+        id: string;
         comments: string;
         internalStage: Types.InternalStage;
         internalType: Types.InternalType;
@@ -90,6 +91,7 @@ export const GetContractsDocument = `
       status
       contractUrl
       opportunities {
+        id
         comments
         internalStage
         internalType
