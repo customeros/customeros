@@ -6,13 +6,6 @@ import "common/external_system.proto";
 
 option go_package = "api/grpc/v1/contract;contract_grpc_service";
 
-// Enum for ContractStatus
-enum ContractStatus {
-  DRAFT = 0;
-  LIVE = 1;
-  ENDED = 2;
-}
-
 // Enum for RenewalCycle
 enum RenewalCycle {
   NONE = 0;
@@ -52,6 +45,20 @@ message UpdateContractGrpcRequest {
   string contractUrl = 12;
 }
 
+message ResetRenewalOpportunityOnExpirationGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
+message CloseEndedContractGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
 // Contract response message
 message ContractIdGrpcResponse {
   string id = 1;
@@ -61,4 +68,6 @@ message ContractIdGrpcResponse {
 service ContractGrpcService {
   rpc CreateContract(CreateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc UpdateContract(UpdateContractGrpcRequest) returns (ContractIdGrpcResponse);
+  rpc ResetRenewalOpportunityOnExpiration(ResetRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
+  rpc CloseEndedContract(CloseEndedContractGrpcRequest) returns (ContractIdGrpcResponse);
 }

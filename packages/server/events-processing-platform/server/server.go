@@ -101,7 +101,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Initialize postgres db
-	postgresDb, _ := InitDB(server.cfg, server.log)
+	postgresDb, _ := InitPostgresDB(server.cfg, server.log)
 	defer postgresDb.SqlDB.Close()
 
 	// Setting up Neo4j
@@ -213,7 +213,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		cancel()
 		return err
 	}
-	defer closeGrpcServer() // nolint: errcheck
+	defer closeGrpcServer()
 
 	<-ctx.Done()
 	server.waitShootDown(waitShotDownDuration)
@@ -236,7 +236,7 @@ func (server *server) waitShootDown(duration time.Duration) {
 	}()
 }
 
-func InitDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, err error) {
+func InitPostgresDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, err error) {
 	if db, err = commonconf.NewPostgresDBConn(cfg.Postgres); err != nil {
 		log.Fatalf("Could not open db connection: %s", err.Error())
 	}

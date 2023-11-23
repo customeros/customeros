@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type ContractGrpcServiceClient interface {
 	CreateContract(ctx context.Context, in *CreateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	UpdateContract(ctx context.Context, in *UpdateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
+	ResetRenewalOpportunityOnExpiration(ctx context.Context, in *ResetRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
+	CloseEndedContract(ctx context.Context, in *CloseEndedContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 }
 
 type contractGrpcServiceClient struct {
@@ -52,12 +54,32 @@ func (c *contractGrpcServiceClient) UpdateContract(ctx context.Context, in *Upda
 	return out, nil
 }
 
+func (c *contractGrpcServiceClient) ResetRenewalOpportunityOnExpiration(ctx context.Context, in *ResetRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
+	out := new(ContractIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/ResetRenewalOpportunityOnExpiration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contractGrpcServiceClient) CloseEndedContract(ctx context.Context, in *CloseEndedContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
+	out := new(ContractIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/CloseEndedContract", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContractGrpcServiceServer is the server API for ContractGrpcService service.
 // All implementations should embed UnimplementedContractGrpcServiceServer
 // for forward compatibility
 type ContractGrpcServiceServer interface {
 	CreateContract(context.Context, *CreateContractGrpcRequest) (*ContractIdGrpcResponse, error)
 	UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error)
+	ResetRenewalOpportunityOnExpiration(context.Context, *ResetRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error)
+	CloseEndedContract(context.Context, *CloseEndedContractGrpcRequest) (*ContractIdGrpcResponse, error)
 }
 
 // UnimplementedContractGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -69,6 +91,12 @@ func (UnimplementedContractGrpcServiceServer) CreateContract(context.Context, *C
 }
 func (UnimplementedContractGrpcServiceServer) UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateContract not implemented")
+}
+func (UnimplementedContractGrpcServiceServer) ResetRenewalOpportunityOnExpiration(context.Context, *ResetRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResetRenewalOpportunityOnExpiration not implemented")
+}
+func (UnimplementedContractGrpcServiceServer) CloseEndedContract(context.Context, *CloseEndedContractGrpcRequest) (*ContractIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseEndedContract not implemented")
 }
 
 // UnsafeContractGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -118,6 +146,42 @@ func _ContractGrpcService_UpdateContract_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContractGrpcService_ResetRenewalOpportunityOnExpiration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetRenewalOpportunityOnExpirationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractGrpcServiceServer).ResetRenewalOpportunityOnExpiration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ContractGrpcService/ResetRenewalOpportunityOnExpiration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractGrpcServiceServer).ResetRenewalOpportunityOnExpiration(ctx, req.(*ResetRenewalOpportunityOnExpirationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContractGrpcService_CloseEndedContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloseEndedContractGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractGrpcServiceServer).CloseEndedContract(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ContractGrpcService/CloseEndedContract",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractGrpcServiceServer).CloseEndedContract(ctx, req.(*CloseEndedContractGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContractGrpcService_ServiceDesc is the grpc.ServiceDesc for ContractGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -132,6 +196,14 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateContract",
 			Handler:    _ContractGrpcService_UpdateContract_Handler,
+		},
+		{
+			MethodName: "ResetRenewalOpportunityOnExpiration",
+			Handler:    _ContractGrpcService_ResetRenewalOpportunityOnExpiration_Handler,
+		},
+		{
+			MethodName: "CloseEndedContract",
+			Handler:    _ContractGrpcService_CloseEndedContract_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
