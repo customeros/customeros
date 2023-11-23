@@ -27,13 +27,14 @@ export const AccountPanel = () => {
 
   const { isModalOpen } = useAccountPanelStateContext();
   const client = getGraphQLClient();
-  const { data, isInitialLoading, error } = useGetContractsQuery(client, {
+  const { data, isInitialLoading } = useGetContractsQuery(client, {
     id,
   });
+
   if (isInitialLoading) {
     return <AccountPanelSkeleton />;
   }
-  if (!data?.organization?.contracts?.length && error) {
+  if (!data?.organization?.contracts?.length) {
     return <EmptyContracts name={data?.organization?.name || ''} />;
   }
 

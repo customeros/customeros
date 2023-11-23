@@ -39,8 +39,18 @@ export class ContractDTO implements TimeToRenewalForm {
     this.contractUrl = data?.contractUrl ?? '';
   }
 
-  static toForm(data?: TimeToRenewalData | null): TimeToRenewalForm {
-    return new ContractDTO(data);
+  static toForm(
+    organizationName: string,
+    data?: TimeToRenewalData | null,
+  ): TimeToRenewalForm {
+    const formData = new ContractDTO(data);
+
+    return {
+      ...formData,
+      name: formData.name?.length
+        ? formData.name
+        : `${organizationName}'s contract`,
+    };
   }
 
   static toPayload(

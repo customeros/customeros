@@ -11,14 +11,12 @@ import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { billedTypeOptions } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 
-interface SubscriptionServiceFromProps {
+interface RecurringServiceFormProps {
   formId: string;
 }
 
-const [_, ...subscriptionOptions] = billedTypeOptions;
-export const SubscriptionServiceFrom = ({
-  formId,
-}: SubscriptionServiceFromProps) => {
+const [_, _1, ...subscriptionOptions] = billedTypeOptions;
+export const RecurringServiceFrom = ({ formId }: RecurringServiceFormProps) => {
   const initialRef = useRef(null);
 
   return (

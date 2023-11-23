@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 
-import { Box } from '@ui/layout/Box';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { Divider } from '@ui/presentation/Divider';
 import { BilledType, ServiceLineItem } from '@graphql/types';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { useUpdateServiceModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
-import { UpdateServiceModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/Services/modals/UpdateServiceModal';
+
+import { UpdateServiceModal } from './modals/UpdateServiceModal';
+import { useUpdateServiceModalContext } from './../../context/AccountModalsContext';
 
 function getBilledTypeLabel(billedType: BilledType): string {
   switch (billedType) {
@@ -18,7 +18,9 @@ function getBilledTypeLabel(billedType: BilledType): string {
     case BilledType.None:
       return '';
     case BilledType.Once:
-      return '/one-time';
+      return ' one-time';
+    case BilledType.Usage:
+      return '/use';
     default:
       return '';
   }
@@ -33,10 +35,19 @@ const ServiceItem = ({
 }) => {
   return (
     <>
-      <Box
+      <Flex
+        as='button'
+        flexDir='column'
         cursor='pointer'
         onClick={() => onOpen(data)}
         _hover={{ '& button': { opacity: 1 } }}
+        _focusVisible={{
+          '&': {
+            boxShadow: 'var(--chakra-shadows-outline)',
+            outline: 'none',
+            borderRadius: 'md',
+          },
+        }}
         sx={{ '& button': { opacity: 0 } }}
       >
         {data.name && (
@@ -46,18 +57,17 @@ const ServiceItem = ({
         )}
         <Flex justifyContent='space-between'>
           <Text>
-            {data.billed === BilledType.Once ? (
-              `${formatCurrency(data.price ?? 0)} one-time`
-            ) : (
+            {![BilledType.Usage, BilledType.Once].includes(data.billed) && (
               <>
                 {data.quantity} {data.quantity > 1 ? 'licenses' : 'license'}
                 <Text as='span' fontSize='sm' mx={1}>
                   x
                 </Text>
-                {formatCurrency(data.price ?? 0)}
-                {getBilledTypeLabel(data.billed)}
               </>
             )}
+
+            {formatCurrency(data.price ?? 0)}
+            {getBilledTypeLabel(data.billed)}
           </Text>
           {/*<IconButton*/}
           {/*  transition='opacity 0.2s linear'*/}
@@ -68,12 +78,11 @@ const ServiceItem = ({
           {/*  icon={<Delete boxSize='4' />}*/}
           {/*/>*/}
         </Flex>
-      </Box>
+      </Flex>
     </>
   );
 };
 
-// todo use generated type after gql schema for Services item is merged
 interface ServicesListProps {
   data?: Array<ServiceLineItem>;
 }

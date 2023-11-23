@@ -5,47 +5,31 @@ import { debounce } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
-import { Button } from '@ui/form/Button';
 import { FormInput } from '@ui/form/Input';
-import { Text } from '@ui/typography/Text';
+import { Check } from '@ui/media/icons/Check';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { ChevronUp } from '@ui/media/icons/ChevronUp';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
+import { Contract, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
-import {
-  Contract,
-  ContractStatus,
-  ContractUpdateInput,
-  ContractRenewalCycle,
-} from '@graphql/types';
+import { ContractSubtitle } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractSubtitle';
 
 import { UrlInput } from './UrlInput';
 import { Services } from './Services/Services';
 import { RenewalARRCard } from './RenewalARRCard';
+import { billingFrequencyOptions } from '../utils';
 import { ContractDTO, TimeToRenewalForm } from './Contract.dto';
-import { billingFrequencyOptions, calculateNextRenewalDate } from '../utils';
 import { ContractStatusSelect } from './contractStatuses/ContractStatusSelect';
 
 interface ContractCardProps {
   data: Contract;
   organizationId: string;
   organizationName: string;
-}
-
-function getLabelFromValue(value: string): string | undefined {
-  if (ContractRenewalCycle.AnnualRenewal === value) {
-    return 'annually';
-  }
-  if (ContractRenewalCycle.MonthlyRenewal === value) {
-    return 'monthly';
-  }
 }
 
 export const ContractCard = ({
@@ -107,7 +91,7 @@ export const ContractCard = ({
     300,
   );
 
-  const defaultValues = ContractDTO.toForm(data);
+  const defaultValues = ContractDTO.toForm(organizationName, data);
   const { setDefaultValues } = useForm<TimeToRenewalForm>({
     formId,
     defaultValues,
@@ -175,20 +159,23 @@ export const ContractCard = ({
       <CardHeader
         as={Flex}
         p='0'
+        role='button'
         pb={isExpanded ? 2 : 0}
         w='full'
         flexDir='column'
+        onClick={() => (!isExpanded ? setIsExpanded(true) : null)}
       >
         <Flex justifyContent='space-between' w='full' flex={1}>
           <Heading
             size='sm'
             color='gray.700'
             noOfLines={1}
-            alignItems='baseline'
-            as={Flex}
+            lineHeight={1.4}
+            display='inline'
+            w={isExpanded ? '235px' : '260px'}
+            whiteSpace='nowrap'
           >
-            {!isExpanded && (data?.name || `${organizationName} contract`)}
-
+            {!isExpanded && data?.name}
             {isExpanded && (
               <FormInput
                 fontWeight='semibold'
@@ -204,7 +191,8 @@ export const ContractCard = ({
               />
             )}
           </Heading>
-          <Flex alignItems='center' gap={2} ml={4}>
+
+          <Flex alignItems='center' gap={2} ml={2}>
             <UrlInput
               formId={formId}
               url={data?.contractUrl}
@@ -219,7 +207,7 @@ export const ContractCard = ({
                 size='xs'
                 variant='ghost'
                 aria-label='Collapse'
-                icon={<ChevronUp />}
+                icon={<Check color='gray.400' />}
                 onClick={() => setIsExpanded(false)}
               />
             )}
@@ -227,14 +215,13 @@ export const ContractCard = ({
         </Flex>
 
         {!isExpanded && (
-          <Button
+          <Flex
             bg='transparent'
             _hover={{
               bg: 'transparent',
               svg: { opacity: 1, transition: 'opacity 0.2s linear' },
             }}
             sx={{ svg: { opacity: 0, transition: 'opacity 0.2s linear' } }}
-            size='xs'
             fontSize='sm'
             fontWeight='normal'
             color='gray.500'
@@ -242,80 +229,10 @@ export const ContractCard = ({
             height='fit-content'
             alignItems='flex-start'
             justifyContent='flex-start'
-            onClick={() => setIsExpanded(true)}
           >
-            <Flex
-              flexDir='column'
-              alignItems='flex-start'
-              justifyContent='center'
-            >
-              {!data?.signedAt && <Text>No start date or services yet</Text>}
-
-              {data?.signedAt && (
-                <>
-                  <Text>
-                    {data?.serviceStartedAt &&
-                      DateTimeUtils.isFuture(data.serviceStartedAt) &&
-                      `Service starts on ${DateTimeUtils.format(
-                        data.serviceStartedAt,
-                        DateTimeUtils.dateWithAbreviatedMonth,
-                      )}`}
-                  </Text>
-                  <Text>
-                    {data?.renewalCycle &&
-                      data?.serviceStartedAt &&
-                      !DateTimeUtils.isFuture(data?.serviceStartedAt) &&
-                      data.status !== ContractStatus.Ended &&
-                      `Renews ${getLabelFromValue(
-                        data.renewalCycle,
-                      )} on ${DateTimeUtils.format(
-                        calculateNextRenewalDate(
-                          data.serviceStartedAt,
-                          data.renewalCycle,
-                        ),
-                        DateTimeUtils.dateWithAbreviatedMonth,
-                      )}`}
-                  </Text>
-
-                  {!data?.renewalCycle &&
-                    data?.endedAt &&
-                    DateTimeUtils.isFuture(data.endedAt) && (
-                      <Text>
-                        Ends on{' '}
-                        {DateTimeUtils.format(
-                          data.endedAt,
-                          DateTimeUtils.dateWithAbreviatedMonth,
-                        )}
-                      </Text>
-                    )}
-
-                  {data?.renewalCycle &&
-                    data?.endedAt &&
-                    DateTimeUtils.isFuture(data.endedAt) && (
-                      <Text>
-                        Ends on{' '}
-                        {DateTimeUtils.format(
-                          data.endedAt,
-                          DateTimeUtils.dateWithAbreviatedMonth,
-                        )}
-                      </Text>
-                    )}
-
-                  {data?.endedAt && !DateTimeUtils.isFuture(data.endedAt) && (
-                    <Text>
-                      Ended on{' '}
-                      {DateTimeUtils.format(
-                        data.endedAt,
-                        DateTimeUtils.dateWithAbreviatedMonth,
-                      )}
-                    </Text>
-                  )}
-                </>
-              )}
-            </Flex>
-
+            <ContractSubtitle data={data} />
             <Edit03 ml={1} color='gray.400' boxSize='3' mt='3px' />
-          </Button>
+          </Flex>
         )}
       </CardHeader>
       {isExpanded && (
@@ -346,7 +263,6 @@ export const ContractCard = ({
               calendarIconHidden
               inset='120% auto auto 0px'
             />
-
             <FormSelect
               label='Contract renews'
               placeholder='Renewal cycle'
