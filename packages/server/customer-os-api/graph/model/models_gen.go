@@ -578,8 +578,14 @@ type DashboardNewCustomers struct {
 }
 
 type DashboardNewCustomersPerMonth struct {
+	Year  int `json:"year"`
 	Month int `json:"month"`
 	Count int `json:"count"`
+}
+
+type DashboardPeriodInput struct {
+	Start time.Time `json:"start"`
+	End   time.Time `json:"end"`
 }
 
 type DashboardRetentionRate struct {

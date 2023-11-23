@@ -321,6 +321,7 @@ type ComplexityRoot struct {
 	DashboardNewCustomersPerMonth struct {
 		Count func(childComplexity int) int
 		Month func(childComplexity int) int
+		Year  func(childComplexity int) int
 	}
 
 	DashboardRetentionRate struct {
@@ -935,13 +936,13 @@ type ComplexityRoot struct {
 		ContactByPhone                        func(childComplexity int, e164 string) int
 		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contract                              func(childComplexity int, id string) int
-		DashboardARRBreakdown                 func(childComplexity int, year int) int
+		DashboardARRBreakdown                 func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardCustomerMap                  func(childComplexity int) int
-		DashboardGrossRevenueRetention        func(childComplexity int, year int) int
-		DashboardMRRPerCustomer               func(childComplexity int, year int) int
-		DashboardNewCustomers                 func(childComplexity int, year int) int
-		DashboardRetentionRate                func(childComplexity int, year int) int
-		DashboardRevenueAtRisk                func(childComplexity int, year int) int
+		DashboardGrossRevenueRetention        func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardMRRPerCustomer               func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardNewCustomers                 func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardRetentionRate                func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardRevenueAtRisk                func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Email                                 func(childComplexity int, id string) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
@@ -1400,12 +1401,12 @@ type QueryResolver interface {
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error)
-	DashboardMRRPerCustomer(ctx context.Context, year int) (*model.DashboardMRRPerCustomer, error)
-	DashboardGrossRevenueRetention(ctx context.Context, year int) (*model.DashboardGrossRevenueRetention, error)
-	DashboardARRBreakdown(ctx context.Context, year int) (*model.DashboardARRBreakdown, error)
-	DashboardRevenueAtRisk(ctx context.Context, year int) (*model.DashboardRevenueAtRisk, error)
-	DashboardRetentionRate(ctx context.Context, year int) (*model.DashboardRetentionRate, error)
-	DashboardNewCustomers(ctx context.Context, year int) (*model.DashboardNewCustomers, error)
+	DashboardMRRPerCustomer(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardMRRPerCustomer, error)
+	DashboardGrossRevenueRetention(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardGrossRevenueRetention, error)
+	DashboardARRBreakdown(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardARRBreakdown, error)
+	DashboardRevenueAtRisk(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRevenueAtRisk, error)
+	DashboardRetentionRate(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRetentionRate, error)
+	DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
@@ -2666,6 +2667,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardNewCustomersPerMonth.Month(childComplexity), true
+
+	case "DashboardNewCustomersPerMonth.year":
+		if e.complexity.DashboardNewCustomersPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardNewCustomersPerMonth.Year(childComplexity), true
 
 	case "DashboardRetentionRate.increasePercentage":
 		if e.complexity.DashboardRetentionRate.IncreasePercentage == nil {
@@ -6881,7 +6889,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardARRBreakdown(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardARRBreakdown(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_CustomerMap":
 		if e.complexity.Query.DashboardCustomerMap == nil {
@@ -6900,7 +6908,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardGrossRevenueRetention(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardGrossRevenueRetention(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_MRRPerCustomer":
 		if e.complexity.Query.DashboardMRRPerCustomer == nil {
@@ -6912,7 +6920,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardMRRPerCustomer(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardMRRPerCustomer(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_NewCustomers":
 		if e.complexity.Query.DashboardNewCustomers == nil {
@@ -6924,7 +6932,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardNewCustomers(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardNewCustomers(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_RetentionRate":
 		if e.complexity.Query.DashboardRetentionRate == nil {
@@ -6936,7 +6944,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardRetentionRate(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardRetentionRate(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_RevenueAtRisk":
 		if e.complexity.Query.DashboardRevenueAtRisk == nil {
@@ -6948,7 +6956,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardRevenueAtRisk(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardRevenueAtRisk(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboardView_Organizations":
 		if e.complexity.Query.DashboardViewOrganizations == nil {
@@ -7891,6 +7899,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCustomFieldTemplateInput,
 		ec.unmarshalInputCustomFieldUpdateInput,
 		ec.unmarshalInputCustomerContactInput,
+		ec.unmarshalInputDashboardPeriodInput,
 		ec.unmarshalInputEmailInput,
 		ec.unmarshalInputEmailUpdateInput,
 		ec.unmarshalInputEntityTemplateInput,
@@ -8767,12 +8776,17 @@ enum CustomFieldTemplateType {
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
     dashboard_CustomerMap: [DashboardCustomerMap!]
-    dashboard_MRRPerCustomer(year: Int!): DashboardMRRPerCustomer
-    dashboard_GrossRevenueRetention(year: Int!): DashboardGrossRevenueRetention
-    dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
-    dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
-    dashboard_RetentionRate(year: Int!): DashboardRetentionRate
-    dashboard_NewCustomers(year: Int!): DashboardNewCustomers
+    dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer
+    dashboard_GrossRevenueRetention(period: DashboardPeriodInput): DashboardGrossRevenueRetention
+    dashboard_ARRBreakdown(period: DashboardPeriodInput): DashboardARRBreakdown
+    dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
+    dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
+    dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
+}
+
+input DashboardPeriodInput {
+    start: Time!
+    end: Time!
 }
 
 type DashboardCustomerMap {
@@ -8840,6 +8854,7 @@ type DashboardNewCustomers {
     perMonth: [DashboardNewCustomersPerMonth]!
 }
 type DashboardNewCustomersPerMonth {
+    year: Int!
     month: Int!
     count: Int!
 }
@@ -13866,90 +13881,90 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_args(ctx con
 func (ec *executionContext) field_Query_dashboard_ARRBreakdown_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_GrossRevenueRetention_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_MRRPerCustomer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_NewCustomers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_RetentionRate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_RevenueAtRisk_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
@@ -22471,12 +22486,58 @@ func (ec *executionContext) fieldContext_DashboardNewCustomers_perMonth(ctx cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardNewCustomersPerMonth_year(ctx, field)
 			case "month":
 				return ec.fieldContext_DashboardNewCustomersPerMonth_month(ctx, field)
 			case "count":
 				return ec.fieldContext_DashboardNewCustomersPerMonth_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardNewCustomersPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardNewCustomersPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardNewCustomersPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardNewCustomersPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardNewCustomersPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardNewCustomersPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -54995,7 +55056,7 @@ func (ec *executionContext) _Query_dashboard_MRRPerCustomer(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardMRRPerCustomer(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardMRRPerCustomer(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -55055,7 +55116,7 @@ func (ec *executionContext) _Query_dashboard_GrossRevenueRetention(ctx context.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardGrossRevenueRetention(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardGrossRevenueRetention(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -55115,7 +55176,7 @@ func (ec *executionContext) _Query_dashboard_ARRBreakdown(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardARRBreakdown(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardARRBreakdown(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -55175,7 +55236,7 @@ func (ec *executionContext) _Query_dashboard_RevenueAtRisk(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardRevenueAtRisk(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardRevenueAtRisk(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -55233,7 +55294,7 @@ func (ec *executionContext) _Query_dashboard_RetentionRate(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardRetentionRate(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardRetentionRate(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -55293,7 +55354,7 @@ func (ec *executionContext) _Query_dashboard_NewCustomers(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardNewCustomers(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardNewCustomers(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64972,6 +65033,44 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputDashboardPeriodInput(ctx context.Context, obj interface{}) (model.DashboardPeriodInput, error) {
+	var it model.DashboardPeriodInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"start", "end"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "start":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Start = data
+		case "end":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.End = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj interface{}) (model.EmailInput, error) {
 	var it model.EmailInput
 	asMap := map[string]interface{}{}
@@ -71344,6 +71443,11 @@ func (ec *executionContext) _DashboardNewCustomersPerMonth(ctx context.Context, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DashboardNewCustomersPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardNewCustomersPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "month":
 			out.Values[i] = ec._DashboardNewCustomersPerMonth_month(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -83726,6 +83830,14 @@ func (ec *executionContext) marshalODashboardNewCustomersPerMonth2ᚖgithubᚗco
 		return graphql.Null
 	}
 	return ec._DashboardNewCustomersPerMonth(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx context.Context, v interface{}) (*model.DashboardPeriodInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputDashboardPeriodInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalODashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRate) graphql.Marshaler {

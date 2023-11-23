@@ -1,0 +1,11 @@
+query GetDashboard_NewCustomers {
+  dashboard_NewCustomers{
+    thisMonthCount
+    thisMonthIncreasePercentage
+    perMonth {
+      year
+      month
+      count
+    }
+  }
+}

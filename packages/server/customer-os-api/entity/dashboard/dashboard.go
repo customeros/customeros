@@ -10,6 +10,7 @@ type DashboardNewCustomersData struct {
 	Months                      []*DashboardNewCustomerMonthData
 }
 type DashboardNewCustomerMonthData struct {
+	Year  int
 	Month int
 	Count int
 }
