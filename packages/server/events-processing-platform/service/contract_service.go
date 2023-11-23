@@ -147,6 +147,27 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 	return &contractpb.ContractIdGrpcResponse{Id: request.Id}, nil
 }
 
+func (s *contractService) CloseEndedContract(ctx context.Context, request *contractpb.CloseEndedContractGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.CloseEndedContract")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	cmd := command.NewCloseEndedContractCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource)
+
+	if err := s.contractCommandHandlers.CloseEndedContract.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(CloseEndedContract.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &contractpb.ContractIdGrpcResponse{Id: request.Id}, nil
+}
+
 func (s *contractService) checkOrganizationExists(ctx context.Context, tenant, organizationId string) (bool, error) {
 	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
 	err := s.aggregateStore.Exists(ctx, organizationAggregate.GetID())

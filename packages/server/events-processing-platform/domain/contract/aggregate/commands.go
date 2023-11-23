@@ -26,6 +26,10 @@ func (a *ContractAggregate) HandleCommand(ctx context.Context, cmd eventstore.Co
 		return a.createContract(ctx, c)
 	case *command.UpdateContractCommand:
 		return a.updateContract(ctx, c)
+	case *command.CloseEndedContractCommand:
+		return a.closeEndedContract(ctx, c)
+	case *command.ResetRenewalOpportunityOnExpirationCommand:
+		return a.resetRenewalOpportunityOnExpiration(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -103,6 +107,55 @@ func (a *ContractAggregate) updateContract(ctx context.Context, cmd *command.Upd
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
+	})
+
+	return a.Apply(updateEvent)
+}
+
+func (a *ContractAggregate) closeEndedContract(ctx context.Context, cmd *command.CloseEndedContractCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.closeEndedContract")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	// Determine contract status based start and end dates
+	status := determineContractStatus(a.Contract.ServiceStartedAt, a.Contract.EndedAt)
+	if status != model.Ended {
+		return errors.New("contract is not ended")
+	}
+
+	updateEvent, err := event.NewEndedContractCloseEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewEndedContractCloseEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
+
+	return a.Apply(updateEvent)
+}
+
+func (a *ContractAggregate) resetRenewalOpportunityOnExpiration(ctx context.Context, cmd *command.ResetRenewalOpportunityOnExpirationCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.resetRenewalOpportunityOnExpiration")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	// Determine contract status based start and end dates
+	updateEvent, err := event.NewResetRenewalOpportunityEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewResetRenewalOpportunityEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
 	})
 
 	return a.Apply(updateEvent)
