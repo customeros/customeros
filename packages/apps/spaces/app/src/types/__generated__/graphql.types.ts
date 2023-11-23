@@ -1503,8 +1503,6 @@ export type Mutation = {
   note_LinkAttachment: Note;
   note_UnlinkAttachment: Note;
   note_Update: Note;
-  opportunityRenewalUpdate: Opportunity;
-  opportunityUpdate: Opportunity;
   organization_AddNewLocation: Location;
   /** @deprecated No longer supported */
   organization_AddRelationship: Organization;
@@ -1929,14 +1927,6 @@ export type MutationNote_UpdateArgs = {
   input: NoteUpdateInput;
 };
 
-export type MutationOpportunityRenewalUpdateArgs = {
-  input: OpportunityRenewalUpdateInput;
-};
-
-export type MutationOpportunityUpdateArgs = {
-  input: OpportunityUpdateInput;
-};
-
 export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID'];
 };
@@ -2257,35 +2247,6 @@ export type Opportunity = Node & {
   source: DataSource;
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time'];
-};
-
-export enum OpportunityRenewalLikelihood {
-  HighRenewal = 'HIGH_RENEWAL',
-  LowRenewal = 'LOW_RENEWAL',
-  MediumRenewal = 'MEDIUM_RENEWAL',
-  ZeroRenewal = 'ZERO_RENEWAL',
-}
-
-export type OpportunityRenewalUpdateInput = {
-  amount?: InputMaybe<Scalars['Float']>;
-  appSource?: InputMaybe<Scalars['String']>;
-  comments?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  opportunityId: Scalars['ID'];
-  renewalLikelihood?: InputMaybe<OpportunityRenewalLikelihood>;
-};
-
-export type OpportunityUpdateInput = {
-  amount?: InputMaybe<Scalars['Float']>;
-  appSource?: InputMaybe<Scalars['String']>;
-  estimatedClosedDate?: InputMaybe<Scalars['Time']>;
-  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  externalStage?: InputMaybe<Scalars['String']>;
-  externalType?: InputMaybe<Scalars['String']>;
-  generalNotes?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  nextSteps?: InputMaybe<Scalars['String']>;
-  opportunityId: Scalars['ID'];
 };
 
 export type OrgAccountDetails = {
@@ -2712,7 +2673,7 @@ export type Query = {
   issue: Issue;
   logEntry: LogEntry;
   meeting: Meeting;
-  opportunity?: Maybe<Opportunity>;
+  opportunity: Opportunity;
   organization?: Maybe<Organization>;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;

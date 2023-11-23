@@ -13,8 +13,6 @@ import {
   ContractRenewalCycle,
   RenewalLikelihoodProbability,
 } from '@graphql/types';
-import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalDetailsModal';
-import { useUpdateRenewalDetailsContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 import { getARRColor } from '../utils';
 
@@ -30,7 +28,6 @@ export const RenewalARRCard = ({
   renewCycle,
   opportunity,
 }: RenewalARRCardProps) => {
-  const { modal } = useUpdateRenewalDetailsContext();
   const differenceInMonths = DateTimeUtils.differenceInMonths(
     new Date().toISOString(),
     startedAt,
@@ -53,11 +50,11 @@ export const RenewalARRCard = ({
         my={2}
         size='lg'
         variant='outline'
-        cursor='pointer'
+        cursor='default'
         border='1px solid'
         borderColor='gray.200'
         position='relative'
-        onClick={modal.onOpen}
+        // onClick={modal.onOpen}
         width={hasRenewed ? 'calc(100% - .5rem)' : 'auto'}
         sx={
           hasRenewed
@@ -151,11 +148,12 @@ export const RenewalARRCard = ({
           </Flex>
         </CardHeader>
       </Card>
-      <RenewalDetailsModal
-        isOpen={modal.isOpen}
-        onClose={modal.onClose}
-        data={opportunity}
-      />
+      {/*todo uncomment when update mutation will be available*/}
+      {/*<RenewalDetailsModal*/}
+      {/*  isOpen={modal.isOpen}*/}
+      {/*  onClose={modal.onClose}*/}
+      {/*  data={{}}*/}
+      {/*/>*/}
     </>
   );
 };
