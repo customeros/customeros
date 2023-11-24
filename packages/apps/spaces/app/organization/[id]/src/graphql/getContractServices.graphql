@@ -1,0 +1,24 @@
+query getContractServices($id: ID!) {
+  serviceLineItem(id: $id) {
+    id
+    name
+#    contracts {
+#      id
+#      name
+#      createdAt
+#      serviceStartedAt
+#      signedAt
+#      endedAt
+#      renewalCycle
+#      status
+#      contractUrl
+##      externalLinks {
+##        type
+##        syncDate
+##        externalId
+##        externalUrl
+##        externalSource
+##      }
+#    }
+  }
+}
