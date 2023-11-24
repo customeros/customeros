@@ -9,7 +9,6 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
-import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Star06 } from '@ui/media/icons/Star06';
 import { Heading } from '@ui/typography/Heading';
@@ -114,12 +113,7 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
         <Heading mb={1} size='sm' fontWeight='semibold'>
           Create new contract
         </Heading>
-        <Text fontSize='sm'>
-          Create new contract for
-          <Text as='span' fontWeight='medium' ml={1}>
-            {name}
-          </Text>
-        </Text>
+
         <Button
           fontSize='sm'
           size='sm'
