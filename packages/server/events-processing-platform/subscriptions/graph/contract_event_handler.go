@@ -2,8 +2,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
@@ -67,7 +65,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 }
 
 func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnCreate")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnUpdate")
 	defer span.Finish()
 	setCommonSpanTagsAndLogFields(span, evt)
 
@@ -78,14 +76,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, eventData.Tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	contractEntityBeforeUpdate := graph_db.MapDbNodeToContractEntity(contractDbNode)
-
-	contractDbNode, err = h.repositories.ContractRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, eventData)
+	_, err := h.repositories.ContractRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
@@ -101,49 +92,11 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		}
 	}
 
-	contractEntityAfterUpdate := graph_db.MapDbNodeToContractEntity(contractDbNode)
-	if contractEntityAfterUpdate == nil {
-		err = errors.New(fmt.Sprintf("contract {%s} not found after update", contractId))
+	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+	err = contractHandler.UpdateRenewalArrAndNextCycleDate(ctx, eventData.Tenant, contractId)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Error(err)
-		return nil
-	}
-
-	createRenewalOpportunity, updateRenewalArr, updateRenewalDate := false, false, false
-
-	if contractEntityBeforeUpdate.RenewalCycle == "" && model.IsFrequencyBasedRenewalCycle(contractEntityAfterUpdate.RenewalCycle) {
-		createRenewalOpportunity = true
-	} else {
-		updateRenewalArr = true
-		if contractEntityBeforeUpdate.RenewalCycle != contractEntityAfterUpdate.RenewalCycle ||
-			!utils.IsEqualTimePtr(contractEntityBeforeUpdate.ServiceStartedAt, contractEntityAfterUpdate.ServiceStartedAt) ||
-			!utils.IsEqualTimePtr(contractEntityBeforeUpdate.EndedAt, contractEntityAfterUpdate.EndedAt) {
-			updateRenewalDate = true
-		}
-	}
-
-	if createRenewalOpportunity {
-		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", eventData.Tenant, "", contractId, "", commonmodel.Source{Source: eventData.Source}, nil, nil))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("CreateRenewalOpportunity failed: %v", err.Error())
-		}
-	} else {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-		if updateRenewalArr {
-			err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contractId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
-			}
-		}
-		if updateRenewalDate {
-			err = contractHandler.UpdateRenewalNextCycleDate(ctx, eventData.Tenant, contractId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
-			}
-		}
+		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 	}
 
 	return nil
