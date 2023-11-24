@@ -1,15 +1,10 @@
 import { format, utcToZonedTime } from 'date-fns-tz';
 import {
-  formatDistanceToNow,
+  isBefore,
   differenceInMinutes,
-  isToday as isTodayDateFns,
-  isBefore as isBeforeDateFns,
-  isFuture as isFutureDateFns,
-  addYears as addYearsDateFns,
+  formatDistanceToNow,
   isSameDay as isSameDayDateFns,
-  addMonths as addMonthsDateFns,
   formatDuration as formatDurationDateFns,
-  differenceInMonths as differenceInMonthsDateFns,
 } from 'date-fns';
 
 export class DateTimeUtils {
@@ -55,11 +50,7 @@ export class DateTimeUtils {
   }
 
   public static isBeforeNow(date: string | number): boolean {
-    return isBeforeDateFns(new Date(), new Date(date));
-  }
-
-  public static isBefore(dateLeft: string, dateRight: string): boolean {
-    return isBeforeDateFns(this.getDate(dateLeft), this.getDate(dateRight));
+    return isBefore(new Date(), new Date(date));
   }
 
   public static toHoursAndMinutes(totalSeconds: number) {
@@ -85,36 +76,11 @@ export class DateTimeUtils {
     return formatDurationDateFns(duration, options);
   }
 
-  public static isFuture(date: string): boolean {
-    return isFutureDateFns(this.getDate(date));
-  }
-  public static isToday(date: string): boolean {
-    return isTodayDateFns(this.getDate(date));
-  }
-
-  public static addYears(date: string, yearsCount: number): Date {
-    return addYearsDateFns(this.getDate(date), yearsCount);
-  }
-
-  public static addMonth(date: string, yearsCount: number): Date {
-    return addMonthsDateFns(this.getDate(date), yearsCount);
-  }
-
   public static isSameDay(dateLeft: string, dateRight: string): boolean {
     return isSameDayDateFns(this.getDate(dateLeft), this.getDate(dateRight));
   }
   public static differenceInMins(dateLeft: string, dateRight: string): number {
     return differenceInMinutes(this.getDate(dateLeft), this.getDate(dateRight));
-  }
-
-  public static differenceInMonths(
-    dateLeft: string,
-    dateRight: string,
-  ): number {
-    return differenceInMonthsDateFns(
-      this.getDate(dateLeft),
-      this.getDate(dateRight),
-    );
   }
 
   public static convertToTimeZone(
