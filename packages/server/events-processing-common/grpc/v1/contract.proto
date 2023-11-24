@@ -69,5 +69,5 @@ service ContractGrpcService {
   rpc CreateContract(CreateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc UpdateContract(UpdateContractGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RolloutRenewalOpportunityOnExpiration(RolloutRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
-  rpc RefreshContractStatusContract(RefreshContractStatusGrpcRequest) returns (ContractIdGrpcResponse);
+  rpc RefreshContractStatus(RefreshContractStatusGrpcRequest) returns (ContractIdGrpcResponse);
 }

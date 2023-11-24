@@ -42,15 +42,15 @@ func (s *contractService) UpkeepContracts() {
 		return
 	}
 
-	s.updateContractStatuses(ctx)
-	s.rolloutContractRenewals(ctx)
+	now := utils.Now()
+
+	s.updateContractStatuses(ctx, now)
+	s.rolloutContractRenewals(ctx, now)
 }
 
-func (s *contractService) updateContractStatuses(ctx context.Context) {
+func (s *contractService) updateContractStatuses(ctx context.Context, referenceTime time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.updateContractStatuses")
 	defer span.Finish()
-
-	now := utils.Now()
 
 	for {
 		select {
@@ -61,7 +61,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.repositories.ContractRepository.GetContractsForStatusRenewal(ctx, now)
+		records, err := s.repositories.ContractRepository.GetContractsForStatusRenewal(ctx, referenceTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for status update: %v", err)
@@ -75,7 +75,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context) {
 
 		//process organizations
 		for _, record := range records {
-			_, err = s.eventsProcessingClient.ContractClient.RefreshContractStatusContract(ctx, &contractpb.RefreshContractStatusGrpcRequest{
+			_, err = s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
 				Tenant:    record.Tenant,
 				Id:        record.ContractId,
 				AppSource: constants.AppSourceDataUpkeeper,
@@ -91,11 +91,9 @@ func (s *contractService) updateContractStatuses(ctx context.Context) {
 	}
 }
 
-func (s *contractService) rolloutContractRenewals(ctx context.Context) {
+func (s *contractService) rolloutContractRenewals(ctx context.Context, referenceTime time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.rolloutContractRenewals")
 	defer span.Finish()
-
-	now := utils.Now()
 
 	for {
 		select {
@@ -106,7 +104,7 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.repositories.ContractRepository.GetContractsForRenewalRollout(ctx, now)
+		records, err := s.repositories.ContractRepository.GetContractsForRenewalRollout(ctx, referenceTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for renewal rollout: %v", err)
