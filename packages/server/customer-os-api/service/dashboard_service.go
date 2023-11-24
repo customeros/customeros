@@ -28,12 +28,12 @@ type DashboardService interface {
 	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
 
 	GetDashboardCustomerMapData(ctx context.Context) ([]*entityDashboard.DashboardCustomerMapData, error)
-	GetDashboardMRRPerCustomerData(ctx context.Context, year int) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error)
-	GetDashboardGrossRevenueRetentionData(ctx context.Context, year int) (*entityDashboard.DashboardGrossRevenueRetentionData, error)
-	GetDashboardARRBreakdownData(ctx context.Context, year int) (*entityDashboard.DashboardARRBreakdownData, error)
-	GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error)
-	GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error)
-	GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error)
+	GetDashboardMRRPerCustomerData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error)
+	GetDashboardGrossRevenueRetentionData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardGrossRevenueRetentionData, error)
+	GetDashboardARRBreakdownData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardARRBreakdownData, error)
+	GetDashboardRevenueAtRiskData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardRevenueAtRiskData, error)
+	GetDashboardRetentionRateData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardRetentionRateData, error)
+	GetDashboardNewCustomersData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardNewCustomersData, error)
 }
 
 type dashboardService struct {
@@ -116,11 +116,12 @@ func (s *dashboardService) GetDashboardCustomerMapData(ctx context.Context) ([]*
 	return response, nil
 }
 
-func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, year int) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error) {
+func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardMRRPerCustomerData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("year", year))
+	span.LogFields(log.Object("start", start))
+	span.LogFields(log.Object("end", end))
 
 	response := entityDashboard.DashboardDashboardMRRPerCustomerData{}
 
@@ -139,11 +140,12 @@ func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, y
 	return &response, nil
 }
 
-func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Context, year int) (*entityDashboard.DashboardGrossRevenueRetentionData, error) {
+func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardGrossRevenueRetentionData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardGrossRevenueRetentionData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("year", year))
+	span.LogFields(log.Object("start", start))
+	span.LogFields(log.Object("end", end))
 
 	response := entityDashboard.DashboardGrossRevenueRetentionData{}
 
@@ -162,11 +164,12 @@ func (s *dashboardService) GetDashboardGrossRevenueRetentionData(ctx context.Con
 	return &response, nil
 }
 
-func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, year int) (*entityDashboard.DashboardARRBreakdownData, error) {
+func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardARRBreakdownData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardARRBreakdownData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("year", year))
+	span.LogFields(log.Object("start", start))
+	span.LogFields(log.Object("end", end))
 
 	response := entityDashboard.DashboardARRBreakdownData{}
 
@@ -190,11 +193,12 @@ func (s *dashboardService) GetDashboardARRBreakdownData(ctx context.Context, yea
 	return &response, nil
 }
 
-func (s *dashboardService) GetDashboardRevenueAtRiskData(ctx context.Context, year int) (*entityDashboard.DashboardRevenueAtRiskData, error) {
+func (s *dashboardService) GetDashboardRevenueAtRiskData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardRevenueAtRiskData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardRevenueAtRiskData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("year", year))
+	span.LogFields(log.Object("start", start))
+	span.LogFields(log.Object("end", end))
 
 	response := entityDashboard.DashboardRevenueAtRiskData{}
 
@@ -204,11 +208,12 @@ func (s *dashboardService) GetDashboardRevenueAtRiskData(ctx context.Context, ye
 	return &response, nil
 }
 
-func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, year int) (*entityDashboard.DashboardRetentionRateData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
+func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardRetentionRateData, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardRetentionRateData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("year", year))
+	span.LogFields(log.Object("start", start))
+	span.LogFields(log.Object("end", end))
 
 	response := entityDashboard.DashboardRetentionRateData{}
 
@@ -228,32 +233,52 @@ func (s *dashboardService) GetDashboardRetentionRateData(ctx context.Context, ye
 	return &response, nil
 }
 
-func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, year int) (*entityDashboard.DashboardNewCustomersData, error) {
+func (s *dashboardService) GetDashboardNewCustomersData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardNewCustomersData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardNewCustomersData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("year", year))
+	span.LogFields(log.Object("start", start))
+	span.LogFields(log.Object("end", end))
 
 	response := entityDashboard.DashboardNewCustomersData{}
 
-	response.ThisMonthCount = 127
-	response.ThisMonthIncreasePercentage = 3.1
-
-	startDate := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
-	endDate := time.Date(year, time.December, 31, 23, 59, 59, 999999999, time.UTC)
-	data, err := s.repositories.DashboardRepository.GetDashboardNewCustomersData(ctx, common.GetContext(ctx).Tenant, startDate, endDate)
+	data, err := s.repositories.DashboardRepository.GetDashboardNewCustomersData(ctx, common.GetContext(ctx).Tenant, start, end)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, v := range data {
-		for key, value := range v {
-			response.Months = append(response.Months, &entityDashboard.DashboardNewCustomerMonthData{
-				Month: int(key.Month()),
-				Count: int(value),
-			})
+	for _, record := range data {
+		year, _ := record["year"].(int64)
+		month, _ := record["month"].(int64)
+		count, _ := record["count"].(int64)
+
+		newData := &entityDashboard.DashboardNewCustomerMonthData{
+			Year:  int(year),
+			Month: int(month),
+			Count: int(count),
 		}
+
+		response.Months = append(response.Months, newData)
 	}
 
+	//currentMonthCount := response.Months[len(response.Months)-1].Count
+	//previousMonthCount := response.Months[len(response.Months)-2].Count
+
+	//var percentageDifference float64
+	//if previousMonthCount != 0 {
+	//	percentageDifference = float64((currentMonthCount - previousMonthCount) * 100 / previousMonthCount)
+	//} else {
+	//	if currentMonthCount != 0 {
+	//		percentageDifference = float64(100)
+	//	} else {
+	//		percentageDifference = float64(0)
+	//	}
+	//}
+
+	//TODO fix this when we know what we want to show
+	response.ThisMonthIncreasePercentage = 0
+	response.ThisMonthCount = response.Months[len(response.Months)-1].Count
+
 	return &response, nil
+
 }
