@@ -95,6 +95,10 @@
     {
       "name": "Check for multiple renewal opportunities for same contract",
       "query": "CALL {MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt UNION MATCH (c:Contract)-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity) WHERE op.internalStage='OPEN' WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt} return sum(cnt)"
+    },
+    {
+      "name": "Check for contracts with wrong status",
+      "query": "CALL {MATCH (c:Contract) WHERE c.status <> 'ENDED' AND datetime(c.endedAt) < datetime() RETURN count(c) AS cnt UNION MATCH (c:Contract) WHERE (c.endedAt is null OR datetime(c.endedAt) > datetime()) AND c.status <> 'LIVE' AND datetime(c.serviceStartedAt) < datetime() RETURN count(c) AS cnt} return sum(cnt)"
     }
   ]
 }

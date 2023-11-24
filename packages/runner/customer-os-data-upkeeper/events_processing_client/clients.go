@@ -1,12 +1,14 @@
 package events_processing_client
 
 import (
-	orggrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"google.golang.org/grpc"
 )
 
 type Client struct {
-	OrganizationClient orggrpc.OrganizationGrpcServiceClient
+	OrganizationClient organizationpb.OrganizationGrpcServiceClient
+	ContractClient     contractpb.ContractGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Client {
@@ -14,7 +16,8 @@ func InitClients(conn *grpc.ClientConn) *Client {
 		return &Client{}
 	}
 	clients := Client{
-		OrganizationClient: orggrpc.NewOrganizationGrpcServiceClient(conn),
+		OrganizationClient: organizationpb.NewOrganizationGrpcServiceClient(conn),
+		ContractClient:     contractpb.NewContractGrpcServiceClient(conn),
 	}
 	return &clients
 }

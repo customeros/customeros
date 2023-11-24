@@ -37,6 +37,8 @@ github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-m
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231123155829-38910834a690/go.mod h1:iTjZ3NwPYWUpCdtKAaUT1PSAyB1vL4JxIPUgTS/LX1Q=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231123155829-38910834a690 h1:H8oWKv8wNzc/YobulvpfY54rNk/qMeHtNiD6RxOk9/g=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231123155829-38910834a690/go.mod h1:YL4o7UVK+9YuQYWv2ZyAqXjWOYzyNH+roBULFXGPj+w=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231124071020-b2a97ab7ec13 h1:5U2aZ+cQdGEnSuzpqSXSCzQfkdLMs4mUDsZxRKaBXMA=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231124071020-b2a97ab7ec13/go.mod h1:YL4o7UVK+9YuQYWv2ZyAqXjWOYzyNH+roBULFXGPj+w=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

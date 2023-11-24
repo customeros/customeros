@@ -318,10 +318,13 @@ func (r *opportunityRepository) CloseWin(ctx context.Context, tenant, opportunit
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("opportunityId", opportunityId), log.Object("data", data))
 
-	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s SET 
-							op.closedAt=$closedAt, 
-							op.internalStage=$internalStage,
-							op.updatedAt=$updatedAt`, tenant)
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s 
+							SET 
+								op.closedAt=$closedAt, 
+								op.internalStage=$internalStage,
+								op.updatedAt=$updatedAt
+							OPTIONAL MATCH (op)<-[rel:ACTIVE_RENEWAL]-(c:Contract)
+							DELETE rel`, tenant)
 	params := map[string]any{
 		"opportunityId": opportunityId,
 		"updatedAt":     data.UpdatedAt,
@@ -339,10 +342,13 @@ func (r *opportunityRepository) CloseLoose(ctx context.Context, tenant, opportun
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("opportunityId", opportunityId), log.Object("data", data))
 
-	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s SET 
-							op.closedAt=$closedAt, 
-							op.internalStage=$internalStage,
-							op.updatedAt=$updatedAt`, tenant)
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s 
+							SET 
+								op.closedAt=$closedAt, 
+								op.internalStage=$internalStage,
+								op.updatedAt=$updatedAt
+							OPTIONAL MATCH (op)<-[rel:ACTIVE_RENEWAL]-(c:Contract)
+							DELETE rel`, tenant)
 	params := map[string]any{
 		"opportunityId": opportunityId,
 		"updatedAt":     data.UpdatedAt,
