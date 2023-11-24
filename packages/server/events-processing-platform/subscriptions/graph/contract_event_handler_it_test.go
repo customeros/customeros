@@ -307,11 +307,11 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 	for _, value := range eventsMap {
 		eventList = value
 	}
-	require.Equal(t, 3, len(eventList))
-	generatedEvent1 := eventList[1]
-	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent1.EventType)
-	generatedEvent2 := eventList[2]
-	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, generatedEvent2.EventType)
+	require.Equal(t, 2, len(eventList))
+	generatedEvent1 := eventList[0]
+	require.Equal(t, opportunityevent.OpportunityCreateRenewalV1, generatedEvent1.EventType)
+	generatedEvent2 := eventList[1]
+	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent2.EventType)
 }
 
 func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
@@ -367,9 +367,9 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 	}
 	require.Equal(t, 3, len(eventList))
 	generatedEvent1 := eventList[1]
-	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent1.EventType)
+	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, generatedEvent1.EventType)
 	generatedEvent2 := eventList[2]
-	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, generatedEvent2.EventType)
+	require.Equal(t, opportunityevent.OpportunityUpdateV1, generatedEvent2.EventType)
 }
 
 func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline(t *testing.T) {
