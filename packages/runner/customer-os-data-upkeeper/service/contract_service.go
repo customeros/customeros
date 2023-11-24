@@ -9,7 +9,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contract"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -68,23 +71,27 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 			return
 		}
 
-		// no organizations found for next cycle date renew
+		// no contracts found for next cycle date renew
 		if len(records) == 0 {
 			return
 		}
 
-		//process organizations
-		//for _, record := range records {
-		//	_, err = s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
-		//		Tenant:    record.Tenant,
-		//		Id:        record.ContractId,
-		//		AppSource: constants.AppSourceDataUpkeeper,
-		//	})
-		//	if err != nil {
-		//		tracing.TraceErr(span, err)
-		//		s.log.Errorf("Error refreshing contract status: %s", err.Error())
-		//	}
-		//}
+		//process contracts
+		for _, record := range records {
+			_, err = s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
+				Tenant:    record.Tenant,
+				Id:        record.ContractId,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error refreshing contract status: %s", err.Error())
+				grpcErr, ok := status.FromError(err)
+				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
+					s.resyncContract(ctx, record.Tenant, record.ContractId)
+				}
+			}
+		}
 
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
@@ -111,12 +118,12 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 			return
 		}
 
-		// no organizations found for next cycle date renew
+		// no contracts found for next cycle date renew
 		if len(records) == 0 {
 			return
 		}
 
-		//process organizations
+		//process contracts
 		for _, record := range records {
 			_, err = s.eventsProcessingClient.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
 				Tenant:    record.Tenant,
@@ -126,10 +133,55 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error refreshing contract status: %s", err.Error())
+				grpcErr, ok := status.FromError(err)
+				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
+					s.resyncContract(ctx, record.Tenant, record.ContractId)
+				}
 			}
 		}
 
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
+	}
+}
+
+func (s *contractService) resyncContract(ctx context.Context, tenant, contractId string) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.resyncContract")
+	defer span.Finish()
+
+	contractDbNode, err := s.repositories.ContractRepository.GetContractById(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting contract {%s}: %s", contractId, err.Error())
+		return
+	}
+
+	props := utils.GetPropsFromNode(*contractDbNode)
+
+	request := contractpb.UpdateContractGrpcRequest{
+		Tenant:           tenant,
+		Id:               contractId,
+		Name:             utils.GetStringPropOrEmpty(props, "name"),
+		ContractUrl:      utils.GetStringPropOrEmpty(props, "contractUrl"),
+		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "serviceStartedAt")),
+		SignedAt:         utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "signedAt")),
+		EndedAt:          utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(props, "endedAt")),
+		SourceFields: &commonpb.SourceFields{
+			Source:    utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
+			AppSource: constants.AppSourceDataUpkeeper,
+		},
+	}
+	switch utils.GetStringPropOrEmpty(props, "renewalCycle") {
+	case "MONTHLY":
+		request.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+	case "ANNUALLY":
+		request.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
+	default:
+		request.RenewalCycle = contractpb.RenewalCycle_NONE
+	}
+	_, err = s.eventsProcessingClient.ContractClient.UpdateContract(ctx, &request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error re-syncing contract {%s}: %s", contractId, err.Error())
 	}
 }
