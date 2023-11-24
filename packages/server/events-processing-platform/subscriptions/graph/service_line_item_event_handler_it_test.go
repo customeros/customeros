@@ -6,10 +6,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	contractmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -150,4 +154,64 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, int64(20), serviceLineItem.Quantity)
 	require.Equal(t, float64(200.0), serviceLineItem.Price)
 	require.Equal(t, "Updated Service Line Item", serviceLineItem.Name)
+}
+
+func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Prepare test data in Neo4j
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		RenewalCycle: string(contractmodel.AnnuallyRenewalCycleString),
+	})
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Billed: model.MonthlyBilled.String(),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemUpdateEvent
+	deleteEvent, err := event.NewServiceLineItemDeleteEvent(
+		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
+	)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnDelete(ctx, deleteEvent)
+	require.Nil(t, err)
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 0, "ServiceLineItem_" + tenantName: 0,
+	})
+
+	// check event was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+	require.Equal(t, opportunityevent.OpportunityUpdateV1, eventList[0].GetEventType())
 }

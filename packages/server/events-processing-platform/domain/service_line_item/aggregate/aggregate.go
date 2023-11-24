@@ -34,6 +34,8 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 		return a.onServiceLineItemCreate(evt)
 	case event.ServiceLineItemUpdateV1:
 		return a.onServiceLineItemUpdate(evt)
+	case event.ServiceLineItemDeleteV1:
+		return a.onServiceLineItemDelete()
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -78,5 +80,10 @@ func (a *ServiceLineItemAggregate) onServiceLineItemUpdate(evt eventstore.Event)
 	}
 	a.ServiceLineItem.Comments = eventData.Comments
 
+	return nil
+}
+
+func (a *ServiceLineItemAggregate) onServiceLineItemDelete() error {
+	a.ServiceLineItem.IsDeleted = true
 	return nil
 }

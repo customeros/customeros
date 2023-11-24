@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ServiceLineItemGrpcServiceClient interface {
 	CreateServiceLineItem(ctx context.Context, in *CreateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 	UpdateServiceLineItem(ctx context.Context, in *UpdateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
+	DeleteServiceLineItem(ctx context.Context, in *DeleteServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 }
 
 type serviceLineItemGrpcServiceClient struct {
@@ -52,12 +53,22 @@ func (c *serviceLineItemGrpcServiceClient) UpdateServiceLineItem(ctx context.Con
 	return out, nil
 }
 
+func (c *serviceLineItemGrpcServiceClient) DeleteServiceLineItem(ctx context.Context, in *DeleteServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error) {
+	out := new(ServiceLineItemIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/ServiceLineItemGrpcService/DeleteServiceLineItem", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceLineItemGrpcServiceServer is the server API for ServiceLineItemGrpcService service.
 // All implementations should embed UnimplementedServiceLineItemGrpcServiceServer
 // for forward compatibility
 type ServiceLineItemGrpcServiceServer interface {
 	CreateServiceLineItem(context.Context, *CreateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 	UpdateServiceLineItem(context.Context, *UpdateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
+	DeleteServiceLineItem(context.Context, *DeleteServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 }
 
 // UnimplementedServiceLineItemGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -69,6 +80,9 @@ func (UnimplementedServiceLineItemGrpcServiceServer) CreateServiceLineItem(conte
 }
 func (UnimplementedServiceLineItemGrpcServiceServer) UpdateServiceLineItem(context.Context, *UpdateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateServiceLineItem not implemented")
+}
+func (UnimplementedServiceLineItemGrpcServiceServer) DeleteServiceLineItem(context.Context, *DeleteServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteServiceLineItem not implemented")
 }
 
 // UnsafeServiceLineItemGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -118,6 +132,24 @@ func _ServiceLineItemGrpcService_UpdateServiceLineItem_Handler(srv interface{}, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ServiceLineItemGrpcService_DeleteServiceLineItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteServiceLineItemGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceLineItemGrpcServiceServer).DeleteServiceLineItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ServiceLineItemGrpcService/DeleteServiceLineItem",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceLineItemGrpcServiceServer).DeleteServiceLineItem(ctx, req.(*DeleteServiceLineItemGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ServiceLineItemGrpcService_ServiceDesc is the grpc.ServiceDesc for ServiceLineItemGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -132,6 +164,10 @@ var ServiceLineItemGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateServiceLineItem",
 			Handler:    _ServiceLineItemGrpcService_UpdateServiceLineItem_Handler,
+		},
+		{
+			MethodName: "DeleteServiceLineItem",
+			Handler:    _ServiceLineItemGrpcService_DeleteServiceLineItem_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

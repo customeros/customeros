@@ -141,3 +141,49 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 	require.Equal(t, "Updated Service Line Item", eventData.Name)
 	require.Equal(t, tenant, eventData.Tenant)
 }
+
+func TestServiceLineItemService_DeleteServiceLineItem(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// Setup test environment
+	tenant := "ziggy"
+	serviceLineItemId := "SLI123"
+
+	// Create and save the initial Service Line Item aggregate
+	aggregateStore := eventstoret.NewTestAggregateStore()
+	serviceLineItemAggregate := aggregate.NewServiceLineItemAggregateWithTenantAndID(tenant, serviceLineItemId)
+	aggregateStore.Save(ctx, serviceLineItemAggregate)
+
+	// Prepare the gRPC connection and client
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	require.Nil(t, err)
+	serviceLineItemClient := servicelineitempb.NewServiceLineItemGrpcServiceClient(grpcConnection)
+
+	// Create the request
+	request := &servicelineitempb.DeleteServiceLineItemGrpcRequest{
+		Tenant:         tenant,
+		LoggedInUserId: "User456",
+		Id:             serviceLineItemId,
+		AppSource:      "unit-test",
+	}
+	// Execute
+	response, err := serviceLineItemClient.DeleteServiceLineItem(ctx, request)
+	require.Nil(t, err)
+
+	// Assertions
+	require.NotNil(t, response)
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	eventList := eventsMap[serviceLineItemAggregate.ID]
+	require.Equal(t, 1, len(eventList))
+
+	createEvent := eventList[0]
+	require.Equal(t, event.ServiceLineItemDeleteV1, createEvent.GetEventType())
+	require.Equal(t, string(aggregate.ServiceLineItemAggregateType)+"-"+tenant+"-"+serviceLineItemId, eventList[0].GetAggregateID())
+
+	var eventData event.ServiceLineItemDeleteEvent
+	err = createEvent.GetJsonData(&eventData)
+	require.Nil(t, err)
+	require.Equal(t, tenant, eventData.Tenant)
+}

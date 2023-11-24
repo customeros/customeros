@@ -17,6 +17,7 @@ type ServiceLineItem struct {
 	UpdatedAt  time.Time `json:"updatedAt"`
 	Source     commonmodel.Source
 	Comments   string `json:"comments,omitempty"`
+	IsDeleted  bool   `json:"isDeleted"`
 }
 
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.
@@ -45,6 +46,14 @@ func (bt BilledType) String() string {
 
 func (bt BilledType) IsOneTime() bool {
 	return bt == OnceBilled
+}
+
+func (bt BilledType) IsUsage() bool {
+	return bt == UsageBilled
+}
+
+func (bt BilledType) IsRecurrent() bool {
+	return bt == MonthlyBilled || bt == AnnuallyBilled
 }
 
 type BilledString string
