@@ -9,7 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231123155829-38910834a690
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231123155829-38910834a690
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231124071020-b2a97ab7ec13
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.8.4

@@ -35,18 +35,19 @@ func (r *organizationRepository) GetOrganizationsForNextCycleDateRenew(ctx conte
 	tracing.SetDefaultNeo4jRepositorySpanTags(span)
 	span.LogFields(log.Object("referenceTime", referenceTime))
 
-	query := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
+	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
 				WHERE org.billingDetailsRenewalCycleNext <= $referenceTime
 				RETURN t.name, org.id ORDER BY org.billingDetailsRenewalCycleNext ASC LIMIT 100`
-	span.LogFields(log.String("query", query))
+	params := map[string]any{
+		"referenceTime": referenceTime,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, map[string]any{
-			"referenceTime": referenceTime,
-		})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			return nil, err
 		}
