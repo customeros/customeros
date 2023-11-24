@@ -46,7 +46,8 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				Email: cosModel.EmailInput{
 					Email: user.Email,
 				},
-				AppSource: &appSource,
+				AppSource:       &appSource,
+				ProfilePhotoURL: user.ProfilePhotoURL,
 			}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
 			if err != nil {
 				context.JSON(500, gin.H{

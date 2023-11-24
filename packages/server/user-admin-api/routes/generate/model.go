@@ -4,9 +4,10 @@ import "time"
 
 type SourceData struct {
 	Users []struct {
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Email     string `json:"email"`
+		FirstName       string  `json:"firstName"`
+		LastName        string  `json:"lastName"`
+		Email           string  `json:"email"`
+		ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	} `json:"users"`
 	Contacts []struct {
 		FirstName string `json:"firstName"`
