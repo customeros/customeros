@@ -74,17 +74,17 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 		}
 
 		//process organizations
-		for _, record := range records {
-			_, err = s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
-				Tenant:    record.Tenant,
-				Id:        record.ContractId,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error refreshing contract status: %s", err.Error())
-			}
-		}
+		//for _, record := range records {
+		//	_, err = s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
+		//		Tenant:    record.Tenant,
+		//		Id:        record.ContractId,
+		//		AppSource: constants.AppSourceDataUpkeeper,
+		//	})
+		//	if err != nil {
+		//		tracing.TraceErr(span, err)
+		//		s.log.Errorf("Error refreshing contract status: %s", err.Error())
+		//	}
+		//}
 
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)

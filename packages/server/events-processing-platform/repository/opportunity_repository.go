@@ -323,6 +323,7 @@ func (r *opportunityRepository) CloseWin(ctx context.Context, tenant, opportunit
 								op.closedAt=$closedAt, 
 								op.internalStage=$internalStage,
 								op.updatedAt=$updatedAt
+							WITH op
 							OPTIONAL MATCH (op)<-[rel:ACTIVE_RENEWAL]-(c:Contract)
 							DELETE rel`, tenant)
 	params := map[string]any{
@@ -343,10 +344,10 @@ func (r *opportunityRepository) CloseLoose(ctx context.Context, tenant, opportun
 	span.LogFields(log.String("opportunityId", opportunityId), log.Object("data", data))
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s 
-							SET 
-								op.closedAt=$closedAt, 
+							SET op.closedAt=$closedAt, 
 								op.internalStage=$internalStage,
 								op.updatedAt=$updatedAt
+							WITH op
 							OPTIONAL MATCH (op)<-[rel:ACTIVE_RENEWAL]-(c:Contract)
 							DELETE rel`, tenant)
 	params := map[string]any{
