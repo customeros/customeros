@@ -25,7 +25,7 @@ type ContractGrpcServiceClient interface {
 	CreateContract(ctx context.Context, in *CreateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	UpdateContract(ctx context.Context, in *UpdateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	RolloutRenewalOpportunityOnExpiration(ctx context.Context, in *RolloutRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
-	RefreshContractStatusContract(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
+	RefreshContractStatus(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 }
 
 type contractGrpcServiceClient struct {
@@ -63,9 +63,9 @@ func (c *contractGrpcServiceClient) RolloutRenewalOpportunityOnExpiration(ctx co
 	return out, nil
 }
 
-func (c *contractGrpcServiceClient) RefreshContractStatusContract(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
+func (c *contractGrpcServiceClient) RefreshContractStatus(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
 	out := new(ContractIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/ContractGrpcService/RefreshContractStatusContract", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/RefreshContractStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ type ContractGrpcServiceServer interface {
 	CreateContract(context.Context, *CreateContractGrpcRequest) (*ContractIdGrpcResponse, error)
 	UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error)
 	RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error)
-	RefreshContractStatusContract(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error)
+	RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error)
 }
 
 // UnimplementedContractGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -95,8 +95,8 @@ func (UnimplementedContractGrpcServiceServer) UpdateContract(context.Context, *U
 func (UnimplementedContractGrpcServiceServer) RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RolloutRenewalOpportunityOnExpiration not implemented")
 }
-func (UnimplementedContractGrpcServiceServer) RefreshContractStatusContract(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RefreshContractStatusContract not implemented")
+func (UnimplementedContractGrpcServiceServer) RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshContractStatus not implemented")
 }
 
 // UnsafeContractGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -164,20 +164,20 @@ func _ContractGrpcService_RolloutRenewalOpportunityOnExpiration_Handler(srv inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ContractGrpcService_RefreshContractStatusContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ContractGrpcService_RefreshContractStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RefreshContractStatusGrpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ContractGrpcServiceServer).RefreshContractStatusContract(ctx, in)
+		return srv.(ContractGrpcServiceServer).RefreshContractStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ContractGrpcService/RefreshContractStatusContract",
+		FullMethod: "/ContractGrpcService/RefreshContractStatus",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContractGrpcServiceServer).RefreshContractStatusContract(ctx, req.(*RefreshContractStatusGrpcRequest))
+		return srv.(ContractGrpcServiceServer).RefreshContractStatus(ctx, req.(*RefreshContractStatusGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -202,8 +202,8 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ContractGrpcService_RolloutRenewalOpportunityOnExpiration_Handler,
 		},
 		{
-			MethodName: "RefreshContractStatusContract",
-			Handler:    _ContractGrpcService_RefreshContractStatusContract_Handler,
+			MethodName: "RefreshContractStatus",
+			Handler:    _ContractGrpcService_RefreshContractStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

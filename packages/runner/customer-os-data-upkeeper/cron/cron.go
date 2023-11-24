@@ -8,16 +8,37 @@ import (
 	"sync"
 )
 
-var jobLock sync.Mutex
+const (
+	organizationGroup = "organization"
+	contractGroup     = "contract"
+)
+
+var jobLocks = struct {
+	sync.Mutex
+	locks map[string]*sync.Mutex
+}{
+	locks: map[string]*sync.Mutex{
+		organizationGroup: {},
+		contractGroup:     {},
+	},
+}
 
 func StartCron(cont *container.Container) *cron.Cron {
 	c := cron.New()
 
+	// Add jobs
 	err := c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateOrgNextCycleDate, func() {
-		lockAndRunJob(cont, updateOrganizationNextCycleDate)
+		lockAndRunJob(cont, organizationGroup, updateOrganizationNextCycleDate)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job: %v", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "updateOrganizationNextCycleDate", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateContract, func() {
+		lockAndRunJob(cont, contractGroup, updateContractsStatusAndRenewal)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "updateContractsStatusAndRenewal", err.Error())
 	}
 
 	c.Start()
@@ -25,9 +46,9 @@ func StartCron(cont *container.Container) *cron.Cron {
 	return c
 }
 
-func lockAndRunJob(cont *container.Container, job func(cont *container.Container)) {
-	jobLock.Lock()
-	defer jobLock.Unlock()
+func lockAndRunJob(cont *container.Container, groupName string, job func(cont *container.Container)) {
+	jobLocks.locks[groupName].Lock()
+	defer jobLocks.locks[groupName].Unlock()
 
 	job(cont)
 }
@@ -41,4 +62,8 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 
 func updateOrganizationNextCycleDate(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpdateNextCycleDate()
+}
+
+func updateContractsStatusAndRenewal(cont *container.Container) {
+	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepContracts()
 }
