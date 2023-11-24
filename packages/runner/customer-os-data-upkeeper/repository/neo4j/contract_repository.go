@@ -3,6 +3,7 @@ package neo4j
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -18,6 +19,7 @@ type TenantAndContractId struct {
 type ContractRepository interface {
 	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
 	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time) ([]TenantAndContractId, error)
+	GetContractById(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 }
 
 type contractRepository struct {
@@ -113,4 +115,33 @@ func (r *contractRepository) GetContractsForRenewalRollout(ctx context.Context, 
 	}
 	span.LogFields(log.Int("output - length", len(output)))
 	return output, nil
+}
+
+func (r *contractRepository) GetContractById(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(span)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id}) RETURN c`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     contractId,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }

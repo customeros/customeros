@@ -209,7 +209,7 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 	}
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	err := h.repositories.ContractRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData.Status)
+	err := h.repositories.ContractRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())

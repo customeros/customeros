@@ -4,17 +4,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type ContractUpdateStatusEvent struct {
-	Tenant string `json:"tenant" validate:"required"`
-	Status string `json:"status" validate:"required"`
+	Tenant           string     `json:"tenant" validate:"required"`
+	Status           string     `json:"status" validate:"required"`
+	ServiceStartedAt *time.Time `json:"serviceStartedAt,omitempty"`
+	EndedAt          *time.Time `json:"endedAt,omitempty"`
 }
 
-func NewContractUpdateStatusEvent(aggr eventstore.Aggregate, status string) (eventstore.Event, error) {
+func NewContractUpdateStatusEvent(aggr eventstore.Aggregate, status string, serviceStartedAt, endedAt *time.Time) (eventstore.Event, error) {
 	eventData := ContractUpdateStatusEvent{
-		Tenant: aggr.GetTenant(),
-		Status: status,
+		Tenant:           aggr.GetTenant(),
+		Status:           status,
+		ServiceStartedAt: serviceStartedAt,
+		EndedAt:          endedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

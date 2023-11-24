@@ -122,7 +122,7 @@ func (a *ContractAggregate) refreshContractStatus(ctx context.Context, cmd *comm
 	// Determine contract status based start and end dates
 	status := determineContractStatus(a.Contract.ServiceStartedAt, a.Contract.EndedAt)
 
-	updateEvent, err := event.NewContractUpdateStatusEvent(a, string(status))
+	updateEvent, err := event.NewContractUpdateStatusEvent(a, status.String(), a.Contract.ServiceStartedAt, a.Contract.EndedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContractUpdateStatusEvent")

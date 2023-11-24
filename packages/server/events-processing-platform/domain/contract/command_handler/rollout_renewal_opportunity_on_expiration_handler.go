@@ -45,6 +45,12 @@ func (h *rolloutRenewalOpportunityOnExpirationCommandHandler) Handle(ctx context
 			tracing.TraceErr(span, err)
 			return err
 		}
+
+		if aggregate.IsAggregateNotFound(contractAggregate) {
+			tracing.TraceErr(span, eventstore.ErrAggregateNotFound)
+			return eventstore.ErrAggregateNotFound
+		}
+
 		// Apply the command to the aggregate
 		if err = contractAggregate.HandleCommand(ctx, cmd); err != nil {
 			tracing.TraceErr(span, err)
