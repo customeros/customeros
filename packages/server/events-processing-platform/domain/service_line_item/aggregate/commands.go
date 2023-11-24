@@ -25,6 +25,8 @@ func (a *ServiceLineItemAggregate) HandleCommand(ctx context.Context, cmd events
 		return a.createServiceLineItem(ctx, c)
 	case *command.UpdateServiceLineItemCommand:
 		return a.updateServiceLineItem(ctx, c)
+	case *command.DeleteServiceLineItemCommand:
+		return a.deleteServiceLineItem(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -39,7 +41,7 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
 	// If the service line item is one-time, set licenses to 0
-	if cmd.DataFields.Billed.IsOneTime() {
+	if !cmd.DataFields.Billed.IsRecurrent() {
 		cmd.DataFields.Quantity = 0
 	}
 
@@ -73,6 +75,12 @@ func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cm
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
+	if a.ServiceLineItem.IsDeleted {
+		err := errors.New(constants.Validate + ": cannot update a deleted service line item")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
 	if (a.ServiceLineItem.Billed == model.OnceBilled.String() && cmd.DataFields.Billed != model.OnceBilled) ||
@@ -98,4 +106,25 @@ func (a *ServiceLineItemAggregate) updateServiceLineItem(ctx context.Context, cm
 	})
 
 	return a.Apply(updateEvent)
+}
+
+func (a *ServiceLineItemAggregate) deleteServiceLineItem(ctx context.Context, cmd *command.DeleteServiceLineItemCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.deleteServiceLineItem")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	deleteEvent, err := event.NewServiceLineItemDeleteEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewServiceLineItemDeleteEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.GetLoggedInUserId(),
+		App:    cmd.GetAppSource(),
+	})
+
+	return a.Apply(deleteEvent)
 }

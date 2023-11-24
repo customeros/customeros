@@ -323,6 +323,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.serviceLineItemEventHandler.OnCreate(ctx, evt)
 	case servicelineitemevent.ServiceLineItemUpdateV1:
 		return s.serviceLineItemEventHandler.OnUpdate(ctx, evt)
+	case servicelineitemevent.ServiceLineItemDeleteV1:
+		return s.serviceLineItemEventHandler.OnDelete(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

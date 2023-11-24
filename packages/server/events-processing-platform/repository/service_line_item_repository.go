@@ -17,6 +17,7 @@ type ServiceLineItemRepository interface {
 	CreateForContract(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCreateEvent) error
 	Update(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemUpdateEvent) error
 	GetAllForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
+	Delete(ctx context.Context, tenant, serviceLineItemId string) error
 }
 
 type serviceLineItemRepository struct {
@@ -132,4 +133,21 @@ func (r *serviceLineItemRepository) GetAllForContract(ctx context.Context, tenan
 		return nil, err
 	}
 	return result.([]*neo4j.Node), nil
+}
+
+func (r *serviceLineItemRepository) Delete(ctx context.Context, tenant, serviceLineItemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.Delete")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
+							WHERE sli:ServiceLineItem_%s
+							DETACH DELETE sli`, tenant)
+	params := map[string]any{
+		"serviceLineItemId": serviceLineItemId,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 }

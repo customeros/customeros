@@ -129,6 +129,29 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
 }
 
+func (s *serviceLineItemService) DeleteServiceLineItem(ctx context.Context, request *servicelineitempb.DeleteServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.DeleteServiceLineItem")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Validate service line item ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	deleteSliCommand := command.NewDeleteServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource)
+
+	if err := s.serviceLineItemCommandHandlers.DeleteServiceLineItem.Handle(ctx, deleteSliCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(DeleteServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the updated service line item
+	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
+}
+
 func (s *serviceLineItemService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
 	err := s.aggregateStore.Exists(ctx, contractAggregate.GetID())
