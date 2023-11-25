@@ -2,8 +2,9 @@ extend type Query {
     serviceLineItem(id: ID!): ServiceLineItem!
 }
 extend type Mutation {
-    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem!
-    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem!
+    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ServiceLineItem implements Node {

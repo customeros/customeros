@@ -23,6 +23,7 @@ import (
 type ServiceLineItemService interface {
 	Create(ctx context.Context, serviceLineItem *ServiceLineItemCreateData) (string, error)
 	Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity) error
+	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
 	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
 }
@@ -123,6 +124,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	}
 	return response.Id, err
 }
+
 func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Update")
 	defer span.Finish()
@@ -183,6 +185,55 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 	}
 
 	return nil
+}
+
+func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId string) (completed bool, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Delete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	sliExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, entity.NodeLabel_ServiceLineItem)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on checking if service line item exists: %s", err.Error())
+		return false, err
+	}
+	if !sliExists {
+		err := fmt.Errorf("service line item with id {%s} not found", serviceLineItemId)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return false, err
+	}
+
+	deleteRequest := servicelineitempb.DeleteServiceLineItemGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             serviceLineItemId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+
+	_, err = s.grpcClients.ServiceLineItemClient.DeleteServiceLineItem(ctx, &deleteRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return false, err
+	}
+
+	// wait for service line item to be deleted from graph db
+	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
+		serviceLineItemFound, findErr := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, entity.NodeLabel_ServiceLineItem)
+		if findErr != nil {
+			tracing.TraceErr(span, findErr)
+			s.log.Errorf("error on checking if service line item exists: %s", findErr.Error())
+		} else if !serviceLineItemFound {
+			span.LogFields(log.Bool("serviceLineItemDeletedFromGraphDb", true))
+			return true, nil
+		}
+		time.Sleep(utils.BackOffIncrementalDelay(i))
+	}
+
+	return false, nil
 }
 
 func (s *serviceLineItemService) GetById(ctx context.Context, serviceLineItemId string) (*entity.ServiceLineItemEntity, error) {

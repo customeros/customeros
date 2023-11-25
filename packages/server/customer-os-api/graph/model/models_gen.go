@@ -605,6 +605,11 @@ type DashboardRevenueAtRisk struct {
 	AtRisk         float64 `json:"atRisk"`
 }
 
+type DeleteResponse struct {
+	Accepted  bool `json:"accepted"`
+	Completed bool `json:"completed"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {

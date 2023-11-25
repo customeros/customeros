@@ -1,0 +1,4 @@
+type DeleteResponse {
+    accepted: Boolean!
+    completed: Boolean!
+}

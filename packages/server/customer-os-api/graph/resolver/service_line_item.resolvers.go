@@ -70,6 +70,22 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
 }
 
+// ServiceLineItemDelete is the resolver for the serviceLineItem_Delete field.
+func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
+
+	deletionCompleted, err := r.Services.ServiceLineItemService.Delete(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to delete service line item %s", id)
+		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
+	}
+	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
+}
+
 // ServiceLineItem is the resolver for the serviceLineItem field.
 func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ServiceLineItem", graphql.GetOperationContext(ctx))
