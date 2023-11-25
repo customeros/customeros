@@ -63,6 +63,8 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 		},
 		timeNow,
 		timeNow,
+		timeNow,
+		nil,
 	)
 	require.Nil(t, err, "failed to create service line item create event")
 
@@ -88,6 +90,10 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, float64(100.50), serviceLineItem.Price)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
+	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
+	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	require.Equal(t, timeNow, serviceLineItem.StartedAt)
+	require.Nil(t, serviceLineItem.EndedAt)
 }
 
 func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {

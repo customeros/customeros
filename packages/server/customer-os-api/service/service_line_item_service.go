@@ -48,6 +48,8 @@ type ServiceLineItemCreateData struct {
 	ExternalReference     *entity.ExternalSystemEntity
 	Source                entity.DataSource
 	AppSource             string
+	StartedAt             *time.Time
+	EndedAt               *time.Time
 }
 
 func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDetails *ServiceLineItemCreateData) (string, error) {
@@ -84,6 +86,8 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		Name:           serviceLineItemDetails.ServiceLineItemEntity.Name,
 		Quantity:       serviceLineItemDetails.ServiceLineItemEntity.Quantity,
 		Price:          float32(serviceLineItemDetails.ServiceLineItemEntity.Price),
+		StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
+		EndedAt:        utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.EndedAt),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(serviceLineItemDetails.Source),
@@ -221,6 +225,8 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
+		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
 		Billed:        entity.GetBilledType(utils.GetStringPropOrEmpty(props, "billed")),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),

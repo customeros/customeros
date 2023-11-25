@@ -62,7 +62,7 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 
 	createdAt, updatedAt := convertCreateAndUpdateProtoTimestampsToTime(request.CreatedAt, request.UpdatedAt)
 
-	createServiceLineItemCommand := command.NewCreateServiceLineItemCommand(
+	createCommand := command.NewCreateServiceLineItemCommand(
 		serviceLineItemId,
 		request.Tenant,
 		request.LoggedInUserId,
@@ -77,8 +77,10 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 		createdAt,
 		updatedAt,
 	)
+	createCommand.StartedAt = utils.TimestampProtoToTimePtr(request.StartedAt)
+	createCommand.EndedAt = utils.TimestampProtoToTimePtr(request.EndedAt)
 
-	if err := s.serviceLineItemCommandHandlers.CreateServiceLineItem.Handle(ctx, createServiceLineItemCommand); err != nil {
+	if err = s.serviceLineItemCommandHandlers.CreateServiceLineItem.Handle(ctx, createCommand); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(CreateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)

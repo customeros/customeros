@@ -375,6 +375,8 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
+		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),

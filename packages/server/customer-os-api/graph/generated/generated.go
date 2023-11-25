@@ -1003,6 +1003,7 @@ type ComplexityRoot struct {
 		Comments      func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		CreatedBy     func(childComplexity int) int
+		EndedAt       func(childComplexity int) int
 		ExternalLinks func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Name          func(childComplexity int) int
@@ -1010,6 +1011,7 @@ type ComplexityRoot struct {
 		Quantity      func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
+		StartedAt     func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
 
@@ -7414,6 +7416,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.CreatedBy(childComplexity), true
 
+	case "ServiceLineItem.endedAt":
+		if e.complexity.ServiceLineItem.EndedAt == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.EndedAt(childComplexity), true
+
 	case "ServiceLineItem.externalLinks":
 		if e.complexity.ServiceLineItem.ExternalLinks == nil {
 			break
@@ -7462,6 +7471,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceLineItem.SourceOfTruth(childComplexity), true
+
+	case "ServiceLineItem.startedAt":
+		if e.complexity.ServiceLineItem.StartedAt == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.StartedAt(childComplexity), true
 
 	case "ServiceLineItem.updatedAt":
 		if e.complexity.ServiceLineItem.UpdatedAt == nil {
@@ -10351,6 +10367,8 @@ type ServiceLineItem implements Node {
     id:                 ID!
     createdAt:          Time!
     updatedAt:          Time!
+    startedAt:          Time!
+    endedAt:            Time
     name:               String!
     billed:             BilledType!
     price:              Float!
@@ -10371,6 +10389,8 @@ input ServiceLineItemInput {
     quantity:           Int64
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
+    startedAt:          Time
+    endedAt:            Time
 }
 
 input ServiceLineItemUpdateInput {
@@ -19324,6 +19344,10 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.C
 				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ServiceLineItem_name(ctx, field)
 			case "billed":
@@ -45052,6 +45076,10 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx cont
 				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ServiceLineItem_name(ctx, field)
 			case "billed":
@@ -45135,6 +45163,10 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx cont
 				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ServiceLineItem_name(ctx, field)
 			case "billed":
@@ -57150,6 +57182,10 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ServiceLineItem_name(ctx, field)
 			case "billed":
@@ -58805,6 +58841,91 @@ func (ec *executionContext) _ServiceLineItem_updatedAt(ctx context.Context, fiel
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceLineItem_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_startedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceLineItem_endedAt(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServiceLineItem",
 		Field:      field,
@@ -67813,7 +67934,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference", "startedAt", "endedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -67883,6 +68004,24 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 				return it, err
 			}
 			it.ExternalReference = data
+		case "startedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartedAt = data
+		case "endedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndedAt = data
 		}
 	}
 
@@ -78687,6 +78826,13 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "startedAt":
+			out.Values[i] = ec._ServiceLineItem_startedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "endedAt":
+			out.Values[i] = ec._ServiceLineItem_endedAt(ctx, field, obj)
 		case "name":
 			out.Values[i] = ec._ServiceLineItem_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

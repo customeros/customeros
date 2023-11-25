@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 )
 
@@ -22,14 +23,45 @@ func main() {
 	}
 
 	// Initialize logger
-	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
-	appLogger.InitLogger()
-	appLogger.WithName(server.GetMicroserviceName(cfg))
+	appLogger := initLogger(cfg)
 
-	// Create a context with a cancel function
-	ctx, cancel := context.WithCancel(context.Background())
+	// Create context and add cancel capability
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
 
-	// Set up signal handler to cancel context on interrupt
+	var waitGroup sync.WaitGroup
+
+	// Launch server goroutine
+	waitGroup.Add(1)
+	go startServer(ctx, cfg, appLogger, &waitGroup)
+
+	// Propagate cancel signal
+	go handleSignals(cancel, appLogger)
+
+	// Wait for everything to exit
+	waitGroup.Wait()
+
+	// Flush logs and exit
+	appLogger.Sync()
+}
+
+func startServer(ctx context.Context, cfg *config.Config, logger *logger.ExtendedLogger, waitGroup *sync.WaitGroup) {
+	// Create the server
+	srv := server.NewServer(cfg, logger)
+
+	// Start it in the background
+	go func() {
+		if err := srv.Start(ctx); err != nil {
+			logger.Fatal(err)
+		}
+		waitGroup.Done()
+	}()
+
+	// Return so main can continue
+	return
+}
+
+func handleSignals(cancel context.CancelFunc, appLogger *logger.ExtendedLogger) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -37,25 +69,13 @@ func main() {
 		case <-sigChan:
 			appLogger.Info("Interrupt signal received. Shutting down...")
 			cancel()
-		case <-ctx.Done():
-			// Do nothing
 		}
 	}()
+}
 
-	// Init server
-	errChan := make(chan error, 1)
-	go func() {
-		errChan <- server.NewServer(cfg, appLogger).Run(ctx)
-	}()
-
-	// Wait for server to exit or context to be canceled
-	select {
-	case err := <-errChan:
-		appLogger.Fatalf("Server error: %v", err)
-	case <-ctx.Done():
-		// Do nothing
-	}
-
-	// Flush logs and exit
-	appLogger.Sync()
+func initLogger(cfg *config.Config) *logger.ExtendedLogger {
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName(server.GetMicroserviceName(cfg))
+	return appLogger
 }

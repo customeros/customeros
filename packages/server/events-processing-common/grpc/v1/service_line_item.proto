@@ -26,6 +26,8 @@ message CreateServiceLineItemGrpcRequest {
   SourceFields sourceFields = 8;
   google.protobuf.Timestamp createdAt = 9;
   google.protobuf.Timestamp updatedAt = 10;
+  google.protobuf.Timestamp startedAt = 11;
+  google.protobuf.Timestamp endedAt = 12;
 }
 
 message UpdateServiceLineItemGrpcRequest {

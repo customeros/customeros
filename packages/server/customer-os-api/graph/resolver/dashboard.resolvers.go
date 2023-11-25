@@ -240,6 +240,19 @@ func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model
 	return mapper.MapDashboardNewCustomersData(newCustomersData), nil
 }
 
+// DashboardCustomerMap returns generated.DashboardCustomerMapResolver implementation.
+func (r *Resolver) DashboardCustomerMap() generated.DashboardCustomerMapResolver {
+	return &dashboardCustomerMapResolver{r}
+}
+
+type dashboardCustomerMapResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
 func getPeriod(period *model.DashboardPeriodInput) (time.Time, time.Time, error) {
 	if period == nil {
 		now := time.Now().UTC()
@@ -256,10 +269,3 @@ func getPeriod(period *model.DashboardPeriodInput) (time.Time, time.Time, error)
 		return period.Start, period.End, nil
 	}
 }
-
-// DashboardCustomerMap returns generated.DashboardCustomerMapResolver implementation.
-func (r *Resolver) DashboardCustomerMap() generated.DashboardCustomerMapResolver {
-	return &dashboardCustomerMapResolver{r}
-}
-
-type dashboardCustomerMapResolver struct{ *Resolver }
