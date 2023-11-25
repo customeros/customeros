@@ -94,7 +94,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	rawResponse := callGraphQL(t, "update_service_line_item", map[string]interface{}{
+	rawResponse := callGraphQL(t, "service_line_item/update_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
 
@@ -109,4 +109,45 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 
 	require.True(t, calledUpdateServiceLineItem)
+}
+
+func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{})
+
+	calledDeleteServiceLineItem := false
+	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
+		DeleteServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.DeleteServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+			require.Equal(t, tenantName, serviceLineItem.Tenant)
+			require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+			require.Equal(t, testUserId, serviceLineItem.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, constants.AppSourceCustomerOsApi)
+			calledDeleteServiceLineItem = true
+			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
+				Id: serviceLineItemId,
+			}, nil
+		},
+	}
+	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "service_line_item/delete_service_line_item", map[string]interface{}{
+		"serviceLineItemId": serviceLineItemId,
+	})
+
+	var response struct {
+		ServiceLineItem_Delete model.DeleteResponse
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.True(t, response.ServiceLineItem_Delete.Accepted)
+	require.False(t, response.ServiceLineItem_Delete.Completed)
+	require.True(t, calledDeleteServiceLineItem)
 }
