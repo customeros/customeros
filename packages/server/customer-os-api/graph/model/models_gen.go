@@ -1601,6 +1601,8 @@ type ServiceLineItem struct {
 	ID            string            `json:"id"`
 	CreatedAt     time.Time         `json:"createdAt"`
 	UpdatedAt     time.Time         `json:"updatedAt"`
+	StartedAt     time.Time         `json:"startedAt"`
+	EndedAt       *time.Time        `json:"endedAt,omitempty"`
 	Name          string            `json:"name"`
 	Billed        BilledType        `json:"billed"`
 	Price         float64           `json:"price"`
@@ -1624,6 +1626,8 @@ type ServiceLineItemInput struct {
 	Quantity          *int64                        `json:"quantity,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
+	EndedAt           *time.Time                    `json:"endedAt,omitempty"`
 }
 
 type ServiceLineItemUpdateInput struct {

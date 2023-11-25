@@ -14,6 +14,8 @@ type CreateServiceLineItemCommand struct {
 	Source     commonmodel.Source
 	CreatedAt  *time.Time
 	UpdatedAt  *time.Time
+	StartedAt  *time.Time
+	EndedAt    *time.Time
 }
 
 // NewCreateServiceLineItemCommand creates a new CreateServiceLineItemCommand.

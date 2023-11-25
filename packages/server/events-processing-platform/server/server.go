@@ -67,7 +67,7 @@ func (server *server) SetCommands(commands *command.CommandHandlers) {
 	server.commandHandlers = commands
 }
 
-func (server *server) Run(parentCtx context.Context) error {
+func (server *server) Start(parentCtx context.Context) error {
 	ctx, cancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 

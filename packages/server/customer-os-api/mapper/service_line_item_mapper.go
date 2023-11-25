@@ -16,6 +16,8 @@ func MapEntityToServiceLineItem(entity *entity.ServiceLineItemEntity) *model.Ser
 		Name:          entity.Name,
 		CreatedAt:     entity.CreatedAt,
 		UpdatedAt:     entity.UpdatedAt,
+		StartedAt:     entity.StartedAt,
+		EndedAt:       entity.EndedAt,
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:     entity.AppSource,

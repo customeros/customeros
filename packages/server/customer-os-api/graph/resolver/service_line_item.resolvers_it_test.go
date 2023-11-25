@@ -49,7 +49,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	rawResponse := callGraphQL(t, "create_service_line_item", map[string]interface{}{
+	rawResponse := callGraphQL(t, "service_line_item/create_service_line_item", map[string]interface{}{
 		"contractId": contractId,
 	})
 

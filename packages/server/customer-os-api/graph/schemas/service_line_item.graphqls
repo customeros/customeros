@@ -10,6 +10,8 @@ type ServiceLineItem implements Node {
     id:                 ID!
     createdAt:          Time!
     updatedAt:          Time!
+    startedAt:          Time!
+    endedAt:            Time
     name:               String!
     billed:             BilledType!
     price:              Float!
@@ -30,6 +32,8 @@ input ServiceLineItemInput {
     quantity:           Int64
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
+    startedAt:          Time
+    endedAt:            Time
 }
 
 input ServiceLineItemUpdateInput {

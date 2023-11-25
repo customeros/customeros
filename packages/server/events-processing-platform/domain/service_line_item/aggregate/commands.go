@@ -47,6 +47,13 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
+	startedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.StartedAt, createdAtNotNil)
+
+	if cmd.EndedAt != nil && cmd.EndedAt.Before(startedAtNotNil) {
+		err := errors.New(constants.FieldValidation + ": endedAt must be after startedAt")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	createEvent, err := event.NewServiceLineItemCreateEvent(
 		a,
@@ -54,6 +61,8 @@ func (a *ServiceLineItemAggregate) createServiceLineItem(ctx context.Context, cm
 		cmd.Source,
 		createdAtNotNil,
 		updatedAtNotNil,
+		startedAtNotNil,
+		cmd.EndedAt,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)

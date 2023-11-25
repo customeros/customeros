@@ -8,6 +8,8 @@ type ServiceLineItemEntity struct {
 	Id            string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	StartedAt     time.Time
+	EndedAt       *time.Time
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string

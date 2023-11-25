@@ -58,6 +58,8 @@ func (a *ServiceLineItemAggregate) onServiceLineItemCreate(evt eventstore.Event)
 	a.ServiceLineItem.CreatedAt = eventData.CreatedAt
 	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
 	a.ServiceLineItem.Source = eventData.Source
+	a.ServiceLineItem.StartedAt = eventData.StartedAt
+	a.ServiceLineItem.EndedAt = eventData.EndedAt
 
 	return nil
 }

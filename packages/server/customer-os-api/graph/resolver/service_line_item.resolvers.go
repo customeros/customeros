@@ -29,6 +29,8 @@ func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input mode
 		ContractId:            input.ContractID,
 		ExternalReference:     mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
 		Source:                entity.DataSourceOpenline,
+		StartedAt:             input.StartedAt,
+		EndedAt:               input.EndedAt,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

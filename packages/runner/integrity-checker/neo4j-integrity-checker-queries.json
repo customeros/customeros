@@ -99,6 +99,10 @@
     {
       "name": "Check for contracts with wrong status",
       "query": "CALL {MATCH (c:Contract) WHERE c.status <> 'ENDED' AND datetime(c.endedAt) < datetime() RETURN count(c) AS cnt UNION MATCH (c:Contract) WHERE (c.endedAt is null OR datetime(c.endedAt) > datetime()) AND c.status <> 'LIVE' AND datetime(c.serviceStartedAt) < datetime() RETURN count(c) AS cnt} return sum(cnt)"
+    },
+    {
+      "name": "Check service line items data consistency",
+      "query": "CALL {MATCH (sli:ServiceLineItem)<-[:HAS_SERVICE]-(c:Contract) WITH sli, count(c) AS sizeContracts WHERE sizeContracts <> 1 RETURN count(sli) AS cnt UNION MATCH (sli:ServiceLineItem) WHERE sli.endedAt > sli.startedAt RETURN count(sli) as cnt UNION MATCH (sli:ServiceLineItem) WHERE sli.createdAt is null OR sli.updatedAt is null OR sli.startedAt is null OR sli.billed is null OR sli.billed = '' return count(sli) as cnt} return sum(cnt)"
     }
   ]
 }

@@ -7,17 +7,19 @@ import (
 
 // ServiceLineItem represents the state of a service line item aggregate.
 type ServiceLineItem struct {
-	ID         string    `json:"id"`
-	ContractId string    `json:"contractId"`
-	Billed     string    `json:"billed"`
-	Quantity   int64     `json:"quantity"` // Relevant only for Subscription type
-	Price      float64   `json:"price"`
-	Name       string    `json:"name"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
-	Source     commonmodel.Source
-	Comments   string `json:"comments,omitempty"`
-	IsDeleted  bool   `json:"isDeleted"`
+	ID         string             `json:"id"`
+	ContractId string             `json:"contractId"`
+	Billed     string             `json:"billed"`
+	Quantity   int64              `json:"quantity"` // Relevant only for Subscription type
+	Price      float64            `json:"price"`
+	Name       string             `json:"name"`
+	Comments   string             `json:"comments,omitempty"`
+	CreatedAt  time.Time          `json:"createdAt"`
+	UpdatedAt  time.Time          `json:"updatedAt"`
+	StartedAt  time.Time          `json:"startedAt"`
+	EndedAt    *time.Time         `json:"endedAt,omitempty"`
+	Source     commonmodel.Source `json:"source"`
+	IsDeleted  bool               `json:"isDeleted"`
 }
 
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.
