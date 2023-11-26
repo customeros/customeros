@@ -9833,6 +9833,7 @@ input OpportunityRenewalUpdateInput {
     amount:             Float
     renewalLikelihood:  OpportunityRenewalLikelihood
     comments:           String
+    ownerUserId:        String
     appSource:          String
 }
 
@@ -9845,6 +9846,7 @@ input OpportunityUpdateInput {
     estimatedClosedDate: Time
     generalNotes:        String
     nextSteps:           String
+    ownerUserId:         ID
     appSource:           String
     externalReference:   ExternalSystemReferenceInput
 }
@@ -67453,7 +67455,7 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "appSource"}
+	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "ownerUserId", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -67505,6 +67507,15 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 				return it, err
 			}
 			it.Comments = data
+		case "ownerUserId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerUserId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerUserID = data
 		case "appSource":
 			var err error
 
@@ -67527,7 +67538,7 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "externalType", "externalStage", "estimatedClosedDate", "generalNotes", "nextSteps", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "externalType", "externalStage", "estimatedClosedDate", "generalNotes", "nextSteps", "ownerUserId", "appSource", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -67606,6 +67617,15 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 				return it, err
 			}
 			it.NextSteps = data
+		case "ownerUserId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerUserId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OwnerUserID = data
 		case "appSource":
 			var err error
 

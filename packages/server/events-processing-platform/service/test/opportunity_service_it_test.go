@@ -187,6 +187,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 		},
 		LoggedInUserId: "user-id-123",
 		Comments:       "Some comments",
+		OwnerUserId:    "OwnerUser123",
 	})
 	require.Nil(t, err, "Failed to update opportunity")
 
@@ -212,6 +213,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 	test.AssertRecentTime(t, eventData.UpdatedAt)
 	require.Equal(t, "user-id-123", eventData.UpdatedByUserId)
 	require.Equal(t, "Some comments", eventData.Comments)
+	require.Equal(t, "OwnerUser123", eventData.OwnerUserId)
 	require.Equal(t, string(model.RenewalLikelihoodStringMedium), eventData.RenewalLikelihood)
 	require.Equal(t, "openline", eventData.Source)
 }

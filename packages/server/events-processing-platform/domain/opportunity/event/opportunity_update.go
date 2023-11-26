@@ -19,17 +19,19 @@ type OpportunityUpdateEvent struct {
 	Source         string                     `json:"source"`
 	ExternalSystem commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	FieldsMask     []string                   `json:"fieldsMask"`
+	OwnerUserId    string                     `json:"ownerUserId"`
 }
 
 func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source string, externalSystem commonmodel.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := OpportunityUpdateEvent{
-		Tenant:     aggregate.GetTenant(),
-		Name:       dataFields.Name,
-		Amount:     dataFields.Amount,
-		MaxAmount:  dataFields.MaxAmount,
-		UpdatedAt:  updatedAt,
-		Source:     source,
-		FieldsMask: fieldsMask,
+		Tenant:      aggregate.GetTenant(),
+		Name:        dataFields.Name,
+		Amount:      dataFields.Amount,
+		MaxAmount:   dataFields.MaxAmount,
+		UpdatedAt:   updatedAt,
+		Source:      source,
+		FieldsMask:  fieldsMask,
+		OwnerUserId: dataFields.OwnerUserId,
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem

@@ -10,7 +10,7 @@ opportunityUpdate(
         generalNotes: "general notes"
         nextSteps: "next steps"
         appSource: "test app source"
-    }
+            }
   ) {
     id
     name

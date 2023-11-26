@@ -154,7 +154,14 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 			return err
 		}
 	}
-
+	if eventData.OwnerUserId != "" {
+		err = h.repositories.OpportunityRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
+			return err
+		}
+	}
 	// if amount changed, recalculate organization combined ARR forecast
 	if amountChanged {
 		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
@@ -244,6 +251,14 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("NewRefreshArrCommand failed: %v", err.Error())
+		}
+	}
+	if eventData.OwnerUserId != "" {
+		err = h.repositories.OpportunityRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
+			return err
 		}
 	}
 

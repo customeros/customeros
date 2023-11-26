@@ -159,7 +159,9 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 			a.Opportunity.ExternalSystems = append(a.Opportunity.ExternalSystems, eventData.ExternalSystem)
 		}
 	}
-
+	if eventData.OwnerUserId != "" {
+		a.Opportunity.OwnerUserId = eventData.OwnerUserId
+	}
 	return nil
 }
 
@@ -180,6 +182,9 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	a.Opportunity.Amount = eventData.Amount
 	if eventData.Source == constants.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
+	}
+	if eventData.OwnerUserId != "" {
+		a.Opportunity.OwnerUserId = eventData.OwnerUserId
 	}
 
 	return nil

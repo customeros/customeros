@@ -1273,6 +1273,7 @@ type OpportunityRenewalUpdateInput struct {
 	Amount            *float64                      `json:"amount,omitempty"`
 	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
 	Comments          *string                       `json:"comments,omitempty"`
+	OwnerUserID       *string                       `json:"ownerUserId,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 }
 
@@ -1285,6 +1286,7 @@ type OpportunityUpdateInput struct {
 	EstimatedClosedDate *time.Time                    `json:"estimatedClosedDate,omitempty"`
 	GeneralNotes        *string                       `json:"generalNotes,omitempty"`
 	NextSteps           *string                       `json:"nextSteps,omitempty"`
+	OwnerUserID         *string                       `json:"ownerUserId,omitempty"`
 	AppSource           *string                       `json:"appSource,omitempty"`
 	ExternalReference   *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }

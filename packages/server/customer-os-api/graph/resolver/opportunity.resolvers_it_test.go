@@ -88,6 +88,7 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
 			}
 			require.Equal(t, timestamppb.New(estimatedCloseAt), opportunity.EstimatedCloseDate)
+			//require.Equal(t, "user-123", opportunity.OwnerUserId)
 			calledUpdateOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: opportunityId,

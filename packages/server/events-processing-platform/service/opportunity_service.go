@@ -126,6 +126,7 @@ func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, reque
 		request.Comments,
 		model.RenewalLikelihood(request.RenewalLikelihood).StringValue(),
 		request.Amount,
+		request.OwnerUserId,
 		source,
 		updatedAt,
 	)

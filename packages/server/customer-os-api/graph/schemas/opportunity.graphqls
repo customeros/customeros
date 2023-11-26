@@ -60,6 +60,7 @@ input OpportunityRenewalUpdateInput {
     amount:             Float
     renewalLikelihood:  OpportunityRenewalLikelihood
     comments:           String
+    ownerUserId:        String
     appSource:          String
 }
 
@@ -72,6 +73,7 @@ input OpportunityUpdateInput {
     estimatedClosedDate: Time
     generalNotes:        String
     nextSteps:           String
+    ownerUserId:         ID
     appSource:           String
     externalReference:   ExternalSystemReferenceInput
 }

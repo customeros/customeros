@@ -138,6 +138,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 		ExternalStage:      opportunity.ExternalStage,
 		GeneralNotes:       opportunity.GeneralNotes,
 		NextSteps:          opportunity.NextSteps,
+		OwnerUserId:        opportunity.OwnerUserId,
 		EstimatedCloseDate: utils.ConvertTimeToTimestampPtr(&opportunity.EstimatedClosedAt),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(opportunity.Source),

@@ -23,6 +23,7 @@ type OpportunityEntity struct {
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt time.Time
 	Comments               string
+	OwnerUserId            string
 	Source                 DataSource
 	SourceOfTruth          DataSource
 	AppSource              string
