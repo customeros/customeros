@@ -58,6 +58,7 @@ message UpdateRenewalOpportunityGrpcRequest {
   google.protobuf.Timestamp updatedAt = 6;
   double amount = 7;
   SourceFields sourceFields = 8;
+  string ownerUserId = 9;
 }
 
 message UpdateOpportunityGrpcRequest {
