@@ -36,6 +36,8 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 		return a.onServiceLineItemUpdate(evt)
 	case event.ServiceLineItemDeleteV1:
 		return a.onServiceLineItemDelete()
+	case event.ServiceLineItemCloseV1:
+		return a.onServiceLineItemClose(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -87,5 +89,17 @@ func (a *ServiceLineItemAggregate) onServiceLineItemUpdate(evt eventstore.Event)
 
 func (a *ServiceLineItemAggregate) onServiceLineItemDelete() error {
 	a.ServiceLineItem.IsDeleted = true
+	return nil
+}
+
+func (a *ServiceLineItemAggregate) onServiceLineItemClose(evt eventstore.Event) error {
+	var eventData event.ServiceLineItemCloseEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.ServiceLineItem.EndedAt = &eventData.EndedAt
+	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
+
 	return nil
 }

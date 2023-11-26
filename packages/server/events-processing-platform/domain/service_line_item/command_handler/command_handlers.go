@@ -11,6 +11,7 @@ type CommandHandlers struct {
 	CreateServiceLineItem CreateServiceLineItemCommandHandler
 	UpdateServiceLineItem UpdateServiceLineItemCommandHandler
 	DeleteServiceLineItem DeleteServiceLineItemCommandHandler
+	CloseServiceLineItem  CloseServiceLineItemCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
@@ -18,5 +19,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		CreateServiceLineItem: NewCreateServiceLineItemCommandHandler(log, es),
 		UpdateServiceLineItem: NewUpdateServiceLineItemCommandHandler(log, es),
 		DeleteServiceLineItem: NewDeleteServiceLineItemCommandHandler(log, es, cfg.Utils),
+		CloseServiceLineItem:  NewCloseServiceLineItemCommandHandler(log, es, cfg.Utils),
 	}
 }
