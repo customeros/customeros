@@ -195,7 +195,7 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
 	}
 
-	// Create a ServiceLineItemUpdateEvent
+	// Create a ServiceLineItemDeleteEvent
 	deleteEvent, err := event.NewServiceLineItemDeleteEvent(
 		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
 	)
@@ -210,6 +210,75 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 		"Contract":        1,
 		"ServiceLineItem": 0, "ServiceLineItem_" + tenantName: 0,
 	})
+
+	// check event was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 1, len(eventList))
+	require.Equal(t, opportunityevent.OpportunityUpdateV1, eventList[0].GetEventType())
+}
+
+func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Prepare test data in Neo4j
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		RenewalCycle: string(contractmodel.AnnuallyRenewalCycleString),
+	})
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Billed: model.MonthlyBilled.String(),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	now := utils.Now()
+	// Create a ServiceLineItemCloseEvent
+	closeEvent, err := event.NewServiceLineItemCloseEvent(aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId), now, now)
+	require.Nil(t, err)
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnClose(ctx, closeEvent)
+	require.Nil(t, err)
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+	})
+
+	// Validate that the service line item is saved in the repository
+	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	require.Nil(t, err)
+	require.NotNil(t, serviceLineItemDbNode)
+
+	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	require.Equal(t, now, serviceLineItem.UpdatedAt)
+	require.Equal(t, now, *serviceLineItem.EndedAt)
 
 	// check event was generated
 	eventsMap := aggregateStore.GetEventMap()

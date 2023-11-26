@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"time"
 )
@@ -30,6 +31,10 @@ type ServiceLineItemDataFields struct {
 	Name       string     `json:"name"`
 	ContractId string     `json:"contractId"`
 	Comments   string     `json:"comments,omitempty"`
+}
+
+func (sli ServiceLineItem) IsEnded() bool {
+	return sli.EndedAt != nil && (*sli.EndedAt).Before(utils.Now())
 }
 
 // BilledType enum represents the billing type for a service line item.

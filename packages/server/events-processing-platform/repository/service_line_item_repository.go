@@ -18,6 +18,7 @@ type ServiceLineItemRepository interface {
 	Update(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemUpdateEvent) error
 	GetAllForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
 	Delete(ctx context.Context, tenant, serviceLineItemId string) error
+	Close(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCloseEvent) error
 }
 
 type serviceLineItemRepository struct {
@@ -150,6 +151,26 @@ func (r *serviceLineItemRepository) Delete(ctx context.Context, tenant, serviceL
 							DETACH DELETE sli`, tenant)
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *serviceLineItemRepository) Close(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCloseEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.Close")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
+							WHERE sli:ServiceLineItem_%s SET
+							sli.endedAt = $endedAt,
+							sli.updatedAt = $updatedAt`, tenant)
+	params := map[string]any{
+		"serviceLineItemId": serviceLineItemId,
+		"updatedAt":         evt.UpdatedAt,
+		"endedAt":           evt.EndedAt,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
