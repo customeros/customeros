@@ -25,7 +25,7 @@ export const ChartCard = ({
           {title}
         </Text>
         {stat && <Heading>{stat}</Heading>}
-        {renderSubStat && <Text>{renderSubStat?.()}</Text>}
+        {renderSubStat && renderSubStat?.()}
       </CardHeader>
       <CardBody>{children}</CardBody>
     </Card>

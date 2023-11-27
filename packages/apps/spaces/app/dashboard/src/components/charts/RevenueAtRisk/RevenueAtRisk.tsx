@@ -1,80 +1,63 @@
 'use client';
+import dynamic from 'next/dynamic';
 
-import { Pie } from '@visx/shape';
-import { Group } from '@visx/group';
+import { ChartCard } from '@dashboard/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
+import { useRevenueAtRiskQuery } from '@dashboard/graphql/revenueAtRisk.generated';
 
-import { useToken } from '@ui/utils';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
-import { AnimatedPie } from './AnimatedPie';
+import { RevenueAtRiskDatum } from './RevenueAtRisk.chart';
 
-const mockData = [
-  {
-    label: 'At Risk',
-    value: 355300,
-  },
-  {
-    label: 'High Confidence',
-    value: 1504990,
-  },
-];
+const RevenueAtRiskChart = dynamic(() => import('./RevenueAtRisk.chart'), {
+  ssr: false,
+});
 
-interface RevenueAtRiskProps {}
+export const RevenueAtRisk = () => {
+  const client = getGraphQLClient();
+  const { data } = useRevenueAtRiskQuery(client, {
+    year: 2023,
+  });
 
-const margin = { top: 0, right: 0, bottom: 0, left: 0 };
-
-const RevenueAtRisk = (_props: RevenueAtRiskProps) => {
-  const [yellow400] = useToken('colors', ['yellow.400']);
-
-  const colorScale = {
-    Confidence: '#66C61C',
-    Risk: yellow400,
+  const chartData: RevenueAtRiskDatum = {
+    atRisk: data?.dashboard_RevenueAtRisk?.atRisk ?? 0,
+    highConfidence: data?.dashboard_RevenueAtRisk?.highConfidence ?? 0,
   };
 
   return (
-    <ParentSize>
-      {({ width, height }) => {
-        if (width < 10) return null;
+    <ChartCard
+      flex='1'
+      title='Revenue at Risk'
+      renderSubStat={() => (
+        <Flex mt='4' justify='space-between'>
+          <Flex flexDir='column'>
+            <Flex gap='3' align='center'>
+              <Flex w='3' h='3' bg='#66C61C' borderRadius='full' />
+              <Text>High Confidence</Text>
+            </Flex>
+            <Text fontSize='sm' fontWeight='medium'>
+              {formatCurrency(chartData.highConfidence)}
+            </Text>
+          </Flex>
 
-        const innerWidth = width - margin.left - margin.right;
-        const innerHeight = height - margin.top - margin.bottom;
-        const radius = Math.min(innerWidth, innerHeight) / 2;
-        const centerY = innerHeight / 2;
-        const centerX = innerWidth / 2;
-        const donutThickness = 70;
-
-        return (
-          <svg width={width} height={height}>
-            <Group top={centerY + margin.top} left={centerX + margin.left}>
-              <Pie
-                data={mockData}
-                pieValue={(d) => d.value}
-                outerRadius={radius}
-                innerRadius={radius - donutThickness}
-                cornerRadius={8}
-                padAngle={0.01}
-              >
-                {(pie) => {
-                  return (
-                    <AnimatedPie
-                      {...pie}
-                      animate
-                      getKey={(arc) => arc.data.label}
-                      getColor={(arc) =>
-                        arc.data.label === 'At Risk'
-                          ? colorScale.Risk
-                          : colorScale.Confidence
-                      }
-                    />
-                  );
-                }}
-              </Pie>
-            </Group>
-          </svg>
-        );
-      }}
-    </ParentSize>
+          <Flex flexDir='column'>
+            <Flex gap='3' align='center'>
+              <Flex w='3' h='3' bg='yellow.400' borderRadius='full' />
+              <Text>At Risk</Text>
+            </Flex>
+            <Text fontSize='sm'>{formatCurrency(chartData.atRisk)}</Text>
+          </Flex>
+        </Flex>
+      )}
+    >
+      <ParentSize>
+        {({ width, height }) => (
+          <RevenueAtRiskChart width={width} height={height} data={chartData} />
+        )}
+      </ParentSize>
+    </ChartCard>
   );
 };
-
-export default RevenueAtRisk;

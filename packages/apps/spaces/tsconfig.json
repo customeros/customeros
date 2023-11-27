@@ -28,6 +28,7 @@
       "@graphql/types": ["app/src/types/__generated__/graphql.types.ts"],
       "@organization/*": ["app/organization/[id]/*"],
       "@organizations/*": ["app/organizations/src/*"],
+      "@dashboard/*": ["app/dashboard/src/*"],
     },
     "plugins": [
       {
