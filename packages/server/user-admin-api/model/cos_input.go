@@ -36,9 +36,10 @@ type TenantInput struct {
 }
 
 type ContactInput struct {
-	FirstName *string     `json:"firstName,omitempty"`
-	LastName  *string     `json:"lastName,omitempty"`
-	Email     *EmailInput `json:"email,omitempty"`
+	FirstName       *string     `json:"firstName,omitempty"`
+	LastName        *string     `json:"lastName,omitempty"`
+	Email           *EmailInput `json:"email,omitempty"`
+	ProfilePhotoURL *string     `json:"profilePhotoUrl,omitempty"`
 }
 
 type InteractionSessionParticipantInput struct {

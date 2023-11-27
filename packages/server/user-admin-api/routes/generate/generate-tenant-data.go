@@ -117,7 +117,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 
 		//contacts creation
 		for _, contact := range sourceData.Contacts {
-			contactId, err := services.CustomerOsClient.CreateContact(tenant, username, contact.FirstName, contact.LastName, contact.Email)
+			contactId, err := services.CustomerOsClient.CreateContact(tenant, username, contact.FirstName, contact.LastName, contact.Email, contact.ProfilePhotoURL)
 			if err != nil {
 				context.JSON(500, gin.H{
 					"error": err.Error(),

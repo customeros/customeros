@@ -3,64 +3,81 @@
     {
       "firstName": "Jonty",
       "lastName": "Knox",
-      "email": "jonty@openline.ai"
+      "email": "jonty@openline.ai",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "firstName": "Matt",
       "lastName": "Brown",
-      "email": "matt@openline.ai"
+      "email": "matt@openline.ai",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "firstName": "Antoine",
       "lastName": "Valot",
-      "email": "antoine@openline.ai"
-    },
-    {
-      "firstName": "Edi",
-      "lastName": "Firut",
-      "email": "edi@openline.ai"
+      "email": "antoine@openline.ai",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "firstName": "Vasi",
       "lastName": "Coscotin",
-      "email": "vasi@openline.ai"
+      "email": "vasi@openline.ai",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     }
   ],
   "contacts": [
     {
       "email": "dk@acme.com",
       "firstName": "D",
-      "lastName": "K"
+      "lastName": "K",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "email": "jh@acme.com",
       "firstName": "J",
-      "lastName": "H"
+      "lastName": "H",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "email": "tb@acme.com",
       "firstName": "T",
-      "lastName": "B"
+      "lastName": "B",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "email": "ct@acme.com",
       "firstName": "C",
-      "lastName": "T"
+      "lastName": "T",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "email": "br@acme.com",
       "firstName": "B",
-      "lastName": "R"
+      "lastName": "R",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "email": "al@bcc.com",
       "firstName": "Alfonso",
-      "lastName": "P"
+      "lastName": "P",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     },
     {
       "email": "jd@bcc.com",
       "firstName": "Jordan",
-      "lastName": "D"
+      "lastName": "D",
+      "profilePhotoUrl": "https://images.newscientist.com/wp-content/uploads/2019/06/18142824/einstein.jpg"
+
     }
   ],
   "organizations": [
