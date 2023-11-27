@@ -25,6 +25,7 @@ type ServiceLineItemGrpcServiceClient interface {
 	CreateServiceLineItem(ctx context.Context, in *CreateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 	UpdateServiceLineItem(ctx context.Context, in *UpdateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 	DeleteServiceLineItem(ctx context.Context, in *DeleteServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
+	CloseServiceLineItem(ctx context.Context, in *CloseServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 }
 
 type serviceLineItemGrpcServiceClient struct {
@@ -62,6 +63,15 @@ func (c *serviceLineItemGrpcServiceClient) DeleteServiceLineItem(ctx context.Con
 	return out, nil
 }
 
+func (c *serviceLineItemGrpcServiceClient) CloseServiceLineItem(ctx context.Context, in *CloseServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error) {
+	out := new(ServiceLineItemIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/ServiceLineItemGrpcService/CloseServiceLineItem", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceLineItemGrpcServiceServer is the server API for ServiceLineItemGrpcService service.
 // All implementations should embed UnimplementedServiceLineItemGrpcServiceServer
 // for forward compatibility
@@ -69,6 +79,7 @@ type ServiceLineItemGrpcServiceServer interface {
 	CreateServiceLineItem(context.Context, *CreateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 	UpdateServiceLineItem(context.Context, *UpdateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 	DeleteServiceLineItem(context.Context, *DeleteServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
+	CloseServiceLineItem(context.Context, *CloseServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 }
 
 // UnimplementedServiceLineItemGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -83,6 +94,9 @@ func (UnimplementedServiceLineItemGrpcServiceServer) UpdateServiceLineItem(conte
 }
 func (UnimplementedServiceLineItemGrpcServiceServer) DeleteServiceLineItem(context.Context, *DeleteServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteServiceLineItem not implemented")
+}
+func (UnimplementedServiceLineItemGrpcServiceServer) CloseServiceLineItem(context.Context, *CloseServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseServiceLineItem not implemented")
 }
 
 // UnsafeServiceLineItemGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -150,6 +164,24 @@ func _ServiceLineItemGrpcService_DeleteServiceLineItem_Handler(srv interface{}, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ServiceLineItemGrpcService_CloseServiceLineItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloseServiceLineItemGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceLineItemGrpcServiceServer).CloseServiceLineItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ServiceLineItemGrpcService/CloseServiceLineItem",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceLineItemGrpcServiceServer).CloseServiceLineItem(ctx, req.(*CloseServiceLineItemGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ServiceLineItemGrpcService_ServiceDesc is the grpc.ServiceDesc for ServiceLineItemGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -168,6 +200,10 @@ var ServiceLineItemGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteServiceLineItem",
 			Handler:    _ServiceLineItemGrpcService_DeleteServiceLineItem_Handler,
+		},
+		{
+			MethodName: "CloseServiceLineItem",
+			Handler:    _ServiceLineItemGrpcService_CloseServiceLineItem_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

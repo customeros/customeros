@@ -1,0 +1,3 @@
+mutation CloseServiceLineItem($serviceLineItemId: ID!) {
+  id: serviceLineItem_Close(input: {id: $serviceLineItemId})
+}

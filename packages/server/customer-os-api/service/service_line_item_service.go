@@ -26,6 +26,7 @@ type ServiceLineItemService interface {
 	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
 	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
+	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
 }
 type serviceLineItemService struct {
 	log          logger.Logger
@@ -234,6 +235,43 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 	}
 
 	return false, nil
+}
+
+func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Close")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	sliExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, entity.NodeLabel_ServiceLineItem)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on checking if service line item exists: %s", err.Error())
+		return err
+	}
+	if !sliExists {
+		err := fmt.Errorf("service line item with id {%s} not found", serviceLineItemId)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return err
+	}
+
+	closeRequest := servicelineitempb.CloseServiceLineItemGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             serviceLineItemId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+		EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
+	}
+
+	_, err = s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (s *serviceLineItemService) GetById(ctx context.Context, serviceLineItemId string) (*entity.ServiceLineItemEntity, error) {

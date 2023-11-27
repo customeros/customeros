@@ -1623,6 +1623,11 @@ type ServiceLineItem struct {
 func (ServiceLineItem) IsNode()            {}
 func (this ServiceLineItem) GetID() string { return this.ID }
 
+type ServiceLineItemCloseInput struct {
+	ID      string     `json:"id"`
+	EndedAt *time.Time `json:"endedAt,omitempty"`
+}
+
 type ServiceLineItemInput struct {
 	ContractID        string                        `json:"contractId"`
 	Name              *string                       `json:"name,omitempty"`

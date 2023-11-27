@@ -137,7 +137,7 @@ func (h *contractHandler) UpdateRenewalArr(ctx context.Context, tenant, contract
 
 func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) error {
 	// if contract already ended, return
-	if contract.EndedAt != nil && contract.EndedAt.Before(utils.Now()) {
+	if contract.IsEnded() {
 		return nil
 	}
 
@@ -185,6 +185,9 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, co
 	}
 
 	for _, sli := range serviceLineItems {
+		if sli.IsEnded() {
+			continue
+		}
 		annualPrice := float64(0)
 		if sli.Billed == string(servicelineitemmodel.AnnuallyBilledString) {
 			annualPrice = float64(sli.Price) * float64(sli.Quantity)
