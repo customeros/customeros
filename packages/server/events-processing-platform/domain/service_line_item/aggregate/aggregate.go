@@ -53,6 +53,7 @@ func (a *ServiceLineItemAggregate) onServiceLineItemCreate(evt eventstore.Event)
 
 	a.ServiceLineItem.ID = a.ID
 	a.ServiceLineItem.ContractId = eventData.ContractId
+	a.ServiceLineItem.ParentId = eventData.ParentId
 	a.ServiceLineItem.Billed = eventData.Billed
 	a.ServiceLineItem.Quantity = eventData.Quantity
 	a.ServiceLineItem.Price = eventData.Price
