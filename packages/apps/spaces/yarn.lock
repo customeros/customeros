@@ -5209,7 +5209,7 @@
     "@lingui/core" "^4.2.0"
     "@remirror/core-helpers" "^3.0.0"
 
-"@remirror/pm@^2.0.4":
+"@remirror/pm@^2.0.8":
   version "2.0.8"
   resolved "https://registry.yarnpkg.com/@remirror/pm/-/pm-2.0.8.tgz#98c722d7bb5f3cc14e9255897fb6813ab0b0cb9a"
   integrity sha512-aHJQKcPkv0dUCcpM61JpKqRhPUA0YBlGJGF1p9zrc2a7fxmwt31UOGFVk4qSdZ2UIMczCuSEy/D6Trp/fl8x2g==
