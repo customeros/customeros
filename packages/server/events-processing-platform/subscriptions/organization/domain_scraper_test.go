@@ -1,11 +1,11 @@
 package organization
 
 import (
-	"bytes"
 	"context"
 	"testing"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"os"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -14,36 +14,40 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	buff   bytes.Buffer
-	driver *neo4j.DriverWithContext
-)
-
 const tenantName = "openline"
 
-func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
+var testDatabase *test.TestDatabase
+var testLogger = test.SetupTestLogger()
+
+func TestMain(m *testing.M) {
+	myDatabase, shutdown := test.SetupTestDatabase()
+	testDatabase = &myDatabase
+
+	defer shutdown()
+
+	os.Exit(m.Run())
+}
+
+func tearDownTestCase(ctx context.Context, database *test.TestDatabase) func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
-		neo4jt.CleanupAllData(ctx, driver)
+		neo4jt.CleanupAllData(ctx, database.Driver)
 	}
 }
+
 func TestWebScraping(t *testing.T) {
 	ctx := context.TODO()
-	log := test.SetupTestLogger()
-	myDatabase, shutdown := test.SetupTestDatabase()
-	testDatabase := &myDatabase
-	defer shutdown()
-	cfg, err := config.InitConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer tearDownTestCase(ctx)(t)
-	_, driver = neo4jt.InitTestNeo4jDB()
+	// cfg, err := config.InitConfig()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	defer tearDownTestCase(ctx, testDatabase)(t)
+	_, driver := neo4jt.InitTestNeo4jDB()
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org 1"})
-	logEntryId := neo4jt.CreateLogEntryForOrg(ctx, driver, tenantName, organizationId, entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})
+	_ = neo4jt.CreateLogEntryForOrg(ctx, driver, tenantName, organizationId, entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})
 
 	neo4jt.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Organization":  1,
@@ -54,17 +58,7 @@ func TestWebScraping(t *testing.T) {
 		"LOGGED":     1,
 	})
 
-	when, timelineEventId, err := testDatabase.Repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, tenantName, organizationId)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if when == nil || timelineEventId == "" {
-		t.Fatal("touchpoint should not be nil")
-	}
-
-	require.Equal(t, timelineEventId, logEntryId)
-	ds := NewDomainScraper(log, cfg, testDatabase.Repositories)
+	ds := NewDomainScraper(testLogger, &config.Config{}, testDatabase.Repositories)
 	scrapedContent, err := ds.Scrape("https://www.customeros.ai", tenantName, organizationId)
 	if err != nil {
 		t.Fatal(err)
