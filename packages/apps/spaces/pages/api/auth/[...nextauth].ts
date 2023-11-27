@@ -63,12 +63,11 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        Object.assign(session, {
+        session = Object.assign(session, {
           accessToken: token.accessToken,
           user: {
-            id: token.id,
-            name: token.name,
-            playerIdentityId: token.playerIdendityId,
+            ...session.user,
+            playerIdentityId: token.playerIdentityId,
           },
         });
       }

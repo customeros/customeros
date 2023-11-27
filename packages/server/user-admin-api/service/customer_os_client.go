@@ -27,7 +27,7 @@ type CustomerOsClient interface {
 	CreateUser(user *model.UserInput, tenant string, roles []model.Role) (*model.UserResponse, error)
 	AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error)
 	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
-	CreateContact(tenant, username, firstName, lastname, email string) (string, error)
+	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
 	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
 
@@ -337,7 +337,7 @@ func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, role
 	}, nil
 }
 
-func (cosService *customerOsClient) CreateContact(tenant, username, firstName, lastname, email string) (string, error) {
+func (cosService *customerOsClient) CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateContact($contactInput: ContactInput!) {
 				contact_Create(input: $contactInput) {
@@ -351,6 +351,7 @@ func (cosService *customerOsClient) CreateContact(tenant, username, firstName, l
 		Email: &model.EmailInput{
 			Email: email,
 		},
+		ProfilePhotoURL: profilePhotoUrl,
 	}
 	graphqlRequest.Var("contactInput", contactInput)
 
