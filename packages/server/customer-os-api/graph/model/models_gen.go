@@ -1641,14 +1641,15 @@ type ServiceLineItemInput struct {
 }
 
 type ServiceLineItemUpdateInput struct {
-	ServiceLineItemID string                        `json:"serviceLineItemId"`
-	Name              *string                       `json:"name,omitempty"`
-	Billed            *BilledType                   `json:"billed,omitempty"`
-	Price             *float64                      `json:"price,omitempty"`
-	Quantity          *int64                        `json:"quantity,omitempty"`
-	Comments          *string                       `json:"comments,omitempty"`
-	AppSource         *string                       `json:"appSource,omitempty"`
-	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	ServiceLineItemID       string                        `json:"serviceLineItemId"`
+	Name                    *string                       `json:"name,omitempty"`
+	Billed                  *BilledType                   `json:"billed,omitempty"`
+	Price                   *float64                      `json:"price,omitempty"`
+	Quantity                *int64                        `json:"quantity,omitempty"`
+	Comments                *string                       `json:"comments,omitempty"`
+	AppSource               *string                       `json:"appSource,omitempty"`
+	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
 }
 
 type Social struct {

@@ -22,7 +22,7 @@ import (
 
 type ServiceLineItemService interface {
 	Create(ctx context.Context, serviceLineItem *ServiceLineItemCreateData) (string, error)
-	Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity) error
+	Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity, isRetroactiveCorrection bool) error
 	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
 	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
@@ -126,7 +126,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	return response.Id, err
 }
 
-func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity) error {
+func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity, isRetroactiveCorrection bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -153,13 +153,14 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 	}
 
 	serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             serviceLineItem.ID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Name:           serviceLineItem.Name,
-		Quantity:       serviceLineItem.Quantity,
-		Price:          float32(serviceLineItem.Price),
-		Comments:       serviceLineItem.Comments,
+		Tenant:                  common.GetTenantFromContext(ctx),
+		Id:                      serviceLineItem.ID,
+		LoggedInUserId:          common.GetUserIdFromContext(ctx),
+		Name:                    serviceLineItem.Name,
+		Quantity:                serviceLineItem.Quantity,
+		Price:                   float32(serviceLineItem.Price),
+		Comments:                serviceLineItem.Comments,
+		IsRetroactiveCorrection: isRetroactiveCorrection,
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(serviceLineItem.Source),
 			AppSource: utils.StringFirstNonEmpty(serviceLineItem.AppSource, constants.AppSourceCustomerOsApi),
