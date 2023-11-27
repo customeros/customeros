@@ -47,10 +47,9 @@ export const CreateServiceModal = ({
   contractId,
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
-  const formId = `create-service-item`;
+  const formId = `create-service-item-${contractId}`;
   const defaultValues = ServiceDTO.toForm();
   const [activeTab, setActiveTab] = useState('RECURRING');
-
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const id = useParams()?.id as string;

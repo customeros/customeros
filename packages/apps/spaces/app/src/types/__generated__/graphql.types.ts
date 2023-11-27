@@ -681,6 +681,12 @@ export type DashboardNewCustomersPerMonth = {
   __typename?: 'DashboardNewCustomersPerMonth';
   count: Scalars['Int'];
   month: Scalars['Int'];
+  year: Scalars['Int'];
+};
+
+export type DashboardPeriodInput = {
+  end: Scalars['Time'];
+  start: Scalars['Time'];
 };
 
 export type DashboardRetentionRate = {
@@ -714,6 +720,12 @@ export enum DataSource {
   Webscrape = 'WEBSCRAPE',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
+
+export type DeleteResponse = {
+  __typename?: 'DeleteResponse';
+  accepted: Scalars['Boolean'];
+  completed: Scalars['Boolean'];
+};
 
 export type DescriptionNode = InteractionEvent | InteractionSession | Meeting;
 
@@ -1553,6 +1565,7 @@ export type Mutation = {
   player_Merge: Result;
   serviceLineItemCreate: ServiceLineItem;
   serviceLineItemUpdate: ServiceLineItem;
+  serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
@@ -2118,6 +2131,10 @@ export type MutationServiceLineItemCreateArgs = {
 
 export type MutationServiceLineItemUpdateArgs = {
   input: ServiceLineItemUpdateInput;
+};
+
+export type MutationServiceLineItem_DeleteArgs = {
+  id: Scalars['ID'];
 };
 
 export type MutationSocial_RemoveArgs = {
@@ -2767,27 +2784,27 @@ export type QueryDashboardView_OrganizationsArgs = {
 };
 
 export type QueryDashboard_ArrBreakdownArgs = {
-  year: Scalars['Int'];
+  period?: InputMaybe<DashboardPeriodInput>;
 };
 
 export type QueryDashboard_GrossRevenueRetentionArgs = {
-  year: Scalars['Int'];
+  period?: InputMaybe<DashboardPeriodInput>;
 };
 
 export type QueryDashboard_MrrPerCustomerArgs = {
-  year: Scalars['Int'];
+  period?: InputMaybe<DashboardPeriodInput>;
 };
 
 export type QueryDashboard_NewCustomersArgs = {
-  year: Scalars['Int'];
+  period?: InputMaybe<DashboardPeriodInput>;
 };
 
 export type QueryDashboard_RetentionRateArgs = {
-  year: Scalars['Int'];
+  period?: InputMaybe<DashboardPeriodInput>;
 };
 
 export type QueryDashboard_RevenueAtRiskArgs = {
-  year: Scalars['Int'];
+  period?: InputMaybe<DashboardPeriodInput>;
 };
 
 export type QueryEmailArgs = {
@@ -2969,6 +2986,7 @@ export type ServiceLineItem = Node & {
   comments: Scalars['String'];
   createdAt: Scalars['Time'];
   createdBy?: Maybe<User>;
+  endedAt?: Maybe<Scalars['Time']>;
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID'];
   name: Scalars['String'];
@@ -2976,6 +2994,7 @@ export type ServiceLineItem = Node & {
   quantity: Scalars['Int64'];
   source: DataSource;
   sourceOfTruth: DataSource;
+  startedAt: Scalars['Time'];
   updatedAt: Scalars['Time'];
 };
 
@@ -2983,10 +3002,12 @@ export type ServiceLineItemInput = {
   appSource?: InputMaybe<Scalars['String']>;
   billed?: InputMaybe<BilledType>;
   contractId: Scalars['ID'];
+  endedAt?: InputMaybe<Scalars['Time']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Float']>;
   quantity?: InputMaybe<Scalars['Int64']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
 };
 
 export type ServiceLineItemUpdateInput = {
