@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -54,7 +55,7 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.serviceLineItemId", input.ServiceLineItemID))
 
-	err := r.Services.ServiceLineItemService.Update(ctx, mapper.MapServiceLineItemUpdateInputToEntity(input))
+	err := r.Services.ServiceLineItemService.Update(ctx, mapper.MapServiceLineItemUpdateInputToEntity(input), utils.IfNotNilBool(input.IsRetroactiveCorrection))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update service line item %s", input.ServiceLineItemID)

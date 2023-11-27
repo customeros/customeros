@@ -10452,6 +10452,7 @@ input ServiceLineItemUpdateInput {
     comments:           String
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
+    isRetroactiveCorrection: Boolean
 }
 
 input ServiceLineItemCloseInput {
@@ -68486,7 +68487,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "comments", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "comments", "appSource", "externalReference", "isRetroactiveCorrection"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -68565,6 +68566,15 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 				return it, err
 			}
 			it.ExternalReference = data
+		case "isRetroactiveCorrection":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isRetroactiveCorrection"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsRetroactiveCorrection = data
 		}
 	}
 

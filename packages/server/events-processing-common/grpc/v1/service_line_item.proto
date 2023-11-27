@@ -41,6 +41,7 @@ message UpdateServiceLineItemGrpcRequest {
   google.protobuf.Timestamp updatedAt = 8;
   SourceFields sourceFields = 9;
   string comments = 10;
+  bool isRetroactiveCorrection = 11;
 }
 
 // Permanently delete service line item request
