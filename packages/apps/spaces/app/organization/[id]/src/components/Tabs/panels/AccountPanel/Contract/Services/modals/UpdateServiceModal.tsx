@@ -194,7 +194,7 @@ export const UpdateServiceModal = ({
             ml='3'
             w='full'
             isLoading={updateService.status === 'loading'}
-            loadingText='Modifying service...'
+            loadingText='Modifying...'
             variant='outline'
             colorScheme='primary'
             onClick={updateServiceData}

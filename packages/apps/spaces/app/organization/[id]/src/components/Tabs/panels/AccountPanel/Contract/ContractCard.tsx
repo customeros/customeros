@@ -243,7 +243,6 @@ export const ContractCard = ({
               placeholder='Signed date'
               formId={formId}
               name='signedAt'
-              calendarIconHidden
               inset='120% auto auto 0px'
             />
             <DatePicker
@@ -251,7 +250,6 @@ export const ContractCard = ({
               placeholder='End date'
               formId={formId}
               name='endedAt'
-              calendarIconHidden
             />
           </Flex>
           <Flex gap='4'>
@@ -260,7 +258,6 @@ export const ContractCard = ({
               placeholder='Start date'
               formId={formId}
               name='serviceStartedAt'
-              calendarIconHidden
               inset='120% auto auto 0px'
             />
             <FormSelect
@@ -270,6 +267,7 @@ export const ContractCard = ({
               name='renewalCycle'
               formId={formId}
               options={billingFrequencyOptions}
+              isClearable
             />
           </Flex>
         </CardBody>

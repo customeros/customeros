@@ -49,7 +49,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
       {data?.endedAt && DateTimeUtils.isFuture(data.endedAt) && (
         <Text>Ends on {endDate}</Text>
       )}
-      {!DateTimeUtils.isFuture(data.endedAt) && <Text>Ended on {endDate}</Text>}
+      {data.status === ContractStatus.Ended && <Text>Ended on {endDate}</Text>}
     </Flex>
   );
 };

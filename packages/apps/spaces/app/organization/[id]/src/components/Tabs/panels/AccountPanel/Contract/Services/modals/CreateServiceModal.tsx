@@ -146,7 +146,7 @@ export const CreateServiceModal = ({
   const determineBillingDetails = () => {
     if (activeTab !== 'RECURRING') {
       const billedTypeValue =
-        activeTab === 'ONE-TIME' ? BilledType.Once : BilledType.Usage;
+        activeTab === BilledType.Once ? BilledType.Once : BilledType.Usage;
 
       return {
         quantity: undefined,
@@ -254,7 +254,7 @@ export const CreateServiceModal = ({
                   fontWeight: 'semibold',
                 }}
                 onClick={() => {
-                  setActiveTab('ONE_TIME');
+                  setActiveTab('ONCE');
                 }}
               >
                 One-time
@@ -290,7 +290,7 @@ export const CreateServiceModal = ({
             variant='outline'
             colorScheme='primary'
             isLoading={createService.status === 'loading'}
-            loadingText='Creating service...'
+            loadingText='Creating...'
             onClick={handleServiceCreation}
           >
             Create

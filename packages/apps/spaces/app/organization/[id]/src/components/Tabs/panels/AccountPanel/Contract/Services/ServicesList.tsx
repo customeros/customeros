@@ -51,7 +51,7 @@ const ServiceItem = ({
         sx={{ '& button': { opacity: 0 } }}
       >
         {data.name && (
-          <Text fontSize='sm' color='gray.500'>
+          <Text fontSize='sm' color='gray.500' noOfLines={1} textAlign='left'>
             {data.name}
           </Text>
         )}
@@ -59,9 +59,9 @@ const ServiceItem = ({
           <Text>
             {![BilledType.Usage, BilledType.Once].includes(data.billed) && (
               <>
-                {data.quantity} {data.quantity > 1 ? 'licenses' : 'license'}
+                {data.quantity}
                 <Text as='span' fontSize='sm' mx={1}>
-                  x
+                  ×
                 </Text>
               </>
             )}
