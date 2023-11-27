@@ -19,6 +19,7 @@ type ServiceLineItemEntity struct {
 	Price         float64
 	Quantity      int64
 	Comments      string
+	ParentId      string
 }
 
 type ServiceLineItemEntities []ServiceLineItemEntity

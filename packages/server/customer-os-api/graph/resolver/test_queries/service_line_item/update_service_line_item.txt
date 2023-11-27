@@ -12,5 +12,6 @@ mutation UpdateServiceLineItem($serviceLineItemId: ID!) {
   ) {
     id
     name
+    parentId
   }
 }

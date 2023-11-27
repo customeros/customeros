@@ -25,6 +25,7 @@ func MapEntityToServiceLineItem(entity *entity.ServiceLineItemEntity) *model.Ser
 		Price:         entity.Price,
 		Quantity:      entity.Quantity,
 		Comments:      entity.Comments,
+		ParentID:      entity.ParentID,
 	}
 }
 

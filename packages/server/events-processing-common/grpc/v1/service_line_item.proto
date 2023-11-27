@@ -42,6 +42,7 @@ message UpdateServiceLineItemGrpcRequest {
   SourceFields sourceFields = 9;
   string comments = 10;
   bool isRetroactiveCorrection = 11;
+  string contractId = 12;
 }
 
 // Permanently delete service line item request

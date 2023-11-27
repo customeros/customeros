@@ -10,6 +10,7 @@ import (
 type ServiceLineItem struct {
 	ID         string             `json:"id"`
 	ContractId string             `json:"contractId"`
+	ParentId   string             `json:"parentId"`
 	Billed     string             `json:"billed"`
 	Quantity   int64              `json:"quantity"` // Relevant only for Subscription type
 	Price      float64            `json:"price"`
@@ -30,6 +31,7 @@ type ServiceLineItemDataFields struct {
 	Price      float64    `json:"price"`
 	Name       string     `json:"name"`
 	ContractId string     `json:"contractId"`
+	ParentId   string     `json:"parentId"`
 	Comments   string     `json:"comments,omitempty"`
 }
 
