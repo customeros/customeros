@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -84,6 +83,22 @@ func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string)
 		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
 	}
 	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
+}
+
+// ServiceLineItemClose is the resolver for the serviceLineItem_Close field.
+func (r *mutationResolver) ServiceLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemClose", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.input", input))
+
+	err := r.Services.ServiceLineItemService.Close(ctx, input.ID, input.EndedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to close service line item %s", input.ID)
+		return input.ID, nil
+	}
+	return input.ID, nil
 }
 
 // ServiceLineItem is the resolver for the serviceLineItem field.

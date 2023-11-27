@@ -51,6 +51,15 @@ message DeleteServiceLineItemGrpcRequest {
   string appSource = 4;
 }
 
+message CloseServiceLineItemGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  google.protobuf.Timestamp updatedAt = 5;
+  google.protobuf.Timestamp endedAt = 6;
+}
+
 // Service line item response message
 message ServiceLineItemIdGrpcResponse {
   string id = 1;
@@ -61,4 +70,5 @@ service ServiceLineItemGrpcService {
   rpc CreateServiceLineItem(CreateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc UpdateServiceLineItem(UpdateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc DeleteServiceLineItem(DeleteServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
+  rpc CloseServiceLineItem(CloseServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
 }

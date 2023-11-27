@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
 
@@ -21,3 +22,7 @@ type ServiceLineItemEntity struct {
 }
 
 type ServiceLineItemEntities []ServiceLineItemEntity
+
+func (sli ServiceLineItemEntity) IsEnded() bool {
+	return sli.EndedAt != nil && sli.EndedAt.Before(utils.Now())
+}

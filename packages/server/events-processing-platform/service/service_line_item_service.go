@@ -154,6 +154,30 @@ func (s *serviceLineItemService) DeleteServiceLineItem(ctx context.Context, requ
 	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
 }
 
+func (s *serviceLineItemService) CloseServiceLineItem(ctx context.Context, request *servicelineitempb.CloseServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.CloseServiceLineItem")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Validate service line item ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	closeSliCommand := command.NewCloseServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource,
+		utils.TimestampProtoToTimePtr(request.EndedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
+
+	if err := s.serviceLineItemCommandHandlers.CloseServiceLineItem.Handle(ctx, closeSliCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(CloseServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the updated service line item
+	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
+}
+
 func (s *serviceLineItemService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
 	err := s.aggregateStore.Exists(ctx, contractAggregate.GetID())
