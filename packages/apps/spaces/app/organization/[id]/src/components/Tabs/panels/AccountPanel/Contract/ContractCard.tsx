@@ -40,9 +40,9 @@ export const ContractCard = ({
   const queryKey = useGetContractsQuery.getKey({ id: organizationId });
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
-  const formId = 'contractForm';
+  const formId = `contractForm-${data.id}`;
+
   const client = getGraphQLClient();
   const updateContract = useUpdateContractMutation(client, {
     // todo fix https://linear.app/customer-os/issue/COS-985/fix-optimitsic-update-for-update-contract-mutation
@@ -97,8 +97,11 @@ export const ContractCard = ({
     300,
   );
 
-  const defaultValues = ContractDTO.toForm(organizationName, data);
-  const { setDefaultValues } = useForm<TimeToRenewalForm>({
+  const defaultValues = ContractDTO.toForm({
+    organizationName,
+    ...(data ?? {}),
+  });
+  const { setDefaultValues, state } = useForm<TimeToRenewalForm>({
     formId,
     defaultValues,
     stateReducer: (state, action, next) => {
@@ -184,7 +187,7 @@ export const ContractCard = ({
             w={isExpanded ? '235px' : '260px'}
             whiteSpace='nowrap'
           >
-            {!isExpanded && data?.name}
+            {!isExpanded && state.values.name}
             {isExpanded && (
               <FormInput
                 fontWeight='semibold'
@@ -192,7 +195,6 @@ export const ContractCard = ({
                 height='fit-content'
                 name='name'
                 formId={formId}
-                placeholder='Contract name'
                 borderBottom='none'
                 _hover={{
                   borderBottom: 'none',

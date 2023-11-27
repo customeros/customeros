@@ -33,6 +33,15 @@ export type GetContractsQuery = {
     __typename?: 'Organization';
     id: string;
     name: string;
+    accountDetails?: {
+      __typename?: 'OrgAccountDetails';
+      renewalForecast?: {
+        __typename?: 'RenewalForecast';
+        arr?: number | null;
+        maxArr?: number | null;
+        potentialAmount?: number | null;
+      } | null;
+    } | null;
     contracts?: Array<{
       __typename?: 'Contract';
       id: string;
@@ -80,6 +89,13 @@ export const GetContractsDocument = `
   organization(id: $id) {
     id
     name
+    accountDetails {
+      renewalForecast {
+        arr
+        maxArr
+        potentialAmount
+      }
+    }
     contracts {
       id
       name

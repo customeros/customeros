@@ -1,4 +1,6 @@
 'use client';
+import React from 'react';
+
 import { useIsMutating, useIsRestoring } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
@@ -7,23 +9,24 @@ import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
+import { Contract, RenewalForecast } from '@graphql/types';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { Opportunity, RenewalLikelihoodProbability } from '@graphql/types';
-import { getARRColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
 import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 interface ARRForecastProps {
   name: string;
   isInitialLoading?: boolean;
-  opportunity?: Opportunity | null;
+  contracts?: Contract[] | null;
+  forecast?: RenewalForecast | null;
 }
 
 export const ARRForecast = ({
   isInitialLoading,
-  opportunity,
+  forecast,
+  contracts,
   name,
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
@@ -31,6 +34,32 @@ export const ARRForecast = ({
   const isMutating = useIsMutating({
     mutationKey: useUpdateRenewalLikelihoodMutation.getKey(),
   });
+  const iconColor = (() => {
+    if (!contracts?.length) {
+      return 'gray';
+    }
+
+    const array = contracts.flatMap((contract) =>
+      contract.opportunities
+        ? contract.opportunities.map((opportunity) =>
+            opportunity.renewalLikelihood.toLowerCase(),
+          )
+        : [],
+    );
+
+    const likelihood = array.every((val) => val === array[0])
+      ? array[0]
+      : 'medium';
+
+    const colorMap: Record<string, string> = {
+      high: 'success',
+      medium: 'warning',
+      low: 'error',
+      zero: 'zero',
+    };
+
+    return colorMap[likelihood] || 'gray';
+  })();
 
   return (
     <>
@@ -55,17 +84,7 @@ export const ARRForecast = ({
         }}
       >
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon
-            size='md'
-            minW='10'
-            colorScheme={
-              opportunity?.renewalLikelihood
-                ? getARRColor(
-                    opportunity.renewalLikelihood as RenewalLikelihoodProbability,
-                  )
-                : 'gray'
-            }
-          >
+          <FeaturedIcon size='md' minW='10' colorScheme={iconColor}>
             <CurrencyDollar />
           </FeaturedIcon>
           <Flex
@@ -99,11 +118,22 @@ export const ARRForecast = ({
               </Flex>
             </Flex>
 
-            <Heading fontSize='2xl' color='gray.700'>
-              {isMutating && (!isInitialLoading || !isRestoring)
-                ? 'Calculating...'
-                : formatCurrency(opportunity?.amount ?? 0)}
-            </Heading>
+            <Flex flexDir='column'>
+              <Heading fontSize='2xl' color='gray.700'>
+                {isMutating && (!isInitialLoading || !isRestoring)
+                  ? 'Calculating...'
+                  : formatCurrency(forecast?.arr ?? 0)}
+              </Heading>
+              {forecast?.maxArr && forecast?.arr !== forecast?.maxArr && (
+                <Text
+                  fontSize='sm'
+                  textAlign='right'
+                  textDecoration='line-through'
+                >
+                  {formatCurrency(forecast.maxArr)}
+                </Text>
+              )}
+            </Flex>
           </Flex>
         </CardBody>
       </Card>
