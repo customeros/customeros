@@ -1618,6 +1618,7 @@ type ServiceLineItem struct {
 	SourceOfTruth DataSource        `json:"sourceOfTruth"`
 	AppSource     string            `json:"appSource"`
 	ExternalLinks []*ExternalSystem `json:"externalLinks"`
+	ParentID      string            `json:"parentId"`
 }
 
 func (ServiceLineItem) IsNode()            {}

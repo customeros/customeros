@@ -24,6 +24,7 @@ type ServiceLineItem implements Node {
     sourceOfTruth:      DataSource!
     appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    parentId:           ID!
 }
 
 input ServiceLineItemInput {

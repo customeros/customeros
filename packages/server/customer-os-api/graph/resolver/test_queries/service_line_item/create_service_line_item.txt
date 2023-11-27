@@ -10,5 +10,6 @@ serviceLineItemCreate(
   ) {
     id
     name
+    parentId
   }
 }

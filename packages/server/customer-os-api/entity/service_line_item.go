@@ -16,6 +16,7 @@ type ServiceLineItemEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
+	ParentID      string
 
 	DataloaderKey string
 }

@@ -40,7 +40,8 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 
 			calledCreateServiceLineItem = true
 			neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-				ID: serviceLineItemId,
+				ID:       serviceLineItemId,
+				ParentID: serviceLineItemId,
 			})
 			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
 				Id: serviceLineItemId,
@@ -62,6 +63,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	require.Nil(t, err)
 	serviceLineItem := serviceLineItemStruct.ServiceLineItemCreate
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.True(t, calledCreateServiceLineItem)
 }
 
@@ -73,7 +75,9 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{Name: "service"})
+	serviceLineItemIdParentId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{Name: "service"})
+	//Using serviceLineItemIdParentId as the parent id
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{Name: "service", ParentID: serviceLineItemIdParentId})
 	calledUpdateServiceLineItem := false
 	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
 		UpdateServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
@@ -108,7 +112,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	require.Nil(t, err)
 	serviceLineItem := serviceLineItemStruct.ServiceLineItemUpdate
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
-
+	require.Equal(t, serviceLineItemIdParentId, serviceLineItem.ParentID)
 	require.True(t, calledUpdateServiceLineItem)
 }
 
