@@ -57,15 +57,14 @@ func MapEntitiesToServiceLineItems(entities *entity.ServiceLineItemEntities) []*
 
 func MapServiceLineItemUpdateInputToEntity(input model.ServiceLineItemUpdateInput) *entity.ServiceLineItemEntity {
 	serviceLineItemEntity := entity.ServiceLineItemEntity{
-		ID:                      input.ServiceLineItemID,
-		Name:                    utils.IfNotNilString(input.Name),
-		Price:                   utils.IfNotNilFloat64(input.Price),
-		Quantity:                utils.IfNotNilInt64(input.Quantity),
-		Comments:                utils.IfNotNilString(input.Comments),
-		IsRetroactiveCorrection: *input.IsRetroactiveCorrection,
-		Source:                  entity.DataSourceOpenline,
-		SourceOfTruth:           entity.DataSourceOpenline,
-		AppSource:               utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		ID:            input.ServiceLineItemID,
+		Name:          utils.IfNotNilString(input.Name),
+		Price:         utils.IfNotNilFloat64(input.Price),
+		Quantity:      utils.IfNotNilInt64(input.Quantity),
+		Comments:      utils.IfNotNilString(input.Comments),
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	if input.Billed != nil {
 		serviceLineItemEntity.Billed = MapBilledTypeFromModel(*input.Billed)
