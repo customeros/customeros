@@ -54,7 +54,7 @@ export const RecurringServiceFrom = ({ formId }: RecurringServiceFormProps) => {
           w='full'
           placeholder='Per license'
           isLabelVisible
-          label='Price/license'
+          label='Price/qty'
           min={1}
           leftElement={<CurrencyDollar boxSize={4} color='gray.500' />}
         />

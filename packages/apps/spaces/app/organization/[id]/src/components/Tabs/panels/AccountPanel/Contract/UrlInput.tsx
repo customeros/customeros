@@ -74,7 +74,7 @@ export const UrlInput: FC<UrlInputProps> = ({
             size='xs'
             variant='ghost'
             color='gray.400'
-            aria-label='Add link to contract'
+            aria-label='Click to add contract link'
             icon={url ? <FileCheck02 /> : <File02 />}
             onClick={onOpen}
           />
@@ -100,6 +100,7 @@ export const UrlInput: FC<UrlInputProps> = ({
               _hover={{ background: 'gray.600', color: 'gray.25' }}
             />
             <FormInput
+              label='Contract link'
               formId={formId}
               name='contractUrl'
               background='gray.700'
@@ -116,7 +117,7 @@ export const UrlInput: FC<UrlInputProps> = ({
               }}
               tabIndex={1}
               border='none'
-              placeholder='Paste or enter a link'
+              placeholder='Paste or enter a contract link'
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setHref(event.target.value)
               }
