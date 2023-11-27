@@ -146,6 +146,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if filter.Filter.Property == "FORECAST_AMOUNT" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
+			} else if filter.Filter.Property == "FORECAST_ARR" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
 			} else if filter.Filter.Property == "LAST_TOUCHPOINT_AT" && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
 			} else if filter.Filter.Property == "LAST_TOUCHPOINT_TYPE" && filter.Filter.Value.ArrayStr != nil {
@@ -312,6 +315,14 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", FORECAST_AMOUNT_FOR_SORTING "
 		}
+		if sort != nil && sort.By == "FORECAST_ARR" {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 0 END as FORECAST_ARR_FOR_SORTING "
+			}
+			aliases += ", FORECAST_ARR_FOR_SORTING "
+		}
 
 		//RENEWAL_CYCLE_NEXT
 
@@ -332,6 +343,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "FORECAST_AMOUNT" {
 				query += " ORDER BY FORECAST_AMOUNT_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == "FORECAST_ARR" {
+				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_LIKELIHOOD" {
 				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_CYCLE_NEXT" {

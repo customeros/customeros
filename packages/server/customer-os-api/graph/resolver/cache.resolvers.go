@@ -74,7 +74,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	response.GCliCache = r.Services.Cache.GetStates() //pre-populate with states
 
-	minARRForecastValue, maxARRForecastValue, err := r.Services.OrganizationService.GetMinMaxRenewalForecastAmount(ctx)
+	minARRForecastValue, maxARRForecastValue, err := r.Services.OrganizationService.GetMinMaxRenewalForecastArr(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - get min max arr forecast")

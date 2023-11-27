@@ -470,6 +470,7 @@ func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
 		Name: "org1",
 		RenewalForecast: entity.RenewalForecast{
 			Amount: utils.ToPtr[float64](200),
+			Arr:    utils.ToPtr[float64](200),
 		},
 	})
 	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -479,12 +480,14 @@ func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
 		Name: "org3",
 		RenewalForecast: entity.RenewalForecast{
 			Amount: utils.ToPtr[float64](100.5),
+			Arr:    utils.ToPtr[float64](100.5),
 		},
 	})
 	organizationId4 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org4",
 		RenewalForecast: entity.RenewalForecast{
 			Amount: utils.ToPtr[float64](300),
+			Arr:    utils.ToPtr[float64](300),
 		},
 	})
 
@@ -494,7 +497,7 @@ func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
 		map[string]interface{}{
 			"page":    1,
 			"limit":   10,
-			"sortBy":  "FORECAST_AMOUNT",
+			"sortBy":  "FORECAST_ARR",
 			"sortDir": "ASC",
 		})
 
