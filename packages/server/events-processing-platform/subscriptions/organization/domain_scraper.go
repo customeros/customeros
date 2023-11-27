@@ -3,6 +3,12 @@ package organization
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+
+	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -11,10 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"net/url"
-	"strings"
 )
 
 type DomainScraper struct {
@@ -87,7 +89,8 @@ func (ds *DomainScraper) getHtml(domainUrl string) (*string, error) {
 }
 
 func (ds *DomainScraper) runCompanyPrompt(text *string, tenant, organizationId string) (*string, error) {
-	prompt := strings.ReplaceAll(ds.cfg.Services.OpenAi.ScrapeCompanyPrompt, "{{text}}", *text)
+	p := strings.ReplaceAll(ds.cfg.Services.OpenAi.ScrapeCompanyPrompt, "{{jsonschema}}", ds.cfg.Services.PromptJsonSchema)
+	prompt := strings.ReplaceAll(p, "{{text}}", *text)
 
 	promptLog := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
@@ -142,22 +145,24 @@ func (ds *DomainScraper) extractRelevantText(html *string) (*string, error) {
 		return nil, errors.Wrap(err, "failed to create document from reader")
 	}
 
-	doc.Find("script, style").Remove()
+	converter := md.NewConverter("", true, nil)
+	markdown := converter.Convert(doc.Selection)
 
-	var texts []string
-	doc.Find("*").FilterFunction(func(_ int, s *goquery.Selection) bool {
-		return s.Children().Length() == 0
-	}).Each(func(_ int, s *goquery.Selection) {
-		text := s.Text()
-		text = strings.TrimSpace(text)
-		if text != "" && !contains(texts, text) {
-			texts = append(texts, text)
-		}
-	})
+	// doc.Find("script, style").Remove()
+	// var texts []string
+	// doc.Find("*").FilterFunction(func(_ int, s *goquery.Selection) bool {
+	// 	return s.Children().Length() == 0
+	// }).Each(func(_ int, s *goquery.Selection) {
+	// 	text := s.Text()
+	// 	text = strings.TrimSpace(text)
+	// 	if text != "" && !contains(texts, text) {
+	// 		texts = append(texts, text)
+	// 	}
+	// })
 
-	text := strings.Join(texts, " ")
-	ds.log.Printf("text: %s", text)
-	return &text, nil
+	// text := strings.Join(texts, " ")
+	ds.log.Printf("text: %s", markdown)
+	return &markdown, nil
 }
 
 func contains(slice []string, text string) bool {
