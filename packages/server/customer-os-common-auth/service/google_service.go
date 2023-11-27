@@ -76,12 +76,17 @@ func (s *googleService) GetGmailService(username, tenant string) (*gmail.Service
 		if tokenEntity != nil && tokenEntity.NeedsManualRefresh {
 			return nil, nil
 		} else if tokenEntity != nil {
-			gmailService, err := s.GetGmailServiceWithOauthToken(*tokenEntity)
-			if err != nil {
-				logrus.Errorf("failed to create gmail service: %v", err)
+			if tokenEntity.RefreshToken == "" {
+				err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 				return nil, err
+			} else {
+				gmailService, err := s.GetGmailServiceWithOauthToken(*tokenEntity)
+				if err != nil {
+					logrus.Errorf("failed to create gmail service: %v", err)
+					return nil, err
+				}
+				return gmailService, nil
 			}
-			return gmailService, nil
 		} else {
 			return nil, nil
 		}
