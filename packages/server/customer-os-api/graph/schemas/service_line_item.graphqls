@@ -47,6 +47,7 @@ input ServiceLineItemUpdateInput {
     comments:           String
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
+    isRetroactiveCorrection: Boolean
 }
 
 input ServiceLineItemCloseInput {
