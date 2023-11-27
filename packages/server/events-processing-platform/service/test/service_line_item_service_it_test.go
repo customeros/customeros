@@ -102,14 +102,15 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 	// Create the update request
 	updatedAt := utils.Now()
 	updateRequest := &servicelineitempb.UpdateServiceLineItemGrpcRequest{
-		Tenant:         tenant,
-		LoggedInUserId: "User456",
-		Id:             serviceLineItemId,
-		Name:           "Updated Service Line Item",
-		Quantity:       10,
-		Price:          150.0,
-		Comments:       "Some comments",
-		UpdatedAt:      timestamppb.New(updatedAt),
+		Tenant:                  tenant,
+		LoggedInUserId:          "User456",
+		Id:                      serviceLineItemId,
+		Name:                    "Updated Service Line Item",
+		Quantity:                10,
+		Price:                   150.0,
+		Comments:                "Some comments",
+		IsRetroactiveCorrection: true,
+		UpdatedAt:               timestamppb.New(updatedAt),
 		SourceFields: &commonpb.SourceFields{
 			Source:    "openline",
 			AppSource: "unit-test",

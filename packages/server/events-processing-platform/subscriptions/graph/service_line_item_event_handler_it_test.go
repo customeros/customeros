@@ -56,6 +56,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 			Price:      100.50,
 			Name:       "Test service line item",
 			ContractId: contractId,
+			ParentId:   serviceLineItemId,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -86,6 +87,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 
 	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentId)
 	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
 	require.Equal(t, float64(100.50), serviceLineItem.Price)

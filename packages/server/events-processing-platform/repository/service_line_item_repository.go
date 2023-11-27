@@ -53,12 +53,14 @@ func (r *serviceLineItemRepository) CreateForContract(ctx context.Context, tenan
 								sli.name=$name,
 								sli.price=$price,
 								sli.quantity=$quantity,
-								sli.billed=$billed
+								sli.billed=$billed,
+								sli.parentId=$parentId
 							`, tenant)
 	params := map[string]any{
 		"tenant":            tenant,
 		"serviceLineItemId": serviceLineItemId,
 		"contractId":        evt.ContractId,
+		"parentId":          evt.ParentId,
 		"createdAt":         evt.CreatedAt,
 		"updatedAt":         evt.UpdatedAt,
 		"startedAt":         evt.StartedAt,

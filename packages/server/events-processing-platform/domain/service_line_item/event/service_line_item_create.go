@@ -15,7 +15,8 @@ type ServiceLineItemCreateEvent struct {
 	Quantity   int64              `json:"quantity,omitempty"`
 	Price      float64            `json:"price"`
 	Name       string             `json:"name"`
-	ContractId string             `json:"contractId"`
+	ContractId string             `json:"contractId" validate:"required"`
+	ParentId   string             `json:"parentId" validate:"required"`
 	CreatedAt  time.Time          `json:"createdAt"`
 	UpdatedAt  time.Time          `json:"updatedAt"`
 	StartedAt  time.Time          `json:"startedAt"`
@@ -31,6 +32,7 @@ func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields mo
 		Price:      dataFields.Price,
 		Name:       dataFields.Name,
 		ContractId: dataFields.ContractId,
+		ParentId:   dataFields.ParentId,
 		CreatedAt:  createdAt,
 		UpdatedAt:  updatedAt,
 		StartedAt:  startedAt,
