@@ -61,16 +61,6 @@ message CloseServiceLineItemGrpcRequest {
   google.protobuf.Timestamp endedAt = 6;
 }
 
-message RolloutServiceLineItemGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string parentServiceLineItemId = 3;
-  string loggedInUserId = 4;
-  float price = 5;
-  int64 quantity = 6;
-  SourceFields sourceFields = 7;
-}
-
 // Service line item response message
 message ServiceLineItemIdGrpcResponse {
   string id = 1;
@@ -82,5 +72,4 @@ service ServiceLineItemGrpcService {
   rpc UpdateServiceLineItem(UpdateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc DeleteServiceLineItem(DeleteServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc CloseServiceLineItem(CloseServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
-  rpc RolloutServiceLineItem(RolloutServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
 }

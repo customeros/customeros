@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -54,7 +55,7 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.serviceLineItemId", input.ServiceLineItemID))
 
-	err := r.Services.ServiceLineItemService.Update(ctx, mapper.MapServiceLineItemUpdateInputToEntity(input))
+	err := r.Services.ServiceLineItemService.Update(ctx, mapper.MapServiceLineItemUpdateInputToEntity(input), utils.IfNotNilBool(input.IsRetroactiveCorrection))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update service line item %s", input.ServiceLineItemID)
