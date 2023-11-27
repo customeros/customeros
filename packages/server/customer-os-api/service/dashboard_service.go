@@ -92,28 +92,41 @@ func (s *dashboardService) GetDashboardCustomerMapData(ctx context.Context) ([]*
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	orgPage, err := s.services.OrganizationService.FindAll(ctx, 0, 10, nil, nil)
+	response := make([]*entityDashboard.DashboardCustomerMapData, 0)
+
+	data, err := s.repositories.DashboardRepository.GetDashboardCustomerMapData(ctx, common.GetContext(ctx).Tenant)
 	if err != nil {
 		return nil, err
 	}
 
-	response := make([]*entityDashboard.DashboardCustomerMapData, 0)
-
-	min := 0
-	max := 10000
-	for i := 1; i <= len(*orgPage.Rows.(*entity.OrganizationEntities)); i++ {
-		rand.Seed(time.Now().UnixNano())
-		randomIndex := rand.Intn(len(entityDashboard.DashboardCustomerMapStates))
+	for _, record := range data {
+		organizationId, _ := record["organizationId"].(string)
+		oldestServiceStartedAt, _ := record["oldestServiceStartedAt"].(time.Time)
+		arr, _ := record["arr"].(float64)
+		state, _ := record["state"].(string)
 
 		response = append(response, &entityDashboard.DashboardCustomerMapData{
-			OrganizationId:     (*orgPage.Rows.(*entity.OrganizationEntities))[i-1].ID,
-			State:              entityDashboard.DashboardCustomerMapStates[randomIndex],
-			Arr:                rand.Intn(max-min) + min,
-			ContractSignedDate: time.Now(),
+			OrganizationId:     organizationId,
+			ContractSignedDate: oldestServiceStartedAt,
+			State:              mapDashboardCustomerMapStateFromString(state),
+			Arr:                arr,
 		})
 	}
 
 	return response, nil
+}
+
+func mapDashboardCustomerMapStateFromString(state string) entityDashboard.DashboardCustomerMapState {
+	switch state {
+	case "OK":
+		return entityDashboard.DashboardCustomerMapStateOk
+	case "AT_RISK":
+		return entityDashboard.DashboardCustomerMapStateAtRisk
+	case "CHURNED":
+		return entityDashboard.DashboardCustomerMapStateChurned
+	default:
+		return ""
+	}
 }
 
 func (s *dashboardService) GetDashboardMRRPerCustomerData(ctx context.Context, start, end time.Time) (*entityDashboard.DashboardDashboardMRRPerCustomerData, error) {

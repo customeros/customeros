@@ -84,6 +84,6 @@ var DashboardCustomerMapStates = []DashboardCustomerMapState{
 type DashboardCustomerMapData struct {
 	OrganizationId     string
 	State              DashboardCustomerMapState
-	Arr                int
+	Arr                float64
 	ContractSignedDate time.Time
 }

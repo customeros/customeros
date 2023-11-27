@@ -1709,6 +1709,19 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 	return opportunityId
 }
 
+func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId, opportunityId string) string {
+	query := fmt.Sprintf(`
+				MATCH (c:Contract_%s {id:$contractId}), (op:Opportunity_%s {id:$opportunityId})
+				MERGE (c)-[:ACTIVE_RENEWAL]->(op)
+				`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"opportunityId": opportunityId,
+		"contractId":    contractId,
+	})
+	return opportunityId
+}
+
 func OpportunityCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, opportunityId, entityId string) {
 	query := `MATCH (e:User {id:$entityId}), (op:Opportunity {id:$opportunityId})
 			MERGE (e)<-[:CREATED_BY]-(op)`

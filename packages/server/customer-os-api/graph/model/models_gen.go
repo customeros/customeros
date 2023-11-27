@@ -547,7 +547,7 @@ type DashboardCustomerMap struct {
 	OrganizationID     string                    `json:"organizationId"`
 	Organization       *Organization             `json:"organization"`
 	State              DashboardCustomerMapState `json:"state"`
-	Arr                int                       `json:"arr"`
+	Arr                float64                   `json:"arr"`
 	ContractSignedDate time.Time                 `json:"contractSignedDate"`
 }
 
