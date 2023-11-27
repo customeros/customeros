@@ -12,7 +12,7 @@ function abbreviateNumber(num: number): string {
   }
 }
 export function formatCurrency(amount: number): string {
-  if (`${amount}`.length >= 6) {
+  if (`${amount}`.length >= 6 && `${amount}`.indexOf('.') > 5) {
     const abbreviatedNumber = abbreviateNumber(amount);
 
     return `$${abbreviatedNumber}`;
@@ -21,6 +21,7 @@ export function formatCurrency(amount: number): string {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(amount);
   }
 }

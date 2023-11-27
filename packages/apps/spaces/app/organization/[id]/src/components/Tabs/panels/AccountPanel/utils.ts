@@ -1,12 +1,14 @@
 import { QueryClient } from '@tanstack/react-query';
 
 import { SelectOption } from '@shared/types/SelectOptions';
+import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 import {
   Maybe,
+  BilledType,
   RenewalCycle,
+  ContractRenewalCycle,
   RenewalLikelihoodProbability,
 } from '@graphql/types';
-import { useOrganizationAccountDetailsQuery } from '@organization/src/graphql/getAccountPanelDetails.generated';
 
 export const invalidateAccountDetailsQuery = (
   queryClient: QueryClient,
@@ -40,4 +42,15 @@ export const frequencyOptions: SelectOption<RenewalCycle>[] = [
   { label: 'Quarterly', value: RenewalCycle.Quarterly },
   { label: 'Biannually', value: RenewalCycle.Biannually },
   { label: 'Annually', value: RenewalCycle.Annually },
+];
+export const billingFrequencyOptions: SelectOption<ContractRenewalCycle>[] = [
+  { label: 'Monthly', value: ContractRenewalCycle.MonthlyRenewal },
+  { label: 'Annually', value: ContractRenewalCycle.AnnualRenewal },
+];
+
+export const billedTypeOptions: SelectOption<BilledType>[] = [
+  { label: 'Once', value: BilledType.Once },
+  { label: 'Usage', value: BilledType.Usage },
+  { label: 'Monthly', value: BilledType.Monthly },
+  { label: 'Annually', value: BilledType.Annually },
 ];
