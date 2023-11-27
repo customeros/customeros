@@ -123,7 +123,7 @@ export const CreateServiceModal = ({
         queryKey,
         context?.previousEntries,
       );
-      toastError('Failed to update contract', 'update-contract-error');
+      toastError('Failed to create service', 'update-service-error');
     },
     onSuccess: () => {
       modal.onClose();

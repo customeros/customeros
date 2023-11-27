@@ -24,6 +24,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
           DateTimeUtils.dateWithAbreviatedMonth,
         )
       : null;
+
   const renewalDate = data?.opportunities?.[0]?.renewedAt
     ? DateTimeUtils.format(
         data?.opportunities?.[0]?.renewedAt,
@@ -34,7 +35,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     ? DateTimeUtils.format(data.endedAt, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
 
-  if (!data?.signedAt) {
+  if (!data.serviceStartedAt) {
     return <Text>No start date or services yet</Text>;
   }
 
