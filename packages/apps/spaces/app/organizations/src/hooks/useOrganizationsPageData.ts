@@ -43,9 +43,7 @@ export const useOrganizationsPageData = ({
     forecast,
     organization,
     relationship,
-    timeToRenewal,
     lastTouchpoint,
-    renewalLikelihood,
   } = columnFilters;
 
   const where = useMemo(() => {
@@ -123,26 +121,6 @@ export const useOrganizationsPageData = ({
         });
       }
 
-      if (renewalLikelihood?.isActive && renewalLikelihood?.value) {
-        draft.AND.push({
-          filter: {
-            property: 'RENEWAL_LIKELIHOOD',
-            value: renewalLikelihood?.value,
-            operation: ComparisonOperator.In,
-          },
-        });
-      }
-
-      if (timeToRenewal?.isActive && timeToRenewal?.value) {
-        draft.AND.push({
-          filter: {
-            property: 'RENEWAL_CYCLE_NEXT',
-            value: timeToRenewal?.value,
-            operation: ComparisonOperator.Lte,
-          },
-        });
-      }
-
       if (forecast.isActive && forecast.value) {
         draft.AND.push({
           filter: {
@@ -195,10 +173,6 @@ export const useOrganizationsPageData = ({
     website?.showEmpty,
     relationship.isActive,
     relationship?.value.length,
-    renewalLikelihood?.isActive,
-    renewalLikelihood?.value.length,
-    timeToRenewal?.isActive,
-    timeToRenewal?.value,
     forecast?.isActive,
     forecast?.value[0],
     forecast?.value[1],
@@ -257,10 +231,6 @@ export const useOrganizationsPageData = ({
       website?.showEmpty,
       relationship.isActive,
       relationship?.value.length,
-      renewalLikelihood?.isActive,
-      renewalLikelihood?.value.length,
-      timeToRenewal?.isActive,
-      timeToRenewal?.value,
       forecast?.isActive,
       forecast?.value[0],
       forecast?.value[1],

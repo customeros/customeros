@@ -6,8 +6,6 @@ import { ForecastFilterSelector } from '@organizations/components/Columns/Filter
 import { OrganizationFilterSelector } from '@organizations/components/Columns/Filters/Organization/OrganizationFilter.atom';
 import { RelationshipFilterSelector } from '@organizations/components/Columns/Filters/Relationship/RelationshipFilter.atom';
 import { LastTouchpointSelector } from '@organizations/components/Columns/Filters/LastTouchpoint/LastTouchpointFilter.atom';
-import { TimeToRenewalFilterSelector } from '@organizations/components/Columns/Filters/TimeToRenewal/TimeToRenewalFilter.atom';
-import { RenewalLikelihoodFilterSelector } from '@organizations/components/Columns/Filters/RenewalLikelihood/RenewalLikelihoodFilter.atom';
 
 const tableStateSelector = selector({
   key: 'tableState',
@@ -17,17 +15,6 @@ const tableStateSelector = selector({
     const forecast = get(ForecastFilterSelector);
     const organization = get(OrganizationFilterSelector);
     const relationship = get(RelationshipFilterSelector);
-    const renewalLikelihood = get(RenewalLikelihoodFilterSelector);
-
-    const timeToRenewal = (() => {
-      const state = get(TimeToRenewalFilterSelector);
-      const value = new Date(state.value).toISOString();
-
-      return {
-        ...state,
-        value,
-      };
-    })();
 
     const lastTouchpoint = (() => {
       const state = get(LastTouchpointSelector);
@@ -48,9 +35,7 @@ const tableStateSelector = selector({
         forecast,
         organization,
         relationship,
-        timeToRenewal,
         lastTouchpoint,
-        renewalLikelihood,
       },
     };
   },
