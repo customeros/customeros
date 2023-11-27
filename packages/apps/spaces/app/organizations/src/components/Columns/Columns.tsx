@@ -247,8 +247,8 @@ export const columns = [
     filterFn: filterForecastFn,
     cell: (props) => {
       const value = props.getValue()?.renewalForecast;
-      const amount = value?.amount;
-      const potentialAmount = value?.potentialAmount;
+      const amount = value?.arr;
+      const potentialAmount = value?.maxArr;
 
       return (
         <RenewalForecastCell
