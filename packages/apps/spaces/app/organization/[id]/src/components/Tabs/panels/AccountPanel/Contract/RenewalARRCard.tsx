@@ -134,16 +134,16 @@ export const RenewalARRCard = ({
 
             <Flex flexDir='column'>
               <Text fontWeight='semibold'>
-                {formatCurrency(opportunity.amount)}
+                {formatCurrency(opportunity.maxAmount)}
               </Text>
 
               {hasRewenewChanged && (
                 <Text
                   fontSize='sm'
                   textAlign='right'
-                  textDecoration={hasRewenewChanged ? 'line-through' : 'none'}
+                  textDecoration='line-through'
                 >
-                  {formatCurrency(hasEnded ? 0 : opportunity.maxAmount)}
+                  {formatCurrency(hasEnded ? 0 : opportunity.amount)}
                 </Text>
               )}
             </Flex>

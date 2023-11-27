@@ -62,9 +62,8 @@ export type GetOrganizationsQuery = {
         __typename?: 'OrgAccountDetails';
         renewalForecast?: {
           __typename?: 'RenewalForecast';
-          amount?: number | null;
-          potentialAmount?: number | null;
-          comment?: string | null;
+          arr?: number | null;
+          maxArr?: number | null;
           updatedAt?: any | null;
           updatedById?: string | null;
           updatedBy?: {
@@ -77,31 +76,6 @@ export type GetOrganizationsQuery = {
               email?: string | null;
             }> | null;
           } | null;
-        } | null;
-        renewalLikelihood?: {
-          __typename?: 'RenewalLikelihood';
-          probability?: Types.RenewalLikelihoodProbability | null;
-          previousProbability?: Types.RenewalLikelihoodProbability | null;
-          comment?: string | null;
-          updatedById?: string | null;
-          updatedAt?: any | null;
-          updatedBy?: {
-            __typename?: 'User';
-            id: string;
-            firstName: string;
-            lastName: string;
-            emails?: Array<{
-              __typename?: 'Email';
-              email?: string | null;
-            }> | null;
-          } | null;
-        } | null;
-        billingDetails?: {
-          __typename?: 'BillingDetails';
-          renewalCycle?: Types.RenewalCycle | null;
-          frequency?: Types.RenewalCycle | null;
-          amount?: number | null;
-          renewalCycleNext?: any | null;
         } | null;
       } | null;
       locations: Array<{
@@ -250,9 +224,8 @@ export const GetOrganizationsDocument = `
       isCustomer
       accountDetails {
         renewalForecast {
-          amount
-          potentialAmount
-          comment
+          arr
+          maxArr
           updatedAt
           updatedById
           updatedBy {
@@ -263,27 +236,6 @@ export const GetOrganizationsDocument = `
               email
             }
           }
-        }
-        renewalLikelihood {
-          probability
-          previousProbability
-          comment
-          updatedById
-          updatedBy {
-            id
-            firstName
-            lastName
-            emails {
-              email
-            }
-          }
-          updatedAt
-        }
-        billingDetails {
-          renewalCycle
-          frequency
-          amount
-          renewalCycleNext
         }
       }
       locations {
