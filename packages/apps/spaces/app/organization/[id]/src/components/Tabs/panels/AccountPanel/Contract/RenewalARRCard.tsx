@@ -67,8 +67,8 @@ export const RenewalARRCard = ({
                   content: "''",
                   width: 2,
                   height: '80%',
-                  left: -2,
-                  top: '7px',
+                  left: '-9px',
+                  top: '6px',
                   bg: 'white',
                   position: 'absolute',
                   borderTopLeftRadius: 'md',
@@ -98,7 +98,7 @@ export const RenewalARRCard = ({
                   Renewal ARR
                 </Heading>
 
-                {!hasEnded && opportunity.renewedAt && (
+                {!hasEnded && opportunity.renewedAt && startedAt && (
                   <Text color='gray.500' ml={1} fontSize='sm'>
                     {DateTimeUtils.isToday(opportunity.renewedAt)
                       ? 'today'
@@ -109,25 +109,27 @@ export const RenewalARRCard = ({
                 )}
               </Flex>
 
-              <Text w='full' color='gray.500' fontSize='sm' lineHeight={1}>
-                {!hasEnded ? (
-                  <>
-                    Likelihood{' '}
-                    <Text
-                      as='span'
-                      fontWeight='medium'
-                      color={`${getARRColor(
-                        opportunity.renewalLikelihood as RenewalLikelihoodProbability,
-                      )}.500`}
-                      textTransform='capitalize'
-                    >
-                      {opportunity?.renewalLikelihood.toLowerCase()}
-                    </Text>
-                  </>
-                ) : (
-                  'Closed lost'
-                )}
-              </Text>
+              {startedAt && (
+                <Text w='full' color='gray.500' fontSize='sm' lineHeight={1}>
+                  {!hasEnded ? (
+                    <>
+                      Likelihood{' '}
+                      <Text
+                        as='span'
+                        fontWeight='medium'
+                        color={`${getARRColor(
+                          opportunity.renewalLikelihood as RenewalLikelihoodProbability,
+                        )}.500`}
+                        textTransform='capitalize'
+                      >
+                        {opportunity?.renewalLikelihood.toLowerCase()}
+                      </Text>
+                    </>
+                  ) : (
+                    'Closed lost'
+                  )}
+                </Text>
+              )}
             </Flex>
 
             <Flex flexDir='column'>

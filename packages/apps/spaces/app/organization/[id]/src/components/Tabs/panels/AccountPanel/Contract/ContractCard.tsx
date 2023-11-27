@@ -1,5 +1,5 @@
 import { useForm } from 'react-inverted-form';
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 import { debounce } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
@@ -39,6 +39,7 @@ export const ContractCard = ({
 }: ContractCardProps) => {
   const queryKey = useGetContractsQuery.getKey({ id: organizationId });
   const queryClient = useQueryClient();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
   const formId = 'contractForm';
@@ -78,7 +79,12 @@ export const ContractCard = ({
     //   toastError('Failed to update contract', 'update-contract-error');
     // },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries(queryKey);
+      }, 1500);
     },
   });
 
@@ -140,6 +146,9 @@ export const ContractCard = ({
   useEffect(() => {
     return () => {
       updateContractDebounced.flush();
+      timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries(queryKey);
+      }, 1000);
     };
   }, []);
 
@@ -231,7 +240,7 @@ export const ContractCard = ({
             justifyContent='flex-start'
           >
             <ContractSubtitle data={data} />
-            <Edit03 ml={1} color='gray.400' boxSize='3' mt='3px' />
+            <Edit03 ml={1} color='gray.400' boxSize='3' mt='4.5px' />
           </Flex>
         )}
       </CardHeader>
@@ -243,7 +252,6 @@ export const ContractCard = ({
               placeholder='Signed date'
               formId={formId}
               name='signedAt'
-              calendarIconHidden
               inset='120% auto auto 0px'
             />
             <DatePicker
@@ -251,7 +259,6 @@ export const ContractCard = ({
               placeholder='End date'
               formId={formId}
               name='endedAt'
-              calendarIconHidden
             />
           </Flex>
           <Flex gap='4'>
@@ -260,7 +267,6 @@ export const ContractCard = ({
               placeholder='Start date'
               formId={formId}
               name='serviceStartedAt'
-              calendarIconHidden
               inset='120% auto auto 0px'
             />
             <FormSelect
@@ -270,6 +276,7 @@ export const ContractCard = ({
               name='renewalCycle'
               formId={formId}
               options={billingFrequencyOptions}
+              isClearable
             />
           </Flex>
         </CardBody>

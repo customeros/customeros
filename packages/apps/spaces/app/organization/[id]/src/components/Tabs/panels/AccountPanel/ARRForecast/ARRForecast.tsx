@@ -117,15 +117,15 @@ export const ARRForecast = ({
       >
         <Text fontSize='sm' fontWeight='normal' mb={4}>
           Annual Recurring Revenue (ARR) is the total amount of money you can
-          expect to receive from{' '}
-          <Text as='span' fontWeight='medium'>
+          expect to receive from
+          <Text as='span' fontWeight='medium' mx={1}>
             {name}
-          </Text>{' '}
+          </Text>
           for the next 12 months.
         </Text>
         <Text fontSize='sm' fontWeight='normal'>
-          It includes all renewals but excludes one-time services. Renewals are
-          discounted based on the renewal likelihood.
+          It includes all renewals but excludes one-time and per use services.
+          Renewals are discounted based on the renewal likelihood
         </Text>
       </InfoDialog>
     </>

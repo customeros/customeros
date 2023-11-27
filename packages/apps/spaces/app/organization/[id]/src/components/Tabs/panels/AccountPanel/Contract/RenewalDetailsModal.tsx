@@ -283,7 +283,7 @@ export const RenewalDetailsModal = ({
             )}
           </div>
 
-          {data?.amount && (
+          {data?.amount > 0 && (
             <CurrencyInput
               w='full'
               placeholder='Amount'

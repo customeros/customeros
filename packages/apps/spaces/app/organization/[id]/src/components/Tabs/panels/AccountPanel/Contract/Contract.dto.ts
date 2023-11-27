@@ -49,7 +49,7 @@ export class ContractDTO implements TimeToRenewalForm {
       ...formData,
       name: formData.name?.length
         ? formData.name
-        : `${organizationName}'s contract`,
+        : `${organizationName ?? 'Unnamed'}'s contract`,
     };
   }
 
