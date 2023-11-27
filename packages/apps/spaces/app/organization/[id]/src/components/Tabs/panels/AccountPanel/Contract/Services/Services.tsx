@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -15,6 +15,7 @@ interface Props {
 }
 
 export const Services: React.FC<Props> = ({ contractId, data }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const { modal } = useAddServiceModalContext();
 
   return (
@@ -29,7 +30,10 @@ export const Services: React.FC<Props> = ({ contractId, data }) => {
           variant='ghost'
           aria-label='Add service'
           color='gray.400'
-          onClick={() => modal.onOpen()}
+          onClick={() => {
+            modal.onOpen();
+            setIsOpen(true); // todo find better solution to multiple modals opening
+          }}
           icon={<Plus boxSize='4' />}
         />
       </Flex>
@@ -37,8 +41,11 @@ export const Services: React.FC<Props> = ({ contractId, data }) => {
       {data?.length && <ServicesList data={data} />}
       <CreateServiceModal
         contractId={contractId}
-        isOpen={modal.isOpen}
-        onClose={modal.onClose}
+        isOpen={modal.isOpen && isOpen}
+        onClose={() => {
+          modal.onClose();
+          setIsOpen(false);
+        }}
       />
     </>
   );

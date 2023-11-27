@@ -4,8 +4,8 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 
 import { Box } from '@ui/layout/Box';
+import { Contract } from '@graphql/types';
 import { Select } from '@ui/form/SyncSelect';
-import { Contract, Opportunity } from '@graphql/types';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
@@ -34,6 +34,7 @@ export const AccountPanel = () => {
   if (isInitialLoading) {
     return <AccountPanelSkeleton />;
   }
+
   if (!data?.organization?.contracts?.length) {
     return <EmptyContracts name={data?.organization?.name || ''} />;
   }
@@ -127,22 +128,26 @@ export const AccountPanel = () => {
         }
         shouldBlockPanelScroll={isModalOpen}
       >
-        {!!data?.organization?.contracts &&
-          data?.organization?.contracts.map((contract) => (
-            <>
-              <ARRForecast
-                opportunity={contract.opportunities?.[0] as Opportunity}
-                name={data?.organization?.name || ''}
-                isInitialLoading={isInitialLoading}
-              />
-              <ContractCard
-                organizationId={id}
-                organizationName={data?.organization?.name ?? ''}
-                key={`contract-card-${contract.id}`}
-                data={(contract as Contract) ?? undefined}
-              />
-            </>
-          ))}
+        {!!data?.organization?.contracts && (
+          <>
+            <ARRForecast
+              forecast={data?.organization?.accountDetails?.renewalForecast}
+              name={data?.organization?.name || ''}
+              isInitialLoading={isInitialLoading}
+              contracts={data.organization.contracts as Contract[]}
+            />
+            {data?.organization?.contracts.map((contract) => (
+              <>
+                <ContractCard
+                  organizationId={id}
+                  organizationName={data?.organization?.name ?? ''}
+                  key={`contract-card-${contract.id}`}
+                  data={(contract as Contract) ?? undefined}
+                />
+              </>
+            ))}
+          </>
+        )}
 
         <Notes id={id} data={data?.organization} />
       </OrganizationPanel>

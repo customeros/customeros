@@ -7,6 +7,7 @@ export interface TimeToRenewalData {
   endedAt?: Date;
   signedAt?: Date;
   serviceStartedAt?: Date;
+  organizationName?: string;
   contractUrl?: string | null;
   renewalCycle?: ContractRenewalCycle;
 }
@@ -35,21 +36,17 @@ export class ContractDTO implements TimeToRenewalForm {
     this.endedAt = data?.endedAt && new Date(data.endedAt);
     this.serviceStartedAt =
       data?.serviceStartedAt && new Date(data.serviceStartedAt);
-    this.name = data?.name ?? '';
+    this.name = data?.name?.length
+      ? data?.name
+      : `${data?.organizationName ?? 'Unnamed'}'s contract`;
     this.contractUrl = data?.contractUrl ?? '';
   }
 
-  static toForm(
-    organizationName: string,
-    data?: TimeToRenewalData | null,
-  ): TimeToRenewalForm {
+  static toForm(data?: TimeToRenewalData | null): TimeToRenewalForm {
     const formData = new ContractDTO(data);
 
     return {
       ...formData,
-      name: formData.name?.length
-        ? formData.name
-        : `${organizationName ?? 'Unnamed'}'s contract`,
     };
   }
 

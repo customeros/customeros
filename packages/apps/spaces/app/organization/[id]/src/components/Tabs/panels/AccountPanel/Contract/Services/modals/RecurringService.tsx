@@ -40,7 +40,7 @@ export const RecurringServiceFrom = ({ formId }: RecurringServiceFormProps) => {
           height='auto'
           placeholder='Quantity'
           isLabelVisible
-          label='Licences'
+          label='Quantity'
           min={1}
           ref={initialRef}
           leftElement={<Certificate02 boxSize={4} color='gray.500' />}
@@ -60,7 +60,7 @@ export const RecurringServiceFrom = ({ formId }: RecurringServiceFormProps) => {
         />
 
         <FormSelect
-          label='Billed'
+          label='Recurring'
           placeholder='Frequency'
           isLabelVisible
           name='billed'
