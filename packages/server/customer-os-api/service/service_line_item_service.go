@@ -151,40 +151,60 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		tracing.TraceErr(span, err)
 		return err
 	}
+	if !serviceLineItem.IsRetroactiveCorrection {
+		serviceLineItemRolloutRequest := servicelineitempb.RolloutServiceLineItemGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			Id:             serviceLineItem.ID,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			Quantity:       serviceLineItem.Quantity,
+			Price:          float32(serviceLineItem.Price),
+			SourceFields: &commonpb.SourceFields{
+				Source:    string(serviceLineItem.Source),
+				AppSource: utils.StringFirstNonEmpty(serviceLineItem.AppSource, constants.AppSourceCustomerOsApi),
+			},
+		}
+		_, err := s.grpcClients.ServiceLineItemClient.RolloutServiceLineItem(ctx, &serviceLineItemRolloutRequest)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing: %s", err.Error())
+			return err
+		}
 
-	serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             serviceLineItem.ID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Name:           serviceLineItem.Name,
-		Quantity:       serviceLineItem.Quantity,
-		Price:          float32(serviceLineItem.Price),
-		Comments:       serviceLineItem.Comments,
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(serviceLineItem.Source),
-			AppSource: utils.StringFirstNonEmpty(serviceLineItem.AppSource, constants.AppSourceCustomerOsApi),
-		},
 	}
-	switch serviceLineItem.Billed {
-	case entity.BilledTypeMonthly:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
-	case entity.BilledTypeAnnually:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
-	case entity.BilledTypeOnce:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ONCE_BILLED
-	case entity.BilledTypeUsage:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_USAGE_BILLED
-	default:
-		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
-	}
+	if serviceLineItem.IsRetroactiveCorrection {
+		serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			Id:             serviceLineItem.ID,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			Name:           serviceLineItem.Name,
+			Quantity:       serviceLineItem.Quantity,
+			Price:          float32(serviceLineItem.Price),
+			Comments:       serviceLineItem.Comments,
+			SourceFields: &commonpb.SourceFields{
+				Source:    string(serviceLineItem.Source),
+				AppSource: utils.StringFirstNonEmpty(serviceLineItem.AppSource, constants.AppSourceCustomerOsApi),
+			},
+		}
+		switch serviceLineItem.Billed {
+		case entity.BilledTypeMonthly:
+			serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
+		case entity.BilledTypeAnnually:
+			serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
+		case entity.BilledTypeOnce:
+			serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ONCE_BILLED
+		case entity.BilledTypeUsage:
+			serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_USAGE_BILLED
+		default:
+			serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
+		}
 
-	_, err := s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return err
+		_, err := s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error from events processing: %s", err.Error())
+			return err
+		}
 	}
-
 	return nil
 }
 
