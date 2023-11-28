@@ -13,10 +13,10 @@ import {
   ContractRenewalCycle,
   RenewalLikelihoodProbability,
 } from '@graphql/types';
-import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalDetailsModal';
+import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalARR/RenewalDetailsModal';
 import { useUpdateRenewalDetailsContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
-import { getARRColor } from '../utils';
+import { getARRColor } from '../../utils';
 
 interface RenewalARRCardProps {
   hasEnded: boolean;
