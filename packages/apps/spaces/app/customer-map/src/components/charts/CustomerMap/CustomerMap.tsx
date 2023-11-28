@@ -2,7 +2,7 @@
 import dynamic from 'next/dynamic';
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useCustomerMapQuery } from '@dashboard/graphql/customerMap.generated';
+import { useCustomerMapQuery } from 'app/customer-map/src/graphql/customerMap.generated';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 

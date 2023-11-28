@@ -1,9 +1,9 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@dashboard/components/ChartCard';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useGrossRevenueRetentionQuery } from '@dashboard/graphql/grossRevenueRetention.generated';
+import { useGrossRevenueRetentionQuery } from '@customerMap/graphql/grossRevenueRetention.generated';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 

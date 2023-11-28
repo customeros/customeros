@@ -1,9 +1,9 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@dashboard/components/ChartCard';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useMrrPerCustomerQuery } from '@dashboard/graphql/mrrPerCustomer.generated';
+import { useMrrPerCustomerQuery } from '@customerMap/graphql/mrrPerCustomer.generated';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
@@ -34,7 +34,7 @@ export const MrrPerCustomer = () => {
     <ChartCard
       flex='1'
       stat={stat}
-      title='MRR per Customer'
+      title='MRR per customer'
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>

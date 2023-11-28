@@ -1,9 +1,9 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@dashboard/components/ChartCard';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useRetentionRateQuery } from '@dashboard/graphql/retentionRate.generated';
+import { useRetentionRateQuery } from '@customerMap/graphql/retentionRate.generated';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
@@ -16,9 +16,7 @@ const RetentionRateChart = dynamic(() => import('./RetentionRate.chart'), {
 
 export const RetentionRate = () => {
   const client = getGraphQLClient();
-  const { data } = useRetentionRateQuery(client, {
-    year: 2023,
-  });
+  const { data } = useRetentionRateQuery(client);
 
   const chartData = (data?.dashboard_RetentionRate?.perMonth ?? []).map(
     (d) => ({
@@ -37,7 +35,7 @@ export const RetentionRate = () => {
     <ChartCard
       flex='1'
       stat={stat}
-      title='Retention Rate'
+      title='Retention rate'
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>

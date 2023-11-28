@@ -1,16 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
-
-import { set } from 'date-fns';
-import { BarStack, BarRounded } from '@visx/shape';
-import { timeFormat } from '@visx/vendor/d3-time-format';
-import { max, min, extent, bisector } from '@visx/vendor/d3-array';
-import { scaleBand, scaleLinear, scaleOrdinal } from '@visx/scale';
 import {
   XYChart,
   Tooltip,
-  // BarStack,
+  BarStack,
   BarSeries,
   AnimatedGrid,
   AnimatedAxis,
@@ -19,6 +12,7 @@ import {
 import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 import { Legend } from '../../Legend';
 import { getMonthLabel } from '../util';
@@ -36,148 +30,113 @@ export type ARRBreakdownDatum = {
 const _mockData: ARRBreakdownDatum[] = [
   {
     month: 1,
-    values: {
-      cancellations: -5,
-      churned: -15,
-      downgrades: -8,
-      newlyContracted: 12,
-      renewals: 18,
-      upsells: 7,
-    },
+    cancellations: -5,
+    churned: -15,
+    downgrades: -8,
+    newlyContracted: 12,
+    renewals: 18,
+    upsells: 7,
   },
   {
     month: 2,
-    values: {
-      cancellations: -8,
-      churned: -10,
-      downgrades: -5,
-      newlyContracted: 14,
-      renewals: 20,
-      upsells: 3,
-    },
+    cancellations: -8,
+    churned: -10,
+    downgrades: -5,
+    newlyContracted: 14,
+    renewals: 20,
+    upsells: 3,
   },
   {
     month: 3,
-    values: {
-      cancellations: -12,
-      churned: -7,
-      downgrades: -10,
-      newlyContracted: 8,
-      renewals: 15,
-      upsells: 5,
-    },
+    cancellations: -12,
+    churned: -7,
+    downgrades: -10,
+    newlyContracted: 8,
+    renewals: 15,
+    upsells: 5,
   },
   {
     month: 4,
-    values: {
-      cancellations: -6,
-      churned: -12,
-      downgrades: -7,
-      newlyContracted: 10,
-      renewals: 22,
-      upsells: 9,
-    },
+    cancellations: -6,
+    churned: -12,
+    downgrades: -7,
+    newlyContracted: 10,
+    renewals: 22,
+    upsells: 9,
   },
   {
     month: 5,
-    values: {
-      cancellations: -10,
-      churned: -8,
-      downgrades: -15,
-      newlyContracted: 13,
-      renewals: 16,
-      upsells: 4,
-    },
+    cancellations: -10,
+    churned: -8,
+    downgrades: -15,
+    newlyContracted: 13,
+    renewals: 16,
+    upsells: 4,
   },
   {
     month: 6,
-    values: {
-      cancellations: -14,
-      churned: -5,
-      downgrades: -9,
-      newlyContracted: 11,
-      renewals: 14,
-      upsells: 6,
-    },
+    cancellations: -14,
+    churned: -5,
+    downgrades: -9,
+    newlyContracted: 11,
+    renewals: 14,
+    upsells: 6,
   },
   {
     month: 7,
-    values: {
-      cancellations: -9,
-      churned: -11,
-      downgrades: -12,
-      newlyContracted: 9,
-      renewals: 17,
-      upsells: 8,
-    },
+    cancellations: -9,
+    churned: -11,
+    downgrades: -12,
+    newlyContracted: 9,
+    renewals: 17,
+    upsells: 8,
   },
   {
     month: 8,
-    values: {
-      cancellations: -11,
-      churned: -14,
-      downgrades: -6,
-      newlyContracted: 15,
-      renewals: 19,
-      upsells: 2,
-    },
+    cancellations: -11,
+    churned: -14,
+    downgrades: -6,
+    newlyContracted: 15,
+    renewals: 19,
+    upsells: 2,
   },
   {
     month: 9,
-    values: {
-      cancellations: -7,
-      churned: -9,
-      downgrades: -11,
-      newlyContracted: 12,
-      renewals: 21,
-      upsells: 10,
-    },
+    cancellations: -7,
+    churned: -9,
+    downgrades: -11,
+    newlyContracted: 12,
+    renewals: 21,
+    upsells: 10,
   },
   {
     month: 10,
-    values: {
-      cancellations: -13,
-      churned: -13,
-      downgrades: -8,
-      newlyContracted: 7,
-      renewals: 13,
-      upsells: 5,
-    },
+    cancellations: -13,
+    churned: -13,
+    downgrades: -8,
+    newlyContracted: 7,
+    renewals: 13,
+    upsells: 5,
   },
   {
     month: 11,
-    values: {
-      cancellations: -8,
-      churned: -6,
-      downgrades: -14,
-      newlyContracted: 10,
-      renewals: 18,
-      upsells: 7,
-    },
+    cancellations: -8,
+    churned: -6,
+    downgrades: -14,
+    newlyContracted: 10,
+    renewals: 18,
+    upsells: 7,
   },
   {
     month: 12,
-    values: {
-      cancellations: -10,
-      churned: -10,
-      downgrades: -10,
-      newlyContracted: 10,
-      renewals: 10,
-      upsells: 10,
-    },
+    cancellations: -10,
+    churned: -10,
+    downgrades: -10,
+    newlyContracted: 10,
+    renewals: 10,
+    upsells: 10,
   },
 ];
-
-const keys = [
-  'newlyContracted',
-  'renewals',
-  'upsells',
-  'downgrades',
-  'cancellations',
-  'churned',
-];
-
-const height = 200;
 
 interface ARRBreakdownProps {
   width: number;
@@ -186,27 +145,40 @@ interface ARRBreakdownProps {
 }
 
 const getX = (d: ARRBreakdownDatum) => getMonthLabel(d.month);
-const flattenValues = (data: ARRBreakdownDatum[]) =>
-  data.flatMap(({ month, ...rest }) => Object.values(rest));
 
 const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
-  const [gray700, moss300, warning400, warning600, warning950] = useToken(
-    'colors',
-    ['gray.700', 'moss.300', 'warning.400', 'warning.600', 'warning.950'],
-  );
+  const [
+    gray700,
+    greenLight200,
+    greenLight400,
+    warning300,
+    warning600,
+    warning950,
+    greenLight700,
+    greenLight500,
+  ] = useToken('colors', [
+    'gray.700',
+    'greenLight.200',
+    'greenLight.400',
+    'warning.300',
+    'warning.600',
+    'warning.950',
+    'greenLight.700',
+    'greenLight.500',
+  ]);
 
   const colorScale = {
-    NewlyContracted: '#3B7C0F',
-    Renewals: '#66C61C',
-    Upsells: moss300,
-    Downgrades: warning400,
+    NewlyContracted: greenLight700,
+    Renewals: greenLight500,
+    Upsells: greenLight200,
+    Downgrades: warning300,
     Cancellations: warning600,
     Churned: warning950,
   };
 
   const legendData = [
     {
-      label: 'Newly Contracted',
+      label: 'Newly contracted',
       color: colorScale.NewlyContracted,
     },
     {
@@ -216,6 +188,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
     {
       label: 'Upsells',
       color: colorScale.Upsells,
+      borderColor: greenLight400,
     },
     {
       label: 'Downgrades',
@@ -231,85 +204,33 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
     },
   ];
 
-  const values = flattenValues(data);
-
-  const scaleX = useMemo(
-    () =>
-      scaleBand({
-        range: [0, width],
-        domain: data.map(getX) as [string, string],
-        padding: 0.2,
-      }),
-    [width, data],
-  );
-  const scaleY = useMemo(
-    () =>
-      scaleLinear({
-        range: [height, 0],
-        domain: [Math.min(...values), Math.max(...values)],
-        // domain: [-100, 100],
-        nice: true,
-      }),
-    [values],
-  );
-  const scaleColor = useMemo(
-    () =>
-      scaleOrdinal<string, string>({
-        domain: keys,
-        range: [
-          colorScale.NewlyContracted,
-          colorScale.Renewals,
-          colorScale.Upsells,
-          colorScale.Downgrades,
-          colorScale.Cancellations,
-          colorScale.Churned,
-        ],
-      }),
-    [colorScale],
-  );
-
   return (
     <>
       <Legend data={legendData} />
-      <svg height={height} width={width || 500}>
-        <BarStack
-          data={data}
-          keys={keys}
-          x={(d) => getX(d) ?? 'Jan'}
-          xScale={scaleX}
-          yScale={scaleY}
-          color={scaleColor}
-        >
-          {(stacks) => {
-            console.log('stacks', stacks);
-
-            return stacks.map((stack) => {
-              return stack.bars.map((bar) => (
-                <rect
-                  key={`bar-${bar.index}-${bar.key}`}
-                  x={bar.x}
-                  y={bar.y}
-                  height={bar.height}
-                  width={bar.width}
-                  fill={bar.color}
-                  // rx={4}
-                  // ry={4}
-                />
-              ));
-            });
-          }}
-          {/* <BarSeries
+      <XYChart
+        height={200}
+        width={width || 500}
+        margin={{ top: 12, right: 0, bottom: 20, left: 0 }}
+        xScale={{
+          type: 'band',
+          paddingInner: 0.4,
+          paddingOuter: 0.4,
+        }}
+        yScale={{ type: 'linear' }}
+      >
+        <BarStack offset='diverging'>
+          <BarSeries
             dataKey='Churned'
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
-            yAccessor={(d) => -d.values.churned}
+            yAccessor={(d) => -d.churned}
             colorAccessor={({ month }) => colorScale.Churned}
           />
           <BarSeries
             dataKey='Cancelations'
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
-            yAccessor={(d) => -d.values.cancellations}
+            yAccessor={(d) => -d.cancellations}
             colorAccessor={({ month }) => colorScale.Cancellations}
           />
           <BarSeries
@@ -318,7 +239,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             radiusBottom
             radius={4}
             xAccessor={(d) => getMonthLabel(d.month)}
-            yAccessor={(d) => -d.values.downgrades}
+            yAccessor={(d) => -d.downgrades}
             colorAccessor={({ month }) => colorScale.Downgrades}
           />
 
@@ -326,14 +247,14 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             dataKey='Newly Contracted'
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
-            yAccessor={(d) => d.values.newlyContracted}
+            yAccessor={(d) => d.newlyContracted}
             colorAccessor={({ month }) => colorScale.NewlyContracted}
           />
           <BarSeries
             dataKey='Renewals'
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
-            yAccessor={(d) => d.values.renewals}
+            yAccessor={(d) => d.renewals}
             colorAccessor={({ month }) => colorScale.Renewals}
           />
           <BarSeries
@@ -342,9 +263,9 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             radius={4}
             radiusTop
             xAccessor={(d) => getMonthLabel(d.month)}
-            yAccessor={(d) => d.values.upsells}
+            yAccessor={(d) => d.upsells}
             colorAccessor={({ month }) => colorScale.Upsells}
-          /> */}
+          />
         </BarStack>
 
         <AnimatedGrid
@@ -353,7 +274,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
           lineStyle={{ stroke: 'white', strokeWidth: 2 }}
         />
 
-        {/* <AnimatedAxis
+        <AnimatedAxis
           orientation='bottom'
           hideAxisLine
           hideTicks
@@ -361,13 +282,13 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             fontWeight: 'medium',
             fontFamily: `var(--font-barlow)`,
           }}
-        /> */}
-        {/* <Tooltip
+        />
+        <Tooltip
           snapTooltipToDatumY
           snapTooltipToDatumX
           style={{
             position: 'absolute',
-            padding: '8px',
+            padding: '8px 12px',
             background: gray700,
             borderRadius: '8px',
           }}
@@ -375,15 +296,26 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             const xLabel = getX(
               tooltipData?.nearestDatum?.datum as ARRBreakdownDatum,
             );
-            const values = (
-              tooltipData?.nearestDatum?.datum as ARRBreakdownDatum
-            ).values;
+            const values = tooltipData?.nearestDatum
+              ?.datum as ARRBreakdownDatum;
+
+            const sumPositives =
+              values.newlyContracted + values.renewals + values.upsells;
+            const sumNegatives =
+              values.churned + values.cancellations + values.downgrades;
+
+            const totalSum = sumPositives - sumNegatives;
 
             return (
               <Flex flexDir='column'>
-                <Text color='white' fontWeight='normal'>
-                  {xLabel}
-                </Text>
+                <Flex justify='space-between' align='center'>
+                  <Text color='white' fontWeight='semibold' fontSize='sm'>
+                    {xLabel}
+                  </Text>
+                  <Text color='white' fontWeight='semibold' fontSize='sm'>
+                    {formatCurrency(totalSum)}
+                  </Text>
+                </Flex>
 
                 <Flex direction='column'>
                   <TooltipEntry
@@ -397,7 +329,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
                     color={colorScale.Renewals}
                   />
                   <TooltipEntry
-                    label='Newly Contracted'
+                    label='Newly contracted'
                     value={values.newlyContracted}
                     color={colorScale.NewlyContracted}
                   />
@@ -407,7 +339,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
                     color={colorScale.Churned}
                   />
                   <TooltipEntry
-                    label='Cancelations'
+                    label='Cancellations'
                     value={values.cancellations}
                     color={colorScale.Cancellations}
                   />
@@ -420,8 +352,8 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
               </Flex>
             );
           }}
-        /> */}
-      </svg>
+        />
+      </XYChart>
     </>
   );
 };
@@ -433,22 +365,26 @@ const TooltipEntry = ({
 }: {
   color: string;
   label: string;
-  value: string | number;
+  value: number;
 }) => {
   return (
     <Flex align='center' gap='4'>
       <Flex align='center' flex='1' gap='2'>
         <Flex
-          w='3'
-          h='3'
+          w='2'
+          h='2'
           bg={color}
           borderRadius='full'
           border='1px solid white'
         />
-        <Text color='white'>{label}</Text>
+        <Text color='white' fontSize='sm'>
+          {label}
+        </Text>
       </Flex>
-      <Flex minW='10' justify='flex-start'>
-        <Text color='white'>${value}</Text>
+      <Flex>
+        <Text color='white' fontSize='sm'>
+          {formatCurrency(value)}
+        </Text>
       </Flex>
     </Flex>
   );

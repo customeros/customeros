@@ -114,6 +114,7 @@ const NewCustomersChart = ({ width }: NewCustomersProps) => {
           }}
         />
         <Tooltip
+          key={Math.random()}
           snapTooltipToDatumY
           snapTooltipToDatumX
           style={{
@@ -122,6 +123,8 @@ const NewCustomersChart = ({ width }: NewCustomersProps) => {
             background: gray700,
             borderRadius: '8px',
           }}
+          offsetTop={-50}
+          offsetLeft={-30}
           renderTooltip={({ tooltipData }) => {
             const xLabel = getX(
               tooltipData?.nearestDatum?.datum as NewCustomersDatum,
@@ -132,9 +135,10 @@ const NewCustomersChart = ({ width }: NewCustomersProps) => {
 
             return (
               <Flex flexDir='column'>
-                <Text color='white' fontWeight='normal'>
+                <Text fontSize='sm' color='white' fontWeight='normal'>
                   {xLabel}
-                  {': '}${value}
+                  {': '}
+                  {value}
                 </Text>
               </Flex>
             );

@@ -1,9 +1,9 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@dashboard/components/ChartCard';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useRevenueAtRiskQuery } from '@dashboard/graphql/revenueAtRisk.generated';
+import { useRevenueAtRiskQuery } from '@customerMap/graphql/revenueAtRisk.generated';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -18,9 +18,7 @@ const RevenueAtRiskChart = dynamic(() => import('./RevenueAtRisk.chart'), {
 
 export const RevenueAtRisk = () => {
   const client = getGraphQLClient();
-  const { data } = useRevenueAtRiskQuery(client, {
-    year: 2023,
-  });
+  const { data } = useRevenueAtRiskQuery(client);
 
   const chartData: RevenueAtRiskDatum = {
     atRisk: data?.dashboard_RevenueAtRisk?.atRisk ?? 0,
@@ -30,23 +28,25 @@ export const RevenueAtRisk = () => {
   return (
     <ChartCard
       flex='1'
-      title='Revenue at Risk'
+      title='Revenue at risk'
       renderSubStat={() => (
         <Flex mt='4' justify='space-between'>
           <Flex flexDir='column'>
-            <Flex gap='3' align='center'>
-              <Flex w='3' h='3' bg='#66C61C' borderRadius='full' />
-              <Text>High Confidence</Text>
+            <Flex gap='2' align='center'>
+              <Flex w='2' h='2' bg='greenLight.500' borderRadius='full' />
+              <Text fontSize='sm'>High Confidence</Text>
             </Flex>
-            <Text fontSize='sm' fontWeight='medium'>
+            <Text fontSize='sm'>
               {formatCurrency(chartData.highConfidence)}
             </Text>
           </Flex>
 
           <Flex flexDir='column'>
-            <Flex gap='3' align='center'>
-              <Flex w='3' h='3' bg='yellow.400' borderRadius='full' />
-              <Text>At Risk</Text>
+            <Flex gap='2' align='center'>
+              <Flex w='2' h='2' bg='warning.300' borderRadius='full' />
+              <Text fontSize='sm' color='gray.500'>
+                At Risk
+              </Text>
             </Flex>
             <Text fontSize='sm'>{formatCurrency(chartData.atRisk)}</Text>
           </Flex>

@@ -13,7 +13,7 @@ import { GrossRevenueRetention } from './src/components/charts/GrossRevenueReten
 
 export default function DashboardPage() {
   return (
-    <Flex flexDir='column' gap='3' pl='2'>
+    <Flex flexDir='column' gap='3' pl='1' pt='4'>
       <Text fontWeight='semibold' fontSize='xl'>
         Customer map
       </Text>

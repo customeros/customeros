@@ -1,9 +1,9 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@dashboard/components/ChartCard';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useArrBreakdownQuery } from '@dashboard/graphql/arrBreakdown.generated';
+import { useArrBreakdownQuery } from '@customerMap/graphql/arrBreakdown.generated';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
@@ -25,11 +25,11 @@ export const ARRBreakdown = () => {
   const chartData = (data?.dashboard_ARRBreakdown?.perMonth ?? []).map((d) => ({
     month: d?.month,
     upsells: d?.upsells,
-    churned: d?.churned,
     renewals: d?.renewals,
-    downgrades: d?.downgrades,
-    cancellations: d?.cancellations,
     newlyContracted: d?.newlyContracted,
+    churned: d?.churned,
+    cancellations: d?.cancellations,
+    downgrades: d?.downgrades,
   })) as ARRBreakdownDatum[];
 
   const stat = formatCurrency(data?.dashboard_ARRBreakdown?.arrBreakdown ?? 0);
@@ -39,7 +39,7 @@ export const ARRBreakdown = () => {
     <ChartCard
       flex='3'
       stat={stat}
-      title='ARR Breakdown'
+      title='ARR breakdown'
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>

@@ -1,4 +1,5 @@
 'use client';
+import { PatternLines } from '@visx/pattern';
 import {
   XYChart,
   Tooltip,
@@ -11,6 +12,7 @@ import {
 import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 import { Legend } from '../../Legend';
 import { getMonthLabel } from '../util';
@@ -151,6 +153,22 @@ const RetentionRate = ({ data, width }: RetentionRateProps) => {
         }}
         yScale={{ type: 'linear' }}
       >
+        <PatternLines
+          id='stripes-renewed'
+          height={8}
+          width={8}
+          stroke={colorScale.Renewed}
+          strokeWidth={2}
+          orientation={['diagonal']}
+        />
+        <PatternLines
+          id='stripes-churned'
+          height={8}
+          width={8}
+          stroke={colorScale.Churned}
+          strokeWidth={2}
+          orientation={['diagonal']}
+        />
         <AnimatedBarStack>
           <AnimatedBarSeries
             dataKey='Renewed'
@@ -159,7 +177,11 @@ const RetentionRate = ({ data, width }: RetentionRateProps) => {
             radiusTop
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => d.values.renewed}
-            colorAccessor={({ month }) => colorScale.Renewed}
+            colorAccessor={(_, i) =>
+              i === data.length - 1
+                ? 'url(#stripes-renewed)'
+                : colorScale.Renewed
+            }
           />
           <AnimatedBarSeries
             dataKey='Churned'
@@ -168,7 +190,11 @@ const RetentionRate = ({ data, width }: RetentionRateProps) => {
             radiusBottom
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => -d.values.churned}
-            colorAccessor={({ month }) => colorScale.Churned}
+            colorAccessor={(_, i) =>
+              i === data.length - 1
+                ? 'url(#stripes-churned)'
+                : colorScale.Churned
+            }
           />
         </AnimatedBarStack>
 
@@ -205,7 +231,7 @@ const RetentionRate = ({ data, width }: RetentionRateProps) => {
 
             return (
               <Flex flexDir='column'>
-                <Text color='white' fontWeight='normal'>
+                <Text color='white' fontWeight='normal' fontSize='sm'>
                   {xLabel}
                 </Text>
 
@@ -237,22 +263,26 @@ const TooltipEntry = ({
 }: {
   color: string;
   label: string;
-  value: string | number;
+  value: number;
 }) => {
   return (
     <Flex align='center' gap='4'>
       <Flex align='center' flex='1' gap='2'>
         <Flex
-          w='3'
-          h='3'
+          w='2'
+          h='2'
           bg={color}
           borderRadius='full'
           border='1px solid white'
         />
-        <Text color='white'>{label}</Text>
+        <Text color='white' fontSize='sm'>
+          {label}
+        </Text>
       </Flex>
-      <Flex minW='10' justify='flex-start'>
-        <Text color='white'>${value}</Text>
+      <Flex justify='flex-start'>
+        <Text color='white' fontSize='sm'>
+          {formatCurrency(value)}
+        </Text>
       </Flex>
     </Flex>
   );

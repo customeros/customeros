@@ -34,12 +34,15 @@ const mapData = (data: RevenueAtRiskDatum) => {
 };
 
 const RevenueAtRisk = ({ data, height, width }: RevenueAtRiskProps) => {
-  const [yellow400] = useToken('colors', ['yellow.400']);
+  const [warning300, greenLight500] = useToken('colors', [
+    'warning.300',
+    'greenLight.500',
+  ]);
   const mappedData = mapData(data);
 
   const colorScale = {
-    Confidence: '#66C61C',
-    Risk: yellow400,
+    Confidence: greenLight500,
+    Risk: warning300,
   };
 
   const innerWidth = width - margin.left - margin.right;

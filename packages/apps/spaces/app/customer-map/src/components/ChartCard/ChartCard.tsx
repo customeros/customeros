@@ -19,15 +19,23 @@ export const ChartCard = ({
   ...props
 }: PropsWithChildren<ChartCardProps>) => {
   return (
-    <Card {...props}>
-      <CardHeader minH='8.24rem'>
+    <Card
+      borderRadius='lg'
+      boxShadow='xs'
+      border='1px solid'
+      borderColor='gray.200'
+      {...props}
+    >
+      <CardHeader pb='0' pt='4' px='6'>
         <Text fontSize='lg' fontWeight='normal'>
           {title}
         </Text>
         {stat && <Heading>{stat}</Heading>}
         {renderSubStat && renderSubStat?.()}
       </CardHeader>
-      <CardBody>{children}</CardBody>
+      <CardBody px='6' pb='6'>
+        {children}
+      </CardBody>
     </Card>
   );
 };
