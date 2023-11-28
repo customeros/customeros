@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -31,6 +31,8 @@ export const RenewalARRCard = ({
   opportunity,
 }: RenewalARRCardProps) => {
   const { modal } = useUpdateRenewalDetailsContext();
+  const [isLocalOpen, setIsLocalOpen] = useState(false);
+
   const differenceInMonths = DateTimeUtils.differenceInMonths(
     new Date().toISOString(),
     startedAt,
@@ -57,7 +59,10 @@ export const RenewalARRCard = ({
         border='1px solid'
         borderColor='gray.200'
         position='relative'
-        onClick={modal.onOpen}
+        onClick={() => {
+          modal.onOpen();
+          setIsLocalOpen(true);
+        }}
         width={hasRenewed ? 'calc(100% - .5rem)' : 'auto'}
         sx={
           hasRenewed
@@ -151,8 +156,11 @@ export const RenewalARRCard = ({
         </CardHeader>
       </Card>
       <RenewalDetailsModal
-        isOpen={modal.isOpen}
-        onClose={modal.onClose}
+        isOpen={modal.isOpen && isLocalOpen}
+        onClose={() => {
+          modal.onClose();
+          setIsLocalOpen(false);
+        }}
         data={opportunity}
       />
     </>

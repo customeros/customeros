@@ -39,10 +39,16 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     return <Text>No start date or services yet</Text>;
   }
 
+  const isActiveAndRenewable =
+    hasStartedService &&
+    data.status !== ContractStatus.Ended &&
+    !!data.renewalCycle &&
+    data.renewalCycle !== ContractRenewalCycle.None;
+
   return (
     <Flex flexDir='column' alignItems='flex-start' justifyContent='center'>
       {serviceStartDate && <Text>Service starts on {serviceStartDate}</Text>}
-      {hasStartedService && data.status !== ContractStatus.Ended && (
+      {isActiveAndRenewable && (
         <Text>
           Renews {getLabelFromValue(data.renewalCycle)} on {renewalDate}
         </Text>

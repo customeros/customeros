@@ -38,7 +38,11 @@ export class ContractDTO implements TimeToRenewalForm {
       data?.serviceStartedAt && new Date(data.serviceStartedAt);
     this.name = data?.name?.length
       ? data?.name
-      : `${data?.organizationName ?? 'Unnamed'}'s contract`;
+      : `${
+          data?.organizationName?.length
+            ? `${data?.organizationName}s`
+            : "Unnamed's"
+        } contract`;
     this.contractUrl = data?.contractUrl ?? '';
   }
 

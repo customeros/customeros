@@ -44,7 +44,7 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
         externalLinks: [],
         renewalCycle: ContractRenewalCycle.None,
         id: `created-contract-${Math.random().toString()}`,
-        name: '',
+        name: `${name?.length ? `${name}s` : "Unnamed's"} contract`,
         owner: null,
         source: DataSource.Openline,
         sourceOfTruth: DataSource.Openline,
@@ -125,7 +125,10 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
           width='fit-content'
           onClick={() =>
             createContract.mutate({
-              input: { organizationId: id },
+              input: {
+                organizationId: id,
+                name: `${name?.length ? `${name}s` : "Unnamed's"} contract`,
+              },
             })
           }
         >
