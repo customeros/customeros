@@ -31,51 +31,50 @@
   ],
   "contacts": [
     {
-      "email": "dk@acme.com",
-      "firstName": "D",
-      "lastName": "K",
+      "email": "daniel.kim@acme.com",
+      "firstName": "Daniel",
+      "lastName": "Kim",
       "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00215_kuu6yw.jpg"
 
     },
     {
-      "email": "jh@acme.com",
-      "firstName": "J",
-      "lastName": "H",
+      "email": "julien.hubert@acme.com",
+      "firstName": "Julien",
+      "lastName": "Hubert",
       "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00218_fcfrp1.jpg"
 
     },
     {
-      "email": "tb@acme.com",
-      "firstName": "T",
-      "lastName": "B",
+      "email": "tobias.bauer@acme.com",
+      "firstName": "Tobias",
+      "lastName": "Bauer",
       "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00219_jch5vi.jpg"
-
     },
     {
-      "email": "ct@acme.com",
-      "firstName": "C",
-      "lastName": "T",
+      "email": "christopher.thompson@acme.com",
+      "firstName": "Christopher",
+      "lastName": "Thompson",
       "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00217_i6sc95.jpg"
 
     },
     {
-      "email": "br@acme.com",
-      "firstName": "B",
-      "lastName": "R",
+      "email": "benjamin.roberts@acme.com",
+      "firstName": "Benjamin",
+      "lastName": "Roberts",
       "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00214_raeijr.jpg"
 
     },
     {
-      "email": "al@bcc.com",
+      "email": "alfonso.perez@bcc.com",
       "firstName": "Alfonso",
-      "lastName": "P",
+      "lastName": "Perez",
       "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00210_m1b1m4.jpg"
 
     },
     {
-      "email": "jd@bcc.com",
+      "email": "jordan.davis@bcc.com",
       "firstName": "Jordan",
-      "lastName": "D",
+      "lastName": "Davis",
       "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00209_jgo1l9.jpg"
 
     }
@@ -87,12 +86,12 @@
       "domain": "bcc.com",
       "people": [
         {
-          "email": "jd@bcc.com",
+          "email": "jordan.davis@bcc.com",
           "jobRole": "Co-Owner",
           "description": "Decision maker"
         },
         {
-          "email": "al@bcc.com",
+          "email": "alfonso.perez@bcc.com",
           "jobRole": "National Sales Manager",
           "description": "Champion,Influencer"
         }
@@ -100,7 +99,7 @@
 
       "emails": [
         {
-          "from": "al@bcc.com",
+          "from": "alfonso.perez@bcc.com",
           "to": ["matt@openline.ai"],
           "cc": [],
           "bcc": [],
@@ -111,7 +110,7 @@
         },
         {
           "from": "jonty@openline.ai",
-          "to": ["al@bcc.com", "jd@bcc.com"],
+          "to": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
           "cc": ["matt@openline.ai"],
           "bcc": [],
           "subject": "Re: Interest in Acme's Cloud Inventory Software for Small Businesses",
@@ -121,7 +120,7 @@
         },
         {
           "from": "antoine@openline.ai",
-          "to": ["al@bcc.com"],
+          "to": ["alfonso.perez@bcc.com"],
           "cc": [],
           "bcc": [],
           "subject": "Re: Capacity Limits - Let's Discuss Solutions",
@@ -133,14 +132,14 @@
       "meetings": [
         {
           "createdBy": "jonty@openline.ai",
-          "attendees": ["al@bcc.com", "jd@bcc.com", "matt@openline.ai"],
+          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com", "matt@openline.ai"],
           "subject": "Acme and BCC Solution Discussion",
           "agenda": "Discussion on the specifics of how Acme's solutions can benefit BCC",
           "startedAt": "2023-07-10T14:00:00Z",
           "endedAt": "2023-07-10T15:30:00Z"
         }, {
           "createdBy": "antoine@openline.ai",
-          "attendees": ["al@bcc.com", "jd@bcc.com"],
+          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
           "subject": "Discussing Upgrade to Professional Plan for BCC",
           "agenda": "Discussion on upgrading to the Professional plan and the associated onboarding fees.",
           "startedAt": "2023-08-07T14:00:00Z",
@@ -158,7 +157,7 @@
       "slack": [
         [
           {
-            "createdBy": "jd@bcc.com",
+            "createdBy": "jordan.davis@bcc.com",
             "createdAt": "2023-08-08T10:30:00Z",
             "message": "We've reviewed the details from the meeting and are excited to proceed with the upgrade to the Professional plan. Let's get this started!"
           },
@@ -172,7 +171,7 @@
       "intercom": [
         [
           {
-            "createdBy": "al@bcc.com",
+            "createdBy": "alfonso.perez@bcc.com",
             "createdAt": "2023-08-04T16:30:00Z",
             "message": "<div>Hey, we’re hitting our limits with the current plan. What can we do?</div>"
           }
@@ -186,20 +185,20 @@
       "domain": "acme.com",
       "people": [
         {
-          "email": "dk@acme.com"
+          "email": "daniel.kim@acme.com"
         },
         {
-          "email": "jh@acme.com"
+          "email": "julien.hubert@acme.com"
         },
         {
-          "email": "tb@acme.com"
+          "email": "tobias.bauer@acme.com"
         }
       ],
       "emails": [
         {
-          "from": "dk@acme.com",
+          "from": "daniel.kim@acme.com",
           "to": ["matt@openline.ai"],
-          "cc": ["jh@acme.com", "tb@acme.com"],
+          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com"],
           "bcc": [],
           "subject": "Inquiry About Acme's Advanced Tier Solutions",
           "body": "Dear Matt, I'm interested in learning more about Acme's Advanced tier solutions and how they might fit into our operations at BCC Technologies...",
@@ -208,16 +207,16 @@
         },
         {
           "from": "jonty@openline.ai",
-          "to": ["dk@acme.com"],
-          "cc": ["jh@acme.com", "tb@acme.com", "matt@openline.ai"],
+          "to": ["daniel.kim@acme.com"],
+          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@openline.ai"],
           "bcc": [],
           "subject": "Re: Inquiry About Acme's Advanced Tier Solutions",
-          "body": "Hello D, Thank you for reaching out. We're excited to discuss how our Advanced tier can help Acme Technologies. Let's set up a meeting to explore this further...",
+          "body": "Hello Daniel, Thank you for reaching out. We're excited to discuss how our Advanced tier can help Acme Technologies. Let's set up a meeting to explore this further...",
           "contentType": "text/plain",
           "date": "2023-09-06T09:45:00Z"
         }, {
           "from": "antoine@openline.ai",
-          "to": ["br@acme.com"],
+          "to": ["benjamin.roberts@acme.com"],
           "cc": [],
           "bcc": [],
           "subject": "Welcome to Acme - Getting Started",
@@ -227,7 +226,7 @@
         },
         {
           "from": "antoine@openline.ai",
-          "to": ["ct@acme.com"],
+          "to": ["christopher.thompson@acme.com"],
           "cc": [],
           "bcc": [],
           "subject": "Welcome to Acme - Your Onboarding Session",
@@ -239,14 +238,14 @@
       "meetings": [
         {
           "createdBy": "jonty@openline.ai",
-          "attendees": ["dk@acme.com", "jh@acme.com", "tb@acme.com", "matt@openline.ai"],
+          "attendees": ["daniel.kim@acme.com", "julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@openline.ai"],
           "subject": "Discussion of Acme's Advanced Tier for BCC Technologies",
           "agenda": "Presentation and discussion of features and benefits of the Advanced tier for BCC Technologies",
           "startedAt": "2023-09-10T15:00:00Z",
           "endedAt": "2023-09-10T16:30:00Z"
         }, {
           "createdBy": "antoine@openline.ai",
-          "attendees": ["jh@acme.com"],
+          "attendees": ["julien.hubert@acme.com"],
           "subject": "Acme Onboarding Session",
           "agenda": "Introduction to Acme's features and best practices for effective use.",
           "startedAt": "2023-10-16T14:00:00Z",
@@ -261,13 +260,13 @@
           "date": "2023-10-01T13:00:00Z"
         }, {
           "createdBy": "jonty@openline.ai",
-          "content": "Received a call from BCC Technologies requesting the addition of 2 new full-access users: B R, and C T. @antoine please proceed with onboarding them.",
+          "content": "Received a call from BCC Technologies requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @antoine please proceed with onboarding them.",
           "contentType": "text/plain",
           "date": "2023-10-12T11:00:00Z"
         },
         {
           "createdBy": "antoine@openline.ai",
-          "content": "Conducted an onboarding session for B R. The second new user, C T, was a no-show and has not responded to messages. @jonty can you look into this please?",
+          "content": "Conducted an onboarding session for Benjamin Roberts. The second new user, Christopher Thompson, was a no-show and has not responded to messages. @jonty can you look into this please?",
           "contentType": "text/plain",
           "date": "2023-10-17T10:00:00Z"
         }
