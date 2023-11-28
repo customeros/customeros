@@ -1,6 +1,7 @@
 import { useForm } from 'react-inverted-form';
 import React, { useRef, useState, useEffect } from 'react';
 
+import { produce } from 'immer';
 import { debounce } from 'lodash';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -11,12 +12,16 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
+import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
 import { Contract, ContractStatus, ContractUpdateInput } from '@graphql/types';
-import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import {
+  GetContractsQuery,
+  useGetContractsQuery,
+} from '@organization/src/graphql/getContracts.generated';
 import { ContractSubtitle } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/ContractSubtitle';
 
 import { UrlInput } from './UrlInput';
@@ -41,43 +46,42 @@ export const ContractCard = ({
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isExpanded, setIsExpanded] = useState(!data?.signedAt);
-  const formId = `contractForm-${data.id}`;
+  const formId = `contract-form-${data.id}`;
 
   const client = getGraphQLClient();
   const updateContract = useUpdateContractMutation(client, {
-    // todo fix https://linear.app/customer-os/issue/COS-985/fix-optimitsic-update-for-update-contract-mutation
-    // onMutate: ({ input }) => {
-    //   queryClient.cancelQueries({ queryKey });
-    //
-    //   queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
-    //     return produce(currentCache, (draft) => {
-    //       const previousContracts = draft?.['organization']?.['contracts'];
-    //       const updatedContractIndex = previousContracts?.findIndex(
-    //         (contract) => contract.id === data?.id,
-    //       );
-    //       if (draft?.['organization']?.['contracts']) {
-    //         draft['organization']['contracts']?.map((contractData, index) => {
-    //           if (index !== updatedContractIndex) {
-    //             return contractData;
-    //           }
-    //
-    //           return { ...contractData, ...input };
-    //         });
-    //       }
-    //     });
-    //   });
-    //   const previousEntries =
-    //     queryClient.getQueryData<GetContractsQuery>(queryKey);
-    //
-    //   return { previousEntries };
-    // },
-    // onError: (_, __, context) => {
-    //   queryClient.setQueryData<GetContractsQuery>(
-    //     queryKey,
-    //     context?.previousEntries,
-    //   );
-    //   toastError('Failed to update contract', 'update-contract-error');
-    // },
+    onMutate: ({ input }) => {
+      queryClient.cancelQueries({ queryKey });
+
+      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
+        return produce(currentCache, (draft) => {
+          const previousContracts = draft?.['organization']?.['contracts'];
+          const updatedContractIndex = previousContracts?.findIndex(
+            (contract) => contract.id === data?.id,
+          );
+          if (draft?.['organization']?.['contracts']) {
+            draft['organization']['contracts']?.map((contractData, index) => {
+              if (index !== updatedContractIndex) {
+                return contractData;
+              }
+
+              return { ...input };
+            });
+          }
+        });
+      });
+      const previousEntries =
+        queryClient.getQueryData<GetContractsQuery>(queryKey);
+
+      return { previousEntries };
+    },
+    onError: (_, __, context) => {
+      queryClient.setQueryData<GetContractsQuery>(
+        queryKey,
+        context?.previousEntries,
+      );
+      toastError('Failed to update contract', 'update-contract-error');
+    },
     onSettled: () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
