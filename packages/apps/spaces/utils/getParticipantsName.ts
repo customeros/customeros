@@ -18,7 +18,7 @@ export const getName = (
   if (personData?.firstName || personData?.lastName) {
     return `${personData.firstName} ${personData.lastName}`;
   }
-  if ((data as Email)?.rawEmail) {
+  if ((data as Email)?.rawEmail || (data as Email)?.email) {
     return getEmailParticipantName(data as Email);
   }
 
