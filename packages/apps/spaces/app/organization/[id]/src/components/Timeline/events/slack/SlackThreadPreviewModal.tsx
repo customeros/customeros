@@ -20,6 +20,7 @@ import { SlackMessageCard } from '@organization/src/components/Timeline/events/s
 import {
   UserParticipant,
   InteractionEvent,
+  EmailParticipant,
   ContactParticipant,
   JobRoleParticipant,
   InteractionEventParticipant,
@@ -36,6 +37,7 @@ const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
     (sentBy?.[0] as ContactParticipant)?.contactParticipant ||
     (sentBy?.[0] as JobRoleParticipant)?.jobRoleParticipant?.contact ||
     (sentBy?.[0] as UserParticipant)?.userParticipant;
+  (sentBy?.[0] as EmailParticipant)?.emailParticipant;
 
   return sender;
 };
