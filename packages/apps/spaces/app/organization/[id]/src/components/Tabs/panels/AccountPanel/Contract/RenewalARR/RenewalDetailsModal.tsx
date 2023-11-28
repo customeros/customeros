@@ -27,6 +27,10 @@ import {
 } from '@organization/src/graphql/getContracts.generated';
 import { useUpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
 import {
+  getButtonStyles,
+  likelihoodButtons,
+} from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalARR/utils';
+import {
   Modal,
   ModalBody,
   ModalFooter,
@@ -215,66 +219,19 @@ export const RenewalDetailsModal = ({
               isAttached
               aria-describedby='likelihood-oprions-button'
             >
-              <Button
-                variant='outline'
-                w='full'
-                leftIcon={<Dot />}
-                onClick={() =>
-                  setLikelihood(OpportunityRenewalLikelihood.ZeroRenewal)
-                }
-                bg={
-                  likelihood === OpportunityRenewalLikelihood.ZeroRenewal
-                    ? 'gray.100'
-                    : 'white'
-                }
-              >
-                Zero
-              </Button>
-              <Button
-                w='full'
-                variant='outline'
-                leftIcon={<Dot colorScheme='error' />}
-                onClick={() =>
-                  setLikelihood(OpportunityRenewalLikelihood.LowRenewal)
-                }
-                bg={
-                  likelihood === OpportunityRenewalLikelihood.LowRenewal
-                    ? 'gray.100'
-                    : 'white'
-                }
-              >
-                Low
-              </Button>
-              <Button
-                w='full'
-                variant='outline'
-                leftIcon={<Dot colorScheme='warning' />}
-                onClick={() =>
-                  setLikelihood(OpportunityRenewalLikelihood.MediumRenewal)
-                }
-                bg={
-                  likelihood === OpportunityRenewalLikelihood.MediumRenewal
-                    ? 'gray.100'
-                    : 'white'
-                }
-              >
-                Medium
-              </Button>
-              <Button
-                w='full'
-                variant='outline'
-                leftIcon={<Dot colorScheme='success' />}
-                onClick={() =>
-                  setLikelihood(OpportunityRenewalLikelihood.HighRenewal)
-                }
-                bg={
-                  likelihood === OpportunityRenewalLikelihood.HighRenewal
-                    ? 'gray.100'
-                    : 'white'
-                }
-              >
-                High
-              </Button>
+              {likelihoodButtons.map((button) => (
+                <Button
+                  key={`${button.likelihood}-likelihood-button`}
+                  variant='outline'
+                  leftIcon={<Dot colorScheme={button.colorScheme} />}
+                  onClick={() => setLikelihood(button.likelihood)}
+                  sx={{
+                    ...getButtonStyles(likelihood, button.likelihood),
+                  }}
+                >
+                  {button.label}
+                </Button>
+              ))}
             </ButtonGroup>
             {data?.renewalUpdatedByUserId && (
               <Text color='gray.500' fontSize='xs' mt={2}>
@@ -282,7 +239,6 @@ export const RenewalDetailsModal = ({
               </Text>
             )}
           </div>
-
           {data?.amount > 0 && (
             <CurrencyInput
               w='full'
