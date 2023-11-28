@@ -1298,57 +1298,55 @@ type OrgAccountDetails struct {
 }
 
 type Organization struct {
-	ID                            string                           `json:"id"`
-	CustomerOsID                  string                           `json:"customerOsId"`
-	ReferenceID                   *string                          `json:"referenceId,omitempty"`
-	CreatedAt                     time.Time                        `json:"createdAt"`
-	UpdatedAt                     time.Time                        `json:"updatedAt"`
-	Name                          string                           `json:"name"`
-	Description                   *string                          `json:"description,omitempty"`
-	Note                          *string                          `json:"note,omitempty"`
-	Domains                       []string                         `json:"domains"`
-	Website                       *string                          `json:"website,omitempty"`
-	Industry                      *string                          `json:"industry,omitempty"`
-	SubIndustry                   *string                          `json:"subIndustry,omitempty"`
-	IndustryGroup                 *string                          `json:"industryGroup,omitempty"`
-	TargetAudience                *string                          `json:"targetAudience,omitempty"`
-	ValueProposition              *string                          `json:"valueProposition,omitempty"`
-	IsPublic                      *bool                            `json:"isPublic,omitempty"`
-	IsCustomer                    *bool                            `json:"isCustomer,omitempty"`
-	Market                        *Market                          `json:"market,omitempty"`
-	Employees                     *int64                           `json:"employees,omitempty"`
-	LastFundingRound              *FundingRound                    `json:"lastFundingRound,omitempty"`
-	LastFundingAmount             *string                          `json:"lastFundingAmount,omitempty"`
-	Source                        DataSource                       `json:"source"`
-	SourceOfTruth                 DataSource                       `json:"sourceOfTruth"`
-	AppSource                     string                           `json:"appSource"`
-	Locations                     []*Location                      `json:"locations"`
-	Socials                       []*Social                        `json:"socials"`
-	Contacts                      *ContactsPage                    `json:"contacts"`
-	JobRoles                      []*JobRole                       `json:"jobRoles"`
-	Notes                         *NotePage                        `json:"notes"`
-	Tags                          []*Tag                           `json:"tags,omitempty"`
-	Contracts                     []*Contract                      `json:"contracts,omitempty"`
-	Emails                        []*Email                         `json:"emails"`
-	PhoneNumbers                  []*PhoneNumber                   `json:"phoneNumbers"`
-	Subsidiaries                  []*LinkedOrganization            `json:"subsidiaries"`
-	SubsidiaryOf                  []*LinkedOrganization            `json:"subsidiaryOf"`
-	SuggestedMergeTo              []*SuggestedMergeOrganization    `json:"suggestedMergeTo"`
-	CustomFields                  []*CustomField                   `json:"customFields"`
-	FieldSets                     []*FieldSet                      `json:"fieldSets"`
-	EntityTemplate                *EntityTemplate                  `json:"entityTemplate,omitempty"`
-	TimelineEvents                []TimelineEvent                  `json:"timelineEvents"`
-	TimelineEventsTotalCount      int64                            `json:"timelineEventsTotalCount"`
-	Owner                         *User                            `json:"owner,omitempty"`
-	Relationships                 []OrganizationRelationship       `json:"relationships"`
-	RelationshipStages            []*OrganizationRelationshipStage `json:"relationshipStages"`
-	ExternalLinks                 []*ExternalSystem                `json:"externalLinks"`
-	LastTouchPointAt              *time.Time                       `json:"lastTouchPointAt,omitempty"`
-	LastTouchPointType            *LastTouchpointType              `json:"lastTouchPointType,omitempty"`
-	LastTouchPointTimelineEventID *string                          `json:"lastTouchPointTimelineEventId,omitempty"`
-	LastTouchPointTimelineEvent   TimelineEvent                    `json:"lastTouchPointTimelineEvent,omitempty"`
-	IssueSummaryByStatus          []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
-	AccountDetails                *OrgAccountDetails               `json:"accountDetails,omitempty"`
+	ID                            string                        `json:"id"`
+	CustomerOsID                  string                        `json:"customerOsId"`
+	ReferenceID                   *string                       `json:"referenceId,omitempty"`
+	CreatedAt                     time.Time                     `json:"createdAt"`
+	UpdatedAt                     time.Time                     `json:"updatedAt"`
+	Name                          string                        `json:"name"`
+	Description                   *string                       `json:"description,omitempty"`
+	Note                          *string                       `json:"note,omitempty"`
+	Domains                       []string                      `json:"domains"`
+	Website                       *string                       `json:"website,omitempty"`
+	Industry                      *string                       `json:"industry,omitempty"`
+	SubIndustry                   *string                       `json:"subIndustry,omitempty"`
+	IndustryGroup                 *string                       `json:"industryGroup,omitempty"`
+	TargetAudience                *string                       `json:"targetAudience,omitempty"`
+	ValueProposition              *string                       `json:"valueProposition,omitempty"`
+	IsPublic                      *bool                         `json:"isPublic,omitempty"`
+	IsCustomer                    *bool                         `json:"isCustomer,omitempty"`
+	Market                        *Market                       `json:"market,omitempty"`
+	Employees                     *int64                        `json:"employees,omitempty"`
+	LastFundingRound              *FundingRound                 `json:"lastFundingRound,omitempty"`
+	LastFundingAmount             *string                       `json:"lastFundingAmount,omitempty"`
+	Source                        DataSource                    `json:"source"`
+	SourceOfTruth                 DataSource                    `json:"sourceOfTruth"`
+	AppSource                     string                        `json:"appSource"`
+	Locations                     []*Location                   `json:"locations"`
+	Socials                       []*Social                     `json:"socials"`
+	Contacts                      *ContactsPage                 `json:"contacts"`
+	JobRoles                      []*JobRole                    `json:"jobRoles"`
+	Notes                         *NotePage                     `json:"notes"`
+	Tags                          []*Tag                        `json:"tags,omitempty"`
+	Contracts                     []*Contract                   `json:"contracts,omitempty"`
+	Emails                        []*Email                      `json:"emails"`
+	PhoneNumbers                  []*PhoneNumber                `json:"phoneNumbers"`
+	Subsidiaries                  []*LinkedOrganization         `json:"subsidiaries"`
+	SubsidiaryOf                  []*LinkedOrganization         `json:"subsidiaryOf"`
+	SuggestedMergeTo              []*SuggestedMergeOrganization `json:"suggestedMergeTo"`
+	CustomFields                  []*CustomField                `json:"customFields"`
+	FieldSets                     []*FieldSet                   `json:"fieldSets"`
+	EntityTemplate                *EntityTemplate               `json:"entityTemplate,omitempty"`
+	TimelineEvents                []TimelineEvent               `json:"timelineEvents"`
+	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
+	Owner                         *User                         `json:"owner,omitempty"`
+	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
+	LastTouchPointAt              *time.Time                    `json:"lastTouchPointAt,omitempty"`
+	LastTouchPointType            *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
+	LastTouchPointTimelineEventID *string                       `json:"lastTouchPointTimelineEventId,omitempty"`
+	LastTouchPointTimelineEvent   TimelineEvent                 `json:"lastTouchPointTimelineEvent,omitempty"`
+	IssueSummaryByStatus          []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
+	AccountDetails                *OrgAccountDetails            `json:"accountDetails,omitempty"`
 }
 
 func (Organization) IsNotedEntity() {}
@@ -1405,11 +1403,6 @@ func (OrganizationParticipant) IsInteractionEventParticipant() {}
 func (OrganizationParticipant) IsIssueParticipant() {}
 
 func (OrganizationParticipant) IsMeetingParticipant() {}
-
-type OrganizationRelationshipStage struct {
-	Relationship OrganizationRelationship `json:"relationship"`
-	Stage        *string                  `json:"stage,omitempty"`
-}
 
 type OrganizationUpdateInput struct {
 	ID          string  `json:"id"`
@@ -2946,121 +2939,6 @@ func (e *OpportunityRenewalLikelihood) UnmarshalGQL(v interface{}) error {
 }
 
 func (e OpportunityRenewalLikelihood) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type OrganizationRelationship string
-
-const (
-	OrganizationRelationshipCustomer                         OrganizationRelationship = "CUSTOMER"
-	OrganizationRelationshipDistributor                      OrganizationRelationship = "DISTRIBUTOR"
-	OrganizationRelationshipPartner                          OrganizationRelationship = "PARTNER"
-	OrganizationRelationshipLicensingPartner                 OrganizationRelationship = "LICENSING_PARTNER"
-	OrganizationRelationshipFranchisee                       OrganizationRelationship = "FRANCHISEE"
-	OrganizationRelationshipFranchisor                       OrganizationRelationship = "FRANCHISOR"
-	OrganizationRelationshipAffiliate                        OrganizationRelationship = "AFFILIATE"
-	OrganizationRelationshipReseller                         OrganizationRelationship = "RESELLER"
-	OrganizationRelationshipInfluencerOrContentCreator       OrganizationRelationship = "INFLUENCER_OR_CONTENT_CREATOR"
-	OrganizationRelationshipMediaPartner                     OrganizationRelationship = "MEDIA_PARTNER"
-	OrganizationRelationshipInvestor                         OrganizationRelationship = "INVESTOR"
-	OrganizationRelationshipMergerOrAcquisitionTarget        OrganizationRelationship = "MERGER_OR_ACQUISITION_TARGET"
-	OrganizationRelationshipParentCompany                    OrganizationRelationship = "PARENT_COMPANY"
-	OrganizationRelationshipSubsidiary                       OrganizationRelationship = "SUBSIDIARY"
-	OrganizationRelationshipJointVenture                     OrganizationRelationship = "JOINT_VENTURE"
-	OrganizationRelationshipSponsor                          OrganizationRelationship = "SPONSOR"
-	OrganizationRelationshipSupplier                         OrganizationRelationship = "SUPPLIER"
-	OrganizationRelationshipVendor                           OrganizationRelationship = "VENDOR"
-	OrganizationRelationshipContractManufacturer             OrganizationRelationship = "CONTRACT_MANUFACTURER"
-	OrganizationRelationshipOriginalEquipmentManufacturer    OrganizationRelationship = "ORIGINAL_EQUIPMENT_MANUFACTURER"
-	OrganizationRelationshipOriginalDesignManufacturer       OrganizationRelationship = "ORIGINAL_DESIGN_MANUFACTURER"
-	OrganizationRelationshipPrivateLabelManufacturer         OrganizationRelationship = "PRIVATE_LABEL_MANUFACTURER"
-	OrganizationRelationshipLogisticsPartner                 OrganizationRelationship = "LOGISTICS_PARTNER"
-	OrganizationRelationshipConsultant                       OrganizationRelationship = "CONSULTANT"
-	OrganizationRelationshipServiceProvider                  OrganizationRelationship = "SERVICE_PROVIDER"
-	OrganizationRelationshipOutsourcingProvider              OrganizationRelationship = "OUTSOURCING_PROVIDER"
-	OrganizationRelationshipInsourcingPartner                OrganizationRelationship = "INSOURCING_PARTNER"
-	OrganizationRelationshipTechnologyProvider               OrganizationRelationship = "TECHNOLOGY_PROVIDER"
-	OrganizationRelationshipDataProvider                     OrganizationRelationship = "DATA_PROVIDER"
-	OrganizationRelationshipCertificationBody                OrganizationRelationship = "CERTIFICATION_BODY"
-	OrganizationRelationshipStandardsOrganization            OrganizationRelationship = "STANDARDS_ORGANIZATION"
-	OrganizationRelationshipIndustryAnalyst                  OrganizationRelationship = "INDUSTRY_ANALYST"
-	OrganizationRelationshipRealEstatePartner                OrganizationRelationship = "REAL_ESTATE_PARTNER"
-	OrganizationRelationshipTalentAcquisitionPartner         OrganizationRelationship = "TALENT_ACQUISITION_PARTNER"
-	OrganizationRelationshipProfessionalEmployerOrganization OrganizationRelationship = "PROFESSIONAL_EMPLOYER_ORGANIZATION"
-	OrganizationRelationshipResearchCollaborator             OrganizationRelationship = "RESEARCH_COLLABORATOR"
-	OrganizationRelationshipRegulatoryBody                   OrganizationRelationship = "REGULATORY_BODY"
-	OrganizationRelationshipTradeAssociationMember           OrganizationRelationship = "TRADE_ASSOCIATION_MEMBER"
-	OrganizationRelationshipCompetitor                       OrganizationRelationship = "COMPETITOR"
-)
-
-var AllOrganizationRelationship = []OrganizationRelationship{
-	OrganizationRelationshipCustomer,
-	OrganizationRelationshipDistributor,
-	OrganizationRelationshipPartner,
-	OrganizationRelationshipLicensingPartner,
-	OrganizationRelationshipFranchisee,
-	OrganizationRelationshipFranchisor,
-	OrganizationRelationshipAffiliate,
-	OrganizationRelationshipReseller,
-	OrganizationRelationshipInfluencerOrContentCreator,
-	OrganizationRelationshipMediaPartner,
-	OrganizationRelationshipInvestor,
-	OrganizationRelationshipMergerOrAcquisitionTarget,
-	OrganizationRelationshipParentCompany,
-	OrganizationRelationshipSubsidiary,
-	OrganizationRelationshipJointVenture,
-	OrganizationRelationshipSponsor,
-	OrganizationRelationshipSupplier,
-	OrganizationRelationshipVendor,
-	OrganizationRelationshipContractManufacturer,
-	OrganizationRelationshipOriginalEquipmentManufacturer,
-	OrganizationRelationshipOriginalDesignManufacturer,
-	OrganizationRelationshipPrivateLabelManufacturer,
-	OrganizationRelationshipLogisticsPartner,
-	OrganizationRelationshipConsultant,
-	OrganizationRelationshipServiceProvider,
-	OrganizationRelationshipOutsourcingProvider,
-	OrganizationRelationshipInsourcingPartner,
-	OrganizationRelationshipTechnologyProvider,
-	OrganizationRelationshipDataProvider,
-	OrganizationRelationshipCertificationBody,
-	OrganizationRelationshipStandardsOrganization,
-	OrganizationRelationshipIndustryAnalyst,
-	OrganizationRelationshipRealEstatePartner,
-	OrganizationRelationshipTalentAcquisitionPartner,
-	OrganizationRelationshipProfessionalEmployerOrganization,
-	OrganizationRelationshipResearchCollaborator,
-	OrganizationRelationshipRegulatoryBody,
-	OrganizationRelationshipTradeAssociationMember,
-	OrganizationRelationshipCompetitor,
-}
-
-func (e OrganizationRelationship) IsValid() bool {
-	switch e {
-	case OrganizationRelationshipCustomer, OrganizationRelationshipDistributor, OrganizationRelationshipPartner, OrganizationRelationshipLicensingPartner, OrganizationRelationshipFranchisee, OrganizationRelationshipFranchisor, OrganizationRelationshipAffiliate, OrganizationRelationshipReseller, OrganizationRelationshipInfluencerOrContentCreator, OrganizationRelationshipMediaPartner, OrganizationRelationshipInvestor, OrganizationRelationshipMergerOrAcquisitionTarget, OrganizationRelationshipParentCompany, OrganizationRelationshipSubsidiary, OrganizationRelationshipJointVenture, OrganizationRelationshipSponsor, OrganizationRelationshipSupplier, OrganizationRelationshipVendor, OrganizationRelationshipContractManufacturer, OrganizationRelationshipOriginalEquipmentManufacturer, OrganizationRelationshipOriginalDesignManufacturer, OrganizationRelationshipPrivateLabelManufacturer, OrganizationRelationshipLogisticsPartner, OrganizationRelationshipConsultant, OrganizationRelationshipServiceProvider, OrganizationRelationshipOutsourcingProvider, OrganizationRelationshipInsourcingPartner, OrganizationRelationshipTechnologyProvider, OrganizationRelationshipDataProvider, OrganizationRelationshipCertificationBody, OrganizationRelationshipStandardsOrganization, OrganizationRelationshipIndustryAnalyst, OrganizationRelationshipRealEstatePartner, OrganizationRelationshipTalentAcquisitionPartner, OrganizationRelationshipProfessionalEmployerOrganization, OrganizationRelationshipResearchCollaborator, OrganizationRelationshipRegulatoryBody, OrganizationRelationshipTradeAssociationMember, OrganizationRelationshipCompetitor:
-		return true
-	}
-	return false
-}
-
-func (e OrganizationRelationship) String() string {
-	return string(e)
-}
-
-func (e *OrganizationRelationship) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = OrganizationRelationship(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid OrganizationRelationship", str)
-	}
-	return nil
-}
-
-func (e OrganizationRelationship) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
