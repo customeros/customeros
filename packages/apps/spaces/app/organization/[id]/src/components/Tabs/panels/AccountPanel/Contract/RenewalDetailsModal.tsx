@@ -52,7 +52,7 @@ export const RenewalDetailsModal = ({
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
 
-  const formId = 'renewalDetailsForm';
+  const formId = `renewal-details-form-${data.id}`;
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [likelihood, setLikelihood] = useState<
     OpportunityRenewalLikelihood | undefined | null
