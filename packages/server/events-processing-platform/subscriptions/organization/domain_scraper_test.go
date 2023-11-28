@@ -63,7 +63,7 @@ func TestWebScraping(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected := map[string]string{"companyName": "CustomerOS", "industry": "Enterprise SaaS", "industryGroup": "Software", "market": "Business to Business", "subIndustry": "CRM Software", "targetAudience": "SaaS companies", "valueProposition": "Grow with your best customers. See every experience everywhere. Create a success plan that delivers results."}
+	expected := map[string]string{"website": "https://www.customeros.ai", "companyName": "CustomerOS", "industry": "Enterprise SaaS", "industryGroup": "Software", "market": "Business to Business", "subIndustry": "CRM Software", "targetAudience": "SaaS companies", "valueProposition": "Grow with your best customers. See every experience everywhere. Create a success plan that delivers results."}
 	require.Equal(t, expected["companyName"], scrapedContent.CompanyName)
 	require.Equal(t, expected["website"], scrapedContent.Website)
 	require.Equal(t, expected["industry"], scrapedContent.Industry)

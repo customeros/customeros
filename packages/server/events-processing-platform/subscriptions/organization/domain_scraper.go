@@ -19,13 +19,17 @@ import (
 	"github.com/pkg/errors"
 )
 
+type WebScraper interface {
+	Scrape(domainOrWebsite, tenant, organizationId string) (*WebscrapeResponseV1, error)
+}
+
 type DomainScraper struct {
 	log          logger.Logger
 	cfg          *config.Config
 	repositories *repository.Repositories
 }
 
-func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repository.Repositories) *DomainScraper {
+func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repository.Repositories) WebScraper {
 	return &DomainScraper{
 		log:          log,
 		cfg:          cfg,
@@ -147,31 +151,8 @@ func (ds *DomainScraper) extractRelevantText(html *string) (*string, error) {
 
 	converter := md.NewConverter("", true, nil)
 	markdown := converter.Convert(doc.Selection)
-
-	// doc.Find("script, style").Remove()
-	// var texts []string
-	// doc.Find("*").FilterFunction(func(_ int, s *goquery.Selection) bool {
-	// 	return s.Children().Length() == 0
-	// }).Each(func(_ int, s *goquery.Selection) {
-	// 	text := s.Text()
-	// 	text = strings.TrimSpace(text)
-	// 	if text != "" && !contains(texts, text) {
-	// 		texts = append(texts, text)
-	// 	}
-	// })
-
-	// text := strings.Join(texts, " ")
 	ds.log.Printf("text: %s", markdown)
 	return &markdown, nil
-}
-
-func contains(slice []string, text string) bool {
-	for _, s := range slice {
-		if s == text {
-			return true
-		}
-	}
-	return false
 }
 
 func (ds *DomainScraper) extractSocialLinks(html *string) (*string, error) {
@@ -243,6 +224,10 @@ func (ds *DomainScraper) openai(prompt string) (*string, *string, error) {
 		return nil, nil, err
 	}
 	rawResponse, err := json.Marshal(result)
+	if err != nil {
+		ds.log.Printf("Error parsing the API response: %s", err)
+		return nil, nil, err
+	}
 
 	choices := result["choices"].([]interface{})
 	if len(choices) > 0 {

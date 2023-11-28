@@ -3,6 +3,8 @@ package organization
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -22,7 +24,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const (
@@ -64,7 +65,7 @@ type organizationEventHandler struct {
 	log                  logger.Logger
 	cfg                  *config.Config
 	caches               caches.Cache
-	domainScraper        *DomainScraper
+	domainScraper        WebScraper
 }
 
 func (h *organizationEventHandler) WebscrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
@@ -357,7 +358,10 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		Prompt:         secondPrompt,
 	}
 	promptStoreLogId2, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog2)
-
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error storing prompt log with error: %v", err)
+	}
 	secondResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
