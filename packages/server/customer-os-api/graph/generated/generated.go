@@ -9804,7 +9804,7 @@ type Opportunity implements Node {
     generalNotes:       String!
     nextSteps:          String!
     renewedAt:          Time!
-    renewalLikelihood:  String!
+    renewalLikelihood:  OpportunityRenewalLikelihood!
     renewalUpdatedByUserId: String!
     renewalUpdatedByUserAt: Time!
     comments:           String!
@@ -48594,9 +48594,9 @@ func (ec *executionContext) _Opportunity_renewalLikelihood(ctx context.Context, 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.OpportunityRenewalLikelihood)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_renewalLikelihood(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48606,7 +48606,7 @@ func (ec *executionContext) fieldContext_Opportunity_renewalLikelihood(ctx conte
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			return nil, errors.New("field of type OpportunityRenewalLikelihood does not have child fields")
 		},
 	}
 	return fc, nil
@@ -83055,6 +83055,16 @@ func (ec *executionContext) marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._Opportunity(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, v interface{}) (model.OpportunityRenewalLikelihood, error) {
+	var res model.OpportunityRenewalLikelihood
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v model.OpportunityRenewalLikelihood) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalUpdateInput(ctx context.Context, v interface{}) (model.OpportunityRenewalUpdateInput, error) {

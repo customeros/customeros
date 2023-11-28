@@ -26,7 +26,7 @@ func MapEntityToOpportunity(entity *entity.OpportunityEntity) *model.Opportunity
 		GeneralNotes:           entity.GeneralNotes,
 		NextSteps:              entity.NextSteps,
 		RenewedAt:              entity.RenewedAt,
-		RenewalLikelihood:      entity.RenewalLikelihood,
+		RenewalLikelihood:      MapOpportunityRenewalLikelihoodToModel(entity.RenewalLikelihood),
 		RenewalUpdatedByUserAt: entity.RenewalUpdatedByUserAt,
 		RenewalUpdatedByUserID: entity.RenewalUpdatedByUserId,
 		Comments:               entity.Comments,

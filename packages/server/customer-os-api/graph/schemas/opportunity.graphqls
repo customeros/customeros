@@ -21,7 +21,7 @@ type Opportunity implements Node {
     generalNotes:       String!
     nextSteps:          String!
     renewedAt:          Time!
-    renewalLikelihood:  String!
+    renewalLikelihood:  OpportunityRenewalLikelihood!
     renewalUpdatedByUserId: String!
     renewalUpdatedByUserAt: Time!
     comments:           String!

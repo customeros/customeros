@@ -91,7 +91,7 @@ func (s *opportunityService) mapDbNodeToOpportunityEntity(dbNode dbtype.Node) *e
 		NextSteps:              utils.GetStringPropOrEmpty(props, "nextSteps"),
 		GeneralNotes:           utils.GetStringPropOrEmpty(props, "generalNotes"),
 		RenewedAt:              utils.GetTimePropOrEpochStart(props, "renewedAt"),
-		RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
+		RenewalLikelihood:      entity.GetOpportunityRenewalLikelihood(utils.GetStringPropOrEmpty(props, "renewalLikelihood")),
 		RenewalUpdatedByUserAt: utils.GetTimePropOrEpochStart(props, "renewalUpdatedByUserAt"),
 		RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
 		Comments:               utils.GetStringPropOrEmpty(props, "comments"),

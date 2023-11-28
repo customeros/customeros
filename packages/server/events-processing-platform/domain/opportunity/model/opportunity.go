@@ -192,21 +192,21 @@ func (r RenewalLikelihood) StringValue() RenewalLikelihoodString {
 type RenewalLikelihoodString string
 
 const (
-	RenewalLikelihoodStringHigh   RenewalLikelihoodString = "HIGH"
-	RenewalLikelihoodStringMedium RenewalLikelihoodString = "MEDIUM"
-	RenewalLikelihoodStringLow    RenewalLikelihoodString = "LOW"
-	RenewalLikelihoodStringZero   RenewalLikelihoodString = "ZERO"
+	RenewalLikelihoodStringHigh   RenewalLikelihoodString = "HIGH_RENEWAL"
+	RenewalLikelihoodStringMedium RenewalLikelihoodString = "MEDIUM_RENEWAL"
+	RenewalLikelihoodStringLow    RenewalLikelihoodString = "LOW_RENEWAL"
+	RenewalLikelihoodStringZero   RenewalLikelihoodString = "ZERO_RENEWAL"
 )
 
 func RenewalLikelihoodStringDecode(val string) RenewalLikelihoodString {
 	switch val {
-	case "HIGH":
+	case "HIGH_RENEWAL":
 		return RenewalLikelihoodStringHigh
-	case "MEDIUM":
+	case "MEDIUM_RENEWAL":
 		return RenewalLikelihoodStringMedium
-	case "LOW":
+	case "LOW_RENEWAL":
 		return RenewalLikelihoodStringLow
-	case "ZERO":
+	case "ZERO_RENEWAL":
 		return RenewalLikelihoodStringZero
 	default:
 		return ""

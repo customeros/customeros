@@ -19,7 +19,7 @@ type OpportunityEntity struct {
 	GeneralNotes           string
 	NextSteps              string
 	RenewedAt              time.Time
-	RenewalLikelihood      string
+	RenewalLikelihood      OpportunityRenewalLikelihood
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt time.Time
 	Comments               string
