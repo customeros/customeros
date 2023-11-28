@@ -3,6 +3,10 @@ package organization
 import (
 	"context"
 	"fmt"
+	"math"
+	"strings"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -25,9 +29,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"math"
-	"strings"
-	"time"
 )
 
 const (
@@ -69,7 +70,7 @@ type organizationEventHandler struct {
 	log                  logger.Logger
 	cfg                  *config.Config
 	caches               caches.Cache
-	domainScraper        *DomainScraper
+	domainScraper        WebScraper
 }
 
 func (h *organizationEventHandler) WebscrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
@@ -362,7 +363,10 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		Prompt:         secondPrompt,
 	}
 	promptStoreLogId2, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog2)
-
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error storing prompt log with error: %v", err)
+	}
 	secondResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -430,7 +434,7 @@ func (h *organizationEventHandler) OnRenewalForecastRequested(ctx context.Contex
 }
 
 func (h *organizationEventHandler) calculateForecastAmount(ctx context.Context, billingDtls entity.BillingDetails, likelihood string) (*float64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.calculateForecastAmount")
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.calculateForecastAmount")
 	defer span.Finish()
 	span.LogFields(log.String("likelihood", likelihood), log.String("billingDtls", fmt.Sprintf("%+v", billingDtls)))
 
@@ -598,7 +602,7 @@ func (h *organizationEventHandler) OnNextCycleDateRequested(ctx context.Context,
 }
 
 func (h *organizationEventHandler) calculateRenewalCycleNext(ctx context.Context, billingDtls entity.BillingDetails) *time.Time {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.calculateRenewalCycleNext")
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.calculateRenewalCycleNext")
 	defer span.Finish()
 
 	if billingDtls.RenewalCycleStart == nil || billingDtls.RenewalCycle == "" {
