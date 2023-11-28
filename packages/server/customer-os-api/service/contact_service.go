@@ -258,7 +258,7 @@ func (s *contactService) Update(ctx context.Context, contactUpdateData *ContactU
 		LastName:        contactDetails.LastName,
 		Description:     contactDetails.Description,
 		Timezone:        contactDetails.Timezone,
-		ProfilePhotoUrl: currentContactEntity.ProfilePhotoUrl,
+		ProfilePhotoUrl: utils.StringFirstNonEmpty(contactDetails.ProfilePhotoUrl, currentContactEntity.ProfilePhotoUrl),
 	}
 	response, err := s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
 	if err != nil {

@@ -202,6 +202,7 @@ input ContactInput {
     name: String
     description: String
     timezone: String
+    profilePhotoUrl: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -281,6 +282,7 @@ input ContactUpdateInput {
     name: String
     description: String
     timezone: String
+    profilePhotoUrl: String
 
     """
     The last name of the contact in customerOS.
