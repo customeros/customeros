@@ -6,7 +6,7 @@ import { useForm } from 'react-inverted-form';
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
-// import { Box } from '@ui/layout/Box';
+import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
@@ -15,7 +15,7 @@ import { toastError } from '@ui/presentation/Toast';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { BilledType, ServiceLineItem } from '@graphql/types';
-// import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
+import { FormCheckbox } from '@ui/form/Checkbox/FormCheckbox';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useUpdateServiceMutation } from '@organization/src/graphql/updateService.generated';
 import {
@@ -50,11 +50,13 @@ export const UpdateServiceModal = ({
 }: SubscriptionServiceModalProps) => {
   const id = useParams()?.id as string;
   const initialRef = useRef(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const formId = `update-service-item`;
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const queryKey = useGetContractsQuery.getKey({ id });
   const defaultValues = ServiceDTO.toForm(data);
+
   const updateService = useUpdateServiceMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
@@ -96,10 +98,15 @@ export const UpdateServiceModal = ({
       onClose();
     },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries(queryKey);
+      }, 1000);
     },
   });
-  const { setDefaultValues, state } = useForm<ServiceForm>({
+  const { state, setDefaultValues } = useForm<ServiceForm>({
     formId,
     defaultValues,
     stateReducer: (_, action, next) => {
@@ -115,6 +122,7 @@ export const UpdateServiceModal = ({
     defaultValues.quantity,
     defaultValues.serviceStartedAt,
     defaultValues.externalReference,
+    defaultValues.isRetroactiveCorrection,
   ]);
 
   const updateServiceData = () => {
@@ -159,18 +167,18 @@ export const UpdateServiceModal = ({
           ) : (
             <RecurringServiceFrom formId={formId} />
           )}
-          {/*<Box*/}
-          {/*  p={2}*/}
-          {/*  my={2}*/}
-          {/*  border='1px solid'*/}
-          {/*  borderColor='gray.100'*/}
-          {/*  bg='gray.25'*/}
-          {/*  borderRadius='md'*/}
-          {/*>*/}
-          {/*  <FormCheckbox formId={formId} name='todo'>*/}
-          {/*    <Text fontSize='sm'>This is a retroactive correction</Text>*/}
-          {/*  </FormCheckbox>*/}
-          {/*</Box>*/}
+          <Box
+            p={2}
+            my={2}
+            border='1px solid'
+            borderColor='gray.100'
+            bg='gray.25'
+            borderRadius='md'
+          >
+            <FormCheckbox formId={formId} name='isRetroactiveCorrection'>
+              <Text fontSize='sm'>This is a retroactive correction</Text>
+            </FormCheckbox>
+          </Box>
 
           <div>
             <Text as='label' htmlFor='reason' fontSize='sm'>

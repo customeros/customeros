@@ -1,7 +1,8 @@
 'use client';
 import React from 'react';
+import { useParams } from 'next/navigation';
 
-import { useIsMutating, useIsRestoring } from '@tanstack/react-query';
+import { useIsFetching, useIsRestoring } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -13,7 +14,7 @@ import { Contract, RenewalForecast } from '@graphql/types';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { useUpdateRenewalLikelihoodMutation } from '@organization/src/graphql/updateRenewalLikelyhood.generated';
+import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 interface ARRForecastProps {
@@ -30,10 +31,18 @@ export const ARRForecast = ({
   name,
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
+  const id = useParams()?.id as string;
   const { modal } = useARRInfoModalContext();
-  const isMutating = useIsMutating({
-    mutationKey: useUpdateRenewalLikelihoodMutation.getKey(),
+
+  const queryKey = useGetContractsQuery.getKey({ id });
+
+  const isFetching = useIsFetching({
+    queryKey: queryKey,
   });
+  const formattedMaxAmount = formatCurrency(forecast?.maxArr ?? 0);
+  const formattedAmount = formatCurrency(forecast?.arr ?? 0);
+
+  const hasForecastChanged = formattedMaxAmount !== formattedAmount;
   const iconColor = (() => {
     if (!contracts?.length) {
       return 'gray';
@@ -120,17 +129,17 @@ export const ARRForecast = ({
 
             <Flex flexDir='column'>
               <Heading fontSize='2xl' color='gray.700'>
-                {isMutating && (!isInitialLoading || !isRestoring)
+                {isFetching && (!isInitialLoading || !isRestoring)
                   ? 'Calculating...'
-                  : formatCurrency(forecast?.arr ?? 0)}
+                  : formattedAmount}
               </Heading>
-              {forecast?.maxArr && forecast?.arr !== forecast?.maxArr && (
+              {hasForecastChanged && !isFetching && (
                 <Text
                   fontSize='sm'
                   textAlign='right'
                   textDecoration='line-through'
                 >
-                  {formatCurrency(forecast.maxArr)}
+                  {formattedMaxAmount}
                 </Text>
               )}
             </Flex>

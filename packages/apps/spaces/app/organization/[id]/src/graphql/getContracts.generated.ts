@@ -79,6 +79,8 @@ export type GetContractsQuery = {
         source: Types.DataSource;
         sourceOfTruth: Types.DataSource;
         appSource: string;
+        endedAt?: any | null;
+        parentId: string;
       }> | null;
     }> | null;
   } | null;
@@ -130,6 +132,8 @@ export const GetContractsDocument = `
         source
         sourceOfTruth
         appSource
+        endedAt
+        parentId
       }
     }
   }
