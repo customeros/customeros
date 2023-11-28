@@ -26,8 +26,8 @@ import { ContractSubtitle } from '@organization/src/components/Tabs/panels/Accou
 
 import { UrlInput } from './UrlInput';
 import { Services } from './Services/Services';
-import { RenewalARRCard } from './RenewalARRCard';
 import { billingFrequencyOptions } from '../utils';
+import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
 import { ContractDTO, TimeToRenewalForm } from './Contract.dto';
 import { ContractStatusSelect } from './contractStatuses/ContractStatusSelect';
 
