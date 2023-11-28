@@ -8460,6 +8460,7 @@ input ContactInput {
     name: String
     description: String
     timezone: String
+    profilePhotoUrl: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -8539,6 +8540,7 @@ input ContactUpdateInput {
     name: String
     description: String
     timezone: String
+    profilePhotoUrl: String
 
     """
     The last name of the contact in customerOS.
@@ -64777,7 +64779,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "name", "description", "timezone", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
+	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "name", "description", "timezone", "profilePhotoUrl", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -64847,6 +64849,15 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.Timezone = data
+		case "profilePhotoUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURL = data
 		case "createdAt":
 			var err error
 
@@ -65008,7 +65019,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "prefix", "firstName", "name", "description", "timezone", "lastName", "label", "ownerId"}
+	fieldsInOrder := [...]string{"id", "prefix", "firstName", "name", "description", "timezone", "profilePhotoUrl", "lastName", "label", "ownerId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -65069,6 +65080,15 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.Timezone = data
+		case "profilePhotoUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURL = data
 		case "lastName":
 			var err error
 
