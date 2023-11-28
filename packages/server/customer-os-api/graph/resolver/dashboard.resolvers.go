@@ -6,8 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -246,26 +244,3 @@ func (r *Resolver) DashboardCustomerMap() generated.DashboardCustomerMapResolver
 }
 
 type dashboardCustomerMapResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func getPeriod(period *model.DashboardPeriodInput) (time.Time, time.Time, error) {
-	if period == nil {
-		now := time.Now().UTC()
-
-		//last 12 months including current month
-		startDate := now.AddDate(-1, 1, 0)
-		endDate := now
-
-		return startDate, endDate, nil
-	} else {
-		if period.Start.After(period.End) {
-			return time.Time{}, time.Time{}, fmt.Errorf("start date must be before end date")
-		}
-		return period.Start, period.End, nil
-	}
-}
