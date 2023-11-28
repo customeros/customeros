@@ -178,6 +178,22 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 	default:
 		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
 	}
+	// set contract id if it's not a retroactive correction
+	if !isRetroactiveCorrection {
+		contractDbNode, err := s.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItem.ID, err.Error())
+			return err
+		}
+		if contractDbNode == nil {
+			err := fmt.Errorf("contract not found for service line item id {%s}", serviceLineItem.ID)
+			tracing.TraceErr(span, err)
+			s.log.Errorf(err.Error())
+			return err
+		}
+		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
+	}
 
 	_, err := s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
 	if err != nil {
