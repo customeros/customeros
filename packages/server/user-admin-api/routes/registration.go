@@ -56,6 +56,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			})
 			return
 		}
+		log.Printf("validated request at provider: %v %v", firstName, lastName)
 
 		tenantName, err := getTenant(services.CustomerOsClient, personalEmailProviders, signInRequest, ginContext)
 		if err != nil {
@@ -158,6 +159,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commonPostgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context) (*string, error) {
 	domain := commonUtils.ExtractDomain(signInRequest.Email)
+	log.Printf("GetTenant - Domain extracted: %s", domain)
 
 	var tenantName *string
 	var err error
@@ -171,18 +173,23 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commo
 		}
 	}
 
+	log.Printf("GetTenant - Is this a personal email: %t", isPersonalEmail)
+
 	if isPersonalEmail {
 		player, err := cosClient.GetPlayer(signInRequest.Email, signInRequest.Provider)
 		if err != nil {
 			return nil, err
 		}
 		if player != nil && player.PlayerByAuthIdProvider.Users != nil && len(*player.PlayerByAuthIdProvider.Users) > 0 {
+			log.Printf("GetTenant - Personal email - Player identified: %v", player.PlayerByAuthIdProvider)
 			for _, user := range *player.PlayerByAuthIdProvider.Users {
 				if user.Tenant != "" {
 					tenantName = &user.Tenant
 					break
 				}
 			}
+		} else {
+			log.Printf("GetTenant - Personal email - Player not identified")
 		}
 	} else {
 		tenantName, err = cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
@@ -193,6 +200,7 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commo
 			return nil, err
 		}
 		if tenantName != nil {
+			log.Printf("GetTenant - Tenant identified: %s", *tenantName)
 			return tenantName, nil
 		}
 
@@ -210,10 +218,21 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commo
 		if err != nil {
 			return nil, err
 		}
+
+		if tenantName != nil {
+			log.Printf("GetTenant - Tenant identified using %s provider: %s", provider, *tenantName)
+			return tenantName, nil
+		}
 	}
 
 	if tenantName == nil {
-		tenantStr := utils.GenerateName()
+		var tenantStr string
+		if isPersonalEmail {
+			tenantStr = utils.GenerateName()
+		} else {
+			tenantStr = utils.Sanitize(domain)
+		}
+		log.Printf("GetTenant - Tenant not found, creating a new one: %s", tenantStr)
 		tenantName, err = createTenant(cosClient, tenantStr, APP_SOURCE)
 		if err != nil {
 			return nil, err
@@ -225,6 +244,7 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []commo
 		if err != nil {
 			return nil, err
 		}
+		log.Printf("GetTenant - Workspace merged: %s", domain)
 	}
 
 	return tenantName, nil
@@ -334,6 +354,7 @@ func getUserInfoFromGoogle(ginContext *gin.Context, config *config.Config, signI
 }
 
 func initializeUser(services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string, ginContext *gin.Context) (*model.UserResponse, error) {
+	log.Printf("Initialize user: %s", email)
 	appSource := APP_SOURCE
 
 	playerExists := false
@@ -345,6 +366,9 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 	}
 	if player != nil && player.PlayerByAuthIdProvider.Id != "" {
 		playerExists = true
+		log.Printf("Initialize user - existing player: %v", player.PlayerByAuthIdProvider)
+	} else {
+		log.Printf("Initialize user - player not found")
 	}
 
 	userByEmail, err := services.CustomerOsClient.GetUserByEmail(tenant, email)
@@ -353,6 +377,9 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 	}
 	if userByEmail != nil && userByEmail.ID != "" {
 		userExists = true
+		log.Printf("Initialize user - user by email: %v", userByEmail)
+	} else {
+		log.Printf("Initialize user - user by email not found")
 	}
 
 	if !playerExists && !userExists {
@@ -375,6 +402,7 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 		if err != nil {
 			return nil, err
 		}
+		log.Printf("Initialize user - user created: %v", userByEmail)
 	} else {
 		if !playerExists {
 			err = services.CustomerOsClient.CreatePlayer(tenant, userByEmail.ID, providerAccountId, email, provider)
@@ -395,6 +423,7 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 func addDefaultMissingRoles(services *service.Services, user *model.UserResponse, tenant *string, ginContext *gin.Context) error {
 	var rolesToAdd []model.Role
 
+	log.Printf("Add default missing roles for user: %v", user)
 	if user.Roles == nil || len(*user.Roles) == 0 {
 		rolesToAdd = []model.Role{model.RoleUser, model.RoleOwner}
 	} else {
@@ -416,6 +445,7 @@ func addDefaultMissingRoles(services *service.Services, user *model.UserResponse
 		}
 	}
 
+	log.Printf("Roles to add: %v to %s", rolesToAdd, user.ID)
 	if len(rolesToAdd) > 0 {
 		_, err := services.CustomerOsClient.AddUserRoles(*tenant, user.ID, rolesToAdd)
 		if err != nil {
