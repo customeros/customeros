@@ -1,19 +1,33 @@
 'use client';
 
+import { useMemo, useCallback } from 'react';
+
+import { set } from 'date-fns';
+import { localPoint } from '@visx/event';
+import { curveLinear } from '@visx/curve';
+import { MarkerCircle } from '@visx/marker';
+import { Axis, Orientation } from '@visx/axis';
 import { LinearGradient } from '@visx/gradient';
-import {
-  XYChart,
-  Tooltip,
-  AnimatedAxis,
-  AnimatedAreaSeries,
-  AnimatedGlyphSeries,
-} from '@visx/xychart';
+import { scaleUtc, scaleLinear } from '@visx/scale';
+import { timeFormat } from '@visx/vendor/d3-time-format';
+import { max, extent, bisector } from '@visx/vendor/d3-array';
+import { Bar, Line, LinePath, AreaClosed } from '@visx/shape';
+import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
 
 import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 
 import { getMonthLabel } from '../util';
+
+const margin = {
+  top: 10,
+  right: 0,
+  bottom: 10,
+  left: 0,
+};
+
+const height = 200;
+const axisHeight = 8;
 
 export type MrrPerCustomerDatum = {
   month: number;
@@ -26,113 +40,201 @@ interface MrrPerCustomerProps {
   data?: MrrPerCustomerDatum[];
 }
 
-const getX = (d: MrrPerCustomerDatum) => getMonthLabel(d.month);
+const getDate = (d: MrrPerCustomerDatum) =>
+  set(new Date(), { month: d.month - 1, date: 1 });
+const bisectDate = bisector<MrrPerCustomerDatum, Date>((d) => getDate(d)).left;
 const getY = (d: MrrPerCustomerDatum) => d.value;
 
 const MrrPerCustomerChart = ({ data = [], width }: MrrPerCustomerProps) => {
-  const [primary600, gray300, gray500, gray700] = useToken('colors', [
+  const [primary600, gray300, gray700] = useToken('colors', [
     'primary.600',
     'gray.300',
-    'gray.500',
     'gray.700',
   ]);
+  const {
+    tooltipTop,
+    tooltipLeft,
+    tooltipOpen,
+    showTooltip,
+    hideTooltip,
+    tooltipData,
+  } = useTooltip<MrrPerCustomerDatum>();
+
+  const innerHeight = height - margin.top - margin.bottom - axisHeight;
+  const innerWidth = width - margin.left - margin.right;
+
+  const scaleX = useMemo(
+    () =>
+      scaleUtc({
+        range: [margin.left, innerWidth],
+        domain: extent(data, getDate) as [Date, Date],
+      }),
+    [innerWidth, data],
+  );
+  const scaleY = useMemo(
+    () =>
+      scaleLinear({
+        range: [innerHeight, margin.top],
+        domain: [0, max(data, (d) => d.value) || 0],
+        nice: true,
+      }),
+    [innerHeight, data],
+  );
+
+  const handleTooltip = useCallback(
+    (
+      event:
+        | React.TouchEvent<SVGRectElement>
+        | React.MouseEvent<SVGRectElement>,
+    ) => {
+      const { x } = localPoint(event) || { x: 0 };
+
+      const x0 = scaleX.invert(x);
+      const index = bisectDate(data, x0, 1);
+      const d0 = data[index - 1];
+      const d1 = data[index];
+      let d = d0;
+      if (d1 && getDate(d1)) {
+        d =
+          x0.valueOf() - getDate(d0).valueOf() >
+          getDate(d1).valueOf() - x0.valueOf()
+            ? d1
+            : d0;
+      }
+
+      showTooltip({
+        tooltipData: d,
+        tooltipLeft: scaleX(getDate(d)),
+        tooltipTop: scaleY(getY(d)),
+      });
+    },
+    [showTooltip, scaleY, scaleX, data],
+  );
 
   return (
-    <XYChart
-      height={200}
-      width={width || 500}
-      margin={{ top: 12, right: 0, bottom: 20, left: 0 }}
-      xScale={{ type: 'band', padding: 0 }}
-      yScale={{ type: 'linear' }}
-    >
-      <LinearGradient
-        fromOpacity={0}
-        toOpacity={0.3}
-        to={'white'}
-        from={primary600}
-        id='visx-area-gradient'
-      />
-      <AnimatedAreaSeries
-        dataKey=''
-        data={data}
-        fill={'url(#visx-area-gradient)'}
-        lineProps={{ stroke: primary600 }}
-        xAccessor={(d) => getX(d)}
-        yAccessor={(d) => getY(d)}
-      />
-      <AnimatedGlyphSeries
-        dataKey=''
-        data={data}
-        renderGlyph={({ x, y, datum }) => {
-          const isLast = datum.month === data[data.length - 1].month;
+    <div style={{ position: 'relative' }}>
+      <svg width={width || 500} height={height} style={{ overflow: 'visible' }}>
+        <LinearGradient
+          fromOpacity={0}
+          toOpacity={0.3}
+          to={'white'}
+          from={primary600}
+          id='visx-area-gradient'
+        />
+        <MarkerCircle
+          id='marker-circle'
+          fill={primary600}
+          size={2}
+          refX={2}
+          strokeWidth={1}
+          stroke='white'
+        />
+        <MarkerCircle
+          id='marker-circle-end'
+          stroke={primary600}
+          size={2}
+          refX={2}
+          strokeWidth={1}
+          fill='white'
+        />
+        <AreaClosed<MrrPerCustomerDatum>
+          data={data}
+          x={(d) => scaleX(getDate(d))}
+          y={(d) => scaleY(d.value) ?? 0}
+          yScale={scaleY}
+          strokeWidth={0}
+          stroke={primary600}
+          fill='url(#visx-area-gradient)'
+          pointerEvents='none'
+        />
 
-          return (
-            <>
-              {isLast && <circle cx={x} cy={y} r={7} fill={gray300} />}
-              <circle
-                r={4}
-                cx={x}
-                cy={y}
-                stroke='white'
-                strokeWidth={2}
-                fill={isLast ? gray500 : primary600}
-              />
-            </>
-          );
-        }}
-        xAccessor={(d) => getX(d)}
-        yAccessor={(d) => getY(d)}
-      />
-      <AnimatedAxis
-        orientation='bottom'
-        hideAxisLine
-        hideTicks
-        tickLabelProps={{
-          fontWeight: 'medium',
-          fontFamily: `var(--font-barlow)`,
-        }}
-      />
-      <Tooltip
-        snapTooltipToDatumY
-        showVerticalCrosshair
-        verticalCrosshairStyle={{
-          stroke: gray300,
-          strokeDasharray: 4,
-          strokeWidth: 1.5,
-        }}
-        showSeriesGlyphs
-        glyphStyle={{
-          fill: primary600,
-          r: 6,
-          stroke: 'white',
-          strokeWidth: 2,
-        }}
-        style={{
-          position: 'absolute',
-          padding: '8px',
-          background: gray700,
-          borderRadius: '8px',
-        }}
-        renderTooltip={({ tooltipData }) => {
-          const xLabel = getX(
-            tooltipData?.nearestDatum?.datum as MrrPerCustomerDatum,
-          );
-          const yLabel = getY(
-            tooltipData?.nearestDatum?.datum as MrrPerCustomerDatum,
-          );
-
-          return (
-            <Flex>
-              <Text color='white' fontWeight='normal'>
-                {xLabel}
-                {': '}
-                {yLabel}
-              </Text>
-            </Flex>
-          );
-        }}
-      />
-    </XYChart>
+        <LinePath<MrrPerCustomerDatum>
+          data={data}
+          curve={curveLinear}
+          x={(d) => scaleX(getDate(d))}
+          y={(d) => scaleY(getY(d)) ?? 0}
+          strokeWidth={2}
+          stroke={primary600}
+          shapeRendering='geometricPrecision'
+          markerMid='url(#marker-circle)'
+          markerStart='url(#marker-circle)'
+          markerEnd='url(#marker-circle-end)'
+        />
+        <Bar
+          x={0}
+          y={0}
+          rx={14}
+          width={width}
+          height={height}
+          fill='transparent'
+          onMouseLeave={hideTooltip}
+          onTouchMove={handleTooltip}
+          onMouseMove={handleTooltip}
+          onTouchStart={handleTooltip}
+        />
+        <Axis
+          hideTicks
+          hideAxisLine
+          scale={scaleX}
+          top={innerHeight + axisHeight}
+          tickValues={data.map(getDate)}
+          orientation={Orientation.bottom}
+          tickFormat={(d) => timeFormat('%b')(d as Date)}
+          tickLabelProps={{
+            fontWeight: 'medium',
+            fontFamily: `var(--font-barlow)`,
+          }}
+        />
+        {tooltipOpen && tooltipData && (
+          <g>
+            <Line
+              from={{ x: tooltipLeft, y: 0 }}
+              to={{ x: tooltipLeft, y: innerHeight }}
+              stroke={gray300}
+              strokeWidth={1.5}
+              pointerEvents='none'
+              strokeDasharray='4'
+            />
+            <circle
+              cx={tooltipLeft}
+              cy={tooltipTop}
+              r={6}
+              fill={primary600}
+              stroke='white'
+              strokeWidth={2}
+              pointerEvents='none'
+            />
+          </g>
+        )}
+      </svg>
+      <Flex w='full' position='relative'>
+        {tooltipData && tooltipOpen && (
+          <TooltipWithBounds
+            key={Math.random()}
+            style={{
+              top: -axisHeight - 16,
+              left: tooltipLeft ?? 0,
+              position: 'absolute',
+              minWidth: 72,
+              fontSize: '14px',
+              textAlign: 'center',
+              borderRadius: '8px',
+              padding: '8px',
+              background: gray700,
+              color: 'white',
+              transform:
+                tooltipData.month === data[0].month
+                  ? undefined
+                  : tooltipData.month === data[data.length - 1].month
+                  ? 'translateX(-100%)'
+                  : 'translateX(-50%)',
+            }}
+          >
+            {`${getMonthLabel(tooltipData.month)}: $${tooltipData.value}`}
+          </TooltipWithBounds>
+        )}
+      </Flex>
+    </div>
   );
 };
 

@@ -6,15 +6,18 @@ import { set } from 'date-fns';
 import { localPoint } from '@visx/event';
 import { curveLinear } from '@visx/curve';
 import { MarkerCircle } from '@visx/marker';
+import { Axis, Orientation } from '@visx/axis';
 import { LinearGradient } from '@visx/gradient';
-import { scaleTime, scaleLinear } from '@visx/scale';
+import { scaleUtc, scaleLinear } from '@visx/scale';
+import { timeFormat } from '@visx/vendor/d3-time-format';
 import { max, extent, bisector } from '@visx/vendor/d3-array';
 import { Bar, Line, LinePath, AreaClosed } from '@visx/shape';
 import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
 
 import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
-// import { Text } from '@ui/typography/Text';
+
+import { getMonthLabel } from '../util';
 
 export type GrossRevenueRetentionDatum = {
   month: number;
@@ -27,19 +30,21 @@ interface GrossRevenueRetentionProps {
   data: GrossRevenueRetentionDatum[];
 }
 
-const _margin = {
-  top: 40,
-  right: 50,
-  bottom: 20,
-  left: 50,
+const margin = {
+  top: 10,
+  right: 0,
+  bottom: 10,
+  left: 0,
 };
 
+const height = 200;
+const axisHeight = 8;
+
 const getDate = (d: GrossRevenueRetentionDatum) =>
-  set(new Date(), { month: d.month });
+  set(new Date(), { month: d.month - 1, date: 1 });
 const bisectDate = bisector<GrossRevenueRetentionDatum, Date>((d) =>
   getDate(d),
 ).left;
-// const getX = (d: GrossRevenueRetentionDatum) => getMonthLabel(d.month);
 const getY = (d: GrossRevenueRetentionDatum) => d.value;
 
 const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
@@ -48,34 +53,34 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
     'gray.300',
     'gray.700',
   ]);
-
-  const height = 200;
-
   const {
-    tooltipLeft,
     tooltipTop,
+    tooltipLeft,
     tooltipOpen,
     showTooltip,
     hideTooltip,
     tooltipData,
   } = useTooltip<GrossRevenueRetentionDatum>();
 
+  const innerHeight = height - margin.top - margin.bottom - axisHeight;
+  const innerWidth = width - margin.left - margin.right;
+
   const scaleX = useMemo(
     () =>
-      scaleTime({
-        range: [0, width],
+      scaleUtc({
+        range: [margin.left, innerWidth],
         domain: extent(data, getDate) as [Date, Date],
       }),
-    [width, data],
+    [innerWidth, data],
   );
   const scaleY = useMemo(
     () =>
       scaleLinear({
-        range: [height, 0],
+        range: [innerHeight, margin.top],
         domain: [0, max(data, (d) => d.value) || 0],
         nice: true,
       }),
-    [height, data],
+    [innerHeight, data],
   );
 
   const handleTooltip = useCallback(
@@ -101,7 +106,7 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
 
       showTooltip({
         tooltipData: d,
-        tooltipLeft: x,
+        tooltipLeft: scaleX(getDate(d)),
         tooltipTop: scaleY(getY(d)),
       });
     },
@@ -110,7 +115,7 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
 
   return (
     <div style={{ position: 'relative' }}>
-      <svg width={width || 500} height={height}>
+      <svg width={width || 500} height={height} style={{ overflow: 'visible' }}>
         <LinearGradient
           fromOpacity={0}
           toOpacity={0.3}
@@ -160,24 +165,37 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
         <Bar
           x={0}
           y={0}
+          rx={14}
           width={width}
           height={height}
           fill='transparent'
-          rx={14}
           onMouseLeave={hideTooltip}
           onTouchMove={handleTooltip}
           onMouseMove={handleTooltip}
           onTouchStart={handleTooltip}
         />
+        <Axis
+          hideTicks
+          hideAxisLine
+          scale={scaleX}
+          top={innerHeight + axisHeight}
+          tickValues={data.map(getDate)}
+          orientation={Orientation.bottom}
+          tickFormat={(d) => timeFormat('%b')(d as Date)}
+          tickLabelProps={{
+            fontWeight: 'medium',
+            fontFamily: `var(--font-barlow)`,
+          }}
+        />
         {tooltipOpen && tooltipData && (
           <g>
             <Line
               from={{ x: tooltipLeft, y: 0 }}
-              to={{ x: tooltipLeft, y: height }}
+              to={{ x: tooltipLeft, y: innerHeight }}
               stroke={gray300}
-              strokeWidth={2}
+              strokeWidth={1.5}
               pointerEvents='none'
-              strokeDasharray='5,2'
+              strokeDasharray='4'
             />
             <circle
               cx={tooltipLeft}
@@ -191,24 +209,30 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
           </g>
         )}
       </svg>
-      <Flex w='full' position='relative' h='20px'>
-        {tooltipData && (
+      <Flex w='full' position='relative'>
+        {tooltipData && tooltipOpen && (
           <TooltipWithBounds
             key={Math.random()}
             style={{
-              top: 0,
-              left: tooltipLeft,
+              top: -axisHeight - 16,
+              left: tooltipLeft ?? 0,
               position: 'absolute',
               minWidth: 72,
+              fontSize: '14px',
               textAlign: 'center',
               borderRadius: '8px',
               padding: '8px',
               background: gray700,
               color: 'white',
-              transform: 'translateX(-50%)',
+              transform:
+                tooltipData.month === data[0].month
+                  ? undefined
+                  : tooltipData.month === data[data.length - 1].month
+                  ? 'translateX(-100%)'
+                  : 'translateX(-50%)',
             }}
           >
-            {`$${tooltipData.value}`}
+            {`${getMonthLabel(tooltipData.month)}: $${tooltipData.value}`}
           </TooltipWithBounds>
         )}
       </Flex>

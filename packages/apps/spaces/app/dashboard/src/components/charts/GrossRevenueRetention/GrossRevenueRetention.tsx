@@ -19,9 +19,7 @@ const RevenueRetentionRateChart = dynamic(
 
 export const GrossRevenueRetention = () => {
   const client = getGraphQLClient();
-  const { data } = useGrossRevenueRetentionQuery(client, {
-    year: 2023,
-  });
+  const { data } = useGrossRevenueRetentionQuery(client);
 
   const chartData = (data?.dashboard_GrossRevenueRetention?.perMonth ?? []).map(
     (d) => ({

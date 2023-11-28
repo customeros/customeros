@@ -1,9 +1,16 @@
 'use client';
 
+import { useMemo } from 'react';
+
+import { set } from 'date-fns';
+import { BarStack, BarRounded } from '@visx/shape';
+import { timeFormat } from '@visx/vendor/d3-time-format';
+import { max, min, extent, bisector } from '@visx/vendor/d3-array';
+import { scaleBand, scaleLinear, scaleOrdinal } from '@visx/scale';
 import {
   XYChart,
   Tooltip,
-  BarStack,
+  // BarStack,
   BarSeries,
   AnimatedGrid,
   AnimatedAxis,
@@ -18,14 +25,12 @@ import { getMonthLabel } from '../util';
 
 export type ARRBreakdownDatum = {
   month: number;
-  values: {
-    upsells: number;
-    churned: number;
-    renewals: number;
-    downgrades: number;
-    cancellations: number;
-    newlyContracted: number;
-  };
+  upsells: number;
+  churned: number;
+  renewals: number;
+  downgrades: number;
+  cancellations: number;
+  newlyContracted: number;
 };
 
 const _mockData: ARRBreakdownDatum[] = [
@@ -163,6 +168,17 @@ const _mockData: ARRBreakdownDatum[] = [
   },
 ];
 
+const keys = [
+  'newlyContracted',
+  'renewals',
+  'upsells',
+  'downgrades',
+  'cancellations',
+  'churned',
+];
+
+const height = 200;
+
 interface ARRBreakdownProps {
   width: number;
   height?: number;
@@ -170,6 +186,8 @@ interface ARRBreakdownProps {
 }
 
 const getX = (d: ARRBreakdownDatum) => getMonthLabel(d.month);
+const flattenValues = (data: ARRBreakdownDatum[]) =>
+  data.flatMap(({ month, ...rest }) => Object.values(rest));
 
 const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
   const [gray700, moss300, warning400, warning600, warning950] = useToken(
@@ -213,22 +231,74 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
     },
   ];
 
+  const values = flattenValues(data);
+
+  const scaleX = useMemo(
+    () =>
+      scaleBand({
+        range: [0, width],
+        domain: data.map(getX) as [string, string],
+        padding: 0.2,
+      }),
+    [width, data],
+  );
+  const scaleY = useMemo(
+    () =>
+      scaleLinear({
+        range: [height, 0],
+        domain: [Math.min(...values), Math.max(...values)],
+        // domain: [-100, 100],
+        nice: true,
+      }),
+    [values],
+  );
+  const scaleColor = useMemo(
+    () =>
+      scaleOrdinal<string, string>({
+        domain: keys,
+        range: [
+          colorScale.NewlyContracted,
+          colorScale.Renewals,
+          colorScale.Upsells,
+          colorScale.Downgrades,
+          colorScale.Cancellations,
+          colorScale.Churned,
+        ],
+      }),
+    [colorScale],
+  );
+
   return (
     <>
       <Legend data={legendData} />
-      <XYChart
-        height={200}
-        width={width || 500}
-        margin={{ top: 12, right: 0, bottom: 20, left: 0 }}
-        xScale={{
-          type: 'band',
-          paddingInner: 0.4,
-          paddingOuter: 0.4,
-        }}
-        yScale={{ type: 'linear' }}
-      >
-        <BarStack>
-          <BarSeries
+      <svg height={height} width={width || 500}>
+        <BarStack
+          data={data}
+          keys={keys}
+          x={(d) => getX(d) ?? 'Jan'}
+          xScale={scaleX}
+          yScale={scaleY}
+          color={scaleColor}
+        >
+          {(stacks) => {
+            console.log('stacks', stacks);
+
+            return stacks.map((stack) => {
+              return stack.bars.map((bar) => (
+                <rect
+                  key={`bar-${bar.index}-${bar.key}`}
+                  x={bar.x}
+                  y={bar.y}
+                  height={bar.height}
+                  width={bar.width}
+                  fill={bar.color}
+                  // rx={4}
+                  // ry={4}
+                />
+              ));
+            });
+          }}
+          {/* <BarSeries
             dataKey='Churned'
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
@@ -274,7 +344,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => d.values.upsells}
             colorAccessor={({ month }) => colorScale.Upsells}
-          />
+          /> */}
         </BarStack>
 
         <AnimatedGrid
@@ -283,7 +353,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
           lineStyle={{ stroke: 'white', strokeWidth: 2 }}
         />
 
-        <AnimatedAxis
+        {/* <AnimatedAxis
           orientation='bottom'
           hideAxisLine
           hideTicks
@@ -291,8 +361,8 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             fontWeight: 'medium',
             fontFamily: `var(--font-barlow)`,
           }}
-        />
-        <Tooltip
+        /> */}
+        {/* <Tooltip
           snapTooltipToDatumY
           snapTooltipToDatumX
           style={{
@@ -350,8 +420,8 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
               </Flex>
             );
           }}
-        />
-      </XYChart>
+        /> */}
+      </svg>
     </>
   );
 };

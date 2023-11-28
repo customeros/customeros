@@ -17,9 +17,7 @@ const MrrPerCustomerChart = dynamic(() => import('./MrrPerCustomer.chart'), {
 
 export const MrrPerCustomer = () => {
   const client = getGraphQLClient();
-  const { data } = useMrrPerCustomerQuery(client, {
-    year: 2023,
-  });
+  const { data } = useMrrPerCustomerQuery(client);
 
   const chartData = (data?.dashboard_MRRPerCustomer?.perMonth ?? []).map(
     (d) => ({

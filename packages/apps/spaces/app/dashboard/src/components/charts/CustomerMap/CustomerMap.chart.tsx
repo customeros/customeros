@@ -252,15 +252,6 @@ const CustomerMapChart = ({
           </>
         )}
 
-        <rect
-          x={0}
-          y={0}
-          rx={14}
-          width={outerWidth}
-          height={outerHeight}
-          fill={'url(#visx-axis-gradient)'}
-        />
-
         <Group width={width} height={height}>
           {transformedData.map((d, i) => (
             <>
