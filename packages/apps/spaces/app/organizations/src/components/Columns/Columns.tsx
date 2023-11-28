@@ -11,11 +11,9 @@ import { WebsiteCell } from './Cells/website/WebsiteCell';
 import { OwnerFilter, filterOwnerFn } from './Filters/Owner';
 import { WebsiteFilter, filterWebsiteFn } from './Filters/Website';
 import { ForecastFilter, filterForecastFn } from './Filters/Forecast';
-import { TimeToRenewalCell } from './Cells/renewal/TimeToRenewalCell';
 import { OrganizationCell } from './Cells/organization/OrganizationCell';
 import { RenewalForecastCell } from './Cells/renewal/RenewalForecastCell';
 import { LastTouchpointCell } from './Cells/touchpoint/LastTouchpointCell';
-import { RenewalLikelihoodCell } from './Cells/renewal/RenewalLikelihoodCell';
 import {
   OrganizationFilter,
   filterOrganizationFn,
@@ -26,17 +24,9 @@ import {
 } from './Filters/Relationship';
 import { OrganizationRelationship } from './Cells/relationship/OrganizationRelationship';
 import {
-  TimeToRenewalFilter,
-  filterTimeToRenewalFn,
-} from './Filters/TimeToRenewal';
-import {
   LastTouchpointFilter,
   filterLastTouchpointFn,
 } from './Filters/LastTouchpoint';
-import {
-  RenewalLikelihoodFilter,
-  filterRenewalLikelihoodFn,
-} from './Filters/RenewalLikelihood';
 
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
@@ -169,96 +159,96 @@ export const columns = [
       />
     ),
   }),
-  columnHelper.accessor('accountDetails', {
-    id: 'RENEWAL_LIKELIHOOD',
-    minSize: 200,
-    filterFn: filterRenewalLikelihoodFn,
-    cell: (props) => {
-      const organizationId = props.row.original.id;
-      const value = props.getValue()?.renewalLikelihood;
-      const currentProbability = value?.probability;
-      const previousProbability = value?.previousProbability;
-      const updatedAt = value?.updatedAt;
-
-      return (
-        <RenewalLikelihoodCell
-          updatedAt={updatedAt}
-          organizationId={organizationId}
-          currentProbability={currentProbability}
-          previousProbability={previousProbability}
-        />
-      );
-    },
-    header: (props) => (
-      <THead
-        id='renewalLikelihood'
-        title='Renewal Likelihood'
-        renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
-        {...getTHeadProps<Organization>(props)}
-      />
-    ),
-    skeleton: () => (
-      <Flex flexDir='column' gap='1'>
-        <Skeleton
-          width='25%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-        <Skeleton
-          width='75%'
-          height='18px'
-          startColor='gray.300'
-          endColor='gray.300'
-        />
-      </Flex>
-    ),
-  }),
-  columnHelper.accessor('accountDetails', {
-    id: 'RENEWAL_CYCLE_NEXT',
-    minSize: 200,
-    filterFn: filterTimeToRenewalFn,
-    cell: (props) => {
-      const values = props.getValue()?.billingDetails;
-      const renewalDate = values?.renewalCycleNext;
-      const renewalFrequency = values?.renewalCycle;
-
-      return (
-        <TimeToRenewalCell
-          renewalDate={renewalDate}
-          renewalFrequency={renewalFrequency}
-        />
-      );
-    },
-    header: (props) => (
-      <THead
-        id='timeToRenewal'
-        title='Time to Renewal'
-        renderFilter={() => (
-          <TimeToRenewalFilter
-            onFilterValueChange={props.column.setFilterValue}
-          />
-        )}
-        {...getTHeadProps<Organization>(props)}
-      />
-    ),
-    skeleton: () => (
-      <Skeleton
-        width='50%'
-        height='18px'
-        startColor='gray.300'
-        endColor='gray.300'
-      />
-    ),
-  }),
+  // columnHelper.accessor('accountDetails', {
+  //   id: 'RENEWAL_LIKELIHOOD',
+  //   minSize: 200,
+  //   filterFn: filterRenewalLikelihoodFn,
+  //   cell: (props) => {
+  //     const organizationId = props.row.original.id;
+  //     const value = props.getValue()?.renewalLikelihood;
+  //     const currentProbability = value?.probability;
+  //     const previousProbability = value?.previousProbability;
+  //     const updatedAt = value?.updatedAt;
+  //
+  //     return (
+  //       <RenewalLikelihoodCell
+  //         updatedAt={updatedAt}
+  //         organizationId={organizationId}
+  //         currentProbability={currentProbability}
+  //         previousProbability={previousProbability}
+  //       />
+  //     );
+  //   },
+  //   header: (props) => (
+  //     <THead
+  //       id='renewalLikelihood'
+  //       title='Renewal Likelihood'
+  //       renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+  //       {...getTHeadProps<Organization>(props)}
+  //     />
+  //   ),
+  //   skeleton: () => (
+  //     <Flex flexDir='column' gap='1'>
+  //       <Skeleton
+  //         width='25%'
+  //         height='18px'
+  //         startColor='gray.300'
+  //         endColor='gray.300'
+  //       />
+  //       <Skeleton
+  //         width='75%'
+  //         height='18px'
+  //         startColor='gray.300'
+  //         endColor='gray.300'
+  //       />
+  //     </Flex>
+  //   ),
+  // }),
+  // columnHelper.accessor('accountDetails', {
+  //   id: 'RENEWAL_CYCLE_NEXT',
+  //   minSize: 200,
+  //   filterFn: filterTimeToRenewalFn,
+  //   cell: (props) => {
+  //     const values = props.getValue()?.billingDetails;
+  //     const renewalDate = values?.renewalCycleNext;
+  //     const renewalFrequency = values?.renewalCycle;
+  //
+  //     return (
+  //       <TimeToRenewalCell
+  //         renewalDate={renewalDate}
+  //         renewalFrequency={renewalFrequency}
+  //       />
+  //     );
+  //   },
+  //   header: (props) => (
+  //     <THead
+  //       id='timeToRenewal'
+  //       title='Time to Renewal'
+  //       renderFilter={() => (
+  //         <TimeToRenewalFilter
+  //           onFilterValueChange={props.column.setFilterValue}
+  //         />
+  //       )}
+  //       {...getTHeadProps<Organization>(props)}
+  //     />
+  //   ),
+  //   skeleton: () => (
+  //     <Skeleton
+  //       width='50%'
+  //       height='18px'
+  //       startColor='gray.300'
+  //       endColor='gray.300'
+  //     />
+  //   ),
+  // }),
   columnHelper.accessor('accountDetails', {
     id: 'FORECAST_AMOUNT',
     minSize: 200,
     filterFn: filterForecastFn,
     cell: (props) => {
       const value = props.getValue()?.renewalForecast;
-      const amount = value?.amount;
-      const potentialAmount = value?.potentialAmount;
+      const amount = value?.arr;
+      const potentialAmount = value?.maxArr;
 
       return (
         <RenewalForecastCell
