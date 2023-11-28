@@ -12,6 +12,16 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/test/graph/model"
 )
 
+// OpportunityUpdate is the resolver for the opportunityUpdate field.
+func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error) {
+	panic(fmt.Errorf("not implemented: OpportunityUpdate - opportunityUpdate"))
+}
+
+// OpportunityRenewalUpdate is the resolver for the opportunityRenewalUpdate field.
+func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput) (*model.Opportunity, error) {
+	panic(fmt.Errorf("not implemented: OpportunityRenewalUpdate - opportunityRenewalUpdate"))
+}
+
 // CreatedBy is the resolver for the createdBy field.
 func (r *opportunityResolver) CreatedBy(ctx context.Context, obj *model.Opportunity) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))

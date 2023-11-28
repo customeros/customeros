@@ -28,32 +28,32 @@ func (r *queryResolver) DashboardCustomerMap(ctx context.Context) ([]*model.Dash
 }
 
 // DashboardMRRPerCustomer is the resolver for the dashboard_MRRPerCustomer field.
-func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, year int) (*model.DashboardMRRPerCustomer, error) {
+func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardMRRPerCustomer, error) {
 	panic(fmt.Errorf("not implemented: DashboardMRRPerCustomer - dashboard_MRRPerCustomer"))
 }
 
 // DashboardGrossRevenueRetention is the resolver for the dashboard_GrossRevenueRetention field.
-func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, year int) (*model.DashboardGrossRevenueRetention, error) {
+func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardGrossRevenueRetention, error) {
 	panic(fmt.Errorf("not implemented: DashboardGrossRevenueRetention - dashboard_GrossRevenueRetention"))
 }
 
 // DashboardARRBreakdown is the resolver for the dashboard_ARRBreakdown field.
-func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, year int) (*model.DashboardARRBreakdown, error) {
+func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardARRBreakdown, error) {
 	panic(fmt.Errorf("not implemented: DashboardARRBreakdown - dashboard_ARRBreakdown"))
 }
 
 // DashboardRevenueAtRisk is the resolver for the dashboard_RevenueAtRisk field.
-func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, year int) (*model.DashboardRevenueAtRisk, error) {
+func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRevenueAtRisk, error) {
 	panic(fmt.Errorf("not implemented: DashboardRevenueAtRisk - dashboard_RevenueAtRisk"))
 }
 
 // DashboardRetentionRate is the resolver for the dashboard_RetentionRate field.
-func (r *queryResolver) DashboardRetentionRate(ctx context.Context, year int) (*model.DashboardRetentionRate, error) {
+func (r *queryResolver) DashboardRetentionRate(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRetentionRate, error) {
 	panic(fmt.Errorf("not implemented: DashboardRetentionRate - dashboard_RetentionRate"))
 }
 
 // DashboardNewCustomers is the resolver for the dashboard_NewCustomers field.
-func (r *queryResolver) DashboardNewCustomers(ctx context.Context, year int) (*model.DashboardNewCustomers, error) {
+func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error) {
 	panic(fmt.Errorf("not implemented: DashboardNewCustomers - dashboard_NewCustomers"))
 }
 

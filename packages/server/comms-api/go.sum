@@ -209,8 +209,8 @@ github.com/opencontainers/runc v1.1.5 h1:L44KXEpKmfWDcS02aeGm8QNTFXTo2D+8MYGDIJ/
 github.com/opencontainers/runc v1.1.5/go.mod h1:1J5XiS+vdZ3wCyZybsuxXZWGrgSr8fFJHLXuG2PsnNg=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231123194903-77ec1248f93b h1:tJQQWFcSHbFOhdVfa8KVWLkbMxKihLDpRGBmbVH5P/o=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231123194903-77ec1248f93b/go.mod h1:H9g1bMNSvYuL+yY+vnmdWglM8Y9StsmmfFeD6dZz3yM=
-github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231123155829-38910834a690 h1:XP3Agda/bNHGU+/KYmmM7j1rMlcKRcfStbWpnKz0z7Y=
-github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231123155829-38910834a690/go.mod h1:wPK0I1d09bUDI+tPP8Sjno6MWC5vDZHpbfskwjOt0qU=
+github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231128144155-d4740b1bf596 h1:MkTQcwgsjyUqGuYLl9vWmm7VU+sYSVq2N1wgSCZrQ18=
+github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20231128144155-d4740b1bf596/go.mod h1:BMCY48H9FJEXgbDhPgJtnqc9KgLi6yRmEDjdddPt7Ok=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pelletier/go-toml/v2 v2.1.0 h1:FnwAJ4oYMvbT/34k9zzHuZNrhlz48GB3/s6at6/MHO4=
