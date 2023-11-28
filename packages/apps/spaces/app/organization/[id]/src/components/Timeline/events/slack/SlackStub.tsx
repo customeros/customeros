@@ -6,28 +6,19 @@ import { Button } from '@ui/form/Button';
 import { Avatar } from '@ui/media/Avatar';
 import { User02 } from '@ui/media/icons/User02';
 import { DateTimeUtils } from '@spaces/utils/date';
-import { getName } from '@spaces/utils/getParticipantsName';
 import { InteractionEventWithDate } from '@organization/src/components/Timeline/types';
 import { SlackMessageCard } from '@organization/src/components/Timeline/events/slack/SlackMessageCard';
-import {
-  UserParticipant,
-  EmailParticipant,
-  ContactParticipant,
-  JobRoleParticipant,
-} from '@graphql/types';
 import { useTimelineEventPreviewMethodsContext } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
+
+import { getDisplayNameAndAvatar } from './util';
 
 export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
   slackEvent,
 }) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
 
-  const slackSender =
-    (slackEvent?.sentBy?.[0] as ContactParticipant)?.contactParticipant ||
-    (slackEvent?.sentBy?.[0] as JobRoleParticipant)?.jobRoleParticipant
-      ?.contact ||
-    (slackEvent?.sentBy?.[0] as UserParticipant)?.userParticipant ||
-    (slackEvent?.sentBy?.[0] as EmailParticipant)?.emailParticipant;
+  const slackSender = getDisplayNameAndAvatar(slackEvent?.sentBy?.[0]);
+
   const isSentByTenantUser =
     slackEvent?.sentBy?.[0]?.__typename === 'UserParticipant';
   const slackEventReplies = slackEvent.interactionSession?.events?.filter(
@@ -35,19 +26,14 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
   );
   const uniqThreadParticipants = slackEventReplies
     ?.map((e) => {
-      return (
-        (e?.sentBy?.[0] as ContactParticipant)?.contactParticipant ||
-        (e?.sentBy?.[0] as JobRoleParticipant)?.jobRoleParticipant?.contact ||
-        (e?.sentBy?.[0] as UserParticipant)?.userParticipant ||
-        (e?.sentBy?.[0] as EmailParticipant)?.emailParticipant
-      );
+      return getDisplayNameAndAvatar(e.sentBy?.[0]);
     })
     ?.filter((v, i, a) => a.findIndex((t) => !!t && t?.id === v?.id) === i);
 
   return (
     <SlackMessageCard
-      name={slackSender ? getName(slackSender) : 'Unknown'}
-      profilePhotoUrl={slackSender?.profilePhotoUrl}
+      name={slackSender.displayName || 'Unknown'}
+      profilePhotoUrl={slackSender.photoUrl || undefined}
       sourceUrl={slackEvent?.externalLinks?.[0]?.externalUrl}
       content={slackEvent?.content || ''}
       onClick={() => openModal(slackEvent.id)}
@@ -58,23 +44,18 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
       {!!slackEventReplies?.length && (
         <Flex mt={1}>
           <Flex columnGap={1} mr={1}>
-            {uniqThreadParticipants?.map(
-              ({ id, name, firstName, lastName, profilePhotoUrl }) => {
-                const displayName =
-                  name ?? [firstName, lastName].filter(Boolean).join(' ');
-
-                return (
-                  <Avatar
-                    size='xs'
-                    name={displayName}
-                    variant='roundedSquareSmall'
-                    icon={<User02 color='primary.700' />}
-                    src={profilePhotoUrl ? profilePhotoUrl : undefined}
-                    key={`uniq-slack-thread-participant-${slackEvent.id}-${id}`}
-                  />
-                );
-              },
-            )}
+            {uniqThreadParticipants?.map(({ id, displayName, photoUrl }) => {
+              return (
+                <Avatar
+                  size='xs'
+                  name={displayName}
+                  src={photoUrl ?? undefined}
+                  variant='roundedSquareSmall'
+                  icon={<User02 color='primary.700' />}
+                  key={`uniq-slack-thread-participant-${slackEvent.id}-${id}`}
+                />
+              );
+            })}
           </Flex>
           <Button variant='link' fontSize='sm' size='sm'>
             {slackEventReplies.length}{' '}
