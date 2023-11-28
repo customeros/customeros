@@ -3,6 +3,7 @@
   "scripts": {
     "dev": "env-cmd -f .env.development next dev -p 3001",
     "production": "env-cmd -f .env.production next dev -p 3001",
+    "dev:remote": "env-cmd -f .env.dev next dev -p 3001",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev -p 3001",
     "build": "next build",
     "build:cluster": "env-cmd -f .env.cluster next build",
