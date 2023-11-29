@@ -12,39 +12,43 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 )
 
 type WebScraper interface {
-	Scrape(domainOrWebsite, tenant, organizationId string) (*WebscrapeResponseV1, error)
+	Scrape(domainOrWebsite, tenant, organizationId string, directScrape bool) (*WebscrapeResponseV1, error)
 }
 
-type DomainScraper struct {
+type DomainScraperV1 struct {
 	log          logger.Logger
 	cfg          *config.Config
 	repositories *repository.Repositories
+	aiModel      ai.AiModel
 }
 
 func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repository.Repositories) WebScraper {
-	return &DomainScraper{
+	return &DomainScraperV1{
 		log:          log,
 		cfg:          cfg,
 		repositories: repositories,
+		aiModel:      ai.NewAiModel(ai.OpenAiModelType, cfg.Services.OpenAi.ApiKey, cfg.Services.OpenAi.ApiPath, cfg.Services.OpenAi.Organization, "gpt-3.5-turbo-1106", log), // 1106 has an extra parameter available that locks response as JSON
 	}
 }
 
-func (ds *DomainScraper) Scrape(domainOrWebsite, tenant, organizationId string) (*WebscrapeResponseV1, error) {
+func (ds *DomainScraperV1) Scrape(domainOrWebsite, tenant, organizationId string, directScrape bool) (*WebscrapeResponseV1, error) {
 	domainUrl := strings.TrimSpace(domainOrWebsite)
 	if !strings.HasPrefix(domainUrl, "http") && !strings.HasPrefix(domainUrl, "www") {
 		domainUrl = fmt.Sprintf("https://%s", domainUrl)
 	}
 	jsonStruct := jsonStructure()
 
-	html, err := ds.getHtml(domainUrl)
+	html, err := ds.getHtml(domainUrl, directScrape)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to getHtml domain: %s", domainUrl))
 	}
@@ -71,10 +75,19 @@ func (ds *DomainScraper) Scrape(domainOrWebsite, tenant, organizationId string) 
 	return r, nil
 }
 
-func (ds *DomainScraper) getHtml(domainUrl string) (*string, error) {
-	response, err := ds.getRequest(ds.cfg.Services.ScrapingBeeApiKey, domainUrl)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute request")
+func (ds *DomainScraperV1) getHtml(domainUrl string, directGet bool) (*string, error) {
+	var response *http.Response
+	var err error
+	if directGet {
+		response, err = ds.getRequest(domainUrl)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to execute request")
+		}
+	} else {
+		response, err = ds.proxyGetRequest(ds.cfg.Services.ScrapingBeeApiKey, domainUrl)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to execute request")
+		}
 	}
 
 	if response.StatusCode != 200 {
@@ -92,9 +105,10 @@ func (ds *DomainScraper) getHtml(domainUrl string) (*string, error) {
 	return &s, nil
 }
 
-func (ds *DomainScraper) runCompanyPrompt(text *string, tenant, organizationId string) (*string, error) {
+func (ds *DomainScraperV1) runCompanyPrompt(text *string, tenant, organizationId string) (*string, error) {
 	p := strings.ReplaceAll(ds.cfg.Services.OpenAi.ScrapeCompanyPrompt, "{{jsonschema}}", ds.cfg.Services.PromptJsonSchema)
 	prompt := strings.ReplaceAll(p, "{{text}}", *text)
+	ctx := context.TODO()
 
 	promptLog := commonEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
@@ -108,19 +122,43 @@ func (ds *DomainScraper) runCompanyPrompt(text *string, tenant, organizationId s
 		PromptTemplate: &ds.cfg.Services.OpenAi.ScrapeCompanyPrompt,
 		Prompt:         prompt,
 	}
+
+	// ignore error from storing prompt log, since it's not critical
 	promptStoreLogId, _ := ds.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
 
-	aiResult, rawResponse, err := ds.openai(prompt)
+	aiResult, err := ds.aiModel.Inference(ctx, prompt)
 	if err != nil {
 		_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		return nil, errors.Wrap(err, "unable to get openai result")
 	}
-	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, *rawResponse)
+	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResult)
 
-	return aiResult, nil
+	return &aiResult, nil
 }
 
-func (ds *DomainScraper) getRequest(apiKey string, domainUrl string) (*http.Response, error) {
+func (ds *DomainScraperV1) getRequest(domainUrl string) (*http.Response, error) {
+	// Create client
+	client := &http.Client{}
+
+	// Create request
+	req, err := http.NewRequest("GET", domainUrl, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create direct request")
+	}
+	parseFormErr := req.ParseForm()
+	if parseFormErr != nil {
+		return nil, errors.Wrap(parseFormErr, "failed to parse form")
+	}
+
+	// Fetch Request
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch request")
+	}
+	return resp, nil // Return the response
+}
+
+func (ds *DomainScraperV1) proxyGetRequest(apiKey string, domainUrl string) (*http.Response, error) {
 	// Create client
 	client := &http.Client{}
 
@@ -143,7 +181,7 @@ func (ds *DomainScraper) getRequest(apiKey string, domainUrl string) (*http.Resp
 	return resp, nil // Return the response
 }
 
-func (ds *DomainScraper) extractRelevantText(html *string) (*string, error) {
+func (ds *DomainScraperV1) extractRelevantText(html *string) (*string, error) {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(*html))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create document from reader")
@@ -155,7 +193,7 @@ func (ds *DomainScraper) extractRelevantText(html *string) (*string, error) {
 	return &markdown, nil
 }
 
-func (ds *DomainScraper) extractSocialLinks(html *string) (*string, error) {
+func (ds *DomainScraperV1) extractSocialLinks(html *string) (*string, error) {
 	socialSites := map[string]string{
 		"linkedin":  "linkedin.com",
 		"twitter":   "twitter.com",
@@ -196,7 +234,8 @@ func (ds *DomainScraper) extractSocialLinks(html *string) (*string, error) {
 	return &s, nil
 }
 
-func (ds *DomainScraper) openai(prompt string) (*string, *string, error) {
+// deprecated
+func (ds *DomainScraperV1) openai(prompt string) (*string, *string, error) {
 	requestData := map[string]interface{}{}
 	requestData["model"] = "gpt-3.5-turbo"
 	requestData["prompt"] = prompt
@@ -237,7 +276,7 @@ func (ds *DomainScraper) openai(prompt string) (*string, *string, error) {
 	return nil, utils.StringPtr(string(rawResponse)), errors.New("no result found")
 }
 
-func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructure *string, tenant, organizationId string) (*WebscrapeResponseV1, error) {
+func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStructure *string, tenant, organizationId string) (*WebscrapeResponseV1, error) {
 
 	replacements := map[string]string{
 		"{{ANALYSIS}}":       *analysis,
@@ -265,15 +304,16 @@ func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructu
 	}
 	promptStoreLogId, _ := ds.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
 
-	cleaned, rawResponse, err := ds.openai(prompt)
+	cleaned, err := ds.aiModel.Inference(context.TODO(), prompt)
+
 	if err != nil {
 		_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		return nil, err
 	}
-	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, *rawResponse)
-	ds.log.Printf("scrapeResponse: %s", *cleaned)
+	_ = ds.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, cleaned)
+	ds.log.Printf("scrapeResponse: %s", cleaned)
 	scrapeResponse := WebscrapeResponseV1{}
-	err = json.Unmarshal([]byte(*cleaned), &scrapeResponse)
+	err = json.Unmarshal([]byte(cleaned), &scrapeResponse)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal response")
 	}

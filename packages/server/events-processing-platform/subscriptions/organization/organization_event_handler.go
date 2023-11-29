@@ -66,6 +66,7 @@ type organizationEventHandler struct {
 	cfg                  *config.Config
 	caches               caches.Cache
 	domainScraper        WebScraper
+	aiModel              ai.AiModel
 }
 
 func (h *organizationEventHandler) WebscrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
@@ -127,7 +128,7 @@ func (h *organizationEventHandler) webscrapeOrganization(ctx context.Context, te
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant), log.String("organizationId", organizationId), log.String("site", site))
 
-	result, err := h.domainScraper.Scrape(site, tenant, organizationId)
+	result, err := h.domainScraper.Scrape(site, tenant, organizationId, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error scraping website/domain %s: %v", site, err)
@@ -323,7 +324,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		span.LogFields(log.String("promptStoreLogId1", promptStoreLogId1))
 	}
 
-	firstResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, firstPrompt)
+	firstResult, err := h.aiModel.Inference(ctx, firstPrompt) // ai.InvokeAnthropic(ctx, h.cfg, h.log, firstPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
@@ -362,7 +363,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error storing prompt log with error: %v", err)
 	}
-	secondResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
+	secondResult, err := h.aiModel.Inference(ctx, secondPrompt) // ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)

@@ -103,7 +103,7 @@ type Services struct {
 	ValidationApi     string `env:"VALIDATION_API" validate:"required"`
 	ValidationApiKey  string `env:"VALIDATION_API_KEY" validate:"required"`
 	ScrapingBeeApiKey string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
-	PromptJsonSchema  string `env:"JSON_SCHEMA" validate:"required" envDefault:"{
+	PromptJsonSchema  string `env:"PROMPT_JSON_SCHEMA" validate:"required" envDefault:"{
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"type": "object",
 		"properties": {
@@ -142,6 +142,7 @@ type Services struct {
 	OpenAi struct {
 		ApiPath             string `env:"OPENAI_API_PATH,required" envDefault:"N/A"`
 		ApiKey              string `env:"OPENAI_API_KEY,required" envDefault:"N/A"`
+		Organization        string `env:"OPENAI_ORGANIZATION,required" envDefault:""`
 		ScrapeCompanyPrompt string `env:"SCRAPE_COMPANY_PROMPT,required" envDefault:"Analyze the text below and return the complete schema {{jsonschema}}\n\nTEXT\n{{text}}"`
 		ScrapeDataPrompt    string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"The following is data scraped from a website:  Please combine and format the data into a clean json response
 
