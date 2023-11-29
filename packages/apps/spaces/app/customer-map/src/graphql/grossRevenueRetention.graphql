@@ -1,0 +1,10 @@
+query GrossRevenueRetention($period: DashboardPeriodInput) {
+  dashboard_GrossRevenueRetention(period: $period) {
+    grossRevenueRetention
+    increasePercentage
+    perMonth {
+      month
+      percentage
+    }
+  }
+}
