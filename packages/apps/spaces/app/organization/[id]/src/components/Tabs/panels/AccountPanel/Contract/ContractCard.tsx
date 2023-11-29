@@ -16,13 +16,8 @@ import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
+import { Contract, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
-import {
-  Contract,
-  ContractStatus,
-  ContractUpdateInput,
-  ContractRenewalCycle,
-} from '@graphql/types';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -130,14 +125,13 @@ export const ContractCard = ({
         if (action.payload.name === 'contractUrl') {
           return next;
         }
+
         updateContract.mutate({
           input: {
             contractId: data.id,
             ...ContractDTO.toPayload({
               ...state.values,
-              [action.payload.name]: action.payload.value
-                ? action.payload.value
-                : { value: ContractRenewalCycle.None },
+              [action.payload.name]: action.payload.value,
             }),
           },
         });

@@ -1,8 +1,7 @@
 'use client';
-import React from 'react';
-import { useParams } from 'next/navigation';
+import React, { useMemo } from 'react';
 
-import { useIsFetching, useIsRestoring } from '@tanstack/react-query';
+import { useIsRestoring } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
@@ -10,11 +9,16 @@ import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
-import { Contract, RenewalForecast } from '@graphql/types';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { useGetContractsQuery } from '@organization/src/graphql/getContracts.generated';
+import {
+  Contract,
+  InternalStage,
+  RenewalForecast,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
+import { useIsMutatingContract } from '@organization/src/components/Tabs/panels/AccountPanel/hooks/useIsMutatingContract';
 import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 interface ARRForecastProps {
@@ -31,44 +35,42 @@ export const ARRForecast = ({
   name,
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
-  const id = useParams()?.id as string;
   const { modal } = useARRInfoModalContext();
 
-  const queryKey = useGetContractsQuery.getKey({ id });
-
-  const isFetching = useIsFetching({
-    queryKey: queryKey,
-  });
+  const isUpdatingContract = useIsMutatingContract();
   const formattedMaxAmount = formatCurrency(forecast?.maxArr ?? 0);
   const formattedAmount = formatCurrency(forecast?.arr ?? 0);
 
   const hasForecastChanged = formattedMaxAmount !== formattedAmount;
-  const iconColor = (() => {
+
+  const iconColor = useMemo(() => {
     if (!contracts?.length) {
       return 'gray';
     }
 
-    const array = contracts.flatMap((contract) =>
-      contract.opportunities
-        ? contract.opportunities.map((opportunity) =>
-            opportunity.renewalLikelihood.toLowerCase(),
-          )
-        : [],
-    );
+    const array = contracts.flatMap((contract) => {
+      return (
+        contract.opportunities
+          ?.filter((e) => e.internalStage !== InternalStage.ClosedLost)
+          ?.map((opportunity) => opportunity.renewalLikelihood) ?? []
+      );
+    });
 
-    const likelihood = array.every((val) => val === array[0])
-      ? array[0]
-      : 'medium';
-
+    const likelihood =
+      array.length === 1
+        ? array[0]
+        : array.every((val) => val === array[0])
+        ? array[0]
+        : OpportunityRenewalLikelihood.MediumRenewal;
     const colorMap: Record<string, string> = {
-      high: 'success',
-      medium: 'warning',
-      low: 'error',
-      zero: 'zero',
+      [OpportunityRenewalLikelihood.HighRenewal]: 'success',
+      [OpportunityRenewalLikelihood.MediumRenewal]: 'warning',
+      [OpportunityRenewalLikelihood.LowRenewal]: 'error',
+      [OpportunityRenewalLikelihood.ZeroRenewal]: 'zero',
     };
 
     return colorMap[likelihood] || 'gray';
-  })();
+  }, [contracts]);
 
   return (
     <>
@@ -129,11 +131,11 @@ export const ARRForecast = ({
 
             <Flex flexDir='column'>
               <Heading fontSize='2xl' color='gray.700'>
-                {isFetching && (!isInitialLoading || !isRestoring)
+                {isUpdatingContract && (!isInitialLoading || !isRestoring)
                   ? 'Calculating...'
                   : formattedAmount}
               </Heading>
-              {hasForecastChanged && !isFetching && (
+              {hasForecastChanged && !isUpdatingContract && (
                 <Text
                   fontSize='sm'
                   textAlign='right'
