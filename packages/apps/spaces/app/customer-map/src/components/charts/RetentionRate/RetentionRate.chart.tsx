@@ -203,6 +203,7 @@ const RetentionRate = ({ data, width }: RetentionRateProps) => {
           hideAxisLine
           hideTicks
           tickLabelProps={{
+            fontSize: 12,
             fontWeight: 'medium',
             fontFamily: `var(--font-barlow)`,
           }}
@@ -217,7 +218,7 @@ const RetentionRate = ({ data, width }: RetentionRateProps) => {
           snapTooltipToDatumX
           style={{
             position: 'absolute',
-            padding: '8px',
+            padding: '8px 12px',
             background: gray700,
             borderRadius: '8px',
           }}
@@ -231,7 +232,7 @@ const RetentionRate = ({ data, width }: RetentionRateProps) => {
 
             return (
               <Flex flexDir='column'>
-                <Text color='white' fontWeight='normal' fontSize='sm'>
+                <Text color='white' fontWeight='semibold' fontSize='sm'>
                   {xLabel}
                 </Text>
 

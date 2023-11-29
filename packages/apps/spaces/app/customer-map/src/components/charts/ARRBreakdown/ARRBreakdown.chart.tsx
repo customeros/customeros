@@ -294,6 +294,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
           hideAxisLine
           hideTicks
           tickLabelProps={{
+            fontSize: 12,
             fontWeight: 'medium',
             fontFamily: `var(--font-barlow)`,
           }}

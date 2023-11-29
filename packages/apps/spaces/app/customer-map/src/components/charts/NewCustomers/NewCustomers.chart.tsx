@@ -123,6 +123,7 @@ const NewCustomersChart = ({ width, data }: NewCustomersProps) => {
           hideAxisLine
           hideTicks
           tickLabelProps={{
+            fontSize: 12,
             fontWeight: 'medium',
             fontFamily: `var(--font-barlow)`,
           }}

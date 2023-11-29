@@ -16,6 +16,7 @@ import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
 
 import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
+import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 import { getMonthLabel } from '../util';
 
@@ -183,6 +184,8 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
           orientation={Orientation.bottom}
           tickFormat={(d) => timeFormat('%b')(d as Date)}
           tickLabelProps={{
+            fontSize: 12,
+            fill: gray700,
             fontWeight: 'medium',
             fontFamily: `var(--font-barlow)`,
           }}
@@ -224,6 +227,7 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
               padding: '8px',
               background: gray700,
               color: 'white',
+              whiteSpace: 'nowrap',
               transform:
                 tooltipData.month === data[0].month
                   ? undefined
@@ -232,7 +236,9 @@ const GrossRevenueRetention = ({ data, width }: GrossRevenueRetentionProps) => {
                   : 'translateX(-50%)',
             }}
           >
-            {`${getMonthLabel(tooltipData.month)}: $${tooltipData.value}`}
+            {`${getMonthLabel(tooltipData.month)}: ${formatCurrency(
+              tooltipData.value,
+            )}`}
           </TooltipWithBounds>
         )}
       </Flex>
