@@ -36,7 +36,11 @@ export const AccountPanel = () => {
   }
 
   if (!data?.organization?.contracts?.length) {
-    return <EmptyContracts name={data?.organization?.name || ''} />;
+    return (
+      <EmptyContracts name={data?.organization?.name || ''}>
+        <Notes id={id} data={data?.organization} />
+      </EmptyContracts>
+    );
   }
 
   return (
