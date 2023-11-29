@@ -38,7 +38,7 @@ export const Services: React.FC<Props> = ({ contractId, data }) => {
         />
       </Flex>
 
-      {data?.length && <ServicesList data={data} />}
+      {data?.length && <ServicesList data={data} contractId={contractId} />}
       <CreateServiceModal
         contractId={contractId}
         isOpen={modal.isOpen && isOpen}
