@@ -6,17 +6,11 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Card, CardHeader } from '@ui/presentation/Card';
+import { Opportunity, ContractRenewalCycle } from '@graphql/types';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import {
-  Opportunity,
-  ContractRenewalCycle,
-  RenewalLikelihoodProbability,
-} from '@graphql/types';
 import { RenewalDetailsModal } from '@organization/src/components/Tabs/panels/AccountPanel/Contract/RenewalARR/RenewalDetailsModal';
 import { useUpdateRenewalDetailsContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
-
-import { getARRColor } from '../../utils';
 
 interface RenewalARRCardProps {
   hasEnded: boolean;
@@ -124,9 +118,6 @@ export const RenewalARRCard = ({
                       <Text
                         as='span'
                         fontWeight='medium'
-                        color={`${getARRColor(
-                          opportunity.renewalLikelihood as RenewalLikelihoodProbability,
-                        )}.500`}
                         textTransform='capitalize'
                       >
                         {opportunity?.renewalLikelihood.toLowerCase()}
