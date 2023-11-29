@@ -11,7 +11,7 @@ import (
 func ExecuteWriteQuery(ctx context.Context, driver *neo4j.DriverWithContext, cypher string, params map[string]any) {
 	_, err := utils.ExecuteQuery(ctx, *driver, "neo4j", cypher, params)
 	if err != nil {
-		log.Fatalf("Error executing query %s", cypher)
+		log.Fatalf("Error executing query in test: %s", cypher)
 		return
 	}
 }
