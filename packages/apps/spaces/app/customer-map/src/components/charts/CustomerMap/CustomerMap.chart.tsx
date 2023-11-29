@@ -203,20 +203,27 @@ const CustomerMapChart = ({
       <Legend data={legendData} />
       <svg width={outerWidth} height={outerHeight}>
         <Group>
-          <text x={margin.left} y={outerHeight - margin.bottom} fill={gray500}>
+          <text
+            x={margin.left}
+            y={outerHeight - margin.bottom}
+            fill={gray500}
+            fontSize={14}
+          >
             {DateTimeUtils.format(minMaxX[0]?.toISOString(), 'd MMM')}
           </text>
           <text
-            x={outerWidth / 2 - 32}
+            x={outerWidth / 2 - 28}
             y={outerHeight - margin.bottom}
             fill={gray500}
+            fontSize={14}
             fontWeight={600}
           >
             Sign date
           </text>
           <text
-            x={outerWidth - (margin.left + margin.right + 12)}
+            x={outerWidth - margin.right - 38}
             y={outerHeight - margin.bottom}
+            fontSize={14}
             fill={gray500}
           >
             {DateTimeUtils.format(minMaxX[1]?.toISOString(), 'd MMM')}

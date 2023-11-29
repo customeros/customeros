@@ -47,7 +47,7 @@ export const ARRBreakdown = () => {
         {({ width }) => (
           <Skeleton
             w='full'
-            h='200px'
+            h={isLoading ? '200px' : 'full'}
             endColor='gray.300'
             startColor='gray.300'
             isLoaded={!isLoading}

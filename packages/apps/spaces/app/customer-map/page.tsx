@@ -13,18 +13,20 @@ import { GrossRevenueRetention } from './src/components/charts/GrossRevenueReten
 
 export default function DashboardPage() {
   return (
-    <Flex flexDir='column' gap='3' pl='1' pt='4'>
+    <Flex flexDir='column' pl='1' pt='4'>
       <Text fontWeight='semibold' fontSize='xl'>
         Customer map
       </Text>
-      <CustomerMap />
+      <Flex mb='6'>
+        <CustomerMap />
+      </Flex>
 
-      <Flex gap='3'>
+      <Flex gap='3' mb='3'>
         <MrrPerCustomer />
         <GrossRevenueRetention />
       </Flex>
 
-      <Flex gap='3'>
+      <Flex gap='3' mb='3'>
         <ARRBreakdown />
         <RevenueAtRisk />
       </Flex>
