@@ -2,7 +2,9 @@ module github.com/openline-ai/openline-customer-os/packages/server/openai-api
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 
-go 1.20
+go 1.21
+
+toolchain go1.21.4
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
