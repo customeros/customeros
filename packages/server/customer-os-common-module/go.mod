@@ -1,6 +1,6 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module
 
-go 1.20
+go 1.21
 
 require (
 	github.com/coocood/freecache v1.2.4

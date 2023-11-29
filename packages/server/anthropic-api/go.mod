@@ -2,7 +2,9 @@ module github.com/openline-ai/openline-customer-os/packages/server/anthorpic-api
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 
-go 1.20
+go 1.21
+
+toolchain go1.21.4
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -39,7 +41,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/neo4j/neo4j-go-driver/v5 v5.14.0 // indirect
+	github.com/neo4j/neo4j-go-driver/v5 v5.15.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
