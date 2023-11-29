@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
@@ -11,13 +12,19 @@ import (
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	"time"
 )
+
+type ActionStatusMetadata struct {
+	Status string `json:"status"`
+}
 
 type ContractEventHandler struct {
 	log                 logger.Logger
@@ -161,7 +168,6 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
-
 	err := h.repositories.ContractRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -175,6 +181,31 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
+		}
+	}
+
+	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	var message string
+
+	metadata, err := utils.ToJson(ActionStatusMetadata{
+		Status: eventData.Status,
+	})
+	if eventData.Status != "" {
+		switch eventData.Status {
+		case string(model.ContractStatusStringLive):
+			message = contractEntity.Name + " is now " + eventData.Status
+		case string(model.ContractStatusStringEnded):
+			message = contractEntity.Name + " has " + eventData.Status
+		}
+		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionContractStatusUpdated, message, metadata, time.Now())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
 		}
 	}
 

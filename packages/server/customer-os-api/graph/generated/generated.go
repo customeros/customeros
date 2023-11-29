@@ -8082,6 +8082,7 @@ enum ActionType {
     CREATED
     RENEWAL_LIKELIHOOD_UPDATED
     RENEWAL_FORECAST_UPDATED
+    CONTRACT_STATUS_UPDATED
 }`, BuiltIn: false},
 	{Name: "../schemas/action_item.graphqls", Input: `type ActionItem {
     id: ID!

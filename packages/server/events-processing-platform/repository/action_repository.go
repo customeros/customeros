@@ -43,6 +43,8 @@ func (r *actionRepository) Create(ctx context.Context, tenant, entityId string, 
 	switch entityType {
 	case entity.ORGANIZATION:
 		query = fmt.Sprintf(`MATCH (n:Organization_%s {id:$entityId}) `, tenant)
+	case entity.CONTRACT:
+		query = fmt.Sprintf(`MATCH (n:Contract_%s {id:$entityId}) `, tenant)
 	}
 
 	query += fmt.Sprintf(` MERGE (n)<-[:ACTION_ON]-(a:Action {id:randomUUID()}) 
@@ -98,6 +100,8 @@ func (r *actionRepository) GetSingleAction(ctx context.Context, tenant, entityId
 	switch entityType {
 	case entity.ORGANIZATION:
 		query = fmt.Sprintf(`MATCH  (n:Organization_%s {id:$entityId}) `, tenant)
+	case entity.CONTRACT:
+		query = fmt.Sprintf(`MATCH  (n:Contract_%s {id:$entityId}) `, tenant)
 	}
 
 	query += `WITH n
@@ -139,6 +143,8 @@ func (r *actionRepository) MergeByActionType(ctx context.Context, tenant, entity
 	switch entityType {
 	case entity.ORGANIZATION:
 		query = fmt.Sprintf(`MATCH  (n:Organization_%s {id:$entityId}) `, tenant)
+	case entity.CONTRACT:
+		query = fmt.Sprintf(`MATCH  (n:Contract_%s {id:$entityId}) `, tenant)
 	}
 
 	query += fmt.Sprintf(`WITH n
