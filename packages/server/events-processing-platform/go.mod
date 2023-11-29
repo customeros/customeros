@@ -1,6 +1,8 @@
 module github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform
 
-go 1.20
+go 1.21
+
+toolchain go1.21.4
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../events-processing-common
 
