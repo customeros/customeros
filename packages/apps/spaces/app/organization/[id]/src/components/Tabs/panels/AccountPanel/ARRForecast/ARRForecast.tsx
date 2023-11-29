@@ -158,7 +158,7 @@ export const ARRForecast = ({
           Annual Recurring Revenue (ARR) is the total amount of money you can
           expect to receive from
           <Text as='span' fontWeight='medium' mx={1}>
-            {name}
+            {name ? name : `Unnamed`}
           </Text>
           for the next 12 months.
         </Text>

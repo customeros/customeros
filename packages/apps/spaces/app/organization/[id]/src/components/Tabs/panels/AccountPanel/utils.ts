@@ -8,6 +8,7 @@ import {
   RenewalCycle,
   ContractRenewalCycle,
   RenewalLikelihoodProbability,
+  OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
 export const invalidateAccountDetailsQuery = (
@@ -32,6 +33,39 @@ export function getARRColor(
       return 'gray';
     default:
       return 'gray';
+  }
+}
+
+export function getRenewalLikelihoodColor(
+  renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,
+) {
+  switch (renewalLikelihood) {
+    case OpportunityRenewalLikelihood.HighRenewal:
+      return 'success';
+    case OpportunityRenewalLikelihood.MediumRenewal:
+      return 'warning';
+    case OpportunityRenewalLikelihood.LowRenewal:
+      return 'error';
+    case OpportunityRenewalLikelihood.ZeroRenewal:
+      return 'gray';
+    default:
+      return 'gray';
+  }
+}
+export function getRenewalLikelihoodLabel(
+  renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,
+) {
+  switch (renewalLikelihood) {
+    case OpportunityRenewalLikelihood.HighRenewal:
+      return 'High';
+    case OpportunityRenewalLikelihood.MediumRenewal:
+      return 'Medium';
+    case OpportunityRenewalLikelihood.LowRenewal:
+      return 'Low';
+    case OpportunityRenewalLikelihood.ZeroRenewal:
+      return 'Zero';
+    default:
+      return '';
   }
 }
 

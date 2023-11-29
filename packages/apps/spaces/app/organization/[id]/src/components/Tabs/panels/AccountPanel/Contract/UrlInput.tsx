@@ -57,6 +57,10 @@ export const UrlInput: FC<UrlInputProps> = ({
     });
     onClose();
   };
+  const handleClearValue = () => {
+    handleUpdateContractUrl('');
+    setHref('');
+  };
 
   return (
     <>
@@ -161,7 +165,7 @@ export const UrlInput: FC<UrlInputProps> = ({
                   size='xs'
                   variant='ghost'
                   aria-label='Remove link'
-                  onClick={() => handleUpdateContractUrl('')}
+                  onClick={handleClearValue}
                   color='gray.400'
                   icon={<Trash01 color='inherit' />}
                   _hover={{ background: 'gray.600', color: 'gray.25' }}
