@@ -1,53 +1,112 @@
 package ai
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"net/http"
-	"strings"
 )
 
-func InvokeAnthropic(ctx context.Context, cfg *config.Config, logger logger.Logger, prompt string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.invokeAnthropic")
-	defer span.Finish()
+type AiModel interface {
+	Inference(ctx context.Context, input string) (string, error)
+}
 
-	reqBody := map[string]interface{}{
-		"prompt": prompt,
-		"model":  "claude-2",
+type AiModelType string
+
+const (
+	AnthropicModelType AiModelType = "anthropic"
+	OpenAiModelType    AiModelType = "openai"
+)
+
+func NewAiModel(modelType AiModelType, apiKey, apiPath, organization, model string, logger logger.Logger) AiModel {
+	switch modelType {
+	case AnthropicModelType:
+		return NewAnthropicModel(apiKey, apiPath, organization, logger)
+	case OpenAiModelType:
+		return NewOpenAiModel(apiKey, organization, model)
+	default:
+		return nil
+	}
+}
+
+type any interface{}
+
+type AiModelConfig struct {
+	Type AiModelType `json:"type"`
+}
+
+type AiModelConfigAnthropic struct {
+	AiModelConfig
+	ApiKey       string `json:"apiKey"`
+	Organization string `json:"organization"`
+	ApiPath      string `json:"apiPath"`
+}
+
+type AiModelConfigOpenAi struct {
+	AiModelConfig
+	ApiKey       string `json:"apiKey"`
+	Organization string `json:"organization"`
+	Model        string `json:"model"`
+}
+
+// TODO: make submodules for each ai provider/client
+/////////////////////// OpenAI ///////////////////////
+
+func NewOpenAiModel(apiKey, organization, model string) AiModel {
+	// TODO: use openai config object plus add logger to openai client
+	return &OpenAiModel{
+		Client: NewOpenAiClient(apiKey, organization, model),
+	}
+}
+
+type OpenAiModel struct {
+	Client *OpenAiClient
+}
+
+func (m *OpenAiModel) Inference(ctx context.Context, input string) (string, error) {
+	request := &CreateChatCompletionsRequest{
+		Model: m.Client.model,
+		Messages: []Message{
+			{
+				Role:    "system",
+				Content: "You are a helpful assistant designed to output JSON.",
+			},
+			{
+				Role:    "user",
+				Content: input,
+			},
+		},
+		Temperature:    0.7,
+		Seed:           42,                                  // always use same seed to increase likelihood of consistent results
+		ResponseFormat: ResponseFormat{Type: "json_object"}, // https://platform.openai.com/docs/guides/text-generation/json-mode
 	}
 
-	jsonBody, _ := json.Marshal(reqBody)
-	reqReader := bytes.NewReader(jsonBody)
-
-	req, err := http.NewRequest("POST", cfg.Services.Anthropic.ApiPath+"/ask", reqReader)
+	response, err := m.Client.CreateChatCompletions(ctx, request)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		logger.Errorf("Error creating request: %v", err.Error())
 		return "", err
 	}
-	req.Header.Set("content-type", "application/json")
-	req.Header.Set(constants.ApiKeyHeader, cfg.Services.Anthropic.ApiKey)
+	return response.Choices[0].Message.Content, nil
+}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+//////////////// Anthropic ///////////////////////
 
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
+func NewAnthropicModel(apiKey, apiPath, organization string, logger logger.Logger) AiModel {
+	cfg := &AiModelConfigAnthropic{
+		AiModelConfig: AiModelConfig{
+			Type: AnthropicModelType,
+		},
+		ApiKey:       apiKey,
+		Organization: organization,
+		ApiPath:      apiPath,
 	}
-	defer resp.Body.Close()
+	return &AnthropicModel{
+		Client: NewAnthropicClient(cfg, logger),
+	}
+}
 
-	var data map[string]string
-	json.NewDecoder(resp.Body).Decode(&data)
-	response := strings.TrimSpace(data["completion"])
-	span.LogFields(log.String("anthropicResponse", response))
+type AnthropicModel struct {
+	Client *AnthropicClient
+}
 
-	return response, nil
+func (m *AnthropicModel) Inference(ctx context.Context, input string) (string, error) {
+	return InvokeAnthropic(ctx, m.Client.cfg, m.Client.logger, input)
 }

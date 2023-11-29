@@ -59,7 +59,7 @@ func TestWebScraping(t *testing.T) {
 	})
 
 	ds := NewDomainScraper(testLogger, &config.Config{}, testDatabase.Repositories)
-	scrapedContent, err := ds.Scrape("https://www.customeros.ai", tenantName, organizationId)
+	scrapedContent, err := ds.Scrape("https://www.customeros.ai", tenantName, organizationId, true)
 	if err != nil {
 		t.Fatal(err)
 	}

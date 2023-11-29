@@ -2,6 +2,9 @@ package organization
 
 import (
 	"context"
+	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
@@ -12,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
-	"strings"
 
 	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
@@ -38,6 +40,7 @@ func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg 
 			repositories:         repositories,
 			caches:               caches,
 			domainScraper:        NewDomainScraper(log, cfg, repositories),
+			aiModel:              ai.NewAiModel(ai.AnthropicModelType, cfg.Services.Anthropic.ApiKey, cfg.Services.Anthropic.ApiPath, "empty org", "no model type", log),
 		},
 	}
 }
