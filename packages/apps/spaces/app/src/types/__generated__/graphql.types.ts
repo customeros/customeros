@@ -318,6 +318,7 @@ export type ContactInput = {
   phoneNumber?: InputMaybe<PhoneNumberInput>;
   /** The prefix of the contact. */
   prefix?: InputMaybe<Scalars['String']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']>;
   /** The unique ID associated with the template of the contact in customerOS. */
   templateId?: InputMaybe<Scalars['ID']>;
   timezone?: InputMaybe<Scalars['String']>;
@@ -360,6 +361,7 @@ export type ContactUpdateInput = {
   ownerId?: InputMaybe<Scalars['ID']>;
   /** The prefix associate with the contact in customerOS. */
   prefix?: InputMaybe<Scalars['String']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']>;
   timezone?: InputMaybe<Scalars['String']>;
 };
 
@@ -2273,7 +2275,7 @@ export type Opportunity = Node & {
   name: Scalars['String'];
   nextSteps: Scalars['String'];
   owner?: Maybe<User>;
-  renewalLikelihood: Scalars['String'];
+  renewalLikelihood: OpportunityRenewalLikelihood;
   renewalUpdatedByUserAt: Scalars['Time'];
   renewalUpdatedByUserId: Scalars['String'];
   renewedAt: Scalars['Time'];

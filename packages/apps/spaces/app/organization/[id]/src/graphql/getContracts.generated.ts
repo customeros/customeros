@@ -33,6 +33,7 @@ export type GetContractsQuery = {
     __typename?: 'Organization';
     id: string;
     name: string;
+    note?: string | null;
     accountDetails?: {
       __typename?: 'OrgAccountDetails';
       renewalForecast?: {
@@ -62,7 +63,7 @@ export type GetContractsQuery = {
         amount: number;
         maxAmount: number;
         name: string;
-        renewalLikelihood: string;
+        renewalLikelihood: Types.OpportunityRenewalLikelihood;
         renewalUpdatedByUserId: string;
         renewalUpdatedByUserAt: any;
         renewedAt: any;
@@ -91,6 +92,7 @@ export const GetContractsDocument = `
   organization(id: $id) {
     id
     name
+    note
     accountDetails {
       renewalForecast {
         arr
