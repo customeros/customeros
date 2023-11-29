@@ -1,0 +1,3 @@
+mutation CloseServiceLineItem($input: ServiceLineItemCloseInput!) {
+    serviceLineItem_Close(input: $input)
+}

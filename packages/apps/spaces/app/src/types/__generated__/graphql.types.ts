@@ -1521,8 +1521,6 @@ export type Mutation = {
   opportunityRenewalUpdate: Opportunity;
   opportunityUpdate: Opportunity;
   organization_AddNewLocation: Location;
-  /** @deprecated No longer supported */
-  organization_AddRelationship: Organization;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
   organization_Archive?: Maybe<Result>;
@@ -1531,14 +1529,8 @@ export type Mutation = {
   organization_Hide: Scalars['ID'];
   organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
-  /** @deprecated No longer supported */
-  organization_RemoveRelationship: Organization;
-  /** @deprecated No longer supported */
-  organization_RemoveRelationshipStage: Organization;
   organization_RemoveSubsidiary: Organization;
   organization_SetOwner: Organization;
-  /** @deprecated No longer supported */
-  organization_SetRelationshipStage: Organization;
   organization_Show: Scalars['ID'];
   organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
@@ -1958,11 +1950,6 @@ export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID'];
 };
 
-export type MutationOrganization_AddRelationshipArgs = {
-  organizationId: Scalars['ID'];
-  relationship: OrganizationRelationship;
-};
-
 export type MutationOrganization_AddSocialArgs = {
   input: SocialInput;
   organizationId: Scalars['ID'];
@@ -1997,16 +1984,6 @@ export type MutationOrganization_MergeArgs = {
   primaryOrganizationId: Scalars['ID'];
 };
 
-export type MutationOrganization_RemoveRelationshipArgs = {
-  organizationId: Scalars['ID'];
-  relationship: OrganizationRelationship;
-};
-
-export type MutationOrganization_RemoveRelationshipStageArgs = {
-  organizationId: Scalars['ID'];
-  relationship: OrganizationRelationship;
-};
-
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
@@ -2015,12 +1992,6 @@ export type MutationOrganization_RemoveSubsidiaryArgs = {
 export type MutationOrganization_SetOwnerArgs = {
   organizationId: Scalars['ID'];
   userId: Scalars['ID'];
-};
-
-export type MutationOrganization_SetRelationshipStageArgs = {
-  organizationId: Scalars['ID'];
-  relationship: OrganizationRelationship;
-  stage: Scalars['String'];
 };
 
 export type MutationOrganization_ShowArgs = {
@@ -2357,10 +2328,6 @@ export type Organization = Node & {
   owner?: Maybe<User>;
   phoneNumbers: Array<PhoneNumber>;
   referenceId?: Maybe<Scalars['String']>;
-  /** @deprecated No longer supported */
-  relationshipStages: Array<OrganizationRelationshipStage>;
-  /** @deprecated No longer supported */
-  relationships: Array<OrganizationRelationship>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -2433,54 +2400,6 @@ export type OrganizationParticipant = {
   __typename?: 'OrganizationParticipant';
   organizationParticipant: Organization;
   type?: Maybe<Scalars['String']>;
-};
-
-export enum OrganizationRelationship {
-  Affiliate = 'AFFILIATE',
-  CertificationBody = 'CERTIFICATION_BODY',
-  Competitor = 'COMPETITOR',
-  Consultant = 'CONSULTANT',
-  ContractManufacturer = 'CONTRACT_MANUFACTURER',
-  Customer = 'CUSTOMER',
-  DataProvider = 'DATA_PROVIDER',
-  Distributor = 'DISTRIBUTOR',
-  Franchisee = 'FRANCHISEE',
-  Franchisor = 'FRANCHISOR',
-  IndustryAnalyst = 'INDUSTRY_ANALYST',
-  InfluencerOrContentCreator = 'INFLUENCER_OR_CONTENT_CREATOR',
-  InsourcingPartner = 'INSOURCING_PARTNER',
-  Investor = 'INVESTOR',
-  JointVenture = 'JOINT_VENTURE',
-  LicensingPartner = 'LICENSING_PARTNER',
-  LogisticsPartner = 'LOGISTICS_PARTNER',
-  MediaPartner = 'MEDIA_PARTNER',
-  MergerOrAcquisitionTarget = 'MERGER_OR_ACQUISITION_TARGET',
-  OriginalDesignManufacturer = 'ORIGINAL_DESIGN_MANUFACTURER',
-  OriginalEquipmentManufacturer = 'ORIGINAL_EQUIPMENT_MANUFACTURER',
-  OutsourcingProvider = 'OUTSOURCING_PROVIDER',
-  ParentCompany = 'PARENT_COMPANY',
-  Partner = 'PARTNER',
-  PrivateLabelManufacturer = 'PRIVATE_LABEL_MANUFACTURER',
-  ProfessionalEmployerOrganization = 'PROFESSIONAL_EMPLOYER_ORGANIZATION',
-  RealEstatePartner = 'REAL_ESTATE_PARTNER',
-  RegulatoryBody = 'REGULATORY_BODY',
-  ResearchCollaborator = 'RESEARCH_COLLABORATOR',
-  Reseller = 'RESELLER',
-  ServiceProvider = 'SERVICE_PROVIDER',
-  Sponsor = 'SPONSOR',
-  StandardsOrganization = 'STANDARDS_ORGANIZATION',
-  Subsidiary = 'SUBSIDIARY',
-  Supplier = 'SUPPLIER',
-  TalentAcquisitionPartner = 'TALENT_ACQUISITION_PARTNER',
-  TechnologyProvider = 'TECHNOLOGY_PROVIDER',
-  TradeAssociationMember = 'TRADE_ASSOCIATION_MEMBER',
-  Vendor = 'VENDOR',
-}
-
-export type OrganizationRelationshipStage = {
-  __typename?: 'OrganizationRelationshipStage';
-  relationship: OrganizationRelationship;
-  stage?: Maybe<Scalars['String']>;
 };
 
 export type OrganizationUpdateInput = {
