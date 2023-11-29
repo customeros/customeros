@@ -19,7 +19,7 @@ require (
 	github.com/graph-gophers/dataloader v5.0.0+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231122210237-45ffd94cc905
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231122210237-45ffd94cc905
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231122210237-45ffd94cc905
