@@ -39,7 +39,7 @@ func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.C
 			organizationCommands: orgCommands,
 			repositories:         repositories,
 			caches:               caches,
-			domainScraper:        NewDomainScraper(log, cfg, repositories),
+			domainScraper:        NewDomainScraper(log, cfg, repositories, ai.NewAiModel(ai.OpenAiModelType, cfg.Services.OpenAi.ApiKey, cfg.Services.OpenAi.ApiPath, cfg.Services.OpenAi.Organization, "gpt-3.5-turbo-1106", log)), // 1106 has an extra parameter available that locks response as JSON)
 			aiModel:              ai.NewAiModel(ai.AnthropicModelType, cfg.Services.Anthropic.ApiKey, cfg.Services.Anthropic.ApiPath, "empty org", "no model type", log),
 		},
 	}
