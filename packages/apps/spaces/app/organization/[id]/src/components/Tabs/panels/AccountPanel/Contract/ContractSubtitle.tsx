@@ -38,6 +38,9 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   if (!data.serviceStartedAt) {
     return <Text>No start date or services yet</Text>;
   }
+  if (!data?.serviceLineItems?.length) {
+    return <Text>No services added yet</Text>;
+  }
 
   const isActiveAndRenewable =
     hasStartedService &&
@@ -47,15 +50,16 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
 
   return (
     <Flex flexDir='column' alignItems='flex-start' justifyContent='center'>
-      {serviceStartDate && <Text>Service starts on {serviceStartDate}</Text>}
+      {serviceStartDate && <Text>Service starts {serviceStartDate}</Text>}
       {isActiveAndRenewable && (
         <Text>
           Renews {getLabelFromValue(data.renewalCycle)} on {renewalDate}
         </Text>
       )}
       {data?.endedAt && DateTimeUtils.isFuture(data.endedAt) && (
-        <Text>Ends on {endDate}</Text>
+        <Text>Ends {endDate}</Text>
       )}
+
       {data.status === ContractStatus.Ended && <Text>Ended on {endDate}</Text>}
     </Flex>
   );
