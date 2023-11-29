@@ -2,7 +2,7 @@ name: spaces
 
 on:
   push:
-    branches: ["otter"]
+    branches: ["otter", "dev"]
     paths:
       - "packages/apps/spaces/**"
       - ".github/workflows/build-spaces.yml"
@@ -85,7 +85,7 @@ jobs:
         uses: docker/build-push-action@v5.0.0
         with:
           context: packages/apps/spaces/
-          push: ${{ github.ref_name == 'otter' }}
+          push: ${{ github.ref_name == 'otter' || github.ref_name == 'dev' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |

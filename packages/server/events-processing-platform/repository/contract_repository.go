@@ -16,9 +16,11 @@ import (
 
 type ContractRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, contractId string, evt event.ContractCreateEvent) error
-	Update(ctx context.Context, tenant, contractId string, evt event.ContractUpdateEvent) error
+	UpdateAndReturn(ctx context.Context, tenant, contractId string, evt event.ContractUpdateEvent) (*dbtype.Node, error)
 	GetContractById(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
-	GetContractByServiceLineItemId(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
+	GetContractByServiceLineItemId(ctx context.Context, tenant string, serviceLineItemId string) (*dbtype.Node, error)
+	GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error)
+	UpdateStatus(ctx context.Context, tenant, contractId string, evt event.ContractUpdateStatusEvent) error
 }
 
 type contractRepository struct {
@@ -82,8 +84,8 @@ func (r *contractRepository) CreateForOrganization(ctx context.Context, tenant, 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 }
 
-func (r *contractRepository) Update(ctx context.Context, tenant, contractId string, evt event.ContractUpdateEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.Update")
+func (r *contractRepository) UpdateAndReturn(ctx context.Context, tenant, contractId string, evt event.ContractUpdateEvent) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.UpdateAndReturn")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("contractId", contractId), log.Object("event", evt))
@@ -98,7 +100,8 @@ func (r *contractRepository) Update(ctx context.Context, tenant, contractId stri
 				ct.status = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $status ELSE ct.status END,
 				ct.renewalCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalCycle ELSE ct.renewalCycle END,
 				ct.updatedAt = $updatedAt,
-				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END`
+				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END
+				RETURN ct`
 	params := map[string]any{
 		"tenant":           tenant,
 		"contractId":       contractId,
@@ -115,7 +118,20 @@ func (r *contractRepository) Update(ctx context.Context, tenant, contractId stri
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }
 
 func (r *contractRepository) GetContractById(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
@@ -178,4 +194,63 @@ func (r *contractRepository) GetContractByServiceLineItemId(ctx context.Context,
 	} else {
 		return records[0], nil
 	}
+}
+
+func (r *contractRepository) GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractByServiceLineItemId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("opportunityId", opportunityId))
+
+	cypher := fmt.Sprintf(`MATCH (:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c:Contract:Contract_%s) RETURN c limit 1`, tenant)
+	params := map[string]any{
+		"id": opportunityId,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	records := result.([]*dbtype.Node)
+	if len(records) == 0 {
+		return nil, nil
+	} else {
+		return records[0], nil
+	}
+}
+
+func (r *contractRepository) UpdateStatus(ctx context.Context, tenant, contractId string, evt event.ContractUpdateStatusEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.UpdateStatus")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET 
+					ct.status=$status,
+					ct.serviceStartedAt=$serviceStartedAt,
+					ct.endedAt=$endedAt,
+					ct.updatedAt=$updatedAt
+							`
+	params := map[string]any{
+		"tenant":           tenant,
+		"contractId":       contractId,
+		"status":           evt.Status,
+		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.ServiceStartedAt),
+		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(evt.EndedAt),
+		"updatedAt":        utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 }

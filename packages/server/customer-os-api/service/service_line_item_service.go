@@ -22,9 +22,11 @@ import (
 
 type ServiceLineItemService interface {
 	Create(ctx context.Context, serviceLineItem *ServiceLineItemCreateData) (string, error)
-	Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity) error
+	Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity, isRetroactiveCorrection bool) error
+	Delete(ctx context.Context, serviceLineItemId string) (bool, error)
 	GetById(ctx context.Context, id string) (*entity.ServiceLineItemEntity, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*entity.ServiceLineItemEntities, error)
+	Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error
 }
 type serviceLineItemService struct {
 	log          logger.Logger
@@ -48,6 +50,8 @@ type ServiceLineItemCreateData struct {
 	ExternalReference     *entity.ExternalSystemEntity
 	Source                entity.DataSource
 	AppSource             string
+	StartedAt             *time.Time
+	EndedAt               *time.Time
 }
 
 func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDetails *ServiceLineItemCreateData) (string, error) {
@@ -84,6 +88,8 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		Name:           serviceLineItemDetails.ServiceLineItemEntity.Name,
 		Quantity:       serviceLineItemDetails.ServiceLineItemEntity.Quantity,
 		Price:          float32(serviceLineItemDetails.ServiceLineItemEntity.Price),
+		StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
+		EndedAt:        utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.EndedAt),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(serviceLineItemDetails.Source),
@@ -98,6 +104,8 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
 	case entity.BilledTypeOnce:
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_ONCE_BILLED
+	case entity.BilledTypeUsage:
+		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_USAGE_BILLED
 	default:
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
 	}
@@ -117,7 +125,8 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	}
 	return response.Id, err
 }
-func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity) error {
+
+func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *entity.ServiceLineItemEntity, isRetroactiveCorrection bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -144,12 +153,14 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 	}
 
 	serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             serviceLineItem.ID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Name:           serviceLineItem.Name,
-		Quantity:       serviceLineItem.Quantity,
-		Price:          float32(serviceLineItem.Price),
+		Tenant:                  common.GetTenantFromContext(ctx),
+		Id:                      serviceLineItem.ID,
+		LoggedInUserId:          common.GetUserIdFromContext(ctx),
+		Name:                    serviceLineItem.Name,
+		Quantity:                serviceLineItem.Quantity,
+		Price:                   float32(serviceLineItem.Price),
+		Comments:                serviceLineItem.Comments,
+		IsRetroactiveCorrection: isRetroactiveCorrection,
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(serviceLineItem.Source),
 			AppSource: utils.StringFirstNonEmpty(serviceLineItem.AppSource, constants.AppSourceCustomerOsApi),
@@ -162,11 +173,115 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
 	case entity.BilledTypeOnce:
 		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ONCE_BILLED
+	case entity.BilledTypeUsage:
+		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_USAGE_BILLED
 	default:
 		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
 	}
+	// set contract id if it's not a retroactive correction
+	if !isRetroactiveCorrection {
+		contractDbNode, err := s.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, common.GetTenantFromContext(ctx), serviceLineItem.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItem.ID, err.Error())
+			return err
+		}
+		if contractDbNode == nil {
+			err := fmt.Errorf("contract not found for service line item id {%s}", serviceLineItem.ID)
+			tracing.TraceErr(span, err)
+			s.log.Errorf(err.Error())
+			return err
+		}
+		serviceLineItemUpdateRequest.ContractId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*contractDbNode), "id")
+	}
 
 	_, err := s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId string) (completed bool, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Delete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	sliExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, entity.NodeLabel_ServiceLineItem)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on checking if service line item exists: %s", err.Error())
+		return false, err
+	}
+	if !sliExists {
+		err := fmt.Errorf("service line item with id {%s} not found", serviceLineItemId)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return false, err
+	}
+
+	deleteRequest := servicelineitempb.DeleteServiceLineItemGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             serviceLineItemId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+
+	_, err = s.grpcClients.ServiceLineItemClient.DeleteServiceLineItem(ctx, &deleteRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return false, err
+	}
+
+	// wait for service line item to be deleted from graph db
+	for i := 1; i <= constants.MaxRetriesCheckDataInNeo4jAfterEventRequest; i++ {
+		serviceLineItemFound, findErr := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, entity.NodeLabel_ServiceLineItem)
+		if findErr != nil {
+			tracing.TraceErr(span, findErr)
+			s.log.Errorf("error on checking if service line item exists: %s", findErr.Error())
+		} else if !serviceLineItemFound {
+			span.LogFields(log.Bool("serviceLineItemDeletedFromGraphDb", true))
+			return true, nil
+		}
+		time.Sleep(utils.BackOffIncrementalDelay(i))
+	}
+
+	return false, nil
+}
+
+func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId string, endedAt *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Close")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	sliExists, err := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId, entity.NodeLabel_ServiceLineItem)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error on checking if service line item exists: %s", err.Error())
+		return err
+	}
+	if !sliExists {
+		err := fmt.Errorf("service line item with id {%s} not found", serviceLineItemId)
+		tracing.TraceErr(span, err)
+		s.log.Errorf(err.Error())
+		return err
+	}
+
+	closeRequest := servicelineitempb.CloseServiceLineItemGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             serviceLineItemId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		AppSource:      constants.AppSourceCustomerOsApi,
+		EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
+	}
+
+	_, err = s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -216,12 +331,16 @@ func (s *serviceLineItemService) mapDbNodeToServiceLineItemEntity(dbNode dbtype.
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
+		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
 		Billed:        entity.GetBilledType(utils.GetStringPropOrEmpty(props, "billed")),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
+		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
 	}
 	return &serviceLineItem
 }

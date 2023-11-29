@@ -21,6 +21,13 @@ enum OpportunityInternalStage {
   CLOSED_LOST = 3;
 }
 
+enum RenewalLikelihood {
+  HIGH_RENEWAL = 0;
+  MEDIUM_RENEWAL = 1;
+  LOW_RENEWAL = 2;
+  ZERO_RENEWAL = 3;
+}
+
 message CreateOpportunityGrpcRequest {
   string tenant = 2;
   string loggedInUserId = 3;
@@ -40,6 +47,17 @@ message CreateOpportunityGrpcRequest {
   SourceFields sourceFields = 17;
   ExternalSystemFields externalSystemFields = 18;
   string organizationId = 19;
+}
+
+message UpdateRenewalOpportunityGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string comments = 4;
+  RenewalLikelihood renewalLikelihood = 5;
+  google.protobuf.Timestamp updatedAt = 6;
+  double amount = 7;
+  SourceFields sourceFields = 8;
 }
 
 message UpdateOpportunityGrpcRequest {
@@ -66,5 +84,6 @@ message OpportunityIdGrpcResponse {
 
 service opportunityGrpcService {
   rpc CreateOpportunity(CreateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
+  rpc UpdateRenewalOpportunity(UpdateRenewalOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateOpportunity(UpdateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
 }

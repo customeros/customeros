@@ -69,7 +69,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		logEntryEventHandler:        &GraphLogEntryEventHandler{repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
 		issueEventHandler:           &GraphIssueEventHandler{Repositories: repositories, organizationCommands: commandHandlers.Organization, log: log},
 		commentEventHandler:         &GraphCommentEventHandler{repositories: repositories, log: log},
-		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
+		opportunityEventHandler:     &OpportunityEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity, organizationCommands: commandHandlers.Organization},
 		contractEventHandler:        &ContractEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
 		serviceLineItemEventHandler: &ServiceLineItemEventHandler{repositories: repositories, log: log, opportunityCommands: commandHandlers.Opportunity},
 	}
@@ -213,6 +213,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnOrganizationShow(ctx, evt)
 	case orgevents.OrganizationRefreshLastTouchpointV1:
 		return s.organizationEventHandler.OnRefreshLastTouchpoint(ctx, evt)
+	case orgevents.OrganizationRefreshArrV1:
+		return s.organizationEventHandler.OnRefreshArr(ctx, evt)
 	case orgevents.OrganizationUpsertCustomFieldV1:
 		return s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
 	case orgevents.OrganizationAddParentV1:
@@ -295,24 +297,36 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	case opportunityevent.OpportunityCreateV1:
 		return s.opportunityEventHandler.OnCreate(ctx, evt)
-	case opportunityevent.OpportunityCreateRenewalV1:
-		return s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
 	case opportunityevent.OpportunityUpdateNextCycleDateV1:
 		return s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
 	case opportunityevent.OpportunityUpdateV1:
 		return s.opportunityEventHandler.OnUpdate(ctx, evt)
+	case opportunityevent.OpportunityCreateRenewalV1:
+		return s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
+	case opportunityevent.OpportunityUpdateRenewalV1:
+		return s.opportunityEventHandler.OnUpdateRenewal(ctx, evt)
+	case opportunityevent.OpportunityCloseWinV1:
+		return s.opportunityEventHandler.OnCloseWin(ctx, evt)
+	case opportunityevent.OpportunityCloseLooseV1:
+		return s.opportunityEventHandler.OnCloseLoose(ctx, evt)
 
 	case contractevent.ContractCreateV1:
 		return s.contractEventHandler.OnCreate(ctx, evt)
 	case contractevent.ContractUpdateV1:
 		return s.contractEventHandler.OnUpdate(ctx, evt)
-	case contractevent.ContractRequestNextCycleDateV1:
-		return nil
+	case contractevent.ContractRolloutRenewalOpportunityV1:
+		return s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
+	case contractevent.ContractUpdateStatusV1:
+		return s.contractEventHandler.OnUpdateStatus(ctx, evt)
 
 	case servicelineitemevent.ServiceLineItemCreateV1:
 		return s.serviceLineItemEventHandler.OnCreate(ctx, evt)
 	case servicelineitemevent.ServiceLineItemUpdateV1:
 		return s.serviceLineItemEventHandler.OnUpdate(ctx, evt)
+	case servicelineitemevent.ServiceLineItemDeleteV1:
+		return s.serviceLineItemEventHandler.OnDelete(ctx, evt)
+	case servicelineitemevent.ServiceLineItemCloseV1:
+		return s.serviceLineItemEventHandler.OnClose(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

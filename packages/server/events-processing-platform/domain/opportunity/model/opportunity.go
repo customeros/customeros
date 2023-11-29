@@ -13,8 +13,10 @@ const (
 )
 
 type RenewalDetails struct {
-	RenewedAt         *time.Time `json:"renewedAt,omitempty"`
-	RenewalLikelihood string     `json:"renewalLikelihood,omitempty"`
+	RenewedAt              *time.Time `json:"renewedAt,omitempty"`
+	RenewalLikelihood      string     `json:"renewalLikelihood,omitempty"`
+	RenewalUpdatedByUserId string     `json:"renewalUpdatedByUserId,omitempty"`
+	RenewalUpdatedByUserAt *time.Time `json:"renewalUpdatedByUserAt,omitempty"`
 }
 
 // Opportunity represents the state of an opportunity aggregate.
@@ -31,6 +33,7 @@ type Opportunity struct {
 	InternalStage     OpportunityInternalStageString `json:"internalStage"`
 	ExternalStage     string                         `json:"externalStage"`
 	EstimatedClosedAt *time.Time                     `json:"estimatedClosedAt,omitempty"`
+	ClosedAt          *time.Time                     `json:"closedAt,omitempty"`
 	OwnerUserId       string                         `json:"ownerUserId"`
 	CreatedByUserId   string                         `json:"createdByUserId"`
 	Source            commonmodel.Source             `json:"source"`
@@ -40,6 +43,7 @@ type Opportunity struct {
 	CreatedAt         time.Time                      `json:"createdAt"`
 	UpdatedAt         time.Time                      `json:"updatedAt"`
 	RenewalDetails    RenewalDetails                 `json:"renewal,omitempty"`
+	Comments          string                         `json:"comments,omitempty"`
 }
 
 // OpportunityDataFields contains all the fields that may be used to create or update an opportunity.
@@ -154,6 +158,32 @@ func OpportunityInternalStageStringDecode(val string) OpportunityInternalStageSt
 		return OpportunityInternalStageStringClosedWon
 	case "CLOSED_LOST":
 		return OpportunityInternalStageStringClosedLost
+	default:
+		return ""
+	}
+}
+
+// OpportunityInternalType represents the type of opportunity within the system.
+type RenewalLikelihood int32
+
+const (
+	HIGH_RENEWAL RenewalLikelihood = iota
+	MEDIUM_RENEWAL
+	LOW_RENEWAL
+	ZERO_RENEWAL
+)
+
+// String returns the string representation of the OpportunityInternalStage.
+func (r RenewalLikelihood) StringValue() RenewalLikelihoodString {
+	switch r {
+	case HIGH_RENEWAL:
+		return RenewalLikelihoodStringHigh
+	case MEDIUM_RENEWAL:
+		return RenewalLikelihoodStringMedium
+	case LOW_RENEWAL:
+		return RenewalLikelihoodStringLow
+	case ZERO_RENEWAL:
+		return RenewalLikelihoodStringZero
 	default:
 		return ""
 	}

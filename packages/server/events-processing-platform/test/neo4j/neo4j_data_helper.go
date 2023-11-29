@@ -255,6 +255,21 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return contractId
 }
 
+func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {
+	contractId := CreateContract(ctx, driver, tenant, contract)
+	LinkContractWithOrganization(ctx, driver, contractId, organizationId)
+	return contractId
+}
+
+func LinkContractWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contractId, organizationId string) {
+	query := `MATCH (c:Contract {id:$contractId}), (o:Organization {id:$organizationId})
+				MERGE (o)-[:HAS_CONTRACT]->(c) `
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"contractId":     contractId,
+		"organizationId": organizationId,
+	})
+}
+
 func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`
@@ -269,7 +284,9 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					op.renewedAt=$renewedAt,
 					op.amount=$amount,
 					op.maxAmount=$maxAmount,
-					op.renewalLikelihood=$renewalLikelihood
+					op.renewalLikelihood=$renewalLikelihood,
+					op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
+					op.comments=$comments
 				`, tenant)
 
 	if opportunity.InternalType == "RENEWAL" {
@@ -277,16 +294,18 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	}
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":                opportunityId,
-		"name":              opportunity.Name,
-		"source":            opportunity.Source,
-		"sourceOfTruth":     opportunity.SourceOfTruth,
-		"internalStage":     opportunity.InternalStage,
-		"internalType":      opportunity.InternalType,
-		"amount":            opportunity.Amount,
-		"maxAmount":         opportunity.MaxAmount,
-		"renewedAt":         utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
-		"renewalLikelihood": opportunity.RenewalDetails.RenewalLikelihood,
+		"id":                     opportunityId,
+		"name":                   opportunity.Name,
+		"source":                 opportunity.Source,
+		"sourceOfTruth":          opportunity.SourceOfTruth,
+		"internalStage":          opportunity.InternalStage,
+		"internalType":           opportunity.InternalType,
+		"amount":                 opportunity.Amount,
+		"maxAmount":              opportunity.MaxAmount,
+		"renewedAt":              utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
+		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
+		"comments":               opportunity.Comments,
 	})
 	return opportunityId
 }
@@ -312,7 +331,8 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.name=$name,
 					sli.price=$price,
 					sli.quantity=$quantity,
-					sli.billed=$billed
+					sli.billed=$billed,
+					sli.comments=$comments
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -322,6 +342,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"name":       serviceLineItem.Name,
 		"quantity":   serviceLineItem.Quantity,
 		"billed":     serviceLineItem.Billed,
+		"comments":   serviceLineItem.Comments,
 	})
 	return serviceLineItemId
 }

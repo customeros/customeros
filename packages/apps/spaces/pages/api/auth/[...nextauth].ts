@@ -1,5 +1,6 @@
 import NextAuth, { AuthOptions } from 'next-auth';
 
+import AzureAD from 'next-auth/providers/azure-ad';
 import Google, { GoogleProfile } from 'next-auth/providers/google';
 import {
   OAuthToken,
@@ -23,13 +24,12 @@ export const authOptions: AuthOptions = {
         },
       },
     }),
-    // AzureAD({
-    //   name: 'Microsoft',
-    //   clientId: process.env.AZURE_AD_CLIENT_ID as string,
-    //   clientSecret: process.env.AZURE_AD_CLIENT_SECRET as string,
-    //   // tenantId: process.env.AZURE_AD_TENANT_ID as string,
-    //   tenantId: "common"
-    // }),
+    AzureAD({
+      name: 'Microsoft',
+      clientId: process.env.AZURE_AD_CLIENT_ID as string,
+      clientSecret: process.env.AZURE_AD_CLIENT_SECRET as string,
+      tenantId: 'common',
+    }),
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
@@ -63,12 +63,11 @@ export const authOptions: AuthOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        Object.assign(session, {
+        session = Object.assign(session, {
           accessToken: token.accessToken,
           user: {
-            id: token.id,
-            name: token.name,
-            playerIdentityId: token.playerIdendityId,
+            ...session.user,
+            playerIdentityId: token.playerIdentityId,
           },
         });
       }

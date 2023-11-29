@@ -40,7 +40,8 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 
 			calledCreateServiceLineItem = true
 			neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{
-				ID: serviceLineItemId,
+				ID:       serviceLineItemId,
+				ParentID: serviceLineItemId,
 			})
 			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
 				Id: serviceLineItemId,
@@ -49,7 +50,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	rawResponse := callGraphQL(t, "create_service_line_item", map[string]interface{}{
+	rawResponse := callGraphQL(t, "service_line_item/create_service_line_item", map[string]interface{}{
 		"contractId": contractId,
 	})
 
@@ -62,6 +63,7 @@ func TestMutationResolver_ServiceLineItemCreate(t *testing.T) {
 	require.Nil(t, err)
 	serviceLineItem := serviceLineItemStruct.ServiceLineItemCreate
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
+	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.True(t, calledCreateServiceLineItem)
 }
 
@@ -73,7 +75,9 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
-	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{Name: "service"})
+	serviceLineItemIdParentId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{Name: "service"})
+	//Using serviceLineItemIdParentId as the parent id
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{Name: "service", ParentID: serviceLineItemIdParentId})
 	calledUpdateServiceLineItem := false
 	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
 		UpdateServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
@@ -85,6 +89,8 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 			require.Equal(t, servicelineitempb.BilledType_MONTHLY_BILLED, serviceLineItem.Billed)
 			require.Equal(t, int64(2), serviceLineItem.Quantity)
 			require.Equal(t, float32(30), serviceLineItem.Price)
+			require.Equal(t, "test comments", serviceLineItem.Comments)
+			require.Equal(t, true, serviceLineItem.IsRetroactiveCorrection)
 			calledUpdateServiceLineItem = true
 			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
 				Id: serviceLineItemId,
@@ -93,7 +99,7 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	}
 	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
 
-	rawResponse := callGraphQL(t, "update_service_line_item", map[string]interface{}{
+	rawResponse := callGraphQL(t, "service_line_item/update_service_line_item", map[string]interface{}{
 		"serviceLineItemId": serviceLineItemId,
 	})
 
@@ -106,6 +112,87 @@ func TestMutationResolver_ServiceLineItemUpdate(t *testing.T) {
 	require.Nil(t, err)
 	serviceLineItem := serviceLineItemStruct.ServiceLineItemUpdate
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
-
+	require.Equal(t, serviceLineItemIdParentId, serviceLineItem.ParentID)
 	require.True(t, calledUpdateServiceLineItem)
+}
+
+func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{})
+
+	calledDeleteServiceLineItem := false
+	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
+		DeleteServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.DeleteServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+			require.Equal(t, tenantName, serviceLineItem.Tenant)
+			require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+			require.Equal(t, testUserId, serviceLineItem.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, constants.AppSourceCustomerOsApi)
+			calledDeleteServiceLineItem = true
+			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
+				Id: serviceLineItemId,
+			}, nil
+		},
+	}
+	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "service_line_item/delete_service_line_item", map[string]interface{}{
+		"serviceLineItemId": serviceLineItemId,
+	})
+
+	var response struct {
+		ServiceLineItem_Delete model.DeleteResponse
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.True(t, response.ServiceLineItem_Delete.Accepted)
+	require.False(t, response.ServiceLineItem_Delete.Completed)
+	require.True(t, calledDeleteServiceLineItem)
+}
+
+func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, entity.ServiceLineItemEntity{})
+
+	calledCloseServiceLineItem := false
+	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
+		CloseServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.CloseServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+			require.Equal(t, tenantName, serviceLineItem.Tenant)
+			require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+			require.Equal(t, testUserId, serviceLineItem.LoggedInUserId)
+			require.Equal(t, constants.AppSourceCustomerOsApi, constants.AppSourceCustomerOsApi)
+			require.Nil(t, serviceLineItem.EndedAt)
+			require.Nil(t, serviceLineItem.UpdatedAt)
+			calledCloseServiceLineItem = true
+			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
+				Id: serviceLineItemId,
+			}, nil
+		},
+	}
+	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
+
+	rawResponse := callGraphQL(t, "service_line_item/close_service_line_item", map[string]interface{}{
+		"serviceLineItemId": serviceLineItemId,
+	})
+
+	var response map[string]interface{}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
+	require.Nil(t, err)
+	require.True(t, calledCloseServiceLineItem)
+	require.Equal(t, serviceLineItemId, response["id"])
 }

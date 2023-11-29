@@ -57,6 +57,7 @@ type ResolverRoot interface {
 	Meeting() MeetingResolver
 	Mutation() MutationResolver
 	Note() NoteResolver
+	Opportunity() OpportunityResolver
 	Organization() OrganizationResolver
 	PhoneNumber() PhoneNumberResolver
 	Player() PlayerResolver
@@ -203,6 +204,7 @@ type ComplexityRoot struct {
 		ExternalLinks    func(childComplexity int) int
 		ID               func(childComplexity int) int
 		Name             func(childComplexity int) int
+		Opportunities    func(childComplexity int) int
 		Owner            func(childComplexity int) int
 		RenewalCycle     func(childComplexity int) int
 		ServiceLineItems func(childComplexity int) int
@@ -319,6 +321,7 @@ type ComplexityRoot struct {
 	DashboardNewCustomersPerMonth struct {
 		Count func(childComplexity int) int
 		Month func(childComplexity int) int
+		Year  func(childComplexity int) int
 	}
 
 	DashboardRetentionRate struct {
@@ -336,6 +339,11 @@ type ComplexityRoot struct {
 	DashboardRevenueAtRisk struct {
 		AtRisk         func(childComplexity int) int
 		HighConfidence func(childComplexity int) int
+	}
+
+	DeleteResponse struct {
+		Accepted  func(childComplexity int) int
+		Completed func(childComplexity int) int
 	}
 
 	Email struct {
@@ -684,8 +692,9 @@ type ComplexityRoot struct {
 		NoteLinkAttachment                       func(childComplexity int, noteID string, attachmentID string) int
 		NoteUnlinkAttachment                     func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                               func(childComplexity int, input model.NoteUpdateInput) int
+		OpportunityRenewalUpdate                 func(childComplexity int, input model.OpportunityRenewalUpdateInput) int
+		OpportunityUpdate                        func(childComplexity int, input model.OpportunityUpdateInput) int
 		OrganizationAddNewLocation               func(childComplexity int, organizationID string) int
-		OrganizationAddRelationship              func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
 		OrganizationAddSocial                    func(childComplexity int, organizationID string, input model.SocialInput) int
 		OrganizationAddSubsidiary                func(childComplexity int, input model.LinkOrganizationsInput) int
 		OrganizationArchive                      func(childComplexity int, id string) int
@@ -694,11 +703,8 @@ type ComplexityRoot struct {
 		OrganizationHide                         func(childComplexity int, id string) int
 		OrganizationHideAll                      func(childComplexity int, ids []string) int
 		OrganizationMerge                        func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationRemoveRelationship           func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
-		OrganizationRemoveRelationshipStage      func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
 		OrganizationRemoveSubsidiary             func(childComplexity int, organizationID string, subsidiaryID string) int
 		OrganizationSetOwner                     func(childComplexity int, organizationID string, userID string) int
-		OrganizationSetRelationshipStage         func(childComplexity int, organizationID string, relationship model.OrganizationRelationship, stage string) int
 		OrganizationShow                         func(childComplexity int, id string) int
 		OrganizationShowAll                      func(childComplexity int, ids []string) int
 		OrganizationUnsetOwner                   func(childComplexity int, organizationID string) int
@@ -722,7 +728,9 @@ type ComplexityRoot struct {
 		PhoneNumberUpdateInOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
 		PhoneNumberUpdateInUser                  func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
 		PlayerMerge                              func(childComplexity int, userID string, input model.PlayerInput) int
+		ServiceLineItemClose                     func(childComplexity int, input model.ServiceLineItemCloseInput) int
 		ServiceLineItemCreate                    func(childComplexity int, input model.ServiceLineItemInput) int
+		ServiceLineItemDelete                    func(childComplexity int, id string) int
 		ServiceLineItemUpdate                    func(childComplexity int, input model.ServiceLineItemUpdateInput) int
 		SocialRemove                             func(childComplexity int, socialID string) int
 		SocialUpdate                             func(childComplexity int, input model.SocialUpdateInput) int
@@ -760,6 +768,33 @@ type ComplexityRoot struct {
 		Content       func(childComplexity int) int
 		TotalElements func(childComplexity int) int
 		TotalPages    func(childComplexity int) int
+	}
+
+	Opportunity struct {
+		Amount                 func(childComplexity int) int
+		AppSource              func(childComplexity int) int
+		Comments               func(childComplexity int) int
+		CreatedAt              func(childComplexity int) int
+		CreatedBy              func(childComplexity int) int
+		EstimatedClosedAt      func(childComplexity int) int
+		ExternalLinks          func(childComplexity int) int
+		ExternalStage          func(childComplexity int) int
+		ExternalType           func(childComplexity int) int
+		GeneralNotes           func(childComplexity int) int
+		ID                     func(childComplexity int) int
+		InternalStage          func(childComplexity int) int
+		InternalType           func(childComplexity int) int
+		MaxAmount              func(childComplexity int) int
+		Name                   func(childComplexity int) int
+		NextSteps              func(childComplexity int) int
+		Owner                  func(childComplexity int) int
+		RenewalLikelihood      func(childComplexity int) int
+		RenewalUpdatedByUserAt func(childComplexity int) int
+		RenewalUpdatedByUserID func(childComplexity int) int
+		RenewedAt              func(childComplexity int) int
+		Source                 func(childComplexity int) int
+		SourceOfTruth          func(childComplexity int) int
+		UpdatedAt              func(childComplexity int) int
 	}
 
 	OrgAccountDetails struct {
@@ -804,8 +839,6 @@ type ComplexityRoot struct {
 		Owner                         func(childComplexity int) int
 		PhoneNumbers                  func(childComplexity int) int
 		ReferenceID                   func(childComplexity int) int
-		RelationshipStages            func(childComplexity int) int
-		Relationships                 func(childComplexity int) int
 		Socials                       func(childComplexity int) int
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
@@ -832,11 +865,6 @@ type ComplexityRoot struct {
 	OrganizationParticipant struct {
 		OrganizationParticipant func(childComplexity int) int
 		Type                    func(childComplexity int) int
-	}
-
-	OrganizationRelationshipStage struct {
-		Relationship func(childComplexity int) int
-		Stage        func(childComplexity int) int
 	}
 
 	PageView struct {
@@ -904,13 +932,13 @@ type ComplexityRoot struct {
 		ContactByPhone                        func(childComplexity int, e164 string) int
 		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contract                              func(childComplexity int, id string) int
-		DashboardARRBreakdown                 func(childComplexity int, year int) int
+		DashboardARRBreakdown                 func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardCustomerMap                  func(childComplexity int) int
-		DashboardGrossRevenueRetention        func(childComplexity int, year int) int
-		DashboardMRRPerCustomer               func(childComplexity int, year int) int
-		DashboardNewCustomers                 func(childComplexity int, year int) int
-		DashboardRetentionRate                func(childComplexity int, year int) int
-		DashboardRevenueAtRisk                func(childComplexity int, year int) int
+		DashboardGrossRevenueRetention        func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardMRRPerCustomer               func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardNewCustomers                 func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardRetentionRate                func(childComplexity int, period *model.DashboardPeriodInput) int
+		DashboardRevenueAtRisk                func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Email                                 func(childComplexity int, id string) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
@@ -924,6 +952,7 @@ type ComplexityRoot struct {
 		Issue                                 func(childComplexity int, id string) int
 		LogEntry                              func(childComplexity int, id string) int
 		Meeting                               func(childComplexity int, id string) int
+		Opportunity                           func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
 		OrganizationDistinctOwners            func(childComplexity int) int
 		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
@@ -942,7 +971,9 @@ type ComplexityRoot struct {
 
 	RenewalForecast struct {
 		Amount          func(childComplexity int) int
+		Arr             func(childComplexity int) int
 		Comment         func(childComplexity int) int
+		MaxArr          func(childComplexity int) int
 		PotentialAmount func(childComplexity int) int
 		UpdatedAt       func(childComplexity int) int
 		UpdatedBy       func(childComplexity int) int
@@ -965,15 +996,19 @@ type ComplexityRoot struct {
 	ServiceLineItem struct {
 		AppSource     func(childComplexity int) int
 		Billed        func(childComplexity int) int
+		Comments      func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		CreatedBy     func(childComplexity int) int
+		EndedAt       func(childComplexity int) int
 		ExternalLinks func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Name          func(childComplexity int) int
+		ParentID      func(childComplexity int) int
 		Price         func(childComplexity int) int
 		Quantity      func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
+		StartedAt     func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
 	}
 
@@ -1090,6 +1125,7 @@ type ContactResolver interface {
 }
 type ContractResolver interface {
 	ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error)
+	Opportunities(ctx context.Context, obj *model.Contract) ([]*model.Opportunity, error)
 	Owner(ctx context.Context, obj *model.Contract) (*model.User, error)
 	CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error)
 
@@ -1243,6 +1279,8 @@ type MutationResolver interface {
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
+	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
+	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput) (*model.Opportunity, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationUpdateRenewalLikelihood(ctx context.Context, input model.RenewalLikelihoodInput) (string, error)
@@ -1264,10 +1302,6 @@ type MutationResolver interface {
 	OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error)
 	OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error)
 	OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error)
-	OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
-	OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
-	OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage string) (*model.Organization, error)
-	OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
 	PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
 	PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error)
@@ -1283,6 +1317,8 @@ type MutationResolver interface {
 	PlayerMerge(ctx context.Context, userID string, input model.PlayerInput) (*model.Result, error)
 	ServiceLineItemCreate(ctx context.Context, input model.ServiceLineItemInput) (*model.ServiceLineItem, error)
 	ServiceLineItemUpdate(ctx context.Context, input model.ServiceLineItemUpdateInput) (*model.ServiceLineItem, error)
+	ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error)
+	ServiceLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error)
 	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
 	SocialRemove(ctx context.Context, socialID string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
@@ -1306,6 +1342,12 @@ type NoteResolver interface {
 	Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error)
 	Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error)
 }
+type OpportunityResolver interface {
+	CreatedBy(ctx context.Context, obj *model.Opportunity) (*model.User, error)
+	Owner(ctx context.Context, obj *model.Opportunity) (*model.User, error)
+
+	ExternalLinks(ctx context.Context, obj *model.Opportunity) ([]*model.ExternalSystem, error)
+}
 type OrganizationResolver interface {
 	Domains(ctx context.Context, obj *model.Organization) ([]string, error)
 
@@ -1327,8 +1369,6 @@ type OrganizationResolver interface {
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	Owner(ctx context.Context, obj *model.Organization) (*model.User, error)
-	Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error)
-	RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error)
 	ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error)
 
 	LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error)
@@ -1356,12 +1396,12 @@ type QueryResolver interface {
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error)
-	DashboardMRRPerCustomer(ctx context.Context, year int) (*model.DashboardMRRPerCustomer, error)
-	DashboardGrossRevenueRetention(ctx context.Context, year int) (*model.DashboardGrossRevenueRetention, error)
-	DashboardARRBreakdown(ctx context.Context, year int) (*model.DashboardARRBreakdown, error)
-	DashboardRevenueAtRisk(ctx context.Context, year int) (*model.DashboardRevenueAtRisk, error)
-	DashboardRetentionRate(ctx context.Context, year int) (*model.DashboardRetentionRate, error)
-	DashboardNewCustomers(ctx context.Context, year int) (*model.DashboardNewCustomers, error)
+	DashboardMRRPerCustomer(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardMRRPerCustomer, error)
+	DashboardGrossRevenueRetention(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardGrossRevenueRetention, error)
+	DashboardARRBreakdown(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardARRBreakdown, error)
+	DashboardRevenueAtRisk(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRevenueAtRisk, error)
+	DashboardRetentionRate(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRetentionRate, error)
+	DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
@@ -1371,6 +1411,7 @@ type QueryResolver interface {
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	ExternalMeetings(ctx context.Context, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.MeetingsPage, error)
+	Opportunity(ctx context.Context, id string) (*model.Opportunity, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
@@ -2139,6 +2180,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contract.Name(childComplexity), true
 
+	case "Contract.opportunities":
+		if e.complexity.Contract.Opportunities == nil {
+			break
+		}
+
+		return e.complexity.Contract.Opportunities(childComplexity), true
+
 	case "Contract.owner":
 		if e.complexity.Contract.Owner == nil {
 			break
@@ -2615,6 +2663,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DashboardNewCustomersPerMonth.Month(childComplexity), true
 
+	case "DashboardNewCustomersPerMonth.year":
+		if e.complexity.DashboardNewCustomersPerMonth.Year == nil {
+			break
+		}
+
+		return e.complexity.DashboardNewCustomersPerMonth.Year(childComplexity), true
+
 	case "DashboardRetentionRate.increasePercentage":
 		if e.complexity.DashboardRetentionRate.IncreasePercentage == nil {
 			break
@@ -2670,6 +2725,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DashboardRevenueAtRisk.HighConfidence(childComplexity), true
+
+	case "DeleteResponse.accepted":
+		if e.complexity.DeleteResponse.Accepted == nil {
+			break
+		}
+
+		return e.complexity.DeleteResponse.Accepted(childComplexity), true
+
+	case "DeleteResponse.completed":
+		if e.complexity.DeleteResponse.Completed == nil {
+			break
+		}
+
+		return e.complexity.DeleteResponse.Completed(childComplexity), true
 
 	case "Email.appSource":
 		if e.complexity.Email.AppSource == nil {
@@ -5025,6 +5094,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.NoteUpdate(childComplexity, args["input"].(model.NoteUpdateInput)), true
 
+	case "Mutation.opportunityRenewalUpdate":
+		if e.complexity.Mutation.OpportunityRenewalUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_opportunityRenewalUpdate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OpportunityRenewalUpdate(childComplexity, args["input"].(model.OpportunityRenewalUpdateInput)), true
+
+	case "Mutation.opportunityUpdate":
+		if e.complexity.Mutation.OpportunityUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_opportunityUpdate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OpportunityUpdate(childComplexity, args["input"].(model.OpportunityUpdateInput)), true
+
 	case "Mutation.organization_AddNewLocation":
 		if e.complexity.Mutation.OrganizationAddNewLocation == nil {
 			break
@@ -5036,18 +5129,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OrganizationAddNewLocation(childComplexity, args["organizationId"].(string)), true
-
-	case "Mutation.organization_AddRelationship":
-		if e.complexity.Mutation.OrganizationAddRelationship == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_AddRelationship_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationAddRelationship(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship)), true
 
 	case "Mutation.organization_AddSocial":
 		if e.complexity.Mutation.OrganizationAddSocial == nil {
@@ -5145,30 +5226,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationMerge(childComplexity, args["primaryOrganizationId"].(string), args["mergedOrganizationIds"].([]string)), true
 
-	case "Mutation.organization_RemoveRelationship":
-		if e.complexity.Mutation.OrganizationRemoveRelationship == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_RemoveRelationship_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationRemoveRelationship(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship)), true
-
-	case "Mutation.organization_RemoveRelationshipStage":
-		if e.complexity.Mutation.OrganizationRemoveRelationshipStage == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_RemoveRelationshipStage_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationRemoveRelationshipStage(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship)), true
-
 	case "Mutation.organization_RemoveSubsidiary":
 		if e.complexity.Mutation.OrganizationRemoveSubsidiary == nil {
 			break
@@ -5192,18 +5249,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OrganizationSetOwner(childComplexity, args["organizationId"].(string), args["userId"].(string)), true
-
-	case "Mutation.organization_SetRelationshipStage":
-		if e.complexity.Mutation.OrganizationSetRelationshipStage == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_SetRelationshipStage_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationSetRelationshipStage(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship), args["stage"].(string)), true
 
 	case "Mutation.organization_Show":
 		if e.complexity.Mutation.OrganizationShow == nil {
@@ -5481,6 +5526,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PlayerMerge(childComplexity, args["userId"].(string), args["input"].(model.PlayerInput)), true
 
+	case "Mutation.serviceLineItem_Close":
+		if e.complexity.Mutation.ServiceLineItemClose == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_serviceLineItem_Close_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ServiceLineItemClose(childComplexity, args["input"].(model.ServiceLineItemCloseInput)), true
+
 	case "Mutation.serviceLineItemCreate":
 		if e.complexity.Mutation.ServiceLineItemCreate == nil {
 			break
@@ -5492,6 +5549,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ServiceLineItemCreate(childComplexity, args["input"].(model.ServiceLineItemInput)), true
+
+	case "Mutation.serviceLineItem_Delete":
+		if e.complexity.Mutation.ServiceLineItemDelete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_serviceLineItem_Delete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ServiceLineItemDelete(childComplexity, args["id"].(string)), true
 
 	case "Mutation.serviceLineItemUpdate":
 		if e.complexity.Mutation.ServiceLineItemUpdate == nil {
@@ -5795,6 +5864,174 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NotePage.TotalPages(childComplexity), true
 
+	case "Opportunity.amount":
+		if e.complexity.Opportunity.Amount == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.Amount(childComplexity), true
+
+	case "Opportunity.appSource":
+		if e.complexity.Opportunity.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.AppSource(childComplexity), true
+
+	case "Opportunity.comments":
+		if e.complexity.Opportunity.Comments == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.Comments(childComplexity), true
+
+	case "Opportunity.createdAt":
+		if e.complexity.Opportunity.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.CreatedAt(childComplexity), true
+
+	case "Opportunity.createdBy":
+		if e.complexity.Opportunity.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.CreatedBy(childComplexity), true
+
+	case "Opportunity.estimatedClosedAt":
+		if e.complexity.Opportunity.EstimatedClosedAt == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.EstimatedClosedAt(childComplexity), true
+
+	case "Opportunity.externalLinks":
+		if e.complexity.Opportunity.ExternalLinks == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.ExternalLinks(childComplexity), true
+
+	case "Opportunity.externalStage":
+		if e.complexity.Opportunity.ExternalStage == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.ExternalStage(childComplexity), true
+
+	case "Opportunity.externalType":
+		if e.complexity.Opportunity.ExternalType == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.ExternalType(childComplexity), true
+
+	case "Opportunity.generalNotes":
+		if e.complexity.Opportunity.GeneralNotes == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.GeneralNotes(childComplexity), true
+
+	case "Opportunity.id":
+		if e.complexity.Opportunity.ID == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.ID(childComplexity), true
+
+	case "Opportunity.internalStage":
+		if e.complexity.Opportunity.InternalStage == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.InternalStage(childComplexity), true
+
+	case "Opportunity.internalType":
+		if e.complexity.Opportunity.InternalType == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.InternalType(childComplexity), true
+
+	case "Opportunity.maxAmount":
+		if e.complexity.Opportunity.MaxAmount == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.MaxAmount(childComplexity), true
+
+	case "Opportunity.name":
+		if e.complexity.Opportunity.Name == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.Name(childComplexity), true
+
+	case "Opportunity.nextSteps":
+		if e.complexity.Opportunity.NextSteps == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.NextSteps(childComplexity), true
+
+	case "Opportunity.owner":
+		if e.complexity.Opportunity.Owner == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.Owner(childComplexity), true
+
+	case "Opportunity.renewalLikelihood":
+		if e.complexity.Opportunity.RenewalLikelihood == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewalLikelihood(childComplexity), true
+
+	case "Opportunity.renewalUpdatedByUserAt":
+		if e.complexity.Opportunity.RenewalUpdatedByUserAt == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewalUpdatedByUserAt(childComplexity), true
+
+	case "Opportunity.renewalUpdatedByUserId":
+		if e.complexity.Opportunity.RenewalUpdatedByUserID == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewalUpdatedByUserID(childComplexity), true
+
+	case "Opportunity.renewedAt":
+		if e.complexity.Opportunity.RenewedAt == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.RenewedAt(childComplexity), true
+
+	case "Opportunity.source":
+		if e.complexity.Opportunity.Source == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.Source(childComplexity), true
+
+	case "Opportunity.sourceOfTruth":
+		if e.complexity.Opportunity.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.SourceOfTruth(childComplexity), true
+
+	case "Opportunity.updatedAt":
+		if e.complexity.Opportunity.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Opportunity.UpdatedAt(childComplexity), true
+
 	case "OrgAccountDetails.billingDetails":
 		if e.complexity.OrgAccountDetails.BillingDetails == nil {
 			break
@@ -6071,20 +6308,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.ReferenceID(childComplexity), true
 
-	case "Organization.relationshipStages":
-		if e.complexity.Organization.RelationshipStages == nil {
-			break
-		}
-
-		return e.complexity.Organization.RelationshipStages(childComplexity), true
-
-	case "Organization.relationships":
-		if e.complexity.Organization.Relationships == nil {
-			break
-		}
-
-		return e.complexity.Organization.Relationships(childComplexity), true
-
 	case "Organization.socials":
 		if e.complexity.Organization.Socials == nil {
 			break
@@ -6234,20 +6457,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrganizationParticipant.Type(childComplexity), true
-
-	case "OrganizationRelationshipStage.relationship":
-		if e.complexity.OrganizationRelationshipStage.Relationship == nil {
-			break
-		}
-
-		return e.complexity.OrganizationRelationshipStage.Relationship(childComplexity), true
-
-	case "OrganizationRelationshipStage.stage":
-		if e.complexity.OrganizationRelationshipStage.Stage == nil {
-			break
-		}
-
-		return e.complexity.OrganizationRelationshipStage.Stage(childComplexity), true
 
 	case "PageView.appSource":
 		if e.complexity.PageView.AppSource == nil {
@@ -6637,7 +6846,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardARRBreakdown(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardARRBreakdown(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_CustomerMap":
 		if e.complexity.Query.DashboardCustomerMap == nil {
@@ -6656,7 +6865,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardGrossRevenueRetention(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardGrossRevenueRetention(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_MRRPerCustomer":
 		if e.complexity.Query.DashboardMRRPerCustomer == nil {
@@ -6668,7 +6877,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardMRRPerCustomer(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardMRRPerCustomer(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_NewCustomers":
 		if e.complexity.Query.DashboardNewCustomers == nil {
@@ -6680,7 +6889,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardNewCustomers(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardNewCustomers(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_RetentionRate":
 		if e.complexity.Query.DashboardRetentionRate == nil {
@@ -6692,7 +6901,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardRetentionRate(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardRetentionRate(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboard_RevenueAtRisk":
 		if e.complexity.Query.DashboardRevenueAtRisk == nil {
@@ -6704,7 +6913,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardRevenueAtRisk(childComplexity, args["year"].(int)), true
+		return e.complexity.Query.DashboardRevenueAtRisk(childComplexity, args["period"].(*model.DashboardPeriodInput)), true
 
 	case "Query.dashboardView_Organizations":
 		if e.complexity.Query.DashboardViewOrganizations == nil {
@@ -6856,6 +7065,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Meeting(childComplexity, args["id"].(string)), true
+
+	case "Query.opportunity":
+		if e.complexity.Query.Opportunity == nil {
+			break
+		}
+
+		args, err := ec.field_Query_opportunity_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Opportunity(childComplexity, args["id"].(string)), true
 
 	case "Query.organization":
 		if e.complexity.Query.Organization == nil {
@@ -7017,12 +7238,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RenewalForecast.Amount(childComplexity), true
 
+	case "RenewalForecast.arr":
+		if e.complexity.RenewalForecast.Arr == nil {
+			break
+		}
+
+		return e.complexity.RenewalForecast.Arr(childComplexity), true
+
 	case "RenewalForecast.comment":
 		if e.complexity.RenewalForecast.Comment == nil {
 			break
 		}
 
 		return e.complexity.RenewalForecast.Comment(childComplexity), true
+
+	case "RenewalForecast.maxArr":
+		if e.complexity.RenewalForecast.MaxArr == nil {
+			break
+		}
+
+		return e.complexity.RenewalForecast.MaxArr(childComplexity), true
 
 	case "RenewalForecast.potentialAmount":
 		if e.complexity.RenewalForecast.PotentialAmount == nil {
@@ -7115,6 +7350,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.Billed(childComplexity), true
 
+	case "ServiceLineItem.comments":
+		if e.complexity.ServiceLineItem.Comments == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.Comments(childComplexity), true
+
 	case "ServiceLineItem.createdAt":
 		if e.complexity.ServiceLineItem.CreatedAt == nil {
 			break
@@ -7128,6 +7370,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceLineItem.CreatedBy(childComplexity), true
+
+	case "ServiceLineItem.endedAt":
+		if e.complexity.ServiceLineItem.EndedAt == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.EndedAt(childComplexity), true
 
 	case "ServiceLineItem.externalLinks":
 		if e.complexity.ServiceLineItem.ExternalLinks == nil {
@@ -7149,6 +7398,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceLineItem.Name(childComplexity), true
+
+	case "ServiceLineItem.parentId":
+		if e.complexity.ServiceLineItem.ParentID == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.ParentID(childComplexity), true
 
 	case "ServiceLineItem.price":
 		if e.complexity.ServiceLineItem.Price == nil {
@@ -7177,6 +7433,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ServiceLineItem.SourceOfTruth(childComplexity), true
+
+	case "ServiceLineItem.startedAt":
+		if e.complexity.ServiceLineItem.StartedAt == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.StartedAt(childComplexity), true
 
 	case "ServiceLineItem.updatedAt":
 		if e.complexity.ServiceLineItem.UpdatedAt == nil {
@@ -7614,6 +7877,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCustomFieldTemplateInput,
 		ec.unmarshalInputCustomFieldUpdateInput,
 		ec.unmarshalInputCustomerContactInput,
+		ec.unmarshalInputDashboardPeriodInput,
 		ec.unmarshalInputEmailInput,
 		ec.unmarshalInputEmailUpdateInput,
 		ec.unmarshalInputEntityTemplateInput,
@@ -7638,6 +7902,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputMeetingUpdateInput,
 		ec.unmarshalInputNoteInput,
 		ec.unmarshalInputNoteUpdateInput,
+		ec.unmarshalInputOpportunityRenewalUpdateInput,
+		ec.unmarshalInputOpportunityUpdateInput,
 		ec.unmarshalInputOrganizationInput,
 		ec.unmarshalInputOrganizationUpdateInput,
 		ec.unmarshalInputPagination,
@@ -7647,6 +7913,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPlayerUpdate,
 		ec.unmarshalInputRenewalForecastInput,
 		ec.unmarshalInputRenewalLikelihoodInput,
+		ec.unmarshalInputServiceLineItemCloseInput,
 		ec.unmarshalInputServiceLineItemInput,
 		ec.unmarshalInputServiceLineItemUpdateInput,
 		ec.unmarshalInputSocialInput,
@@ -8100,6 +8367,7 @@ input ContactInput {
     name: String
     description: String
     timezone: String
+    profilePhotoUrl: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -8179,6 +8447,7 @@ input ContactUpdateInput {
     name: String
     description: String
     timezone: String
+    profilePhotoUrl: String
 
     """
     The last name of the contact in customerOS.
@@ -8242,6 +8511,7 @@ type Contract implements Node {
     renewalCycle:       ContractRenewalCycle!
     status:             ContractStatus!
     serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true)
+    opportunities:      [Opportunity!] @goField(forceResolver: true)
     owner:              User @goField(forceResolver: true)
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!
@@ -8482,17 +8752,22 @@ enum CustomFieldTemplateType {
 }`, BuiltIn: false},
 	{Name: "../schemas/dashboard.graphqls", Input: `extend type Query {
     """
-    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT
+    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
     dashboard_CustomerMap: [DashboardCustomerMap!]
-    dashboard_MRRPerCustomer(year: Int!): DashboardMRRPerCustomer
-    dashboard_GrossRevenueRetention(year: Int!): DashboardGrossRevenueRetention
-    dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
-    dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
-    dashboard_RetentionRate(year: Int!): DashboardRetentionRate
-    dashboard_NewCustomers(year: Int!): DashboardNewCustomers
+    dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer
+    dashboard_GrossRevenueRetention(period: DashboardPeriodInput): DashboardGrossRevenueRetention
+    dashboard_ARRBreakdown(period: DashboardPeriodInput): DashboardARRBreakdown
+    dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
+    dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
+    dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
+}
+
+input DashboardPeriodInput {
+    start: Time!
+    end: Time!
 }
 
 type DashboardCustomerMap {
@@ -8560,6 +8835,7 @@ type DashboardNewCustomers {
     perMonth: [DashboardNewCustomersPerMonth]!
 }
 type DashboardNewCustomersPerMonth {
+    year: Int!
     month: Int!
     count: Int!
 }
@@ -9412,6 +9688,84 @@ input NoteUpdateInput {
     content: String
     contentType: String
 }`, BuiltIn: false},
+	{Name: "../schemas/opportunity.graphqls", Input: `extend type Query {
+    opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+extend type Mutation {
+    opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
+    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!): Opportunity!
+}
+
+type Opportunity implements Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    amount:             Float!
+    maxAmount:          Float!
+    internalType:       InternalType!
+    externalType:       String!
+    internalStage:      InternalStage!
+    externalStage:      String!
+    estimatedClosedAt:  Time!
+    generalNotes:       String!
+    nextSteps:          String!
+    renewedAt:          Time!
+    renewalLikelihood:  OpportunityRenewalLikelihood!
+    renewalUpdatedByUserId: String!
+    renewalUpdatedByUserAt: Time!
+    comments:           String!
+    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+enum InternalType {
+    NBO
+    UPSELL
+    CROSS_SELL
+    RENEWAL
+}
+
+enum InternalStage {
+    OPEN
+    EVALUATING
+    CLOSED_WON
+    CLOSED_LOST
+}
+
+enum OpportunityRenewalLikelihood {
+    HIGH_RENEWAL
+    MEDIUM_RENEWAL
+    LOW_RENEWAL
+    ZERO_RENEWAL
+}
+
+input OpportunityRenewalUpdateInput {
+    opportunityId:      ID!
+    name:               String
+    amount:             Float
+    renewalLikelihood:  OpportunityRenewalLikelihood
+    comments:           String
+    appSource:          String
+}
+
+input OpportunityUpdateInput {
+    opportunityId:       ID!
+    name:                String
+    amount:              Float
+    externalType:        String
+    externalStage:       String
+    estimatedClosedDate: Time
+    generalNotes:        String
+    nextSteps:           String
+    appSource:           String
+    externalReference:   ExternalSystemReferenceInput
+}
+`, BuiltIn: false},
 	{Name: "../schemas/organization.graphqls", Input: `extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -9440,10 +9794,6 @@ extend type Mutation {
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
 }
 
 type LinkedOrganization {
@@ -9494,8 +9844,6 @@ type Organization implements Node {
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
-    relationships: [OrganizationRelationship!]! @goField(forceResolver: true) @deprecated
-    relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true) @deprecated
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 
     lastTouchPointAt: Time
@@ -9530,6 +9878,8 @@ type RenewalForecast {
     updatedAt: Time
     updatedById: String
     updatedBy: User @goField(forceResolver: true)
+    arr: Float
+    maxArr: Float
 }
 
 type BillingDetails {
@@ -9633,60 +9983,6 @@ enum Market {
     B2B
     B2C
     MARKETPLACE
-}
-
-#Deprecated
-enum OrganizationRelationship {
-    CUSTOMER
-    DISTRIBUTOR
-    PARTNER
-    LICENSING_PARTNER
-    FRANCHISEE
-    FRANCHISOR
-    AFFILIATE
-    RESELLER
-    INFLUENCER_OR_CONTENT_CREATOR
-    MEDIA_PARTNER
-
-    INVESTOR
-    MERGER_OR_ACQUISITION_TARGET
-    PARENT_COMPANY
-    SUBSIDIARY
-    JOINT_VENTURE
-    SPONSOR
-
-    SUPPLIER
-    VENDOR
-    CONTRACT_MANUFACTURER
-    ORIGINAL_EQUIPMENT_MANUFACTURER
-    ORIGINAL_DESIGN_MANUFACTURER
-    PRIVATE_LABEL_MANUFACTURER
-    LOGISTICS_PARTNER
-
-    CONSULTANT
-    SERVICE_PROVIDER
-    OUTSOURCING_PROVIDER
-    INSOURCING_PARTNER
-    TECHNOLOGY_PROVIDER
-    DATA_PROVIDER
-    CERTIFICATION_BODY
-    STANDARDS_ORGANIZATION
-    INDUSTRY_ANALYST
-    REAL_ESTATE_PARTNER
-    TALENT_ACQUISITION_PARTNER
-    PROFESSIONAL_EMPLOYER_ORGANIZATION
-
-    RESEARCH_COLLABORATOR
-    REGULATORY_BODY
-    TRADE_ASSOCIATION_MEMBER
-
-    COMPETITOR
-}
-
-#Deprecated
-type OrganizationRelationshipStage {
-    relationship: OrganizationRelationship!
-    stage: String
 }
 
 enum FundingRound {
@@ -9968,23 +10264,29 @@ enum GCliSearchResultType {
     serviceLineItem(id: ID!): ServiceLineItem!
 }
 extend type Mutation {
-    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem!
-    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem!
+    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ServiceLineItem implements Node {
     id:                 ID!
     createdAt:          Time!
     updatedAt:          Time!
+    startedAt:          Time!
+    endedAt:            Time
     name:               String!
     billed:             BilledType!
     price:              Float!
     quantity:           Int64!
+    comments:           String!
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    parentId:           ID!
 }
 
 input ServiceLineItemInput {
@@ -9995,6 +10297,8 @@ input ServiceLineItemInput {
     quantity:           Int64
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
+    startedAt:          Time
+    endedAt:            Time
 }
 
 input ServiceLineItemUpdateInput {
@@ -10003,8 +10307,15 @@ input ServiceLineItemUpdateInput {
     billed:             BilledType
     price:              Float
     quantity:           Int64
+    comments:           String
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
+    isRetroactiveCorrection: Boolean
+}
+
+input ServiceLineItemCloseInput {
+    id:         ID!
+    endedAt:    Time
 }
 
 enum BilledType {
@@ -10012,6 +10323,7 @@ enum BilledType {
     MONTHLY
     ANNUALLY
     ONCE
+    USAGE
 }`, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
     social_Update(input: SocialUpdateInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -10130,6 +10442,10 @@ enum TimelineEventType {
     MEETING
     ACTION
     LOG_ENTRY
+}`, BuiltIn: false},
+	{Name: "../schemas/types.graphqls", Input: `type DeleteResponse {
+    accepted: Boolean!
+    completed: Boolean!
 }`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
@@ -12093,6 +12409,36 @@ func (ec *executionContext) field_Mutation_note_Update_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_opportunityRenewalUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OpportunityRenewalUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_opportunityUpdate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OpportunityUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOpportunityUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_organization_AddNewLocation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -12105,30 +12451,6 @@ func (ec *executionContext) field_Mutation_organization_AddNewLocation_args(ctx 
 		}
 	}
 	args["organizationId"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_AddRelationship_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["organizationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["organizationId"] = arg0
-	var arg1 model.OrganizationRelationship
-	if tmp, ok := rawArgs["relationship"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-		arg1, err = ec.unmarshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["relationship"] = arg1
 	return args, nil
 }
 
@@ -12270,54 +12592,6 @@ func (ec *executionContext) field_Mutation_organization_Merge_args(ctx context.C
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_organization_RemoveRelationshipStage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["organizationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["organizationId"] = arg0
-	var arg1 model.OrganizationRelationship
-	if tmp, ok := rawArgs["relationship"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-		arg1, err = ec.unmarshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["relationship"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_RemoveRelationship_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["organizationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["organizationId"] = arg0
-	var arg1 model.OrganizationRelationship
-	if tmp, ok := rawArgs["relationship"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-		arg1, err = ec.unmarshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["relationship"] = arg1
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_organization_RemoveSubsidiary_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -12363,39 +12637,6 @@ func (ec *executionContext) field_Mutation_organization_SetOwner_args(ctx contex
 		}
 	}
 	args["userId"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_SetRelationshipStage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["organizationId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["organizationId"] = arg0
-	var arg1 model.OrganizationRelationship
-	if tmp, ok := rawArgs["relationship"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-		arg1, err = ec.unmarshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["relationship"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["stage"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
-		arg2, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["stage"] = arg2
 	return args, nil
 }
 
@@ -12888,6 +13129,36 @@ func (ec *executionContext) field_Mutation_serviceLineItemUpdate_args(ctx contex
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_serviceLineItem_Close_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ServiceLineItemCloseInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNServiceLineItemCloseInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemCloseInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_serviceLineItem_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -13473,90 +13744,90 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_args(ctx con
 func (ec *executionContext) field_Query_dashboard_ARRBreakdown_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_GrossRevenueRetention_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_MRRPerCustomer_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_NewCustomers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_RetentionRate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Query_dashboard_RevenueAtRisk_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["year"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("year"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg0 *model.DashboardPeriodInput
+	if tmp, ok := rawArgs["period"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
+		arg0, err = ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["year"] = arg0
+	args["period"] = arg0
 	return args, nil
 }
 
@@ -13756,6 +14027,21 @@ func (ec *executionContext) field_Query_logEntry_args(ctx context.Context, rawAr
 }
 
 func (ec *executionContext) field_Query_meeting_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_opportunity_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -18901,6 +19187,10 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.C
 				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ServiceLineItem_name(ctx, field)
 			case "billed":
@@ -18909,6 +19199,8 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.C
 				return ec.fieldContext_ServiceLineItem_price(ctx, field)
 			case "quantity":
 				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "source":
@@ -18919,8 +19211,101 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(ctx context.C
 				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "parentId":
+				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_opportunities(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_opportunities(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contract().Opportunities(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Opportunity)
+	fc.Result = res
+	return ec.marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_opportunities(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Opportunity_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Opportunity_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Opportunity_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_Opportunity_amount(ctx, field)
+			case "maxAmount":
+				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
+			case "internalType":
+				return ec.fieldContext_Opportunity_internalType(ctx, field)
+			case "externalType":
+				return ec.fieldContext_Opportunity_externalType(ctx, field)
+			case "internalStage":
+				return ec.fieldContext_Opportunity_internalStage(ctx, field)
+			case "externalStage":
+				return ec.fieldContext_Opportunity_externalStage(ctx, field)
+			case "estimatedClosedAt":
+				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
+			case "generalNotes":
+				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
+			case "nextSteps":
+				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Opportunity_createdBy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Opportunity_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Opportunity_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Opportunity_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
 		},
 	}
 	return fc, nil
@@ -21234,10 +21619,6 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx c
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -21970,12 +22351,58 @@ func (ec *executionContext) fieldContext_DashboardNewCustomers_perMonth(ctx cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "year":
+				return ec.fieldContext_DashboardNewCustomersPerMonth_year(ctx, field)
 			case "month":
 				return ec.fieldContext_DashboardNewCustomersPerMonth_month(ctx, field)
 			case "count":
 				return ec.fieldContext_DashboardNewCustomersPerMonth_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DashboardNewCustomersPerMonth", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DashboardNewCustomersPerMonth_year(ctx context.Context, field graphql.CollectedField, obj *model.DashboardNewCustomersPerMonth) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DashboardNewCustomersPerMonth_year(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Year, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DashboardNewCustomersPerMonth_year(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DashboardNewCustomersPerMonth",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -22424,6 +22851,94 @@ func (ec *executionContext) fieldContext_DashboardRevenueAtRisk_atRisk(ctx conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeleteResponse_accepted(ctx context.Context, field graphql.CollectedField, obj *model.DeleteResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeleteResponse_accepted(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Accepted, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeleteResponse_accepted(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeleteResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeleteResponse_completed(ctx context.Context, field graphql.CollectedField, obj *model.DeleteResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeleteResponse_completed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Completed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeleteResponse_completed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeleteResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -23239,10 +23754,6 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -28858,10 +29369,6 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -29605,10 +30112,6 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -34197,6 +34700,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
 				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
 			case "createdBy":
@@ -34318,6 +34823,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
 				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
 			case "createdBy":
@@ -37537,10 +38044,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -39579,6 +40082,216 @@ func (ec *executionContext) fieldContext_Mutation_note_UnlinkAttachment(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_opportunityUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_opportunityUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OpportunityUpdate(rctx, fc.Args["input"].(model.OpportunityUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Opportunity)
+	fc.Result = res
+	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_opportunityUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Opportunity_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Opportunity_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Opportunity_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_Opportunity_amount(ctx, field)
+			case "maxAmount":
+				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
+			case "internalType":
+				return ec.fieldContext_Opportunity_internalType(ctx, field)
+			case "externalType":
+				return ec.fieldContext_Opportunity_externalType(ctx, field)
+			case "internalStage":
+				return ec.fieldContext_Opportunity_internalStage(ctx, field)
+			case "externalStage":
+				return ec.fieldContext_Opportunity_externalStage(ctx, field)
+			case "estimatedClosedAt":
+				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
+			case "generalNotes":
+				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
+			case "nextSteps":
+				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Opportunity_createdBy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Opportunity_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Opportunity_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Opportunity_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_opportunityUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_opportunityRenewalUpdate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_opportunityRenewalUpdate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OpportunityRenewalUpdate(rctx, fc.Args["input"].(model.OpportunityRenewalUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Opportunity)
+	fc.Result = res
+	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_opportunityRenewalUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Opportunity_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Opportunity_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Opportunity_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_Opportunity_amount(ctx, field)
+			case "maxAmount":
+				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
+			case "internalType":
+				return ec.fieldContext_Opportunity_internalType(ctx, field)
+			case "externalType":
+				return ec.fieldContext_Opportunity_externalType(ctx, field)
+			case "internalStage":
+				return ec.fieldContext_Opportunity_internalStage(ctx, field)
+			case "externalStage":
+				return ec.fieldContext_Opportunity_externalStage(ctx, field)
+			case "estimatedClosedAt":
+				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
+			case "generalNotes":
+				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
+			case "nextSteps":
+				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Opportunity_createdBy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Opportunity_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Opportunity_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Opportunity_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_opportunityRenewalUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_organization_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_organization_Create(ctx, field)
 	if err != nil {
@@ -39732,10 +40445,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -39921,10 +40630,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -41134,10 +41839,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -41323,10 +42024,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -41512,10 +42209,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -41943,10 +42636,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -42132,10 +42821,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -42162,762 +42847,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_UnsetOwner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_AddRelationship(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_AddRelationship(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationAddRelationship(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(model.OrganizationRelationship))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Organization); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Organization)
-	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Organization_id(ctx, field)
-			case "customerOsId":
-				return ec.fieldContext_Organization_customerOsId(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Organization_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_Organization_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Organization_description(ctx, field)
-			case "note":
-				return ec.fieldContext_Organization_note(ctx, field)
-			case "domains":
-				return ec.fieldContext_Organization_domains(ctx, field)
-			case "website":
-				return ec.fieldContext_Organization_website(ctx, field)
-			case "industry":
-				return ec.fieldContext_Organization_industry(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
-			case "industryGroup":
-				return ec.fieldContext_Organization_industryGroup(ctx, field)
-			case "targetAudience":
-				return ec.fieldContext_Organization_targetAudience(ctx, field)
-			case "valueProposition":
-				return ec.fieldContext_Organization_valueProposition(ctx, field)
-			case "isPublic":
-				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "isCustomer":
-				return ec.fieldContext_Organization_isCustomer(ctx, field)
-			case "market":
-				return ec.fieldContext_Organization_market(ctx, field)
-			case "employees":
-				return ec.fieldContext_Organization_employees(ctx, field)
-			case "lastFundingRound":
-				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
-			case "lastFundingAmount":
-				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
-			case "source":
-				return ec.fieldContext_Organization_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "locations":
-				return ec.fieldContext_Organization_locations(ctx, field)
-			case "socials":
-				return ec.fieldContext_Organization_socials(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Organization_contacts(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_Organization_jobRoles(ctx, field)
-			case "notes":
-				return ec.fieldContext_Organization_notes(ctx, field)
-			case "tags":
-				return ec.fieldContext_Organization_tags(ctx, field)
-			case "contracts":
-				return ec.fieldContext_Organization_contracts(ctx, field)
-			case "emails":
-				return ec.fieldContext_Organization_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
-			case "subsidiaries":
-				return ec.fieldContext_Organization_subsidiaries(ctx, field)
-			case "subsidiaryOf":
-				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
-			case "suggestedMergeTo":
-				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "customFields":
-				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
-			case "timelineEvents":
-				return ec.fieldContext_Organization_timelineEvents(ctx, field)
-			case "timelineEventsTotalCount":
-				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "owner":
-				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Organization_externalLinks(ctx, field)
-			case "lastTouchPointAt":
-				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
-			case "lastTouchPointType":
-				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
-			case "lastTouchPointTimelineEventId":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
-			case "lastTouchPointTimelineEvent":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "issueSummaryByStatus":
-				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
-			case "accountDetails":
-				return ec.fieldContext_Organization_accountDetails(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_AddRelationship_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_RemoveRelationship(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_RemoveRelationship(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationRemoveRelationship(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(model.OrganizationRelationship))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Organization); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Organization)
-	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationship(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Organization_id(ctx, field)
-			case "customerOsId":
-				return ec.fieldContext_Organization_customerOsId(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Organization_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_Organization_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Organization_description(ctx, field)
-			case "note":
-				return ec.fieldContext_Organization_note(ctx, field)
-			case "domains":
-				return ec.fieldContext_Organization_domains(ctx, field)
-			case "website":
-				return ec.fieldContext_Organization_website(ctx, field)
-			case "industry":
-				return ec.fieldContext_Organization_industry(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
-			case "industryGroup":
-				return ec.fieldContext_Organization_industryGroup(ctx, field)
-			case "targetAudience":
-				return ec.fieldContext_Organization_targetAudience(ctx, field)
-			case "valueProposition":
-				return ec.fieldContext_Organization_valueProposition(ctx, field)
-			case "isPublic":
-				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "isCustomer":
-				return ec.fieldContext_Organization_isCustomer(ctx, field)
-			case "market":
-				return ec.fieldContext_Organization_market(ctx, field)
-			case "employees":
-				return ec.fieldContext_Organization_employees(ctx, field)
-			case "lastFundingRound":
-				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
-			case "lastFundingAmount":
-				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
-			case "source":
-				return ec.fieldContext_Organization_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "locations":
-				return ec.fieldContext_Organization_locations(ctx, field)
-			case "socials":
-				return ec.fieldContext_Organization_socials(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Organization_contacts(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_Organization_jobRoles(ctx, field)
-			case "notes":
-				return ec.fieldContext_Organization_notes(ctx, field)
-			case "tags":
-				return ec.fieldContext_Organization_tags(ctx, field)
-			case "contracts":
-				return ec.fieldContext_Organization_contracts(ctx, field)
-			case "emails":
-				return ec.fieldContext_Organization_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
-			case "subsidiaries":
-				return ec.fieldContext_Organization_subsidiaries(ctx, field)
-			case "subsidiaryOf":
-				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
-			case "suggestedMergeTo":
-				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "customFields":
-				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
-			case "timelineEvents":
-				return ec.fieldContext_Organization_timelineEvents(ctx, field)
-			case "timelineEventsTotalCount":
-				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "owner":
-				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Organization_externalLinks(ctx, field)
-			case "lastTouchPointAt":
-				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
-			case "lastTouchPointType":
-				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
-			case "lastTouchPointTimelineEventId":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
-			case "lastTouchPointTimelineEvent":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "issueSummaryByStatus":
-				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
-			case "accountDetails":
-				return ec.fieldContext_Organization_accountDetails(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_RemoveRelationship_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_SetRelationshipStage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_SetRelationshipStage(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationSetRelationshipStage(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(model.OrganizationRelationship), fc.Args["stage"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Organization); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Organization)
-	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipStage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Organization_id(ctx, field)
-			case "customerOsId":
-				return ec.fieldContext_Organization_customerOsId(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Organization_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_Organization_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Organization_description(ctx, field)
-			case "note":
-				return ec.fieldContext_Organization_note(ctx, field)
-			case "domains":
-				return ec.fieldContext_Organization_domains(ctx, field)
-			case "website":
-				return ec.fieldContext_Organization_website(ctx, field)
-			case "industry":
-				return ec.fieldContext_Organization_industry(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
-			case "industryGroup":
-				return ec.fieldContext_Organization_industryGroup(ctx, field)
-			case "targetAudience":
-				return ec.fieldContext_Organization_targetAudience(ctx, field)
-			case "valueProposition":
-				return ec.fieldContext_Organization_valueProposition(ctx, field)
-			case "isPublic":
-				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "isCustomer":
-				return ec.fieldContext_Organization_isCustomer(ctx, field)
-			case "market":
-				return ec.fieldContext_Organization_market(ctx, field)
-			case "employees":
-				return ec.fieldContext_Organization_employees(ctx, field)
-			case "lastFundingRound":
-				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
-			case "lastFundingAmount":
-				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
-			case "source":
-				return ec.fieldContext_Organization_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "locations":
-				return ec.fieldContext_Organization_locations(ctx, field)
-			case "socials":
-				return ec.fieldContext_Organization_socials(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Organization_contacts(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_Organization_jobRoles(ctx, field)
-			case "notes":
-				return ec.fieldContext_Organization_notes(ctx, field)
-			case "tags":
-				return ec.fieldContext_Organization_tags(ctx, field)
-			case "contracts":
-				return ec.fieldContext_Organization_contracts(ctx, field)
-			case "emails":
-				return ec.fieldContext_Organization_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
-			case "subsidiaries":
-				return ec.fieldContext_Organization_subsidiaries(ctx, field)
-			case "subsidiaryOf":
-				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
-			case "suggestedMergeTo":
-				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "customFields":
-				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
-			case "timelineEvents":
-				return ec.fieldContext_Organization_timelineEvents(ctx, field)
-			case "timelineEventsTotalCount":
-				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "owner":
-				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Organization_externalLinks(ctx, field)
-			case "lastTouchPointAt":
-				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
-			case "lastTouchPointType":
-				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
-			case "lastTouchPointTimelineEventId":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
-			case "lastTouchPointTimelineEvent":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "issueSummaryByStatus":
-				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
-			case "accountDetails":
-				return ec.fieldContext_Organization_accountDetails(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_SetRelationshipStage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_RemoveRelationshipStage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_RemoveRelationshipStage(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationRemoveRelationshipStage(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(model.OrganizationRelationship))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Organization); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Organization)
-	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshipStage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Organization_id(ctx, field)
-			case "customerOsId":
-				return ec.fieldContext_Organization_customerOsId(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Organization_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_Organization_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Organization_description(ctx, field)
-			case "note":
-				return ec.fieldContext_Organization_note(ctx, field)
-			case "domains":
-				return ec.fieldContext_Organization_domains(ctx, field)
-			case "website":
-				return ec.fieldContext_Organization_website(ctx, field)
-			case "industry":
-				return ec.fieldContext_Organization_industry(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
-			case "industryGroup":
-				return ec.fieldContext_Organization_industryGroup(ctx, field)
-			case "targetAudience":
-				return ec.fieldContext_Organization_targetAudience(ctx, field)
-			case "valueProposition":
-				return ec.fieldContext_Organization_valueProposition(ctx, field)
-			case "isPublic":
-				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "isCustomer":
-				return ec.fieldContext_Organization_isCustomer(ctx, field)
-			case "market":
-				return ec.fieldContext_Organization_market(ctx, field)
-			case "employees":
-				return ec.fieldContext_Organization_employees(ctx, field)
-			case "lastFundingRound":
-				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
-			case "lastFundingAmount":
-				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
-			case "source":
-				return ec.fieldContext_Organization_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "locations":
-				return ec.fieldContext_Organization_locations(ctx, field)
-			case "socials":
-				return ec.fieldContext_Organization_socials(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Organization_contacts(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_Organization_jobRoles(ctx, field)
-			case "notes":
-				return ec.fieldContext_Organization_notes(ctx, field)
-			case "tags":
-				return ec.fieldContext_Organization_tags(ctx, field)
-			case "contracts":
-				return ec.fieldContext_Organization_contracts(ctx, field)
-			case "emails":
-				return ec.fieldContext_Organization_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
-			case "subsidiaries":
-				return ec.fieldContext_Organization_subsidiaries(ctx, field)
-			case "subsidiaryOf":
-				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
-			case "suggestedMergeTo":
-				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "customFields":
-				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
-			case "timelineEvents":
-				return ec.fieldContext_Organization_timelineEvents(ctx, field)
-			case "timelineEventsTotalCount":
-				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "owner":
-				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Organization_externalLinks(ctx, field)
-			case "lastTouchPointAt":
-				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
-			case "lastTouchPointType":
-				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
-			case "lastTouchPointTimelineEventId":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
-			case "lastTouchPointTimelineEvent":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "issueSummaryByStatus":
-				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
-			case "accountDetails":
-				return ec.fieldContext_Organization_accountDetails(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_RemoveRelationshipStage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -44244,8 +44173,38 @@ func (ec *executionContext) _Mutation_serviceLineItemCreate(ctx context.Context,
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ServiceLineItemCreate(rctx, fc.Args["input"].(model.ServiceLineItemInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ServiceLineItemCreate(rctx, fc.Args["input"].(model.ServiceLineItemInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ServiceLineItem); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ServiceLineItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -44276,6 +44235,10 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx cont
 				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ServiceLineItem_name(ctx, field)
 			case "billed":
@@ -44284,6 +44247,8 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx cont
 				return ec.fieldContext_ServiceLineItem_price(ctx, field)
 			case "quantity":
 				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "source":
@@ -44294,6 +44259,8 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemCreate(ctx cont
 				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "parentId":
+				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -44325,8 +44292,38 @@ func (ec *executionContext) _Mutation_serviceLineItemUpdate(ctx context.Context,
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ServiceLineItemUpdate(rctx, fc.Args["input"].(model.ServiceLineItemUpdateInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ServiceLineItemUpdate(rctx, fc.Args["input"].(model.ServiceLineItemUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ServiceLineItem); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ServiceLineItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -44357,6 +44354,10 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx cont
 				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ServiceLineItem_name(ctx, field)
 			case "billed":
@@ -44365,6 +44366,8 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx cont
 				return ec.fieldContext_ServiceLineItem_price(ctx, field)
 			case "quantity":
 				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "source":
@@ -44375,6 +44378,8 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx cont
 				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "parentId":
+				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -44387,6 +44392,182 @@ func (ec *executionContext) fieldContext_Mutation_serviceLineItemUpdate(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_serviceLineItemUpdate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_serviceLineItem_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_serviceLineItem_Delete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ServiceLineItemDelete(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.DeleteResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.DeleteResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DeleteResponse)
+	fc.Result = res
+	return ec.marshalNDeleteResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDeleteResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_serviceLineItem_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_DeleteResponse_accepted(ctx, field)
+			case "completed":
+				return ec.fieldContext_DeleteResponse_completed(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeleteResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_serviceLineItem_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_serviceLineItem_Close(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_serviceLineItem_Close(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ServiceLineItemClose(rctx, fc.Args["input"].(model.ServiceLineItemCloseInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_serviceLineItem_Close(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_serviceLineItem_Close_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -46709,6 +46890,1238 @@ func (ec *executionContext) fieldContext_NotePage_totalElements(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Opportunity_id(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_name(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_amount(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_amount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Amount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_amount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_maxAmount(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_maxAmount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxAmount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_maxAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_internalType(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_internalType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InternalType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.InternalType)
+	fc.Result = res
+	return ec.marshalNInternalType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInternalType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_internalType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type InternalType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_externalType(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_externalType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExternalType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_externalType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_internalStage(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_internalStage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InternalStage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.InternalStage)
+	fc.Result = res
+	return ec.marshalNInternalStage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInternalStage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_internalStage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type InternalStage does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_externalStage(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_externalStage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExternalStage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_externalStage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_estimatedClosedAt(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EstimatedClosedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_estimatedClosedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_generalNotes(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_generalNotes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GeneralNotes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_generalNotes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_nextSteps(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_nextSteps(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NextSteps, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_nextSteps(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_renewedAt(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_renewalLikelihood(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalLikelihood, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OpportunityRenewalLikelihood)
+	fc.Result = res
+	return ec.marshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewalLikelihood(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OpportunityRenewalLikelihood does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_renewalUpdatedByUserId(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalUpdatedByUserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewalUpdatedByUserId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_renewalUpdatedByUserAt(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalUpdatedByUserAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_renewalUpdatedByUserAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_comments(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_comments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Comments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_createdBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Opportunity().CreatedBy(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, obj, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, obj, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_owner(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Opportunity().Owner(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, obj, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, obj, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "bot":
+				return ec.fieldContext_User_bot(ctx, field)
+			case "timezone":
+				return ec.fieldContext_User_timezone(ctx, field)
+			case "profilePhotoUrl":
+				return ec.fieldContext_User_profilePhotoUrl(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_source(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Opportunity_externalLinks(ctx context.Context, field graphql.CollectedField, obj *model.Opportunity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Opportunity_externalLinks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Opportunity().ExternalLinks(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, obj, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, obj, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.ExternalSystem); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ExternalSystem`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ExternalSystem)
+	fc.Result = res
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Opportunity_externalLinks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Opportunity",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_ExternalSystem_type(ctx, field)
+			case "syncDate":
+				return ec.fieldContext_ExternalSystem_syncDate(ctx, field)
+			case "externalId":
+				return ec.fieldContext_ExternalSystem_externalId(ctx, field)
+			case "externalUrl":
+				return ec.fieldContext_ExternalSystem_externalUrl(ctx, field)
+			case "externalSource":
+				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrgAccountDetails_renewalLikelihood(ctx context.Context, field graphql.CollectedField, obj *model.OrgAccountDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrgAccountDetails_renewalLikelihood(ctx, field)
 	if err != nil {
@@ -46812,6 +48225,10 @@ func (ec *executionContext) fieldContext_OrgAccountDetails_renewalForecast(ctx c
 				return ec.fieldContext_RenewalForecast_updatedById(ctx, field)
 			case "updatedBy":
 				return ec.fieldContext_RenewalForecast_updatedBy(ctx, field)
+			case "arr":
+				return ec.fieldContext_RenewalForecast_arr(ctx, field)
+			case "maxArr":
+				return ec.fieldContext_RenewalForecast_maxArr(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type RenewalForecast", field.Name)
 		},
@@ -48354,6 +49771,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
 				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
 			case "createdBy":
@@ -49049,100 +50468,6 @@ func (ec *executionContext) fieldContext_Organization_owner(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_relationships(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_relationships(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().Relationships(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]model.OrganizationRelationship)
-	fc.Result = res
-	return ec.marshalNOrganizationRelationship2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_relationships(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type OrganizationRelationship does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Organization_relationshipStages(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_relationshipStages(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().RelationshipStages(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.OrganizationRelationshipStage)
-	fc.Result = res
-	return ec.marshalNOrganizationRelationshipStage2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipStageᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_relationshipStages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "relationship":
-				return ec.fieldContext_OrganizationRelationshipStage_relationship(ctx, field)
-			case "stage":
-				return ec.fieldContext_OrganizationRelationshipStage_stage(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OrganizationRelationshipStage", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_externalLinks(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_externalLinks(ctx, field)
 	if err != nil {
@@ -49585,10 +50910,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -49865,10 +51186,6 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -49921,91 +51238,6 @@ func (ec *executionContext) _OrganizationParticipant_type(ctx context.Context, f
 func (ec *executionContext) fieldContext_OrganizationParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OrganizationParticipant",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OrganizationRelationshipStage_relationship(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationRelationshipStage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OrganizationRelationshipStage_relationship(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Relationship, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.OrganizationRelationship)
-	fc.Result = res
-	return ec.marshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OrganizationRelationshipStage_relationship(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OrganizationRelationshipStage",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type OrganizationRelationship does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _OrganizationRelationshipStage_stage(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationRelationshipStage) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OrganizationRelationshipStage_stage(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Stage, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OrganizationRelationshipStage_stage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OrganizationRelationshipStage",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -51335,10 +52567,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -52875,6 +54103,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
 				return ec.fieldContext_Contract_serviceLineItems(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Contract_opportunities(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contract_owner(ctx, field)
 			case "createdBy":
@@ -53036,7 +54266,7 @@ func (ec *executionContext) _Query_dashboard_MRRPerCustomer(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardMRRPerCustomer(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardMRRPerCustomer(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53096,7 +54326,7 @@ func (ec *executionContext) _Query_dashboard_GrossRevenueRetention(ctx context.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardGrossRevenueRetention(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardGrossRevenueRetention(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53156,7 +54386,7 @@ func (ec *executionContext) _Query_dashboard_ARRBreakdown(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardARRBreakdown(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardARRBreakdown(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53216,7 +54446,7 @@ func (ec *executionContext) _Query_dashboard_RevenueAtRisk(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardRevenueAtRisk(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardRevenueAtRisk(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53274,7 +54504,7 @@ func (ec *executionContext) _Query_dashboard_RetentionRate(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardRetentionRate(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardRetentionRate(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53334,7 +54564,7 @@ func (ec *executionContext) _Query_dashboard_NewCustomers(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardNewCustomers(rctx, fc.Args["year"].(int))
+		return ec.resolvers.Query().DashboardNewCustomers(rctx, fc.Args["period"].(*model.DashboardPeriodInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -54277,6 +55507,138 @@ func (ec *executionContext) fieldContext_Query_externalMeetings(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_opportunity(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_opportunity(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Opportunity(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Opportunity); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Opportunity`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Opportunity)
+	fc.Result = res
+	return ec.marshalOOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_opportunity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Opportunity_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Opportunity_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Opportunity_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Opportunity_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_Opportunity_amount(ctx, field)
+			case "maxAmount":
+				return ec.fieldContext_Opportunity_maxAmount(ctx, field)
+			case "internalType":
+				return ec.fieldContext_Opportunity_internalType(ctx, field)
+			case "externalType":
+				return ec.fieldContext_Opportunity_externalType(ctx, field)
+			case "internalStage":
+				return ec.fieldContext_Opportunity_internalStage(ctx, field)
+			case "externalStage":
+				return ec.fieldContext_Opportunity_externalStage(ctx, field)
+			case "estimatedClosedAt":
+				return ec.fieldContext_Opportunity_estimatedClosedAt(ctx, field)
+			case "generalNotes":
+				return ec.fieldContext_Opportunity_generalNotes(ctx, field)
+			case "nextSteps":
+				return ec.fieldContext_Opportunity_nextSteps(ctx, field)
+			case "renewedAt":
+				return ec.fieldContext_Opportunity_renewedAt(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_Opportunity_renewalLikelihood(ctx, field)
+			case "renewalUpdatedByUserId":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserId(ctx, field)
+			case "renewalUpdatedByUserAt":
+				return ec.fieldContext_Opportunity_renewalUpdatedByUserAt(ctx, field)
+			case "comments":
+				return ec.fieldContext_Opportunity_comments(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Opportunity_createdBy(ctx, field)
+			case "owner":
+				return ec.fieldContext_Opportunity_owner(ctx, field)
+			case "source":
+				return ec.fieldContext_Opportunity_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Opportunity_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Opportunity_appSource(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Opportunity_externalLinks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Opportunity", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_opportunity_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_organizations(ctx, field)
 	if err != nil {
@@ -54522,10 +55884,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -54998,6 +56356,10 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ServiceLineItem_updatedAt(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
 			case "name":
 				return ec.fieldContext_ServiceLineItem_name(ctx, field)
 			case "billed":
@@ -55006,6 +56368,8 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_price(ctx, field)
 			case "quantity":
 				return ec.fieldContext_ServiceLineItem_quantity(ctx, field)
+			case "comments":
+				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
 			case "createdBy":
 				return ec.fieldContext_ServiceLineItem_createdBy(ctx, field)
 			case "source":
@@ -55016,6 +56380,8 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_appSource(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_ServiceLineItem_externalLinks(ctx, field)
+			case "parentId":
+				return ec.fieldContext_ServiceLineItem_parentId(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ServiceLineItem", field.Name)
 		},
@@ -56119,6 +57485,88 @@ func (ec *executionContext) fieldContext_RenewalForecast_updatedBy(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _RenewalForecast_arr(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalForecast_arr(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Arr, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalForecast_arr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalForecast",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RenewalForecast_maxArr(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalForecast_maxArr(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxArr, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalForecast_maxArr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalForecast",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _RenewalLikelihood_probability(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_RenewalLikelihood_probability(ctx, field)
 	if err != nil {
@@ -56581,6 +58029,91 @@ func (ec *executionContext) fieldContext_ServiceLineItem_updatedAt(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _ServiceLineItem_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_startedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_startedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceLineItem_endedAt(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_endedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ServiceLineItem_name(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ServiceLineItem_name(ctx, field)
 	if err != nil {
@@ -56752,6 +58285,50 @@ func (ec *executionContext) fieldContext_ServiceLineItem_quantity(ctx context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceLineItem_comments(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_comments(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Comments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_comments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -57021,6 +58598,50 @@ func (ec *executionContext) fieldContext_ServiceLineItem_externalLinks(ctx conte
 				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ServiceLineItem_parentId(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_parentId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_parentId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -57686,10 +59307,6 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "owner":
 				return ec.fieldContext_Organization_owner(ctx, field)
-			case "relationships":
-				return ec.fieldContext_Organization_relationships(ctx, field)
-			case "relationshipStages":
-				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "externalLinks":
 				return ec.fieldContext_Organization_externalLinks(ctx, field)
 			case "lastTouchPointAt":
@@ -61901,7 +63518,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "name", "description", "timezone", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
+	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "name", "description", "timezone", "profilePhotoUrl", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -61971,6 +63588,15 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.Timezone = data
+		case "profilePhotoUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURL = data
 		case "createdAt":
 			var err error
 
@@ -62132,7 +63758,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "prefix", "firstName", "name", "description", "timezone", "lastName", "label", "ownerId"}
+	fieldsInOrder := [...]string{"id", "prefix", "firstName", "name", "description", "timezone", "profilePhotoUrl", "lastName", "label", "ownerId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -62193,6 +63819,15 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.Timezone = data
+		case "profilePhotoUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("profilePhotoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ProfilePhotoURL = data
 		case "lastName":
 			var err error
 
@@ -62747,6 +64382,44 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 				return it, err
 			}
 			it.AppSource = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDashboardPeriodInput(ctx context.Context, obj interface{}) (model.DashboardPeriodInput, error) {
+	var it model.DashboardPeriodInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"start", "end"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "start":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Start = data
+		case "end":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.End = data
 		}
 	}
 
@@ -64593,6 +66266,190 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx context.Context, obj interface{}) (model.OpportunityRenewalUpdateInput, error) {
+	var it model.OpportunityRenewalUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "renewalLikelihood", "comments", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "opportunityId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OpportunityID = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "amount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "renewalLikelihood":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalLikelihood"))
+			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalLikelihood = data
+		case "comments":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Comments = data
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppSource = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Context, obj interface{}) (model.OpportunityUpdateInput, error) {
+	var it model.OpportunityUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"opportunityId", "name", "amount", "externalType", "externalStage", "estimatedClosedDate", "generalNotes", "nextSteps", "appSource", "externalReference"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "opportunityId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OpportunityID = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "amount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "externalType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalType"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalType = data
+		case "externalStage":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalStage"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalStage = data
+		case "estimatedClosedDate":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("estimatedClosedDate"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EstimatedClosedDate = data
+		case "generalNotes":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("generalNotes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GeneralNotes = data
+		case "nextSteps":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nextSteps"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NextSteps = data
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppSource = data
+		case "externalReference":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalReference = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context, obj interface{}) (model.OrganizationInput, error) {
 	var it model.OrganizationInput
 	asMap := map[string]interface{}{}
@@ -65304,6 +67161,44 @@ func (ec *executionContext) unmarshalInputRenewalLikelihoodInput(ctx context.Con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputServiceLineItemCloseInput(ctx context.Context, obj interface{}) (model.ServiceLineItemCloseInput, error) {
+	var it model.ServiceLineItemCloseInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "endedAt"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "endedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndedAt = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Context, obj interface{}) (model.ServiceLineItemInput, error) {
 	var it model.ServiceLineItemInput
 	asMap := map[string]interface{}{}
@@ -65311,7 +67206,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"contractId", "name", "billed", "price", "quantity", "appSource", "externalReference", "startedAt", "endedAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -65381,6 +67276,24 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 				return it, err
 			}
 			it.ExternalReference = data
+		case "startedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartedAt = data
+		case "endedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndedAt = data
 		}
 	}
 
@@ -65394,7 +67307,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"serviceLineItemId", "name", "billed", "price", "quantity", "comments", "appSource", "externalReference", "isRetroactiveCorrection"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -65446,6 +67359,15 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 				return it, err
 			}
 			it.Quantity = data
+		case "comments":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("comments"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Comments = data
 		case "appSource":
 			var err error
 
@@ -65464,6 +67386,15 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 				return it, err
 			}
 			it.ExternalReference = data
+		case "isRetroactiveCorrection":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isRetroactiveCorrection"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsRetroactiveCorrection = data
 		}
 	}
 
@@ -66340,6 +68271,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Meeting(ctx, sel, obj)
+	case model.Opportunity:
+		return ec._Opportunity(ctx, sel, &obj)
+	case *model.Opportunity:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Opportunity(ctx, sel, obj)
 	case model.Organization:
 		return ec._Organization(ctx, sel, &obj)
 	case *model.Organization:
@@ -67894,6 +69832,39 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "opportunities":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contract_opportunities(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "owner":
 			field := field
 
@@ -68892,6 +70863,11 @@ func (ec *executionContext) _DashboardNewCustomersPerMonth(ctx context.Context, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DashboardNewCustomersPerMonth")
+		case "year":
+			out.Values[i] = ec._DashboardNewCustomersPerMonth_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "month":
 			out.Values[i] = ec._DashboardNewCustomersPerMonth_month(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -69041,6 +71017,50 @@ func (ec *executionContext) _DashboardRevenueAtRisk(ctx context.Context, sel ast
 			}
 		case "atRisk":
 			out.Values[i] = ec._DashboardRevenueAtRisk_atRisk(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var deleteResponseImplementors = []string{"DeleteResponse"}
+
+func (ec *executionContext) _DeleteResponse(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deleteResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeleteResponse")
+		case "accepted":
+			out.Values[i] = ec._DeleteResponse_accepted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "completed":
+			out.Values[i] = ec._DeleteResponse_completed(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -72427,6 +74447,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "opportunityUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_opportunityUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "opportunityRenewalUpdate":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_opportunityRenewalUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "organization_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_Create(ctx, field)
@@ -72562,34 +74596,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "organization_AddRelationship":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_AddRelationship(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_RemoveRelationship":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_RemoveRelationship(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_SetRelationshipStage":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_SetRelationshipStage(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_RemoveRelationshipStage":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_RemoveRelationshipStage(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "phoneNumberMergeToContact":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_phoneNumberMergeToContact(ctx, field)
@@ -72691,6 +74697,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "serviceLineItemUpdate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_serviceLineItemUpdate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "serviceLineItem_Delete":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_serviceLineItem_Delete(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "serviceLineItem_Close":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_serviceLineItem_Close(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -73030,6 +75050,247 @@ func (ec *executionContext) _NotePage(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var opportunityImplementors = []string{"Opportunity", "Node"}
+
+func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionSet, obj *model.Opportunity) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, opportunityImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Opportunity")
+		case "id":
+			out.Values[i] = ec._Opportunity_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "createdAt":
+			out.Values[i] = ec._Opportunity_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Opportunity_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._Opportunity_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "amount":
+			out.Values[i] = ec._Opportunity_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "maxAmount":
+			out.Values[i] = ec._Opportunity_maxAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "internalType":
+			out.Values[i] = ec._Opportunity_internalType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "externalType":
+			out.Values[i] = ec._Opportunity_externalType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "internalStage":
+			out.Values[i] = ec._Opportunity_internalStage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "externalStage":
+			out.Values[i] = ec._Opportunity_externalStage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "estimatedClosedAt":
+			out.Values[i] = ec._Opportunity_estimatedClosedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "generalNotes":
+			out.Values[i] = ec._Opportunity_generalNotes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "nextSteps":
+			out.Values[i] = ec._Opportunity_nextSteps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "renewedAt":
+			out.Values[i] = ec._Opportunity_renewedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "renewalLikelihood":
+			out.Values[i] = ec._Opportunity_renewalLikelihood(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "renewalUpdatedByUserId":
+			out.Values[i] = ec._Opportunity_renewalUpdatedByUserId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "renewalUpdatedByUserAt":
+			out.Values[i] = ec._Opportunity_renewalUpdatedByUserAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "comments":
+			out.Values[i] = ec._Opportunity_comments(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "createdBy":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Opportunity_createdBy(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "owner":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Opportunity_owner(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "source":
+			out.Values[i] = ec._Opportunity_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._Opportunity_sourceOfTruth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "appSource":
+			out.Values[i] = ec._Opportunity_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "externalLinks":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Opportunity_externalLinks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -73846,78 +76107,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "relationships":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Organization_relationships(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "relationshipStages":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Organization_relationshipStages(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "externalLinks":
 			field := field
 
@@ -74126,47 +76315,6 @@ func (ec *executionContext) _OrganizationParticipant(ctx context.Context, sel as
 			}
 		case "type":
 			out.Values[i] = ec._OrganizationParticipant_type(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var organizationRelationshipStageImplementors = []string{"OrganizationRelationshipStage"}
-
-func (ec *executionContext) _OrganizationRelationshipStage(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationRelationshipStage) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, organizationRelationshipStageImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("OrganizationRelationshipStage")
-		case "relationship":
-			out.Values[i] = ec._OrganizationRelationshipStage_relationship(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "stage":
-			out.Values[i] = ec._OrganizationRelationshipStage_stage(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -75260,6 +77408,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "opportunity":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_opportunity(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "organizations":
 			field := field
 
@@ -75688,6 +77855,10 @@ func (ec *executionContext) _RenewalForecast(ctx context.Context, sel ast.Select
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "arr":
+			out.Values[i] = ec._RenewalForecast_arr(ctx, field, obj)
+		case "maxArr":
+			out.Values[i] = ec._RenewalForecast_maxArr(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -75853,6 +78024,13 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "startedAt":
+			out.Values[i] = ec._ServiceLineItem_startedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "endedAt":
+			out.Values[i] = ec._ServiceLineItem_endedAt(ctx, field, obj)
 		case "name":
 			out.Values[i] = ec._ServiceLineItem_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -75870,6 +78048,11 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			}
 		case "quantity":
 			out.Values[i] = ec._ServiceLineItem_quantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "comments":
+			out.Values[i] = ec._ServiceLineItem_comments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -75957,6 +78140,11 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "parentId":
+			out.Values[i] = ec._ServiceLineItem_parentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -77982,6 +80170,20 @@ func (ec *executionContext) marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋop
 	return v
 }
 
+func (ec *executionContext) marshalNDeleteResponse2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDeleteResponse(ctx context.Context, sel ast.SelectionSet, v model.DeleteResponse) graphql.Marshaler {
+	return ec._DeleteResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDeleteResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDeleteResponse(ctx context.Context, sel ast.SelectionSet, v *model.DeleteResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeleteResponse(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNDescriptionNode2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDescriptionNode(ctx context.Context, sel ast.SelectionSet, v model.DescriptionNode) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -78786,6 +80988,26 @@ func (ec *executionContext) unmarshalNInteractionSessionParticipantInput2ᚖgith
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNInternalStage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInternalStage(ctx context.Context, v interface{}) (model.InternalStage, error) {
+	var res model.InternalStage
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInternalStage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInternalStage(ctx context.Context, sel ast.SelectionSet, v model.InternalStage) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNInternalType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInternalType(ctx context.Context, v interface{}) (model.InternalType, error) {
+	var res model.InternalType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInternalType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInternalType(ctx context.Context, sel ast.SelectionSet, v model.InternalType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNIssue2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v model.Issue) graphql.Marshaler {
 	return ec._Issue(ctx, sel, &v)
 }
@@ -79419,6 +81641,40 @@ func (ec *executionContext) marshalNNotedEntity2ᚕgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
+func (ec *executionContext) marshalNOpportunity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v model.Opportunity) graphql.Marshaler {
+	return ec._Opportunity(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v *model.Opportunity) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Opportunity(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, v interface{}) (model.OpportunityRenewalLikelihood, error) {
+	var res model.OpportunityRenewalLikelihood
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v model.OpportunityRenewalLikelihood) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalUpdateInput(ctx context.Context, v interface{}) (model.OpportunityRenewalUpdateInput, error) {
+	res, err := ec.unmarshalInputOpportunityRenewalUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNOpportunityUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityUpdateInput(ctx context.Context, v interface{}) (model.OpportunityUpdateInput, error) {
+	res, err := ec.unmarshalInputOpportunityUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNOrganization2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v model.Organization) graphql.Marshaler {
 	return ec._Organization(ctx, sel, &v)
 }
@@ -79494,131 +81750,6 @@ func (ec *executionContext) marshalNOrganizationPage2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._OrganizationPage(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx context.Context, v interface{}) (model.OrganizationRelationship, error) {
-	var res model.OrganizationRelationship
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx context.Context, sel ast.SelectionSet, v model.OrganizationRelationship) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalNOrganizationRelationship2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipᚄ(ctx context.Context, v interface{}) ([]model.OrganizationRelationship, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]model.OrganizationRelationship, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNOrganizationRelationship2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipᚄ(ctx context.Context, sel ast.SelectionSet, v []model.OrganizationRelationship) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNOrganizationRelationshipStage2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipStageᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationRelationshipStage) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNOrganizationRelationshipStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipStage(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNOrganizationRelationshipStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipStage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationRelationshipStage) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._OrganizationRelationshipStage(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNOrganizationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationUpdateInput(ctx context.Context, v interface{}) (model.OrganizationUpdateInput, error) {
@@ -79884,6 +82015,11 @@ func (ec *executionContext) marshalNServiceLineItem2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._ServiceLineItem(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNServiceLineItemCloseInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemCloseInput(ctx context.Context, v interface{}) (model.ServiceLineItemCloseInput, error) {
+	res, err := ec.unmarshalInputServiceLineItemCloseInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNServiceLineItemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐServiceLineItemInput(ctx context.Context, v interface{}) (model.ServiceLineItemInput, error) {
@@ -80949,6 +83085,14 @@ func (ec *executionContext) marshalODashboardNewCustomersPerMonth2ᚖgithubᚗco
 	return ec._DashboardNewCustomersPerMonth(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardPeriodInput(ctx context.Context, v interface{}) (*model.DashboardPeriodInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputDashboardPeriodInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalODashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRate) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -81446,6 +83590,76 @@ func (ec *executionContext) unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenline
 	}
 	res, err := ec.unmarshalInputNoteUpdateInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Opportunity) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v *model.Opportunity) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Opportunity(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, v interface{}) (*model.OpportunityRenewalLikelihood, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.OpportunityRenewalLikelihood)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v *model.OpportunityRenewalLikelihood) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOOrgAccountDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrgAccountDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrgAccountDetails) graphql.Marshaler {

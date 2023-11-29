@@ -44,6 +44,8 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.showOrganization(ctx, c)
 	case *command.RefreshLastTouchpointCommand:
 		return a.refreshLastTouchpoint(ctx, c)
+	case *command.RefreshArrCommand:
+		return a.refreshArr(ctx, c)
 	case *command.UpsertCustomFieldCommand:
 		return a.upsertCustomField(ctx, c)
 	case *command.LinkEmailCommand:
@@ -460,6 +462,28 @@ func (a *OrganizationAggregate) refreshLastTouchpoint(ctx context.Context, cmd *
 	}
 
 	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+
+	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) refreshArr(ctx context.Context, cmd *command.RefreshArrCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.refreshArr")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	event, err := events.NewOrganizationRefreshArrEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationRefreshArrEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
 
 	return a.Apply(event)
 }

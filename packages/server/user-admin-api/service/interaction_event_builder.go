@@ -8,19 +8,21 @@ import (
 type InteractionEventBuilderOption func(*InteractionEventBuilderOptions)
 
 type InteractionEventBuilderOptions struct {
-	sessionId       *string
-	meetingId       *string
-	eventIdentifier *string
-	repliesTo       *string
-	content         *string
-	contentType     *string
-	channel         *string
-	channelData     *string
-	eventType       *string
-	sentBy          []model.InteractionEventParticipantInput
-	sentTo          []model.InteractionEventParticipantInput
-	appSource       *string
-	createdAt       *time.Time
+	sessionId        *string
+	meetingId        *string
+	eventIdentifier  *string
+	externalId       *string
+	externalSystemId *string
+	repliesTo        *string
+	content          *string
+	contentType      *string
+	channel          *string
+	channelData      *string
+	eventType        *string
+	sentBy           []model.InteractionEventParticipantInput
+	sentTo           []model.InteractionEventParticipantInput
+	appSource        *string
+	createdAt        *time.Time
 }
 
 func WithSessionId(value *string) InteractionEventBuilderOption {
@@ -91,6 +93,18 @@ func WithAppSource(value *string) InteractionEventBuilderOption {
 func WithEventIdentifier(eventIdentifier string) InteractionEventBuilderOption {
 	return func(options *InteractionEventBuilderOptions) {
 		options.eventIdentifier = &eventIdentifier
+	}
+}
+
+func WithExternalId(externalId string) InteractionEventBuilderOption {
+	return func(options *InteractionEventBuilderOptions) {
+		options.externalId = &externalId
+	}
+}
+
+func WithExternalSystemId(externalSystemId string) InteractionEventBuilderOption {
+	return func(options *InteractionEventBuilderOptions) {
+		options.externalSystemId = &externalSystemId
 	}
 }
 

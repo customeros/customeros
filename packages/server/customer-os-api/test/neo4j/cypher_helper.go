@@ -8,19 +8,11 @@ import (
 	"log"
 )
 
-func ExecuteWriteQuery(ctx context.Context, driver *neo4j.DriverWithContext, query string, params map[string]interface{}) {
-	session := utils.NewNeo4jWriteSession(ctx, *driver, utils.WithDatabaseName("neo4j"))
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		_, err := tx.Run(ctx, query, params)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
-	})
+func ExecuteWriteQuery(ctx context.Context, driver *neo4j.DriverWithContext, cypher string, params map[string]any) {
+	_, err := utils.ExecuteQuery(ctx, *driver, "neo4j", cypher, params)
 	if err != nil {
-		log.Fatalf("Failed executing query: %s\n Error: %s", query, err)
+		log.Fatalf("Error executing query in test %s : %s", cypher, err.Error())
+		return
 	}
 }
 

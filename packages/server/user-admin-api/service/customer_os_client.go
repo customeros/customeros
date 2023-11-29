@@ -27,14 +27,15 @@ type CustomerOsClient interface {
 	CreateUser(user *model.UserInput, tenant string, roles []model.Role) (*model.UserResponse, error)
 	AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error)
 	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
-	CreateContact(tenant, username, firstName, lastname, email string) (string, error)
+	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
 	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
 
 	CreateInteractionSession(tenant, username string, options ...InteractionSessionBuilderOption) (*string, error)
 	CreateInteractionEvent(tenant, username string, options ...InteractionEventBuilderOption) (*string, error)
+	CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error)
 
-	AddOrganizationToContact(tenant, username, contactId, organizationId string) error
+	AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error
 }
 
 type customerOsClient struct {
@@ -233,7 +234,12 @@ func (s *customerOsClient) GetPlayer(authId string, provider string) (*model.Get
 				player_ByAuthIdProvider(
 					  authId: $authId,
 					  provider: $provider
-				) { id }
+				) { 
+					id
+					users {
+						tenant
+					}
+				   }
 		}
 	`)
 	graphqlRequest.Var("authId", authId)
@@ -331,7 +337,7 @@ func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, role
 	}, nil
 }
 
-func (cosService *customerOsClient) CreateContact(tenant, username, firstName, lastname, email string) (string, error) {
+func (cosService *customerOsClient) CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateContact($contactInput: ContactInput!) {
 				contact_Create(input: $contactInput) {
@@ -345,6 +351,7 @@ func (cosService *customerOsClient) CreateContact(tenant, username, firstName, l
 		Email: &model.EmailInput{
 			Email: email,
 		},
+		ProfilePhotoURL: profilePhotoUrl,
 	}
 	graphqlRequest.Var("contactInput", contactInput)
 
@@ -400,20 +407,18 @@ func (s *customerOsClient) CreateOrganization(tenant, username, organizationName
 	return graphqlResponse.OrganizationCreate.Id, nil
 }
 
-func (s *customerOsClient) AddOrganizationToContact(tenant, username, contactId, organizationId string) error {
+func (s *customerOsClient) AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error {
 	graphqlRequest := graphql.NewRequest(
-		`mutation AddOrganizationToContact($contactId: ID!, $organizationId: ID!) {
-			  contact_AddOrganizationById(
-			  input: {
-				contactId: $contactId
-				organizationId: $organizationId
-			  }) {
+		`mutation AddOrganizationToContact($contactId: ID!, $organizationId: ID!, $jobTitle: String, $description: String) {
+			  jobRole_Create(contactId : $contactId, input: {organizationId: $organizationId, jobTitle: $jobTitle, description: $description}) {
 				id
 			  }
 			}`)
 
 	graphqlRequest.Var("contactId", contactId)
 	graphqlRequest.Var("organizationId", organizationId)
+	graphqlRequest.Var("jobTitle", jobTitle)
+	graphqlRequest.Var("description", description)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
 	if err != nil {
@@ -594,6 +599,8 @@ func (s *customerOsClient) CreateInteractionEvent(tenant, username string, optio
 				$sessionId: ID, 
 				$meetingId: ID,
 				$eventIdentifier: String,
+				$externalId: String,
+				$externalSystemId: String,
 				$channel: String,
 				$channelData: String,
 				$sentBy: [InteractionEventParticipantInput!]!, 
@@ -608,6 +615,8 @@ func (s *customerOsClient) CreateInteractionEvent(tenant, username string, optio
     					event: {interactionSession: $sessionId, 
 								meetingId: $meetingId,
 								eventIdentifier: $eventIdentifier,
+								externalId: $externalId,
+								externalSystemId: $externalSystemId,
 								channel: $channel, 
 								channelData: $channelData,
 								sentBy: $sentBy, 
@@ -633,6 +642,8 @@ func (s *customerOsClient) CreateInteractionEvent(tenant, username string, optio
 
 	graphqlRequest.Var("sessionId", params.sessionId)
 	graphqlRequest.Var("eventIdentifier", params.eventIdentifier)
+	graphqlRequest.Var("externalId", params.externalId)
+	graphqlRequest.Var("externalSystemId", params.externalSystemId)
 	graphqlRequest.Var("content", params.content)
 	graphqlRequest.Var("contentType", params.contentType)
 	graphqlRequest.Var("channelData", params.channelData)
@@ -660,6 +671,40 @@ func (s *customerOsClient) CreateInteractionEvent(tenant, username string, optio
 		return nil, fmt.Errorf("CreateInteractionSession: %w", err)
 	}
 	id := graphqlResponse["interactionEvent_Create"]["id"]
+	return &id, nil
+}
+
+func (s *customerOsClient) CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateLogEntry($organizationId: ID!, $content: String, $contentType: String, $startedAt: Time) {
+			  logEntry_CreateForOrganization(
+				organizationId: $organizationId
+				input: {content: $content, contentType: $contentType, startedAt: $startedAt}
+			  )
+			}`)
+
+	graphqlRequest.Var("organizationId", organizationId)
+	graphqlRequest.Var("content", content)
+	graphqlRequest.Var("contentType", contentType)
+	graphqlRequest.Var("contentType", contentType)
+	graphqlRequest.Var("startedAt", startedAt)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &author)
+
+	if err != nil {
+		return nil, fmt.Errorf("error while adding headers to graph request: %w", err)
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, fmt.Errorf("GetInteractionEvent: %w", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]string
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("Error logEntry_CreateForOrganization: %w", err)
+	}
+	id := graphqlResponse["logEntry_CreateForOrganization"]
 	return &id, nil
 }
 

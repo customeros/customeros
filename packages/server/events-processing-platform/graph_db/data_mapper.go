@@ -51,6 +51,8 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
 			UpdatedBy:       utils.GetStringPropOrEmpty(props, "renewalForecastUpdatedBy"),
 			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
+			Arr:             utils.GetFloatPropOrNil(props, "renewalForecastArr"),
+			MaxArr:          utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
 		},
 		BillingDetails: entity.BillingDetails{
 			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
@@ -182,8 +184,11 @@ func MapDbNodeToCommentEntity(node dbtype.Node) *entity.CommentEntity {
 	return &comment
 }
 
-func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
-	props := utils.GetPropsFromNode(node)
+func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
 	opportunity := entity.OpportunityEntity{
 		Id:                utils.GetStringPropOrEmpty(props, "id"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
@@ -194,23 +199,30 @@ func MapDbNodeToOpportunityEntity(node dbtype.Node) *entity.OpportunityEntity {
 		InternalStage:     utils.GetStringPropOrEmpty(props, "internalStage"),
 		ExternalStage:     utils.GetStringPropOrEmpty(props, "externalStage"),
 		EstimatedClosedAt: utils.GetTimePropOrNil(props, "estimatedClosedAt"),
+		ClosedAt:          utils.GetTimePropOrNil(props, "closedAt"),
 		GeneralNotes:      utils.GetStringPropOrEmpty(props, "generalNotes"),
 		NextSteps:         utils.GetStringPropOrEmpty(props, "nextSteps"),
+		Comments:          utils.GetStringPropOrEmpty(props, "comments"),
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		RenewalDetails: entity.RenewalDetails{
-			RenewedAt:         utils.GetTimePropOrNil(props, "renewedAt"),
-			RenewalLikelihood: utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
+			RenewedAt:              utils.GetTimePropOrNil(props, "renewedAt"),
+			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
+			RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
+			RenewalUpdatedByUserAt: utils.GetTimePropOrNil(props, "renewalUpdatedByUserAt"),
 		},
 	}
 	return &opportunity
 }
 
-func MapDbNodeToContractEntity(node dbtype.Node) *entity.ContractEntity {
-	props := utils.GetPropsFromNode(node)
+func MapDbNodeToContractEntity(node *dbtype.Node) *entity.ContractEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
 	contract := entity.ContractEntity{
 		Id:               utils.GetStringPropOrEmpty(props, "id"),
 		Name:             utils.GetStringPropOrEmpty(props, "name"),
@@ -363,12 +375,16 @@ func MapDbNodeToServiceLineItemEntity(node dbtype.Node) *entity.ServiceLineItemE
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
+		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Billed:        utils.GetStringPropOrEmpty(props, "billed"),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
+		Comments:      utils.GetStringPropOrEmpty(props, "comments"),
+		ParentId:      utils.GetStringPropOrEmpty(props, "parentId"),
 	}
 	return &serviceLineItem
 }

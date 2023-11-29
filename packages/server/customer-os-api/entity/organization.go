@@ -94,6 +94,8 @@ type RenewalForecast struct {
 	Comment         *string
 	UpdatedAt       *time.Time
 	UpdatedById     *string
+	Arr             *float64 `neo4jDb:"property:renewalForecastArr;lookupName:FORECAST_ARR;supportCaseSensitive:false"`
+	MaxArr          *float64
 }
 
 func (r RenewalForecast) String() string {

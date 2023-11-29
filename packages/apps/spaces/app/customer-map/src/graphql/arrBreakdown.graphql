@@ -1,0 +1,15 @@
+query ArrBreakdown($period: DashboardPeriodInput) {
+  dashboard_ARRBreakdown(period: $period) {
+    arrBreakdown
+    increasePercentage
+    perMonth {
+      month
+      newlyContracted
+      renewals
+      upsells
+      downgrades
+      cancellations
+      churned
+    }
+  }
+}

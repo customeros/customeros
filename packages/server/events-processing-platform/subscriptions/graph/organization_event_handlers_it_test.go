@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -737,4 +738,69 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "ASSOCIATED_WITH"), "Incorrect number of ASSOCIATED_WITH relationships in Neo4j")
 	neo4jt.AssertRelationship(ctx, t, testDatabase.Driver, orgId, "ASSOCIATED_WITH", locationId)
+}
+
+func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	contractId1 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
+	contractId2 := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{})
+	opportunityIdRenewal1_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		Amount:       float64(10),
+		MaxAmount:    float64(20),
+		InternalType: string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+	})
+	opportunityIdRenewal2_1 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		Amount:       float64(100),
+		MaxAmount:    float64(200),
+		InternalType: string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+	})
+	opportunityIdRenewal2_2 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		Amount:       float64(1000),
+		MaxAmount:    float64(2000),
+		InternalType: string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+	})
+	opportunityIdNbo2_3 := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		Amount:       float64(10000),
+		MaxAmount:    float64(20000),
+		InternalType: string(opportunitymodel.OpportunityInternalTypeStringNBO),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId1, opportunityIdRenewal1_1, true)
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_1, true)
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdRenewal2_2, true)
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId2, opportunityIdNbo2_3, false)
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
+
+	// prepare event handler
+	orgEventHandler := &OrganizationEventHandler{
+		repositories:         testDatabase.Repositories,
+		organizationCommands: command_handler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, testDatabase.Repositories),
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+	event, err := events.NewOrganizationRefreshArrEvent(orgAggregate)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = orgEventHandler.OnRefreshArr(context.Background(), event)
+	require.Nil(t, err)
+
+	orgDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Organization", orgId)
+	require.Nil(t, err)
+	require.NotNil(t, orgDbNode)
+
+	// verify organization
+	organization := graph_db.MapDbNodeToOrganizationEntity(*orgDbNode)
+	require.Equal(t, orgId, organization.ID)
+	require.Equal(t, float64(1110), *organization.RenewalForecast.Arr)
+	require.Equal(t, float64(2220), *organization.RenewalForecast.MaxArr)
+
+	// Check no events were generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 0, len(eventsMap))
 }

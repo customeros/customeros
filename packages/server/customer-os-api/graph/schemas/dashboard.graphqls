@@ -1,16 +1,21 @@
 extend type Query {
     """
-    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT
+    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
     dashboard_CustomerMap: [DashboardCustomerMap!]
-    dashboard_MRRPerCustomer(year: Int!): DashboardMRRPerCustomer
-    dashboard_GrossRevenueRetention(year: Int!): DashboardGrossRevenueRetention
-    dashboard_ARRBreakdown(year: Int!): DashboardARRBreakdown
-    dashboard_RevenueAtRisk(year: Int!): DashboardRevenueAtRisk
-    dashboard_RetentionRate(year: Int!): DashboardRetentionRate
-    dashboard_NewCustomers(year: Int!): DashboardNewCustomers
+    dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer
+    dashboard_GrossRevenueRetention(period: DashboardPeriodInput): DashboardGrossRevenueRetention
+    dashboard_ARRBreakdown(period: DashboardPeriodInput): DashboardARRBreakdown
+    dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
+    dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
+    dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
+}
+
+input DashboardPeriodInput {
+    start: Time!
+    end: Time!
 }
 
 type DashboardCustomerMap {
@@ -78,6 +83,7 @@ type DashboardNewCustomers {
     perMonth: [DashboardNewCustomersPerMonth]!
 }
 type DashboardNewCustomersPerMonth {
+    year: Int!
     month: Int!
     count: Int!
 }

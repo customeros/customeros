@@ -17,6 +17,8 @@ type ServiceLineItemRepository interface {
 	CreateForContract(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCreateEvent) error
 	Update(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemUpdateEvent) error
 	GetAllForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
+	Delete(ctx context.Context, tenant, serviceLineItemId string) error
+	Close(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCloseEvent) error
 }
 
 type serviceLineItemRepository struct {
@@ -43,20 +45,26 @@ func (r *serviceLineItemRepository) CreateForContract(ctx context.Context, tenan
 								sli:ServiceLineItem_%s,
 								sli.createdAt=$createdAt,
 								sli.updatedAt=$updatedAt,
+								sli.startedAt=$startedAt,
+								sli.endedAt=$endedAt,
 								sli.source=$source,
 								sli.sourceOfTruth=$sourceOfTruth,
 								sli.appSource=$appSource,
 								sli.name=$name,
 								sli.price=$price,
 								sli.quantity=$quantity,
-								sli.billed=$billed
+								sli.billed=$billed,
+								sli.parentId=$parentId
 							`, tenant)
 	params := map[string]any{
 		"tenant":            tenant,
 		"serviceLineItemId": serviceLineItemId,
 		"contractId":        evt.ContractId,
+		"parentId":          evt.ParentId,
 		"createdAt":         evt.CreatedAt,
 		"updatedAt":         evt.UpdatedAt,
+		"startedAt":         evt.StartedAt,
+		"endedAt":           utils.TimePtrFirstNonNilNillableAsAny(evt.EndedAt),
 		"source":            helper.GetSource(evt.Source.Source),
 		"sourceOfTruth":     helper.GetSourceOfTruth(evt.Source.Source),
 		"appSource":         helper.GetAppSource(evt.Source.AppSource),
@@ -84,7 +92,8 @@ func (r *serviceLineItemRepository) Update(ctx context.Context, tenant, serviceL
 								sli.quantity = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $quantity ELSE sli.quantity END,
 								sli.billed = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billed ELSE sli.billed END,
 								sli.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE sli.sourceOfTruth END,
-								sli.updatedAt=$updatedAt
+								sli.updatedAt=$updatedAt,
+				                sli.comments=$comments
 							`, tenant)
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
@@ -93,6 +102,7 @@ func (r *serviceLineItemRepository) Update(ctx context.Context, tenant, serviceL
 		"quantity":          evt.Quantity,
 		"name":              evt.Name,
 		"billed":            evt.Billed,
+		"comments":          evt.Comments,
 		"sourceOfTruth":     helper.GetSourceOfTruth(evt.Source.Source),
 		"overwrite":         helper.GetSourceOfTruth(evt.Source.Source) == constants.SourceOpenline,
 	}
@@ -130,4 +140,41 @@ func (r *serviceLineItemRepository) GetAllForContract(ctx context.Context, tenan
 		return nil, err
 	}
 	return result.([]*neo4j.Node), nil
+}
+
+func (r *serviceLineItemRepository) Delete(ctx context.Context, tenant, serviceLineItemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.Delete")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
+							WHERE sli:ServiceLineItem_%s
+							DETACH DELETE sli`, tenant)
+	params := map[string]any{
+		"serviceLineItemId": serviceLineItemId,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *serviceLineItemRepository) Close(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCloseEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.Close")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
+							WHERE sli:ServiceLineItem_%s SET
+							sli.endedAt = $endedAt,
+							sli.updatedAt = $updatedAt`, tenant)
+	params := map[string]any{
+		"serviceLineItemId": serviceLineItemId,
+		"updatedAt":         evt.UpdatedAt,
+		"endedAt":           evt.EndedAt,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 }

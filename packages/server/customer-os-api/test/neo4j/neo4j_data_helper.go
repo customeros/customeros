@@ -152,25 +152,19 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 }
 
 func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, user entity.UserEntity) string {
-	if userId == "" {
-		userUuid, _ := uuid.NewRandom()
-		userId = userUuid.String()
-	}
-	query := `
-		MATCH (t:Tenant {name:$tenant})
-			MERGE (u:User {
-				  	id: $userId,
-				  	firstName: $firstName,
-				  	lastName: $lastName,
-					profilePhotoUrl: $profilePhotoUrl,
-					createdAt :datetime({timezone: 'UTC'}),
-					source: $source,
-					sourceOfTruth: $sourceOfTruth
-				})-[:USER_BELONGS_TO_TENANT]->(t)
+	userId = utils.NewUUIDIfEmpty(userId)
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (u:User {id: $userId})-[:USER_BELONGS_TO_TENANT]->(t)
 			SET u:User_%s, 
 				u.roles=$roles,
 				u.internal=$internal,
-				u.bot=$bot`
+				u.bot=$bot,
+				u.firstName=$firstName,
+				u.lastName=$lastName,
+				u.profilePhotoUrl=$profilePhotoUrl,
+				u.createdAt=$now,
+				u.source=$source,
+				u.sourceOfTruth=$sourceOfTruth`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":          tenant,
 		"userId":          userId,
@@ -182,6 +176,7 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		"internal":        user.Internal,
 		"bot":             user.Bot,
 		"profilePhotoUrl": user.ProfilePhotoUrl,
+		"now":             utils.Now(),
 	})
 	return userId
 }
@@ -800,6 +795,8 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.renewalForecastComment=$renewalForecastComment,
 							org.renewalForecastUpdatedAt=$renewalForecastUpdatedAt,
 							org.renewalForecastUpdatedBy=$renewalForecastUpdatedBy,
+							org.renewalForecastArr=$renewalForecastArr,
+							org.renewalForecastMaxArr=$renewalForecastMaxArr,
 							org.billingDetailsAmount=$billingDetailsAmount,
 							org.billingDetailsFrequency=$billingDetailsFrequency,
 							org.billingDetailsRenewalCycle=$billingDetailsRenewalCycle,
@@ -834,6 +831,8 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"renewalLikelihoodUpdatedAt":      utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalLikelihood.UpdatedAt),
 		"renewalForecast":                 organization.RenewalForecast.Amount,
 		"renewalForecastPotential":        organization.RenewalForecast.PotentialAmount,
+		"renewalForecastArr":              organization.RenewalForecast.Arr,
+		"renewalForecastMaxArr":           organization.RenewalForecast.MaxArr,
 		"renewalForecastComment":          organization.RenewalForecast.Comment,
 		"renewalForecastUpdatedBy":        organization.RenewalForecast.UpdatedById,
 		"renewalForecastUpdatedAt":        utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalForecast.UpdatedAt),
@@ -1624,8 +1623,10 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.billed=$billed,	
 					sli.quantity=$quantity,	
 					sli.price=$price,
+                    sli.comments=$comments,
 					sli.createdAt=$createdAt,
-					sli.updatedAt=$updatedAt
+					sli.updatedAt=$updatedAt,
+	                sli.parentId=$parentId
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -1638,11 +1639,87 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"appSource":     serviceLineItem.AppSource,
 		"billed":        serviceLineItem.Billed,
 		"quantity":      serviceLineItem.Quantity,
+		"comments":      serviceLineItem.Comments,
 		"price":         serviceLineItem.Price,
 		"createdAt":     serviceLineItem.CreatedAt,
 		"updatedAt":     serviceLineItem.UpdatedAt,
+		"parentId":      serviceLineItem.ParentID,
 	})
 	return serviceLineItemId
+}
+
+func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
+	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (c:Contract {id:$contractId})
+				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c)
+				SET 
+                    op:Opportunity_%s,
+					op.name=$name,
+					op.source=$source,
+					op.sourceOfTruth=$sourceOfTruth,
+					op.appSource=$appSource,
+					op.amount=$amount,
+					op.maxAmount=$maxAmount,
+                    op.internalType=$internalType,
+					op.externalType=$externalType,
+					op.internalStage=$internalStage,
+					op.externalStage=$externalStage,
+					op.estimatedClosedAt=$estimatedClosedAt,
+					op.generalNotes=$generalNotes,
+                    op.comments=$comments,
+                    op.renewedAt=$renewedAt,
+                    op.renewalLikelihood=$renewalLikelihood,
+                    op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
+                    op.renewalUpdateByUserAt=$renewalUpdateByUserAt,
+					op.nextSteps=$nextSteps,
+					op.createdAt=$createdAt,
+					op.updatedAt=$updatedAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":                     opportunityId,
+		"contractId":             contractId,
+		"tenant":                 tenant,
+		"name":                   opportunity.Name,
+		"source":                 opportunity.Source,
+		"sourceOfTruth":          opportunity.SourceOfTruth,
+		"appSource":              opportunity.AppSource,
+		"amount":                 opportunity.Amount,
+		"maxAmount":              opportunity.MaxAmount,
+		"internalType":           opportunity.InternalType,
+		"externalType":           opportunity.ExternalType,
+		"internalStage":          opportunity.InternalStage,
+		"externalStage":          opportunity.ExternalStage,
+		"estimatedClosedAt":      opportunity.EstimatedClosedAt,
+		"generalNotes":           opportunity.GeneralNotes,
+		"nextSteps":              opportunity.NextSteps,
+		"comments":               opportunity.Comments,
+		"renewedAt":              opportunity.RenewedAt,
+		"renewalLikelihood":      opportunity.RenewalLikelihood,
+		"renewalUpdatedByUserId": opportunity.RenewalUpdatedByUserId,
+		"renewalUpdateByUserAt":  opportunity.RenewalUpdatedByUserAt,
+		"createdAt":              opportunity.CreatedAt,
+		"updatedAt":              opportunity.UpdatedAt,
+	})
+	return opportunityId
+}
+
+func OpportunityCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, opportunityId, entityId string) {
+	query := `MATCH (e:User {id:$entityId}), (op:Opportunity {id:$opportunityId})
+			MERGE (e)<-[:CREATED_BY]-(op)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"opportunityId": opportunityId,
+		"entityId":      entityId,
+	})
+}
+
+func OpportunityOwnedBy(ctx context.Context, driver *neo4j.DriverWithContext, opportunityId, entityId string) {
+	query := `MATCH (e:User {id:$entityId}), (op:Opportunity {id:$opportunityId})
+			MERGE (e)-[:OWNS]->(op)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"opportunityId": opportunityId,
+		"entityId":      entityId,
+	})
 }
 
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {

@@ -34,6 +34,8 @@ type OrganizationRepository interface {
 	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
 	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
 	GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error)
+	UpdateArr(ctx context.Context, tenant, organizationId string) error
+	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
 }
 
 type organizationRepository struct {
@@ -223,6 +225,7 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 				org.employees = CASE WHEN $employees <> 0 THEN $employees ELSE org.employees END, 
 				org.isCustomer = CASE WHEN $isCustomer = true THEN $isCustomer ELSE org.isCustomer END, 
 				org.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE org.sourceOfTruth END,
+				org.hide = case WHEN $overwriteHide = true THEN $hide ELSE org.hide END,
 				org.updatedAt = $updatedAt,
 				org.syncedWithEventStore = true`, event.Tenant)
 	params := map[string]any{
@@ -245,6 +248,8 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 		"isCustomer":        event.IsCustomer,
 		"sourceOfTruth":     helper.GetSource(event.Source),
 		"updatedAt":         event.UpdatedAt,
+		"hide":              event.Hide,
+		"overwriteHide":     event.ExternalSystem.Available() && !event.Hide,
 		"overwrite":         helper.GetSource(event.Source) == constants.SourceOpenline,
 	}
 
@@ -606,6 +611,64 @@ func (r *organizationRepository) GetOrganizationIdsConnectedToInteractionEvent(c
 		return nil, err
 	}
 	return result.([]string), err
+}
+
+func (r *organizationRepository) UpdateArr(ctx context.Context, tenant, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateArr")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[:HAS_CONTRACT]->(c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
+				WITH org, sum(op.amount) as arr, sum(op.maxAmount) as maxArr
+				SET org.renewalForecastArr = arr, org.renewalForecastMaxArr = maxArr, org.updatedAt = $now`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	return r.executeQuery(ctx, cypher, params)
+}
+
+func (r *organizationRepository) GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationByOpportunityId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("opportunityId", opportunityId))
+
+	cypher := `MATCH (op:Opportunity {id:$id})
+				MATCH (t:Tenant {name:$tenant})
+				OPTIONAL MATCH (op)<-[:HAS_OPPORTUNITY]-(:Contract)<-[:HAS_CONTRACT]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+				OPTIONAL MATCH (op)<-[:HAS_OPPORTUNITY]-(directOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+			WITH COALESCE(org, directOrg) as organization 
+			WHERE organization IS NOT NULL RETURN organization`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     opportunityId,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	records := result.([]*dbtype.Node)
+	if len(records) == 0 {
+		return nil, nil
+	} else {
+		return records[0], nil
+	}
 }
 
 // Common database interaction method

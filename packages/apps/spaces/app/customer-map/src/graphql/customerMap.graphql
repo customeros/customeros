@@ -1,0 +1,11 @@
+query CustomerMap {
+  dashboard_CustomerMap {
+    organization {
+      id
+      name
+    }
+    state
+    arr
+    contractSignedDate
+  }
+}

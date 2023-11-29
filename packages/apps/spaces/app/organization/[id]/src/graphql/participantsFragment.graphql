@@ -10,11 +10,13 @@ fragment InteractionEventParticipantFragment on InteractionEventParticipant {
         name
         firstName
         lastName
+        profilePhotoUrl
       }
       users {
         id
         firstName
         lastName
+        profilePhotoUrl
       }
       organizations {
         id

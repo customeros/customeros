@@ -1,6 +1,7 @@
 package contract
 
 import (
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -36,22 +37,63 @@ func NewContractHandler(log logger.Logger, repositories *repository.Repositories
 	}
 }
 
-func (h *contractHandler) UpdateRenewalNextCycleDate(ctx context.Context, tenant, contractId string) error {
+func (h *contractHandler) UpdateRenewalArrAndNextCycleDate(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.CalculateNextCycleDate")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
-	contract, renewalOpportunity, done := h.assertContractAndRenewalOpportunity(ctx, span, tenant, contractId)
+	contract, renewalOpportunity, done := h.AssertContractAndRenewalOpportunity(ctx, tenant, contractId)
 	if done {
 		return nil
 	}
 
-	renewedAt := h.calculateNextCycleDate(contract.ServiceStartedAt, contract.RenewalCycle)
-	err := h.opportunityCommands.UpdateRenewalOpportunityNextCycleDate.Handle(ctx, opportunitycmd.NewUpdateRenewalOpportunityNextCycleDateCommand(renewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, renewedAt))
+	err := h.updateRenewalNextCycleDate(ctx, tenant, contract, renewalOpportunity, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("UpdateRenewalOpportunityNextCycleDate command failed: %v", err.Error())
 		return nil
+	}
+	err = h.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	return nil
+}
+
+func (h *contractHandler) UpdateRenewalNextCycleDate(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.CalculateNextCycleDate")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	contract, renewalOpportunity, done := h.AssertContractAndRenewalOpportunity(ctx, tenant, contractId)
+	if done {
+		return nil
+	}
+
+	return h.updateRenewalNextCycleDate(ctx, tenant, contract, renewalOpportunity, span)
+}
+
+func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) error {
+	if contract.IsEnded() && renewalOpportunity != nil {
+		err := h.opportunityCommands.CloseLooseOpportunity.Handle(ctx, opportunitycmd.NewCloseLooseOpportunityCommand(renewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, nil))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("CloseLooseOpportunityCommand command failed: %v", err.Error())
+			return nil
+		}
+		return nil
+	}
+
+	renewedAt := h.calculateNextCycleDate(contract.ServiceStartedAt, contract.RenewalCycle)
+	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunity.RenewalDetails.RenewedAt) {
+		err := h.opportunityCommands.UpdateRenewalOpportunityNextCycleDate.Handle(ctx, opportunitycmd.NewUpdateRenewalOpportunityNextCycleDateCommand(renewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, renewedAt))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("UpdateRenewalOpportunityNextCycleDate command failed: %v", err.Error())
+			return nil
+		}
 	}
 
 	return nil
@@ -80,33 +122,40 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 	return &renewalCycleNext
 }
 
-func (h *contractHandler) UpdateRenewalArrForecast(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateRenewalArrForecast")
+func (h *contractHandler) UpdateRenewalArr(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateRenewalArr")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
-	contract, renewalOpportunity, done := h.assertContractAndRenewalOpportunity(ctx, span, tenant, contractId)
+	contract, renewalOpportunity, done := h.AssertContractAndRenewalOpportunity(ctx, tenant, contractId)
 	if done {
 		return nil
 	}
 
+	return h.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
+}
+
+func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) error {
 	// if contract already ended, return
-	if contract.EndedAt != nil && contract.EndedAt.Before(utils.Now()) {
+	if contract.IsEnded() {
+		span.LogFields(log.Bool("contract ended", true))
 		return nil
 	}
 
-	maxArrForecast, err := h.calculateMaxArr(ctx, span, tenant, contract)
+	maxArr, err := h.calculateMaxArr(ctx, tenant, contract, renewalOpportunity, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while calculating ARR for contract %s: %s", contractId, err.Error())
+		h.log.Errorf("Error while calculating ARR for contract %s: %s", contract.Id, err.Error())
 		return nil
 	}
-	currentArrForecast := h.calculateCurrentArrByLikelihood(maxArrForecast, renewalOpportunity.RenewalDetails.RenewalLikelihood)
+	// adjust with likelihood
+	currentArr := h.calculateCurrentArrByLikelihood(maxArr, renewalOpportunity.RenewalDetails.RenewalLikelihood)
 
 	err = h.opportunityCommands.UpdateOpportunity.Handle(ctx, opportunitycmd.NewUpdateOpportunityCommand(renewalOpportunity.Id, tenant, "",
 		opportunitymodel.OpportunityDataFields{
-			Amount:    currentArrForecast,
-			MaxAmount: maxArrForecast,
+			Amount:    currentArr,
+			MaxAmount: maxArr,
 		},
 		commonmodel.Source{
 			Source:    constants.SourceOpenline,
@@ -124,12 +173,13 @@ func (h *contractHandler) UpdateRenewalArrForecast(ctx context.Context, tenant, 
 	return nil
 }
 
-func (h *contractHandler) calculateMaxArr(ctx context.Context, span opentracing.Span, tenant string, contract *entity.ContractEntity) (float64, error) {
+func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) (float64, error) {
 	var arr float64
 
 	// Fetch service line items for the contract from the database
 	sliDbNodes, err := h.repositories.ServiceLineItemRepository.GetAllForContract(ctx, tenant, contract.Id)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return 0, err
 	}
 	serviceLineItems := entity.ServiceLineItemEntities{}
@@ -137,26 +187,29 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, span opentracing.
 		serviceLineItems = append(serviceLineItems, *graph_db.MapDbNodeToServiceLineItemEntity(*sliDbNode))
 	}
 
+	span.LogFields(log.Int("service line items count", len(serviceLineItems)))
 	for _, sli := range serviceLineItems {
-		annualPrice := float64(0)
-
-		if sli.Billed == string(servicelineitemmodel.OnceBilledString) {
-			annualPrice = sli.Price
-		} else {
-			annualPrice = float64(sli.Price) * float64(sli.Quantity)
-			if sli.Billed == string(servicelineitemmodel.MonthlyBilledString) {
-				annualPrice *= 12
-			}
+		if sli.IsEnded() {
+			span.LogFields(log.Bool(fmt.Sprintf("service line item {%s} ended", sli.Id), true))
+			continue
 		}
+		span.LogFields(log.Object(fmt.Sprintf("service line item {%s}:", sli.Id), sli))
+		annualPrice := float64(0)
+		if sli.Billed == string(servicelineitemmodel.AnnuallyBilledString) {
+			annualPrice = float64(sli.Price) * float64(sli.Quantity)
+		} else if sli.Billed == string(servicelineitemmodel.MonthlyBilledString) {
+			annualPrice = float64(sli.Price) * float64(sli.Quantity)
+			annualPrice *= 12
+		}
+		span.LogFields(log.Float64(fmt.Sprintf("service line item {%s} added ARR value:", sli.Id), annualPrice))
 		// Add to total ARR
 		arr += annualPrice
 	}
 
-	// Prorate if the contract has an end date
-	currentDate := utils.Now()
-	if contract.EndedAt != nil && contract.EndedAt.After(currentDate) {
-		monthsRemaining := monthsUntilContractEnd(currentDate, *contract.EndedAt)
-		arr = prorateArr(arr, monthsRemaining)
+	// Adjust with end date
+	if contract.EndedAt != nil {
+		span.LogFields(log.Bool("ARR prorated with contract end date", true))
+		arr = prorateArr(arr, monthsUntilContractEnd(utils.Now(), *contract.EndedAt))
 	}
 
 	return arr, nil
@@ -182,6 +235,9 @@ func monthsUntilContractEnd(start, end time.Time) int {
 }
 
 func prorateArr(arr float64, monthsRemaining int) float64 {
+	if monthsRemaining > 12 {
+		return arr
+	}
 	monthlyRate := arr / 12
 	return monthlyRate * float64(monthsRemaining)
 }
@@ -204,7 +260,12 @@ func (h *contractHandler) calculateCurrentArrByLikelihood(amount float64, likeli
 	return math.Trunc(amount*likelihoodFactor*100) / 100
 }
 
-func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Context, span opentracing.Span, tenant, contractId string) (*entity.ContractEntity, *entity.OpportunityEntity, bool) {
+func (h *contractHandler) AssertContractAndRenewalOpportunity(ctx context.Context, tenant, contractId string) (*entity.ContractEntity, *entity.OpportunityEntity, bool) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.AssertContractAndRenewalOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
 	if h.opportunityCommands == nil {
 		tracing.TraceErr(span, errors.New("OpportunityCommands is nil"))
 		h.log.Errorf("OpportunityCommands is nil")
@@ -217,7 +278,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
-	contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 
 	// if contract is not frequency based, return
 	if !model.IsFrequencyBasedRenewalCycle(contract.RenewalCycle) {
@@ -230,18 +291,22 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
 		return nil, nil, true
 	}
+
 	// if there is no renewal opportunity, create one
 	if currentRenewalOpportunityDbNode == nil {
-		err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", tenant, "", contractId, "", commonmodel.Source{}, nil, nil))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("CreateRenewalOpportunity command failed: %v", err.Error())
-			return nil, nil, true
+		if !contract.IsEnded() {
+			err = h.opportunityCommands.CreateRenewalOpportunity.Handle(ctx, opportunitycmd.NewCreateRenewalOpportunityCommand("", tenant, "", contractId, "", commonmodel.Source{}, nil, nil))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("CreateRenewalOpportunity command failed: %v", err.Error())
+				return nil, nil, true
+			}
+			span.LogFields(log.Bool("renewal opportunity create requested", true))
 		}
 		return nil, nil, true
 	}
 
-	currentRenewalOpportunity := graph_db.MapDbNodeToOpportunityEntity(*currentRenewalOpportunityDbNode)
+	currentRenewalOpportunity := graph_db.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
 
 	return contract, currentRenewalOpportunity, false
 }
