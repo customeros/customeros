@@ -2,6 +2,7 @@ query getContracts($id: ID!) {
   organization(id: $id) {
     id
     name
+    note
     accountDetails {
       renewalForecast {
         arr

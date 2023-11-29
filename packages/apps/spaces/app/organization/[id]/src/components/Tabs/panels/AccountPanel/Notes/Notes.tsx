@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
 import { useForm } from 'react-inverted-form';
+import { useRef, useState, useEffect } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -36,13 +36,9 @@ export const Notes = ({ data, id }: NotesProps) => {
     },
   });
 
-  const note = data?.note ?? '';
-
-  useForm({
+  const { setDefaultValues } = useForm({
     formId: 'account-notes-form',
-    defaultValues: {
-      notes: note,
-    },
+
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_BLUR') {
         setIsFocused(false);
@@ -54,6 +50,10 @@ export const Notes = ({ data, id }: NotesProps) => {
       return next;
     },
   });
+
+  useEffect(() => {
+    setDefaultValues({ notes: data?.note });
+  }, [data?.note, data?.id]);
 
   return (
     <Card

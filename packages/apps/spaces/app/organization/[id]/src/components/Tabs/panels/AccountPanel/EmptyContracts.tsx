@@ -1,7 +1,7 @@
 'use client';
 
-import { FC } from 'react';
 import { useParams } from 'next/navigation';
+import { FC, PropsWithChildren } from 'react';
 
 import { produce } from 'immer';
 import { useSession } from 'next-auth/react';
@@ -27,7 +27,10 @@ import {
 } from '@organization/src/graphql/getContracts.generated';
 import { OrganizationPanel } from '@organization/src/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 
-export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
+export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
+  name,
+  children,
+}) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const { data: session } = useSession();
@@ -100,7 +103,7 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
       }
     >
       <Flex
-        mt={4}
+        my={4}
         w='full'
         boxShadow={'none'}
         flexDir='column'
@@ -135,6 +138,7 @@ export const EmptyContracts: FC<{ name: string }> = ({ name }) => {
           New contract
         </Button>
       </Flex>
+      {children}
     </OrganizationPanel>
   );
 };
