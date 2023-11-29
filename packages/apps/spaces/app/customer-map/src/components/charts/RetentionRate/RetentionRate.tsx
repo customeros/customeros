@@ -8,6 +8,7 @@ import { useRetentionRateQuery } from '@customerMap/graphql/retentionRate.genera
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
+import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
 import { RetentionRateDatum } from './RetentionRate.chart';
 
@@ -37,6 +38,7 @@ export const RetentionRate = () => {
       flex='1'
       stat={stat}
       title='Retention rate'
+      renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>

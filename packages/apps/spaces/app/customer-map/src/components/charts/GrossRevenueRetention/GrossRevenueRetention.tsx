@@ -8,6 +8,7 @@ import { useGrossRevenueRetentionQuery } from '@customerMap/graphql/grossRevenue
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
+import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
 import { GrossRevenueRetentionDatum } from './GrossRevenueRetention.chart';
 
@@ -41,6 +42,7 @@ export const GrossRevenueRetention = () => {
       flex='2'
       stat={stat}
       title='Gross Revenue Retention'
+      renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>

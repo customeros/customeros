@@ -9,6 +9,7 @@ import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
+import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
 import { ARRBreakdownDatum } from './ARRBreakdown.chart';
 
@@ -41,6 +42,7 @@ export const ARRBreakdown = () => {
       flex='3'
       stat={stat}
       title='ARR breakdown'
+      renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>

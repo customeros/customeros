@@ -9,6 +9,7 @@ import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
+import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
 import { MrrPerCustomerDatum } from './MrrPerCustomer.chart';
 
@@ -36,6 +37,7 @@ export const MrrPerCustomer = () => {
       flex='1'
       stat={stat}
       title='MRR per customer'
+      renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>
