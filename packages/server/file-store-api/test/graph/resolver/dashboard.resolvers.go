@@ -8,15 +8,68 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
 )
 
-// DashboardViewContacts is the resolver for the dashboardView_Contacts field.
-func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error) {
-	panic(fmt.Errorf("not implemented: DashboardViewContacts - dashboardView_Contacts"))
+// Organization is the resolver for the organization field.
+func (r *dashboardCustomerMapResolver) Organization(ctx context.Context, obj *model.DashboardCustomerMap) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: Organization - organization"))
 }
 
 // DashboardViewOrganizations is the resolver for the dashboardView_Organizations field.
 func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
 	panic(fmt.Errorf("not implemented: DashboardViewOrganizations - dashboardView_Organizations"))
+}
+
+// DashboardCustomerMap is the resolver for the dashboard_CustomerMap field.
+func (r *queryResolver) DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error) {
+	panic(fmt.Errorf("not implemented: DashboardCustomerMap - dashboard_CustomerMap"))
+}
+
+// DashboardMRRPerCustomer is the resolver for the dashboard_MRRPerCustomer field.
+func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardMRRPerCustomer, error) {
+	panic(fmt.Errorf("not implemented: DashboardMRRPerCustomer - dashboard_MRRPerCustomer"))
+}
+
+// DashboardGrossRevenueRetention is the resolver for the dashboard_GrossRevenueRetention field.
+func (r *queryResolver) DashboardGrossRevenueRetention(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardGrossRevenueRetention, error) {
+	panic(fmt.Errorf("not implemented: DashboardGrossRevenueRetention - dashboard_GrossRevenueRetention"))
+}
+
+// DashboardARRBreakdown is the resolver for the dashboard_ARRBreakdown field.
+func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardARRBreakdown, error) {
+	panic(fmt.Errorf("not implemented: DashboardARRBreakdown - dashboard_ARRBreakdown"))
+}
+
+// DashboardRevenueAtRisk is the resolver for the dashboard_RevenueAtRisk field.
+func (r *queryResolver) DashboardRevenueAtRisk(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRevenueAtRisk, error) {
+	panic(fmt.Errorf("not implemented: DashboardRevenueAtRisk - dashboard_RevenueAtRisk"))
+}
+
+// DashboardRetentionRate is the resolver for the dashboard_RetentionRate field.
+func (r *queryResolver) DashboardRetentionRate(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardRetentionRate, error) {
+	panic(fmt.Errorf("not implemented: DashboardRetentionRate - dashboard_RetentionRate"))
+}
+
+// DashboardNewCustomers is the resolver for the dashboard_NewCustomers field.
+func (r *queryResolver) DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error) {
+	panic(fmt.Errorf("not implemented: DashboardNewCustomers - dashboard_NewCustomers"))
+}
+
+// DashboardCustomerMap returns generated.DashboardCustomerMapResolver implementation.
+func (r *Resolver) DashboardCustomerMap() generated.DashboardCustomerMapResolver {
+	return &dashboardCustomerMapResolver{r}
+}
+
+type dashboardCustomerMapResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error) {
+	panic(fmt.Errorf("not implemented: DashboardViewContacts - dashboardView_Contacts"))
 }
