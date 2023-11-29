@@ -35,12 +35,15 @@ func tearDownTestCase(ctx context.Context, database *test.TestDatabase) func(tb 
 	}
 }
 
+type mockAiModel struct{}
+
+func (m *mockAiModel) Inference(ctx context.Context, text string) (string, error) {
+	return `{"website": "https://www.customeros.ai", "companyName": "CustomerOS", "industry": "Enterprise SaaS", "industryGroup": "Software", "market": "Business to Business", "subIndustry": "CRM Software", "targetAudience": "SaaS companies", "valueProposition": "Grow with your best customers. See every experience everywhere. Create a success plan that delivers results."}`, nil
+}
+
 func TestWebScraping(t *testing.T) {
 	ctx := context.TODO()
-	// cfg, err := config.InitConfig()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+
 	defer tearDownTestCase(ctx, testDatabase)(t)
 	_, driver := neo4jt.InitTestNeo4jDB()
 
@@ -58,7 +61,7 @@ func TestWebScraping(t *testing.T) {
 		"LOGGED":     1,
 	})
 
-	ds := NewDomainScraper(testLogger, &config.Config{}, testDatabase.Repositories)
+	ds := NewDomainScraper(testLogger, &config.Config{}, testDatabase.Repositories, &mockAiModel{})
 	scrapedContent, err := ds.Scrape("https://www.customeros.ai", tenantName, organizationId, true)
 	if err != nil {
 		t.Fatal(err)

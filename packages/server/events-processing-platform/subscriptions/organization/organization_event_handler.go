@@ -468,6 +468,7 @@ func (h *organizationEventHandler) calculateForecastAmount(ctx context.Context, 
 	return &forecastAmount, nil
 }
 
+//lint:ignore U1000 <This was being noisy>
 func (h *organizationEventHandler) getBillingPeriodsInRenewalCycle(billingFreq string, renewalFreq string) float64 {
 	switch billingFreq {
 

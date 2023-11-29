@@ -32,12 +32,12 @@ type DomainScraperV1 struct {
 	aiModel      ai.AiModel
 }
 
-func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repository.Repositories) WebScraper {
+func NewDomainScraper(log logger.Logger, cfg *config.Config, repositories *repository.Repositories, aiModel ai.AiModel) WebScraper {
 	return &DomainScraperV1{
 		log:          log,
 		cfg:          cfg,
 		repositories: repositories,
-		aiModel:      ai.NewAiModel(ai.OpenAiModelType, cfg.Services.OpenAi.ApiKey, cfg.Services.OpenAi.ApiPath, cfg.Services.OpenAi.Organization, "gpt-3.5-turbo-1106", log), // 1106 has an extra parameter available that locks response as JSON
+		aiModel:      aiModel,
 	}
 }
 
@@ -232,48 +232,6 @@ func (ds *DomainScraperV1) extractSocialLinks(html *string) (*string, error) {
 	// Convert JSON bytes to a string
 	s := string(jsonBytes)
 	return &s, nil
-}
-
-// deprecated
-func (ds *DomainScraperV1) openai(prompt string) (*string, *string, error) {
-	requestData := map[string]interface{}{}
-	requestData["model"] = "gpt-3.5-turbo"
-	requestData["prompt"] = prompt
-	requestBody, _ := json.Marshal(requestData)
-	request, _ := http.NewRequest("POST", ds.cfg.Services.OpenAi.ApiPath+"/ask", strings.NewReader(string(requestBody)))
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("X-Openline-API-KEY", ds.cfg.Services.OpenAi.ApiKey)
-
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		ds.log.Printf("Error making the API request: %s ", err)
-		return nil, nil, err
-	}
-	if response.StatusCode != 200 {
-		ds.log.Printf("Error making the API request: %s", response.Status)
-		return nil, nil, fmt.Errorf("error making the API request: %s", response.Status)
-	}
-	defer response.Body.Close()
-
-	var result map[string]interface{}
-	err = json.NewDecoder(response.Body).Decode(&result)
-	if err != nil {
-		ds.log.Printf("Error parsing the API response: %s", err)
-		return nil, nil, err
-	}
-	rawResponse, err := json.Marshal(result)
-	if err != nil {
-		ds.log.Printf("Error parsing the API response: %s", err)
-		return nil, nil, err
-	}
-
-	choices := result["choices"].([]interface{})
-	if len(choices) > 0 {
-		categorization := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-		return &categorization, utils.StringPtr(string(rawResponse)), nil
-	}
-	return nil, utils.StringPtr(string(rawResponse)), errors.New("no result found")
 }
 
 func (ds *DomainScraperV1) runDataPrompt(analysis, domainUrl, socials, jsonStructure *string, tenant, organizationId string) (*WebscrapeResponseV1, error) {
