@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/araddon/dateparse"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
@@ -284,7 +285,10 @@ func convertToUTC(datetimeStr string) (time.Time, error) {
 	}
 
 	if err != nil {
-		return time.Time{}, fmt.Errorf("unable to parse datetime string: %s", datetimeStr)
+		parsedTime, err = dateparse.ParseAny(datetimeStr)
+		if err != nil {
+			return time.Time{}, fmt.Errorf("unable to parse datetime string: %s", datetimeStr)
+		}
 	}
 
 	return parsedTime.UTC(), nil

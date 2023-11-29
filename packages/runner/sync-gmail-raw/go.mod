@@ -1,17 +1,18 @@
 module github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw
 
-go 1.20
+go 1.21
 
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../../server/customer-os-common-module
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ./../../server/customer-os-common-auth
 
 require (
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/google/uuid v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231127212748-cb4286a2f4c6
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231127212748-cb4286a2f4c6
+	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231129154813-29beae0259b1
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231129154813-29beae0259b1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.9.3
