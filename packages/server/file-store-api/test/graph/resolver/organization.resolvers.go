@@ -118,26 +118,6 @@ func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizat
 	panic(fmt.Errorf("not implemented: OrganizationUnsetOwner - organization_UnsetOwner"))
 }
 
-// OrganizationAddRelationship is the resolver for the organization_AddRelationship field.
-func (r *mutationResolver) OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationAddRelationship - organization_AddRelationship"))
-}
-
-// OrganizationRemoveRelationship is the resolver for the organization_RemoveRelationship field.
-func (r *mutationResolver) OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationship - organization_RemoveRelationship"))
-}
-
-// OrganizationSetRelationshipStage is the resolver for the organization_SetRelationshipStage field.
-func (r *mutationResolver) OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationSetRelationshipStage - organization_SetRelationshipStage"))
-}
-
-// OrganizationRemoveRelationshipStage is the resolver for the organization_RemoveRelationshipStage field.
-func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationshipStage - organization_RemoveRelationshipStage"))
-}
-
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))
@@ -171,6 +151,11 @@ func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organizatio
 // Tags is the resolver for the tags field.
 func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error) {
 	panic(fmt.Errorf("not implemented: Tags - tags"))
+}
+
+// Contracts is the resolver for the contracts field.
+func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error) {
+	panic(fmt.Errorf("not implemented: Contracts - contracts"))
 }
 
 // Emails is the resolver for the emails field.
@@ -226,16 +211,6 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 // Owner is the resolver for the owner field.
 func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organization) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: Owner - owner"))
-}
-
-// Relationships is the resolver for the relationships field.
-func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error) {
-	panic(fmt.Errorf("not implemented: Relationships - relationships"))
-}
-
-// RelationshipStages is the resolver for the relationshipStages field.
-func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error) {
-	panic(fmt.Errorf("not implemented: RelationshipStages - relationshipStages"))
 }
 
 // ExternalLinks is the resolver for the externalLinks field.
