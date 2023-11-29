@@ -2,8 +2,6 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-w
 
 go 1.21
 
-toolchain go1.21.4
-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ../customer-os-common-auth
