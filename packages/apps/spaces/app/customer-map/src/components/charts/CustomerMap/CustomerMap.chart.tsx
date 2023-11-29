@@ -204,7 +204,7 @@ const CustomerMapChart = ({
       <svg width={outerWidth} height={outerHeight}>
         <Group>
           <text x={margin.left} y={outerHeight - margin.bottom} fill={gray500}>
-            {DateTimeUtils.format(minMaxX[0].toISOString(), 'd MMM')}
+            {DateTimeUtils.format(minMaxX[0]?.toISOString(), 'd MMM')}
           </text>
           <text
             x={outerWidth / 2 - 32}

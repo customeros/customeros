@@ -18,7 +18,7 @@ export const CustomerMap = () => {
   const { data, isLoading } = useCustomerMapQuery(client);
 
   const chartData = (data?.dashboard_CustomerMap ?? []).map((d) => ({
-    x: new Date(d?.contractSignedDate),
+    x: d?.contractSignedDate ? new Date(d?.contractSignedDate) : new Date(),
     r: d?.arr,
     values: {
       id: d?.organization?.id,
