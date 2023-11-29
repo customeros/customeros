@@ -25,6 +25,7 @@ var actionTypeByModel = map[model.ActionType]entity.ActionType{
 	model.ActionTypeCreated:                  entity.ActionCreated,
 	model.ActionTypeRenewalForecastUpdated:   entity.ActionRenewalForecastUpdated,
 	model.ActionTypeRenewalLikelihoodUpdated: entity.ActionRenewalLikelihoodUpdated,
+	model.ActionTypeContractStatusUpdated:    entity.ActionContractStatusUpdated,
 }
 
 var actionTypeByValue = utils.ReverseMap(actionTypeByModel)

@@ -1877,17 +1877,19 @@ const (
 	ActionTypeCreated                  ActionType = "CREATED"
 	ActionTypeRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
 	ActionTypeRenewalForecastUpdated   ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionTypeContractStatusUpdated    ActionType = "CONTRACT_STATUS_UPDATED"
 )
 
 var AllActionType = []ActionType{
 	ActionTypeCreated,
 	ActionTypeRenewalLikelihoodUpdated,
 	ActionTypeRenewalForecastUpdated,
+	ActionTypeContractStatusUpdated,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated:
 		return true
 	}
 	return false

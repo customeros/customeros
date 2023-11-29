@@ -22,12 +22,14 @@ const (
 	ActionCreated                  ActionType = "CREATED"
 	ActionRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
 	ActionRenewalForecastUpdated   ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionContractStatusUpdated    ActionType = "CONTRACT_STATUS_UPDATED"
 )
 
 var AllActionType = []ActionType{
 	ActionCreated,
 	ActionRenewalLikelihoodUpdated,
 	ActionRenewalForecastUpdated,
+	ActionContractStatusUpdated,
 }
 
 func GetActionType(s string) ActionType {
