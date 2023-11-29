@@ -3,10 +3,10 @@ package entity
 type OpportunityRenewalLikelihood string
 
 const (
-	OpportunityRenewalLikelihoodHigh   OpportunityRenewalLikelihood = "HIGH_RENEWAL"
-	OpportunityRenewalLikelihoodMedium OpportunityRenewalLikelihood = "MEDIUM_RENEWAL"
-	OpportunityRenewalLikelihoodLow    OpportunityRenewalLikelihood = "LOW_RENEWAL"
-	OpportunityRenewalLikelihoodZero   OpportunityRenewalLikelihood = "ZERO_RENEWAL"
+	OpportunityRenewalLikelihoodHigh   OpportunityRenewalLikelihood = "HIGH"
+	OpportunityRenewalLikelihoodMedium OpportunityRenewalLikelihood = "MEDIUM"
+	OpportunityRenewalLikelihoodLow    OpportunityRenewalLikelihood = "LOW"
+	OpportunityRenewalLikelihoodZero   OpportunityRenewalLikelihood = "ZERO"
 )
 
 var AllOpportunityRenewalLikelihoods = []OpportunityRenewalLikelihood{
