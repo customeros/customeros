@@ -225,6 +225,7 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 				org.employees = CASE WHEN $employees <> 0 THEN $employees ELSE org.employees END, 
 				org.isCustomer = CASE WHEN $isCustomer = true THEN $isCustomer ELSE org.isCustomer END, 
 				org.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE org.sourceOfTruth END,
+				org.hide = case WHEN $overwriteHide = true THEN $hide ELSE org.hide END,
 				org.updatedAt = $updatedAt,
 				org.syncedWithEventStore = true`, event.Tenant)
 	params := map[string]any{
@@ -247,6 +248,8 @@ func (r *organizationRepository) UpdateOrganizationIgnoreEmptyInputParams(ctx co
 		"isCustomer":        event.IsCustomer,
 		"sourceOfTruth":     helper.GetSource(event.Source),
 		"updatedAt":         event.UpdatedAt,
+		"hide":              event.Hide,
+		"overwriteHide":     event.ExternalSystem.Available() && !event.Hide,
 		"overwrite":         helper.GetSource(event.Source) == constants.SourceOpenline,
 	}
 
