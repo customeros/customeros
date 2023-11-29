@@ -16,8 +16,13 @@ import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardBody, CardFooter, CardHeader } from '@ui/presentation/Card';
-import { Contract, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { useUpdateContractMutation } from '@organization/src/graphql/updateContract.generated';
+import {
+  Contract,
+  ContractStatus,
+  ContractUpdateInput,
+  ContractRenewalCycle,
+} from '@graphql/types';
 import {
   GetContractsQuery,
   useGetContractsQuery,
@@ -52,7 +57,6 @@ export const ContractCard = ({
   const updateContract = useUpdateContractMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
-
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
         return produce(currentCache, (draft) => {
           const previousContracts = draft?.['organization']?.['contracts'];
@@ -88,7 +92,7 @@ export const ContractCard = ({
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries(queryKey);
-      }, 1500);
+      }, 1000);
     },
   });
 
@@ -131,7 +135,9 @@ export const ContractCard = ({
             contractId: data.id,
             ...ContractDTO.toPayload({
               ...state.values,
-              [action.payload.name]: action.payload.value,
+              [action.payload.name]: action.payload.value
+                ? action.payload.value
+                : { value: ContractRenewalCycle.None },
             }),
           },
         });
@@ -282,20 +288,23 @@ export const ContractCard = ({
               name='renewalCycle'
               formId={formId}
               options={billingFrequencyOptions}
-              isClearable
+              // isClearable
             />
           </Flex>
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
-        {data?.opportunities && (
-          <RenewalARRCard
-            hasEnded={data.status === ContractStatus.Ended}
-            startedAt={data.serviceStartedAt}
-            renewCycle={data.renewalCycle}
-            opportunity={data.opportunities?.[0]}
-          />
-        )}
+        {data?.opportunities &&
+          data.renewalCycle &&
+          data.signedAt &&
+          data.serviceStartedAt && (
+            <RenewalARRCard
+              hasEnded={data.status === ContractStatus.Ended}
+              startedAt={data.serviceStartedAt}
+              renewCycle={data.renewalCycle}
+              opportunity={data.opportunities?.[0]}
+            />
+          )}
         <Services contractId={data.id} data={data?.serviceLineItems} />
       </CardFooter>
     </Card>

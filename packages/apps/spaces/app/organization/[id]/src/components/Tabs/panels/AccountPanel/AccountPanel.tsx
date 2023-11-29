@@ -4,6 +4,7 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 
 import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
 import { Contract } from '@graphql/types';
 import { Select } from '@ui/form/SyncSelect';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
@@ -141,14 +142,18 @@ export const AccountPanel = () => {
               contracts={data.organization.contracts as Contract[]}
             />
             {data?.organization?.contracts.map((contract) => (
-              <>
+              <Flex
+                key={`contract-card-${contract.id}`}
+                flexDir='column'
+                gap={4}
+                mb={4}
+              >
                 <ContractCard
                   organizationId={id}
                   organizationName={data?.organization?.name ?? ''}
-                  key={`contract-card-${contract.id}`}
                   data={(contract as Contract) ?? undefined}
                 />
-              </>
+              </Flex>
             ))}
           </>
         )}
