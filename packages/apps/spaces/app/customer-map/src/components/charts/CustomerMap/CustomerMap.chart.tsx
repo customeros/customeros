@@ -219,7 +219,7 @@ const CustomerMapChart = ({
             y={outerHeight - margin.bottom}
             fill={gray500}
           >
-            {DateTimeUtils.format(minMaxX[1].toISOString(), 'd MMM')}
+            {DateTimeUtils.format(minMaxX[1]?.toISOString(), 'd MMM')}
           </text>
         </Group>
         {tooltipOpen && (
@@ -245,7 +245,7 @@ const CustomerMapChart = ({
               />
               <text x={crosshairX - 23} y={outerHeight - 20} fill='white'>
                 {tooltipData?.x
-                  ? DateTimeUtils.format(tooltipData?.x.toISOString(), 'd MMM')
+                  ? DateTimeUtils.format(tooltipData?.x?.toISOString(), 'd MMM')
                   : 'N/A'}
               </text>
             </Group>
