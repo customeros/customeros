@@ -74,7 +74,7 @@ const pointsWithRadii = points.map(([x, y]) => ({
     status: sample(['OK', 'AT_RISK', 'CHURNED']),
   },
 }));
-const data = pointsWithRadii;
+const _data = pointsWithRadii;
 
 export type CustomerMapDatum = {
   x: Date;
@@ -101,7 +101,7 @@ interface CustomerMapChartProps {
 }
 
 const CustomerMapChart = ({
-  // data,
+  data,
   width: outerWidth = 800,
   height: outerHeight = 800,
 }: CustomerMapChartProps) => {

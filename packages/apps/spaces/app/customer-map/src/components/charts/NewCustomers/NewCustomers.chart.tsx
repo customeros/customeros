@@ -1,5 +1,6 @@
 'use client';
 
+import { PatternLines } from '@visx/pattern';
 import { LinearGradient } from '@visx/gradient';
 import { XYChart, Tooltip, BarSeries, AnimatedAxis } from '@visx/xychart';
 
@@ -7,58 +8,60 @@ import { useToken } from '@ui/utils';
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 
-type NewCustomersDatum = {
-  x: string;
+import { getMonthLabel } from '../util';
+
+export type NewCustomersDatum = {
+  month: number;
   value: number;
 };
 
-const mockData: NewCustomersDatum[] = [
+const _mockData: NewCustomersDatum[] = [
   {
-    x: 'Jan',
+    month: 1,
     value: 20,
   },
   {
-    x: 'Feb',
+    month: 2,
     value: 50,
   },
   {
-    x: 'Mar',
+    month: 3,
     value: 68,
   },
   {
-    x: 'Apr',
+    month: 4,
     value: 55,
   },
   {
-    x: 'May',
+    month: 5,
     value: 73,
   },
   {
-    x: 'Jun',
+    month: 6,
     value: 69,
   },
   {
-    x: 'Jul',
+    month: 7,
     value: 84,
   },
   {
-    x: 'Aug',
+    month: 8,
     value: 85,
   },
   {
-    x: 'Sep',
+    month: 9,
     value: 80,
   },
   {
-    x: 'Oct',
+    month: 10,
     value: 87,
   },
   {
-    x: 'Nov',
+    month: 11,
     value: 90,
   },
   {
-    x: 'Dec',
+    month: 12,
     value: 95,
   },
 ];
@@ -66,11 +69,12 @@ const mockData: NewCustomersDatum[] = [
 interface NewCustomersProps {
   width?: number;
   height?: number;
+  data: NewCustomersDatum[];
 }
 
-const getX = (d: NewCustomersDatum) => d.x;
+const getX = (d: NewCustomersDatum) => getMonthLabel(d.month);
 
-const NewCustomersChart = ({ width }: NewCustomersProps) => {
+const NewCustomersChart = ({ width, data }: NewCustomersProps) => {
   const [primary600, gray700] = useToken('colors', ['primary.600', 'gray.700']);
 
   return (
@@ -94,14 +98,24 @@ const NewCustomersChart = ({ width }: NewCustomersProps) => {
           from={primary600}
           id='visx-area-gradient'
         />
+        <PatternLines
+          id='stripes'
+          height={8}
+          width={8}
+          stroke={primary600}
+          strokeWidth={2}
+          orientation={['diagonal']}
+        />
         <BarSeries
-          dataKey='Newly Contracted'
+          dataKey='Newly contracted'
           radius={4}
-          data={mockData}
+          data={data}
           radiusAll
-          xAccessor={(d) => d.x}
+          xAccessor={(d) => getX(d)}
           yAccessor={(d) => d.value}
-          colorAccessor={({ x }) => primary600}
+          colorAccessor={(_, i) =>
+            i === data.length - 1 ? 'url(#stripes)' : primary600
+          }
         />
 
         <AnimatedAxis

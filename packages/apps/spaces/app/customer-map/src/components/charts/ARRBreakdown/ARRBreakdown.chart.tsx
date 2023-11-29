@@ -1,5 +1,6 @@
 'use client';
 
+import { PatternLines } from '@visx/pattern';
 import {
   XYChart,
   Tooltip,
@@ -204,6 +205,9 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
     },
   ];
 
+  const getBarColor = (key: keyof typeof colorScale, barIndex: number) =>
+    barIndex === data.length - 1 ? `url(#stripes-${key})` : colorScale[key];
+
   return (
     <>
       <Legend data={legendData} />
@@ -218,20 +222,31 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
         }}
         yScale={{ type: 'linear' }}
       >
+        {Object.entries(colorScale).map(([key, color]) => (
+          <PatternLines
+            key={key}
+            id={`stripes-${key}`}
+            height={8}
+            width={8}
+            stroke={color}
+            strokeWidth={2}
+            orientation={['diagonal']}
+          />
+        ))}
         <BarStack offset='diverging'>
           <BarSeries
             dataKey='Churned'
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => -d.churned}
-            colorAccessor={({ month }) => colorScale.Churned}
+            colorAccessor={(_, i) => getBarColor('Churned', i)}
           />
           <BarSeries
             dataKey='Cancelations'
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => -d.cancellations}
-            colorAccessor={({ month }) => colorScale.Cancellations}
+            colorAccessor={(_, i) => getBarColor('Cancellations', i)}
           />
           <BarSeries
             dataKey='Downgrades'
@@ -240,7 +255,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             radius={4}
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => -d.downgrades}
-            colorAccessor={({ month }) => colorScale.Downgrades}
+            colorAccessor={(_, i) => getBarColor('Downgrades', i)}
           />
 
           <BarSeries
@@ -248,14 +263,14 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => d.newlyContracted}
-            colorAccessor={({ month }) => colorScale.NewlyContracted}
+            colorAccessor={(_, i) => getBarColor('NewlyContracted', i)}
           />
           <BarSeries
             dataKey='Renewals'
             data={data}
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => d.renewals}
-            colorAccessor={({ month }) => colorScale.Renewals}
+            colorAccessor={(_, i) => getBarColor('Renewals', i)}
           />
           <BarSeries
             dataKey='Upsells'
@@ -264,7 +279,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
             radiusTop
             xAccessor={(d) => getMonthLabel(d.month)}
             yAccessor={(d) => d.upsells}
-            colorAccessor={({ month }) => colorScale.Upsells}
+            colorAccessor={(_, i) => getBarColor('Upsells', i)}
           />
         </BarStack>
 

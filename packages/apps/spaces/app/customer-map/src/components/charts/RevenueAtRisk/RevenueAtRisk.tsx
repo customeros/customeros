@@ -7,6 +7,7 @@ import { useRevenueAtRiskQuery } from '@customerMap/graphql/revenueAtRisk.genera
 
 import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
@@ -18,7 +19,7 @@ const RevenueAtRiskChart = dynamic(() => import('./RevenueAtRisk.chart'), {
 
 export const RevenueAtRisk = () => {
   const client = getGraphQLClient();
-  const { data } = useRevenueAtRiskQuery(client);
+  const { data, isLoading } = useRevenueAtRiskQuery(client);
 
   const chartData: RevenueAtRiskDatum = {
     atRisk: data?.dashboard_RevenueAtRisk?.atRisk ?? 0,
@@ -55,7 +56,19 @@ export const RevenueAtRisk = () => {
     >
       <ParentSize>
         {({ width, height }) => (
-          <RevenueAtRiskChart width={width} height={height} data={chartData} />
+          <Skeleton
+            w='full'
+            h='200px'
+            endColor='gray.300'
+            startColor='gray.300'
+            isLoaded={!isLoading}
+          >
+            <RevenueAtRiskChart
+              width={width}
+              height={height}
+              data={chartData}
+            />
+          </Skeleton>
         )}
       </ParentSize>
     </ChartCard>

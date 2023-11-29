@@ -3,45 +3,51 @@ import dynamic from 'next/dynamic';
 
 import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-// import { useMrrPerCustomerQuery } from '@dashboard/graphql/.generated';
+import { useNewCustomersQuery } from '@customerMap/graphql/newCustomers.generated';
 
-// import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-// import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { Skeleton } from '@ui/presentation/Skeleton';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { PercentageTrend } from '../../PercentageTrend';
-// import {} from './NewCustomers.chart';
+import { NewCustomersDatum } from './NewCustomers.chart';
 
 const NewCustomersChart = dynamic(() => import('./NewCustomers.chart'), {
   ssr: false,
 });
 
 export const NewCustomers = () => {
-  // const client = getGraphQLClient();
-  // const { data } = useMrrPerCustomerQuery(client, {
-  //   year: 2023,
-  // });
+  const client = getGraphQLClient();
+  const { data, isLoading } = useNewCustomersQuery(client);
 
-  // const chartData = (data?.dashboard_MRRPerCustomer?.perMonth ?? []).map(
-  //   (d) => ({
-  //     month: d?.month,
-  //     value: d?.value,
-  //   }),
-  // );
+  const chartData = (data?.dashboard_NewCustomers?.perMonth ?? []).map((d) => ({
+    month: d?.month,
+    value: d?.count,
+  })) as NewCustomersDatum[];
 
-  // const stat = formatCurrency(
-  //   data?.dashboard_MRRPerCustomer?.mrrPerCustomer ?? 0,
-  // );
-  // const percentage = data?.dashboard_MRRPerCustomer?.increasePercentage ?? 0;
+  const stat = `${data?.dashboard_NewCustomers?.thisMonthCount ?? 0}`;
+
+  const percentage =
+    data?.dashboard_NewCustomers?.thisMonthIncreasePercentage ?? 0;
 
   return (
     <ChartCard
       flex='1'
-      stat={'127'}
+      stat={stat}
       title='New customers'
-      renderSubStat={() => <PercentageTrend percentage={2} />}
+      renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>
-        {({ width }) => <NewCustomersChart width={width} />}
+        {({ width }) => (
+          <Skeleton
+            w='full'
+            h='200px'
+            endColor='gray.300'
+            startColor='gray.300'
+            isLoaded={!isLoading}
+          >
+            <NewCustomersChart width={width} data={chartData} />
+          </Skeleton>
+        )}
       </ParentSize>
     </ChartCard>
   );

@@ -5,6 +5,7 @@ import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { useRetentionRateQuery } from '@customerMap/graphql/retentionRate.generated';
 
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { PercentageTrend } from '../../PercentageTrend';
@@ -16,7 +17,7 @@ const RetentionRateChart = dynamic(() => import('./RetentionRate.chart'), {
 
 export const RetentionRate = () => {
   const client = getGraphQLClient();
-  const { data } = useRetentionRateQuery(client);
+  const { data, isLoading } = useRetentionRateQuery(client);
 
   const chartData = (data?.dashboard_RetentionRate?.perMonth ?? []).map(
     (d) => ({
@@ -39,7 +40,17 @@ export const RetentionRate = () => {
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>
-        {({ width }) => <RetentionRateChart width={width} data={chartData} />}
+        {({ width }) => (
+          <Skeleton
+            w='full'
+            h='200px'
+            endColor='gray.300'
+            startColor='gray.300'
+            isLoaded={!isLoading}
+          >
+            <RetentionRateChart width={width} data={chartData} />
+          </Skeleton>
+        )}
       </ParentSize>
     </ChartCard>
   );

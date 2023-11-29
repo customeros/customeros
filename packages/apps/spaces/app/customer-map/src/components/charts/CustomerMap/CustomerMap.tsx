@@ -2,8 +2,9 @@
 import dynamic from 'next/dynamic';
 
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useCustomerMapQuery } from 'app/customer-map/src/graphql/customerMap.generated';
+import { useCustomerMapQuery } from '@customerMap/graphql/customerMap.generated';
 
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { CustomerMapDatum } from './CustomerMap.chart';
@@ -14,7 +15,7 @@ const CustomerMapChart = dynamic(() => import('./CustomerMap.chart'), {
 
 export const CustomerMap = () => {
   const client = getGraphQLClient();
-  const { data } = useCustomerMapQuery(client);
+  const { data, isLoading } = useCustomerMapQuery(client);
 
   const chartData = (data?.dashboard_CustomerMap ?? []).map((d) => ({
     x: new Date(d?.contractSignedDate),
@@ -29,7 +30,15 @@ export const CustomerMap = () => {
   return (
     <ParentSize>
       {({ width }) => (
-        <CustomerMapChart width={width} height={350} data={chartData} />
+        <Skeleton
+          w='full'
+          h='350px'
+          endColor='gray.300'
+          startColor='gray.300'
+          isLoaded={!isLoading}
+        >
+          <CustomerMapChart width={width} height={350} data={chartData} />
+        </Skeleton>
       )}
     </ParentSize>
   );

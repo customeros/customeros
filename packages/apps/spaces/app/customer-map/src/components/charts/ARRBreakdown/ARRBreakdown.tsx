@@ -5,6 +5,7 @@ import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { useArrBreakdownQuery } from '@customerMap/graphql/arrBreakdown.generated';
 
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
@@ -20,7 +21,7 @@ const RevenueRetentionRateChart = dynamic(
 
 export const ARRBreakdown = () => {
   const client = getGraphQLClient();
-  const { data } = useArrBreakdownQuery(client);
+  const { data, isLoading } = useArrBreakdownQuery(client);
 
   const chartData = (data?.dashboard_ARRBreakdown?.perMonth ?? []).map((d) => ({
     month: d?.month,
@@ -44,7 +45,15 @@ export const ARRBreakdown = () => {
     >
       <ParentSize>
         {({ width }) => (
-          <RevenueRetentionRateChart width={width} data={chartData} />
+          <Skeleton
+            w='full'
+            h='200px'
+            endColor='gray.300'
+            startColor='gray.300'
+            isLoaded={!isLoading}
+          >
+            <RevenueRetentionRateChart width={width} data={chartData} />
+          </Skeleton>
         )}
       </ParentSize>
     </ChartCard>

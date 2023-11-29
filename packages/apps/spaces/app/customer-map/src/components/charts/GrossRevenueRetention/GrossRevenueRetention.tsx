@@ -5,6 +5,7 @@ import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import { useGrossRevenueRetentionQuery } from '@customerMap/graphql/grossRevenueRetention.generated';
 
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
 import { PercentageTrend } from '../../PercentageTrend';
@@ -19,7 +20,7 @@ const RevenueRetentionRateChart = dynamic(
 
 export const GrossRevenueRetention = () => {
   const client = getGraphQLClient();
-  const { data } = useGrossRevenueRetentionQuery(client);
+  const { data, isLoading } = useGrossRevenueRetentionQuery(client);
 
   const chartData = (data?.dashboard_GrossRevenueRetention?.perMonth ?? []).map(
     (d) => ({
@@ -44,7 +45,15 @@ export const GrossRevenueRetention = () => {
     >
       <ParentSize>
         {({ width }) => (
-          <RevenueRetentionRateChart width={width} data={chartData} />
+          <Skeleton
+            w='full'
+            h='200px'
+            endColor='gray.300'
+            startColor='gray.300'
+            isLoaded={!isLoading}
+          >
+            <RevenueRetentionRateChart width={width} data={chartData} />
+          </Skeleton>
         )}
       </ParentSize>
     </ChartCard>
