@@ -4,8 +4,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 go 1.21
 
-toolchain go1.21.4
-
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-contrib/cors v1.5.0
