@@ -152,25 +152,20 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 }
 
 func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, user entity.UserEntity) string {
-	if userId == "" {
-		userUuid, _ := uuid.NewRandom()
-		userId = userUuid.String()
-	}
+	userId = utils.NewUUIDIfEmpty(userId)
 	query := `
 		MATCH (t:Tenant {name:$tenant})
-			MERGE (u:User {
-				  	id: $userId,
-				  	firstName: $firstName,
-				  	lastName: $lastName,
-					profilePhotoUrl: $profilePhotoUrl,
-					createdAt :datetime({timezone: 'UTC'}),
-					source: $source,
-					sourceOfTruth: $sourceOfTruth
-				})-[:USER_BELONGS_TO_TENANT]->(t)
+			MERGE (u:User {id: $userId})-[:USER_BELONGS_TO_TENANT]->(t)
 			SET u:User_%s, 
 				u.roles=$roles,
 				u.internal=$internal,
-				u.bot=$bot`
+				u.bot=$bot,
+				u.firstName=$firstName,
+				u.lastName=$lastName,
+				u.profilePhotoUrl=$profilePhotoUrl,
+				u.createdAt=$now,
+				u.source=$source,
+				u.sourceOfTruth=$sourceOfTruth`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":          tenant,
 		"userId":          userId,
@@ -182,6 +177,7 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		"internal":        user.Internal,
 		"bot":             user.Bot,
 		"profilePhotoUrl": user.ProfilePhotoUrl,
+		"now":             utils.Now(),
 	})
 	return userId
 }
