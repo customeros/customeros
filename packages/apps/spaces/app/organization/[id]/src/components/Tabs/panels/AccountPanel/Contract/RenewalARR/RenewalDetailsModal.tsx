@@ -52,7 +52,6 @@ export const RenewalDetailsModal = ({
   onClose,
 }: RenewalDetailsProps) => {
   const orgId = useParams()?.id as string;
-
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const formId = `renewal-details-form-${data.id}`;
@@ -84,6 +83,9 @@ export const RenewalDetailsModal = ({
   const getContractsQueryKey = useGetContractsQuery.getKey({
     id: orgId,
   });
+  useEffect(() => {
+    setAmount(data?.amount?.toString());
+  }, [data.amount]);
 
   const updateOpportunityMutation = useUpdateOpportunityRenewalMutation(
     client,
