@@ -153,8 +153,7 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 
 func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, user entity.UserEntity) string {
 	userId = utils.NewUUIDIfEmpty(userId)
-	query := `
-		MATCH (t:Tenant {name:$tenant})
+	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (u:User {id: $userId})-[:USER_BELONGS_TO_TENANT]->(t)
 			SET u:User_%s, 
 				u.roles=$roles,
