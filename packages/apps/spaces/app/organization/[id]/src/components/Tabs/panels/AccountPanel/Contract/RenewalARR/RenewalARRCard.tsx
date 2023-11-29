@@ -43,8 +43,10 @@ export const RenewalARRCard = ({
       ? differenceInMonths > 12
       : differenceInMonths > 1;
 
-  const hasRewenewChanged =
-    opportunity.amount !== opportunity.maxAmount || hasEnded;
+  const formattedMaxAmount = formatCurrency(opportunity.maxAmount ?? 0);
+  const formattedAmount = formatCurrency(hasEnded ? 0 : opportunity.amount);
+
+  const hasRewenewChanged = formattedMaxAmount !== formattedAmount;
 
   return (
     <>
@@ -138,9 +140,7 @@ export const RenewalARRCard = ({
             </Flex>
 
             <Flex flexDir='column'>
-              <Text fontWeight='semibold'>
-                {formatCurrency(opportunity.maxAmount)}
-              </Text>
+              <Text fontWeight='semibold'>{formattedAmount}</Text>
 
               {hasRewenewChanged && (
                 <Text
@@ -148,7 +148,7 @@ export const RenewalARRCard = ({
                   textAlign='right'
                   textDecoration='line-through'
                 >
-                  {formatCurrency(hasEnded ? 0 : opportunity.amount)}
+                  {formattedMaxAmount}
                 </Text>
               )}
             </Flex>

@@ -1565,6 +1565,7 @@ export type Mutation = {
   player_Merge: Result;
   serviceLineItemCreate: ServiceLineItem;
   serviceLineItemUpdate: ServiceLineItem;
+  serviceLineItem_Close: Scalars['ID'];
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
   social_Update: Social;
@@ -2131,6 +2132,10 @@ export type MutationServiceLineItemCreateArgs = {
 
 export type MutationServiceLineItemUpdateArgs = {
   input: ServiceLineItemUpdateInput;
+};
+
+export type MutationServiceLineItem_CloseArgs = {
+  input: ServiceLineItemCloseInput;
 };
 
 export type MutationServiceLineItem_DeleteArgs = {
@@ -2709,7 +2714,7 @@ export type Query = {
    */
   contacts: ContactsPage;
   contract: Contract;
-  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;
@@ -2990,12 +2995,18 @@ export type ServiceLineItem = Node & {
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID'];
   name: Scalars['String'];
+  parentId: Scalars['ID'];
   price: Scalars['Float'];
   quantity: Scalars['Int64'];
   source: DataSource;
   sourceOfTruth: DataSource;
   startedAt: Scalars['Time'];
   updatedAt: Scalars['Time'];
+};
+
+export type ServiceLineItemCloseInput = {
+  endedAt?: InputMaybe<Scalars['Time']>;
+  id: Scalars['ID'];
 };
 
 export type ServiceLineItemInput = {
@@ -3015,6 +3026,7 @@ export type ServiceLineItemUpdateInput = {
   billed?: InputMaybe<BilledType>;
   comments?: InputMaybe<Scalars['String']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Float']>;
   quantity?: InputMaybe<Scalars['Int64']>;

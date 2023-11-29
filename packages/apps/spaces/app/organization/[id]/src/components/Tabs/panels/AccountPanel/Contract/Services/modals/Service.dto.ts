@@ -16,6 +16,7 @@ export interface ServiceForm {
   appSource?: string;
   serviceStartedAt?: Date;
   externalReference?: string;
+  isRetroactiveCorrection?: boolean;
   renewalCycle?: ContractRenewalCycle;
   billed?: SelectOption<BilledType> | null;
 }
@@ -31,6 +32,7 @@ export class ServiceDTO implements ServiceForm {
   serviceStartedAt?: Date;
   externalReference?: string;
   renewalCycle?: ContractRenewalCycle;
+  isRetroactiveCorrection?: boolean;
 
   constructor(data?: ServiceItem) {
     this.quantity = data?.quantity;
@@ -40,6 +42,7 @@ export class ServiceDTO implements ServiceForm {
     this.billed =
       billedTypeOptions.find((o) => o.value === data?.billed) ??
       billedTypeOptions[2];
+    this.isRetroactiveCorrection = false;
   }
 
   static toForm(data?: ServiceItem): ServiceForm {
@@ -68,6 +71,7 @@ export class ServiceDTO implements ServiceForm {
       price: data?.price,
       appSource: data?.appSource,
       billed: data?.billed?.value,
+      isRetroactiveCorrection: data?.isRetroactiveCorrection,
     };
   }
 }
