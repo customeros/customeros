@@ -88,6 +88,7 @@ interface ServicesListProps {
 }
 
 export const ServicesList = ({ data }: ServicesListProps) => {
+  const [isLocalOpen, setIsLocalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<
     ServiceLineItem | undefined
   >(undefined);
@@ -96,22 +97,28 @@ export const ServicesList = ({ data }: ServicesListProps) => {
   const handleOpenModal = (service: ServiceLineItem) => {
     setSelectedService(service);
     modal.onOpen();
+    setIsLocalOpen(true);
   };
 
   return (
     <Flex flexDir='column' gap={1}>
-      {data?.map((service, i) => (
-        <React.Fragment key={`service-item-${service.id}`}>
-          <ServiceItem data={service} onOpen={handleOpenModal} />
-          {data.length - 1 !== i && (
-            <Divider w='full' orientation='horizontal' />
-          )}
-        </React.Fragment>
-      ))}
+      {data
+        ?.filter(({ endedAt }) => !endedAt)
+        ?.map((service, i) => (
+          <React.Fragment key={`service-item-${service.id}`}>
+            <ServiceItem data={service} onOpen={handleOpenModal} />
+            {data?.length - 1 !== i && (
+              <Divider w='full' orientation='horizontal' />
+            )}
+          </React.Fragment>
+        ))}
       <UpdateServiceModal
         data={selectedService}
-        isOpen={modal.isOpen}
-        onClose={modal.onClose}
+        isOpen={modal.isOpen && isLocalOpen}
+        onClose={() => {
+          modal.onClose();
+          setIsLocalOpen(false);
+        }}
       />
     </Flex>
   );

@@ -48,6 +48,7 @@ export const CreateServiceModal = ({
 }: SubscriptionServiceModalProps) => {
   const initialRef = useRef(null);
   const formId = `create-service-item-${contractId}`;
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const defaultValues = ServiceDTO.toForm();
   const [activeTab, setActiveTab] = useState('RECURRING');
   const client = getGraphQLClient();
@@ -128,7 +129,12 @@ export const CreateServiceModal = ({
       modal.onClose();
     },
     onSettled: () => {
-      queryClient.invalidateQueries(queryKey);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        queryClient.invalidateQueries(queryKey);
+      }, 1000);
     },
   });
   const { setDefaultValues, state } = useForm<ServiceForm>({
