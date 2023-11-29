@@ -1,7 +1,6 @@
 'use client';
 
 import { Flex } from '@ui/layout/Flex';
-import { Text } from '@ui/typography/Text';
 
 import { CustomerMap } from './src/components/charts/CustomerMap';
 import { ARRBreakdown } from './src/components/charts/ARRBreakdown';
@@ -14,9 +13,6 @@ import { GrossRevenueRetention } from './src/components/charts/GrossRevenueReten
 export default function DashboardPage() {
   return (
     <Flex flexDir='column' pl='1' pt='4'>
-      <Text fontWeight='semibold' fontSize='xl'>
-        Customer map
-      </Text>
       <Flex mb='6'>
         <CustomerMap />
       </Flex>

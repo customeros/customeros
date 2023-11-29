@@ -8,6 +8,7 @@ import { useNewCustomersQuery } from '@customerMap/graphql/newCustomers.generate
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
+import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
 import { NewCustomersDatum } from './NewCustomers.chart';
 
@@ -34,6 +35,7 @@ export const NewCustomers = () => {
       flex='1'
       stat={stat}
       title='New customers'
+      renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >
       <ParentSize>

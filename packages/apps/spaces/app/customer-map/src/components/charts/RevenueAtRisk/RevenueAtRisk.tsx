@@ -11,6 +11,7 @@ import { Skeleton } from '@ui/presentation/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
+import { HelpContent } from './HelpContent';
 import { RevenueAtRiskDatum } from './RevenueAtRisk.chart';
 
 const RevenueAtRiskChart = dynamic(() => import('./RevenueAtRisk.chart'), {
@@ -30,6 +31,7 @@ export const RevenueAtRisk = () => {
     <ChartCard
       flex='1'
       title='Revenue at risk'
+      renderHelpContent={HelpContent}
       renderSubStat={() => (
         <Flex mt='4' justify='space-between'>
           <Flex flexDir='column'>
