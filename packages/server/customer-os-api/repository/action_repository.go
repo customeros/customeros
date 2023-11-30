@@ -35,6 +35,8 @@ func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransacti
 	switch entityType {
 	case entity.ORGANIZATION:
 		query = fmt.Sprintf(`MATCH (p:Organization_%s {id:$entityId}) `, tenant)
+	case entity.CONTRACT:
+		query = fmt.Sprintf(`MATCH (p:Contract_%s {id:$entityId}) `, tenant)
 	}
 
 	query += fmt.Sprintf("MERGE (p)<-[:ACTION_ON]-(a:Action {id:randomUUID()}) "+

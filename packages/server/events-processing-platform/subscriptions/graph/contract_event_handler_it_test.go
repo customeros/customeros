@@ -459,73 +459,124 @@ func prepareRenewalOpportunity(t *testing.T, tenant, opportunityId string, aggre
 	require.Nil(t, err)
 }
 
-//func TestContractEventHandler_OnUpdateStatus(t *testing.T) {
-//	ctx := context.Background()
-//	defer tearDownTestCase(ctx, testDatabase)(t)
-//
-//	aggregateStore := eventstoret.NewTestAggregateStore()
-//
-//	// Prepare neo4j data
-//	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-//	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
-//	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
-//		Name:   "test contract",
-//		Status: string(model.ContractStatusStringDraft),
-//	})
-//	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
-//		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
-//
-//	// prepare event handler
-//	contractEventHandler := &ContractEventHandler{
-//		repositories: testDatabase.Repositories,
-//	}
-//	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
-//	now := utils.NowPtr()
-//	event, err := event.NewContractUpdateStatusEvent(contractAggregate, string(model.ContractStatusStringLive), now, nil)
-//	require.Nil(t, err)
-//
-//	// EXECUTE
-//	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
-//	require.Nil(t, err)
-//
-//	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
-//		"Contract": 1, "Contract_" + tenantName: 1,
-//		"Action": 1, "Action_" + tenantName: 1,
-//		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
-//
-//	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
-//	require.Nil(t, err)
-//	require.NotNil(t, contractDbNode)
-//
-//	// verify contract
-//	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
-//	require.Equal(t, orgId, contract.Id)
-//	require.Equal(t, now, contract.UpdatedAt)
-//	require.Equal(t, entity.DataSourceOpenline, contract.SourceOfTruth)
-//
-//	// verify action
-//	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
-//	require.Nil(t, err)
-//	require.NotNil(t, actionDbNode)
-//	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
-//	require.NotNil(t, action.Id)
-//	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
-//	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
-//	require.Equal(t, now, action.CreatedAt)
-//	require.Equal(t, entity.ActionContractStatusUpdated, action.Type)
-//	require.Equal(t, "Renewal likelihood set to Low by new user", action.Content)
-//	require.Equal(t, `{"likelihood":"LOW","reason":""}`, action.Metadata)
-//
-//	// Check request was generated
-//	eventsMap := aggregateStore.GetEventMap()
-//	require.Equal(t, 1, len(eventsMap))
-//	eventList := eventsMap[contractAggregate.ID]
-//	require.Equal(t, 1, len(eventList))
-//	generatedEvent := eventList[0]
-//	require.Equal(t, events.OrganizationRequestRenewalForecastV1, generatedEvent.EventType)
-//	var eventData events.OrganizationRequestRenewalForecastEvent
-//	err = generatedEvent.GetJsonData(&eventData)
-//	require.Nil(t, err)
-//	test.AssertRecentTime(t, eventData.RequestedAt)
-//	require.Equal(t, tenantName, eventData.Tenant)
-//}
+func TestContractEventHandler_OnUpdateStatusEnded(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
+		Name:   "test contract",
+		Status: string(model.ContractStatusStringDraft),
+	})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	now := utils.Now()
+	event, err := event.NewContractUpdateStatusEvent(contractAggregate, string(model.ContractStatusStringEnded), &now, nil)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+		"Contract": 1, "Contract_" + tenantName: 1,
+		"Action": 1, "Action_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+
+	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	require.Nil(t, err)
+	require.NotNil(t, contractDbNode)
+
+	// verify contract
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	require.Equal(t, contractId, contract.Id)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionContractStatusUpdated, action.Type)
+	require.Equal(t, "test contract has ended", action.Content)
+	require.Equal(t, `{"status":"ENDED"}`, action.Metadata)
+
+	// Check request was not generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 0, len(eventsMap))
+}
+
+func TestContractEventHandler_OnUpdateStatusLive(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jt.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{})
+	contractId := neo4jt.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, entity.ContractEntity{
+		Name:   "test contract",
+		Status: string(model.ContractStatusStringDraft),
+	})
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+		"Contract": 1, "Contract_" + tenantName: 1, "Action": 0, "TimelineEvent": 0})
+
+	// prepare event handler
+	contractEventHandler := &ContractEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
+	now := utils.Now()
+	event, err := event.NewContractUpdateStatusEvent(contractAggregate, string(model.ContractStatusStringLive), &now, nil)
+	require.Nil(t, err)
+
+	// EXECUTE
+	err = contractEventHandler.OnUpdateStatus(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1,
+		"Contract": 1, "Contract_" + tenantName: 1,
+		"Action": 1, "Action_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+
+	contractDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contract_"+tenantName, contractId)
+	require.Nil(t, err)
+	require.NotNil(t, contractDbNode)
+
+	// verify contract
+	contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	require.Equal(t, contractId, contract.Id)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionContractStatusUpdated, action.Type)
+	require.Equal(t, "test contract is nowt live", action.Content)
+	require.Equal(t, `{"status":"LIVE"}`, action.Metadata)
+
+	// Check request was not generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 0, len(eventsMap))
+}

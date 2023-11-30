@@ -19,7 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"time"
+	"strings"
 )
 
 type ActionStatusMetadata struct {
@@ -168,7 +168,17 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.ContractRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData)
+
+	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+	//we will use this boolean below to check if the status has changed
+	statusChanged := contractEntity.Status != eventData.Status
+
+	err = h.repositories.ContractRepository.UpdateStatus(ctx, eventData.Tenant, contractId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
@@ -183,31 +193,23 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
 		}
 	}
-
-	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, eventData.Tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	contractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
 	var message string
-
 	metadata, err := utils.ToJson(ActionStatusMetadata{
 		Status: eventData.Status,
 	})
-	if eventData.Status != "" {
+
+	if statusChanged {
 		switch eventData.Status {
 		case string(model.ContractStatusStringLive):
-			message = contractEntity.Name + " is now " + eventData.Status
+			message = contractEntity.Name + " is now " + strings.ToLower(eventData.Status)
 		case string(model.ContractStatusStringEnded):
-			message = contractEntity.Name + " has " + eventData.Status
+			message = contractEntity.Name + " has " + strings.ToLower(eventData.Status)
 		}
-		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionContractStatusUpdated, message, metadata, time.Now())
+		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionContractStatusUpdated, message, metadata, utils.Now())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
 		}
 	}
-
 	return nil
 }
