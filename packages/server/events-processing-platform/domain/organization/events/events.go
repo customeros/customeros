@@ -32,6 +32,7 @@ const (
 	OrganizationAddParentV1               = "V1_ORGANIZATION_ADD_PARENT"
 	OrganizationRemoveParentV1            = "V1_ORGANIZATION_REMOVE_PARENT"
 	OrganizationRefreshArrV1              = "V1_ORGANIZATION_REFRESH_ARR"
+	OrganizationRefreshRenewalSummaryV1   = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
 )
 
 type OrganizationCreateEvent struct {
@@ -548,6 +549,26 @@ func NewOrganizationRefreshArrEvent(aggregate eventstore.Aggregate) (eventstore.
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshArrV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRefreshArrEvent")
+	}
+	return event, nil
+}
+
+type OrganizationRefreshRenewalSummaryEvent struct {
+	Tenant string `json:"tenant" validate:"required"`
+}
+
+func NewOrganizationRefreshRenewalSummaryEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
+	eventData := OrganizationRefreshRenewalSummaryEvent{
+		Tenant: aggregate.GetTenant(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRefreshRenewalSummaryEvent")
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshRenewalSummaryV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRefreshRenewalSummaryEvent")
 	}
 	return event, nil
 }

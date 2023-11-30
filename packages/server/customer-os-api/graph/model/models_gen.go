@@ -1295,6 +1295,7 @@ type OrgAccountDetails struct {
 	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
 	RenewalForecast   *RenewalForecast   `json:"renewalForecast,omitempty"`
 	BillingDetails    *BillingDetails    `json:"billingDetails,omitempty"`
+	RenewalSummary    *RenewalSummary    `json:"renewalSummary,omitempty"`
 }
 
 type Organization struct {
@@ -1587,6 +1588,13 @@ type RenewalLikelihoodInput struct {
 	ID          string                        `json:"id"`
 	Probability *RenewalLikelihoodProbability `json:"probability,omitempty"`
 	Comment     *string                       `json:"comment,omitempty"`
+}
+
+type RenewalSummary struct {
+	ArrForecast       *float64                      `json:"arrForecast,omitempty"`
+	MaxArrForecast    *float64                      `json:"maxArrForecast,omitempty"`
+	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	NextRenewalDate   *time.Time                    `json:"nextRenewalDate,omitempty"`
 }
 
 // Describes the success or failure of the GraphQL call.

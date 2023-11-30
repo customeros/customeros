@@ -53,10 +53,19 @@ type OrganizationEntity struct {
 	RenewalLikelihood RenewalLikelihood
 	RenewalForecast   RenewalForecast
 	BillingDetails    BillingDetails
+	RenewalSummary    RenewalSummary
 
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 
 	DataloaderKey string
+}
+
+type RenewalSummary struct {
+	ArrForecast            *float64
+	MaxArrForecast         *float64
+	NextRenewalAt          *time.Time
+	RenewalLikelihood      string
+	RenewalLikelihoodOrder *int64
 }
 
 type RenewalLikelihood struct {

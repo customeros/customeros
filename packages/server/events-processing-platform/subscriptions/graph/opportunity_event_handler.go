@@ -113,7 +113,28 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
 	}
 
+	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+
 	return nil
+}
+
+func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
+	organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
+		return
+	}
+	if organizationDbNode == nil {
+		return
+	}
+	organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+
+	err = h.organizationCommands.RefreshRenewalSummary.Handle(ctx, cmd.NewRefreshRenewalSummaryCommand(tenant, organization.ID, "", constants.AppSourceEventProcessingPlatform))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("NewRefreshRenewalSummaryCommand failed: %v", err.Error())
+	}
 }
 
 func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
@@ -208,6 +229,9 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		return err
 	}
 
+	if likelihoodChanged {
+		h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+	}
 	// update renewal ARR if likelihood changed but amount didn't
 	if likelihoodChanged && !amountChanged {
 		contractDbNode, err := h.repositories.ContractRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
@@ -290,6 +314,8 @@ func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventsto
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
+
+	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
 
 	return nil
 }

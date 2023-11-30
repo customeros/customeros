@@ -22,3 +22,18 @@ func MapOpportunityRenewalLikelihoodFromModel(input model.OpportunityRenewalLike
 func MapOpportunityRenewalLikelihoodToModel(input entity.OpportunityRenewalLikelihood) model.OpportunityRenewalLikelihood {
 	return opportunityRenewalLikelihoodByValue[input]
 }
+
+func MapOpportunityRenewalLikelihoodToModelPtr(input string) *model.OpportunityRenewalLikelihood {
+	switch input {
+	case string(entity.OpportunityRenewalLikelihoodHigh):
+		return utils.Ptr(model.OpportunityRenewalLikelihoodHighRenewal)
+	case string(entity.OpportunityRenewalLikelihoodMedium):
+		return utils.Ptr(model.OpportunityRenewalLikelihoodMediumRenewal)
+	case string(entity.OpportunityRenewalLikelihoodLow):
+		return utils.Ptr(model.OpportunityRenewalLikelihoodLowRenewal)
+	case string(entity.OpportunityRenewalLikelihoodZero):
+		return utils.Ptr(model.OpportunityRenewalLikelihoodZeroRenewal)
+	default:
+		return nil
+	}
+}

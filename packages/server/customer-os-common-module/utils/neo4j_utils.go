@@ -436,7 +436,7 @@ func GetInt64PropOrZero(props map[string]any, key string) int64 {
 	return 0
 }
 
-func GetIntPropOrNil(props map[string]any, key string) *int64 {
+func GetInt64PropOrNil(props map[string]any, key string) *int64 {
 	if props[key] != nil {
 		i := props[key].(int64)
 		return &i
