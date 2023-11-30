@@ -173,22 +173,22 @@ export const ServicesList = ({ data, contractId }: ServicesListProps) => {
     setIsLocalOpen(true);
   };
 
+  const filteredData = data?.filter(({ endedAt }) => !endedAt);
+
   return (
     <Flex flexDir='column' gap={1}>
-      {data
-        ?.filter(({ endedAt }) => !endedAt)
-        ?.map((service, i) => (
-          <React.Fragment key={`service-item-${service.id}`}>
-            <ServiceItem
-              data={service}
-              onOpen={handleOpenModal}
-              onCloseService={closeServiceLineItem.mutate}
-            />
-            {data?.length - 1 !== i && (
-              <Divider w='full' orientation='horizontal' />
-            )}
-          </React.Fragment>
-        ))}
+      {filteredData?.map((service, i) => (
+        <React.Fragment key={`service-item-${service.id}`}>
+          <ServiceItem
+            data={service}
+            onOpen={handleOpenModal}
+            onCloseService={closeServiceLineItem.mutate}
+          />
+          {filteredData?.length > 1 && filteredData?.length - 1 !== i && (
+            <Divider w='full' orientation='horizontal' />
+          )}
+        </React.Fragment>
+      ))}
       <UpdateServiceModal
         data={selectedService}
         isOpen={modal.isOpen && isLocalOpen}

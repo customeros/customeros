@@ -88,12 +88,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             )
           }
           calendarIcon={
-            calendarIconHidden ? (
-              <Text
-                color={value ? 'gray.700' : 'gray.400'}
-                role='button'
-                textAlign='left'
-              >
+            <Flex alignItems='center'>
+              {calendarIconHidden && (
+                <Box mr={3} color='gray.500'>
+                  <Calendar />
+                </Box>
+              )}
+
+              <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
                 {value
                   ? DateTimeUtils.format(
                       value.toISOString(),
@@ -101,21 +103,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                     )
                   : `${placeholder ? placeholder : 'Start date'}`}
               </Text>
-            ) : (
-              <Flex alignItems='center'>
-                <Box mr={3} color='gray.500'>
-                  <Calendar />
-                </Box>
-                <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
-                  {value
-                    ? DateTimeUtils.format(
-                        value.toISOString(),
-                        DateTimeUtils.dateWithAbreviatedMonth,
-                      )
-                    : `${placeholder ? placeholder : 'Start date'}`}
-                </Text>
-              </Flex>
-            )
+            </Flex>
           }
         />
       </Flex>
