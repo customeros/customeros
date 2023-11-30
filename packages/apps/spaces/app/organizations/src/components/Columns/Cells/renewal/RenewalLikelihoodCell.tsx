@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 
-import { produce } from 'immer';
 import capitalize from 'lodash/capitalize';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
@@ -55,25 +54,25 @@ export const RenewalLikelihoodCell = ({
 
       queryClient.cancelQueries(queryKey);
 
-      queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-        queryKey,
-        (old) => {
-          return produce(old, (draft) => {
-            const pageIndex = getOrganization.pagination.page - 1;
-            const row = draft?.pages[
-              pageIndex
-            ]?.dashboardView_Organizations?.content.find(
-              (c) => c.id === organizationId,
-            );
-            const likelihood = row?.accountDetails?.renewalLikelihood;
-
-            if (likelihood) {
-              likelihood.probability = payload.input.probability;
-              likelihood.previousProbability = currentProbability;
-            }
-          });
-        },
-      );
+      // queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
+      //   queryKey,
+      //   (old) => {
+      //     return produce(old, (draft) => {
+      //       // const pageIndex = getOrganization.pagination.page - 1;
+      //       // const row = draft?.pages[
+      //       //   pageIndex
+      //       // ]?.dashboardView_Organizations?.content.find(
+      //       //   (c) => c.id === organizationId,
+      //       // );
+      //       // const likelihood = row?.accountDetails?.renewalLikelihood;
+      //
+      //       // if (likelihood) {
+      //       //   likelihood.probability = payload.input.probability;
+      //       //   likelihood.previousProbability = currentProbability;
+      //       // }
+      //     });
+      //   },
+      // );
 
       return { previousEntries };
     },

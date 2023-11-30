@@ -38,6 +38,10 @@ type UserService interface {
 	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
 	GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error)
 	GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error)
+	GetUserOwnersForOpportunities(ctx context.Context, opportunityIds []string) (*entity.UserEntities, error)
+	GetUserCreatorsForOpportunities(ctx context.Context, opportunityIds []string) (*entity.UserEntities, error)
+	GetUserCreatorsForServiceLineItems(ctx context.Context, serviceLineItemIds []string) (*entity.UserEntities, error)
+	GetUserCreatorsForContracts(ctx context.Context, contractIds []string) (*entity.UserEntities, error)
 	GetUserAuthorsForLogEntries(ctx context.Context, logEntryIDs []string) (*entity.UserEntities, error)
 	GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*entity.UserEntities, error)
 	GetUsers(ctx context.Context, userIds []string) (*entity.UserEntities, error)
@@ -47,6 +51,7 @@ type UserService interface {
 	RemoveRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
 	RemoveRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
 	ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool
+	GetContractOwner(ctx context.Context, contractId string) (*entity.UserEntity, error)
 
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
 	addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity)
@@ -482,6 +487,80 @@ func (s *userService) GetUserOwnersForOrganizations(parentCtx context.Context, o
 	return &userEntities, nil
 }
 
+func (s *userService) GetUserOwnersForOpportunities(parentCtx context.Context, opportunityIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserOwnersForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("opportunityIds", opportunityIds))
+
+	users, err := s.repositories.UserRepository.GetAllOwnersForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserCreatorsForOpportunities(parentCtx context.Context, opportunityIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("opportunityIds", opportunityIds))
+
+	users, err := s.repositories.UserRepository.GetAllCreatorsForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+func (s *userService) GetUserCreatorsForServiceLineItems(parentCtx context.Context, serviceLineItemIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("serviceLineItemIds", serviceLineItemIds))
+
+	users, err := s.repositories.UserRepository.GetAllCreatorsForServiceLineItems(ctx, common.GetTenantFromContext(ctx), serviceLineItemIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+func (s *userService) GetUserCreatorsForContracts(parentCtx context.Context, contractIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForContracts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("contractIds", contractIds))
+
+	users, err := s.repositories.UserRepository.GetAllCreatorsForContracts(ctx, common.GetTenantFromContext(ctx), contractIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
 func (s *userService) GetUserAuthorsForLogEntries(parentCtx context.Context, logEntryIDs []string) (*entity.UserEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserAuthorsForLogEntries")
 	defer span.Finish()
@@ -618,4 +697,24 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 func (s *userService) addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	userEntity.DefaultForPlayer = utils.GetBoolPropOrFalse(props, "default")
+}
+
+func (s *userService) GetContractOwner(parentCtx context.Context, contractId string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetContractOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	ownerDbNode, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return s.repositories.UserRepository.GetOwnerForContract(ctx, tx, common.GetContext(ctx).Tenant, contractId)
+	})
+	if err != nil {
+		return nil, err
+	} else if ownerDbNode.(*dbtype.Node) == nil {
+		return nil, nil
+	} else {
+		return s.mapDbNodeToUserEntity(*ownerDbNode.(*dbtype.Node)), nil
+	}
 }

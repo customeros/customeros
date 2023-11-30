@@ -41,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20.5'
+          go-version: stable
 
       - name: Build
         run: make all
@@ -50,7 +50,7 @@ jobs:
         id: test-folders
         run: |
           test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
-          echo "::set-output name=test_folders::$test_folders"
+          echo "test_folders=$test_folders" >> $GITHUB_OUTPUT
 
       - name: Test
         run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
@@ -73,7 +73,7 @@ jobs:
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
-          echo "::set-output name=computed_coverage::$coverage"
+          echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
 
       - name: Send Output to Slack
         run: |

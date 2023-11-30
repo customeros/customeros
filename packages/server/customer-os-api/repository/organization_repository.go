@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
@@ -38,6 +39,10 @@ type OrganizationRepository interface {
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+
+	// TODO deprecated, remove when decomission organization renewal forecast
+	GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error)
+	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
 }
 
 type organizationRepository struct {
@@ -488,6 +493,26 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS_CONTRACT]->(n:Contract) "+
+		" MERGE (primary)-[newRel:HAS_CONTRACT]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS_OPPORTUNITY]->(n:Opportunity) "+
+		" MERGE (primary)-[newRel:HAS_OPPORTUNITY]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
 		" MERGE (merged)-[rel:IS_MERGED_INTO]->(primary) "+
 		" ON CREATE SET rel.mergedAt=$now", params); err != nil {
 		return err
@@ -806,4 +831,96 @@ func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx conte
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *organizationRepository) GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMinMaxRenewalForecastAmount")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `CALL { MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
+              return min(o.renewalForecastAmount) as min, max(o.renewalForecastAmount) as max }
+		      RETURN min, max`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": common.GetTenantFromContext(ctx),
+			}); err != nil {
+			return nil, err
+		} else {
+			record, err := queryResult.Single(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			return record, nil
+		}
+	})
+	if err != nil {
+		return 0, 0, err
+	}
+	if result != nil {
+		record := result.(*db.Record)
+		if record.Values[0] == nil || record.Values[1] == nil {
+			return 0, 0, nil
+		}
+		minValue, minOk := record.Values[0].(float64)
+		maxValue, maxOk := record.Values[1].(float64)
+		if !minOk || !maxOk {
+			return 0, 0, errors.New("unexpected type for min or max value")
+		}
+		return minValue, maxValue, nil
+	} else {
+		return 0, 0, nil
+	}
+}
+
+func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMinMaxRenewalForecastArr")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `CALL { MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
+              RETURN min(o.renewalForecastArr) as min, max(o.renewalForecastArr) as max }
+		      RETURN min, max`
+	params := map[string]any{
+		"tenant": common.GetTenantFromContext(ctx),
+	}
+	span.LogFields(log.String("cypher", cypher))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			record, err := queryResult.Single(ctx)
+			if err != nil {
+				return nil, err
+			}
+			return record, nil
+		}
+	})
+	if err != nil {
+		return 0, 0, err
+	}
+	if result != nil {
+		record := result.(*db.Record)
+		if record.Values[0] == nil || record.Values[1] == nil {
+			return 0, 0, nil
+		}
+		minValue, minOk := record.Values[0].(float64)
+		maxValue, maxOk := record.Values[1].(float64)
+		if !minOk || !maxOk {
+			return 0, 0, errors.New("unexpected type for min or max value")
+		}
+		return minValue, maxValue, nil
+	} else {
+		return 0, 0, nil
+	}
 }

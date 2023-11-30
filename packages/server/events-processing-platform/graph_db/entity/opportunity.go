@@ -5,8 +5,10 @@ import (
 )
 
 type RenewalDetails struct {
-	RenewedAt         *time.Time
-	RenewalLikelihood string
+	RenewedAt              *time.Time
+	RenewalLikelihood      string
+	RenewalUpdatedByUserId string
+	RenewalUpdatedByUserAt *time.Time
 }
 
 type OpportunityEntity struct {
@@ -24,9 +26,11 @@ type OpportunityEntity struct {
 	InternalStage     string
 	ExternalStage     string
 	EstimatedClosedAt *time.Time
+	ClosedAt          *time.Time
 	OwnerUserId       string
 	CreatedByUserId   string
 	GeneralNotes      string
 	NextSteps         string
+	Comments          string
 	RenewalDetails    RenewalDetails
 }

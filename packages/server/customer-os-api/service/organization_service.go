@@ -45,6 +45,8 @@ type OrganizationService interface {
 	UpdateLastTouchpointByEmail(ctx context.Context, email string)
 	UpdateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string)
 	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
+	GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error)
+	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -451,6 +453,42 @@ func (s *organizationService) GetSuggestedMergeToForOrganizations(ctx context.Co
 	return &organizationEntities, nil
 }
 
+func (s *organizationService) GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetMinMaxRenewalForecastAmount")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	min, max, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastAmount(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting min and max renewal forecast amount: %s", err.Error())
+		return 0, 0, err
+	}
+	return min, max, nil
+}
+
+func (s *organizationService) GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetMinMaxRenewalForecastArr")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	min, max, err := s.repositories.OrganizationRepository.GetMinMaxRenewalForecastArr(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting min and max renewal forecast ARR: %s", err.Error())
+		return 0, 0, err
+	}
+	if min == float64(0) && max == float64(0) {
+		min, max, err = s.repositories.OrganizationRepository.GetMinMaxRenewalForecastAmount(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting min and max renewal forecast amount: %s", err.Error())
+			return 0, 0, err
+		}
+	}
+	return min, max, nil
+}
+
 func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ReplaceOwner")
 	defer span.Finish()
@@ -818,6 +856,8 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
 			UpdatedById:     utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
 			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
+			Arr:             utils.GetFloatPropOrNil(props, "renewalForecastArr"),
+			MaxArr:          utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
 		},
 		BillingDetails: entity.BillingDetails{
 			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
@@ -825,6 +865,13 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),
 			RenewalCycleStart: utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleStart"),
 			RenewalCycleNext:  utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleNext"),
+		},
+		RenewalSummary: entity.RenewalSummary{
+			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
+			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
+			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
+			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "derivedRenewalLikelihood"),
+			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
 		},
 	}
 	return &output

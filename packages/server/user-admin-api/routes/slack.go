@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -17,12 +16,12 @@ import (
 )
 
 func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
-	rg.GET("/slack/requestAccess", commonService.TenantUserContextEnhancer(context.Background(), commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories), func(ctx *gin.Context) {
+	rg.GET("/slack/requestAccess", commonService.TenantUserContextEnhancer(commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories), func(ctx *gin.Context) {
 		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + config.Slack.ClientId + "&scope=channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
 
 		ctx.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
 	})
-	rg.POST("/slack/oauth/callback", commonService.TenantUserContextEnhancer(context.Background(), commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories), func(ctx *gin.Context) {
+	rg.POST("/slack/oauth/callback", commonService.TenantUserContextEnhancer(commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories), func(ctx *gin.Context) {
 		tenant, _ := ctx.Get(commonService.KEY_TENANT_NAME)
 
 		slackSettingsEntity, err := services.AuthServices.CommonAuthRepositories.SlackSettingsRepository.Get(tenant.(string))
@@ -99,7 +98,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 
 		ctx.JSON(http.StatusOK, gin.H{})
 	})
-	rg.POST("/slack/revoke", commonService.TenantUserContextEnhancer(context.Background(), commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories), func(ctx *gin.Context) {
+	rg.POST("/slack/revoke", commonService.TenantUserContextEnhancer(commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories), func(ctx *gin.Context) {
 		tenant, _ := ctx.Get(commonService.KEY_TENANT_NAME)
 
 		slackSettingsEntity, err := services.AuthServices.CommonAuthRepositories.SlackSettingsRepository.Get(tenant.(string))

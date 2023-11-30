@@ -262,10 +262,11 @@ type ContactInput struct {
 	// The first name of the contact.
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact.
-	LastName    *string `json:"lastName,omitempty"`
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Timezone    *string `json:"timezone,omitempty"`
+	LastName        *string `json:"lastName,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	Description     *string `json:"description,omitempty"`
+	Timezone        *string `json:"timezone,omitempty"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// User defined metadata appended to contact.
@@ -314,10 +315,11 @@ type ContactUpdateInput struct {
 	// The prefix associate with the contact in customerOS.
 	Prefix *string `json:"prefix,omitempty"`
 	// The first name of the contact in customerOS.
-	FirstName   *string `json:"firstName,omitempty"`
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Timezone    *string `json:"timezone,omitempty"`
+	FirstName       *string `json:"firstName,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	Description     *string `json:"description,omitempty"`
+	Timezone        *string `json:"timezone,omitempty"`
+	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 	// The last name of the contact in customerOS.
 	LastName *string `json:"lastName,omitempty"`
 	Label    *string `json:"label,omitempty"`
@@ -360,6 +362,7 @@ type Contract struct {
 	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
 	Status           ContractStatus       `json:"status"`
 	ServiceLineItems []*ServiceLineItem   `json:"serviceLineItems,omitempty"`
+	Opportunities    []*Opportunity       `json:"opportunities,omitempty"`
 	Owner            *User                `json:"owner,omitempty"`
 	CreatedBy        *User                `json:"createdBy,omitempty"`
 	Source           DataSource           `json:"source"`
@@ -522,6 +525,91 @@ type CustomerJobRole struct {
 type CustomerUser struct {
 	ID      string           `json:"id"`
 	JobRole *CustomerJobRole `json:"jobRole"`
+}
+
+type DashboardARRBreakdown struct {
+	ArrBreakdown       float64                          `json:"arrBreakdown"`
+	IncreasePercentage float64                          `json:"increasePercentage"`
+	PerMonth           []*DashboardARRBreakdownPerMonth `json:"perMonth"`
+}
+
+type DashboardARRBreakdownPerMonth struct {
+	Month           int `json:"month"`
+	NewlyContracted int `json:"newlyContracted"`
+	Renewals        int `json:"renewals"`
+	Upsells         int `json:"upsells"`
+	Downgrades      int `json:"downgrades"`
+	Cancellations   int `json:"cancellations"`
+	Churned         int `json:"churned"`
+}
+
+type DashboardCustomerMap struct {
+	OrganizationID     string                    `json:"organizationId"`
+	Organization       *Organization             `json:"organization"`
+	State              DashboardCustomerMapState `json:"state"`
+	Arr                int                       `json:"arr"`
+	ContractSignedDate time.Time                 `json:"contractSignedDate"`
+}
+
+type DashboardGrossRevenueRetention struct {
+	GrossRevenueRetention float64                                   `json:"grossRevenueRetention"`
+	IncreasePercentage    float64                                   `json:"increasePercentage"`
+	PerMonth              []*DashboardGrossRevenueRetentionPerMonth `json:"perMonth"`
+}
+
+type DashboardGrossRevenueRetentionPerMonth struct {
+	Month      int     `json:"month"`
+	Percentage float64 `json:"percentage"`
+}
+
+type DashboardMRRPerCustomer struct {
+	MrrPerCustomer     float64                            `json:"mrrPerCustomer"`
+	IncreasePercentage float64                            `json:"increasePercentage"`
+	PerMonth           []*DashboardMRRPerCustomerPerMonth `json:"perMonth"`
+}
+
+type DashboardMRRPerCustomerPerMonth struct {
+	Month int `json:"month"`
+	Value int `json:"value"`
+}
+
+type DashboardNewCustomers struct {
+	ThisMonthCount              int                              `json:"thisMonthCount"`
+	ThisMonthIncreasePercentage float64                          `json:"thisMonthIncreasePercentage"`
+	PerMonth                    []*DashboardNewCustomersPerMonth `json:"perMonth"`
+}
+
+type DashboardNewCustomersPerMonth struct {
+	Year  int `json:"year"`
+	Month int `json:"month"`
+	Count int `json:"count"`
+}
+
+type DashboardPeriodInput struct {
+	Start time.Time `json:"start"`
+	End   time.Time `json:"end"`
+}
+
+type DashboardRetentionRate struct {
+	RetentionRate      int                               `json:"retentionRate"`
+	IncreasePercentage float64                           `json:"increasePercentage"`
+	PerMonth           []*DashboardRetentionRatePerMonth `json:"perMonth"`
+}
+
+type DashboardRetentionRatePerMonth struct {
+	Month      int `json:"month"`
+	RenewCount int `json:"renewCount"`
+	ChurnCount int `json:"churnCount"`
+}
+
+type DashboardRevenueAtRisk struct {
+	HighConfidence float64 `json:"highConfidence"`
+	AtRisk         float64 `json:"atRisk"`
+}
+
+type DeleteResponse struct {
+	Accepted  bool `json:"accepted"`
+	Completed bool `json:"completed"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -712,6 +800,8 @@ type GlobalCache struct {
 	IsGoogleActive       bool        `json:"isGoogleActive"`
 	IsGoogleTokenExpired bool        `json:"isGoogleTokenExpired"`
 	GCliCache            []*GCliItem `json:"gCliCache"`
+	MinARRForecastValue  float64     `json:"minARRForecastValue"`
+	MaxARRForecastValue  float64     `json:"maxARRForecastValue"`
 }
 
 type InteractionEvent struct {
@@ -1149,64 +1239,115 @@ type NoteUpdateInput struct {
 	ContentType *string `json:"contentType,omitempty"`
 }
 
+type Opportunity struct {
+	ID                     string                       `json:"id"`
+	CreatedAt              time.Time                    `json:"createdAt"`
+	UpdatedAt              time.Time                    `json:"updatedAt"`
+	Name                   string                       `json:"name"`
+	Amount                 float64                      `json:"amount"`
+	MaxAmount              float64                      `json:"maxAmount"`
+	InternalType           InternalType                 `json:"internalType"`
+	ExternalType           string                       `json:"externalType"`
+	InternalStage          InternalStage                `json:"internalStage"`
+	ExternalStage          string                       `json:"externalStage"`
+	EstimatedClosedAt      time.Time                    `json:"estimatedClosedAt"`
+	GeneralNotes           string                       `json:"generalNotes"`
+	NextSteps              string                       `json:"nextSteps"`
+	RenewedAt              time.Time                    `json:"renewedAt"`
+	RenewalLikelihood      OpportunityRenewalLikelihood `json:"renewalLikelihood"`
+	RenewalUpdatedByUserID string                       `json:"renewalUpdatedByUserId"`
+	RenewalUpdatedByUserAt time.Time                    `json:"renewalUpdatedByUserAt"`
+	Comments               string                       `json:"comments"`
+	CreatedBy              *User                        `json:"createdBy,omitempty"`
+	Owner                  *User                        `json:"owner,omitempty"`
+	Source                 DataSource                   `json:"source"`
+	SourceOfTruth          DataSource                   `json:"sourceOfTruth"`
+	AppSource              string                       `json:"appSource"`
+	ExternalLinks          []*ExternalSystem            `json:"externalLinks"`
+}
+
+func (Opportunity) IsNode()            {}
+func (this Opportunity) GetID() string { return this.ID }
+
+type OpportunityRenewalUpdateInput struct {
+	OpportunityID     string                        `json:"opportunityId"`
+	Name              *string                       `json:"name,omitempty"`
+	Amount            *float64                      `json:"amount,omitempty"`
+	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	Comments          *string                       `json:"comments,omitempty"`
+	AppSource         *string                       `json:"appSource,omitempty"`
+}
+
+type OpportunityUpdateInput struct {
+	OpportunityID       string                        `json:"opportunityId"`
+	Name                *string                       `json:"name,omitempty"`
+	Amount              *float64                      `json:"amount,omitempty"`
+	ExternalType        *string                       `json:"externalType,omitempty"`
+	ExternalStage       *string                       `json:"externalStage,omitempty"`
+	EstimatedClosedDate *time.Time                    `json:"estimatedClosedDate,omitempty"`
+	GeneralNotes        *string                       `json:"generalNotes,omitempty"`
+	NextSteps           *string                       `json:"nextSteps,omitempty"`
+	AppSource           *string                       `json:"appSource,omitempty"`
+	ExternalReference   *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+}
+
 type OrgAccountDetails struct {
 	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
 	RenewalForecast   *RenewalForecast   `json:"renewalForecast,omitempty"`
 	BillingDetails    *BillingDetails    `json:"billingDetails,omitempty"`
+	RenewalSummary    *RenewalSummary    `json:"renewalSummary,omitempty"`
 }
 
 type Organization struct {
-	ID                            string                           `json:"id"`
-	CustomerOsID                  string                           `json:"customerOsId"`
-	ReferenceID                   *string                          `json:"referenceId,omitempty"`
-	CreatedAt                     time.Time                        `json:"createdAt"`
-	UpdatedAt                     time.Time                        `json:"updatedAt"`
-	Name                          string                           `json:"name"`
-	Description                   *string                          `json:"description,omitempty"`
-	Note                          *string                          `json:"note,omitempty"`
-	Domains                       []string                         `json:"domains"`
-	Website                       *string                          `json:"website,omitempty"`
-	Industry                      *string                          `json:"industry,omitempty"`
-	SubIndustry                   *string                          `json:"subIndustry,omitempty"`
-	IndustryGroup                 *string                          `json:"industryGroup,omitempty"`
-	TargetAudience                *string                          `json:"targetAudience,omitempty"`
-	ValueProposition              *string                          `json:"valueProposition,omitempty"`
-	IsPublic                      *bool                            `json:"isPublic,omitempty"`
-	IsCustomer                    *bool                            `json:"isCustomer,omitempty"`
-	Market                        *Market                          `json:"market,omitempty"`
-	Employees                     *int64                           `json:"employees,omitempty"`
-	LastFundingRound              *FundingRound                    `json:"lastFundingRound,omitempty"`
-	LastFundingAmount             *string                          `json:"lastFundingAmount,omitempty"`
-	Source                        DataSource                       `json:"source"`
-	SourceOfTruth                 DataSource                       `json:"sourceOfTruth"`
-	AppSource                     string                           `json:"appSource"`
-	Locations                     []*Location                      `json:"locations"`
-	Socials                       []*Social                        `json:"socials"`
-	Contacts                      *ContactsPage                    `json:"contacts"`
-	JobRoles                      []*JobRole                       `json:"jobRoles"`
-	Notes                         *NotePage                        `json:"notes"`
-	Tags                          []*Tag                           `json:"tags,omitempty"`
-	Contracts                     []*Contract                      `json:"contracts,omitempty"`
-	Emails                        []*Email                         `json:"emails"`
-	PhoneNumbers                  []*PhoneNumber                   `json:"phoneNumbers"`
-	Subsidiaries                  []*LinkedOrganization            `json:"subsidiaries"`
-	SubsidiaryOf                  []*LinkedOrganization            `json:"subsidiaryOf"`
-	SuggestedMergeTo              []*SuggestedMergeOrganization    `json:"suggestedMergeTo"`
-	CustomFields                  []*CustomField                   `json:"customFields"`
-	FieldSets                     []*FieldSet                      `json:"fieldSets"`
-	EntityTemplate                *EntityTemplate                  `json:"entityTemplate,omitempty"`
-	TimelineEvents                []TimelineEvent                  `json:"timelineEvents"`
-	TimelineEventsTotalCount      int64                            `json:"timelineEventsTotalCount"`
-	Owner                         *User                            `json:"owner,omitempty"`
-	Relationships                 []OrganizationRelationship       `json:"relationships"`
-	RelationshipStages            []*OrganizationRelationshipStage `json:"relationshipStages"`
-	ExternalLinks                 []*ExternalSystem                `json:"externalLinks"`
-	LastTouchPointAt              *time.Time                       `json:"lastTouchPointAt,omitempty"`
-	LastTouchPointType            *LastTouchpointType              `json:"lastTouchPointType,omitempty"`
-	LastTouchPointTimelineEventID *string                          `json:"lastTouchPointTimelineEventId,omitempty"`
-	LastTouchPointTimelineEvent   TimelineEvent                    `json:"lastTouchPointTimelineEvent,omitempty"`
-	IssueSummaryByStatus          []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
-	AccountDetails                *OrgAccountDetails               `json:"accountDetails,omitempty"`
+	ID                            string                        `json:"id"`
+	CustomerOsID                  string                        `json:"customerOsId"`
+	ReferenceID                   *string                       `json:"referenceId,omitempty"`
+	CreatedAt                     time.Time                     `json:"createdAt"`
+	UpdatedAt                     time.Time                     `json:"updatedAt"`
+	Name                          string                        `json:"name"`
+	Description                   *string                       `json:"description,omitempty"`
+	Note                          *string                       `json:"note,omitempty"`
+	Domains                       []string                      `json:"domains"`
+	Website                       *string                       `json:"website,omitempty"`
+	Industry                      *string                       `json:"industry,omitempty"`
+	SubIndustry                   *string                       `json:"subIndustry,omitempty"`
+	IndustryGroup                 *string                       `json:"industryGroup,omitempty"`
+	TargetAudience                *string                       `json:"targetAudience,omitempty"`
+	ValueProposition              *string                       `json:"valueProposition,omitempty"`
+	IsPublic                      *bool                         `json:"isPublic,omitempty"`
+	IsCustomer                    *bool                         `json:"isCustomer,omitempty"`
+	Market                        *Market                       `json:"market,omitempty"`
+	Employees                     *int64                        `json:"employees,omitempty"`
+	LastFundingRound              *FundingRound                 `json:"lastFundingRound,omitempty"`
+	LastFundingAmount             *string                       `json:"lastFundingAmount,omitempty"`
+	Source                        DataSource                    `json:"source"`
+	SourceOfTruth                 DataSource                    `json:"sourceOfTruth"`
+	AppSource                     string                        `json:"appSource"`
+	Locations                     []*Location                   `json:"locations"`
+	Socials                       []*Social                     `json:"socials"`
+	Contacts                      *ContactsPage                 `json:"contacts"`
+	JobRoles                      []*JobRole                    `json:"jobRoles"`
+	Notes                         *NotePage                     `json:"notes"`
+	Tags                          []*Tag                        `json:"tags,omitempty"`
+	Contracts                     []*Contract                   `json:"contracts,omitempty"`
+	Emails                        []*Email                      `json:"emails"`
+	PhoneNumbers                  []*PhoneNumber                `json:"phoneNumbers"`
+	Subsidiaries                  []*LinkedOrganization         `json:"subsidiaries"`
+	SubsidiaryOf                  []*LinkedOrganization         `json:"subsidiaryOf"`
+	SuggestedMergeTo              []*SuggestedMergeOrganization `json:"suggestedMergeTo"`
+	CustomFields                  []*CustomField                `json:"customFields"`
+	FieldSets                     []*FieldSet                   `json:"fieldSets"`
+	EntityTemplate                *EntityTemplate               `json:"entityTemplate,omitempty"`
+	TimelineEvents                []TimelineEvent               `json:"timelineEvents"`
+	TimelineEventsTotalCount      int64                         `json:"timelineEventsTotalCount"`
+	Owner                         *User                         `json:"owner,omitempty"`
+	ExternalLinks                 []*ExternalSystem             `json:"externalLinks"`
+	LastTouchPointAt              *time.Time                    `json:"lastTouchPointAt,omitempty"`
+	LastTouchPointType            *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
+	LastTouchPointTimelineEventID *string                       `json:"lastTouchPointTimelineEventId,omitempty"`
+	LastTouchPointTimelineEvent   TimelineEvent                 `json:"lastTouchPointTimelineEvent,omitempty"`
+	IssueSummaryByStatus          []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
+	AccountDetails                *OrgAccountDetails            `json:"accountDetails,omitempty"`
 }
 
 func (Organization) IsNotedEntity() {}
@@ -1263,11 +1404,6 @@ func (OrganizationParticipant) IsInteractionEventParticipant() {}
 func (OrganizationParticipant) IsIssueParticipant() {}
 
 func (OrganizationParticipant) IsMeetingParticipant() {}
-
-type OrganizationRelationshipStage struct {
-	Relationship OrganizationRelationship `json:"relationship"`
-	Stage        *string                  `json:"stage,omitempty"`
-}
 
 type OrganizationUpdateInput struct {
 	ID          string  `json:"id"`
@@ -1429,6 +1565,8 @@ type RenewalForecast struct {
 	UpdatedAt       *time.Time `json:"updatedAt,omitempty"`
 	UpdatedByID     *string    `json:"updatedById,omitempty"`
 	UpdatedBy       *User      `json:"updatedBy,omitempty"`
+	Arr             *float64   `json:"arr,omitempty"`
+	MaxArr          *float64   `json:"maxArr,omitempty"`
 }
 
 type RenewalForecastInput struct {
@@ -1452,6 +1590,13 @@ type RenewalLikelihoodInput struct {
 	Comment     *string                       `json:"comment,omitempty"`
 }
 
+type RenewalSummary struct {
+	ArrForecast       *float64                      `json:"arrForecast,omitempty"`
+	MaxArrForecast    *float64                      `json:"maxArrForecast,omitempty"`
+	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	NextRenewalDate   *time.Time                    `json:"nextRenewalDate,omitempty"`
+}
+
 // Describes the success or failure of the GraphQL call.
 // **A `return` object**
 type Result struct {
@@ -1464,19 +1609,28 @@ type ServiceLineItem struct {
 	ID            string            `json:"id"`
 	CreatedAt     time.Time         `json:"createdAt"`
 	UpdatedAt     time.Time         `json:"updatedAt"`
+	StartedAt     time.Time         `json:"startedAt"`
+	EndedAt       *time.Time        `json:"endedAt,omitempty"`
 	Name          string            `json:"name"`
 	Billed        BilledType        `json:"billed"`
 	Price         float64           `json:"price"`
 	Quantity      int64             `json:"quantity"`
+	Comments      string            `json:"comments"`
 	CreatedBy     *User             `json:"createdBy,omitempty"`
 	Source        DataSource        `json:"source"`
 	SourceOfTruth DataSource        `json:"sourceOfTruth"`
 	AppSource     string            `json:"appSource"`
 	ExternalLinks []*ExternalSystem `json:"externalLinks"`
+	ParentID      string            `json:"parentId"`
 }
 
 func (ServiceLineItem) IsNode()            {}
 func (this ServiceLineItem) GetID() string { return this.ID }
+
+type ServiceLineItemCloseInput struct {
+	ID      string     `json:"id"`
+	EndedAt *time.Time `json:"endedAt,omitempty"`
+}
 
 type ServiceLineItemInput struct {
 	ContractID        string                        `json:"contractId"`
@@ -1486,16 +1640,20 @@ type ServiceLineItemInput struct {
 	Quantity          *int64                        `json:"quantity,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	StartedAt         *time.Time                    `json:"startedAt,omitempty"`
+	EndedAt           *time.Time                    `json:"endedAt,omitempty"`
 }
 
 type ServiceLineItemUpdateInput struct {
-	ServiceLineItemID string                        `json:"serviceLineItemId"`
-	Name              *string                       `json:"name,omitempty"`
-	Billed            *BilledType                   `json:"billed,omitempty"`
-	Price             *float64                      `json:"price,omitempty"`
-	Quantity          *int64                        `json:"quantity,omitempty"`
-	AppSource         *string                       `json:"appSource,omitempty"`
-	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	ServiceLineItemID       string                        `json:"serviceLineItemId"`
+	Name                    *string                       `json:"name,omitempty"`
+	Billed                  *BilledType                   `json:"billed,omitempty"`
+	Price                   *float64                      `json:"price,omitempty"`
+	Quantity                *int64                        `json:"quantity,omitempty"`
+	Comments                *string                       `json:"comments,omitempty"`
+	AppSource               *string                       `json:"appSource,omitempty"`
+	ExternalReference       *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	IsRetroactiveCorrection *bool                         `json:"isRetroactiveCorrection,omitempty"`
 }
 
 type Social struct {
@@ -1771,6 +1929,7 @@ const (
 	BilledTypeMonthly  BilledType = "MONTHLY"
 	BilledTypeAnnually BilledType = "ANNUALLY"
 	BilledTypeOnce     BilledType = "ONCE"
+	BilledTypeUsage    BilledType = "USAGE"
 )
 
 var AllBilledType = []BilledType{
@@ -1778,11 +1937,12 @@ var AllBilledType = []BilledType{
 	BilledTypeMonthly,
 	BilledTypeAnnually,
 	BilledTypeOnce,
+	BilledTypeUsage,
 }
 
 func (e BilledType) IsValid() bool {
 	switch e {
-	case BilledTypeNone, BilledTypeMonthly, BilledTypeAnnually, BilledTypeOnce:
+	case BilledTypeNone, BilledTypeMonthly, BilledTypeAnnually, BilledTypeOnce, BilledTypeUsage:
 		return true
 	}
 	return false
@@ -2074,6 +2234,49 @@ func (e *CustomFieldTemplateType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e CustomFieldTemplateType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type DashboardCustomerMapState string
+
+const (
+	DashboardCustomerMapStateOk      DashboardCustomerMapState = "OK"
+	DashboardCustomerMapStateAtRisk  DashboardCustomerMapState = "AT_RISK"
+	DashboardCustomerMapStateChurned DashboardCustomerMapState = "CHURNED"
+)
+
+var AllDashboardCustomerMapState = []DashboardCustomerMapState{
+	DashboardCustomerMapStateOk,
+	DashboardCustomerMapStateAtRisk,
+	DashboardCustomerMapStateChurned,
+}
+
+func (e DashboardCustomerMapState) IsValid() bool {
+	switch e {
+	case DashboardCustomerMapStateOk, DashboardCustomerMapStateAtRisk, DashboardCustomerMapStateChurned:
+		return true
+	}
+	return false
+}
+
+func (e DashboardCustomerMapState) String() string {
+	return string(e)
+}
+
+func (e *DashboardCustomerMapState) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DashboardCustomerMapState(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DashboardCustomerMapState", str)
+	}
+	return nil
+}
+
+func (e DashboardCustomerMapState) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -2463,6 +2666,96 @@ func (e GCliSearchResultType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type InternalStage string
+
+const (
+	InternalStageOpen       InternalStage = "OPEN"
+	InternalStageEvaluating InternalStage = "EVALUATING"
+	InternalStageClosedWon  InternalStage = "CLOSED_WON"
+	InternalStageClosedLost InternalStage = "CLOSED_LOST"
+)
+
+var AllInternalStage = []InternalStage{
+	InternalStageOpen,
+	InternalStageEvaluating,
+	InternalStageClosedWon,
+	InternalStageClosedLost,
+}
+
+func (e InternalStage) IsValid() bool {
+	switch e {
+	case InternalStageOpen, InternalStageEvaluating, InternalStageClosedWon, InternalStageClosedLost:
+		return true
+	}
+	return false
+}
+
+func (e InternalStage) String() string {
+	return string(e)
+}
+
+func (e *InternalStage) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = InternalStage(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid InternalStage", str)
+	}
+	return nil
+}
+
+func (e InternalStage) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type InternalType string
+
+const (
+	InternalTypeNbo       InternalType = "NBO"
+	InternalTypeUpsell    InternalType = "UPSELL"
+	InternalTypeCrossSell InternalType = "CROSS_SELL"
+	InternalTypeRenewal   InternalType = "RENEWAL"
+)
+
+var AllInternalType = []InternalType{
+	InternalTypeNbo,
+	InternalTypeUpsell,
+	InternalTypeCrossSell,
+	InternalTypeRenewal,
+}
+
+func (e InternalType) IsValid() bool {
+	switch e {
+	case InternalTypeNbo, InternalTypeUpsell, InternalTypeCrossSell, InternalTypeRenewal:
+		return true
+	}
+	return false
+}
+
+func (e InternalType) String() string {
+	return string(e)
+}
+
+func (e *InternalType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = InternalType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid InternalType", str)
+	}
+	return nil
+}
+
+func (e InternalType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type LastTouchpointType string
 
 const (
@@ -2612,118 +2905,48 @@ func (e MeetingStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type OrganizationRelationship string
+type OpportunityRenewalLikelihood string
 
 const (
-	OrganizationRelationshipCustomer                         OrganizationRelationship = "CUSTOMER"
-	OrganizationRelationshipDistributor                      OrganizationRelationship = "DISTRIBUTOR"
-	OrganizationRelationshipPartner                          OrganizationRelationship = "PARTNER"
-	OrganizationRelationshipLicensingPartner                 OrganizationRelationship = "LICENSING_PARTNER"
-	OrganizationRelationshipFranchisee                       OrganizationRelationship = "FRANCHISEE"
-	OrganizationRelationshipFranchisor                       OrganizationRelationship = "FRANCHISOR"
-	OrganizationRelationshipAffiliate                        OrganizationRelationship = "AFFILIATE"
-	OrganizationRelationshipReseller                         OrganizationRelationship = "RESELLER"
-	OrganizationRelationshipInfluencerOrContentCreator       OrganizationRelationship = "INFLUENCER_OR_CONTENT_CREATOR"
-	OrganizationRelationshipMediaPartner                     OrganizationRelationship = "MEDIA_PARTNER"
-	OrganizationRelationshipInvestor                         OrganizationRelationship = "INVESTOR"
-	OrganizationRelationshipMergerOrAcquisitionTarget        OrganizationRelationship = "MERGER_OR_ACQUISITION_TARGET"
-	OrganizationRelationshipParentCompany                    OrganizationRelationship = "PARENT_COMPANY"
-	OrganizationRelationshipSubsidiary                       OrganizationRelationship = "SUBSIDIARY"
-	OrganizationRelationshipJointVenture                     OrganizationRelationship = "JOINT_VENTURE"
-	OrganizationRelationshipSponsor                          OrganizationRelationship = "SPONSOR"
-	OrganizationRelationshipSupplier                         OrganizationRelationship = "SUPPLIER"
-	OrganizationRelationshipVendor                           OrganizationRelationship = "VENDOR"
-	OrganizationRelationshipContractManufacturer             OrganizationRelationship = "CONTRACT_MANUFACTURER"
-	OrganizationRelationshipOriginalEquipmentManufacturer    OrganizationRelationship = "ORIGINAL_EQUIPMENT_MANUFACTURER"
-	OrganizationRelationshipOriginalDesignManufacturer       OrganizationRelationship = "ORIGINAL_DESIGN_MANUFACTURER"
-	OrganizationRelationshipPrivateLabelManufacturer         OrganizationRelationship = "PRIVATE_LABEL_MANUFACTURER"
-	OrganizationRelationshipLogisticsPartner                 OrganizationRelationship = "LOGISTICS_PARTNER"
-	OrganizationRelationshipConsultant                       OrganizationRelationship = "CONSULTANT"
-	OrganizationRelationshipServiceProvider                  OrganizationRelationship = "SERVICE_PROVIDER"
-	OrganizationRelationshipOutsourcingProvider              OrganizationRelationship = "OUTSOURCING_PROVIDER"
-	OrganizationRelationshipInsourcingPartner                OrganizationRelationship = "INSOURCING_PARTNER"
-	OrganizationRelationshipTechnologyProvider               OrganizationRelationship = "TECHNOLOGY_PROVIDER"
-	OrganizationRelationshipDataProvider                     OrganizationRelationship = "DATA_PROVIDER"
-	OrganizationRelationshipCertificationBody                OrganizationRelationship = "CERTIFICATION_BODY"
-	OrganizationRelationshipStandardsOrganization            OrganizationRelationship = "STANDARDS_ORGANIZATION"
-	OrganizationRelationshipIndustryAnalyst                  OrganizationRelationship = "INDUSTRY_ANALYST"
-	OrganizationRelationshipRealEstatePartner                OrganizationRelationship = "REAL_ESTATE_PARTNER"
-	OrganizationRelationshipTalentAcquisitionPartner         OrganizationRelationship = "TALENT_ACQUISITION_PARTNER"
-	OrganizationRelationshipProfessionalEmployerOrganization OrganizationRelationship = "PROFESSIONAL_EMPLOYER_ORGANIZATION"
-	OrganizationRelationshipResearchCollaborator             OrganizationRelationship = "RESEARCH_COLLABORATOR"
-	OrganizationRelationshipRegulatoryBody                   OrganizationRelationship = "REGULATORY_BODY"
-	OrganizationRelationshipTradeAssociationMember           OrganizationRelationship = "TRADE_ASSOCIATION_MEMBER"
-	OrganizationRelationshipCompetitor                       OrganizationRelationship = "COMPETITOR"
+	OpportunityRenewalLikelihoodHighRenewal   OpportunityRenewalLikelihood = "HIGH_RENEWAL"
+	OpportunityRenewalLikelihoodMediumRenewal OpportunityRenewalLikelihood = "MEDIUM_RENEWAL"
+	OpportunityRenewalLikelihoodLowRenewal    OpportunityRenewalLikelihood = "LOW_RENEWAL"
+	OpportunityRenewalLikelihoodZeroRenewal   OpportunityRenewalLikelihood = "ZERO_RENEWAL"
 )
 
-var AllOrganizationRelationship = []OrganizationRelationship{
-	OrganizationRelationshipCustomer,
-	OrganizationRelationshipDistributor,
-	OrganizationRelationshipPartner,
-	OrganizationRelationshipLicensingPartner,
-	OrganizationRelationshipFranchisee,
-	OrganizationRelationshipFranchisor,
-	OrganizationRelationshipAffiliate,
-	OrganizationRelationshipReseller,
-	OrganizationRelationshipInfluencerOrContentCreator,
-	OrganizationRelationshipMediaPartner,
-	OrganizationRelationshipInvestor,
-	OrganizationRelationshipMergerOrAcquisitionTarget,
-	OrganizationRelationshipParentCompany,
-	OrganizationRelationshipSubsidiary,
-	OrganizationRelationshipJointVenture,
-	OrganizationRelationshipSponsor,
-	OrganizationRelationshipSupplier,
-	OrganizationRelationshipVendor,
-	OrganizationRelationshipContractManufacturer,
-	OrganizationRelationshipOriginalEquipmentManufacturer,
-	OrganizationRelationshipOriginalDesignManufacturer,
-	OrganizationRelationshipPrivateLabelManufacturer,
-	OrganizationRelationshipLogisticsPartner,
-	OrganizationRelationshipConsultant,
-	OrganizationRelationshipServiceProvider,
-	OrganizationRelationshipOutsourcingProvider,
-	OrganizationRelationshipInsourcingPartner,
-	OrganizationRelationshipTechnologyProvider,
-	OrganizationRelationshipDataProvider,
-	OrganizationRelationshipCertificationBody,
-	OrganizationRelationshipStandardsOrganization,
-	OrganizationRelationshipIndustryAnalyst,
-	OrganizationRelationshipRealEstatePartner,
-	OrganizationRelationshipTalentAcquisitionPartner,
-	OrganizationRelationshipProfessionalEmployerOrganization,
-	OrganizationRelationshipResearchCollaborator,
-	OrganizationRelationshipRegulatoryBody,
-	OrganizationRelationshipTradeAssociationMember,
-	OrganizationRelationshipCompetitor,
+var AllOpportunityRenewalLikelihood = []OpportunityRenewalLikelihood{
+	OpportunityRenewalLikelihoodHighRenewal,
+	OpportunityRenewalLikelihoodMediumRenewal,
+	OpportunityRenewalLikelihoodLowRenewal,
+	OpportunityRenewalLikelihoodZeroRenewal,
 }
 
-func (e OrganizationRelationship) IsValid() bool {
+func (e OpportunityRenewalLikelihood) IsValid() bool {
 	switch e {
-	case OrganizationRelationshipCustomer, OrganizationRelationshipDistributor, OrganizationRelationshipPartner, OrganizationRelationshipLicensingPartner, OrganizationRelationshipFranchisee, OrganizationRelationshipFranchisor, OrganizationRelationshipAffiliate, OrganizationRelationshipReseller, OrganizationRelationshipInfluencerOrContentCreator, OrganizationRelationshipMediaPartner, OrganizationRelationshipInvestor, OrganizationRelationshipMergerOrAcquisitionTarget, OrganizationRelationshipParentCompany, OrganizationRelationshipSubsidiary, OrganizationRelationshipJointVenture, OrganizationRelationshipSponsor, OrganizationRelationshipSupplier, OrganizationRelationshipVendor, OrganizationRelationshipContractManufacturer, OrganizationRelationshipOriginalEquipmentManufacturer, OrganizationRelationshipOriginalDesignManufacturer, OrganizationRelationshipPrivateLabelManufacturer, OrganizationRelationshipLogisticsPartner, OrganizationRelationshipConsultant, OrganizationRelationshipServiceProvider, OrganizationRelationshipOutsourcingProvider, OrganizationRelationshipInsourcingPartner, OrganizationRelationshipTechnologyProvider, OrganizationRelationshipDataProvider, OrganizationRelationshipCertificationBody, OrganizationRelationshipStandardsOrganization, OrganizationRelationshipIndustryAnalyst, OrganizationRelationshipRealEstatePartner, OrganizationRelationshipTalentAcquisitionPartner, OrganizationRelationshipProfessionalEmployerOrganization, OrganizationRelationshipResearchCollaborator, OrganizationRelationshipRegulatoryBody, OrganizationRelationshipTradeAssociationMember, OrganizationRelationshipCompetitor:
+	case OpportunityRenewalLikelihoodHighRenewal, OpportunityRenewalLikelihoodMediumRenewal, OpportunityRenewalLikelihoodLowRenewal, OpportunityRenewalLikelihoodZeroRenewal:
 		return true
 	}
 	return false
 }
 
-func (e OrganizationRelationship) String() string {
+func (e OpportunityRenewalLikelihood) String() string {
 	return string(e)
 }
 
-func (e *OrganizationRelationship) UnmarshalGQL(v interface{}) error {
+func (e *OpportunityRenewalLikelihood) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = OrganizationRelationship(str)
+	*e = OpportunityRenewalLikelihood(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid OrganizationRelationship", str)
+		return fmt.Errorf("%s is not a valid OpportunityRenewalLikelihood", str)
 	}
 	return nil
 }
 
-func (e OrganizationRelationship) MarshalGQL(w io.Writer) {
+func (e OpportunityRenewalLikelihood) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

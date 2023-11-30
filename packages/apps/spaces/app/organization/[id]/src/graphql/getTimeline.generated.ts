@@ -123,12 +123,14 @@ export type GetTimelineQuery = {
                     name?: string | null;
                     firstName?: string | null;
                     lastName?: string | null;
+                    profilePhotoUrl?: string | null;
                   }>;
                   users: Array<{
                     __typename?: 'User';
                     id: string;
                     firstName: string;
                     lastName: string;
+                    profilePhotoUrl?: string | null;
                   }>;
                   organizations: Array<{
                     __typename?: 'Organization';
@@ -198,12 +200,14 @@ export type GetTimelineQuery = {
                     name?: string | null;
                     firstName?: string | null;
                     lastName?: string | null;
+                    profilePhotoUrl?: string | null;
                   }>;
                   users: Array<{
                     __typename?: 'User';
                     id: string;
                     firstName: string;
                     lastName: string;
+                    profilePhotoUrl?: string | null;
                   }>;
                   organizations: Array<{
                     __typename?: 'Organization';
@@ -281,12 +285,14 @@ export type GetTimelineQuery = {
                         name?: string | null;
                         firstName?: string | null;
                         lastName?: string | null;
+                        profilePhotoUrl?: string | null;
                       }>;
                       users: Array<{
                         __typename?: 'User';
                         id: string;
                         firstName: string;
                         lastName: string;
+                        profilePhotoUrl?: string | null;
                       }>;
                       organizations: Array<{
                         __typename?: 'Organization';
@@ -508,12 +514,14 @@ export type GetTimelineQuery = {
                       name?: string | null;
                       firstName?: string | null;
                       lastName?: string | null;
+                      profilePhotoUrl?: string | null;
                     }>;
                     users: Array<{
                       __typename?: 'User';
                       id: string;
                       firstName: string;
                       lastName: string;
+                      profilePhotoUrl?: string | null;
                     }>;
                     organizations: Array<{
                       __typename?: 'Organization';

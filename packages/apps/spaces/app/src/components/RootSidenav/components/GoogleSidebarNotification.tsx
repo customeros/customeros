@@ -26,22 +26,20 @@ export const GoogleSidebarNotification = () => {
     if (!session) return;
     GetGoogleSettings(session.user.playerIdentityId).then(
       async (res: OAuthUserSettingsInterface) => {
-        const scopes = ['openid', 'email', 'profile'];
-        if (res.gmailSyncEnabled) {
-          scopes.push(
-            'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/gmail.send',
-          );
-        }
-        if (res.googleCalendarSyncEnabled) {
-          scopes.push('https://www.googleapis.com/auth/calendar');
-        }
+        const scopes = [
+          'openid',
+          'email',
+          'profile',
+          'https://www.googleapis.com/auth/gmail.readonly',
+          'https://www.googleapis.com/auth/gmail.send',
+          'https://www.googleapis.com/auth/calendar.readonly',
+        ];
 
         await signIn(
           'google',
           { callbackUrl: '/' },
           {
-            prompt: 'login',
+            prompt: 'consent',
             scope: scopes.join(' '),
           },
         );

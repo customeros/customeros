@@ -74,51 +74,15 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	response.GCliCache = r.Services.Cache.GetStates() //pre-populate with states
 
-	//contacts
-	//for i := 'a'; i < 'z'; i++ {
-	//	filter := model.Filter{}
-	//	contactFirstNameStartsWith := fmt.Sprintf("%c", i)
-	//	filter.Filter = &model.FilterItem{
-	//		Property:      "FIRST_NAME",
-	//		Operation:     model.ComparisonOperatorStartsWith,
-	//		Value:         model.AnyTypeValue{Str: &contactFirstNameStartsWith},
-	//		CaseSensitive: utils.BoolPtr(false),
-	//	}
-	//	contactsPage, err := r.Services.ContactService.FindAll(ctx, 1, 3, &filter, nil)
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		graphql.AddErrorf(ctx, "Failed GcliCache - get contacts")
-	//		return nil, err
-	//	}
-	//	contacts := contactsPage.Rows.(*entity.ContactEntities)
-	//	for _, v := range *contacts {
-	//		item := mapper.MapContactToGCliItem(v)
-	//		response.GCliCache = append(response.GCliCache, &item)
-	//	}
-	//}
+	minARRForecastValue, maxARRForecastValue, err := r.Services.OrganizationService.GetMinMaxRenewalForecastArr(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed GlobalCache - get min max arr forecast")
+		return nil, nil
+	}
 
-	//organizations
-	//for i := 'a'; i < 'z'; i++ {
-	//	filter := model.Filter{}
-	//	organizationNameStartsWith := fmt.Sprintf("%c", i)
-	//	filter.Filter = &model.FilterItem{
-	//		Property:      "NAME",
-	//		Operation:     model.ComparisonOperatorStartsWith,
-	//		Value:         model.AnyTypeValue{Str: &organizationNameStartsWith},
-	//		CaseSensitive: utils.BoolPtr(false),
-	//	}
-	//	contactsPage, err := r.Services.OrganizationService.FindAll(ctx, 1, 3, &filter, nil)
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		graphql.AddErrorf(ctx, "Failed GcliCache - get organizations")
-	//		return nil, err
-	//	}
-	//	organizations := contactsPage.Rows.(*entity.OrganizationEntities)
-	//	for _, v := range *organizations {
-	//		item := mapper.MapOrganizationToGCliItem(v)
-	//		response.GCliCache = append(response.GCliCache, &item)
-	//	}
-	//}
+	response.MinARRForecastValue = minARRForecastValue
+	response.MaxARRForecastValue = maxARRForecastValue
 
 	return response, nil
 }

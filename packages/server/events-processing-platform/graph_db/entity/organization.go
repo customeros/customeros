@@ -52,12 +52,14 @@ type OrganizationEntity struct {
 	RenewalLikelihood RenewalLikelihood
 	RenewalForecast   RenewalForecast
 	BillingDetails    BillingDetails
+	RenewalSummary    RenewalSummary
 
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 
 	DataloaderKey string
 }
 
+// Deprecated
 type RenewalLikelihood struct {
 	RenewalLikelihood         string
 	PreviousRenewalLikelihood string
@@ -83,12 +85,26 @@ func (r RenewalLikelihood) String() string {
 	return output
 }
 
+// Deprecated
 type RenewalForecast struct {
-	Amount          *float64
+	//deprecated
+	Amount *float64
+	//deprecated
 	PotentialAmount *float64
-	Comment         *string
-	UpdatedAt       *time.Time
-	UpdatedBy       string
+	//deprecated
+	Comment *string
+	//deprecated
+	UpdatedAt *time.Time
+	//deprecated
+	UpdatedBy string
+}
+
+type RenewalSummary struct {
+	ArrForecast            *float64
+	MaxArrForecast         *float64
+	NextRenewalAt          *time.Time
+	RenewalLikelihood      string
+	RenewalLikelihoodOrder *int64
 }
 
 func (r RenewalForecast) String() string {
@@ -117,6 +133,7 @@ func (r RenewalForecast) String() string {
 	return output
 }
 
+// Deprecated
 type BillingDetails struct {
 	Amount            *float64
 	Frequency         string
@@ -160,12 +177,6 @@ func (OrganizationEntity) NotedEntityLabel() string {
 func (OrganizationEntity) IsInteractionEventParticipant() {}
 
 func (OrganizationEntity) ParticipantLabel() string {
-	return NodeLabel_Organization
-}
-
-func (OrganizationEntity) IsMeetingParticipant() {}
-
-func (OrganizationEntity) MeetingParticipantLabel() string {
 	return NodeLabel_Organization
 }
 

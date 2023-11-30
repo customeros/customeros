@@ -29,6 +29,12 @@ func (a *OpportunityAggregate) HandleCommand(ctx context.Context, cmd eventstore
 		return a.updateRenewalOpportunityNextCycleDate(ctx, c)
 	case *command.UpdateOpportunityCommand:
 		return a.updateOpportunity(ctx, c)
+	case *command.UpdateRenewalOpportunityCommand:
+		return a.updateRenewalOpportunity(ctx, c)
+	case *command.CloseWinOpportunityCommand:
+		return a.closeWinOpportunity(ctx, c)
+	case *command.CloseLooseOpportunityCommand:
+		return a.closeLooseOpportunity(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -71,7 +77,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, cmd
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
 	cmd.Source.SetDefaultValues()
 
-	renewalLikelihood := model.RenewalLikelihoodStringDecode(cmd.RenewalLikelihood)
+	renewalLikelihood := cmd.RenewalLikelihood
 	if string(renewalLikelihood) == "" {
 		renewalLikelihood = model.RenewalLikelihoodStringHigh
 	}
@@ -146,4 +152,83 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, cmd *comma
 	})
 
 	return a.Apply(updateEvent)
+}
+
+func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, cmd *command.UpdateRenewalOpportunityCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.updateRenewalOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
+	cmd.Source.SetDefaultValues()
+
+	renewalLikelihood := cmd.RenewalLikelihood
+	if string(renewalLikelihood) == "" {
+		renewalLikelihood = model.RenewalLikelihoodStringHigh
+	}
+
+	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), cmd.Comments, cmd.LoggedInUserId, cmd.Source.Source, cmd.Amount, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOpportunityUpdateRenewalEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateRenewalEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.Source.AppSource,
+	})
+
+	return a.Apply(updateRenewalEvent)
+}
+
+func (a *OpportunityAggregate) closeWinOpportunity(ctx context.Context, cmd *command.CloseWinOpportunityCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.closeWinOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	now := utils.Now()
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)
+	closedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.ClosedAt, now)
+
+	closeWinEvent, err := event.NewOpportunityCloseWinEvent(a, updatedAtNotNil, closedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOpportunityCloseWinEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&closeWinEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
+
+	return a.Apply(closeWinEvent)
+}
+
+func (a *OpportunityAggregate) closeLooseOpportunity(ctx context.Context, cmd *command.CloseLooseOpportunityCommand) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.closeLooseOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
+
+	now := utils.Now()
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)
+	closedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.ClosedAt, now)
+
+	closeLooseEvent, err := event.NewOpportunityCloseLooseEvent(a, updatedAtNotNil, closedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOpportunityCloseLooseEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&closeLooseEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
+
+	return a.Apply(closeLooseEvent)
 }

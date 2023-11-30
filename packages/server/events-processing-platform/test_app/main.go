@@ -15,6 +15,7 @@ import (
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
+	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/service_line_item"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -35,10 +36,32 @@ type Clients struct {
 	CommentClient          commentpb.CommentGrpcServiceClient
 	UserClient             userpb.UserGrpcServiceClient
 	ContractClient         contractpb.ContractGrpcServiceClient
+	ServiceLineItemClient  servicelineitempb.ServiceLineItemGrpcServiceClient
 	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
 }
 
 var clients *Clients
+
+func InitClients() {
+	conn, _ := grpc.Dial("localhost:5001", grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(
+			interceptor.ApiKeyEnricher(grpcApiKey),
+		))
+	clients = &Clients{
+		InteractionEventClient: iepb.NewInteractionEventGrpcServiceClient(conn),
+		OrganizationClient:     organizationpb.NewOrganizationGrpcServiceClient(conn),
+		ContactClient:          contactpb.NewContactGrpcServiceClient(conn),
+		LogEntryClient:         logentrypb.NewLogEntryGrpcServiceClient(conn),
+		EmailClient:            emailpb.NewEmailGrpcServiceClient(conn),
+		PhoneNumberClient:      phonenumberpb.NewPhoneNumberGrpcServiceClient(conn),
+		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
+		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
+		UserClient:             userpb.NewUserGrpcServiceClient(conn),
+		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
+		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
+		ServiceLineItemClient:  servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
+	}
+}
 
 func main() {
 	InitClients()
@@ -68,27 +91,9 @@ func main() {
 	//testUpdateIssue()
 	//testCreateComment()
 	//testUserLinkWithEmail()
-	testCreateContract()
-}
-
-func InitClients() {
-	conn, _ := grpc.Dial("localhost:5001", grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(
-			interceptor.ApiKeyEnricher(grpcApiKey),
-		))
-	clients = &Clients{
-		InteractionEventClient: iepb.NewInteractionEventGrpcServiceClient(conn),
-		OrganizationClient:     organizationpb.NewOrganizationGrpcServiceClient(conn),
-		ContactClient:          contactpb.NewContactGrpcServiceClient(conn),
-		LogEntryClient:         logentrypb.NewLogEntryGrpcServiceClient(conn),
-		EmailClient:            emailpb.NewEmailGrpcServiceClient(conn),
-		PhoneNumberClient:      phonenumberpb.NewPhoneNumberGrpcServiceClient(conn),
-		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
-		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
-		UserClient:             userpb.NewUserGrpcServiceClient(conn),
-		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
-		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
-	}
+	//testCreateContract()
+	//testUpdateContract()
+	testAddContractService()
 }
 
 func testRequestGenerateSummaryRequest() {
@@ -538,16 +543,66 @@ func testUserLinkWithEmail() {
 func testCreateContract() {
 	tenant := "openline"
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	organizationId := "7442738e-65df-41aa-854b-556ee2f3bc3d"
-	yesterday := utils.Now().AddDate(0, 0, -1)
+	organizationId := "a00dc1f8-aec9-4107-bb77-48ef39f897bc"
 
 	result, err := clients.ContractClient.CreateContract(context.Background(), &contractpb.CreateContractGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		LoggedInUserId: userId,
+		Name:           "Saturday contract 2",
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testUpdateContract() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	contractId := "c5486341-c7d8-47eb-b75a-4016b8e3d6d5"
+	in10Days := utils.Now().AddDate(0, 0, 10)
+	yesterday := utils.Now().AddDate(0, 0, -1)
+	in1year := utils.Now().AddDate(1, 0, 0)
+
+	result, err := clients.ContractClient.UpdateContract(context.Background(), &contractpb.UpdateContractGrpcRequest{
 		Tenant:           tenant,
-		OrganizationId:   organizationId,
 		LoggedInUserId:   userId,
-		Name:             "contract 5",
-		RenewalCycle:     contractpb.RenewalCycle_MONTHLY_RENEWAL,
-		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&yesterday),
+		Id:               contractId,
+		Name:             "Saturday contract 1",
+		SignedAt:         utils.ConvertTimeToTimestampPtr(&yesterday),
+		ServiceStartedAt: utils.ConvertTimeToTimestampPtr(&in10Days),
+		EndedAt:          utils.ConvertTimeToTimestampPtr(&in1year),
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "test_app",
+		},
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testAddContractService() {
+	tenant := "openline"
+	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
+	contractId := "c5486341-c7d8-47eb-b75a-4016b8e3d6d5"
+	price := 3000
+	//quantity := 3
+	//billed := servicelineitempb.BilledType_ANNUALLY_BILLED
+	billed := servicelineitempb.BilledType_ONCE_BILLED
+
+	result, err := clients.ServiceLineItemClient.CreateServiceLineItem(context.Background(), &servicelineitempb.CreateServiceLineItemGrpcRequest{
+		Tenant:         tenant,
+		LoggedInUserId: userId,
+		Name:           "Custom",
+		ContractId:     contractId,
+		Price:          float32(price),
+		//Quantity:       int64(quantity),
+		Billed: billed,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: "test_app",
+		},
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())

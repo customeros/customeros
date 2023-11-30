@@ -30,18 +30,21 @@ export const OwnerInput = ({ id, owner, invalidateQuery }: OwnerProps) => {
   const queryKey = useOrganizationQuery.getKey({ id });
   const { data } = useGetUsersQuery(client, {
     pagination: {
-      limit: 100,
+      limit: 1000,
       page: 1,
     },
   });
 
   const options = useMemo(() => {
     return data?.users?.content
-      ?.filter((e) => Boolean(e.firstName) || Boolean(e.lastName))
+      ?.filter(
+        (e) => Boolean(e.firstName) || Boolean(e.lastName) || Boolean(e.name),
+      )
       ?.map((o) => ({
         value: o.id,
-        label: `${o.firstName} ${o.lastName}`.trim(),
-      }));
+        label: `${o.name ?? o.firstName + ' ' + o.lastName}`.trim(),
+      }))
+      ?.sort((a, b) => a.label.localeCompare(b.label));
   }, [data]);
 
   const value = owner ? options?.find((o) => o.value === owner.id) : null;

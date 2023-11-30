@@ -54,7 +54,7 @@ export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
     });
   };
 
-  useForm<BillingDetailsForm>({
+  const { setDefaultValues } = useForm<BillingDetailsForm>({
     formId,
     defaultValues,
     stateReducer: (state, action, next) => {
@@ -86,6 +86,10 @@ export const BillingDetailsCard = ({ id, data }: BillingDetailsCardBProps) => {
       return next;
     },
   });
+
+  useEffect(() => {
+    setDefaultValues(defaultValues);
+  }, [defaultValues?.amount, defaultValues?.frequency?.value]);
 
   useEffect(() => {
     return () => {

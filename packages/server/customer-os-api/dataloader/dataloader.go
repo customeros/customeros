@@ -42,6 +42,10 @@ type Loaders struct {
 	UsersForPhoneNumber                         *dataloader.Loader
 	UsersForPlayer                              *dataloader.Loader
 	UserOwnerForOrganization                    *dataloader.Loader
+	UserOwnerForOpportunity                     *dataloader.Loader
+	UserCreatorForOpportunity                   *dataloader.Loader
+	UserCreatorForServiceLineItem               *dataloader.Loader
+	UserCreatorForContract                      *dataloader.Loader
 	UserAuthorForLogEntry                       *dataloader.Loader
 	UserAuthorForComment                        *dataloader.Loader
 	User                                        *dataloader.Loader
@@ -71,6 +75,9 @@ type Loaders struct {
 	ExternalSystemsForLogEntry                  *dataloader.Loader
 	ExternalSystemsForMeeting                   *dataloader.Loader
 	ExternalSystemsForInteractionEvent          *dataloader.Loader
+	ExternalSystemsForContract                  *dataloader.Loader
+	ExternalSystemsForOpportunity               *dataloader.Loader
+	ExternalSystemsForServiceLineItem           *dataloader.Loader
 	TimelineEventForTimelineEventId             *dataloader.Loader
 	OrganizationForJobRole                      *dataloader.Loader
 	ContactForJobRole                           *dataloader.Loader
@@ -84,6 +91,7 @@ type Loaders struct {
 	FollowerParticipantsForIssue                *dataloader.Loader
 	ContractsForOrganization                    *dataloader.Loader
 	ServiceLineItemsForContract                 *dataloader.Loader
+	OpportunitiesForContract                    *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -175,6 +183,9 @@ type contractBatcher struct {
 }
 type serviceLineItemBatcher struct {
 	serviceLineItemService service.ServiceLineItemService
+}
+type opportunityBatcher struct {
+	opportunityService service.OpportunityService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -269,6 +280,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	serviceLineItemBatcher := &serviceLineItemBatcher{
 		serviceLineItemService: services.ServiceLineItemService,
 	}
+	opportunityBatcher := &opportunityBatcher{
+		opportunityService: services.OpportunityService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -301,6 +315,10 @@ func NewDataLoader(services *service.Services) *Loaders {
 		UsersForPhoneNumber:                         dataloader.NewBatchedLoader(userBatcher.getUsersForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForPlayer:                              dataloader.NewBatchedLoader(userBatcher.getUsersForPlayers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserOwnerForOrganization:                    dataloader.NewBatchedLoader(userBatcher.getUserOwnersForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UserOwnerForOpportunity:                     dataloader.NewBatchedLoader(userBatcher.getUserOwnersForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UserCreatorForOpportunity:                   dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UserCreatorForServiceLineItem:               dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForServiceLineItems, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UserCreatorForContract:                      dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserAuthorForLogEntry:                       dataloader.NewBatchedLoader(userBatcher.getUserAuthorsForLogEntries, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserAuthorForComment:                        dataloader.NewBatchedLoader(userBatcher.getUserAuthorsForComments, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		User:                                        dataloader.NewBatchedLoader(userBatcher.getUsers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -325,6 +343,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ExternalSystemsForLogEntry:                  dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForLogEntries, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ExternalSystemsForMeeting:                   dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForMeetings, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ExternalSystemsForInteractionEvent:          dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForContract:                  dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForOpportunity:               dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ExternalSystemsForServiceLineItem:           dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForServiceLineItems, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TimelineEventForTimelineEventId:             dataloader.NewBatchedLoader(timelineEventBatcher.getTimelineEventsForTimelineEventIds, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForJobRole:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactForJobRole:                           dataloader.NewBatchedLoader(contactBatcher.getContactsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -339,6 +360,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		CommentsForIssue:                            dataloader.NewBatchedLoader(commentBatcher.getCommentsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContractsForOrganization:                    dataloader.NewBatchedLoader(contractBatcher.getContractsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ServiceLineItemsForContract:                 dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		OpportunitiesForContract:                    dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

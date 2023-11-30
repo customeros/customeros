@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
 
@@ -18,4 +19,8 @@ type ContractEntity struct {
 	SignedAt         *time.Time
 	ServiceStartedAt *time.Time
 	EndedAt          *time.Time
+}
+
+func (c ContractEntity) IsEnded() bool {
+	return c.EndedAt != nil && c.EndedAt.Before(utils.Now())
 }

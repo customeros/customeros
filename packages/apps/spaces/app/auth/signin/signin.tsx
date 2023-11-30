@@ -14,6 +14,7 @@ import { Center } from '@ui/layout/Center';
 import { Link } from '@ui/navigation/Link';
 import { Google } from '@ui/media/logos/Google';
 import { Heading } from '@ui/typography/Heading';
+import { Microsoft } from '@ui/media/logos/Microsoft';
 
 import Background from './login-bg.png';
 import CustomOsLogo from './CustomerOS-logo.png';
@@ -52,20 +53,34 @@ export default function SignIn({
             </Heading>
             <Text color='gray.500'>Sign in to your account</Text>
             {providers &&
-              Object.values(providers).map((provider, i) => (
-                <Button
-                  mt={i === 0 ? 6 : 3}
-                  key={provider.name}
-                  size='md'
-                  variant='outline'
-                  leftIcon={<Google boxSize={6} />}
-                  backgroundColor={'white'}
-                  onClick={() => signIn(provider.id)}
-                  width='100%'
-                >
-                  Sign in with {provider.name}
-                </Button>
-              ))}
+              Object.values(providers).map((provider, i) => {
+                let icon = undefined;
+                switch (provider.id) {
+                  case 'google':
+                    icon = <Google boxSize={6} />;
+                    break;
+                  case 'azure-ad':
+                    icon = <Microsoft boxSize={6} />;
+                    break;
+                  default:
+                    icon = undefined;
+                }
+
+                return (
+                  <Button
+                    mt={i === 0 ? 6 : 3}
+                    key={provider.name}
+                    size='md'
+                    variant='outline'
+                    leftIcon={icon}
+                    backgroundColor={'white'}
+                    onClick={() => signIn(provider.id)}
+                    width='100%'
+                  >
+                    Sign in with {provider.name}
+                  </Button>
+                );
+              })}
 
             <Text color='gray.500' mt={2} textAlign='center' fontSize='xs'>
               By logging in you agree to CustomerOS&apos;s

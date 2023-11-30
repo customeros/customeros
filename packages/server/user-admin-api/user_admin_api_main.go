@@ -5,6 +5,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
@@ -39,7 +40,16 @@ func main() {
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
-	services := service.InitServices(cfg, db.GormDB, &neo4jDriver)
+	// Setting up gRPC client
+	df := grpc_client.NewDialFactory(cfg)
+	gRPCconn, err := df.GetEventsProcessingPlatformConn()
+	if err != nil {
+		panic(err)
+	}
+	defer df.Close(gRPCconn)
+	grpcContainer := grpc_client.InitClients(gRPCconn)
+
+	services := service.InitServices(cfg, db.GormDB, &neo4jDriver, grpcContainer)
 
 	routes.Run(cfg, services)
 }

@@ -625,6 +625,98 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchpoint(ctx context.Context, 
 	return nil
 }
 
+func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshArr")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData events.OrganizationRefreshArrEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	if err := h.repositories.OrganizationRepository.UpdateArr(ctx, eventData.Tenant, organizationId); err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to update arr for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
+	}
+
+	return nil
+}
+
+func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshRenewalSummary")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData events.OrganizationRefreshArrEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	opportunityDbNodes, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to get open renewal opportunities for organization %s: %s", organizationId, err.Error())
+		return nil
+	}
+	var nextRenewalDate *time.Time
+	var lowestRenewalLikelihood *string
+	var renewalLikelihoodOrder int64
+	if len(opportunityDbNodes) > 0 {
+		opportunities := make([]entity.OpportunityEntity, len(opportunityDbNodes))
+		for _, opportunityDbNode := range opportunityDbNodes {
+			opportunities = append(opportunities, *graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode))
+		}
+		for _, opportunity := range opportunities {
+			if opportunity.RenewalDetails.RenewedAt != nil {
+				if nextRenewalDate == nil || opportunity.RenewalDetails.RenewedAt.Before(*nextRenewalDate) {
+					nextRenewalDate = opportunity.RenewalDetails.RenewedAt
+				}
+			}
+			if opportunity.RenewalDetails.RenewalLikelihood != "" {
+				order := getOrderForRenewalLikelihood(opportunity.RenewalDetails.RenewalLikelihood)
+				if renewalLikelihoodOrder == 0 || renewalLikelihoodOrder > order {
+					renewalLikelihoodOrder = order
+					lowestRenewalLikelihood = utils.ToPtr(opportunity.RenewalDetails.RenewalLikelihood)
+				}
+			}
+		}
+	}
+
+	renewalLikelihoodOrderPtr := utils.ToPtr[int64](renewalLikelihoodOrder)
+	if renewalLikelihoodOrder == 0 {
+		renewalLikelihoodOrderPtr = nil
+	}
+
+	if err := h.repositories.OrganizationRepository.UpdateRenewalSummary(ctx, eventData.Tenant, organizationId, lowestRenewalLikelihood, renewalLikelihoodOrderPtr, nextRenewalDate); err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to update arr for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
+	}
+
+	return nil
+}
+
+func getOrderForRenewalLikelihood(likelihood string) int64 {
+	switch likelihood {
+	case "HIGH":
+		return 40
+	case "MEDIUM":
+		return 30
+	case "LOW":
+		return 20
+	case "ZERO":
+		return 10
+	default:
+		return 0
+	}
+}
+
 func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpsertCustomField")
 	defer span.Finish()

@@ -6,15 +6,16 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -29,6 +30,8 @@ func (r *mutationResolver) ServiceLineItemCreate(ctx context.Context, input mode
 		ContractId:            input.ContractID,
 		ExternalReference:     mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
 		Source:                entity.DataSourceOpenline,
+		StartedAt:             input.StartedAt,
+		EndedAt:               input.EndedAt,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -52,7 +55,7 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.serviceLineItemId", input.ServiceLineItemID))
 
-	err := r.Services.ServiceLineItemService.Update(ctx, mapper.MapServiceLineItemUpdateInputToEntity(input))
+	err := r.Services.ServiceLineItemService.Update(ctx, mapper.MapServiceLineItemUpdateInputToEntity(input), utils.IfNotNilBool(input.IsRetroactiveCorrection))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update service line item %s", input.ServiceLineItemID)
@@ -68,19 +71,83 @@ func (r *mutationResolver) ServiceLineItemUpdate(ctx context.Context, input mode
 	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
 }
 
+// ServiceLineItemDelete is the resolver for the serviceLineItem_Delete field.
+func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
+
+	deletionCompleted, err := r.Services.ServiceLineItemService.Delete(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to delete service line item %s", id)
+		return &model.DeleteResponse{Accepted: false, Completed: false}, nil
+	}
+	return &model.DeleteResponse{Accepted: true, Completed: deletionCompleted}, nil
+}
+
+// ServiceLineItemClose is the resolver for the serviceLineItem_Close field.
+func (r *mutationResolver) ServiceLineItemClose(ctx context.Context, input model.ServiceLineItemCloseInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ServiceLineItemClose", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.input", input))
+
+	err := r.Services.ServiceLineItemService.Close(ctx, input.ID, input.EndedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "failed to close service line item %s", input.ID)
+		return input.ID, nil
+	}
+	return input.ID, nil
+}
+
 // ServiceLineItem is the resolver for the serviceLineItem field.
 func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.ServiceLineItem, error) {
-	panic(fmt.Errorf("not implemented: ServiceLineItem - serviceLineItem"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ServiceLineItem", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.serviceLineItemID", id))
+
+	if id == "" {
+		graphql.AddErrorf(ctx, "Missing service line item input id")
+		return nil, nil
+	}
+
+	serviceLineItemEntityPtr, err := r.Services.ServiceLineItemService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get service line item by id %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToServiceLineItem(serviceLineItemEntityPtr), nil
 }
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *serviceLineItemResolver) CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForServiceLineItem(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *serviceLineItemResolver) ExternalLinks(ctx context.Context, obj *model.ServiceLineItem) ([]*model.ExternalSystem, error) {
-	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForServiceLineItem(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get external system for service line item %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get external system for service line item %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
 // ServiceLineItem returns generated.ServiceLineItemResolver implementation.

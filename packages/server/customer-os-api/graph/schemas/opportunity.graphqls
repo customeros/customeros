@@ -1,0 +1,77 @@
+extend type Query {
+    opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+extend type Mutation {
+    opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
+    opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!): Opportunity!
+}
+
+type Opportunity implements Node {
+    id:                 ID!
+    createdAt:          Time!
+    updatedAt:          Time!
+    name:               String!
+    amount:             Float!
+    maxAmount:          Float!
+    internalType:       InternalType!
+    externalType:       String!
+    internalStage:      InternalStage!
+    externalStage:      String!
+    estimatedClosedAt:  Time!
+    generalNotes:       String!
+    nextSteps:          String!
+    renewedAt:          Time!
+    renewalLikelihood:  OpportunityRenewalLikelihood!
+    renewalUpdatedByUserId: String!
+    renewalUpdatedByUserAt: Time!
+    comments:           String!
+    createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+    source:             DataSource!
+    sourceOfTruth:      DataSource!
+    appSource:          String!
+    externalLinks:      [ExternalSystem!]! @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+enum InternalType {
+    NBO
+    UPSELL
+    CROSS_SELL
+    RENEWAL
+}
+
+enum InternalStage {
+    OPEN
+    EVALUATING
+    CLOSED_WON
+    CLOSED_LOST
+}
+
+enum OpportunityRenewalLikelihood {
+    HIGH_RENEWAL
+    MEDIUM_RENEWAL
+    LOW_RENEWAL
+    ZERO_RENEWAL
+}
+
+input OpportunityRenewalUpdateInput {
+    opportunityId:      ID!
+    name:               String
+    amount:             Float
+    renewalLikelihood:  OpportunityRenewalLikelihood
+    comments:           String
+    appSource:          String
+}
+
+input OpportunityUpdateInput {
+    opportunityId:       ID!
+    name:                String
+    amount:              Float
+    externalType:        String
+    externalStage:       String
+    estimatedClosedDate: Time
+    generalNotes:        String
+    nextSteps:           String
+    appSource:           String
+    externalReference:   ExternalSystemReferenceInput
+}

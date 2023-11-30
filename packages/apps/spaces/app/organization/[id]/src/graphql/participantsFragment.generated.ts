@@ -26,12 +26,14 @@ export type InteractionEventParticipantFragmentEmailParticipantFragment = {
       name?: string | null;
       firstName?: string | null;
       lastName?: string | null;
+      profilePhotoUrl?: string | null;
     }>;
     users: Array<{
       __typename?: 'User';
       id: string;
       firstName: string;
       lastName: string;
+      profilePhotoUrl?: string | null;
     }>;
     organizations: Array<{
       __typename?: 'Organization';
@@ -180,11 +182,13 @@ export const InteractionEventParticipantFragmentFragmentDoc = `
         name
         firstName
         lastName
+        profilePhotoUrl
       }
       users {
         id
         firstName
         lastName
+        profilePhotoUrl
       }
       organizations {
         id

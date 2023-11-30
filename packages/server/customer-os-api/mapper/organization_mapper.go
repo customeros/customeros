@@ -51,6 +51,8 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 				Comment:         entity.RenewalForecast.Comment,
 				UpdatedAt:       entity.RenewalForecast.UpdatedAt,
 				UpdatedByID:     entity.RenewalForecast.UpdatedById,
+				Arr:             entity.RenewalForecast.Arr,
+				MaxArr:          entity.RenewalForecast.MaxArr,
 			},
 			BillingDetails: &model.BillingDetails{
 				Amount:            entity.BillingDetails.Amount,
@@ -58,6 +60,12 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 				RenewalCycle:      MapRenewalCycleToModel(entity.BillingDetails.RenewalCycle),
 				RenewalCycleStart: entity.BillingDetails.RenewalCycleStart,
 				RenewalCycleNext:  entity.BillingDetails.RenewalCycleNext,
+			},
+			RenewalSummary: &model.RenewalSummary{
+				ArrForecast:       entity.RenewalSummary.ArrForecast,
+				MaxArrForecast:    entity.RenewalSummary.MaxArrForecast,
+				NextRenewalDate:   entity.RenewalSummary.NextRenewalAt,
+				RenewalLikelihood: MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood),
 			},
 		},
 	}

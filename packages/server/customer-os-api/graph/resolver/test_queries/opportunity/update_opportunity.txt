@@ -1,0 +1,18 @@
+mutation UpdateOpportunity($opportunityId: ID!) {
+opportunityUpdate(
+    input: {
+        opportunityId: $opportunityId
+        name: "Updated Opportunity"
+        amount: 100
+        estimatedClosedDate: "2019-03-01T00:00:00Z"
+        externalType: "external type"
+        externalStage: "external stage"
+        generalNotes: "general notes"
+        nextSteps: "next steps"
+        appSource: "test app source"
+    }
+  ) {
+    id
+    name
+  }
+}

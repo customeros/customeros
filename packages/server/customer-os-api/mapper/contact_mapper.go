@@ -9,16 +9,17 @@ import (
 
 func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	contactEntity := entity.ContactEntity{
-		CreatedAt:     input.CreatedAt,
-		FirstName:     utils.IfNotNilString(input.FirstName),
-		LastName:      utils.IfNotNilString(input.LastName),
-		Name:          utils.IfNotNilString(input.Name),
-		Prefix:        utils.IfNotNilString(input.Prefix),
-		Description:   utils.IfNotNilString(input.Description),
-		Timezone:      utils.IfNotNilString(input.Timezone),
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
-		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		CreatedAt:       input.CreatedAt,
+		FirstName:       utils.IfNotNilString(input.FirstName),
+		LastName:        utils.IfNotNilString(input.LastName),
+		Name:            utils.IfNotNilString(input.Name),
+		Prefix:          utils.IfNotNilString(input.Prefix),
+		Description:     utils.IfNotNilString(input.Description),
+		Timezone:        utils.IfNotNilString(input.Timezone),
+		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
+		Source:          entity.DataSourceOpenline,
+		SourceOfTruth:   entity.DataSourceOpenline,
+		AppSource:       utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &contactEntity
 }
@@ -41,14 +42,15 @@ func MapCustomerContactInputToEntity(input model.CustomerContactInput) *entity.C
 
 func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.ContactEntity {
 	contactEntity := entity.ContactEntity{
-		Id:            input.ID,
-		Name:          utils.IfNotNilString(input.Name),
-		FirstName:     utils.IfNotNilString(input.FirstName),
-		LastName:      utils.IfNotNilString(input.LastName),
-		Prefix:        utils.IfNotNilString(input.Prefix),
-		Description:   utils.IfNotNilString(input.Description),
-		Timezone:      utils.IfNotNilString(input.Timezone),
-		SourceOfTruth: entity.DataSourceOpenline,
+		Id:              input.ID,
+		Name:            utils.IfNotNilString(input.Name),
+		FirstName:       utils.IfNotNilString(input.FirstName),
+		LastName:        utils.IfNotNilString(input.LastName),
+		Prefix:          utils.IfNotNilString(input.Prefix),
+		Description:     utils.IfNotNilString(input.Description),
+		Timezone:        utils.IfNotNilString(input.Timezone),
+		ProfilePhotoUrl: utils.IfNotNilString(input.ProfilePhotoURL),
+		SourceOfTruth:   entity.DataSourceOpenline,
 	}
 	return &contactEntity
 }

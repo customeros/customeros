@@ -1,7 +1,12 @@
 package model
 
 type GetPlayerResponse struct {
-	Id string `json:"id"`
+	PlayerByAuthIdProvider struct {
+		Id    string `json:"id"`
+		Users *[]struct {
+			Tenant string `json:"tenant"`
+		} `json:"users"`
+	} `json:"player_ByAuthIdProvider"`
 }
 
 type Result struct {
@@ -9,7 +14,7 @@ type Result struct {
 }
 
 type GetTenantByWorkspaceResponse struct {
-	Workspace *string `json:"tenant_ByWorkspace"`
+	Name *string `json:"tenant_ByWorkspace"`
 }
 
 type MergeTenantToWorkspaceResponse struct {

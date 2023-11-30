@@ -67,6 +67,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	case events.OrganizationRequestRenewalForecastV1,
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRefreshLastTouchpointV1,
+		events.OrganizationRefreshArrV1,
+		events.OrganizationRefreshRenewalSummaryV1,
 		events.OrganizationRequestScrapeByWebsiteV1:
 		return nil
 	default:

@@ -1,6 +1,95 @@
 extend type Query {
     """
-    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT
+    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
+
+    dashboard_CustomerMap: [DashboardCustomerMap!]
+    dashboard_MRRPerCustomer(period: DashboardPeriodInput): DashboardMRRPerCustomer
+    dashboard_GrossRevenueRetention(period: DashboardPeriodInput): DashboardGrossRevenueRetention
+    dashboard_ARRBreakdown(period: DashboardPeriodInput): DashboardARRBreakdown
+    dashboard_RevenueAtRisk(period: DashboardPeriodInput): DashboardRevenueAtRisk
+    dashboard_RetentionRate(period: DashboardPeriodInput): DashboardRetentionRate
+    dashboard_NewCustomers(period: DashboardPeriodInput): DashboardNewCustomers
+}
+
+input DashboardPeriodInput {
+    start: Time!
+    end: Time!
+}
+
+type DashboardCustomerMap {
+    organizationId: ID!
+    organization: Organization! @goField(forceResolver: true)
+    state: DashboardCustomerMapState!
+    arr: Int!
+    contractSignedDate: Time!
+}
+
+type DashboardMRRPerCustomer {
+    mrrPerCustomer: Float!
+    increasePercentage: Float!
+    perMonth: [DashboardMRRPerCustomerPerMonth]!
+}
+type DashboardMRRPerCustomerPerMonth {
+    month: Int!
+    value: Int!
+}
+
+type DashboardGrossRevenueRetention {
+    grossRevenueRetention: Float!
+    increasePercentage: Float!
+    perMonth: [DashboardGrossRevenueRetentionPerMonth]!
+}
+type DashboardGrossRevenueRetentionPerMonth {
+    month: Int!
+    percentage: Float!
+}
+
+type DashboardARRBreakdown {
+    arrBreakdown: Float!
+    increasePercentage: Float!
+    perMonth: [DashboardARRBreakdownPerMonth]!
+}
+type DashboardARRBreakdownPerMonth {
+    month: Int!
+    newlyContracted: Int!
+    renewals: Int!
+    upsells: Int!
+    downgrades: Int!
+    cancellations: Int!
+    churned: Int!
+}
+
+type DashboardRevenueAtRisk {
+    highConfidence: Float!
+    atRisk: Float!
+}
+
+type DashboardRetentionRate {
+    retentionRate: Int!
+    increasePercentage: Float!
+    perMonth: [DashboardRetentionRatePerMonth]!
+}
+type DashboardRetentionRatePerMonth {
+    month: Int!
+    renewCount: Int!
+    churnCount: Int!
+}
+
+type DashboardNewCustomers {
+    thisMonthCount: Int!
+    thisMonthIncreasePercentage: Float!
+    perMonth: [DashboardNewCustomersPerMonth]!
+}
+type DashboardNewCustomersPerMonth {
+    year: Int!
+    month: Int!
+    count: Int!
+}
+
+enum DashboardCustomerMapState {
+    OK
+    AT_RISK
+    CHURNED
 }

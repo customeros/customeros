@@ -64,5 +64,4 @@ func TestGet_Whoami(t *testing.T) {
 	require.Equal(t, len(resp.Users), 2)
 	require.Equal(t, len(resp.Users[0].Emails), 1)
 	require.Equal(t, len(resp.Users[1].Emails), 1)
-
 }
