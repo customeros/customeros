@@ -1,74 +1,35 @@
-import capitalize from 'lodash/capitalize';
-
-import { RenewalLikelihoodProbability } from '@graphql/types';
-
-export function isLikelihoodIncreased(
-  curr: RenewalLikelihoodProbability | null = null,
-  prev: RenewalLikelihoodProbability | null = null,
-) {
-  if (!curr) return false;
-  if (!prev) return true;
-
-  if (curr === RenewalLikelihoodProbability.High) {
-    return true;
-  }
-
-  if (
-    curr === RenewalLikelihoodProbability.Medium &&
-    [
-      RenewalLikelihoodProbability.Medium,
-      RenewalLikelihoodProbability.Low,
-      RenewalLikelihoodProbability.Zero,
-    ].includes(prev)
-  ) {
-    return true;
-  }
-
-  if (
-    curr === RenewalLikelihoodProbability.Low &&
-    [
-      RenewalLikelihoodProbability.Low,
-      RenewalLikelihoodProbability.Zero,
-    ].includes(prev)
-  ) {
-    return true;
-  }
-
-  return false;
-}
+import { Maybe, OpportunityRenewalLikelihood } from '@graphql/types';
 
 export function getLikelihoodColor(
-  likelihood: RenewalLikelihoodProbability | null = null,
+  likelihood: OpportunityRenewalLikelihood | null = null,
 ) {
   switch (likelihood) {
-    case RenewalLikelihoodProbability.High:
+    case OpportunityRenewalLikelihood.HighRenewal:
       return 'success.500';
-    case RenewalLikelihoodProbability.Medium:
+    case OpportunityRenewalLikelihood.MediumRenewal:
       return 'warning.500';
-    case RenewalLikelihoodProbability.Low:
+    case OpportunityRenewalLikelihood.LowRenewal:
       return 'error.500';
-    case RenewalLikelihoodProbability.Zero:
+    case OpportunityRenewalLikelihood.ZeroRenewal:
       return 'gray.500';
     default:
       return 'gray.500';
   }
 }
 
-export const renewalLikelihoodOptions = [
-  {
-    label: capitalize(RenewalLikelihoodProbability.High),
-    value: RenewalLikelihoodProbability.High,
-  },
-  {
-    label: capitalize(RenewalLikelihoodProbability.Medium),
-    value: RenewalLikelihoodProbability.Medium,
-  },
-  {
-    label: capitalize(RenewalLikelihoodProbability.Low),
-    value: RenewalLikelihoodProbability.Low,
-  },
-  {
-    label: capitalize(RenewalLikelihoodProbability.Zero),
-    value: RenewalLikelihoodProbability.Zero,
-  },
-];
+export function getRenewalLikelihoodLabel(
+  renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,
+) {
+  switch (renewalLikelihood) {
+    case OpportunityRenewalLikelihood.HighRenewal:
+      return 'High';
+    case OpportunityRenewalLikelihood.MediumRenewal:
+      return 'Medium';
+    case OpportunityRenewalLikelihood.LowRenewal:
+      return 'Low';
+    case OpportunityRenewalLikelihood.ZeroRenewal:
+      return 'Zero';
+    default:
+      return '';
+  }
+}

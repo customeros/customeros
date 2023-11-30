@@ -4,7 +4,6 @@ import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 interface RenewalForecastCellProps {
   amount?: number | null;
-  isUpdatedByUser?: boolean;
   potentialAmount?: number | null;
 }
 

@@ -135,10 +135,9 @@ const AccountPanelComponent = () => {
       {!!data?.organization?.contracts && (
         <>
           <ARRForecast
-            forecast={data?.organization?.accountDetails?.renewalForecast}
+            renewalSunnary={data?.organization?.accountDetails?.renewalSummary}
             name={data?.organization?.name || ''}
             isInitialLoading={isInitialLoading}
-            contracts={data.organization.contracts as Contract[]}
           />
           {data?.organization?.contracts.map((contract) => (
             <Flex

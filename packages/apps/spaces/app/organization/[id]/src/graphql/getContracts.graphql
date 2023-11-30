@@ -4,10 +4,10 @@ query getContracts($id: ID!) {
     name
     note
     accountDetails {
-      renewalForecast {
-        arr
-        maxArr
-        potentialAmount
+      renewalSummary {
+        arrForecast
+        maxArrForecast
+        renewalLikelihood
       }
     }
     contracts {
