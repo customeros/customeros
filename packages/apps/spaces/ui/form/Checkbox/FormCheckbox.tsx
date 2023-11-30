@@ -47,6 +47,7 @@ export const FormCheckbox = (props: PropsWithChildren<FormCheckboxProps>) => {
     iconColor,
     isIndeterminate,
     spacing = '0.5rem',
+    fontSize = 'md',
     icon = <CheckboxIcon />,
     formId,
     name,
@@ -93,7 +94,14 @@ export const FormCheckbox = (props: PropsWithChildren<FormCheckboxProps>) => {
       >
         {clonedIcon}
       </chakra.span>
-      <chakra.span __css={{ marginStart: spacing, ...styles.label }}>
+      <chakra.span
+        __css={{
+          ...styles.label,
+          marginStart: spacing,
+          fontSize,
+          lineHeight: 1,
+        }}
+      >
         {children}
       </chakra.span>
     </chakra.label>

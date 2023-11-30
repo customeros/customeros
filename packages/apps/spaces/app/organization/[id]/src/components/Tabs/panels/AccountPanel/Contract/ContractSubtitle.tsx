@@ -14,6 +14,13 @@ function getLabelFromValue(value: string): string | undefined {
   }
 }
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
+  if (!data.serviceStartedAt) {
+    return <Text>No start date or services yet</Text>;
+  }
+  if (!data?.serviceLineItems?.length) {
+    return <Text>No services added yet</Text>;
+  }
+
   const hasStartedService =
     data?.serviceStartedAt && !DateTimeUtils.isFuture(data.serviceStartedAt);
 
@@ -24,23 +31,30 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
           DateTimeUtils.dateWithAbreviatedMonth,
         )
       : null;
-
   const renewalDate = data?.opportunities?.[0]?.renewedAt
     ? DateTimeUtils.format(
         data?.opportunities?.[0]?.renewedAt,
         DateTimeUtils.dateWithAbreviatedMonth,
       )
     : null;
+  if (
+    !renewalDate &&
+    hasStartedService &&
+    data?.status !== ContractStatus.Ended
+  ) {
+    const serviceStarted = hasStartedService
+      ? DateTimeUtils.format(
+          data.serviceStartedAt,
+          DateTimeUtils.dateWithAbreviatedMonth,
+        )
+      : null;
+
+    return <Text>Service started {serviceStarted}</Text>;
+  }
+
   const endDate = data?.endedAt
     ? DateTimeUtils.format(data.endedAt, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
-
-  if (!data.serviceStartedAt) {
-    return <Text>No start date or services yet</Text>;
-  }
-  if (!data?.serviceLineItems?.length) {
-    return <Text>No services added yet</Text>;
-  }
 
   const isActiveAndRenewable =
     hasStartedService &&

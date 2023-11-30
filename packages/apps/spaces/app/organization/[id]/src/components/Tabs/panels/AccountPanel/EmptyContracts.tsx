@@ -47,7 +47,7 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
         externalLinks: [],
         renewalCycle: ContractRenewalCycle.None,
         id: `created-contract-${Math.random().toString()}`,
-        name: `${name?.length ? `${name}s` : "Unnamed's"} contract`,
+        name: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
         owner: null,
         source: DataSource.Openline,
         sourceOfTruth: DataSource.Openline,
@@ -130,7 +130,7 @@ export const EmptyContracts: FC<PropsWithChildren<{ name: string }>> = ({
             createContract.mutate({
               input: {
                 organizationId: id,
-                name: `${name?.length ? `${name}s` : "Unnamed's"} contract`,
+                name: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
               },
             })
           }

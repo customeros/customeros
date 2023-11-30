@@ -130,10 +130,16 @@ export const ARRForecast = ({
             </Flex>
 
             <Flex flexDir='column'>
-              <Heading fontSize='2xl' color='gray.700'>
-                {isUpdatingContract && (!isInitialLoading || !isRestoring)
-                  ? 'Calculating...'
-                  : formattedAmount}
+              <Heading
+                fontSize='2xl'
+                transition='opacity 0.25s ease-in'
+                color={
+                  isUpdatingContract && (!isInitialLoading || !isRestoring)
+                    ? 'gray.400'
+                    : 'gray.700'
+                }
+              >
+                {formattedAmount}
               </Heading>
               {hasForecastChanged && !isUpdatingContract && (
                 <Text
