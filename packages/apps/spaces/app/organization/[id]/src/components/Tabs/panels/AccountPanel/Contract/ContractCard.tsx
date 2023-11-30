@@ -161,6 +161,7 @@ export const ContractCard = ({
 
   return (
     <Card
+      as='section'
       px='4'
       py='3'
       w='full'
@@ -181,17 +182,43 @@ export const ContractCard = ({
         flexDir='column'
         onClick={() => (!isExpanded ? setIsExpanded(true) : null)}
       >
-        <Flex justifyContent='space-between' w='full' flex={1}>
+        <Flex
+          justifyContent='space-between'
+          w='full'
+          flex={1}
+          _hover={
+            !isExpanded
+              ? {
+                  bg: 'transparent',
+                  '#edit-contract-icon': {
+                    opacity: 1,
+                    transition: 'opacity 0.2s linear',
+                  },
+                }
+              : {}
+          }
+          sx={
+            !isExpanded
+              ? {
+                  '#edit-contract-icon': {
+                    opacity: 0,
+                    transition: 'opacity 0.2s linear',
+                  },
+                }
+              : {}
+          }
+        >
           <Heading
             size='sm'
             color='gray.700'
             noOfLines={1}
             lineHeight={1.4}
             display='inline'
-            w={isExpanded ? '235px' : '260px'}
+            w={isExpanded ? '235px' : '250px'}
             whiteSpace='nowrap'
           >
             {!isExpanded && state.values.name}
+
             {isExpanded && (
               <FormInput
                 fontWeight='semibold'
@@ -208,6 +235,14 @@ export const ContractCard = ({
           </Heading>
 
           <Flex alignItems='center' gap={2} ml={2}>
+            {!isExpanded && (
+              <Edit03
+                mr={1}
+                color='gray.400'
+                boxSize='4'
+                id='edit-contract-icon'
+              />
+            )}
             <UrlInput
               formId={formId}
               url={data?.contractUrl}
@@ -246,7 +281,6 @@ export const ContractCard = ({
             justifyContent='flex-start'
           >
             <ContractSubtitle data={data} />
-            <Edit03 ml={1} color='gray.400' boxSize='3' mt='4.5px' />
           </Flex>
         )}
       </CardHeader>
@@ -259,12 +293,14 @@ export const ContractCard = ({
               formId={formId}
               name='signedAt'
               inset='120% auto auto 0px'
+              calendarIconHidden
             />
             <DatePicker
               label='Contract ends'
               placeholder='End date'
               formId={formId}
               name='endedAt'
+              calendarIconHidden
             />
           </Flex>
           <Flex gap='4'>
@@ -274,6 +310,7 @@ export const ContractCard = ({
               formId={formId}
               name='serviceStartedAt'
               inset='120% auto auto 0px'
+              calendarIconHidden
             />
             <FormSelect
               label='Contract renews'
@@ -288,17 +325,14 @@ export const ContractCard = ({
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
-        {data?.opportunities &&
-          data.renewalCycle &&
-          data.signedAt &&
-          data.serviceStartedAt && (
-            <RenewalARRCard
-              hasEnded={data.status === ContractStatus.Ended}
-              startedAt={data.serviceStartedAt}
-              renewCycle={data.renewalCycle}
-              opportunity={data.opportunities?.[0]}
-            />
-          )}
+        {data?.opportunities && data.renewalCycle && data.serviceStartedAt && (
+          <RenewalARRCard
+            hasEnded={data.status === ContractStatus.Ended}
+            startedAt={data.serviceStartedAt}
+            renewCycle={data.renewalCycle}
+            opportunity={data.opportunities?.[0]}
+          />
+        )}
         <Services contractId={data.id} data={data?.serviceLineItems} />
       </CardFooter>
     </Card>

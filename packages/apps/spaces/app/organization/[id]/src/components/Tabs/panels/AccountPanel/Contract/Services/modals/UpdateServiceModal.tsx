@@ -6,7 +6,7 @@ import { useForm } from 'react-inverted-form';
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Box } from '@ui/layout/Box';
+import { Flex } from '@ui/layout/Flex';
 import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon } from '@ui/media/Icon';
@@ -167,18 +167,23 @@ export const UpdateServiceModal = ({
           ) : (
             <RecurringServiceFrom formId={formId} />
           )}
-          <Box
+          <Flex
             p={2}
             my={2}
             border='1px solid'
             borderColor='gray.100'
             bg='gray.25'
             borderRadius='md'
+            alignItems='center'
           >
-            <FormCheckbox formId={formId} name='isRetroactiveCorrection'>
-              <Text fontSize='sm'>This is a retroactive correction</Text>
+            <FormCheckbox
+              formId={formId}
+              name='isRetroactiveCorrection'
+              fontSize='sm'
+            >
+              This is a retroactive correction
             </FormCheckbox>
-          </Box>
+          </Flex>
 
           <div>
             <Text as='label' htmlFor='reason' fontSize='sm'>

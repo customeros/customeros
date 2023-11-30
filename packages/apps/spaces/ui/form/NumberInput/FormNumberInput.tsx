@@ -22,6 +22,8 @@ interface FormNumberInputProps extends NumberInputProps {
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
 }
+const blockInvalidChar = (e: { key: string; preventDefault: () => void }) =>
+  ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault();
 
 export const FormNumberInput = forwardRef<
   HTMLInputElement,
@@ -62,7 +64,12 @@ export const FormNumberInput = forwardRef<
             <InputLeftElement w='4'>{leftElement}</InputLeftElement>
           )}
 
-          <NumberInput {...getInputProps()} {...props} autoComplete='off'>
+          <NumberInput
+            {...getInputProps()}
+            {...props}
+            autoComplete='off'
+            onKeyDown={blockInvalidChar}
+          >
             <NumberInputField
               ref={ref}
               pl={leftElement ? '30px' : '0'}
