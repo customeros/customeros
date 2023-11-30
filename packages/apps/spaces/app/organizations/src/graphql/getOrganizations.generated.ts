@@ -60,22 +60,12 @@ export type GetOrganizationsQuery = {
       } | null;
       accountDetails?: {
         __typename?: 'OrgAccountDetails';
-        renewalForecast?: {
-          __typename?: 'RenewalForecast';
-          arr?: number | null;
-          maxArr?: number | null;
-          updatedAt?: any | null;
-          updatedById?: string | null;
-          updatedBy?: {
-            __typename?: 'User';
-            id: string;
-            firstName: string;
-            lastName: string;
-            emails?: Array<{
-              __typename?: 'Email';
-              email?: string | null;
-            }> | null;
-          } | null;
+        renewalSummary?: {
+          __typename?: 'RenewalSummary';
+          arrForecast?: number | null;
+          maxArrForecast?: number | null;
+          renewalLikelihood?: Types.OpportunityRenewalLikelihood | null;
+          nextRenewalDate?: any | null;
         } | null;
       } | null;
       locations: Array<{
@@ -223,19 +213,11 @@ export const GetOrganizationsDocument = `
       domains
       isCustomer
       accountDetails {
-        renewalForecast {
-          arr
-          maxArr
-          updatedAt
-          updatedById
-          updatedBy {
-            id
-            firstName
-            lastName
-            emails {
-              email
-            }
-          }
+        renewalSummary {
+          arrForecast
+          maxArrForecast
+          renewalLikelihood
+          nextRenewalDate
         }
       }
       locations {

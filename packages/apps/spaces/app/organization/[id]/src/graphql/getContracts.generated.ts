@@ -36,11 +36,11 @@ export type GetContractsQuery = {
     note?: string | null;
     accountDetails?: {
       __typename?: 'OrgAccountDetails';
-      renewalForecast?: {
-        __typename?: 'RenewalForecast';
-        arr?: number | null;
-        maxArr?: number | null;
-        potentialAmount?: number | null;
+      renewalSummary?: {
+        __typename?: 'RenewalSummary';
+        arrForecast?: number | null;
+        maxArrForecast?: number | null;
+        renewalLikelihood?: Types.OpportunityRenewalLikelihood | null;
       } | null;
     } | null;
     contracts?: Array<{
@@ -94,10 +94,10 @@ export const GetContractsDocument = `
     name
     note
     accountDetails {
-      renewalForecast {
-        arr
-        maxArr
-        potentialAmount
+      renewalSummary {
+        arrForecast
+        maxArrForecast
+        renewalLikelihood
       }
     }
     contracts {

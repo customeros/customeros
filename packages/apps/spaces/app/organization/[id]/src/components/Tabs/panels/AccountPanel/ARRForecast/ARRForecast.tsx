@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { useIsRestoring } from '@tanstack/react-query';
 
@@ -9,15 +9,11 @@ import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody } from '@ui/presentation/Card';
+import { Contract, RenewalSummary } from '@graphql/types';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import {
-  Contract,
-  InternalStage,
-  RenewalForecast,
-  OpportunityRenewalLikelihood,
-} from '@graphql/types';
+import { getRenewalLikelihoodColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import { useIsMutatingContract } from '@organization/src/components/Tabs/panels/AccountPanel/hooks/useIsMutatingContract';
 import { useARRInfoModalContext } from '@organization/src/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
@@ -25,52 +21,24 @@ interface ARRForecastProps {
   name: string;
   isInitialLoading?: boolean;
   contracts?: Contract[] | null;
-  forecast?: RenewalForecast | null;
+  renewalSunnary?: RenewalSummary | null;
 }
 
 export const ARRForecast = ({
   isInitialLoading,
-  forecast,
-  contracts,
+  renewalSunnary,
   name,
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
   const { modal } = useARRInfoModalContext();
 
   const isUpdatingContract = useIsMutatingContract();
-  const formattedMaxAmount = formatCurrency(forecast?.maxArr ?? 0);
-  const formattedAmount = formatCurrency(forecast?.arr ?? 0);
+  const formattedMaxAmount = formatCurrency(
+    renewalSunnary?.maxArrForecast ?? 0,
+  );
+  const formattedAmount = formatCurrency(renewalSunnary?.arrForecast ?? 0);
 
   const hasForecastChanged = formattedMaxAmount !== formattedAmount;
-
-  const iconColor = useMemo(() => {
-    if (!contracts?.length) {
-      return 'gray';
-    }
-
-    const array = contracts.flatMap((contract) => {
-      return (
-        contract.opportunities
-          ?.filter((e) => e.internalStage !== InternalStage.ClosedLost)
-          ?.map((opportunity) => opportunity.renewalLikelihood) ?? []
-      );
-    });
-
-    const likelihood =
-      array.length === 1
-        ? array[0]
-        : array.every((val) => val === array[0])
-        ? array[0]
-        : OpportunityRenewalLikelihood.MediumRenewal;
-    const colorMap: Record<string, string> = {
-      [OpportunityRenewalLikelihood.HighRenewal]: 'success',
-      [OpportunityRenewalLikelihood.MediumRenewal]: 'warning',
-      [OpportunityRenewalLikelihood.LowRenewal]: 'error',
-      [OpportunityRenewalLikelihood.ZeroRenewal]: 'zero',
-    };
-
-    return colorMap[likelihood] || 'gray';
-  }, [contracts]);
 
   return (
     <>
@@ -95,7 +63,13 @@ export const ARRForecast = ({
         }}
       >
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' minW='10' colorScheme={iconColor}>
+          <FeaturedIcon
+            size='md'
+            minW='10'
+            colorScheme={getRenewalLikelihoodColor(
+              renewalSunnary?.renewalLikelihood,
+            )}
+          >
             <CurrencyDollar />
           </FeaturedIcon>
           <Flex

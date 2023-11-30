@@ -2286,9 +2286,13 @@ export type OpportunityUpdateInput = {
 
 export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
+  /** @deprecated No longer supported */
   billingDetails?: Maybe<BillingDetails>;
+  /** @deprecated No longer supported */
   renewalForecast?: Maybe<RenewalForecast>;
+  /** @deprecated No longer supported */
   renewalLikelihood?: Maybe<RenewalLikelihood>;
+  renewalSummary?: Maybe<RenewalSummary>;
 };
 
 export type Organization = Node & {
@@ -2884,6 +2888,14 @@ export enum RenewalLikelihoodProbability {
   Medium = 'MEDIUM',
   Zero = 'ZERO',
 }
+
+export type RenewalSummary = {
+  __typename?: 'RenewalSummary';
+  arrForecast?: Maybe<Scalars['Float']>;
+  maxArrForecast?: Maybe<Scalars['Float']>;
+  nextRenewalDate?: Maybe<Scalars['Time']>;
+  renewalLikelihood?: Maybe<OpportunityRenewalLikelihood>;
+};
 
 /**
  * Describes the success or failure of the GraphQL call.
