@@ -19,7 +19,24 @@ type OpportunityEntity struct {
 	GeneralNotes           string
 	NextSteps              string
 	RenewedAt              time.Time
-	RenewalLikelihood      string
+	RenewalLikelihood      OpportunityRenewalLikelihood
+	RenewalUpdatedByUserId string
+	RenewalUpdatedByUserAt time.Time
+	Comments               string
+	Source                 DataSource
+	SourceOfTruth          DataSource
+	AppSource              string
+
+	DataloaderKey string
+}
+
+type OpportunityRenewalEntity struct {
+	Id                     string
+	Name                   string
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	Amount                 float64
+	RenewalLikelihood      OpportunityRenewalLikelihood
 	RenewalUpdatedByUserId string
 	RenewalUpdatedByUserAt time.Time
 	Comments               string

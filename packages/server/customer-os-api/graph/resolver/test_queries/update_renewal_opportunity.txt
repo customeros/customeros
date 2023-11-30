@@ -1,0 +1,15 @@
+mutation UpdateRenewalOpportunity($opportunityId: ID!) {
+opportunityRenewalUpdate(
+    input: {
+        opportunityId: $opportunityId
+        name: "Updated Opportunity"
+        amount: 100
+        renewalLikelihood: HIGH_RENEWAL
+        comments: "test comments"
+        appSource: "test app source"
+    }
+  ) {
+    id
+    name
+  }
+}

@@ -85,13 +85,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	}
 
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-	err = contractHandler.UpdateRenewalNextCycleDate(ctx, eventData.Tenant, eventData.ContractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
-		return nil
-	}
-	err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, eventData.ContractId)
+	err = contractHandler.UpdateRenewalArrAndNextCycleDate(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
@@ -119,7 +113,28 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
 	}
 
+	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+
 	return nil
+}
+
+func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
+	organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
+		return
+	}
+	if organizationDbNode == nil {
+		return
+	}
+	organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+
+	err = h.organizationCommands.RefreshRenewalSummary.Handle(ctx, cmd.NewRefreshRenewalSummaryCommand(tenant, organization.ID, "", constants.AppSourceEventProcessingPlatform))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("NewRefreshRenewalSummaryCommand failed: %v", err.Error())
+	}
 }
 
 func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
@@ -141,7 +156,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	amountChanged := ((opportunity.Amount != eventData.Amount) && eventData.UpdateAmount()) ||
 		((opportunity.MaxAmount != eventData.MaxAmount) && eventData.UpdateMaxAmount())
 
@@ -202,7 +217,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
-	opportunity := graph_db.MapDbNodeToOpportunityEntity(*opportunityDbNode)
+	opportunity := graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	amountChanged := opportunity.Amount != eventData.Amount
 	likelihoodChanged := opportunity.RenewalDetails.RenewalLikelihood != eventData.RenewalLikelihood
 	setUpdatedByUserId := (amountChanged || likelihoodChanged) && eventData.UpdatedByUserId != ""
@@ -214,6 +229,9 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		return err
 	}
 
+	if likelihoodChanged {
+		h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+	}
 	// update renewal ARR if likelihood changed but amount didn't
 	if likelihoodChanged && !amountChanged {
 		contractDbNode, err := h.repositories.ContractRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
@@ -225,7 +243,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		if contractDbNode == nil {
 			return nil
 		}
-		contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
 		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
@@ -252,6 +270,52 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 			h.log.Errorf("NewRefreshArrCommand failed: %v", err.Error())
 		}
 	}
+
+	return nil
+}
+
+func (h *OpportunityEventHandler) OnCloseWin(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCloseWin")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.OpportunityCloseWinEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
+	err := h.repositories.OpportunityRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCloseLoose")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.OpportunityCloseLooseEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
+	err := h.repositories.OpportunityRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
+		return err
+	}
+
+	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
 
 	return nil
 }

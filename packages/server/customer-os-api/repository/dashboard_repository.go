@@ -18,7 +18,7 @@ import (
 
 type DashboardRepository interface {
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
-	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[time.Time]int64, error)
+	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -146,6 +146,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if filter.Filter.Property == "FORECAST_AMOUNT" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
+			} else if filter.Filter.Property == "FORECAST_ARR" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
 			} else if filter.Filter.Property == "LAST_TOUCHPOINT_AT" && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("lastTouchpointAt", *filter.Filter.Value.Time, utils.GTE, false))
 			} else if filter.Filter.Property == "LAST_TOUCHPOINT_TYPE" && filter.Filter.Value.ArrayStr != nil {
@@ -312,6 +315,14 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", FORECAST_AMOUNT_FOR_SORTING "
 		}
+		if sort != nil && sort.By == "FORECAST_ARR" {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 0 END as FORECAST_ARR_FOR_SORTING "
+			}
+			aliases += ", FORECAST_ARR_FOR_SORTING "
+		}
 
 		//RENEWAL_CYCLE_NEXT
 
@@ -332,6 +343,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "FORECAST_AMOUNT" {
 				query += " ORDER BY FORECAST_AMOUNT_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == "FORECAST_ARR" {
+				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_LIKELIHOOD" {
 				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_CYCLE_NEXT" {
@@ -381,7 +394,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[time.Time]int64, error) {
+func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardNewCustomersData")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -394,25 +407,43 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
-					WITH datetime({ year: $startYear, month: $startMonth, day: 1, hour: 0, minute: 0, second: 0 }) as startDate,
-						 datetime({ year: $endYear, month: $endMonth, day: $endDay, hour: 23, minute: 59, second: 59 }) as endDate
-					WITH range(0, duration.inMonths(startDate, endDate).months) as months, startDate, endDate
-					UNWIND months as monthOffset
-					WITH startDate + duration({months: monthOffset}) as currentDate
+					WITH $startDate AS startDate, $endDate AS endDate
+					WITH startDate.year AS startYear, startDate.month AS startMonth, endDate.year AS endYear, endDate.month AS endMonth, endDate
+					WITH range(startYear * 12 + startMonth - 1, endYear * 12 + endMonth - 1) AS monthsRange, endDate
+					UNWIND monthsRange AS monthsSinceEpoch
 					
-					OPTIONAL MATCH (i:Contract_%s) 
+					WITH datetime({year: monthsSinceEpoch / 12, 
+								   month: monthsSinceEpoch %s, 
+								   day: 1}) AS currentDate, endDate
+
+					WITH currentDate,
+						 CASE 
+						   WHEN currentDate.month = 12 THEN date({year: currentDate.year + 1, month: 1, day: 1})
+						   ELSE date({year: currentDate.year, month: currentDate.month + 1, day: 1})
+						 END AS startOfNextMonth
+						
+					WITH currentDate,
+						 startOfNextMonth,
+						 CASE 
+						   WHEN startOfNextMonth.month = 1 THEN date({year: startOfNextMonth.year, month: 1, day: 1}) - duration({days: 1})
+						   ELSE startOfNextMonth - duration({days: 1})
+						 END AS endOfMonth
+
+					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, currentDate, datetime({year: endOfMonth.year, month: endOfMonth.month, day: endOfMonth.day, hour: 23, minute: 59, second: 59, nanosecond:999999999}) as endOfMonth
+					OPTIONAL MATCH (i:Contract_%s)<-[:HAS_CONTRACT]-(o:Organization_%s)
 					WHERE 
-					i.serviceStartedAt.year = currentDate.year and 
-					i.serviceStartedAt.month = currentDate.month and 
-					(i.endedAt is null or i.endedAt > datetime(currentDate.year + '-' + currentDate.month + '-01'))
-					RETURN currentDate, count(i)
-				`, tenant),
+					  i.serviceStartedAt.year = year AND 
+					  i.serviceStartedAt.month = month AND 
+					  (i.endedAt IS NULL OR i.endedAt > endOfMonth)
+					
+					WITH o, year, month, MIN(i.serviceStartedAt) AS oldestContractDate
+					OPTIONAL MATCH (o)-[:HAS_CONTRACT]->(oldest:Contract_%s)
+					WHERE oldest.serviceStartedAt = oldestContractDate
+					RETURN year, month, COUNT(oldest) AS totalContracts
+				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
-				"startYear":  startDate.Year(),
-				"endYear":    startDate.Year(),
-				"startMonth": startDate.Month(),
-				"endMonth":   endDate.Month(),
-				"endDay":     endDate.Day(),
+				"startDate": startDate,
+				"endDate":   endDate,
 			})
 		if err != nil {
 			return nil, err
@@ -422,15 +453,23 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	result := []map[time.Time]int64{}
 
+	var results []map[string]interface{}
 	if dbRecords != nil {
 		for _, v := range dbRecords.([]*neo4j.Record) {
-			month := v.Values[0].(time.Time)
-			count := v.Values[1].(int64)
-			result = append(result, map[time.Time]int64{month: count})
+			year := v.Values[0].(int64)
+			month := v.Values[1].(int64)
+			count := v.Values[2].(int64)
+
+			record := map[string]interface{}{
+				"year":  year,
+				"month": month,
+				"count": count,
+			}
+
+			results = append(results, record)
 		}
 	}
 
-	return result, nil
+	return results, nil
 }

@@ -102,7 +102,7 @@ export const AuthPanel = () => {
         'google',
         { callbackUrl: '/settings?tab=oauth' },
         {
-          prompt: 'login',
+          prompt: 'consent',
           scope: scopes.join(' '),
         },
       );

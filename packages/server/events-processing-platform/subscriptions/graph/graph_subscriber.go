@@ -215,6 +215,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnRefreshLastTouchpoint(ctx, evt)
 	case orgevents.OrganizationRefreshArrV1:
 		return s.organizationEventHandler.OnRefreshArr(ctx, evt)
+	case orgevents.OrganizationRefreshRenewalSummaryV1:
+		return s.organizationEventHandler.OnRefreshRenewalSummary(ctx, evt)
 	case orgevents.OrganizationUpsertCustomFieldV1:
 		return s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
 	case orgevents.OrganizationAddParentV1:
@@ -305,16 +307,28 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
 	case opportunityevent.OpportunityUpdateRenewalV1:
 		return s.opportunityEventHandler.OnUpdateRenewal(ctx, evt)
+	case opportunityevent.OpportunityCloseWinV1:
+		return s.opportunityEventHandler.OnCloseWin(ctx, evt)
+	case opportunityevent.OpportunityCloseLooseV1:
+		return s.opportunityEventHandler.OnCloseLoose(ctx, evt)
 
 	case contractevent.ContractCreateV1:
 		return s.contractEventHandler.OnCreate(ctx, evt)
 	case contractevent.ContractUpdateV1:
 		return s.contractEventHandler.OnUpdate(ctx, evt)
+	case contractevent.ContractRolloutRenewalOpportunityV1:
+		return s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
+	case contractevent.ContractUpdateStatusV1:
+		return s.contractEventHandler.OnUpdateStatus(ctx, evt)
 
 	case servicelineitemevent.ServiceLineItemCreateV1:
 		return s.serviceLineItemEventHandler.OnCreate(ctx, evt)
 	case servicelineitemevent.ServiceLineItemUpdateV1:
 		return s.serviceLineItemEventHandler.OnUpdate(ctx, evt)
+	case servicelineitemevent.ServiceLineItemDeleteV1:
+		return s.serviceLineItemEventHandler.OnDelete(ctx, evt)
+	case servicelineitemevent.ServiceLineItemCloseV1:
+		return s.serviceLineItemEventHandler.OnClose(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

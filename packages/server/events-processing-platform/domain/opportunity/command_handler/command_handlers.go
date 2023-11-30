@@ -13,6 +13,8 @@ type CommandHandlers struct {
 	CreateRenewalOpportunity              CreateRenewalOpportunityCommandHandler
 	UpdateRenewalOpportunity              UpdateRenewalOpportunityCommandHandler
 	UpdateRenewalOpportunityNextCycleDate UpdateRenewalOpportunityNextCycleDateCommandHandler
+	CloseWinOpportunity                   CloseWinOpportunityCommandHandler
+	CloseLooseOpportunity                 CloseLooseOpportunityCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
@@ -22,5 +24,7 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		CreateRenewalOpportunity:              NewCreateRenewalOpportunityCommandHandler(log, es),
 		UpdateRenewalOpportunity:              NewUpdateRenewalOpportunityCommandHandler(log, es, cfg.Utils),
 		UpdateRenewalOpportunityNextCycleDate: NewUpdateRenewalOpportunityNextCycleDateCommandHandler(log, es, cfg.Utils),
+		CloseWinOpportunity:                   NewCloseWinOpportunityCommandHandler(log, es, cfg.Utils),
+		CloseLooseOpportunity:                 NewCloseLooseOpportunityCommandHandler(log, es, cfg.Utils),
 	}
 }

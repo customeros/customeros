@@ -26,10 +26,6 @@ extend type Mutation {
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
 }
 
 type LinkedOrganization {
@@ -80,8 +76,6 @@ type Organization implements Node {
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
-    relationships: [OrganizationRelationship!]! @goField(forceResolver: true) @deprecated
-    relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true) @deprecated
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 
     lastTouchPointAt: Time
@@ -95,9 +89,10 @@ type Organization implements Node {
 }
 
 type OrgAccountDetails {
-    renewalLikelihood: RenewalLikelihood
-    renewalForecast: RenewalForecast
-    billingDetails: BillingDetails
+    renewalLikelihood: RenewalLikelihood @deprecated
+    renewalForecast: RenewalForecast @deprecated
+    billingDetails: BillingDetails @deprecated
+    renewalSummary: RenewalSummary
 }
 
 type RenewalLikelihood {
@@ -118,6 +113,13 @@ type RenewalForecast {
     updatedBy: User @goField(forceResolver: true)
     arr: Float
     maxArr: Float
+}
+
+type RenewalSummary {
+    arrForecast:       Float
+    maxArrForecast:    Float
+    renewalLikelihood: OpportunityRenewalLikelihood
+    nextRenewalDate:   Time
 }
 
 type BillingDetails {
@@ -221,60 +223,6 @@ enum Market {
     B2B
     B2C
     MARKETPLACE
-}
-
-#Deprecated
-enum OrganizationRelationship {
-    CUSTOMER
-    DISTRIBUTOR
-    PARTNER
-    LICENSING_PARTNER
-    FRANCHISEE
-    FRANCHISOR
-    AFFILIATE
-    RESELLER
-    INFLUENCER_OR_CONTENT_CREATOR
-    MEDIA_PARTNER
-
-    INVESTOR
-    MERGER_OR_ACQUISITION_TARGET
-    PARENT_COMPANY
-    SUBSIDIARY
-    JOINT_VENTURE
-    SPONSOR
-
-    SUPPLIER
-    VENDOR
-    CONTRACT_MANUFACTURER
-    ORIGINAL_EQUIPMENT_MANUFACTURER
-    ORIGINAL_DESIGN_MANUFACTURER
-    PRIVATE_LABEL_MANUFACTURER
-    LOGISTICS_PARTNER
-
-    CONSULTANT
-    SERVICE_PROVIDER
-    OUTSOURCING_PROVIDER
-    INSOURCING_PARTNER
-    TECHNOLOGY_PROVIDER
-    DATA_PROVIDER
-    CERTIFICATION_BODY
-    STANDARDS_ORGANIZATION
-    INDUSTRY_ANALYST
-    REAL_ESTATE_PARTNER
-    TALENT_ACQUISITION_PARTNER
-    PROFESSIONAL_EMPLOYER_ORGANIZATION
-
-    RESEARCH_COLLABORATOR
-    REGULATORY_BODY
-    TRADE_ASSOCIATION_MEMBER
-
-    COMPETITOR
-}
-
-#Deprecated
-type OrganizationRelationshipStage {
-    relationship: OrganizationRelationship!
-    stage: String
 }
 
 enum FundingRound {

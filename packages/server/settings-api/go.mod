@@ -7,11 +7,11 @@ go 1.20
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/gin-contrib/cors v1.4.0
+	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20231010053057-7f0277709731
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231010053057-7f0277709731
 	gorm.io/driver/postgres v1.5.4

@@ -40,7 +40,9 @@ type OrganizationRepository interface {
 	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 
+	// TODO deprecated, remove when decomission organization renewal forecast
 	GetMinMaxRenewalForecastAmount(ctx context.Context) (float64, float64, error)
+	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
 }
 
 type organizationRepository struct {
@@ -855,6 +857,52 @@ func (r *organizationRepository) GetMinMaxRenewalForecastAmount(ctx context.Cont
 				return nil, err
 			}
 
+			return record, nil
+		}
+	})
+	if err != nil {
+		return 0, 0, err
+	}
+	if result != nil {
+		record := result.(*db.Record)
+		if record.Values[0] == nil || record.Values[1] == nil {
+			return 0, 0, nil
+		}
+		minValue, minOk := record.Values[0].(float64)
+		maxValue, maxOk := record.Values[1].(float64)
+		if !minOk || !maxOk {
+			return 0, 0, errors.New("unexpected type for min or max value")
+		}
+		return minValue, maxValue, nil
+	} else {
+		return 0, 0, nil
+	}
+}
+
+func (r *organizationRepository) GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMinMaxRenewalForecastArr")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `CALL { MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
+              RETURN min(o.renewalForecastArr) as min, max(o.renewalForecastArr) as max }
+		      RETURN min, max`
+	params := map[string]any{
+		"tenant": common.GetTenantFromContext(ctx),
+	}
+	span.LogFields(log.String("cypher", cypher))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			record, err := queryResult.Single(ctx)
+			if err != nil {
+				return nil, err
+			}
 			return record, nil
 		}
 	})

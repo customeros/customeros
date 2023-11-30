@@ -7,6 +7,7 @@ const (
 	BilledTypeMonthly  BilledType = "MONTHLY"
 	BilledTypeAnnually BilledType = "ANNUALLY"
 	BilledTypeOnce     BilledType = "ONCE"
+	BilledTypeUsage    BilledType = "USAGE"
 )
 
 var AllBilledTypes = []BilledType{
@@ -14,6 +15,7 @@ var AllBilledTypes = []BilledType{
 	BilledTypeMonthly,
 	BilledTypeAnnually,
 	BilledTypeOnce,
+	BilledTypeUsage,
 }
 
 func GetBilledType(s string) BilledType {

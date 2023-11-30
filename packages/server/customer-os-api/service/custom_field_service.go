@@ -290,7 +290,7 @@ func (s *customFieldService) mapDbNodeToCustomFieldEntity(node dbtype.Node) *ent
 		Value: model.AnyTypeValue{
 			Str:   utils.GetStringPropOrNil(props, entity.CustomFieldTextProperty.String()),
 			Time:  utils.GetTimePropOrNil(props, entity.CustomFieldTimeProperty.String()),
-			Int:   utils.GetIntPropOrNil(props, entity.CustomFieldIntProperty.String()),
+			Int:   utils.GetInt64PropOrNil(props, entity.CustomFieldIntProperty.String()),
 			Float: utils.GetFloatPropOrNil(props, entity.CustomFieldFloatProperty.String()),
 			Bool:  utils.GetBoolPropOrNil(props, entity.CustomFieldBoolProperty.String()),
 		},

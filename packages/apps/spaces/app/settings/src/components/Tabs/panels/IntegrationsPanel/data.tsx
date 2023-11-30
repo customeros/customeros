@@ -1146,6 +1146,7 @@ export const integrationsData: IntegrationItem[] = [
         label: 'Refresh Token',
       },
     ],
+    isFromIntegrationApp: true,
   },
   {
     key: 'salesloft',

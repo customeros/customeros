@@ -256,7 +256,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			Hide:              !(orgHasWhitelistedDomain || orgInput.Whitelisted),
 			Note:              orgInput.Note,
 			ReferenceId:       orgInput.ReferenceId,
-			IgnoreEmptyFields: false,
+			IgnoreEmptyFields: orgInput.UpdateOnly,
 			SourceFields: &commonpb.SourceFields{
 				Source:    orgInput.ExternalSystem,
 				AppSource: appSource,

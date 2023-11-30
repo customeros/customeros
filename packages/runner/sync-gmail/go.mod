@@ -8,7 +8,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/google/uuid v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.14.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.15.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231115112548-eb9138c9c039
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20231115112548-eb9138c9c039
 	github.com/opentracing/opentracing-go v1.2.0
@@ -22,7 +22,6 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.5.0 // indirect

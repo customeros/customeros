@@ -1,7 +1,12 @@
 package model
 
 type GetPlayerResponse struct {
-	Id string `json:"id"`
+	PlayerByAuthIdProvider struct {
+		Id    string `json:"id"`
+		Users *[]struct {
+			Tenant string `json:"tenant"`
+		} `json:"users"`
+	} `json:"player_ByAuthIdProvider"`
 }
 
 type Result struct {

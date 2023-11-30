@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -66,7 +65,15 @@ func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*mod
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *contractResolver) CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.

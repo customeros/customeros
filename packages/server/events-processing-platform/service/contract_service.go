@@ -147,6 +147,48 @@ func (s *contractService) UpdateContract(ctx context.Context, request *contractp
 	return &contractpb.ContractIdGrpcResponse{Id: request.Id}, nil
 }
 
+func (s *contractService) RefreshContractStatus(ctx context.Context, request *contractpb.RefreshContractStatusGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.RefreshContractStatus")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	cmd := command.NewRefreshContractStatusCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource)
+
+	if err := s.contractCommandHandlers.RefreshContractStatus.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RefreshContractStatus.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &contractpb.ContractIdGrpcResponse{Id: request.Id}, nil
+}
+
+func (s *contractService) RolloutRenewalOpportunityOnExpiration(ctx context.Context, request *contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.RefreshContractStatus")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	cmd := command.NewRolloutRenewalOpportunityOnExpirationCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource)
+
+	if err := s.contractCommandHandlers.RolloutRenewalOpportunityOnExpiration.Handle(ctx, cmd); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RolloutRenewalOpportunityOnExpiration.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &contractpb.ContractIdGrpcResponse{Id: request.Id}, nil
+}
+
 func (s *contractService) checkOrganizationExists(ctx context.Context, tenant, organizationId string) (bool, error) {
 	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
 	err := s.aggregateStore.Exists(ctx, organizationAggregate.GetID())

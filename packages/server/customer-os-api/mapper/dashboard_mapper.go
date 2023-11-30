@@ -19,6 +19,7 @@ func MapDashboardNewCustomersMonthData(months []*entityDashboard.DashboardNewCus
 	var result []*model.DashboardNewCustomersPerMonth
 	for _, month := range months {
 		result = append(result, &model.DashboardNewCustomersPerMonth{
+			Year:  month.Year,
 			Month: month.Month,
 			Count: month.Count,
 		})

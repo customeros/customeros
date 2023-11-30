@@ -33,6 +33,7 @@ type Opportunity struct {
 	InternalStage     OpportunityInternalStageString `json:"internalStage"`
 	ExternalStage     string                         `json:"externalStage"`
 	EstimatedClosedAt *time.Time                     `json:"estimatedClosedAt,omitempty"`
+	ClosedAt          *time.Time                     `json:"closedAt,omitempty"`
 	OwnerUserId       string                         `json:"ownerUserId"`
 	CreatedByUserId   string                         `json:"createdByUserId"`
 	Source            commonmodel.Source             `json:"source"`

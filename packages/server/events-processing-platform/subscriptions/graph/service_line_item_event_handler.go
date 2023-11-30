@@ -77,7 +77,87 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 		return nil
 	}
 	if contractDbNode != nil {
-		contract := graph_db.MapDbNodeToContractEntity(*contractDbNode)
+		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
+			return nil
+		}
+	}
+
+	return nil
+}
+
+func (h *ServiceLineItemEventHandler) OnDelete(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnDelete")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ServiceLineItemDeleteEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
+
+	contractDbNode, err := h.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
+		return nil
+	}
+
+	err = h.repositories.ServiceLineItemRepository.Delete(ctx, eventData.Tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while deleting service line item %s: %s", serviceLineItemId, err.Error())
+		return err
+	}
+
+	if contractDbNode != nil {
+		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
+			return nil
+		}
+	}
+
+	return nil
+}
+
+func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnClose")
+	defer span.Finish()
+	setCommonSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ServiceLineItemCloseEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
+	err := h.repositories.ServiceLineItemRepository.Close(ctx, eventData.Tenant, serviceLineItemId, eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while closing service line item %s: %s", serviceLineItemId, err.Error())
+		return err
+	}
+
+	contractDbNode, err := h.repositories.ContractRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
+		return nil
+	}
+	if contractDbNode != nil {
+		contract := graph_db.MapDbNodeToContractEntity(contractDbNode)
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
 		err = contractHandler.UpdateRenewalArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {

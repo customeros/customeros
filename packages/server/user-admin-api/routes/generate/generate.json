@@ -3,144 +3,299 @@
     {
       "firstName": "Jonty",
       "lastName": "Knox",
-      "email": "jonty@demo.com"
+      "email": "jonty@openline.ai",
+      "profilePhotoUrl": "https://avatars.slack-edge.com/2022-11-02/4303022214486_f3ea9561724c2221162d_192.png"
+
     },
     {
       "firstName": "Matt",
       "lastName": "Brown",
-      "email": "matt@demo.com"
+      "email": "matt@openline.ai",
+      "profilePhotoUrl": "https://avatars.slack-edge.com/2023-01-05/4600383510131_c4e50d2962044c01327e_192.png"
+
+    },
+    {
+      "firstName": "Antoine",
+      "lastName": "Valot",
+      "email": "antoine@openline.ai",
+      "profilePhotoUrl": "https://avatars.slack-edge.com/2023-08-22/5772736958310_a64a246b4f237d7472f8_192.jpg"
+
+    },
+    {
+      "firstName": "Vasi",
+      "lastName": "Coscotin",
+      "email": "vasi@openline.ai",
+      "profilePhotoUrl": "https://avatars.slack-edge.com/2022-10-19/4270750360112_7bfedcf03f1d0f092a68_192.png"
+
     }
   ],
   "contacts": [
     {
-      "firstName": "Adam",
-      "lastName": "Miller",
-      "email": "adam.miller@flexport.com"
+      "email": "daniel.kim@acme.com",
+      "firstName": "Daniel",
+      "lastName": "Kim",
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00215_kuu6yw.jpg"
+
     },
     {
-      "firstName": "Emily",
-      "lastName": "Johnson",
-      "email": "emily.johnson@airbnb.com"
+      "email": "julien.hubert@acme.com",
+      "firstName": "Julien",
+      "lastName": "Hubert",
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00218_fcfrp1.jpg"
+
     },
     {
-      "firstName": "David",
+      "email": "tobias.bauer@acme.com",
+      "firstName": "Tobias",
+      "lastName": "Bauer",
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00219_jch5vi.jpg"
+    },
+    {
+      "email": "christopher.thompson@acme.com",
+      "firstName": "Christopher",
       "lastName": "Thompson",
-      "email": "david.thompson@airbnb.com"
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00217_i6sc95.jpg"
+
+    },
+    {
+      "email": "benjamin.roberts@acme.com",
+      "firstName": "Benjamin",
+      "lastName": "Roberts",
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00214_raeijr.jpg"
+
+    },
+    {
+      "email": "alfonso.perez@bcc.com",
+      "firstName": "Alfonso",
+      "lastName": "Perez",
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00210_m1b1m4.jpg"
+
+    },
+    {
+      "email": "jordan.davis@bcc.com",
+      "firstName": "Jordan",
+      "lastName": "Davis",
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00209_jgo1l9.jpg"
+
     }
   ],
   "organizations": [
     {
       "id": "",
-      "name": "Airbnb",
-      "domain": "airbnb.com",
+      "name": "BCC",
+      "domain": "bcc.com",
       "people": [
         {
-          "email": "emily.johnson@airbnb.com",
-          "jobRole": "VP of Marketing",
+          "email": "jordan.davis@bcc.com",
+          "jobRole": "Co-Owner",
           "description": "Decision maker"
         },
         {
-          "email": "david.thompson@airbnb.com",
-          "jobRole": "CTO",
-          "description": "Decision maker,Champion,Influencer"
+          "email": "alfonso.perez@bcc.com",
+          "jobRole": "National Sales Manager",
+          "description": "Champion,Influencer"
         }
       ],
+
       "emails": [
         {
-          "from": "matt@demo.com",
-          "to": [
-            "emily.johnson@airbnb.com"
-          ],
-          "cc": [
-            "david.thompson@airbnb.com"
-          ],
-          "bcc": [
-            "private.mail@airbnb.com"
-          ],
-          "subject": "Potential Collaboration with Airbnb",
-          "body": "Hello Emily, We've been impressed with Airbnb's approach...",
+          "from": "alfonso.perez@bcc.com",
+          "to": ["matt@openline.ai"],
+          "cc": [],
+          "bcc": [],
+          "subject": "Interest in Acme's Cloud Inventory Software for Small Businesses",
+          "body": "Dear Matt, I've come across Acme's innovative cloud inventory solutions and am interested in how they could benefit our operations at BCC...",
           "contentType": "text/plain",
-          "date": "2023-06-10T10:30:00Z"
+          "date": "2023-07-05T09:00:00Z"
+        },
+        {
+          "from": "jonty@openline.ai",
+          "to": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
+          "cc": ["matt@openline.ai"],
+          "bcc": [],
+          "subject": "Re: Interest in Acme's Cloud Inventory Software for Small Businesses",
+          "body": "Hello Alfonso, Thank you for reaching out. We're excited about the prospect of working with BCC. How about we jump on a demo this Thursday?",
+          "contentType": "text/plain",
+          "date": "2023-07-06T10:30:00Z"
+        },
+        {
+          "from": "antoine@openline.ai",
+          "to": ["alfonso.perez@bcc.com"],
+          "cc": [],
+          "bcc": [],
+          "subject": "Re: Capacity Limits - Let's Discuss Solutions",
+          "body": "Hi Alfonso, I received your message about hitting capacity limits. We definitely have solutions to address this. Let's schedule a meeting to discuss further...",
+          "contentType": "text/plain",
+          "date": "2023-08-05T09:00:00Z"
         }
       ],
       "meetings": [
         {
-          "createdBy": "matt@demo.com",
-          "attendees": [
-            "emily.johnson@airbnb.com",
-            "david.thompson@airbnb.com"
-          ],
-          "subject": "Partnership Discussion with Airbnb",
-          "agenda": "Exploring potential areas of partnership.",
-          "startedAt": "2023-06-15T15:00:00Z",
-          "endedAt": "2023-06-15T16:30:00Z"
+          "createdBy": "jonty@openline.ai",
+          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com", "matt@openline.ai"],
+          "subject": "Acme and BCC Solution Discussion",
+          "agenda": "Discussion on the specifics of how Acme's solutions can benefit BCC",
+          "startedAt": "2023-07-10T14:00:00Z",
+          "endedAt": "2023-07-10T15:30:00Z"
+        }, {
+          "createdBy": "antoine@openline.ai",
+          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
+          "subject": "Discussing Upgrade to Professional Plan for BCC",
+          "agenda": "Discussion on upgrading to the Professional plan and the associated onboarding fees.",
+          "startedAt": "2023-08-07T14:00:00Z",
+          "endedAt": "2023-08-07T15:00:00Z"
         }
       ],
       "logEntries": [
         {
-          "createdBy": "jonty@demo.com",
-          "content": "<div>Hey Brian, I'm a big fan of Flexport. I've been using it for years and I love it. I'm a software engineer and I'd love to work for you guys. I'm attaching my resume. Thanks, Jonty</div>",
-          "contentType": "text/html",
-          "date": "2020-01-01T00:00:00Z"
-        }
-      ],
-      "issues": [
-        {
-          "createdBy": "jonty@demo.com",
-          "createdAt": "2020-01-01T00:00:00Z",
-          "subject": "Flexport is down",
-          "status": "closed",
-          "priority": "high",
-          "description": "Flexport is down. I can't log in."
-        },
-        {
-          "createdBy": "matt@demo.com",
-          "createdAt": "2021-01-01T00:00:00Z",
-          "subject": "Flexport is down again",
-          "status": "open",
-          "priority": "urgent",
-          "description": "Flexport is down again. Please fix it"
+          "createdBy": "antoine@openline.ai",
+          "content": "Successfully implemented for BCC. The team at BCC is pleased with the setup and operational improvements.",
+          "contentType": "text/plain",
+          "date": "2023-08-01T12:00:00Z"
         }
       ],
       "slack": [
         [
           {
-            "createdBy": "matt@demo.com",
-            "createdAt": "2023-08-10T14:11:12Z",
-            "message": "Hey guys, I'm going to be late to the meeting today. I'll be there in 10 minutes."
+            "createdBy": "jordan.davis@bcc.com",
+            "createdAt": "2023-08-08T10:30:00Z",
+            "message": "We've reviewed the details from the meeting and are excited to proceed with the upgrade to the Professional plan. Let's get this started!"
           },
           {
-            "createdBy": "emily.johnson@airbnb.com",
-            "createdAt": "2023-08-10T14:32:47Z",
-            "message": "No problem, Matt. See you soon."
-          }
-        ],
-        [
-          {
-            "createdBy": "emily.johnson@airbnb.com",
-            "createdAt": "2023-11-10T08:01:00Z",
-            "message": "Good morning. Can we meet at 10am today?"
-          },
-          {
-            "createdBy": "matt@demo.com",
-            "createdAt": "2023-11-10T08:07:00Z",
-            "message": "Sure, that works for me."
-          },
-          {
-            "createdBy": "david.thompson@airbnb.com",
-            "createdAt": "2023-11-10T08:12:00Z",
-            "message": "I'm free then too."
+            "createdBy": "jonty@openline.ai",
+            "createdAt": "2023-08-08T10:45:00Z",
+            "message": "Great to hear, Jordan! We're excited too. We'll begin the upgrade process and keep you updated every step of the way."
           }
         ]
       ],
       "intercom": [
         [
           {
-            "createdBy": "david.thompson@airbnb.com",
-            "createdAt": "2023-11-20T08:12:00Z",
-            "message": "<div>hello world</div>"
+            "createdBy": "alfonso.perez@bcc.com",
+            "createdAt": "2023-08-04T16:30:00Z",
+            "message": "<div>Hey, we’re hitting our limits with the current plan. What can we do?</div>"
           }
         ]
+      ]
+
+    },
+    {
+      "id": "",
+      "name": "Acme",
+      "domain": "acme.com",
+      "people": [
+        {
+          "email": "daniel.kim@acme.com"
+        },
+        {
+          "email": "julien.hubert@acme.com"
+        },
+        {
+          "email": "tobias.bauer@acme.com"
+        }
+      ],
+      "emails": [
+        {
+          "from": "daniel.kim@acme.com",
+          "to": ["matt@openline.ai"],
+          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com"],
+          "bcc": [],
+          "subject": "Inquiry About Acme's Advanced Tier Solutions",
+          "body": "Dear Matt, I'm interested in learning more about Acme's Advanced tier solutions and how they might fit into our operations at BCC Technologies...",
+          "contentType": "text/plain",
+          "date": "2023-09-05T08:30:00Z"
+        },
+        {
+          "from": "jonty@openline.ai",
+          "to": ["daniel.kim@acme.com"],
+          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@openline.ai"],
+          "bcc": [],
+          "subject": "Re: Inquiry About Acme's Advanced Tier Solutions",
+          "body": "Hello Daniel, Thank you for reaching out. We're excited to discuss how our Advanced tier can help Acme Technologies. Let's set up a meeting to explore this further...",
+          "contentType": "text/plain",
+          "date": "2023-09-06T09:45:00Z"
+        }, {
+          "from": "antoine@openline.ai",
+          "to": ["benjamin.roberts@acme.com"],
+          "cc": [],
+          "bcc": [],
+          "subject": "Welcome to Acme - Getting Started",
+          "body": "Hello, Welcome to Acme! I'm Antoine, your trainer. Let's get you set up and familiar with our platform...",
+          "contentType": "text/plain",
+          "date": "2023-10-13T09:00:00Z"
+        },
+        {
+          "from": "antoine@openline.ai",
+          "to": ["christopher.thompson@acme.com"],
+          "cc": [],
+          "bcc": [],
+          "subject": "Welcome to Acme - Your Onboarding Session",
+          "body": "Hi, I'm Antoine from Acme. We have scheduled an onboarding session to help you get started. Please let me know a suitable time for you...",
+          "contentType": "text/plain",
+          "date": "2023-10-13T09:04:00Z"
+        }
+      ],
+      "meetings": [
+        {
+          "createdBy": "jonty@openline.ai",
+          "attendees": ["daniel.kim@acme.com", "julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@openline.ai"],
+          "subject": "Discussion of Acme's Advanced Tier for BCC Technologies",
+          "agenda": "Presentation and discussion of features and benefits of the Advanced tier for BCC Technologies",
+          "startedAt": "2023-09-10T15:00:00Z",
+          "endedAt": "2023-09-10T16:30:00Z"
+        }, {
+          "createdBy": "antoine@openline.ai",
+          "attendees": ["julien.hubert@acme.com"],
+          "subject": "Acme Onboarding Session",
+          "agenda": "Introduction to Acme's features and best practices for effective use.",
+          "startedAt": "2023-10-16T14:00:00Z",
+          "endedAt": "2023-10-16T15:00:00Z"
+        }
+      ],
+      "logEntries": [
+        {
+          "createdBy": "antoine@openline.ai",
+          "content": "Successfully implemented Acme's Advanced tier solution for BCC Technologies. Contract signed for an annual subscription. The BCC team is onboarded and operational.",
+          "contentType": "text/plain",
+          "date": "2023-10-01T13:00:00Z"
+        }, {
+          "createdBy": "jonty@openline.ai",
+          "content": "Received a call from BCC Technologies requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @antoine please proceed with onboarding them.",
+          "contentType": "text/plain",
+          "date": "2023-10-12T11:00:00Z"
+        },
+        {
+          "createdBy": "antoine@openline.ai",
+          "content": "Conducted an onboarding session for Benjamin Roberts. The second new user, Christopher Thompson, was a no-show and has not responded to messages. @jonty can you look into this please?",
+          "contentType": "text/plain",
+          "date": "2023-10-17T10:00:00Z"
+        }
+      ],
+      "issues": [
+        {
+          "createdBy": "jonty@openline.ai",
+          "createdAt": "2023-10-03T09:00:00Z",
+          "subject": "Difficulty with Report Generation",
+          "status": "closed",
+          "priority": "medium",
+          "description": "BCC Technologies reported difficulty generating custom reports. Identified a user permission issue and swiftly adjusted settings. Provided a quick tutorial on managing permissions. Suggested a feature to alert users about permission-related issues, which was added to the product roadmap."
+        },
+        {
+          "createdBy": "antoine@openline.ai",
+          "createdAt": "2023-10-06T13:30:00Z",
+          "subject": "Sync Error with Third-Party Platform",
+          "status": "closed",
+          "priority": "high",
+          "description": "Noticed irregular sync patterns with a third-party platform used by BCC. Proactively reached out and resolved a configuration mismatch before BCC experienced any operational disruptions. Enhanced monitoring tools to detect and alert such mismatches earlier."
+        },
+        {
+          "createdBy": "antoine@openline.ai",
+          "createdAt": "2023-10-10T16:45:00Z",
+          "subject": "Unexpected Downtime Alert",
+          "status": "closed",
+          "priority": "urgent",
+          "description": "Detected an unexpected downtime in a service module affecting Kron. Immediately notified Kron, isolated the issue, and deployed a fix within an hour. Conducted a follow-up call to confirm resolution and provided a detailed report on the incident."
+        }
       ]
     }
   ]

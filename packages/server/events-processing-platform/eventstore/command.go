@@ -9,6 +9,12 @@ type BaseCommand struct {
 	ObjectID       string `json:"objectID" validate:"required"`
 	Tenant         string `json:"tenant" validate:"required"`
 	LoggedInUserId string `json:"loggedInUserId"`
+	AppSource      string `json:"appSource"`
+}
+
+func (c BaseCommand) WithAppSource(appSource string) BaseCommand {
+	c.AppSource = appSource
+	return c
 }
 
 func NewBaseCommand(objectID, tenant, loggedInUserId string) BaseCommand {
@@ -19,14 +25,18 @@ func NewBaseCommand(objectID, tenant, loggedInUserId string) BaseCommand {
 	}
 }
 
-func (c *BaseCommand) GetObjectID() string {
+func (c BaseCommand) GetObjectID() string {
 	return c.ObjectID
 }
 
-func (c *BaseCommand) GetTenant() string {
+func (c BaseCommand) GetTenant() string {
 	return c.Tenant
 }
 
-func (c *BaseCommand) GetLoggedInUserId() string {
+func (c BaseCommand) GetLoggedInUserId() string {
 	return c.LoggedInUserId
+}
+
+func (c BaseCommand) GetAppSource() string {
+	return c.AppSource
 }

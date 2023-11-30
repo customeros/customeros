@@ -34,9 +34,9 @@ func (r *opportunityRepository) GetById(ctx context.Context, tenant, opportunity
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`MATCH (o:Opportunity {id:$opportunityId}) 
-		WHERE o:Opportunity_%s
-		RETURN o`, tenant)
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
+		WHERE op:Opportunity_%s
+		RETURN op`, tenant)
 	params := map[string]any{
 		"opportunityId": opportunityId,
 	}
