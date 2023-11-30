@@ -28,6 +28,7 @@ type CommandHandlers struct {
 	AddParentCommand               AddParentCommandHandler
 	RemoveParentCommand            RemoveParentCommandHandler
 	RefreshArr                     RefreshArrCommandHandler
+	RefreshRenewalSummary          RefreshRenewalSummaryCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, repositories *repository.Repositories) *CommandHandlers {
@@ -51,5 +52,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		AddParentCommand:               NewAddParentCommandHandler(log, es),
 		RemoveParentCommand:            NewRemoveParentCommandHandler(log, es),
 		RefreshArr:                     NewRefreshArrCommandHandler(log, es, cfg.Utils),
+		RefreshRenewalSummary:          NewRefreshRenewalSummaryCommandHandler(log, es, cfg.Utils),
 	}
 }
