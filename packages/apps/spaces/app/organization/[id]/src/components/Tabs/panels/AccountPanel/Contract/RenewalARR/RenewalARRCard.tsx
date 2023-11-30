@@ -41,10 +41,11 @@ export const RenewalARRCard = ({
     startedAt,
   );
 
-  const hasRenewed =
-    renewCycle === ContractRenewalCycle.AnnualRenewal
+  const hasRenewed = startedAt
+    ? renewCycle === ContractRenewalCycle.AnnualRenewal
       ? differenceInMonths > 12
-      : differenceInMonths > 1;
+      : differenceInMonths > 1
+    : null;
 
   const formattedMaxAmount = formatCurrency(opportunity.maxAmount ?? 0);
   const formattedAmount = formatCurrency(hasEnded ? 0 : opportunity.amount);
@@ -119,7 +120,7 @@ export const RenewalARRCard = ({
                 )}
               </Flex>
 
-              {startedAt && (
+              {opportunity?.renewalLikelihood && (
                 <Text w='full' color='gray.500' fontSize='sm' lineHeight={1}>
                   {!hasEnded ? (
                     <>
