@@ -88,7 +88,7 @@ export const ContractCard = ({
       toastError(
         `${
           invalidDate
-            ? 'End date cannot be before start date'
+            ? 'The contract end date needs to be after the service start date'
             : 'Failed to update contract'
         }`,
         `update-contract-error-${error}`,
