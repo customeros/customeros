@@ -115,7 +115,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v5.0.0
+        uses: docker/build-push-action@v5.1.0
         with:
           context: packages/runner/customer-os-data-upkeeper/.
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
