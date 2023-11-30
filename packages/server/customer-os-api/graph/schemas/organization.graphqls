@@ -89,9 +89,10 @@ type Organization implements Node {
 }
 
 type OrgAccountDetails {
-    renewalLikelihood: RenewalLikelihood
-    renewalForecast: RenewalForecast
-    billingDetails: BillingDetails
+    renewalLikelihood: RenewalLikelihood @deprecated
+    renewalForecast: RenewalForecast @deprecated
+    billingDetails: BillingDetails @deprecated
+    renewalSummary: RenewalSummary
 }
 
 type RenewalLikelihood {
@@ -112,6 +113,13 @@ type RenewalForecast {
     updatedBy: User @goField(forceResolver: true)
     arr: Float
     maxArr: Float
+}
+
+type RenewalSummary {
+    arrForecast:       Float
+    maxArrForecast:    Float
+    renewalLikelihood: OpportunityRenewalLikelihood
+    nextRenewalDate:   Time
 }
 
 type BillingDetails {

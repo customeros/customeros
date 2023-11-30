@@ -801,6 +801,7 @@ type ComplexityRoot struct {
 		BillingDetails    func(childComplexity int) int
 		RenewalForecast   func(childComplexity int) int
 		RenewalLikelihood func(childComplexity int) int
+		RenewalSummary    func(childComplexity int) int
 	}
 
 	Organization struct {
@@ -987,6 +988,13 @@ type ComplexityRoot struct {
 		UpdatedAt           func(childComplexity int) int
 		UpdatedBy           func(childComplexity int) int
 		UpdatedByID         func(childComplexity int) int
+	}
+
+	RenewalSummary struct {
+		ArrForecast       func(childComplexity int) int
+		MaxArrForecast    func(childComplexity int) int
+		NextRenewalDate   func(childComplexity int) int
+		RenewalLikelihood func(childComplexity int) int
 	}
 
 	Result struct {
@@ -6053,6 +6061,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrgAccountDetails.RenewalLikelihood(childComplexity), true
 
+	case "OrgAccountDetails.renewalSummary":
+		if e.complexity.OrgAccountDetails.RenewalSummary == nil {
+			break
+		}
+
+		return e.complexity.OrgAccountDetails.RenewalSummary(childComplexity), true
+
 	case "Organization.accountDetails":
 		if e.complexity.Organization.AccountDetails == nil {
 			break
@@ -7329,6 +7344,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RenewalLikelihood.UpdatedByID(childComplexity), true
 
+	case "RenewalSummary.arrForecast":
+		if e.complexity.RenewalSummary.ArrForecast == nil {
+			break
+		}
+
+		return e.complexity.RenewalSummary.ArrForecast(childComplexity), true
+
+	case "RenewalSummary.maxArrForecast":
+		if e.complexity.RenewalSummary.MaxArrForecast == nil {
+			break
+		}
+
+		return e.complexity.RenewalSummary.MaxArrForecast(childComplexity), true
+
+	case "RenewalSummary.nextRenewalDate":
+		if e.complexity.RenewalSummary.NextRenewalDate == nil {
+			break
+		}
+
+		return e.complexity.RenewalSummary.NextRenewalDate(childComplexity), true
+
+	case "RenewalSummary.renewalLikelihood":
+		if e.complexity.RenewalSummary.RenewalLikelihood == nil {
+			break
+		}
+
+		return e.complexity.RenewalSummary.RenewalLikelihood(childComplexity), true
+
 	case "Result.result":
 		if e.complexity.Result.Result == nil {
 			break
@@ -8547,6 +8590,7 @@ input ContractUpdateInput {
 enum ContractRenewalCycle {
     NONE
     MONTHLY_RENEWAL
+    QUARTERLY_RENEWAL
     ANNUAL_RENEWAL
 }
 enum ContractStatus {
@@ -8775,7 +8819,7 @@ type DashboardCustomerMap {
     organizationId: ID!
     organization: Organization! @goField(forceResolver: true)
     state: DashboardCustomerMapState!
-    arr: Int!
+    arr: Float!
     contractSignedDate: Time!
 }
 
@@ -9858,9 +9902,10 @@ type Organization implements Node {
 }
 
 type OrgAccountDetails {
-    renewalLikelihood: RenewalLikelihood
-    renewalForecast: RenewalForecast
-    billingDetails: BillingDetails
+    renewalLikelihood: RenewalLikelihood @deprecated
+    renewalForecast: RenewalForecast @deprecated
+    billingDetails: BillingDetails @deprecated
+    renewalSummary: RenewalSummary
 }
 
 type RenewalLikelihood {
@@ -9881,6 +9926,13 @@ type RenewalForecast {
     updatedBy: User @goField(forceResolver: true)
     arr: Float
     maxArr: Float
+}
+
+type RenewalSummary {
+    arrForecast:       Float
+    maxArrForecast:    Float
+    renewalLikelihood: OpportunityRenewalLikelihood
+    nextRenewalDate:   Time
 }
 
 type BillingDetails {
@@ -10322,6 +10374,7 @@ input ServiceLineItemCloseInput {
 enum BilledType {
     NONE
     MONTHLY
+    QUARTERLY
     ANNUALLY
     ONCE
     USAGE
@@ -21711,9 +21764,9 @@ func (ec *executionContext) _DashboardCustomerMap_arr(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(float64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardCustomerMap_arr(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21723,7 +21776,7 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_arr(ctx context.Co
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Float does not have child fields")
 		},
 	}
 	return fc, nil
@@ -48290,6 +48343,57 @@ func (ec *executionContext) fieldContext_OrgAccountDetails_billingDetails(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _OrgAccountDetails_renewalSummary(ctx context.Context, field graphql.CollectedField, obj *model.OrgAccountDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrgAccountDetails_renewalSummary(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalSummary, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.RenewalSummary)
+	fc.Result = res
+	return ec.marshalORenewalSummary2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalSummary(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrgAccountDetails_renewalSummary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrgAccountDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "arrForecast":
+				return ec.fieldContext_RenewalSummary_arrForecast(ctx, field)
+			case "maxArrForecast":
+				return ec.fieldContext_RenewalSummary_maxArrForecast(ctx, field)
+			case "renewalLikelihood":
+				return ec.fieldContext_RenewalSummary_renewalLikelihood(ctx, field)
+			case "nextRenewalDate":
+				return ec.fieldContext_RenewalSummary_nextRenewalDate(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RenewalSummary", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_id(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_id(ctx, field)
 	if err != nil {
@@ -50781,6 +50885,8 @@ func (ec *executionContext) fieldContext_Organization_accountDetails(ctx context
 				return ec.fieldContext_OrgAccountDetails_renewalForecast(ctx, field)
 			case "billingDetails":
 				return ec.fieldContext_OrgAccountDetails_billingDetails(ctx, field)
+			case "renewalSummary":
+				return ec.fieldContext_OrgAccountDetails_renewalSummary(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrgAccountDetails", field.Name)
 		},
@@ -57849,6 +57955,170 @@ func (ec *executionContext) fieldContext_RenewalLikelihood_updatedBy(ctx context
 				return ec.fieldContext_User_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RenewalSummary_arrForecast(ctx context.Context, field graphql.CollectedField, obj *model.RenewalSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalSummary_arrForecast(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ArrForecast, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalSummary_arrForecast(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RenewalSummary_maxArrForecast(ctx context.Context, field graphql.CollectedField, obj *model.RenewalSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalSummary_maxArrForecast(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxArrForecast, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalSummary_maxArrForecast(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RenewalSummary_renewalLikelihood(ctx context.Context, field graphql.CollectedField, obj *model.RenewalSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalSummary_renewalLikelihood(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalLikelihood, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OpportunityRenewalLikelihood)
+	fc.Result = res
+	return ec.marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalSummary_renewalLikelihood(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OpportunityRenewalLikelihood does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RenewalSummary_nextRenewalDate(ctx context.Context, field graphql.CollectedField, obj *model.RenewalSummary) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalSummary_nextRenewalDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NextRenewalDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalSummary_nextRenewalDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -75332,6 +75602,8 @@ func (ec *executionContext) _OrgAccountDetails(ctx context.Context, sel ast.Sele
 			out.Values[i] = ec._OrgAccountDetails_renewalForecast(ctx, field, obj)
 		case "billingDetails":
 			out.Values[i] = ec._OrgAccountDetails_billingDetails(ctx, field, obj)
+		case "renewalSummary":
+			out.Values[i] = ec._OrgAccountDetails_renewalSummary(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -77937,6 +78209,48 @@ func (ec *executionContext) _RenewalLikelihood(ctx context.Context, sel ast.Sele
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var renewalSummaryImplementors = []string{"RenewalSummary"}
+
+func (ec *executionContext) _RenewalSummary(ctx context.Context, sel ast.SelectionSet, obj *model.RenewalSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, renewalSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RenewalSummary")
+		case "arrForecast":
+			out.Values[i] = ec._RenewalSummary_arrForecast(ctx, field, obj)
+		case "maxArrForecast":
+			out.Values[i] = ec._RenewalSummary_maxArrForecast(ctx, field, obj)
+		case "renewalLikelihood":
+			out.Values[i] = ec._RenewalSummary_renewalLikelihood(ctx, field, obj)
+		case "nextRenewalDate":
+			out.Values[i] = ec._RenewalSummary_nextRenewalDate(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -83760,6 +84074,13 @@ func (ec *executionContext) marshalORenewalLikelihoodProbability2ᚖgithubᚗcom
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalORenewalSummary2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRenewalSummary(ctx context.Context, sel ast.SelectionSet, v *model.RenewalSummary) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._RenewalSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v *model.Result) graphql.Marshaler {

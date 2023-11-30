@@ -61,6 +61,7 @@ const (
 	None RenewalCycle = iota
 	MonthlyRenewal
 	AnnuallyRenewal
+	QuarterlyRenewal
 )
 
 // This function provides a string representation of the ContractStatus enum.
@@ -84,6 +85,8 @@ func (rc RenewalCycle) String() string {
 		return ""
 	case MonthlyRenewal:
 		return string(MonthlyRenewalCycleString)
+	case QuarterlyRenewal:
+		return string(QuarterlyRenewalCycleString)
 	case AnnuallyRenewal:
 		return string(AnnuallyRenewalCycleString)
 	default:
@@ -94,14 +97,17 @@ func (rc RenewalCycle) String() string {
 type RenewalCycleString string
 
 const (
-	MonthlyRenewalCycleString  RenewalCycleString = "MONTHLY"
-	AnnuallyRenewalCycleString RenewalCycleString = "ANNUALLY"
+	MonthlyRenewalCycleString   RenewalCycleString = "MONTHLY"
+	QuarterlyRenewalCycleString RenewalCycleString = "QUARTERLY"
+	AnnuallyRenewalCycleString  RenewalCycleString = "ANNUALLY"
 )
 
 func RenewalCycleFromString(renewalCycle string) RenewalCycle {
 	switch renewalCycle {
 	case "MONTHLY":
 		return MonthlyRenewal
+	case "QUARTERLY":
+		return QuarterlyRenewal
 	case "ANNUALLY":
 		return AnnuallyRenewal
 	default:
@@ -110,5 +116,7 @@ func RenewalCycleFromString(renewalCycle string) RenewalCycle {
 }
 
 func IsFrequencyBasedRenewalCycle(renewalCycle string) bool {
-	return renewalCycle == string(MonthlyRenewalCycleString) || renewalCycle == string(AnnuallyRenewalCycleString)
+	return renewalCycle == string(MonthlyRenewalCycleString) ||
+		renewalCycle == string(AnnuallyRenewalCycleString) ||
+		renewalCycle == string(QuarterlyRenewalCycleString)
 }

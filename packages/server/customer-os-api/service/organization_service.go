@@ -866,6 +866,13 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 			RenewalCycleStart: utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleStart"),
 			RenewalCycleNext:  utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleNext"),
 		},
+		RenewalSummary: entity.RenewalSummary{
+			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
+			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
+			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
+			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "derivedRenewalLikelihood"),
+			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
+		},
 	}
 	return &output
 }

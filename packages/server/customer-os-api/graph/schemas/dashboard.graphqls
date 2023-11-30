@@ -22,7 +22,7 @@ type DashboardCustomerMap {
     organizationId: ID!
     organization: Organization! @goField(forceResolver: true)
     state: DashboardCustomerMapState!
-    arr: Int!
+    arr: Float!
     contractSignedDate: Time!
 }
 
