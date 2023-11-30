@@ -7,9 +7,10 @@ import (
 )
 
 var contractRenewalCycleByModel = map[model.ContractRenewalCycle]entity.ContractRenewalCycle{
-	model.ContractRenewalCycleNone:           entity.ContractRenewalCycleNone,
-	model.ContractRenewalCycleMonthlyRenewal: entity.ContractRenewalCycleMonthlyRenewal,
-	model.ContractRenewalCycleAnnualRenewal:  entity.ContractRenewalCycleAnnualRenewal,
+	model.ContractRenewalCycleNone:             entity.ContractRenewalCycleNone,
+	model.ContractRenewalCycleMonthlyRenewal:   entity.ContractRenewalCycleMonthlyRenewal,
+	model.ContractRenewalCycleQuarterlyRenewal: entity.ContractRenewalCycleQuarterlyRenewal,
+	model.ContractRenewalCycleAnnualRenewal:    entity.ContractRenewalCycleAnnualRenewal,
 }
 
 var contractRenewalCycleByValue = utils.ReverseMap(contractRenewalCycleByModel)

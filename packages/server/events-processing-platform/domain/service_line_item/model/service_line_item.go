@@ -47,10 +47,11 @@ const (
 	AnnuallyBilled
 	OnceBilled  // For One-Time
 	UsageBilled // For Usage-Based
+	QuarterlyBilled
 )
 
 func (bt BilledType) String() string {
-	return [...]string{string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString), string(UsageBilledString)}[bt]
+	return [...]string{string(MonthlyBilledString), string(AnnuallyBilledString), string(OnceBilledString), string(UsageBilledString), string(QuarterlyBilledString)}[bt]
 }
 
 func (bt BilledType) IsOneTime() bool {
@@ -62,14 +63,15 @@ func (bt BilledType) IsUsage() bool {
 }
 
 func (bt BilledType) IsRecurrent() bool {
-	return bt == MonthlyBilled || bt == AnnuallyBilled
+	return bt == MonthlyBilled || bt == AnnuallyBilled || bt == QuarterlyBilled
 }
 
 type BilledString string
 
 const (
-	MonthlyBilledString  BilledString = "MONTHLY"
-	AnnuallyBilledString BilledString = "ANNUALLY"
-	OnceBilledString     BilledString = "ONCE"
-	UsageBilledString    BilledString = "USAGE"
+	MonthlyBilledString   BilledString = "MONTHLY"
+	QuarterlyBilledString BilledString = "QUARTERLY"
+	AnnuallyBilledString  BilledString = "ANNUALLY"
+	OnceBilledString      BilledString = "ONCE"
+	UsageBilledString     BilledString = "USAGE"
 )

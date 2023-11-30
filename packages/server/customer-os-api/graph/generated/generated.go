@@ -8589,6 +8589,7 @@ input ContractUpdateInput {
 enum ContractRenewalCycle {
     NONE
     MONTHLY_RENEWAL
+    QUARTERLY_RENEWAL
     ANNUAL_RENEWAL
 }
 enum ContractStatus {
@@ -10372,6 +10373,7 @@ input ServiceLineItemCloseInput {
 enum BilledType {
     NONE
     MONTHLY
+    QUARTERLY
     ANNUALLY
     ONCE
     USAGE
