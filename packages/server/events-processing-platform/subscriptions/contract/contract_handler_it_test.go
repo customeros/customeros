@@ -109,6 +109,52 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	require.Equal(t, utils.TimePtr(startOfNextMonth(utils.Now())), eventData.RenewedAt)
 }
 
+func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		ServiceStartedAt: serviceStartedAt,
+		RenewalCycle:     string(model.QuarterlyRenewalCycleString),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+
+	// EXECUTE
+	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
+	require.Nil(t, err)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 2, len(eventList))
+
+	updateNextCycleDateEvent := eventList[1]
+	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, updateNextCycleDateEvent.EventType)
+	var eventData opportunityevent.OpportunityUpdateNextCycleDateEvent
+	err = updateNextCycleDateEvent.GetJsonData(&eventData)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData.Tenant)
+	require.Equal(t, utils.TimePtr(startOfNextQuarter(utils.Now())), eventData.RenewedAt)
+}
+
 func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
@@ -182,6 +228,17 @@ func startOfNextMonth(current time.Time) time.Time {
 		firstOfNextMonth = time.Date(year+1, time.January, 1, 0, 0, 0, 0, current.Location())
 	}
 	return firstOfNextMonth
+}
+
+func startOfNextQuarter(current time.Time) time.Time {
+	year, month, _ := current.Date()
+	quarter := (month-1)/3 + 1
+	firstOfNextQuarter := time.Date(year, quarter*3+1, 1, 0, 0, 0, 0, current.Location())
+	// Handle year change transition
+	if quarter == 4 {
+		firstOfNextQuarter = time.Date(year+1, time.January, 1, 0, 0, 0, 0, current.Location())
+	}
+	return firstOfNextQuarter
 }
 
 func startOfNextYear(current time.Time) time.Time {

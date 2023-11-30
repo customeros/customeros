@@ -116,6 +116,8 @@ func (s *contractService) Update(ctx context.Context, contract *entity.ContractE
 	switch contract.ContractRenewalCycle {
 	case entity.ContractRenewalCycleMonthlyRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+	case entity.ContractRenewalCycleQuarterlyRenewal:
+		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
 	case entity.ContractRenewalCycleAnnualRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
@@ -154,6 +156,8 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	switch contractDetails.ContractEntity.ContractRenewalCycle {
 	case entity.ContractRenewalCycleMonthlyRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+	case entity.ContractRenewalCycleQuarterlyRenewal:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
 	case entity.ContractRenewalCycleAnnualRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:

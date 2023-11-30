@@ -1925,16 +1925,18 @@ func (e ActionType) MarshalGQL(w io.Writer) {
 type BilledType string
 
 const (
-	BilledTypeNone     BilledType = "NONE"
-	BilledTypeMonthly  BilledType = "MONTHLY"
-	BilledTypeAnnually BilledType = "ANNUALLY"
-	BilledTypeOnce     BilledType = "ONCE"
-	BilledTypeUsage    BilledType = "USAGE"
+	BilledTypeNone      BilledType = "NONE"
+	BilledTypeMonthly   BilledType = "MONTHLY"
+	BilledTypeQuarterly BilledType = "QUARTERLY"
+	BilledTypeAnnually  BilledType = "ANNUALLY"
+	BilledTypeOnce      BilledType = "ONCE"
+	BilledTypeUsage     BilledType = "USAGE"
 )
 
 var AllBilledType = []BilledType{
 	BilledTypeNone,
 	BilledTypeMonthly,
+	BilledTypeQuarterly,
 	BilledTypeAnnually,
 	BilledTypeOnce,
 	BilledTypeUsage,
@@ -1942,7 +1944,7 @@ var AllBilledType = []BilledType{
 
 func (e BilledType) IsValid() bool {
 	switch e {
-	case BilledTypeNone, BilledTypeMonthly, BilledTypeAnnually, BilledTypeOnce, BilledTypeUsage:
+	case BilledTypeNone, BilledTypeMonthly, BilledTypeQuarterly, BilledTypeAnnually, BilledTypeOnce, BilledTypeUsage:
 		return true
 	}
 	return false
@@ -2064,20 +2066,22 @@ func (e ComparisonOperator) MarshalGQL(w io.Writer) {
 type ContractRenewalCycle string
 
 const (
-	ContractRenewalCycleNone           ContractRenewalCycle = "NONE"
-	ContractRenewalCycleMonthlyRenewal ContractRenewalCycle = "MONTHLY_RENEWAL"
-	ContractRenewalCycleAnnualRenewal  ContractRenewalCycle = "ANNUAL_RENEWAL"
+	ContractRenewalCycleNone             ContractRenewalCycle = "NONE"
+	ContractRenewalCycleMonthlyRenewal   ContractRenewalCycle = "MONTHLY_RENEWAL"
+	ContractRenewalCycleQuarterlyRenewal ContractRenewalCycle = "QUARTERLY_RENEWAL"
+	ContractRenewalCycleAnnualRenewal    ContractRenewalCycle = "ANNUAL_RENEWAL"
 )
 
 var AllContractRenewalCycle = []ContractRenewalCycle{
 	ContractRenewalCycleNone,
 	ContractRenewalCycleMonthlyRenewal,
+	ContractRenewalCycleQuarterlyRenewal,
 	ContractRenewalCycleAnnualRenewal,
 }
 
 func (e ContractRenewalCycle) IsValid() bool {
 	switch e {
-	case ContractRenewalCycleNone, ContractRenewalCycleMonthlyRenewal, ContractRenewalCycleAnnualRenewal:
+	case ContractRenewalCycleNone, ContractRenewalCycleMonthlyRenewal, ContractRenewalCycleQuarterlyRenewal, ContractRenewalCycleAnnualRenewal:
 		return true
 	}
 	return false

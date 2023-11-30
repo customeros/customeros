@@ -3,16 +3,18 @@ package entity
 type BilledType string
 
 const (
-	BilledTypeNone     BilledType = ""
-	BilledTypeMonthly  BilledType = "MONTHLY"
-	BilledTypeAnnually BilledType = "ANNUALLY"
-	BilledTypeOnce     BilledType = "ONCE"
-	BilledTypeUsage    BilledType = "USAGE"
+	BilledTypeNone      BilledType = ""
+	BilledTypeMonthly   BilledType = "MONTHLY"
+	BilledTypeQuarterly BilledType = "QUARTERLY"
+	BilledTypeAnnually  BilledType = "ANNUALLY"
+	BilledTypeOnce      BilledType = "ONCE"
+	BilledTypeUsage     BilledType = "USAGE"
 )
 
 var AllBilledTypes = []BilledType{
 	BilledTypeNone,
 	BilledTypeMonthly,
+	BilledTypeQuarterly,
 	BilledTypeAnnually,
 	BilledTypeOnce,
 	BilledTypeUsage,

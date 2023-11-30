@@ -52,6 +52,7 @@ input ContractUpdateInput {
 enum ContractRenewalCycle {
     NONE
     MONTHLY_RENEWAL
+    QUARTERLY_RENEWAL
     ANNUAL_RENEWAL
 }
 enum ContractStatus {

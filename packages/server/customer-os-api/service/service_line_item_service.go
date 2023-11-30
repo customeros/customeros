@@ -100,6 +100,8 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 	switch serviceLineItemDetails.ServiceLineItemEntity.Billed {
 	case entity.BilledTypeMonthly:
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
+	case entity.BilledTypeQuarterly:
+		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_QUARTERLY_BILLED
 	case entity.BilledTypeAnnually:
 		createServiceLineItemRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
 	case entity.BilledTypeOnce:
@@ -169,6 +171,8 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 	switch serviceLineItem.Billed {
 	case entity.BilledTypeMonthly:
 		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_MONTHLY_BILLED
+	case entity.BilledTypeQuarterly:
+		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_QUARTERLY_BILLED
 	case entity.BilledTypeAnnually:
 		serviceLineItemUpdateRequest.Billed = servicelineitempb.BilledType_ANNUALLY_BILLED
 	case entity.BilledTypeOnce:

@@ -109,6 +109,8 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 		switch renewalCycle {
 		case string(model.MonthlyRenewalCycleString):
 			renewalCycleNext = renewalCycleNext.AddDate(0, 1, 0)
+		case string(model.QuarterlyRenewalCycleString):
+			renewalCycleNext = renewalCycleNext.AddDate(0, 4, 0)
 		case string(model.AnnuallyRenewalCycleString):
 			renewalCycleNext = renewalCycleNext.AddDate(1, 0, 0)
 		default:
@@ -200,6 +202,9 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, co
 		} else if sli.Billed == string(servicelineitemmodel.MonthlyBilledString) {
 			annualPrice = float64(sli.Price) * float64(sli.Quantity)
 			annualPrice *= 12
+		} else if sli.Billed == string(servicelineitemmodel.QuarterlyBilledString) {
+			annualPrice = float64(sli.Price) * float64(sli.Quantity)
+			annualPrice *= 4
 		}
 		span.LogFields(log.Float64(fmt.Sprintf("service line item {%s} added ARR value:", sli.Id), annualPrice))
 		// Add to total ARR
