@@ -547,7 +547,7 @@ type DashboardCustomerMap struct {
 	OrganizationID     string                    `json:"organizationId"`
 	Organization       *Organization             `json:"organization"`
 	State              DashboardCustomerMapState `json:"state"`
-	Arr                int                       `json:"arr"`
+	Arr                float64                   `json:"arr"`
 	ContractSignedDate time.Time                 `json:"contractSignedDate"`
 }
 
@@ -1295,6 +1295,7 @@ type OrgAccountDetails struct {
 	RenewalLikelihood *RenewalLikelihood `json:"renewalLikelihood,omitempty"`
 	RenewalForecast   *RenewalForecast   `json:"renewalForecast,omitempty"`
 	BillingDetails    *BillingDetails    `json:"billingDetails,omitempty"`
+	RenewalSummary    *RenewalSummary    `json:"renewalSummary,omitempty"`
 }
 
 type Organization struct {
@@ -1587,6 +1588,13 @@ type RenewalLikelihoodInput struct {
 	ID          string                        `json:"id"`
 	Probability *RenewalLikelihoodProbability `json:"probability,omitempty"`
 	Comment     *string                       `json:"comment,omitempty"`
+}
+
+type RenewalSummary struct {
+	ArrForecast       *float64                      `json:"arrForecast,omitempty"`
+	MaxArrForecast    *float64                      `json:"maxArrForecast,omitempty"`
+	RenewalLikelihood *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
+	NextRenewalDate   *time.Time                    `json:"nextRenewalDate,omitempty"`
 }
 
 // Describes the success or failure of the GraphQL call.
@@ -1919,16 +1927,18 @@ func (e ActionType) MarshalGQL(w io.Writer) {
 type BilledType string
 
 const (
-	BilledTypeNone     BilledType = "NONE"
-	BilledTypeMonthly  BilledType = "MONTHLY"
-	BilledTypeAnnually BilledType = "ANNUALLY"
-	BilledTypeOnce     BilledType = "ONCE"
-	BilledTypeUsage    BilledType = "USAGE"
+	BilledTypeNone      BilledType = "NONE"
+	BilledTypeMonthly   BilledType = "MONTHLY"
+	BilledTypeQuarterly BilledType = "QUARTERLY"
+	BilledTypeAnnually  BilledType = "ANNUALLY"
+	BilledTypeOnce      BilledType = "ONCE"
+	BilledTypeUsage     BilledType = "USAGE"
 )
 
 var AllBilledType = []BilledType{
 	BilledTypeNone,
 	BilledTypeMonthly,
+	BilledTypeQuarterly,
 	BilledTypeAnnually,
 	BilledTypeOnce,
 	BilledTypeUsage,
@@ -1936,7 +1946,7 @@ var AllBilledType = []BilledType{
 
 func (e BilledType) IsValid() bool {
 	switch e {
-	case BilledTypeNone, BilledTypeMonthly, BilledTypeAnnually, BilledTypeOnce, BilledTypeUsage:
+	case BilledTypeNone, BilledTypeMonthly, BilledTypeQuarterly, BilledTypeAnnually, BilledTypeOnce, BilledTypeUsage:
 		return true
 	}
 	return false
@@ -2058,20 +2068,22 @@ func (e ComparisonOperator) MarshalGQL(w io.Writer) {
 type ContractRenewalCycle string
 
 const (
-	ContractRenewalCycleNone           ContractRenewalCycle = "NONE"
-	ContractRenewalCycleMonthlyRenewal ContractRenewalCycle = "MONTHLY_RENEWAL"
-	ContractRenewalCycleAnnualRenewal  ContractRenewalCycle = "ANNUAL_RENEWAL"
+	ContractRenewalCycleNone             ContractRenewalCycle = "NONE"
+	ContractRenewalCycleMonthlyRenewal   ContractRenewalCycle = "MONTHLY_RENEWAL"
+	ContractRenewalCycleQuarterlyRenewal ContractRenewalCycle = "QUARTERLY_RENEWAL"
+	ContractRenewalCycleAnnualRenewal    ContractRenewalCycle = "ANNUAL_RENEWAL"
 )
 
 var AllContractRenewalCycle = []ContractRenewalCycle{
 	ContractRenewalCycleNone,
 	ContractRenewalCycleMonthlyRenewal,
+	ContractRenewalCycleQuarterlyRenewal,
 	ContractRenewalCycleAnnualRenewal,
 }
 
 func (e ContractRenewalCycle) IsValid() bool {
 	switch e {
-	case ContractRenewalCycleNone, ContractRenewalCycleMonthlyRenewal, ContractRenewalCycleAnnualRenewal:
+	case ContractRenewalCycleNone, ContractRenewalCycleMonthlyRenewal, ContractRenewalCycleQuarterlyRenewal, ContractRenewalCycleAnnualRenewal:
 		return true
 	}
 	return false

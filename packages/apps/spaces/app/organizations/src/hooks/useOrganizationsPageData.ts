@@ -83,6 +83,7 @@ export const useOrganizationsPageData = ({
             property,
             value,
             operation: ComparisonOperator.Eq,
+            includeEmpty: false,
           },
         });
       }

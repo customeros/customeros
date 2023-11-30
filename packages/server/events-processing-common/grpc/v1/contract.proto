@@ -11,6 +11,7 @@ enum RenewalCycle {
   NONE = 0;
   MONTHLY_RENEWAL = 1;
   ANNUALLY_RENEWAL = 2;
+  QUARTERLY_RENEWAL = 3;
 }
 
 // CreateContract request message

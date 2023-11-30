@@ -125,28 +125,7 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 		return s.organizationEventHandler.OnRenewalForecastRequested(ctx, evt)
 	case orgevts.OrganizationRequestNextCycleDateV1:
 		return s.organizationEventHandler.OnNextCycleDateRequested(ctx, evt)
-	case
-		orgevts.OrganizationLinkDomainV1,
-		orgevts.OrganizationRequestScrapeByWebsiteV1,
-		orgevts.OrganizationPhoneNumberLinkV1,
-		orgevts.OrganizationEmailLinkV1,
-		orgevts.OrganizationLocationLinkV1,
-		orgevts.OrganizationAddSocialV1,
-		orgevts.OrganizationUpdateRenewalLikelihoodV1,
-		orgevts.OrganizationUpdateRenewalForecastV1,
-		orgevts.OrganizationUpdateBillingDetailsV1,
-		orgevts.OrganizationRefreshLastTouchpointV1,
-		orgevts.OrganizationHideV1,
-		orgevts.OrganizationShowV1,
-		orgevts.OrganizationAddParentV1,
-		orgevts.OrganizationRemoveParentV1,
-		orgevts.OrganizationUpsertCustomFieldV1:
-		return nil
-
 	default:
-		s.log.Warnf("(OrganizationSubscriber) Unknown EventType: {%s}", evt.EventType)
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
+		return nil
 	}
 }

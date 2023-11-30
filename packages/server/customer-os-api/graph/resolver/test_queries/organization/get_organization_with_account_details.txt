@@ -23,6 +23,12 @@ query GetOrganizationById($organizationId: ID!){
             renewalCycle
             renewalCycleStart
         }
+        renewalSummary {
+            arrForecast
+            maxArrForecast
+            renewalLikelihood
+            nextRenewalDate
+        }
     }
   }
 }

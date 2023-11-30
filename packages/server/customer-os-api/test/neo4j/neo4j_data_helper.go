@@ -795,13 +795,16 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.renewalForecastComment=$renewalForecastComment,
 							org.renewalForecastUpdatedAt=$renewalForecastUpdatedAt,
 							org.renewalForecastUpdatedBy=$renewalForecastUpdatedBy,
-							org.renewalForecastArr=$renewalForecastArr,
-							org.renewalForecastMaxArr=$renewalForecastMaxArr,
 							org.billingDetailsAmount=$billingDetailsAmount,
 							org.billingDetailsFrequency=$billingDetailsFrequency,
 							org.billingDetailsRenewalCycle=$billingDetailsRenewalCycle,
 							org.billingDetailsRenewalCycleStart=$billingDetailsRenewalCycleStart,
-							org.billingDetailsRenewalCycleNext=$billingDetailsRenewalCycleNext
+							org.billingDetailsRenewalCycleNext=$billingDetailsRenewalCycleNext,
+							org.renewalForecastArr=$renewalForecastArr,
+							org.renewalForecastMaxArr=$renewalForecastMaxArr,
+							org.derivedNextRenewalAt=$derivedNextRenewalAt,
+							org.derivedRenewalLikelihood=$derivedRenewalLikelihood,
+							org.derivedRenewalLikelihoodOrder=$derivedRenewalLikelihoodOrder
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                              organizationId.String(),
@@ -831,8 +834,6 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"renewalLikelihoodUpdatedAt":      utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalLikelihood.UpdatedAt),
 		"renewalForecast":                 organization.RenewalForecast.Amount,
 		"renewalForecastPotential":        organization.RenewalForecast.PotentialAmount,
-		"renewalForecastArr":              organization.RenewalForecast.Arr,
-		"renewalForecastMaxArr":           organization.RenewalForecast.MaxArr,
 		"renewalForecastComment":          organization.RenewalForecast.Comment,
 		"renewalForecastUpdatedBy":        organization.RenewalForecast.UpdatedById,
 		"renewalForecastUpdatedAt":        utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalForecast.UpdatedAt),
@@ -841,8 +842,12 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"billingDetailsRenewalCycle":      organization.BillingDetails.RenewalCycle,
 		"billingDetailsRenewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(utils.ToDatePtr(organization.BillingDetails.RenewalCycleStart)),
 		"billingDetailsRenewalCycleNext":  utils.TimePtrFirstNonNilNillableAsAny(utils.ToDatePtr(organization.BillingDetails.RenewalCycleNext)),
-
-		"now": utils.Now(),
+		"renewalForecastArr":              organization.RenewalSummary.ArrForecast,
+		"renewalForecastMaxArr":           organization.RenewalSummary.MaxArrForecast,
+		"derivedNextRenewalAt":            utils.TimePtrFirstNonNilNillableAsAny(organization.RenewalSummary.NextRenewalAt),
+		"derivedRenewalLikelihood":        organization.RenewalSummary.RenewalLikelihood,
+		"derivedRenewalLikelihoodOrder":   organization.RenewalSummary.RenewalLikelihoodOrder,
+		"now":                             utils.Now(),
 	})
 	return organizationId.String()
 }
@@ -1700,6 +1705,19 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 		"renewalUpdateByUserAt":  opportunity.RenewalUpdatedByUserAt,
 		"createdAt":              opportunity.CreatedAt,
 		"updatedAt":              opportunity.UpdatedAt,
+	})
+	return opportunityId
+}
+
+func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId, opportunityId string) string {
+	query := fmt.Sprintf(`
+				MATCH (c:Contract_%s {id:$contractId}), (op:Opportunity_%s {id:$opportunityId})
+				MERGE (c)-[:ACTIVE_RENEWAL]->(op)
+				`, tenant, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"opportunityId": opportunityId,
+		"contractId":    contractId,
 	})
 	return opportunityId
 }

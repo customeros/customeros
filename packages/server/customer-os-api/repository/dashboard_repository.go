@@ -19,6 +19,7 @@ import (
 type DashboardRepository interface {
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -430,8 +431,9 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 						 END AS endOfMonth
 
 					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, currentDate, datetime({year: endOfMonth.year, month: endOfMonth.month, day: endOfMonth.day, hour: 23, minute: 59, second: 59, nanosecond:999999999}) as endOfMonth
-					OPTIONAL MATCH (i:Contract_%s)<-[:HAS_CONTRACT]-(o:Organization_%s)
+					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(i:Contract_%s)
 					WHERE 
+					  o.hide = false AND
 					  i.serviceStartedAt.year = year AND 
 					  i.serviceStartedAt.month = month AND 
 					  (i.endedAt IS NULL OR i.endedAt > endOfMonth)
@@ -442,6 +444,7 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 					RETURN year, month, COUNT(oldest) AS totalContracts
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
+				"tenant":    tenant,
 				"startDate": startDate,
 				"endDate":   endDate,
 			})
@@ -465,6 +468,96 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 				"year":  year,
 				"month": month,
 				"count": count,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+
+func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardCustomerMapData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
+					WHERE o.hide = false AND c.serviceStartedAt IS NOT NULL and op.maxAmount IS NOT NULL
+					WITH o,  
+						 COLLECT(DISTINCT CASE
+						   WHEN c.status = 'ENDED' THEN 'CHURNED'
+						   WHEN c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.renewalLikelihood = 'HIGH' THEN 'OK'
+						   ELSE 'AT_RISK' END) AS statuses,
+						 COLLECT(DISTINCT { id: c.id, serviceStartedAt: c.serviceStartedAt, status: c.status, maxAmount: op.maxAmount }) AS contractDetails
+					WITH *, CASE
+								WHEN ALL(x IN statuses WHERE x = 'CHURNED') THEN 'CHURNED'
+								WHEN ALL(x IN statuses WHERE x IN ['OK', 'CHURNED']) THEN 'OK'
+								ELSE 'AT_RISK'
+							END AS status
+
+					WITH *, REDUCE(s = null, cd IN contractDetails | 
+							 CASE WHEN s IS NULL OR cd.serviceStartedAt < s THEN cd.serviceStartedAt ELSE s END
+						 ) AS oldestServiceStartedAt
+
+					WITH *, REDUCE(s = null, cd IN contractDetails | 
+							 CASE WHEN s IS NULL OR cd.serviceStartedAt > s THEN cd.serviceStartedAt ELSE s END
+						 ) AS latestServiceStartedAt
+
+					WITH *, REDUCE(s = 0, cd IN contractDetails | 
+							 CASE WHEN cd.serviceStartedAt = latestServiceStartedAt THEN s + cd.maxAmount ELSE s END 
+						 ) AS latestContractLiveArr
+					
+					WITH *, REDUCE(sum = 0, cd IN contractDetails | CASE WHEN cd.status <> 'ENDED' THEN sum + cd.maxAmount ELSE sum END ) AS arr
+					
+					RETURN o.id,
+						 oldestServiceStartedAt,
+						 status,
+						 CASE WHEN status = 'CHURNED' THEN latestContractLiveArr ELSE arr END as arr
+					ORDER BY oldestServiceStartedAt ASC
+				`, tenant, tenant, tenant),
+			map[string]any{
+				"tenant": tenant,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			organizationId := v.Values[0].(string)
+			oldestServiceStartedAt := v.Values[1].(time.Time)
+			state := v.Values[2].(string)
+			var arr float64
+
+			switch val := v.Values[3].(type) {
+			case int64:
+				arr = float64(val)
+			case float64:
+				arr = val
+			default:
+				fmt.Errorf("unexpected type %T", val)
+				arr = 0
+			}
+
+			record := map[string]interface{}{
+				"organizationId":         organizationId,
+				"oldestServiceStartedAt": oldestServiceStartedAt,
+				"state":                  state,
+				"arr":                    arr,
 			}
 
 			results = append(results, record)

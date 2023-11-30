@@ -3,14 +3,16 @@ package entity
 type ContractRenewalCycle string
 
 const (
-	ContractRenewalCycleNone           ContractRenewalCycle = ""
-	ContractRenewalCycleMonthlyRenewal ContractRenewalCycle = "MONTHLY"
-	ContractRenewalCycleAnnualRenewal  ContractRenewalCycle = "ANNUALLY"
+	ContractRenewalCycleNone             ContractRenewalCycle = ""
+	ContractRenewalCycleMonthlyRenewal   ContractRenewalCycle = "MONTHLY"
+	ContractRenewalCycleQuarterlyRenewal ContractRenewalCycle = "QUARTERLY"
+	ContractRenewalCycleAnnualRenewal    ContractRenewalCycle = "ANNUALLY"
 )
 
 var AllContractRenewalCycles = []ContractRenewalCycle{
 	ContractRenewalCycleNone,
 	ContractRenewalCycleMonthlyRenewal,
+	ContractRenewalCycleQuarterlyRenewal,
 	ContractRenewalCycleAnnualRenewal,
 }
 
