@@ -12,6 +12,7 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -74,12 +75,24 @@ export const ContractCard = ({
 
       return { previousEntries };
     },
-    onError: (_, __, context) => {
+    onError: (error, { input }, context) => {
       queryClient.setQueryData<GetContractsQuery>(
         queryKey,
         context?.previousEntries,
       );
-      toastError('Failed to update contract', 'update-contract-error');
+
+      const invalidDate =
+        DateTimeUtils.isBefore(input.endedAt, input.serviceStartedAt) ||
+        DateTimeUtils.isBefore(input.endedAt, input.signedAt);
+
+      toastError(
+        `${
+          invalidDate
+            ? 'End date cannot be before start date'
+            : 'Failed to update contract'
+        }`,
+        `update-contract-error-${error}`,
+      );
     },
     onSettled: () => {
       if (timeoutRef.current) {
@@ -153,9 +166,9 @@ export const ContractCard = ({
   useEffect(() => {
     return () => {
       updateContractDebounced.flush();
-      timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries(queryKey);
-      }, 1000);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, []);
 
@@ -180,34 +193,29 @@ export const ContractCard = ({
         pb={isExpanded ? 2 : 0}
         w='full'
         flexDir='column'
+        _hover={
+          !isExpanded
+            ? {
+                '#edit-contract-icon': {
+                  opacity: 1,
+                  transition: 'opacity 0.2s linear',
+                },
+              }
+            : {}
+        }
+        sx={
+          !isExpanded
+            ? {
+                '#edit-contract-icon': {
+                  opacity: 0,
+                  transition: 'opacity 0.2s linear',
+                },
+              }
+            : {}
+        }
         onClick={() => (!isExpanded ? setIsExpanded(true) : null)}
       >
-        <Flex
-          justifyContent='space-between'
-          w='full'
-          flex={1}
-          _hover={
-            !isExpanded
-              ? {
-                  bg: 'transparent',
-                  '#edit-contract-icon': {
-                    opacity: 1,
-                    transition: 'opacity 0.2s linear',
-                  },
-                }
-              : {}
-          }
-          sx={
-            !isExpanded
-              ? {
-                  '#edit-contract-icon': {
-                    opacity: 0,
-                    transition: 'opacity 0.2s linear',
-                  },
-                }
-              : {}
-          }
-        >
+        <Flex justifyContent='space-between' w='full' flex={1}>
           <Heading
             size='sm'
             color='gray.700'
@@ -286,7 +294,7 @@ export const ContractCard = ({
       </CardHeader>
       {isExpanded && (
         <CardBody as={Flex} p='0' flexDir='column' w='full'>
-          <Flex gap='4' mb={2}>
+          <Flex gap='4' mb={2} flexGrow={0}>
             <DatePicker
               label='Contract signed'
               placeholder='Signed date'
@@ -298,18 +306,20 @@ export const ContractCard = ({
             <DatePicker
               label='Contract ends'
               placeholder='End date'
+              minDate={state.values.serviceStartedAt}
               formId={formId}
               name='endedAt'
               calendarIconHidden
             />
           </Flex>
-          <Flex gap='4'>
+          <Flex gap='4' flexGrow={0}>
             <DatePicker
               label='Service starts'
               placeholder='Start date'
               formId={formId}
               name='serviceStartedAt'
               inset='120% auto auto 0px'
+              maxDate={state.values.endedAt}
               calendarIconHidden
             />
             <FormSelect
@@ -325,7 +335,7 @@ export const ContractCard = ({
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
-        {data?.opportunities && data.renewalCycle && data.serviceStartedAt && (
+        {data?.opportunities && data.renewalCycle && (
           <RenewalARRCard
             hasEnded={data.status === ContractStatus.Ended}
             startedAt={data.serviceStartedAt}
