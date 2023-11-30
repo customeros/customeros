@@ -6,9 +6,9 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -18,19 +18,75 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
+// ServiceLineItems is the resolver for the serviceLineItems field.
+func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	serviceLineItemEntities, err := dataloader.For(ctx).GetServiceLineItemsForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get service line items for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get service line items for contract %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToServiceLineItems(serviceLineItemEntities), nil
+}
+
+// Opportunities is the resolver for the opportunities field.
+func (r *contractResolver) Opportunities(ctx context.Context, obj *model.Contract) ([]*model.Opportunity, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get opportunities for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get opportunities for contract %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToOpportunities(opportunityEntities), nil
+}
+
 // Owner is the resolver for the owner field.
 func (r *contractResolver) Owner(ctx context.Context, obj *model.Contract) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: Owner - owner"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContractResolver.Owner", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contractID", obj.ID))
+
+	owner, err := r.Services.UserService.GetContactOwner(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get owner for contact %s", obj.ID)
+		return nil, err
+	}
+	if owner == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(owner), err
 }
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *contractResolver) CreatedBy(ctx context.Context, obj *model.Contract) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserCreatorForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("error fetching user creator for service line item %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching user creator for service line item %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.
 func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contract) ([]*model.ExternalSystem, error) {
-	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForContract(ctx, obj.ID)
+	if err != nil {
+		r.log.Errorf("Failed to get external system for contract %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get external system for contract %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
 }
 
 // ContractCreate is the resolver for the contract_Create field.
@@ -85,7 +141,23 @@ func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.Contr
 
 // Contract is the resolver for the contract field.
 func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contract, error) {
-	panic(fmt.Errorf("not implemented: Contract - contract"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contract", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contractID", id))
+
+	if id == "" {
+		graphql.AddErrorf(ctx, "Missing contract input id")
+		return nil, nil
+	}
+
+	contractEntityPtr, err := r.Services.ContractService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get contract by id %s", id)
+		return nil, err
+	}
+	return mapper.MapEntityToContract(contractEntityPtr), nil
 }
 
 // Contract returns generated.ContractResolver implementation.

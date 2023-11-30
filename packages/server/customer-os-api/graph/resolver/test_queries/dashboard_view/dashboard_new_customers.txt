@@ -1,0 +1,13 @@
+query GetDashboard_NewCustomers($start: Time!, $end: Time!) {
+  dashboard_NewCustomers(
+    period: {start: $start, end: $end}
+  ) {
+    thisMonthCount
+    thisMonthIncreasePercentage
+    perMonth {
+      year
+      month
+      count
+    }
+  }
+}

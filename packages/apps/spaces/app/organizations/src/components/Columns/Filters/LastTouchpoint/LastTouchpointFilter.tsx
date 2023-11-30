@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useEffect } from 'react';
+import { memo, useRef, useMemo, useState, useEffect, useCallback } from 'react';
 
 import { produce } from 'immer';
 import subDays from 'date-fns/subDays';
@@ -10,10 +10,10 @@ import { Flex } from '@ui/layout/Flex';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Radio, RadioGroup } from '@ui/form/Radio';
-import { Checkbox, CheckboxGroup } from '@ui/form/Checkbox';
+import { CustomCheckbox } from '@ui/form/Checkbox';
 import { Organization, LastTouchpointType } from '@graphql/types';
 
-import { touchpoints } from './util';
+import { allTime, touchpoints } from './util';
 import { FilterHeader, useFilterToggle } from '../shared';
 import {
   LastTouchpointSelector,
@@ -23,7 +23,6 @@ import {
 interface LastTouchpointFilterProps {
   onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
-
 export const LastTouchpointFilter = ({
   onFilterValueChange,
 }: LastTouchpointFilterProps) => {
@@ -56,11 +55,10 @@ export const LastTouchpointFilter = ({
   const isAllSelected =
     filter.value.length === touchpoints.length && filter.value.length > 0;
 
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
         if (isAllSelected) {
-          draft.isActive = false;
           draft.value = [];
         } else {
           draft.isActive = true;
@@ -72,25 +70,28 @@ export const LastTouchpointFilter = ({
 
       return next;
     });
-  };
+  }, [isAllSelected, setFilter, toggle.setIsActive]);
 
-  const handleSelect = (value: LastTouchpointType) => () => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
+  const handleSelect = useCallback(
+    (value: LastTouchpointType) => {
+      setFilter((prev) => {
+        const next = produce(prev, (draft) => {
+          draft.isActive = true;
 
-        if (draft.value.includes(value)) {
-          draft.value = draft.value.filter((item) => item !== value);
-        } else {
-          draft.value.push(value);
-        }
+          if (draft.value.includes(value)) {
+            draft.value = draft.value.filter((item) => item !== value);
+          } else {
+            draft.value.push(value);
+          }
+        });
+
+        toggle.setIsActive(next.isActive);
+
+        return next;
       });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
-    });
-  };
+    },
+    [setFilter, toggle.setIsActive],
+  );
 
   const handleDateChange = (value: string) => {
     setFilter((prev) => {
@@ -137,6 +138,9 @@ export const LastTouchpointFilter = ({
           <Radio value={quarter}>
             <Text fontSize='sm'>Last 90 days</Text>
           </Radio>
+          <Radio value={allTime}>
+            <Text fontSize='sm'>All time</Text>
+          </Radio>
         </VStack>
       </RadioGroup>
 
@@ -150,37 +154,113 @@ export const LastTouchpointFilter = ({
         overflowX='hidden'
         overflowY='auto'
       >
-        <CheckboxGroup size='md' value={filter.value}>
-          <Flex
-            top='0'
-            w='full'
-            zIndex='10'
-            bg='white'
-            position='sticky'
-            borderBottom='1px solid'
-            borderColor='gray.200'
-            pb='2'
-          >
-            <Checkbox
-              top='0'
-              zIndex='10'
-              isChecked={isAllSelected}
-              onChange={handleSelectAll}
-            >
-              <Text fontSize='sm'>
-                {isAllSelected ? 'Deselect all' : 'Select all'}
-              </Text>
-            </Checkbox>
-          </Flex>
-          {touchpoints.map(({ label, value }) => (
-            <Checkbox key={value} value={value} onChange={handleSelect(value)}>
-              <Text fontSize='sm' noOfLines={1}>
-                {label}
-              </Text>
-            </Checkbox>
-          ))}
-        </CheckboxGroup>
+        <Checkboxes
+          value={filter.value}
+          onCheck={handleSelect}
+          onCheckAll={handleSelectAll}
+          isAllSelected={isAllSelected}
+        />
       </VStack>
     </>
   );
 };
+
+interface CheckboxOptionsProps {
+  value: string[];
+  isAllSelected: boolean;
+  onCheckAll: () => void;
+  onCheck: (value: LastTouchpointType) => void;
+}
+
+const makeState = (values: string[]) =>
+  values.reduce((acc, curr) => ({ ...acc, [curr]: true }), {});
+
+const allCheckedState = touchpoints.reduce(
+  (acc, { value }) => ({ ...acc, [value]: true }),
+  {},
+);
+const allUnchecked = touchpoints.reduce(
+  (acc, { value }) => ({ ...acc, [value]: false }),
+  {},
+);
+
+const Checkboxes = memo(
+  ({
+    value = [],
+    onCheck,
+    onCheckAll,
+    isAllSelected,
+  }: CheckboxOptionsProps) => {
+    const timeoutRef = useRef<NodeJS.Timeout>();
+    const [_isAllChecked, setIsAllChecked] = useState(() => isAllSelected);
+    const [checked, setChecked] = useState<Record<string, boolean>>(() =>
+      makeState(value),
+    );
+
+    const handleCheck = (v: string) => {
+      setChecked((prev) =>
+        produce(prev, (draft) => {
+          draft[v] = !draft[v];
+        }),
+      );
+
+      timeoutRef.current && clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(
+        () => onCheck(v as LastTouchpointType),
+        250,
+      );
+    };
+
+    const handleCheckAll = () => {
+      setIsAllChecked((prev) => !prev);
+      setChecked(_isAllChecked ? allUnchecked : allCheckedState);
+
+      timeoutRef.current && clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(onCheckAll, 250);
+    };
+
+    useEffect(() => {
+      setIsAllChecked(Object.values(checked).every((v) => v));
+    }, [checked]);
+
+    return (
+      <>
+        <Flex
+          top='0'
+          w='full'
+          zIndex='10'
+          bg='white'
+          position='sticky'
+          borderBottom='1px solid'
+          borderColor='gray.200'
+          pb='2'
+        >
+          <CustomCheckbox
+            top='0'
+            size='md'
+            zIndex='10'
+            onChange={handleCheckAll}
+            isChecked={_isAllChecked}
+          >
+            <Text fontSize='sm'>
+              {_isAllChecked ? 'Deselect all' : 'Select all'}
+            </Text>
+          </CustomCheckbox>
+        </Flex>
+        {touchpoints.map(({ label, value }) => (
+          <CustomCheckbox
+            key={value}
+            size='md'
+            value={value}
+            onChange={handleCheck}
+            isChecked={checked[value]}
+          >
+            <Text fontSize='sm' noOfLines={1}>
+              {label}
+            </Text>
+          </CustomCheckbox>
+        ))}
+      </>
+    );
+  },
+);

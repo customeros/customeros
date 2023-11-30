@@ -46,6 +46,14 @@ const (
 	Ended
 )
 
+type ContractStatusString string
+
+const (
+	ContractStatusStringDraft ContractStatusString = "DRAFT"
+	ContractStatusStringLive  ContractStatusString = "LIVE"
+	ContractStatusStringEnded ContractStatusString = "ENDED"
+)
+
 // RenewalCycle represents the renewal cycle of a contract.
 type RenewalCycle int32
 
@@ -75,9 +83,9 @@ func (rc RenewalCycle) String() string {
 	case None:
 		return ""
 	case MonthlyRenewal:
-		return "MONTHLY"
+		return string(MonthlyRenewalCycleString)
 	case AnnuallyRenewal:
-		return "ANNUALLY"
+		return string(AnnuallyRenewalCycleString)
 	default:
 		return ""
 	}

@@ -15,13 +15,16 @@ type ServiceLineItemCreateEvent struct {
 	Quantity   int64              `json:"quantity,omitempty"`
 	Price      float64            `json:"price"`
 	Name       string             `json:"name"`
-	ContractId string             `json:"contractId"`
+	ContractId string             `json:"contractId" validate:"required"`
+	ParentId   string             `json:"parentId" validate:"required"`
 	CreatedAt  time.Time          `json:"createdAt"`
 	UpdatedAt  time.Time          `json:"updatedAt"`
+	StartedAt  time.Time          `json:"startedAt"`
+	EndedAt    *time.Time         `json:"endedAt,omitempty"`
 	Source     commonmodel.Source `json:"source"`
 }
 
-func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, createdAt, updatedAt, startedAt time.Time, endedAt *time.Time) (eventstore.Event, error) {
 	eventData := ServiceLineItemCreateEvent{
 		Tenant:     aggregate.GetTenant(),
 		Billed:     dataFields.Billed.String(),
@@ -29,8 +32,11 @@ func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields mo
 		Price:      dataFields.Price,
 		Name:       dataFields.Name,
 		ContractId: dataFields.ContractId,
+		ParentId:   dataFields.ParentId,
 		CreatedAt:  createdAt,
 		UpdatedAt:  updatedAt,
+		StartedAt:  startedAt,
+		EndedAt:    endedAt,
 		Source:     source,
 	}
 

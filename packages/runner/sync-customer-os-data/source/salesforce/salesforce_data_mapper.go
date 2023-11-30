@@ -57,25 +57,24 @@ func MapUser(inputJson string) (string, error) {
 
 func MapOrganization(inputJson string) (string, error) {
 	var input struct {
-		Attributes struct {
-			Type string `json:"type,omitempty"`
-		} `json:"attributes,omitempty"`
+		Id string `json:"id,omitempty"`
 	}
 
 	err := json.Unmarshal([]byte(inputJson), &input)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
-	if input.Attributes.Type == "Account" {
+
+	if strings.HasPrefix(input.Id, "001") {
 		return mapOrganizationFromAccount(inputJson)
-	} else if input.Attributes.Type == "Lead" {
+	} else if strings.HasPrefix(input.Id, "00Q") {
 		return mapOrganizationFromLead(inputJson)
-	} else if input.Attributes.Type == "Opportunity" {
+	} else if strings.HasPrefix(input.Id, "006") {
 		return mapOrganizationFromOpportunity(inputJson)
 	} else {
 		output := entity.BaseData{
 			Skip:       true,
-			SkipReason: "Attributes type not equal Account or Lead",
+			SkipReason: "Given Json is not Account, Lead or Opportunity based on Id prefix",
 		}
 		return utils.ToJson(output)
 	}

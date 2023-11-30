@@ -1,0 +1,17 @@
+mutation UpdateServiceLineItem($serviceLineItemId: ID!) {
+  serviceLineItemUpdate(
+    input: {
+      serviceLineItemId: $serviceLineItemId
+      name: "Service Line Item 1"
+      billed: MONTHLY
+      price: 30
+      quantity: 2
+      comments: "test comments"
+      isRetroactiveCorrection: true
+    }
+  ) {
+    id
+    name
+    parentId
+  }
+}

@@ -505,6 +505,17 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 		return response.Id, nil
 	}
 
+	_, err = r.Clients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: id,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to refresh the last touchpoint %s", id)
+		return response.Id, nil
+	}
+
 	return response.Id, nil
 }
 
@@ -670,30 +681,6 @@ func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizat
 		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
-}
-
-// OrganizationAddRelationship is the resolver for the organization_AddRelationship field.
-func (r *mutationResolver) OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	graphql.AddErrorf(ctx, "Not available")
-	return nil, nil
-}
-
-// OrganizationRemoveRelationship is the resolver for the organization_RemoveRelationship field.
-func (r *mutationResolver) OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	graphql.AddErrorf(ctx, "Not available")
-	return nil, nil
-}
-
-// OrganizationSetRelationshipStage is the resolver for the organization_SetRelationshipStage field.
-func (r *mutationResolver) OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage string) (*model.Organization, error) {
-	graphql.AddErrorf(ctx, "Not available")
-	return nil, nil
-}
-
-// OrganizationRemoveRelationshipStage is the resolver for the organization_RemoveRelationshipStage field.
-func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
-	graphql.AddErrorf(ctx, "Not available")
-	return nil, nil
 }
 
 // Domains is the resolver for the domains field.
@@ -982,18 +969,6 @@ func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organizatio
 		return nil, nil
 	}
 	return mapper.MapEntityToUser(userEntityNillable), nil
-}
-
-// Relationships is the resolver for the relationships field.
-func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error) {
-	graphql.AddErrorf(ctx, "Not available")
-	return nil, nil
-}
-
-// RelationshipStages is the resolver for the relationshipStages field.
-func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error) {
-	graphql.AddErrorf(ctx, "Not available")
-	return nil, nil
 }
 
 // ExternalLinks is the resolver for the externalLinks field.

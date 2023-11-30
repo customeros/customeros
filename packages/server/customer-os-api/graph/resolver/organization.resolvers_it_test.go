@@ -8,7 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -857,6 +857,8 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
+	nextRenewal := utils.Now().Add(time.Duration(10) * time.Hour)
+
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org",
 		RenewalLikelihood: entity.RenewalLikelihood{
@@ -878,6 +880,13 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 			Frequency:         "MONTHLY",
 			RenewalCycle:      "ANNUALLY",
 			RenewalCycleStart: utils.TimePtr(utils.Now()),
+		},
+		RenewalSummary: entity.RenewalSummary{
+			ArrForecast:            utils.ToPtr[float64](500),
+			MaxArrForecast:         utils.ToPtr[float64](1000),
+			RenewalLikelihood:      "HIGH",
+			RenewalLikelihoodOrder: utils.ToPtr(int64(1)),
+			NextRenewalAt:          utils.TimePtr(nextRenewal),
 		},
 	})
 
@@ -909,6 +918,10 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	require.Equal(t, model.RenewalCycleMonthly, *organization.AccountDetails.BillingDetails.Frequency)
 	require.Equal(t, model.RenewalCycleAnnually, *organization.AccountDetails.BillingDetails.RenewalCycle)
 	require.NotNil(t, organization.AccountDetails.BillingDetails.RenewalCycleStart)
+	require.Equal(t, 500.0, *organization.AccountDetails.RenewalSummary.ArrForecast)
+	require.Equal(t, 1000.0, *organization.AccountDetails.RenewalSummary.MaxArrForecast)
+	require.Equal(t, model.OpportunityRenewalLikelihoodHighRenewal, *organization.AccountDetails.RenewalSummary.RenewalLikelihood)
+	require.Equal(t, nextRenewal, *organization.AccountDetails.RenewalSummary.NextRenewalDate)
 }
 
 func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
@@ -922,14 +935,14 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 
-	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return &organizationpb.OrganizationIdGrpcResponse{
 				Id: parentOrgId,
 			}, nil
 		},
 	}
-	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
 		client.Var("parentOrganizationId", parentOrgId),
@@ -1058,7 +1071,7 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 
 	calledRefreshLastTouchpoint := false
 
-	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
 		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, parentOrgId, org.OrganizationId)
 			require.Equal(t, tenantName, org.Tenant)
@@ -1071,7 +1084,7 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 			}, nil
 		},
 	}
-	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	callGraphQL(t, "organization/merge_organizations", map[string]interface{}{
 		"parentOrganizationId":  parentOrgId,
@@ -1111,7 +1124,7 @@ func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 
 	calledAddParent := false
 
-	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
 		AddParent: func(context context.Context, org *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, subsidiaryType, org.Type)
 			require.Equal(t, subOrgId, org.OrganizationId)
@@ -1126,7 +1139,7 @@ func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 			}, nil
 		},
 	}
-	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("organization/add_subsidiary"),
 		client.Var("organizationId", parentOrgId),
@@ -1165,7 +1178,7 @@ func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 
 	calledRemoveParent := false
 
-	organizationServiceCallbacks := events_paltform.MockOrganizationServiceCallbacks{
+	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
 		RemoveParent: func(context context.Context, org *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 			require.Equal(t, subOrgId, org.OrganizationId)
 			require.Equal(t, parentOrgId, org.ParentOrganizationId)
@@ -1178,7 +1191,7 @@ func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 			}, nil
 		},
 	}
-	events_paltform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
 
 	rawResponse, err := c.RawPost(getQuery("organization/remove_subsidiary"),
 		client.Var("organizationId", parentOrgId),

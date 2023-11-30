@@ -7,12 +7,16 @@ type ServiceLineItemEntity struct {
 	Name          string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	StartedAt     time.Time
+	EndedAt       *time.Time
 	Billed        BilledType
 	Price         float64
 	Quantity      int64
+	Comments      string
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
+	ParentID      string
 
 	DataloaderKey string
 }

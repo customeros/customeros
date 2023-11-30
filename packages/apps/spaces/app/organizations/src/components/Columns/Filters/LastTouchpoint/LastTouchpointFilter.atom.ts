@@ -1,6 +1,8 @@
 import subDays from 'date-fns/subDays';
 import { atom, selector, useRecoilState } from 'recoil';
 
+import { touchpoints } from './util';
+
 interface LastTouchpointState {
   after?: string;
   value: string[];
@@ -10,7 +12,7 @@ interface LastTouchpointState {
 const defaultAfter = subDays(new Date(), 7).toISOString().split('T')[0];
 
 export const defaultState: LastTouchpointState = {
-  value: [],
+  value: touchpoints.map((t) => t.value),
   after: defaultAfter,
   isActive: false,
 };

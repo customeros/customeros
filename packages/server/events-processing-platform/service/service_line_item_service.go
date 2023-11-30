@@ -62,7 +62,7 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 
 	createdAt, updatedAt := convertCreateAndUpdateProtoTimestampsToTime(request.CreatedAt, request.UpdatedAt)
 
-	createServiceLineItemCommand := command.NewCreateServiceLineItemCommand(
+	createCommand := command.NewCreateServiceLineItemCommand(
 		serviceLineItemId,
 		request.Tenant,
 		request.LoggedInUserId,
@@ -72,13 +72,16 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 			Price:      float64(request.Price),
 			Name:       request.Name,
 			ContractId: request.ContractId,
+			ParentId:   serviceLineItemId,
 		},
 		source,
 		createdAt,
 		updatedAt,
 	)
+	createCommand.StartedAt = utils.TimestampProtoToTimePtr(request.StartedAt)
+	createCommand.EndedAt = utils.TimestampProtoToTimePtr(request.EndedAt)
 
-	if err := s.serviceLineItemCommandHandlers.CreateServiceLineItem.Handle(ctx, createServiceLineItemCommand); err != nil {
+	if err = s.serviceLineItemCommandHandlers.CreateServiceLineItem.Handle(ctx, createCommand); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(CreateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
@@ -104,23 +107,128 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
 
-	updateServiceLineItemCommand := command.NewUpdateServiceLineItemCommand(
-		request.Id,
-		request.Tenant,
-		request.LoggedInUserId,
-		model.ServiceLineItemDataFields{
-			Billed:   model.BilledType(request.Billed),
-			Quantity: request.Quantity,
-			Price:    float64(request.Price),
-			Name:     request.Name,
-		},
-		source,
-		updatedAt,
-	)
+	if request.IsRetroactiveCorrection {
+		updateServiceLineItemCommand := command.NewUpdateServiceLineItemCommand(
+			request.Id,
+			request.Tenant,
+			request.LoggedInUserId,
+			model.ServiceLineItemDataFields{
+				Billed:   model.BilledType(request.Billed),
+				Quantity: request.Quantity,
+				Price:    float64(request.Price),
+				Name:     request.Name,
+				Comments: request.Comments,
+			},
+			source,
+			updatedAt,
+		)
 
-	if err := s.serviceLineItemCommandHandlers.UpdateServiceLineItem.Handle(ctx, updateServiceLineItemCommand); err != nil {
+		if err := s.serviceLineItemCommandHandlers.UpdateServiceLineItem.Handle(ctx, updateServiceLineItemCommand); err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("(UpdateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+			return nil, grpcerr.ErrResponse(err)
+		}
+		// Return the ID of the updated service line item
+		return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
+
+	} else {
+		versionDate := utils.NowPtr()
+
+		// Validate contract ID
+		if request.ContractId == "" {
+			return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
+		}
+
+		// Check if the contract aggregate exists prior to closing the service line item
+		contractExists, err := s.checkContractExists(ctx, request.Tenant, request.ContractId)
+		if err != nil {
+			s.log.Error(err, "error checking contract existence")
+			return nil, status.Errorf(codes.Internal, "error checking contract existence: %v", err)
+		}
+		if !contractExists {
+			return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", request.ContractId)
+		}
+
+		//Close service line item
+		closeSliCommand := command.NewCloseServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, source.AppSource,
+			versionDate, utils.TimestampProtoToTimePtr(request.UpdatedAt))
+
+		if err := s.serviceLineItemCommandHandlers.CloseServiceLineItem.Handle(ctx, closeSliCommand); err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("(CloseServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+			return nil, grpcerr.ErrResponse(err)
+		}
+
+		//Create new service line item
+		serviceLineItemId := uuid.New().String()
+
+		createCommand := command.NewCreateServiceLineItemCommand(
+			serviceLineItemId,
+			request.Tenant,
+			request.LoggedInUserId,
+			model.ServiceLineItemDataFields{
+				Billed:     model.BilledType(request.Billed),
+				Quantity:   request.Quantity,
+				Price:      float64(request.Price),
+				Name:       request.Name,
+				ContractId: request.ContractId,
+				ParentId:   request.Id,
+			},
+			source,
+			utils.NowPtr(),
+			updatedAt,
+		)
+		createCommand.StartedAt = versionDate
+
+		if err = s.serviceLineItemCommandHandlers.CreateServiceLineItem.Handle(ctx, createCommand); err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("(CreateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+			return nil, grpcerr.ErrResponse(err)
+		}
+		return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: serviceLineItemId}, nil
+	}
+}
+
+func (s *serviceLineItemService) DeleteServiceLineItem(ctx context.Context, request *servicelineitempb.DeleteServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.DeleteServiceLineItem")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Validate service line item ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	deleteSliCommand := command.NewDeleteServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource)
+
+	if err := s.serviceLineItemCommandHandlers.DeleteServiceLineItem.Handle(ctx, deleteSliCommand); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(DeleteServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the updated service line item
+	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
+}
+
+func (s *serviceLineItemService) CloseServiceLineItem(ctx context.Context, request *servicelineitempb.CloseServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.CloseServiceLineItem")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Validate service line item ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	closeSliCommand := command.NewCloseServiceLineItemCommand(request.Id, request.Tenant, request.LoggedInUserId, request.AppSource,
+		utils.TimestampProtoToTimePtr(request.EndedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
+
+	if err := s.serviceLineItemCommandHandlers.CloseServiceLineItem.Handle(ctx, closeSliCommand); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(CloseServiceLineItem.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

@@ -61,7 +61,7 @@ func (r *serviceLineItemRepository) GetForContracts(ctx context.Context, tenant 
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
 			WHERE c.id IN $contractIds
-			RETURN sli, c.id ORDER BY sli.createdAt DESC`
+			RETURN sli, c.id ORDER BY sli.createdAt ASC`
 	params := map[string]any{
 		"tenant":      tenant,
 		"contractIds": contractIds,

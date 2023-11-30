@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
@@ -32,10 +33,18 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.OpportunityCreateV1:
 		return a.onOpportunityCreate(evt)
+	case event.OpportunityUpdateV1:
+		return a.onOpportunityUpdate(evt)
 	case event.OpportunityCreateRenewalV1:
 		return a.onRenewalOpportunityCreate(evt)
+	case event.OpportunityUpdateRenewalV1:
+		return a.onRenewalOpportunityUpdate(evt)
 	case event.OpportunityUpdateNextCycleDateV1:
 		return a.onOpportunityUpdateNextCycleDate(evt)
+	case event.OpportunityCloseWinV1:
+		return a.onOpportunityCloseWin(evt)
+	case event.OpportunityCloseLooseV1:
+		return a.onOpportunityCloseLoose(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -82,7 +91,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) 
 	a.Opportunity.ID = a.ID
 	a.Opportunity.Tenant = a.Tenant
 	a.Opportunity.ContractId = eventData.ContractId
-	a.Opportunity.InternalType = model.OpportunityInternalTypeStringDecode(eventData.InternalType)
+	a.Opportunity.InternalType = model.OpportunityInternalTypeStringRenewal
 	a.Opportunity.InternalStage = model.OpportunityInternalStageStringDecode(eventData.InternalStage)
 	a.Opportunity.CreatedAt = eventData.CreatedAt
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
@@ -100,5 +109,100 @@ func (a *OpportunityAggregate) onOpportunityUpdateNextCycleDate(evt eventstore.E
 
 	a.Opportunity.RenewalDetails.RenewedAt = eventData.RenewedAt
 
+	return nil
+}
+
+func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
+	var eventData event.OpportunityUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	// Update only if the source of truth is 'openline' or the new source matches the source of truth
+	if eventData.Source == constants.SourceOpenline {
+		a.Opportunity.Source.SourceOfTruth = eventData.Source
+	}
+
+	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == constants.SourceOpenline {
+		// Update fields only if they are empty
+		if a.Opportunity.Name == "" && eventData.UpdateName() {
+			a.Opportunity.Name = eventData.Name
+		}
+	} else {
+		if eventData.UpdateName() {
+			a.Opportunity.Name = eventData.Name
+		}
+		if eventData.UpdateAmount() {
+			a.Opportunity.Amount = eventData.Amount
+		}
+		if eventData.UpdateMaxAmount() {
+			a.Opportunity.MaxAmount = eventData.MaxAmount
+		}
+	}
+
+	a.Opportunity.UpdatedAt = eventData.UpdatedAt
+
+	if eventData.ExternalSystem.Available() {
+		found := false
+		for _, externalSystem := range a.Opportunity.ExternalSystems {
+			if externalSystem.ExternalSystemId == eventData.ExternalSystem.ExternalSystemId && externalSystem.ExternalId == eventData.ExternalSystem.ExternalId {
+				found = true
+				externalSystem.ExternalUrl = eventData.ExternalSystem.ExternalUrl
+				externalSystem.ExternalSource = eventData.ExternalSystem.ExternalSource
+				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
+				if eventData.ExternalSystem.ExternalIdSecond != "" {
+					externalSystem.ExternalIdSecond = eventData.ExternalSystem.ExternalIdSecond
+				}
+			}
+		}
+		if !found {
+			a.Opportunity.ExternalSystems = append(a.Opportunity.ExternalSystems, eventData.ExternalSystem)
+		}
+	}
+
+	return nil
+}
+
+func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) error {
+	var eventData event.OpportunityUpdateRenewalEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Opportunity.UpdatedAt = eventData.UpdatedAt
+	a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
+	if eventData.UpdatedByUserId != "" &&
+		(eventData.Amount != a.Opportunity.Amount || eventData.RenewalLikelihood != a.Opportunity.RenewalDetails.RenewalLikelihood) {
+		a.Opportunity.RenewalDetails.RenewalUpdatedByUserAt = &eventData.UpdatedAt
+		a.Opportunity.RenewalDetails.RenewalUpdatedByUserId = eventData.UpdatedByUserId
+	}
+	a.Opportunity.Comments = eventData.Comments
+	a.Opportunity.Amount = eventData.Amount
+	if eventData.Source == constants.SourceOpenline {
+		a.Opportunity.Source.SourceOfTruth = eventData.Source
+	}
+
+	return nil
+}
+
+func (a *OpportunityAggregate) onOpportunityCloseWin(evt eventstore.Event) error {
+	var eventData event.OpportunityCloseWinEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Opportunity.InternalStage = model.OpportunityInternalStageStringClosedWon
+	a.Opportunity.ClosedAt = &eventData.ClosedAt
+	a.Opportunity.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *OpportunityAggregate) onOpportunityCloseLoose(evt eventstore.Event) error {
+	var eventData event.OpportunityCloseLooseEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Opportunity.InternalStage = model.OpportunityInternalStageStringClosedLost
+	a.Opportunity.ClosedAt = &eventData.ClosedAt
+	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	return nil
 }

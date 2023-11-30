@@ -15,9 +15,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_paltform"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -89,7 +90,7 @@ func prepareClient() {
 
 	commonServices := commonService.InitServices(postgresGormDB, driver)
 	commonAuthServices := commonAuthService.InitServices(nil, postgresGormDB)
-	testDialFactory := events_paltform.NewTestDialFactory()
+	testDialFactory := events_platform.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	services = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpc_client.InitClients(gRPCconn))
 	graphResolver := NewResolver(appLogger, services, grpc_client.InitClients(gRPCconn))
@@ -154,6 +155,16 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 	require.Nil(t, response.Errors)
 }
 
+func assertRawResponseError(t *testing.T, response *client.Response, err error) {
+	require.Nil(t, err)
+	require.NotNil(t, response)
+	if response.Errors != nil {
+		log.Println(fmt.Sprintf("Error in response: %v", string(response.Errors)))
+	}
+	require.NotNil(t, response.Data)
+	require.NotNil(t, response.Errors)
+}
+
 func assertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, expectedLabels []string) {
 	actualLabels := neo4jt.GetAllLabels(ctx, driver)
 	sort.Strings(expectedLabels)
@@ -196,4 +207,31 @@ func callGraphQL(t *testing.T, queryLocation string, vars map[string]interface{}
 	require.Nil(t, err)
 	assertRawResponseSuccess(t, rawResponse, err)
 	return
+}
+
+func callGraphQLExpectError(t *testing.T, queryLocation string, vars map[string]interface{}) (response GraphQlErrorResponse) {
+	// Transform map into var args of options
+	options := make([]client.Option, 0, len(vars))
+	for key, value := range vars {
+		options = append(options, client.Var(key, value))
+	}
+
+	// Call RawPost with options
+	rawResponse, err := c.RawPost(getQuery(queryLocation), options...)
+	require.Nil(t, err)
+	assertRawResponseError(t, rawResponse, err)
+
+	var rr struct {
+		GraphQlErrorResponse GraphQlErrorResponse
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &rr)
+	require.Nil(t, err)
+
+	return rr.GraphQlErrorResponse
+}
+
+type GraphQlErrorResponse struct {
+	Message string   `json:"message"`
+	Path    []string `json:"path"`
 }

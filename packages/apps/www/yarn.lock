@@ -161,16 +161,16 @@
   resolved "https://registry.yarnpkg.com/@astrojs/compiler/-/compiler-1.8.2.tgz#f305d5724c45a9932a8ef4e87b2e7227d15d1c2b"
   integrity sha512-o/ObKgtMzl8SlpIdzaxFnt7SATKPxu4oIP/1NL+HDJRzxfJcAkOTAb/ZKMRyULbz4q+1t2/DAebs2Z1QairkZw==
 
-"@astrojs/image@^0.16.8":
-  version "0.16.9"
-  resolved "https://registry.yarnpkg.com/@astrojs/image/-/image-0.16.9.tgz#4981a518943fb6fa4672f4a35b714f29fdc8313c"
-  integrity sha512-8RfGGd1MAIQ6xCHgmu+xXBKWE14gvWYcIv61PxWlToEBgMUbmFdN5ICBQ1bea24rx6o5WvsvRjfOnkjPpf2eew==
+"@astrojs/image@^0.18.0":
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/@astrojs/image/-/image-0.18.0.tgz#db457da3667a58782f0e099033d9740a0072ff6c"
+  integrity sha512-IAsECAGG5s0u7KItQMVVfhU8gAkIeIlzoSga6LymLvWvTWJacjxtnRYjct5uR03kuxIYAdjZhwQowKR1bYpwDA==
   dependencies:
     "@altano/tiny-async-pool" "^1.0.2"
-    http-cache-semantics "^4.1.0"
+    http-cache-semantics "^4.1.1"
     image-size "^1.0.2"
     kleur "^4.1.5"
-    magic-string "^0.27.0"
+    magic-string "^0.30.2"
     mime "^3.0.0"
 
 "@astrojs/internal-helpers@^0.1.2":
@@ -885,7 +885,7 @@
   resolved "https://registry.yarnpkg.com/@jridgewell/set-array/-/set-array-1.1.2.tgz#7c6cf998d6d20b914c0a55a91ae928ff25965e72"
   integrity sha512-xnkseuNADM0gt2bs+BvhO0p78Mk762YnZdsuzFV018NoG1Sj1SCQvpSqa7XUaTam5vAGasABV9qXASMKnFMwMw==
 
-"@jridgewell/sourcemap-codec@^1.4.10", "@jridgewell/sourcemap-codec@^1.4.13", "@jridgewell/sourcemap-codec@^1.4.14", "@jridgewell/sourcemap-codec@^1.4.15":
+"@jridgewell/sourcemap-codec@^1.4.10", "@jridgewell/sourcemap-codec@^1.4.14", "@jridgewell/sourcemap-codec@^1.4.15":
   version "1.4.15"
   resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz#d7c6e6755c78567a951e04ab52ef0fd26de59f32"
   integrity sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==
@@ -977,83 +977,83 @@
     deepmerge "^4.2.2"
     escalade "^3.1.1"
 
-"@resvg/resvg-js-android-arm-eabi@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-android-arm-eabi/-/resvg-js-android-arm-eabi-2.5.0.tgz#1ac07ee9a2aae8702887b5a9a9c26f3e723d256f"
-  integrity sha512-zqcJJLijd+SRYH+oHMijKIiDgECm9cfnanhPqp/9S8X0k28E6EviFvRDaXlZPS9La184ywOK5fR8D2BU0YopaQ==
+"@resvg/resvg-js-android-arm-eabi@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-android-arm-eabi/-/resvg-js-android-arm-eabi-2.6.0.tgz#fed7723ed5c5f7490762e025ad704bcbceee37b7"
+  integrity sha512-lJnZ/2P5aMocrFMW7HWhVne5gH82I8xH6zsfH75MYr4+/JOaVcGCTEQ06XFohGMdYRP3v05SSPLPvTM/RHjxfA==
 
-"@resvg/resvg-js-android-arm64@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-android-arm64/-/resvg-js-android-arm64-2.5.0.tgz#add1400af2f2895106a6a8f32d13133cc522ceac"
-  integrity sha512-9yfavDnQ3WMeAdQQr7/29viqcrqAgJ6o3QTIm0VMrqaUm7Xm+BylWvafluT+o3J8f+1+iMvqmbf/lyReWFHpkQ==
+"@resvg/resvg-js-android-arm64@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-android-arm64/-/resvg-js-android-arm64-2.6.0.tgz#e0531a220ec8954e41039b2483cc3706d30d3635"
+  integrity sha512-N527f529bjMwYWShZYfBD60dXA4Fux+D695QsHQ93BDYZSHUoOh1CUGUyICevnTxs7VgEl98XpArmUWBZQVMfQ==
 
-"@resvg/resvg-js-darwin-arm64@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-darwin-arm64/-/resvg-js-darwin-arm64-2.5.0.tgz#10e89c2d4e4ea15e92078515c4aa9cb48517bfc4"
-  integrity sha512-qbk50BM/bd/eEtnQp5W5xNPoCOsb0WJMZy6wOOATljYzgvKZOOBtwHU/ej9m4w5DfFa67qdWZh0iw35y4VUzBQ==
+"@resvg/resvg-js-darwin-arm64@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-darwin-arm64/-/resvg-js-darwin-arm64-2.6.0.tgz#38f609cd2bd71ce6a065df7a8b8144479b156969"
+  integrity sha512-MabUKLVayEwlPo0mIqAmMt+qESN8LltCvv5+GLgVga1avpUrkxj/fkU1TKm8kQegutUjbP/B0QuMuUr0uhF8ew==
 
-"@resvg/resvg-js-darwin-x64@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-darwin-x64/-/resvg-js-darwin-x64-2.5.0.tgz#38f7f2bdb8d2150ff2051f83f7403da804c9d4c8"
-  integrity sha512-r3qtM0NKNEgEG0oM7uAwxsHfaoueJzL4AeQ/ukLRvzepnrnL6VMQC7yj4LaPmzB43i25FBKXJEO4ck44m8Q75A==
+"@resvg/resvg-js-darwin-x64@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-darwin-x64/-/resvg-js-darwin-x64-2.6.0.tgz#5c3f69d0cd68980e7e5cfcabf0db90e85d289559"
+  integrity sha512-zrFetdnSw/suXjmyxSjfDV7i61hahv6DDG6kM7BYN2yJ3Es5+BZtqYZTcIWogPJedYKmzN1YTMWGd/3f0ubFiA==
 
-"@resvg/resvg-js-linux-arm-gnueabihf@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-arm-gnueabihf/-/resvg-js-linux-arm-gnueabihf-2.5.0.tgz#3a18554b434756911cd43686fdec8fded314218f"
-  integrity sha512-LP1Sq1PIVyOClVu6qPmvZUP4JY5505X6JZs5ycDAZMSHhn0JP1w/jAJtEQFdZuJBUleAgxXkwNW1MVJhE6MQTA==
+"@resvg/resvg-js-linux-arm-gnueabihf@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-arm-gnueabihf/-/resvg-js-linux-arm-gnueabihf-2.6.0.tgz#6bcae7d4101e7fea2be0db167eda832cab63e27f"
+  integrity sha512-sH4gxXt7v7dGwjGyzLwn7SFGvwZG6DQqLaZ11MmzbCwd9Zosy1TnmrMJfn6TJ7RHezmQMgBPi18bl55FZ1AT4A==
 
-"@resvg/resvg-js-linux-arm64-gnu@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-arm64-gnu/-/resvg-js-linux-arm64-gnu-2.5.0.tgz#7939cb0fba9fb03917a340611336455ffa08da8d"
-  integrity sha512-soZ8QE4bllca5eVwMR5BRU5jODjFpR5KRD4yBRwG/8TXLsU3Lx2glLrB+cZIfosqt7BKUGSakTG15Mpbglru7A==
+"@resvg/resvg-js-linux-arm64-gnu@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-arm64-gnu/-/resvg-js-linux-arm64-gnu-2.6.0.tgz#fb71ea6b9a4b30412fa096fdbf9e8427012b3a99"
+  integrity sha512-fCyMncqCJtrlANADIduYF4IfnWQ295UKib7DAxFXQhBsM9PLDTpizr0qemZcCNadcwSVHnAIzL4tliZhCM8P6A==
 
-"@resvg/resvg-js-linux-arm64-musl@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-arm64-musl/-/resvg-js-linux-arm64-musl-2.5.0.tgz#9a0b20f8be92f66ccbdad0b6c29f4e8683db5939"
-  integrity sha512-IhigcvJbtwyyLoFQAeOrxxbNv6EbBJDE72JZrzKt4ywsEMF+FzLQKIVtI7zZRwG5RX0JQmjdAOS9/95YyN449g==
+"@resvg/resvg-js-linux-arm64-musl@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-arm64-musl/-/resvg-js-linux-arm64-musl-2.6.0.tgz#ec7e85b8b6eea23c0242faa1f1486241f253a190"
+  integrity sha512-ouLjTgBQHQyxLht4FdMPTvuY8xzJigM9EM2Tlu0llWkN1mKyTQrvYWi6TA6XnKdzDJHy7ZLpWpjZi7F5+Pg+Vg==
 
-"@resvg/resvg-js-linux-x64-gnu@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-x64-gnu/-/resvg-js-linux-x64-gnu-2.5.0.tgz#6bf57411a94d239b188cd97d24cbb2b66d5caed3"
-  integrity sha512-Zl1GI+046jMYGDWeG2R1ika2gquLNlH57L1ceWEsfjJWVA1yBawB50roUyDEfATclrO0dUTLJellLbOwm2/iBg==
+"@resvg/resvg-js-linux-x64-gnu@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-x64-gnu/-/resvg-js-linux-x64-gnu-2.6.0.tgz#2a9b2a14554b0b1825c2ebc52b5fc2d95a831a63"
+  integrity sha512-n3zC8DWsvxC1AwxpKFclIPapDFibs5XdIRoV/mcIlxlh0vseW1F49b97F33BtJQRmlntsqqN6GMMqx8byB7B+Q==
 
-"@resvg/resvg-js-linux-x64-musl@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-x64-musl/-/resvg-js-linux-x64-musl-2.5.0.tgz#f40e19174eed4b2d4deca020ddac2446fca0031c"
-  integrity sha512-P/Sl040LAbI5r2IB/87OzpAckAmtDI626HejnTBE8i0VZZiXsv7RS5tK7krAF4PAiQaGV787lE6EU5hSB/a5lg==
+"@resvg/resvg-js-linux-x64-musl@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-linux-x64-musl/-/resvg-js-linux-x64-musl-2.6.0.tgz#42081a8b06ccfa011aee9cc10b2f0fea3a4563ed"
+  integrity sha512-n4tasK1HOlAxdTEROgYA1aCfsEKk0UOFDNd/AQTTZlTmCbHKXPq+O8npaaKlwXquxlVK8vrkcWbksbiGqbCAcw==
 
-"@resvg/resvg-js-win32-arm64-msvc@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-win32-arm64-msvc/-/resvg-js-win32-arm64-msvc-2.5.0.tgz#759d4937a58178f7fb74e93dbd4362e63fd6bce3"
-  integrity sha512-AsgdH2naTIeFsAyJLNhZ/bHISw4ykXzgk4DIDrt6D9ESkhjskTw5Fz3nyiEvgC/7DAgQFKqYOkCF2ua9y5Wv4g==
+"@resvg/resvg-js-win32-arm64-msvc@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-win32-arm64-msvc/-/resvg-js-win32-arm64-msvc-2.6.0.tgz#3af0d5f7bd9193ac6be8f226b539be6f7576302d"
+  integrity sha512-X2+EoBJFwDI5LDVb51Sk7ldnVLitMGr9WwU/i21i3fAeAXZb3hM16k67DeTy16OYkT2dk/RfU1tP1wG+rWbz2Q==
 
-"@resvg/resvg-js-win32-ia32-msvc@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-win32-ia32-msvc/-/resvg-js-win32-ia32-msvc-2.5.0.tgz#3cc0143ac3ddd20c51ad4f97c5555dfd351e9144"
-  integrity sha512-RST2Amt9qJMtLIspfO5VZDKiCtZp9ZZOTlVQkSotcfZ/jw71t5amwvG6N1oCk3jt0OyGXQcUMmZykeHM/ZnOBQ==
+"@resvg/resvg-js-win32-ia32-msvc@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-win32-ia32-msvc/-/resvg-js-win32-ia32-msvc-2.6.0.tgz#64af45bfee41cb2bea0b6dd0bdc94175183f2b56"
+  integrity sha512-L7oevWjQoUgK5W1fCKn0euSVemhDXVhrjtwqpc7MwBKKimYeiOshO1Li1pa8bBt5PESahenhWgdB6lav9O0fEg==
 
-"@resvg/resvg-js-win32-x64-msvc@2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-win32-x64-msvc/-/resvg-js-win32-x64-msvc-2.5.0.tgz#241ab915fcc932d685fde54799ba3d4c4ffaf471"
-  integrity sha512-oyfZzog1PrfFx7dCI7qeNCvhLyKau/4buqlBFv6O4biZZCFJSRlYNb9t+9oWKFRSVyMjdvqq4yjLwc4hyPMmFQ==
+"@resvg/resvg-js-win32-x64-msvc@2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js-win32-x64-msvc/-/resvg-js-win32-x64-msvc-2.6.0.tgz#08431a243c15f002d32e5e628857d19852323274"
+  integrity sha512-8lJlghb+Unki5AyKgsnFbRJwkEj9r1NpwyuBG8yEJiG1W9eEGl03R3I7bsVa3haof/3J1NlWf0rzSa1G++A2iw==
 
-"@resvg/resvg-js@^2.4.1":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@resvg/resvg-js/-/resvg-js-2.5.0.tgz#49fb8a822fbd7d08a1a8fde4f763e2b9efe04ed2"
-  integrity sha512-Um0F9XfKZfhltIrcnScl/h5C31HDIn4MriZkVBa/E7C0cdkH2teLAzWBW/Z0WBIG9oa0U+JjzmpwJlF+UtKr1A==
+"@resvg/resvg-js@^2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@resvg/resvg-js/-/resvg-js-2.6.0.tgz#d811100796dda1f37a516c747dab3bbc9b24e5e4"
+  integrity sha512-Tf3YpbBKcQn991KKcw/vg7vZf98v01seSv6CVxZBbRkL/xyjnoYB6KgrFL6zskT1A4dWC/vg77KyNOW+ePaNlA==
   optionalDependencies:
-    "@resvg/resvg-js-android-arm-eabi" "2.5.0"
-    "@resvg/resvg-js-android-arm64" "2.5.0"
-    "@resvg/resvg-js-darwin-arm64" "2.5.0"
-    "@resvg/resvg-js-darwin-x64" "2.5.0"
-    "@resvg/resvg-js-linux-arm-gnueabihf" "2.5.0"
-    "@resvg/resvg-js-linux-arm64-gnu" "2.5.0"
-    "@resvg/resvg-js-linux-arm64-musl" "2.5.0"
-    "@resvg/resvg-js-linux-x64-gnu" "2.5.0"
-    "@resvg/resvg-js-linux-x64-musl" "2.5.0"
-    "@resvg/resvg-js-win32-arm64-msvc" "2.5.0"
-    "@resvg/resvg-js-win32-ia32-msvc" "2.5.0"
-    "@resvg/resvg-js-win32-x64-msvc" "2.5.0"
+    "@resvg/resvg-js-android-arm-eabi" "2.6.0"
+    "@resvg/resvg-js-android-arm64" "2.6.0"
+    "@resvg/resvg-js-darwin-arm64" "2.6.0"
+    "@resvg/resvg-js-darwin-x64" "2.6.0"
+    "@resvg/resvg-js-linux-arm-gnueabihf" "2.6.0"
+    "@resvg/resvg-js-linux-arm64-gnu" "2.6.0"
+    "@resvg/resvg-js-linux-arm64-musl" "2.6.0"
+    "@resvg/resvg-js-linux-x64-gnu" "2.6.0"
+    "@resvg/resvg-js-linux-x64-musl" "2.6.0"
+    "@resvg/resvg-js-win32-arm64-msvc" "2.6.0"
+    "@resvg/resvg-js-win32-ia32-msvc" "2.6.0"
+    "@resvg/resvg-js-win32-x64-msvc" "2.6.0"
 
 "@rollup/pluginutils@^4.0.0":
   version "4.2.1"
@@ -3183,7 +3183,7 @@ html-void-elements@^2.0.0:
   resolved "https://registry.yarnpkg.com/html-void-elements/-/html-void-elements-2.0.1.tgz#29459b8b05c200b6c5ee98743c41b979d577549f"
   integrity sha512-0quDb7s97CfemeJAnW9wC0hw78MtW7NU3hqtCD75g2vFlDLt36llsYD7uB7SUzojLMP24N5IatXf7ylGXiGG9A==
 
-http-cache-semantics@^4.1.0, http-cache-semantics@^4.1.1:
+http-cache-semantics@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/http-cache-semantics/-/http-cache-semantics-4.1.1.tgz#abe02fcb2985460bf0323be664436ec3476a6d5a"
   integrity sha512-er295DKPVsV82j5kw1Gjt+ADA/XYHsajl82cGNQG2eyoPkvgUhX+nDIyelzhIWbbsXP39EHcI6l5tYs2FYqYXQ==
@@ -3726,13 +3726,6 @@ lru-cache@^6.0.0:
   integrity sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==
   dependencies:
     yallist "^4.0.0"
-
-magic-string@^0.27.0:
-  version "0.27.0"
-  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.27.0.tgz#e4a3413b4bab6d98d2becffd48b4a257effdbbf3"
-  integrity sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==
-  dependencies:
-    "@jridgewell/sourcemap-codec" "^1.4.13"
 
 magic-string@^0.30.2:
   version "0.30.5"
@@ -5414,7 +5407,7 @@ set-function-name@^2.0.0:
     functions-have-names "^1.2.3"
     has-property-descriptors "^1.0.0"
 
-sharp@^0.32.1:
+sharp@^0.32.6:
   version "0.32.6"
   resolved "https://registry.yarnpkg.com/sharp/-/sharp-0.32.6.tgz#6ad30c0b7cd910df65d5f355f774aa4fce45732a"
   integrity sha512-KyLTWwgcR9Oe4d9HwCwNM2l7+J0dUQwn/yf7S0EnTtb0eVS4RxO0eUSvxPtzT4F3SY+C4K6fqdv/DO27sJ/v/w==
@@ -6413,15 +6406,10 @@ yoga-wasm-web@^0.3.3:
   resolved "https://registry.yarnpkg.com/yoga-wasm-web/-/yoga-wasm-web-0.3.3.tgz#eb8e9fcb18e5e651994732f19a220cb885d932ba"
   integrity sha512-N+d4UJSJbt/R3wqY7Coqs5pcV0aUj2j9IaQ3rNj9bVCLld8tTGKRa2USARjnvZJWVx1NDmQev8EknoczaOQDOA==
 
-zod@^3.17.3, zod@^3.20.6:
+zod@^3.17.3, zod@^3.20.6, zod@^3.22.4:
   version "3.22.4"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.22.4.tgz#f31c3a9386f61b1f228af56faa9255e845cf3fff"
   integrity sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==
-
-zod@^3.22.3:
-  version "3.22.3"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.22.3.tgz#2fbc96118b174290d94e8896371c95629e87a060"
-  integrity sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==
 
 zwitch@^2.0.0, zwitch@^2.0.4:
   version "2.0.4"

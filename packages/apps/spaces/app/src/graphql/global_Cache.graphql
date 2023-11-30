@@ -23,5 +23,7 @@ query global_Cache {
         display
       }
     }
+    minARRForecastValue
+    maxARRForecastValue
   }
 }

@@ -13,7 +13,7 @@ import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { getARRColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
   RenewalLikelihoodProbability,
   RenewalForecast as RenewalForecastT,
@@ -87,7 +87,7 @@ export const RenewalForecast = ({
             minW='10'
             colorScheme={
               renewalForecast?.amount && !renewalForecast?.updatedBy
-                ? getFeatureIconColor(renewalProbability)
+                ? getARRColor(renewalProbability)
                 : 'gray'
             }
           >

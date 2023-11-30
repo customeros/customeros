@@ -22,11 +22,12 @@ type PlayerInput struct {
 }
 
 type UserInput struct {
-	FirstName string      `json:"firstName"`
-	LastName  string      `json:"lastName"`
-	Email     EmailInput  `json:"email"`
-	Player    PlayerInput `json:"player"`
-	AppSource *string     `json:"appSource"`
+	FirstName       string      `json:"firstName"`
+	LastName        string      `json:"lastName"`
+	Email           EmailInput  `json:"email"`
+	Player          PlayerInput `json:"player"`
+	AppSource       *string     `json:"appSource"`
+	ProfilePhotoURL *string     `json:"profilePhotoUrl,omitempty"`
 }
 
 type TenantInput struct {
@@ -35,9 +36,10 @@ type TenantInput struct {
 }
 
 type ContactInput struct {
-	FirstName *string     `json:"firstName,omitempty"`
-	LastName  *string     `json:"lastName,omitempty"`
-	Email     *EmailInput `json:"email,omitempty"`
+	FirstName       *string     `json:"firstName,omitempty"`
+	LastName        *string     `json:"lastName,omitempty"`
+	Email           *EmailInput `json:"email,omitempty"`
+	ProfilePhotoURL *string     `json:"profilePhotoUrl,omitempty"`
 }
 
 type InteractionSessionParticipantInput struct {

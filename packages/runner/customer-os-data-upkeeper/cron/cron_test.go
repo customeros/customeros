@@ -22,7 +22,10 @@ func getLogger() logger.Logger {
 func TestStartCron(t *testing.T) {
 	// Arrange
 	cfg := config.Config{
-		Cron: cron_config.Config{CronScheduleUpdateOrgNextCycleDate: "0 0 */1 * * *"},
+		Cron: cron_config.Config{
+			CronScheduleUpdateOrgNextCycleDate: "0 0 */1 * * *",
+			CronScheduleUpdateContract:         "0 0 */1 * * *",
+		},
 	}
 
 	// Act

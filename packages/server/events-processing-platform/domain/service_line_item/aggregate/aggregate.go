@@ -34,6 +34,10 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 		return a.onServiceLineItemCreate(evt)
 	case event.ServiceLineItemUpdateV1:
 		return a.onServiceLineItemUpdate(evt)
+	case event.ServiceLineItemDeleteV1:
+		return a.onServiceLineItemDelete()
+	case event.ServiceLineItemCloseV1:
+		return a.onServiceLineItemClose(evt)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
@@ -49,6 +53,7 @@ func (a *ServiceLineItemAggregate) onServiceLineItemCreate(evt eventstore.Event)
 
 	a.ServiceLineItem.ID = a.ID
 	a.ServiceLineItem.ContractId = eventData.ContractId
+	a.ServiceLineItem.ParentId = eventData.ParentId
 	a.ServiceLineItem.Billed = eventData.Billed
 	a.ServiceLineItem.Quantity = eventData.Quantity
 	a.ServiceLineItem.Price = eventData.Price
@@ -56,6 +61,8 @@ func (a *ServiceLineItemAggregate) onServiceLineItemCreate(evt eventstore.Event)
 	a.ServiceLineItem.CreatedAt = eventData.CreatedAt
 	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
 	a.ServiceLineItem.Source = eventData.Source
+	a.ServiceLineItem.StartedAt = eventData.StartedAt
+	a.ServiceLineItem.EndedAt = eventData.EndedAt
 
 	return nil
 }
@@ -76,6 +83,24 @@ func (a *ServiceLineItemAggregate) onServiceLineItemUpdate(evt eventstore.Event)
 	if constants.SourceOpenline == eventData.Source.Source {
 		a.ServiceLineItem.Source.SourceOfTruth = eventData.Source.Source
 	}
+	a.ServiceLineItem.Comments = eventData.Comments
+
+	return nil
+}
+
+func (a *ServiceLineItemAggregate) onServiceLineItemDelete() error {
+	a.ServiceLineItem.IsDeleted = true
+	return nil
+}
+
+func (a *ServiceLineItemAggregate) onServiceLineItemClose(evt eventstore.Event) error {
+	var eventData event.ServiceLineItemCloseEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.ServiceLineItem.EndedAt = &eventData.EndedAt
+	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
 
 	return nil
 }

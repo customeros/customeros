@@ -82,11 +82,27 @@
     },
     {
       "name": "Check source fields",
-      "query": "MATCH (n:User|Email|PhoneNumber|Organization|Issue|Comment|Contract|Opportunity) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
+      "query": "MATCH (n:User|Email|PhoneNumber|Organization|Issue|Comment|Contract|Opportunity|ServiceLineItem) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
     },
     {
       "name": "Check for comments without parent",
       "query": "MATCH (c:Comment) WHERE NOT (c)-[:COMMENTED]->() return count(c)"
+    },
+    {
+      "name": "Check for contracts without organization",
+      "query": "MATCH (c:Contract) WHERE NOT (c)<-[:HAS_CONTRACT]-(:Organization) return count(c)"
+    },
+    {
+      "name": "Check for multiple renewal opportunities for same contract",
+      "query": "CALL {MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt UNION MATCH (c:Contract)-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity) WHERE op.internalStage='OPEN' WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c) AS cnt} return sum(cnt)"
+    },
+    {
+      "name": "Check for contracts with wrong status",
+      "query": "CALL {MATCH (c:Contract) WHERE c.status <> 'ENDED' AND datetime(c.endedAt) < datetime() RETURN count(c) AS cnt UNION MATCH (c:Contract) WHERE (c.endedAt is null OR datetime(c.endedAt) > datetime()) AND c.status <> 'LIVE' AND datetime(c.serviceStartedAt) < datetime() RETURN count(c) AS cnt} return sum(cnt)"
+    },
+    {
+      "name": "Check service line items data consistency",
+      "query": "CALL {MATCH (sli:ServiceLineItem)<-[:HAS_SERVICE]-(c:Contract) WITH sli, count(c) AS sizeContracts WHERE sizeContracts <> 1 RETURN count(sli) AS cnt UNION MATCH (sli:ServiceLineItem) WHERE sli.endedAt < sli.startedAt RETURN count(sli) as cnt UNION MATCH (sli:ServiceLineItem) WHERE sli.createdAt is null OR sli.updatedAt is null OR sli.startedAt is null OR sli.billed is null OR sli.billed = '' OR sli.parentId is null OR sli.parentId = '' return count(sli) as cnt} return sum(cnt)"
     }
   ]
 }

@@ -1,0 +1,10 @@
+query MrrPerCustomer($period: DashboardPeriodInput) {
+  dashboard_MRRPerCustomer(period: $period) {
+    mrrPerCustomer
+    increasePercentage
+    perMonth {
+      month
+      value
+    }
+  }
+}

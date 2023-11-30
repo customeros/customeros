@@ -30,9 +30,8 @@ query getOrganizations(
       isCustomer
       accountDetails {
         renewalForecast {
-          amount
-          potentialAmount
-          comment
+          arr
+          maxArr
           updatedAt
           updatedById
           updatedBy {
@@ -44,27 +43,27 @@ query getOrganizations(
             }
           }
         }
-        renewalLikelihood {
-          probability
-          previousProbability
-          comment
-          updatedById
-          updatedBy {
-            id
-            firstName
-            lastName
-            emails {
-              email
-            }
-          }
-          updatedAt
-        }
-        billingDetails {
-          renewalCycle
-          frequency
-          amount
-          renewalCycleNext
-        }
+#        renewalLikelihood {
+#          probability
+#          previousProbability
+#          comment
+#          updatedById
+#          updatedBy {
+#            id
+#            firstName
+#            lastName
+#            emails {
+#              email
+#            }
+#          }
+#          updatedAt
+#        }
+#        billingDetails {
+#          renewalCycle
+#          frequency
+#          amount
+#          renewalCycleNext
+#        }
       }
       locations {
         id

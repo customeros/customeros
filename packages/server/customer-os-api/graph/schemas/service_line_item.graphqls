@@ -2,37 +2,64 @@ extend type Query {
     serviceLineItem(id: ID!): ServiceLineItem!
 }
 extend type Mutation {
-    serviceLineItem_Create(input: ServiceLineItemInput!): ServiceLineItem!
+    serviceLineItemCreate(input: ServiceLineItemInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItemUpdate(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    serviceLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type ServiceLineItem implements Node {
     id:                 ID!
     createdAt:          Time!
     updatedAt:          Time!
+    startedAt:          Time!
+    endedAt:            Time
     name:               String!
     billed:             BilledType!
     price:              Float!
     quantity:           Int64!
+    comments:           String!
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!
     sourceOfTruth:      DataSource!
     appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
+    parentId:           ID!
 }
 
 input ServiceLineItemInput {
+    contractId:         ID!
     name:               String
-    contractId:         String!
     billed:             BilledType
     price:              Float
     quantity:           Int64
     appSource:          String
     externalReference:  ExternalSystemReferenceInput
+    startedAt:          Time
+    endedAt:            Time
+}
+
+input ServiceLineItemUpdateInput {
+    serviceLineItemId:  ID!
+    name:               String
+    billed:             BilledType
+    price:              Float
+    quantity:           Int64
+    comments:           String
+    appSource:          String
+    externalReference:  ExternalSystemReferenceInput
+    isRetroactiveCorrection: Boolean
+}
+
+input ServiceLineItemCloseInput {
+    id:         ID!
+    endedAt:    Time
 }
 
 enum BilledType {
     NONE
-    MONTHLY_BILLED
-    ANNUALLY_BILLED
-    ONCE_BILLED
+    MONTHLY
+    ANNUALLY
+    ONCE
+    USAGE
 }

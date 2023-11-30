@@ -149,3 +149,57 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "appSource"))
 }
+
+func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	validated := false
+	e164 := "+0123456789"
+	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, testDatabase.Driver, tenantName, entity.PhoneNumberEntity{
+		E164:           e164,
+		Validated:      &validated,
+		RawPhoneNumber: e164,
+		Source:         constants.SourceOpenline,
+		SourceOfTruth:  constants.SourceOpenline,
+		AppSource:      constants.SourceOpenline,
+	})
+
+	dbNodeAfterCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNodeAfterCreate)
+	propsAfterCreate := utils.GetPropsFromNode(*dbNodeAfterCreate)
+	require.Equal(t, false, utils.GetBoolPropOrFalse(propsAfterCreate, "validated"))
+	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+	creationUpdatedAt := utils.GetTimePropOrNil(propsAfterCreate, "updatedAt")
+	require.Equal(t, &creationTime, creationUpdatedAt)
+
+	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId)
+	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
+	updatedAtUpdate := time.Now().UTC()
+	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, constants.SourceWebscrape, updatedAtUpdate)
+	require.Nil(t, err)
+
+	phoneNumberEventHandler := &GraphPhoneNumberEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	err = phoneNumberEventHandler.OnPhoneNumberUpdate(context.Background(), event)
+	require.Nil(t, err)
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "PhoneNumber_"+tenantName, phoneNumberId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	phoneUpdateProps := utils.GetPropsFromNode(*dbNode)
+	require.Equal(t, 10, len(phoneUpdateProps))
+
+	require.Less(t, *creationUpdatedAt, utils.GetTimePropOrNow(phoneUpdateProps, "updatedAt"))
+	require.Equal(t, creationTime, utils.GetTimePropOrNow(phoneUpdateProps, "createdAt"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(phoneUpdateProps, "syncedWithEventStore"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "source"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "sourceOfTruth"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "appSource"))
+	require.Equal(t, e164, utils.GetStringPropOrEmpty(phoneUpdateProps, "rawPhoneNumber"))
+	require.Equal(t, e164, utils.GetStringPropOrEmpty(phoneUpdateProps, "e164"))
+	require.Equal(t, false, utils.GetBoolPropOrFalse(phoneUpdateProps, "validated"))
+}

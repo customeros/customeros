@@ -85,7 +85,8 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 			  MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id})
 				SET u:User_%s,
 					u.firstName=$firstName,
-					u.lastName=$lastName
+					u.lastName=$lastName,
+					u.roles=$roles
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -93,6 +94,7 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 		"id":        userId,
 		"firstName": user.FirstName,
 		"lastName":  user.LastName,
+		"roles":     user.Roles,
 	})
 	return userId
 }
@@ -131,6 +133,20 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"lastName":  contact.LastName,
 	})
 	return contactId
+}
+
+func CreateJobRole(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, jobRole entity.JobRoleEntity) string {
+	jobRoleId := jobRole.Id
+	if jobRoleId == "" {
+		jobRoleId = uuid.New().String()
+	}
+	query := fmt.Sprintf(`CREATE (jobRole:JobRole:JobRole_%s {id:$jobRoleId})`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"jobRoleId": jobRoleId,
+	})
+	return jobRoleId
+
 }
 
 func CreateLogEntryForOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
@@ -239,6 +255,21 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return contractId
 }
 
+func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {
+	contractId := CreateContract(ctx, driver, tenant, contract)
+	LinkContractWithOrganization(ctx, driver, contractId, organizationId)
+	return contractId
+}
+
+func LinkContractWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contractId, organizationId string) {
+	query := `MATCH (c:Contract {id:$contractId}), (o:Organization {id:$organizationId})
+				MERGE (o)-[:HAS_CONTRACT]->(c) `
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"contractId":     contractId,
+		"organizationId": organizationId,
+	})
+}
+
 func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`
@@ -250,19 +281,45 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					op.sourceOfTruth=$sourceOfTruth,
 					op.internalStage=$internalStage,
 					op.internalType=$internalType,
-					op.renewedAt=$renewedAt
+					op.renewedAt=$renewedAt,
+					op.amount=$amount,
+					op.maxAmount=$maxAmount,
+					op.renewalLikelihood=$renewalLikelihood,
+					op.renewalUpdatedByUserId=$renewalUpdatedByUserId,
+					op.comments=$comments
 				`, tenant)
 
+	if opportunity.InternalType == "RENEWAL" {
+		query += `, op:RenewalOpportunity`
+	}
+
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":            opportunityId,
-		"name":          opportunity.Name,
-		"source":        opportunity.Source,
-		"sourceOfTruth": opportunity.SourceOfTruth,
-		"internalStage": opportunity.InternalStage,
-		"internalType":  opportunity.InternalType,
-		"renewedAt":     utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+		"id":                     opportunityId,
+		"name":                   opportunity.Name,
+		"source":                 opportunity.Source,
+		"sourceOfTruth":          opportunity.SourceOfTruth,
+		"internalStage":          opportunity.InternalStage,
+		"internalType":           opportunity.InternalType,
+		"amount":                 opportunity.Amount,
+		"maxAmount":              opportunity.MaxAmount,
+		"renewedAt":              utils.TimePtrFirstNonNilNillableAsAny(opportunity.RenewalDetails.RenewedAt),
+		"renewalLikelihood":      opportunity.RenewalDetails.RenewalLikelihood,
+		"renewalUpdatedByUserId": opportunity.RenewalDetails.RenewalUpdatedByUserId,
+		"comments":               opportunity.Comments,
 	})
 	return opportunityId
+}
+
+func LinkContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, contractId, opportunityId string, renewal bool) {
+	query := `MATCH (c:Contract {id:$contractId}), (o:Opportunity {id:$opportunityId})
+				MERGE (c)-[:HAS_OPPORTUNITY]->(o) `
+	if renewal {
+		query += `MERGE (c)-[:ACTIVE_RENEWAL]->(o)`
+	}
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"contractId":    contractId,
+		"opportunityId": opportunityId,
+	})
 }
 
 func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
@@ -274,7 +331,8 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 					sli.name=$name,
 					sli.price=$price,
 					sli.quantity=$quantity,
-					sli.billed=$billed
+					sli.billed=$billed,
+					sli.comments=$comments
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -284,6 +342,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"name":       serviceLineItem.Name,
 		"quantity":   serviceLineItem.Quantity,
 		"billed":     serviceLineItem.Billed,
+		"comments":   serviceLineItem.Comments,
 	})
 	return serviceLineItemId
 }

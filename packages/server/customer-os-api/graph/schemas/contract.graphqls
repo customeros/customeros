@@ -16,6 +16,8 @@ type Contract implements Node {
     name:               String!
     renewalCycle:       ContractRenewalCycle!
     status:             ContractStatus!
+    serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true)
+    opportunities:      [Opportunity!] @goField(forceResolver: true)
     owner:              User @goField(forceResolver: true)
     createdBy:          User @goField(forceResolver: true)
     source:             DataSource!

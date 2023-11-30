@@ -10,7 +10,7 @@ import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import { getUserDisplayData } from '@spaces/utils/getUserEmail';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
-import { getFeatureIconColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
+import { getARRColor } from '@organization/src/components/Tabs/panels/AccountPanel/utils';
 import {
   Maybe,
   RenewalLikelihoodProbability,
@@ -53,7 +53,7 @@ export const RenewalLikelihood = ({
           <FeaturedIcon
             size='md'
             minW='10'
-            colorScheme={getFeatureIconColor(data?.probability)}
+            colorScheme={getARRColor(data?.probability)}
           >
             <Icons.HeartActivity />
           </FeaturedIcon>

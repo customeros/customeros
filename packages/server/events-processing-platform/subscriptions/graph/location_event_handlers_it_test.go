@@ -365,3 +365,170 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 	require.Equal(t, false, utils.GetBoolPropOrFalse(props, "validated"))
 	require.NotEqual(t, updatedAt, utils.GetTimePropOrNil(props, "updatedAt"))
 }
+
+func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	name := "test_location_name"
+	updatedAt := time.Now().UTC()
+	country := "US"
+	region := "test_region"
+	locality := "test_locality"
+	street := "test_street"
+	address1 := "test_address1"
+	address2 := "test_address2"
+	zip := "test_zip"
+	addressType := "test_address_type"
+	rawAddress := "test_location_raw_address"
+	houseNumber := "test_house_number"
+	postalCode := "test_postal_code"
+	plusFour := "test_plus_four"
+	commercial := false
+	predirection := "test_prediction"
+	district := "test_district"
+	timeZone := "test_timezone"
+	var utcOffset = 1
+	var latitude float64 = 1
+	var longitude float64 = 2
+	locationId := neo4jt.CreateLocation(ctx, testDatabase.Driver, tenantName, entity.LocationEntity{
+		Name:          name,
+		UpdatedAt:     updatedAt,
+		Country:       country,
+		Region:        region,
+		Locality:      locality,
+		Address:       address1,
+		Address2:      address2,
+		Zip:           zip,
+		AddressType:   addressType,
+		HouseNumber:   houseNumber,
+		PostalCode:    postalCode,
+		PlusFour:      plusFour,
+		Commercial:    commercial,
+		Predirection:  predirection,
+		District:      district,
+		Street:        street,
+		RawAddress:    rawAddress,
+		Latitude:      &latitude,
+		Longitude:     &longitude,
+		TimeZone:      timeZone,
+		UtcOffset:     int64(utcOffset),
+		SourceOfTruth: constants.SourceOpenline,
+		Source:        constants.SourceOpenline,
+		AppSource:     constants.SourceOpenline,
+	})
+
+	dbNodeAfterCreate, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNodeAfterCreate)
+
+	propsAfterCreate := utils.GetPropsFromNode(*dbNodeAfterCreate)
+	require.Equal(t, rawAddress, utils.GetStringPropOrEmpty(propsAfterCreate, "rawAddress"))
+	require.Equal(t, name, utils.GetStringPropOrEmpty(propsAfterCreate, "name"))
+	require.Equal(t, country, utils.GetStringPropOrEmpty(propsAfterCreate, "country"))
+	require.Equal(t, region, utils.GetStringPropOrEmpty(propsAfterCreate, "region"))
+	require.Equal(t, district, utils.GetStringPropOrEmpty(propsAfterCreate, "district"))
+	require.Equal(t, locality, utils.GetStringPropOrEmpty(propsAfterCreate, "locality"))
+	require.Equal(t, street, utils.GetStringPropOrEmpty(propsAfterCreate, "street"))
+	require.Equal(t, zip, utils.GetStringPropOrEmpty(propsAfterCreate, "zip"))
+	require.Equal(t, plusFour, utils.GetStringPropOrEmpty(propsAfterCreate, "plusFour"))
+	require.Equal(t, address1, utils.GetStringPropOrEmpty(propsAfterCreate, "address"))
+	require.Equal(t, address2, utils.GetStringPropOrEmpty(propsAfterCreate, "address2"))
+	require.Equal(t, addressType, utils.GetStringPropOrEmpty(propsAfterCreate, "addressType"))
+	require.Equal(t, houseNumber, utils.GetStringPropOrEmpty(propsAfterCreate, "houseNumber"))
+	require.Equal(t, postalCode, utils.GetStringPropOrEmpty(propsAfterCreate, "postalCode"))
+	require.Equal(t, commercial, utils.GetBoolPropOrFalse(propsAfterCreate, "commercial"))
+	require.Equal(t, predirection, utils.GetStringPropOrEmpty(propsAfterCreate, "predirection"))
+	require.Equal(t, &latitude, utils.GetFloatPropOrNil(propsAfterCreate, "latitude"))
+	require.Equal(t, &longitude, utils.GetFloatPropOrNil(propsAfterCreate, "longitude"))
+	require.Equal(t, timeZone, utils.GetStringPropOrEmpty(propsAfterCreate, "timeZone"))
+	require.Equal(t, int64(utcOffset), utils.GetInt64PropOrZero(propsAfterCreate, "utcOffset"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "source"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "sourceOfTruth"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "appSource"))
+	require.Equal(t, &updatedAt, utils.GetTimePropOrNil(propsAfterCreate, "updatedAt"))
+
+	locationAggregate := aggregate.NewLocationAggregateWithTenantAndID(tenantName, locationId)
+	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
+	updatedAtUpdate := time.Now().UTC()
+	locationAddressLatitudeUpdate := 1.1
+	locationAddressLongitudeUpdate := 2.2
+	locationAddressCountryUpdate := "locationAddressCountryUpdate"
+	locationAddressRegionUpdate := "locationAddressRegionUpdate"
+	locationAddressDistrictUpdate := "locationAddressDistrictUpdate"
+	locationAddressLocalityUpdate := "locationAddressLocalityUpdate"
+	locationAddressStreetUpdate := "locationAddressStreetUpdate"
+	locationAddressAddress1Update := "locationAddressAddress1Update"
+	locationAddressAddress2Update := "locationAddressAddress2Update"
+	locationAddressZipUpdate := "locationAddressZipUpdate"
+	locationAddressAddressType := "locationAddressAddressType"
+	locationAddressHouseNumber := "locationAddressHouseNumber"
+	locationAddressPostalCodeUpdate := "locationAddressPostalCodeUpdate"
+	locationAddressPlusFourUpdate := "locationAddressPlusFourUpdate"
+	locationAddressCommercialUpdate := true
+	locationAddressPredirectionUpdate := "locationAddressPredirectionUpdate"
+	locationAddressTimeZoneUpdate := "locationAddressTimeZoneUpdate"
+	locationAddressUtcOffsetUpdate := 1
+	locationUpdateEvent, err := events.NewLocationUpdateEvent(locationAggregate, name, rawAddress, constants.SourceOpenline, updatedAtUpdate, models.LocationAddress{
+		Country:      locationAddressCountryUpdate,
+		Region:       locationAddressRegionUpdate,
+		District:     locationAddressDistrictUpdate,
+		Locality:     locationAddressLocalityUpdate,
+		Street:       locationAddressStreetUpdate,
+		Address1:     locationAddressAddress1Update,
+		Address2:     locationAddressAddress2Update,
+		Zip:          locationAddressZipUpdate,
+		AddressType:  locationAddressAddressType,
+		HouseNumber:  locationAddressHouseNumber,
+		PostalCode:   locationAddressPostalCodeUpdate,
+		PlusFour:     locationAddressPlusFourUpdate,
+		Commercial:   locationAddressCommercialUpdate,
+		Predirection: locationAddressPredirectionUpdate,
+		Latitude:     &locationAddressLatitudeUpdate,
+		Longitude:    &locationAddressLongitudeUpdate,
+		TimeZone:     locationAddressTimeZoneUpdate,
+		UtcOffset:    locationAddressUtcOffsetUpdate,
+	})
+	require.Nil(t, err)
+
+	locationEventHandler := &GraphLocationEventHandler{
+		Repositories: testDatabase.Repositories,
+	}
+	err = locationEventHandler.OnLocationUpdate(context.Background(), locationUpdateEvent)
+	require.Nil(t, err)
+
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Location_"+tenantName, locationId)
+	require.Nil(t, err)
+	require.NotNil(t, dbNode)
+	locationUpdateProps := utils.GetPropsFromNode(*dbNode)
+	require.Equal(t, 27, len(locationUpdateProps))
+
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(locationUpdateProps, "appSource"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(locationUpdateProps, "source"))
+	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(locationUpdateProps, "sourceOfTruth"))
+	require.Equal(t, locationAddressStreetUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "street"))
+	require.Equal(t, locationAddressZipUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "zip"))
+	require.Equal(t, locationAddressAddressType, utils.GetStringPropOrEmpty(locationUpdateProps, "addressType"))
+	require.Equal(t, locationAddressLongitudeUpdate, utils.GetFloatPropOrZero(locationUpdateProps, "longitude"))
+	require.Equal(t, locationAddressPlusFourUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "plusFour"))
+	require.Equal(t, locationAddressAddress2Update, utils.GetStringPropOrEmpty(locationUpdateProps, "address2"))
+	require.Equal(t, locationAddressLocalityUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "locality"))
+	require.Equal(t, locationAddressRegionUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "region"))
+	require.Equal(t, locationAddressCommercialUpdate, utils.GetBoolPropOrFalse(locationUpdateProps, "commercial"))
+	require.Equal(t, locationAddressLatitudeUpdate, utils.GetFloatPropOrZero(locationUpdateProps, "latitude"))
+	require.Equal(t, locationAddressPredirectionUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "predirection"))
+	require.Equal(t, locationAddressAddress1Update, utils.GetStringPropOrEmpty(locationUpdateProps, "address"))
+	require.Equal(t, locationAddressPostalCodeUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "postalCode"))
+	require.Equal(t, locationAddressHouseNumber, utils.GetStringPropOrEmpty(locationUpdateProps, "houseNumber"))
+	require.Equal(t, locationAddressUtcOffsetUpdate, int(utils.GetInt64PropOrZero(locationUpdateProps, "utcOffset")))
+	require.Equal(t, name, utils.GetStringPropOrEmpty(locationUpdateProps, "name"))
+	require.Equal(t, locationAddressCountryUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "country"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(locationUpdateProps, "syncedWithEventStore"))
+	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
+	require.Equal(t, creationTime, utils.GetTimePropOrNow(locationUpdateProps, "createdAt"))
+	require.Equal(t, locationAddressTimeZoneUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "timeZone"))
+	require.Equal(t, rawAddress, utils.GetStringPropOrEmpty(locationUpdateProps, "rawAddress"))
+	require.Less(t, updatedAt, utils.GetTimePropOrNow(locationUpdateProps, "updatedAt"))
+	require.Equal(t, locationAddressDistrictUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "district"))
+}

@@ -12,33 +12,23 @@ import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Divider } from '@ui/presentation/Divider';
-import { getName } from '@spaces/utils/getParticipantsName';
 import { CardBody, CardHeader } from '@ui/presentation/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { InteractionEvent, InteractionEventParticipant } from '@graphql/types';
 import { useGetTimelineEventsQuery } from '@organization/src/graphql/getTimelineEvents.generated';
 import { SlackMessageCard } from '@organization/src/components/Timeline/events/slack/SlackMessageCard';
-import {
-  UserParticipant,
-  InteractionEvent,
-  ContactParticipant,
-  JobRoleParticipant,
-  InteractionEventParticipant,
-} from '@graphql/types';
 import {
   useTimelineEventPreviewStateContext,
   useTimelineEventPreviewMethodsContext,
 } from '@organization/src/components/Timeline/preview/context/TimelineEventPreviewContext';
 
+import { getDisplayNameAndAvatar } from './util';
 import { MessageCardSkeleton } from '../../shared';
 
 const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
-  const sender =
-    (sentBy?.[0] as ContactParticipant)?.contactParticipant ||
-    (sentBy?.[0] as JobRoleParticipant)?.jobRoleParticipant?.contact ||
-    (sentBy?.[0] as UserParticipant)?.userParticipant;
-
-  return sender;
+  return getDisplayNameAndAvatar(sentBy?.[0]);
 };
+
 export const SlackThreadPreviewModal: React.FC = () => {
   const client = getGraphQLClient();
   const { modalContent } = useTimelineEventPreviewStateContext();
@@ -111,8 +101,8 @@ export const SlackThreadPreviewModal: React.FC = () => {
       <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6} pt={0}>
         <SlackMessageCard
           w='full'
-          name={getName(slackSender)}
-          profilePhotoUrl={slackSender?.profilePhotoUrl}
+          name={slackSender.displayName}
+          profilePhotoUrl={slackSender?.photoUrl}
           sourceUrl={event?.externalLinks?.[0]?.externalUrl}
           content={event?.content || ''}
           // @ts-expect-error typescript does not work well with aliases
@@ -159,8 +149,8 @@ export const SlackThreadPreviewModal: React.FC = () => {
                   <SlackMessageCard
                     key={`slack-event-thread-reply-preview-modal-${reply.id}`}
                     w='full'
-                    name={getName(replyParticipant)}
-                    profilePhotoUrl={replyParticipant?.profilePhotoUrl}
+                    name={replyParticipant?.displayName}
+                    profilePhotoUrl={replyParticipant?.photoUrl}
                     content={reply?.content || ''}
                     // @ts-expect-error typescript does not work well with aliases
                     date={DateTimeUtils.timeAgo(reply?.date, {
