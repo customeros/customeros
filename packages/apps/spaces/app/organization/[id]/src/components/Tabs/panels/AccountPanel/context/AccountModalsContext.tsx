@@ -1,4 +1,4 @@
-import { useMemo, useContext, createContext, PropsWithChildren } from 'react';
+import { useContext, createContext, PropsWithChildren } from 'react';
 
 import { useDisclosure, UseDisclosureReturn } from '@ui/utils';
 
@@ -72,18 +72,6 @@ export const AccountModalsContextProvider = ({
     id: 'update-service-modal',
   });
 
-  const isModalOpen = useMemo(() => {
-    return (
-      arrForecastInfoModal.isOpen ||
-      addServiceModal.isOpen ||
-      updateRenewalDetailsModal.isOpen
-    );
-  }, [
-    arrForecastInfoModal.isOpen,
-    addServiceModal.isOpen,
-    updateRenewalDetailsModal.isOpen,
-  ]);
-
   return (
     <ARRInfoModalContext.Provider
       value={{
@@ -107,7 +95,11 @@ export const AccountModalsContextProvider = ({
           >
             <AccountPanelStateContext.Provider
               value={{
-                isModalOpen,
+                isModalOpen:
+                  arrForecastInfoModal.isOpen ||
+                  addServiceModal.isOpen ||
+                  updateRenewalDetailsModal.isOpen ||
+                  updateServiceModal.isOpen,
               }}
             >
               {children}

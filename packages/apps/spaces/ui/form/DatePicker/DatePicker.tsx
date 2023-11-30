@@ -89,7 +89,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           }
           calendarIcon={
             <Flex alignItems='center'>
-              {calendarIconHidden && (
+              {!calendarIconHidden && (
                 <Box mr={3} color='gray.500'>
                   <Calendar />
                 </Box>
