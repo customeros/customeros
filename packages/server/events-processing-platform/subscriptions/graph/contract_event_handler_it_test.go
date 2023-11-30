@@ -573,7 +573,7 @@ func TestContractEventHandler_OnUpdateStatusLive(t *testing.T) {
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionContractStatusUpdated, action.Type)
-	require.Equal(t, "test contract is nowt live", action.Content)
+	require.Equal(t, "test contract is now live", action.Content)
 	require.Equal(t, `{"status":"LIVE"}`, action.Metadata)
 
 	// Check request was not generated
