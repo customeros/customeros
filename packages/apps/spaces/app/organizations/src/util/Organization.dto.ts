@@ -28,19 +28,13 @@ const defaults: GetOrganizationRowResult = {
   },
   accountDetails: {
     __typename: 'OrgAccountDetails',
-    renewalForecast: {
-      __typename: 'RenewalForecast',
-      arr: null,
-      maxArr: null,
-      updatedAt: null,
-      updatedById: null,
-      updatedBy: {
-        __typename: 'User',
-        id: '',
-        firstName: '',
-        lastName: '',
-        emails: null,
-      },
+
+    renewalSummary: {
+      __typename: 'RenewalSummary',
+      arrForecast: null,
+      maxArrForecast: null,
+      renewalLikelihood: null,
+      nextRenewalDate: null,
     },
   },
   locations: [],

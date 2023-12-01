@@ -5,4 +5,5 @@ export type {
   AsyncCreatableProps,
   ControlProps,
   MultiValueGenericProps,
+  OptionProps,
 } from 'chakra-react-select';

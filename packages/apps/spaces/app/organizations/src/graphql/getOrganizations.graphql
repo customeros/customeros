@@ -29,42 +29,14 @@ query getOrganizations(
       domains
       isCustomer
       accountDetails {
-        renewalForecast {
-          arr
-          maxArr
-          updatedAt
-          updatedById
-          updatedBy {
-            id
-            firstName
-            lastName
-            emails {
-              email
-            }
-          }
+        renewalSummary {
+          arrForecast
+          maxArrForecast
+          renewalLikelihood
+          nextRenewalDate
         }
-#        renewalLikelihood {
-#          probability
-#          previousProbability
-#          comment
-#          updatedById
-#          updatedBy {
-#            id
-#            firstName
-#            lastName
-#            emails {
-#              email
-#            }
-#          }
-#          updatedAt
-#        }
-#        billingDetails {
-#          renewalCycle
-#          frequency
-#          amount
-#          renewalCycleNext
-#        }
       }
+
       locations {
         id
         name

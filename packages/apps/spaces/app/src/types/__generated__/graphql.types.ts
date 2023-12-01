@@ -318,6 +318,7 @@ export type ContactInput = {
   phoneNumber?: InputMaybe<PhoneNumberInput>;
   /** The prefix of the contact. */
   prefix?: InputMaybe<Scalars['String']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']>;
   /** The unique ID associated with the template of the contact in customerOS. */
   templateId?: InputMaybe<Scalars['ID']>;
   timezone?: InputMaybe<Scalars['String']>;
@@ -360,6 +361,7 @@ export type ContactUpdateInput = {
   ownerId?: InputMaybe<Scalars['ID']>;
   /** The prefix associate with the contact in customerOS. */
   prefix?: InputMaybe<Scalars['String']>;
+  profilePhotoUrl?: InputMaybe<Scalars['String']>;
   timezone?: InputMaybe<Scalars['String']>;
 };
 
@@ -1519,8 +1521,6 @@ export type Mutation = {
   opportunityRenewalUpdate: Opportunity;
   opportunityUpdate: Opportunity;
   organization_AddNewLocation: Location;
-  /** @deprecated No longer supported */
-  organization_AddRelationship: Organization;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
   organization_Archive?: Maybe<Result>;
@@ -1529,14 +1529,8 @@ export type Mutation = {
   organization_Hide: Scalars['ID'];
   organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
-  /** @deprecated No longer supported */
-  organization_RemoveRelationship: Organization;
-  /** @deprecated No longer supported */
-  organization_RemoveRelationshipStage: Organization;
   organization_RemoveSubsidiary: Organization;
   organization_SetOwner: Organization;
-  /** @deprecated No longer supported */
-  organization_SetRelationshipStage: Organization;
   organization_Show: Scalars['ID'];
   organization_ShowAll?: Maybe<Result>;
   organization_UnsetOwner: Organization;
@@ -1565,6 +1559,7 @@ export type Mutation = {
   player_Merge: Result;
   serviceLineItemCreate: ServiceLineItem;
   serviceLineItemUpdate: ServiceLineItem;
+  serviceLineItem_Close: Scalars['ID'];
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
   social_Update: Social;
@@ -1955,11 +1950,6 @@ export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID'];
 };
 
-export type MutationOrganization_AddRelationshipArgs = {
-  organizationId: Scalars['ID'];
-  relationship: OrganizationRelationship;
-};
-
 export type MutationOrganization_AddSocialArgs = {
   input: SocialInput;
   organizationId: Scalars['ID'];
@@ -1994,16 +1984,6 @@ export type MutationOrganization_MergeArgs = {
   primaryOrganizationId: Scalars['ID'];
 };
 
-export type MutationOrganization_RemoveRelationshipArgs = {
-  organizationId: Scalars['ID'];
-  relationship: OrganizationRelationship;
-};
-
-export type MutationOrganization_RemoveRelationshipStageArgs = {
-  organizationId: Scalars['ID'];
-  relationship: OrganizationRelationship;
-};
-
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
@@ -2012,12 +1992,6 @@ export type MutationOrganization_RemoveSubsidiaryArgs = {
 export type MutationOrganization_SetOwnerArgs = {
   organizationId: Scalars['ID'];
   userId: Scalars['ID'];
-};
-
-export type MutationOrganization_SetRelationshipStageArgs = {
-  organizationId: Scalars['ID'];
-  relationship: OrganizationRelationship;
-  stage: Scalars['String'];
 };
 
 export type MutationOrganization_ShowArgs = {
@@ -2131,6 +2105,10 @@ export type MutationServiceLineItemCreateArgs = {
 
 export type MutationServiceLineItemUpdateArgs = {
   input: ServiceLineItemUpdateInput;
+};
+
+export type MutationServiceLineItem_CloseArgs = {
+  input: ServiceLineItemCloseInput;
 };
 
 export type MutationServiceLineItem_DeleteArgs = {
@@ -2268,7 +2246,7 @@ export type Opportunity = Node & {
   name: Scalars['String'];
   nextSteps: Scalars['String'];
   owner?: Maybe<User>;
-  renewalLikelihood: Scalars['String'];
+  renewalLikelihood: OpportunityRenewalLikelihood;
   renewalUpdatedByUserAt: Scalars['Time'];
   renewalUpdatedByUserId: Scalars['String'];
   renewedAt: Scalars['Time'];
@@ -2308,9 +2286,13 @@ export type OpportunityUpdateInput = {
 
 export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
+  /** @deprecated No longer supported */
   billingDetails?: Maybe<BillingDetails>;
+  /** @deprecated No longer supported */
   renewalForecast?: Maybe<RenewalForecast>;
+  /** @deprecated No longer supported */
   renewalLikelihood?: Maybe<RenewalLikelihood>;
+  renewalSummary?: Maybe<RenewalSummary>;
 };
 
 export type Organization = Node & {
@@ -2350,10 +2332,6 @@ export type Organization = Node & {
   owner?: Maybe<User>;
   phoneNumbers: Array<PhoneNumber>;
   referenceId?: Maybe<Scalars['String']>;
-  /** @deprecated No longer supported */
-  relationshipStages: Array<OrganizationRelationshipStage>;
-  /** @deprecated No longer supported */
-  relationships: Array<OrganizationRelationship>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -2426,54 +2404,6 @@ export type OrganizationParticipant = {
   __typename?: 'OrganizationParticipant';
   organizationParticipant: Organization;
   type?: Maybe<Scalars['String']>;
-};
-
-export enum OrganizationRelationship {
-  Affiliate = 'AFFILIATE',
-  CertificationBody = 'CERTIFICATION_BODY',
-  Competitor = 'COMPETITOR',
-  Consultant = 'CONSULTANT',
-  ContractManufacturer = 'CONTRACT_MANUFACTURER',
-  Customer = 'CUSTOMER',
-  DataProvider = 'DATA_PROVIDER',
-  Distributor = 'DISTRIBUTOR',
-  Franchisee = 'FRANCHISEE',
-  Franchisor = 'FRANCHISOR',
-  IndustryAnalyst = 'INDUSTRY_ANALYST',
-  InfluencerOrContentCreator = 'INFLUENCER_OR_CONTENT_CREATOR',
-  InsourcingPartner = 'INSOURCING_PARTNER',
-  Investor = 'INVESTOR',
-  JointVenture = 'JOINT_VENTURE',
-  LicensingPartner = 'LICENSING_PARTNER',
-  LogisticsPartner = 'LOGISTICS_PARTNER',
-  MediaPartner = 'MEDIA_PARTNER',
-  MergerOrAcquisitionTarget = 'MERGER_OR_ACQUISITION_TARGET',
-  OriginalDesignManufacturer = 'ORIGINAL_DESIGN_MANUFACTURER',
-  OriginalEquipmentManufacturer = 'ORIGINAL_EQUIPMENT_MANUFACTURER',
-  OutsourcingProvider = 'OUTSOURCING_PROVIDER',
-  ParentCompany = 'PARENT_COMPANY',
-  Partner = 'PARTNER',
-  PrivateLabelManufacturer = 'PRIVATE_LABEL_MANUFACTURER',
-  ProfessionalEmployerOrganization = 'PROFESSIONAL_EMPLOYER_ORGANIZATION',
-  RealEstatePartner = 'REAL_ESTATE_PARTNER',
-  RegulatoryBody = 'REGULATORY_BODY',
-  ResearchCollaborator = 'RESEARCH_COLLABORATOR',
-  Reseller = 'RESELLER',
-  ServiceProvider = 'SERVICE_PROVIDER',
-  Sponsor = 'SPONSOR',
-  StandardsOrganization = 'STANDARDS_ORGANIZATION',
-  Subsidiary = 'SUBSIDIARY',
-  Supplier = 'SUPPLIER',
-  TalentAcquisitionPartner = 'TALENT_ACQUISITION_PARTNER',
-  TechnologyProvider = 'TECHNOLOGY_PROVIDER',
-  TradeAssociationMember = 'TRADE_ASSOCIATION_MEMBER',
-  Vendor = 'VENDOR',
-}
-
-export type OrganizationRelationshipStage = {
-  __typename?: 'OrganizationRelationshipStage';
-  relationship: OrganizationRelationship;
-  stage?: Maybe<Scalars['String']>;
 };
 
 export type OrganizationUpdateInput = {
@@ -2709,7 +2639,7 @@ export type Query = {
    */
   contacts: ContactsPage;
   contract: Contract;
-  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT */
+  /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboard_ARRBreakdown?: Maybe<DashboardArrBreakdown>;
   dashboard_CustomerMap?: Maybe<Array<DashboardCustomerMap>>;
@@ -2959,6 +2889,14 @@ export enum RenewalLikelihoodProbability {
   Zero = 'ZERO',
 }
 
+export type RenewalSummary = {
+  __typename?: 'RenewalSummary';
+  arrForecast?: Maybe<Scalars['Float']>;
+  maxArrForecast?: Maybe<Scalars['Float']>;
+  nextRenewalDate?: Maybe<Scalars['Time']>;
+  renewalLikelihood?: Maybe<OpportunityRenewalLikelihood>;
+};
+
 /**
  * Describes the success or failure of the GraphQL call.
  * **A `return` object**
@@ -2990,12 +2928,18 @@ export type ServiceLineItem = Node & {
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID'];
   name: Scalars['String'];
+  parentId: Scalars['ID'];
   price: Scalars['Float'];
   quantity: Scalars['Int64'];
   source: DataSource;
   sourceOfTruth: DataSource;
   startedAt: Scalars['Time'];
   updatedAt: Scalars['Time'];
+};
+
+export type ServiceLineItemCloseInput = {
+  endedAt?: InputMaybe<Scalars['Time']>;
+  id: Scalars['ID'];
 };
 
 export type ServiceLineItemInput = {
@@ -3015,6 +2959,7 @@ export type ServiceLineItemUpdateInput = {
   billed?: InputMaybe<BilledType>;
   comments?: InputMaybe<Scalars['String']>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
+  isRetroactiveCorrection?: InputMaybe<Scalars['Boolean']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Float']>;
   quantity?: InputMaybe<Scalars['Int64']>;

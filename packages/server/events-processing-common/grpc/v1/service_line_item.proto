@@ -21,7 +21,7 @@ message CreateServiceLineItemGrpcRequest {
   string loggedInUserId = 2;
   BilledType billed = 3;
   int64 quantity = 4; // Relevant only for Subscription type
-  float price = 5;
+  double price = 5;
   string name = 6;
   string contractId = 7;
   SourceFields sourceFields = 8;
@@ -36,7 +36,7 @@ message UpdateServiceLineItemGrpcRequest {
   string tenant = 2;
   string loggedInUserId = 3;
   string name = 4;
-  float price = 5;
+  double price = 5;
   int64 quantity = 6;
   BilledType billed = 7;
   google.protobuf.Timestamp updatedAt = 8;
