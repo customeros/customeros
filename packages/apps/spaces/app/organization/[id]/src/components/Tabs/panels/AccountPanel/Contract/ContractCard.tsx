@@ -13,6 +13,7 @@ import { FormSelect } from '@ui/form/SyncSelect';
 import { IconButton } from '@ui/form/IconButton';
 import { Heading } from '@ui/typography/Heading';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Collapse } from '@ui/transitions/Collapse';
 import { toastError } from '@ui/presentation/Toast';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -335,14 +336,22 @@ export const ContractCard = ({
         </CardBody>
       )}
       <CardFooter p='0' mt={1} w='full' flexDir='column'>
-        {data?.opportunities && data.renewalCycle && (
-          <RenewalARRCard
-            hasEnded={data.status === ContractStatus.Ended}
-            startedAt={data.serviceStartedAt}
-            renewCycle={data.renewalCycle}
-            opportunity={data.opportunities?.[0]}
-          />
-        )}
+        <Collapse
+          delay={{ enter: 0.2 }}
+          in={!!data?.opportunities && !!data.renewalCycle}
+          animateOpacity
+          startingHeight={0}
+        >
+          {data?.opportunities && data.renewalCycle && (
+            <RenewalARRCard
+              hasEnded={data.status === ContractStatus.Ended}
+              startedAt={data.serviceStartedAt}
+              renewCycle={data.renewalCycle}
+              opportunity={data.opportunities?.[0]}
+            />
+          )}
+        </Collapse>
+
         <Services contractId={data.id} data={data?.serviceLineItems} />
       </CardFooter>
     </Card>
