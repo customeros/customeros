@@ -215,8 +215,16 @@ func (s *dashboardService) GetDashboardRevenueAtRiskData(ctx context.Context, st
 
 	response := entityDashboard.DashboardRevenueAtRiskData{}
 
-	response.HighConfidence = 1504990
-	response.AtRisk = 355300
+	data, err := s.repositories.DashboardRepository.GetDashboardRevenueAtRiskData(ctx, common.GetContext(ctx).Tenant, start, end)
+	if err != nil {
+		return nil, err
+	}
+
+	high, _ := data[0]["high"].(float64)
+	atRisk, _ := data[0]["atRisk"].(float64)
+
+	response.HighConfidence = high
+	response.AtRisk = atRisk
 
 	return &response, nil
 }
