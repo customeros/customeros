@@ -1,0 +1,6 @@
+query GetDashboard_RevenueAtRisk($start: Time!, $end: Time!) {
+  dashboard_RevenueAtRisk(period: {start: $start, end: $end}) {
+    highConfidence
+    atRisk
+  }
+}

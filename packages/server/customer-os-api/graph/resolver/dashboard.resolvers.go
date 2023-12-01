@@ -159,7 +159,7 @@ func (r *queryResolver) DashboardARRBreakdown(ctx context.Context, period *model
 	newCustomersData, err := r.Services.QueryService.GetDashboardARRBreakdownData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for period %s - %s", startTime, endTime)
+		graphql.AddErrorf(ctx, "Failed to get the arr breakdown data for period %s - %s", startTime, endTime)
 		return nil, nil
 	}
 

@@ -20,6 +20,7 @@ type DashboardRepository interface {
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 	GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error)
+	GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -550,17 +551,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 			organizationId := v.Values[0].(string)
 			oldestServiceStartedAt := v.Values[1].(time.Time)
 			state := v.Values[2].(string)
-			var arr float64
-
-			switch val := v.Values[3].(type) {
-			case int64:
-				arr = float64(val)
-			case float64:
-				arr = val
-			default:
-				fmt.Errorf("unexpected type %T", val)
-				arr = 0
-			}
+			arr := getCorrectValueType(v.Values[3])
 
 			record := map[string]interface{}{
 				"organizationId":         organizationId,
@@ -574,4 +565,75 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 	}
 
 	return results, nil
+}
+
+func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardNewCustomersData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("startDate", startDate), log.Object("endDate", endDate))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
+					WHERE 
+						o.hide = false AND c.status = 'LIVE' AND op.internalType = 'RENEWAL'
+					
+					WITH COLLECT(DISTINCT { renewalLikelihood: op.renewalLikelihood, maxAmount: CASE WHEN c.renewalCycle = 'ANNUALLY' THEN op.maxAmount ELSE CASE WHEN c.renewalCycle = 'QUARTERLY' THEN 4 * op.maxAmount ELSE CASE WHEN c.renewalCycle = 'MONTHLY' THEN 12 * op.maxAmount ELSE 0 END END END }) AS contractDetails
+					
+					return 
+						REDUCE(sumHigh = 0, cd IN contractDetails | CASE WHEN cd.renewalLikelihood = 'HIGH' THEN sumHigh + cd.maxAmount ELSE sumHigh END ) AS high,
+						REDUCE(sumAtRisk = 0, cd IN contractDetails | CASE WHEN cd.renewalLikelihood <> 'HIGH' THEN sumAtRisk + cd.maxAmount ELSE sumAtRisk END ) AS atRisk
+				`, tenant, tenant, tenant),
+			map[string]any{
+				"tenant":    tenant,
+				"startDate": startDate,
+				"endDate":   endDate,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			high := getCorrectValueType(v.Values[0])
+			atRisk := getCorrectValueType(v.Values[1])
+
+			record := map[string]interface{}{
+				"high":   high,
+				"atRisk": atRisk,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+
+func getCorrectValueType(valueToExtract any) float64 {
+	var v float64
+
+	switch val := valueToExtract.(type) {
+	case int64:
+		v = float64(val)
+	case float64:
+		v = val
+	default:
+		fmt.Errorf("unexpected type %T", val)
+		v = 0
+	}
+
+	return v
 }
