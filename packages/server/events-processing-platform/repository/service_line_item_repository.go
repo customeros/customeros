@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
@@ -15,6 +16,7 @@ import (
 
 type ServiceLineItemRepository interface {
 	CreateForContract(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemCreateEvent) error
+	GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error)
 	Update(ctx context.Context, tenant, serviceLineItemId string, evt event.ServiceLineItemUpdateEvent) error
 	GetAllForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error)
 	Delete(ctx context.Context, tenant, serviceLineItemId string) error
@@ -177,4 +179,33 @@ func (r *serviceLineItemRepository) Close(ctx context.Context, tenant, serviceLi
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
 	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *serviceLineItemRepository) GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetServiceLineItemById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-(sli:ServiceLineItem {id:$id}) RETURN sli`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     serviceLineItemId,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }

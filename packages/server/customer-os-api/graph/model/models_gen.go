@@ -1883,10 +1883,11 @@ type WorkspaceInput struct {
 type ActionType string
 
 const (
-	ActionTypeCreated                  ActionType = "CREATED"
-	ActionTypeRenewalLikelihoodUpdated ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
-	ActionTypeRenewalForecastUpdated   ActionType = "RENEWAL_FORECAST_UPDATED"
-	ActionTypeContractStatusUpdated    ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeCreated                     ActionType = "CREATED"
+	ActionTypeRenewalLikelihoodUpdated    ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionTypeRenewalForecastUpdated      ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionTypeContractStatusUpdated       ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeServiceLineItemPriceUpdated ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
 )
 
 var AllActionType = []ActionType{
@@ -1894,11 +1895,12 @@ var AllActionType = []ActionType{
 	ActionTypeRenewalLikelihoodUpdated,
 	ActionTypeRenewalForecastUpdated,
 	ActionTypeContractStatusUpdated,
+	ActionTypeServiceLineItemPriceUpdated,
 }
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated:
 		return true
 	}
 	return false

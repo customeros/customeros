@@ -63,7 +63,16 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	}
 
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.ServiceLineItemRepository.Update(ctx, eventData.Tenant, serviceLineItemId, eventData)
+	serviceLineItemDbNode, err := h.repositories.ServiceLineItemRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	serviceLineItemEntity := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	//we will use this boolean below to check if the price has changed
+	priceChanged := serviceLineItemEntity.Price != eventData.Price
+
+	err = h.repositories.ServiceLineItemRepository.Update(ctx, eventData.Tenant, serviceLineItemId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating service line item %s: %s", serviceLineItemId, err.Error())
@@ -85,6 +94,9 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
 			return nil
 		}
+	}
+	if priceChanged {
+		//TODO logic comes here
 	}
 
 	return nil
