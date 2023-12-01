@@ -11,14 +11,23 @@ export const RenewalForecastCell = ({
   amount = null,
   potentialAmount = null,
 }: RenewalForecastCellProps) => {
+  const formattedAmount =
+    amount !== null && amount >= 0 ? formatCurrency(amount, 0) : 'Unknown';
+  const formattedPotentialAmount = formatCurrency(potentialAmount ?? 0, 0);
+
+  const showPotentialAmount =
+    amount !== null &&
+    potentialAmount !== null &&
+    formattedAmount !== formattedPotentialAmount;
+
   return (
     <Flex flexDir='column' justify='center'>
       <Text fontSize='sm' color={amount ? 'gray.700' : 'gray.500'}>
-        {amount !== null && amount >= 0 ? formatCurrency(amount) : 'Unknown'}
+        {formattedAmount}
       </Text>
-      {potentialAmount && potentialAmount !== amount && (
+      {showPotentialAmount && (
         <Text fontSize='sm' color='gray.500' textDecoration='line-through'>
-          {formatCurrency(potentialAmount)}
+          {formattedPotentialAmount}
         </Text>
       )}
     </Flex>
