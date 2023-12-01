@@ -506,7 +506,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 						   WHEN c.status = 'ENDED' THEN 'CHURNED'
 						   WHEN c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.renewalLikelihood = 'HIGH' THEN 'OK'
 						   ELSE 'AT_RISK' END) AS statuses,
-						 COLLECT(DISTINCT { id: c.id, serviceStartedAt: c.serviceStartedAt, status: c.status, renewalCycle: c.renewalCycle, maxAmount: CASE WHEN c.renewalCycle = 'ANNUALLY' THEN op.maxAmount ELSE CASE WHEN c.renewalCycle = 'QUARTERLY' THEN 4 * op.maxAmount ELSE CASE WHEN c.renewalCycle = 'MONTHLY' THEN 12 * op.maxAmount ELSE 0 END END END }) AS contractDetails
+						 COLLECT(DISTINCT { id: c.id, serviceStartedAt: c.serviceStartedAt, status: c.status, maxAmount: op.maxAmount }) AS contractDetails
 					WITH *, CASE
 								WHEN ALL(x IN statuses WHERE x = 'CHURNED') THEN 'CHURNED'
 								WHEN ALL(x IN statuses WHERE x IN ['OK', 'CHURNED']) THEN 'OK'
@@ -584,7 +584,7 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 					WHERE 
 						o.hide = false AND c.status = 'LIVE' AND op.internalType = 'RENEWAL'
 					
-					WITH COLLECT(DISTINCT { renewalLikelihood: op.renewalLikelihood, maxAmount: CASE WHEN c.renewalCycle = 'ANNUALLY' THEN op.maxAmount ELSE CASE WHEN c.renewalCycle = 'QUARTERLY' THEN 4 * op.maxAmount ELSE CASE WHEN c.renewalCycle = 'MONTHLY' THEN 12 * op.maxAmount ELSE 0 END END END }) AS contractDetails
+					WITH COLLECT(DISTINCT { renewalLikelihood: op.renewalLikelihood, maxAmount: op.maxAmount }) AS contractDetails
 					
 					return 
 						REDUCE(sumHigh = 0, cd IN contractDetails | CASE WHEN cd.renewalLikelihood = 'HIGH' THEN sumHigh + cd.maxAmount ELSE sumHigh END ) AS high,

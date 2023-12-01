@@ -196,136 +196,48 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_HIDDEN_Organization_With_Co
 	require.Equal(t, float64(0), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
 }
 
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Annual_Renewal_Contract_High_Renewal_Should_Be_HIGH(t *testing.T) {
+func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Renewal_Contract_High_Should_Be_HIGH(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleAnnualRenewal, entity.OpportunityRenewalLikelihoodHigh)
+	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodHigh)
 
 	assertFor1Organization(ctx, t, driver, float64(10), float64(0))
 }
 
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Monthly_Renewal_Contract_High_Renewal_Should_Be_HIGH(t *testing.T) {
+func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Renewal_Contract_Medium_Should_Be_AT_RISK(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleMonthlyRenewal, entity.OpportunityRenewalLikelihoodHigh)
-
-	assertFor1Organization(ctx, t, driver, float64(120), float64(0))
-}
-
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Quarterly_Renewal_Contract_High_Renewal_Should_Be_HIGH(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleQuarterlyRenewal, entity.OpportunityRenewalLikelihoodHigh)
-
-	assertFor1Organization(ctx, t, driver, float64(40), float64(0))
-}
-
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Annual_Renewal_Contract_Medium_Renewal_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleAnnualRenewal, entity.OpportunityRenewalLikelihoodMedium)
+	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodMedium)
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
 }
 
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Monthly_Renewal_Contract_Medium_Renewal_Should_Be_AT_RISK(t *testing.T) {
+func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Renewal_Contract_Low_Should_Be_AT_RISK(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleMonthlyRenewal, entity.OpportunityRenewalLikelihoodMedium)
-
-	assertFor1Organization(ctx, t, driver, float64(0), float64(120))
-}
-
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Quarterly_Renewal_Contract_Medium_Renewal_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleQuarterlyRenewal, entity.OpportunityRenewalLikelihoodMedium)
-
-	assertFor1Organization(ctx, t, driver, float64(0), float64(40))
-}
-
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Annual_Renewal_Contract_Low_Renewal_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleAnnualRenewal, entity.OpportunityRenewalLikelihoodLow)
+	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodLow)
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
 }
 
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Monthly_Renewal_Contract_Low_Renewal_Should_Be_AT_RISK(t *testing.T) {
+func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Contract_Zero_Should_Be_AT_RISK(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleMonthlyRenewal, entity.OpportunityRenewalLikelihoodLow)
-
-	assertFor1Organization(ctx, t, driver, float64(0), float64(120))
-}
-
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Quarterly_Renewal_Contract_Low_Renewal_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleQuarterlyRenewal, entity.OpportunityRenewalLikelihoodLow)
-
-	assertFor1Organization(ctx, t, driver, float64(0), float64(40))
-}
-
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Annual_Renewal_Contract_Zero_Renewal_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleAnnualRenewal, entity.OpportunityRenewalLikelihoodZero)
+	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodZero)
 
 	assertFor1Organization(ctx, t, driver, float64(0), float64(10))
-}
-
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Monthly_Renewal_Contract_Zero_Renewal_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleMonthlyRenewal, entity.OpportunityRenewalLikelihoodZero)
-
-	assertFor1Organization(ctx, t, driver, float64(0), float64(120))
-}
-
-func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_Live_Quarterly_Renewal_Contract_Zero_Renewal_Should_Be_AT_RISK(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleQuarterlyRenewal, entity.OpportunityRenewalLikelihoodZero)
-
-	assertFor1Organization(ctx, t, driver, float64(0), float64(40))
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_High_1_At_Risk(t *testing.T) {
@@ -336,8 +248,8 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_High_1_
 
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 
-	insertContractWithOpportunity(ctx, driver, orgId, entity.ContractRenewalCycleAnnualRenewal, entity.OpportunityRenewalLikelihoodHigh)
-	insertContractWithOpportunity(ctx, driver, orgId, entity.ContractRenewalCycleQuarterlyRenewal, entity.OpportunityRenewalLikelihoodMedium)
+	insertContractWithOpportunity(ctx, driver, orgId, entity.OpportunityRenewalLikelihoodHigh)
+	insertContractWithOpportunity(ctx, driver, orgId, entity.OpportunityRenewalLikelihoodMedium)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
@@ -358,7 +270,7 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_One_Organization_With_1_High_1_
 	require.Nil(t, err)
 
 	require.Equal(t, float64(10), dashboardReport.Dashboard_RevenueAtRisk.HighConfidence)
-	require.Equal(t, float64(40), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
+	require.Equal(t, float64(10), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
 }
 
 func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_At_Risk(t *testing.T) {
@@ -367,8 +279,8 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleAnnualRenewal, entity.OpportunityRenewalLikelihoodHigh)
-	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.ContractRenewalCycleQuarterlyRenewal, entity.OpportunityRenewalLikelihoodMedium)
+	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodHigh)
+	insert1OrganizationWith1ContractWithOpportunity(ctx, driver, entity.OpportunityRenewalLikelihoodMedium)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
@@ -389,21 +301,20 @@ func TestQueryResolver_Dashboard_Revenue_At_Risk_2_Organizations_With_1_High_1_A
 	require.Nil(t, err)
 
 	require.Equal(t, float64(10), dashboardReport.Dashboard_RevenueAtRisk.HighConfidence)
-	require.Equal(t, float64(40), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
+	require.Equal(t, float64(10), dashboardReport.Dashboard_RevenueAtRisk.AtRisk)
 }
 
-func insert1OrganizationWith1ContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, renewalCycle entity.ContractRenewalCycle, renewalLikelihood entity.OpportunityRenewalLikelihood) {
+func insert1OrganizationWith1ContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, renewalLikelihood entity.OpportunityRenewalLikelihood) {
 	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 
-	insertContractWithOpportunity(ctx, driver, orgId, renewalCycle, renewalLikelihood)
+	insertContractWithOpportunity(ctx, driver, orgId, renewalLikelihood)
 }
 
-func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, renewalCycle entity.ContractRenewalCycle, renewalLikelihood entity.OpportunityRenewalLikelihood) {
+func insertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, orgId string, renewalLikelihood entity.OpportunityRenewalLikelihood) {
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt:     &contract1ServiceStartedAt,
-		ContractStatus:       entity.ContractStatusLive,
-		ContractRenewalCycle: renewalCycle,
+		ServiceStartedAt: &contract1ServiceStartedAt,
+		ContractStatus:   entity.ContractStatusLive,
 	})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:              "opportunity 1",
