@@ -154,8 +154,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renew
 
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:              "oppo 1",
@@ -202,8 +203,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renew
 
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:              "oppo 1",
@@ -250,8 +252,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renew
 
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:              "oppo 1",
@@ -298,8 +301,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_Renew
 
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:              "oppo 1",
@@ -346,9 +350,10 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Ended_Rene
 
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contractId := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		EndedAt:          &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		EndedAt:              &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunityId := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contractId, entity.OpportunityEntity{
 		Name:              "oppo 1",
@@ -396,8 +401,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -412,8 +418,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -461,8 +468,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -477,8 +485,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -525,8 +534,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -541,8 +551,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -589,8 +600,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -605,8 +617,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -653,8 +666,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -669,8 +683,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Live_Renew
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -717,8 +732,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_1_Clo
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -733,9 +749,10 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_1_Clo
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		EndedAt:          &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		EndedAt:              &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -782,8 +799,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_1_Clo
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -798,9 +816,10 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Live_1_Clo
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		EndedAt:          &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		EndedAt:              &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -847,9 +866,10 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Ren
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		EndedAt:          &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		EndedAt:              &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -864,9 +884,10 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_2_Closed_Ren
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		EndedAt:          &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		EndedAt:              &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -913,9 +934,10 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Closed_1_L
 	//contract 1
 	contract1ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		EndedAt:          &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		EndedAt:              &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -930,8 +952,9 @@ func TestQueryResolver_Dashboard_Customer_Map_One_Organization_With_1_Closed_1_L
 	//contract 2
 	contract2ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -978,9 +1001,10 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 
 	contract1ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org1Id, entity.ContractEntity{
-		ServiceStartedAt: &contract1ServiceStartedAt,
-		EndedAt:          &contract1ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusEnded,
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		EndedAt:              &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 1",
@@ -996,8 +1020,9 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 	org2Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
 	contract2ServiceStartedAt := time.Date(2023, 8, 1, 0, 0, 0, 0, time.UTC)
 	contract2Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org2Id, entity.ContractEntity{
-		ServiceStartedAt: &contract2ServiceStartedAt,
-		ContractStatus:   entity.ContractStatusLive,
+		ServiceStartedAt:     &contract2ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
 	})
 	opportunity2Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract2Id, entity.OpportunityEntity{
 		Name:              "opp 1 - ctr 2",
@@ -1038,4 +1063,313 @@ func TestQueryResolver_Dashboard_Customer_Map_Two_Organizations_With_1_Contract_
 	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
 	require.Equal(t, model.DashboardCustomerMapStateChurned, org1.State)
 	require.Equal(t, float64(10), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_MMR_1_Live_Contract_Yearly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//org 1
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	contract1ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
+	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org1Id, entity.ContractEntity{
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
+	})
+	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
+		Name:              "opp 1 - ctr 1",
+		CreatedAt:         contract1ServiceStartedAt,
+		UpdatedAt:         contract1ServiceStartedAt,
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contract1Id, opportunity1Id)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+
+	require.Equal(t, org1Id, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateOk, org1.State)
+	require.Equal(t, float64(10), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_MMR_1_Live_Contract_Monthly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//org 1
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	contract1ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
+	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org1Id, entity.ContractEntity{
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleMonthlyRenewal,
+	})
+	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
+		Name:              "opp 1 - ctr 1",
+		CreatedAt:         contract1ServiceStartedAt,
+		UpdatedAt:         contract1ServiceStartedAt,
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contract1Id, opportunity1Id)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+
+	require.Equal(t, org1Id, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateOk, org1.State)
+	require.Equal(t, float64(120), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_MMR_1_Live_Contract_Quarterly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//org 1
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	contract1ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
+	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org1Id, entity.ContractEntity{
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusLive,
+		ContractRenewalCycle: entity.ContractRenewalCycleQuarterlyRenewal,
+	})
+	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
+		Name:              "opp 1 - ctr 1",
+		CreatedAt:         contract1ServiceStartedAt,
+		UpdatedAt:         contract1ServiceStartedAt,
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contract1Id, opportunity1Id)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+
+	require.Equal(t, org1Id, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateOk, org1.State)
+	require.Equal(t, float64(40), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_MMR_1_Closed_Contract_Yearly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//org 1
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	contract1ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
+	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org1Id, entity.ContractEntity{
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		EndedAt:              &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleAnnualRenewal,
+	})
+	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
+		Name:              "opp 1 - ctr 1",
+		CreatedAt:         contract1ServiceStartedAt,
+		UpdatedAt:         contract1ServiceStartedAt,
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contract1Id, opportunity1Id)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+
+	require.Equal(t, org1Id, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateChurned, org1.State)
+	require.Equal(t, float64(10), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_MMR_1_Closed_Contract_Monthly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//org 1
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	contract1ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
+	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org1Id, entity.ContractEntity{
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		EndedAt:              &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleMonthlyRenewal,
+	})
+	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
+		Name:              "opp 1 - ctr 1",
+		CreatedAt:         contract1ServiceStartedAt,
+		UpdatedAt:         contract1ServiceStartedAt,
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contract1Id, opportunity1Id)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+
+	require.Equal(t, org1Id, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateChurned, org1.State)
+	require.Equal(t, float64(120), org1.Arr)
+}
+
+func TestQueryResolver_Dashboard_Customer_MMR_1_Closed_Contract_Quarterly(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	//org 1
+	org1Id := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	contract1ServiceStartedAt := time.Date(2024, 8, 1, 0, 0, 0, 0, time.UTC)
+	contract1Id := neo4jt.CreateContractForOrganization(ctx, driver, tenantName, org1Id, entity.ContractEntity{
+		ServiceStartedAt:     &contract1ServiceStartedAt,
+		EndedAt:              &contract1ServiceStartedAt,
+		ContractStatus:       entity.ContractStatusEnded,
+		ContractRenewalCycle: entity.ContractRenewalCycleQuarterlyRenewal,
+	})
+	opportunity1Id := neo4jt.CreateOpportunityForContract(ctx, driver, tenantName, contract1Id, entity.OpportunityEntity{
+		Name:              "opp 1 - ctr 1",
+		CreatedAt:         contract1ServiceStartedAt,
+		UpdatedAt:         contract1ServiceStartedAt,
+		MaxAmount:         10,
+		InternalType:      entity.InternalTypeRenewal,
+		RenewalLikelihood: entity.OpportunityRenewalLikelihoodHigh,
+	})
+	neo4jt.ActiveRenewalOpportunityForContract(ctx, driver, tenantName, contract1Id, opportunity1Id)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Tenant": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Contract": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Opportunity": 1})
+
+	rawResponse := callGraphQL(t, "dashboard_view/dashboard_customer_map",
+		map[string]interface{}{})
+
+	var dashboardReport struct {
+		Dashboard_CustomerMap []model.DashboardCustomerMap
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &dashboardReport)
+	require.Nil(t, err)
+
+	require.Equal(t, 1, len(dashboardReport.Dashboard_CustomerMap))
+
+	org1 := dashboardReport.Dashboard_CustomerMap[0]
+
+	require.Equal(t, org1Id, org1.Organization.ID)
+	require.Equal(t, contract1ServiceStartedAt, org1.ContractSignedDate)
+	require.Equal(t, model.DashboardCustomerMapStateChurned, org1.State)
+	require.Equal(t, float64(40), org1.Arr)
 }
