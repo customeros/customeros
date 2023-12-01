@@ -10,4 +10,5 @@ type GlobalCache {
     gCliCache: [GCliItem!]!
     minARRForecastValue: Float!
     maxARRForecastValue: Float!
+    contractsExist: Boolean!
 }

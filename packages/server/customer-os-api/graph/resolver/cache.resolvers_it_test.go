@@ -143,3 +143,68 @@ func TestQueryResolver_GCliCache(t *testing.T) {
 	//require.Equal(t, "ORGANIZATION", gcliCacheResponse.Global_Cache.GCliCache[8].Type.String())
 	//require.Equal(t, "ORGANIZATION", gcliCacheResponse.Global_Cache.GCliCache[9].Type.String())
 }
+
+func TestQueryResolver_GCliCache_HasContracts_False(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+		FirstName: "a",
+		LastName:  "b",
+	})
+
+	neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Contract"))
+
+	rawResponse, err := c.RawPost(getQuery("cache/global_Cache"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var gcliCacheResponse struct {
+		Global_Cache struct {
+			ContractsExist bool `json:"contractsExist"`
+		}
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &gcliCacheResponse)
+	require.Nil(t, err)
+	require.NotNil(t, gcliCacheResponse)
+
+	require.Equal(t, false, gcliCacheResponse.Global_Cache.ContractsExist)
+}
+
+func TestQueryResolver_GCliCache_HasContracts_True(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+		FirstName: "a",
+		LastName:  "b",
+	})
+
+	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{})
+	neo4jt.CreateContractForOrganization(ctx, driver, tenantName, orgId, entity.ContractEntity{})
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contract"))
+
+	rawResponse, err := c.RawPost(getQuery("cache/global_Cache"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var gcliCacheResponse struct {
+		Global_Cache struct {
+			ContractsExist bool `json:"contractsExist"`
+		}
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &gcliCacheResponse)
+	require.Nil(t, err)
+	require.NotNil(t, gcliCacheResponse)
+
+	require.Equal(t, true, gcliCacheResponse.Global_Cache.ContractsExist)
+}

@@ -802,6 +802,7 @@ type GlobalCache struct {
 	GCliCache            []*GCliItem `json:"gCliCache"`
 	MinARRForecastValue  float64     `json:"minARRForecastValue"`
 	MaxARRForecastValue  float64     `json:"maxARRForecastValue"`
+	ContractsExist       bool        `json:"contractsExist"`
 }
 
 type InteractionEvent struct {
