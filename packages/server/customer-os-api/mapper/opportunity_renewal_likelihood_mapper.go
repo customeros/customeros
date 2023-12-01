@@ -23,6 +23,17 @@ func MapOpportunityRenewalLikelihoodToModel(input entity.OpportunityRenewalLikel
 	return opportunityRenewalLikelihoodByValue[input]
 }
 
+func MapOpportunityRenewalLikelihoodFromString(input *string) string {
+	if input == nil {
+		return ""
+	}
+	if v, exists := opportunityRenewalLikelihoodByModel[model.OpportunityRenewalLikelihood(*input)]; exists {
+		return string(v)
+	} else {
+		return ""
+	}
+}
+
 func MapOpportunityRenewalLikelihoodToModelPtr(input string) *model.OpportunityRenewalLikelihood {
 	switch input {
 	case string(entity.OpportunityRenewalLikelihoodHigh):
