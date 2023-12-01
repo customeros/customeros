@@ -15,7 +15,8 @@ import (
 
 var (
 	relationshipsWithOrganization           = []string{"LOGGED", "REPORTED_BY", "SENT_TO", "SENT_BY", "ACTION_ON"}
-	relationshipsWithOrganizationProperties = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY", "ACTION_ON"}
+	relationshipsWithOrganizationProperties = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
+	relationshipsWithOrganizationContracts  = []string{"ACTION_ON"}
 	relationshipsWithContact                = []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
 	relationshipsWithContactProperties      = []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"}
 )
@@ -175,6 +176,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		"size":                          size,
 		"relationshipsWithOrganization": relationshipsWithOrganization,
 		"relationshipsWithOrganizationProperties": relationshipsWithOrganizationProperties,
+		"relationshipsWithOrganizationContracts":  relationshipsWithOrganizationContracts,
 		"relationshipsWithContact":                relationshipsWithContact,
 		"relationshipsWithContactProperties":      relationshipsWithContactProperties,
 		"skipStatus":                              "deleted",
@@ -215,17 +217,26 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
-		// get all timeline events for the organization emails, phone numbers, job roles or contracts
-		" WITH o MATCH (o)-[:HAS|ROLE_IN|HAS_CONTRACT]-(e:Email|PhoneNumber|JobRole|Contract), "+
+		// get all timeline events for the organization emails, phone numbers and job roles
+		" WITH o MATCH (o)-[:HAS|ROLE_IN]-(e:Email|PhoneNumber|JobRole), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationProperties)"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
+		" UNION "+
+		// get all timeline events for the organization contracts
+		" WITH o MATCH (o)-[:HAS_CONTRACT]-(n:Contract), "+
+		" p = (n)--(a:TimelineEvent) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationContracts)"+
+		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
+		" AND (a.hide IS NULL OR a.hide = false) "+
+		" %s "+
+		" return a as timelineEvent "+
 		" } "+
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
-		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
+		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
@@ -262,6 +273,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		"organizationId":                organizationId,
 		"relationshipsWithOrganization": relationshipsWithOrganization,
 		"relationshipsWithOrganizationProperties": relationshipsWithOrganizationProperties,
+		"relationshipsWithOrganizationContracts":  relationshipsWithOrganizationContracts,
 		"relationshipsWithContact":                relationshipsWithContact,
 		"relationshipsWithContactProperties":      relationshipsWithContactProperties,
 		"skipStatus":                              "deleted",
@@ -299,16 +311,24 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+
-		// get all timeline events for the organization emails, phone numbers job roles and contract
-		" WITH o MATCH (o)-[:HAS|ROLE_IN|HAS_CONTRACT]-(e:Email|PhoneNumber|JobRole|Contract), "+
+		// get all timeline events for the organization emails, phone numbers and job roles
+		" WITH o MATCH (o)-[:HAS|ROLE_IN]-(e:Email|PhoneNumber|JobRole), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationProperties)"+
 		" AND (a.hide IS NULL OR a.hide = false) "+
 		" %s "+
 		" return a as timelineEvent "+
+		" UNION "+
+		// get all timeline events for the organization contracts
+		" WITH o MATCH (o)-[:HAS_CONTRACT]-(n:Contract), "+
+		" p = (n)--(a:TimelineEvent) "+
+		" WHERE all(r IN relationships(p) WHERE type(r) in $relationshipsWithOrganizationContracts)"+
+		" AND (a.hide IS NULL OR a.hide = false) "+
+		" %s "+
+		" return a as timelineEvent "+
 		" } "+
 		" RETURN count(distinct timelineEvent)",
-		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
+		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
