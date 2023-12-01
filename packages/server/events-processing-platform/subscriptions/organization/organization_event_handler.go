@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"

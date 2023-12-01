@@ -2,10 +2,12 @@ package anthropic
 
 import (
 	"context"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 )
 
 func NewModel(apiKey, apiPath string) *AnthropicModel {
-	cfg := &AiModelConfigAnthropic{
+	cfg := &config.AiModelConfigAnthropic{
 		ApiKey:  apiKey,
 		ApiPath: apiPath,
 	}

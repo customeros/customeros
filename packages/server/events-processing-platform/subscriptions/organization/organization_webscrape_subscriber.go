@@ -4,7 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
+	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
+	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
@@ -29,6 +30,17 @@ type OrganizationWebscrapeSubscriber struct {
 }
 
 func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *command_handler.CommandHandlers, repositories *repository.Repositories, caches caches.Cache) *OrganizationWebscrapeSubscriber {
+	aiCfg := aiConfig.Config{
+		OpenAi: aiConfig.AiModelConfigOpenAi{
+			ApiKey:       cfg.Services.OpenAi.ApiKey,
+			Organization: cfg.Services.OpenAi.Organization,
+			Model:        "gpt-3.5-turbo-1106", // 1106 has an extra parameter available that locks response as JSON)
+		},
+		Anthropic: aiConfig.AiModelConfigAnthropic{
+			ApiPath: cfg.Services.Anthropic.ApiPath,
+			ApiKey:  cfg.Services.Anthropic.ApiKey,
+		},
+	}
 	return &OrganizationWebscrapeSubscriber{
 		log: log,
 		db:  db,
@@ -39,8 +51,8 @@ func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg 
 			organizationCommands: orgCommands,
 			repositories:         repositories,
 			caches:               caches,
-			domainScraper:        NewDomainScraper(log, cfg, repositories, ai.NewAiModel(ai.OpenAiModelType, cfg.Services.OpenAi.ApiKey, cfg.Services.OpenAi.ApiPath, cfg.Services.OpenAi.Organization, "gpt-3.5-turbo-1106", log)), // 1106 has an extra parameter available that locks response as JSON
-			aiModel:              ai.NewAiModel(ai.AnthropicModelType, cfg.Services.Anthropic.ApiKey, cfg.Services.Anthropic.ApiPath, "empty org", "no model type", log),
+			domainScraper:        NewDomainScraper(log, cfg, repositories, ai.NewAiModel(ai.OpenAiModelType, aiCfg)),
+			aiModel:              ai.NewAiModel(ai.AnthropicModelType, aiCfg),
 		},
 	}
 }
