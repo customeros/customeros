@@ -857,6 +857,8 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
+	nextRenewal := utils.Now().Add(time.Duration(10) * time.Hour)
+
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org",
 		RenewalLikelihood: entity.RenewalLikelihood{
@@ -878,6 +880,13 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 			Frequency:         "MONTHLY",
 			RenewalCycle:      "ANNUALLY",
 			RenewalCycleStart: utils.TimePtr(utils.Now()),
+		},
+		RenewalSummary: entity.RenewalSummary{
+			ArrForecast:            utils.ToPtr[float64](500),
+			MaxArrForecast:         utils.ToPtr[float64](1000),
+			RenewalLikelihood:      "HIGH",
+			RenewalLikelihoodOrder: utils.ToPtr(int64(1)),
+			NextRenewalAt:          utils.TimePtr(nextRenewal),
 		},
 	})
 
@@ -909,6 +918,10 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	require.Equal(t, model.RenewalCycleMonthly, *organization.AccountDetails.BillingDetails.Frequency)
 	require.Equal(t, model.RenewalCycleAnnually, *organization.AccountDetails.BillingDetails.RenewalCycle)
 	require.NotNil(t, organization.AccountDetails.BillingDetails.RenewalCycleStart)
+	require.Equal(t, 500.0, *organization.AccountDetails.RenewalSummary.ArrForecast)
+	require.Equal(t, 1000.0, *organization.AccountDetails.RenewalSummary.MaxArrForecast)
+	require.Equal(t, model.OpportunityRenewalLikelihoodHighRenewal, *organization.AccountDetails.RenewalSummary.RenewalLikelihood)
+	require.Equal(t, nextRenewal, *organization.AccountDetails.RenewalSummary.NextRenewalDate)
 }
 
 func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {

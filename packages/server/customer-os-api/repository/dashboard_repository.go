@@ -19,6 +19,7 @@ import (
 type DashboardRepository interface {
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
+	GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error)
 }
 
 type dashboardRepository struct {
@@ -143,6 +144,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalLikelihood", renewalLikelihoodValues, utils.IN, false))
 			} else if filter.Filter.Property == "RENEWAL_CYCLE_NEXT" && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
+			} else if filter.Filter.Property == "RENEWAL_DATE" && filter.Filter.Value.Time != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedNextRenewalAt", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == "FORECAST_AMOUNT" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
@@ -293,9 +296,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		if sort != nil && sort.By == "RENEWAL_LIKELIHOOD" {
 			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.renewalLikelihood <> \"\" and o.renewalLikelihood IS NOT NULL THEN o.renewalLikelihood ELSE '9999-ZZZZZ' END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 			} else {
-				query += ", CASE WHEN o.renewalLikelihood <> \"\" and o.renewalLikelihood IS NOT NULL THEN o.renewalLikelihood ELSE '0-AAAAAAAA' END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 			}
 			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 		}
@@ -306,6 +309,14 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
 			}
 			aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
+		}
+		if sort != nil && sort.By == "RENEWAL_DATE" {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
+			}
+			aliases += ", RENEWAL_DATE_FOR_SORTING "
 		}
 		if sort != nil && sort.By == "FORECAST_AMOUNT" {
 			if sort.Direction == model.SortingDirectionAsc {
@@ -323,9 +334,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", FORECAST_ARR_FOR_SORTING "
 		}
-
-		//RENEWAL_CYCLE_NEXT
-
 		if sort != nil && sort.By == "ORGANIZATION" {
 			query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
 			query += aliases + ", parent "
@@ -349,6 +357,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_CYCLE_NEXT" {
 				query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == "RENEWAL_DATE" {
+				query += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "LAST_TOUCHPOINT" {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
@@ -430,8 +440,9 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 						 END AS endOfMonth
 
 					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, currentDate, datetime({year: endOfMonth.year, month: endOfMonth.month, day: endOfMonth.day, hour: 23, minute: 59, second: 59, nanosecond:999999999}) as endOfMonth
-					OPTIONAL MATCH (i:Contract_%s)<-[:HAS_CONTRACT]-(o:Organization_%s)
+					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(i:Contract_%s)
 					WHERE 
+					  o.hide = false AND
 					  i.serviceStartedAt.year = year AND 
 					  i.serviceStartedAt.month = month AND 
 					  (i.endedAt IS NULL OR i.endedAt > endOfMonth)
@@ -442,6 +453,7 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 					RETURN year, month, COUNT(oldest) AS totalContracts
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
+				"tenant":    tenant,
 				"startDate": startDate,
 				"endDate":   endDate,
 			})
@@ -465,6 +477,96 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 				"year":  year,
 				"month": month,
 				"count": count,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+
+func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, tenant string) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardCustomerMapData")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`
+					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
+					WHERE o.hide = false AND c.serviceStartedAt IS NOT NULL and op.maxAmount IS NOT NULL
+					WITH o,  
+						 COLLECT(DISTINCT CASE
+						   WHEN c.status = 'ENDED' THEN 'CHURNED'
+						   WHEN c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.renewalLikelihood = 'HIGH' THEN 'OK'
+						   ELSE 'AT_RISK' END) AS statuses,
+						 COLLECT(DISTINCT { id: c.id, serviceStartedAt: c.serviceStartedAt, status: c.status, renewalCycle: c.renewalCycle, maxAmount: CASE WHEN c.renewalCycle = 'ANNUALLY' THEN op.maxAmount ELSE CASE WHEN c.renewalCycle = 'QUARTERLY' THEN 4 * op.maxAmount ELSE CASE WHEN c.renewalCycle = 'MONTHLY' THEN 12 * op.maxAmount ELSE 0 END END END }) AS contractDetails
+					WITH *, CASE
+								WHEN ALL(x IN statuses WHERE x = 'CHURNED') THEN 'CHURNED'
+								WHEN ALL(x IN statuses WHERE x IN ['OK', 'CHURNED']) THEN 'OK'
+								ELSE 'AT_RISK'
+							END AS status
+
+					WITH *, REDUCE(s = null, cd IN contractDetails | 
+							 CASE WHEN s IS NULL OR cd.serviceStartedAt < s THEN cd.serviceStartedAt ELSE s END
+						 ) AS oldestServiceStartedAt
+
+					WITH *, REDUCE(s = null, cd IN contractDetails | 
+							 CASE WHEN s IS NULL OR cd.serviceStartedAt > s THEN cd.serviceStartedAt ELSE s END
+						 ) AS latestServiceStartedAt
+
+					WITH *, REDUCE(s = 0, cd IN contractDetails | 
+							 CASE WHEN cd.serviceStartedAt = latestServiceStartedAt THEN s + cd.maxAmount ELSE s END 
+						 ) AS latestContractLiveArr
+					
+					WITH *, REDUCE(sum = 0, cd IN contractDetails | CASE WHEN cd.status <> 'ENDED' THEN sum + cd.maxAmount ELSE sum END ) AS arr
+					
+					RETURN o.id,
+						 oldestServiceStartedAt,
+						 status,
+						 CASE WHEN status = 'CHURNED' THEN latestContractLiveArr ELSE arr END as arr
+					ORDER BY oldestServiceStartedAt ASC
+				`, tenant, tenant, tenant),
+			map[string]any{
+				"tenant": tenant,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if dbRecords != nil {
+		for _, v := range dbRecords.([]*neo4j.Record) {
+			organizationId := v.Values[0].(string)
+			oldestServiceStartedAt := v.Values[1].(time.Time)
+			state := v.Values[2].(string)
+			var arr float64
+
+			switch val := v.Values[3].(type) {
+			case int64:
+				arr = float64(val)
+			case float64:
+				arr = val
+			default:
+				fmt.Errorf("unexpected type %T", val)
+				arr = 0
+			}
+
+			record := map[string]interface{}{
+				"organizationId":         organizationId,
+				"oldestServiceStartedAt": oldestServiceStartedAt,
+				"state":                  state,
+				"arr":                    arr,
 			}
 
 			results = append(results, record)

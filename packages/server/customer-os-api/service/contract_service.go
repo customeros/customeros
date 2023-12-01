@@ -25,6 +25,7 @@ type ContractService interface {
 	Update(ctx context.Context, contract *entity.ContractEntity) error
 	GetById(ctx context.Context, id string) (*entity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*entity.ContractEntities, error)
+	ContractsExistForTenant(ctx context.Context) (bool, error)
 }
 type contractService struct {
 	log          logger.Logger
@@ -116,6 +117,8 @@ func (s *contractService) Update(ctx context.Context, contract *entity.ContractE
 	switch contract.ContractRenewalCycle {
 	case entity.ContractRenewalCycleMonthlyRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+	case entity.ContractRenewalCycleQuarterlyRenewal:
+		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
 	case entity.ContractRenewalCycleAnnualRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
@@ -154,6 +157,8 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 	switch contractDetails.ContractEntity.ContractRenewalCycle {
 	case entity.ContractRenewalCycleMonthlyRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
+	case entity.ContractRenewalCycleQuarterlyRenewal:
+		createContractRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
 	case entity.ContractRenewalCycleAnnualRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
@@ -213,6 +218,17 @@ func (s *contractService) GetContractsForOrganizations(ctx context.Context, orga
 		contractEntities = append(contractEntities, *contractEntity)
 	}
 	return &contractEntities, nil
+}
+
+func (s *contractService) ContractsExistForTenant(ctx context.Context) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.ContractsExistForTenant")
+	defer span.Finish()
+
+	contractsExistForTenant, err := s.repositories.ContractRepository.ContractsExistForTenant(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		return false, err
+	}
+	return contractsExistForTenant, nil
 }
 
 func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.ContractEntity {

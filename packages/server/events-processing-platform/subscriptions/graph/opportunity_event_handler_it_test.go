@@ -401,14 +401,21 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	for _, value := range eventsMap {
 		eventList = value
 	}
-	require.Equal(t, 1, len(eventList))
+	require.Equal(t, 2, len(eventList))
 
 	generatedEvent1 := eventList[0]
-	require.Equal(t, organizationEvents.OrganizationRefreshArrV1, generatedEvent1.EventType)
-	var eventData1 organizationEvents.OrganizationRefreshArrEvent
+	require.Equal(t, organizationEvents.OrganizationRefreshRenewalSummaryV1, generatedEvent1.EventType)
+	var eventData1 organizationEvents.OrganizationRefreshRenewalSummaryEvent
 	err = generatedEvent1.GetJsonData(&eventData1)
 	require.Nil(t, err)
 	require.Equal(t, tenantName, eventData1.Tenant)
+
+	generatedEvent2 := eventList[1]
+	require.Equal(t, organizationEvents.OrganizationRefreshArrV1, generatedEvent2.EventType)
+	var eventData2 organizationEvents.OrganizationRefreshArrEvent
+	err = generatedEvent1.GetJsonData(&eventData2)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData2.Tenant)
 }
 
 func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNotUpdatePreviousUpdatedByUser(t *testing.T) {

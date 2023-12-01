@@ -7,6 +7,7 @@ const (
 	USER         EntityType = "USER"
 	ORGANIZATION EntityType = "ORGANIZATION"
 	MEETING      EntityType = "MEETING"
+	CONTRACT     EntityType = "CONTRACT"
 )
 
 func (entityType EntityType) String() string {
@@ -23,6 +24,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabel_Organization
 	case MEETING:
 		return NodeLabel_Meeting
+	case CONTRACT:
+		return NodeLabel_Contract
 	}
 	return "Unknown"
 }

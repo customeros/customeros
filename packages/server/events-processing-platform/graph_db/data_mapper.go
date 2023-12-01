@@ -51,8 +51,6 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 			Comment:         utils.GetStringPropOrNil(props, "renewalForecastComment"),
 			UpdatedBy:       utils.GetStringPropOrEmpty(props, "renewalForecastUpdatedBy"),
 			UpdatedAt:       utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
-			Arr:             utils.GetFloatPropOrNil(props, "renewalForecastArr"),
-			MaxArr:          utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
 		},
 		BillingDetails: entity.BillingDetails{
 			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
@@ -60,6 +58,13 @@ func MapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity 
 			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),
 			RenewalCycleStart: utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleStart"),
 			RenewalCycleNext:  utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleNext"),
+		},
+		RenewalSummary: entity.RenewalSummary{
+			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
+			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
+			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, "derivedRenewalLikelihood"),
+			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
+			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
 		},
 	}
 	return &output

@@ -59,6 +59,7 @@ input ServiceLineItemCloseInput {
 enum BilledType {
     NONE
     MONTHLY
+    QUARTERLY
     ANNUALLY
     ONCE
     USAGE

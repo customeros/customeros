@@ -84,5 +84,14 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	response.MinARRForecastValue = minARRForecastValue
 	response.MaxARRForecastValue = maxARRForecastValue
 
+	contractsExistForTenant, err := r.Services.ContractService.ContractsExistForTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed GlobalCache - contracts exist for tenant")
+		return nil, nil
+	}
+
+	response.ContractsExist = contractsExistForTenant
+
 	return response, nil
 }

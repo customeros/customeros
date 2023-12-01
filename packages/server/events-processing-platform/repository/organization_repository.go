@@ -35,6 +35,7 @@ type OrganizationRepository interface {
 	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
 	GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error)
 	UpdateArr(ctx context.Context, tenant, organizationId string) error
+	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
 	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
 }
 
@@ -626,6 +627,30 @@ func (r *organizationRepository) UpdateArr(ctx context.Context, tenant, organiza
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	return r.executeQuery(ctx, cypher, params)
+}
+
+func (r *organizationRepository) UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateRenewalSummary")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.Object("likelihood", likelihood), log.Object("likelihoodOrder", likelihoodOrder), log.Object("nextRenewalDate", nextRenewalDate))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				SET org.derivedRenewalLikelihood = $derivedRenewalLikelihood,
+					org.derivedRenewalLikelihoodOrder = $derivedRenewalLikelihoodOrder,
+					org.derivedNextRenewalAt = $derivedNextRenewalAt,
+					org.updatedAt = $now`
+	params := map[string]any{
+		"tenant":                        tenant,
+		"organizationId":                organizationId,
+		"derivedRenewalLikelihood":      likelihood,
+		"derivedRenewalLikelihoodOrder": likelihoodOrder,
+		"derivedNextRenewalAt":          utils.TimePtrFirstNonNilNillableAsAny(nextRenewalDate),
+		"now":                           utils.Now(),
 	}
 	span.LogFields(log.String("query", cypher), log.Object("params", params))
 
