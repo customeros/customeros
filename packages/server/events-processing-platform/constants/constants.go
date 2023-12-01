@@ -33,6 +33,11 @@ const (
 	NodeLabel_Opportunity      = "Opportunity"
 	NodeLabel_Contract         = "Contract"
 
+	RenewalLikelihood_Order_High   = 40
+	RenewalLikelihood_Order_Medium = 30
+	RenewalLikelihood_Order_Low    = 20
+	RenewalLikelihood_Order_Zero   = 10
+
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 	ApiKeyHeader    = "X-Openline-API-KEY"
 

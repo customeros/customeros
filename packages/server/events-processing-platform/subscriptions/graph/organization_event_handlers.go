@@ -8,6 +8,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
@@ -704,14 +705,14 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 
 func getOrderForRenewalLikelihood(likelihood string) int64 {
 	switch likelihood {
-	case "HIGH":
-		return 40
-	case "MEDIUM":
-		return 30
-	case "LOW":
-		return 20
-	case "ZERO":
-		return 10
+	case string(opportunitymodel.RenewalLikelihoodStringHigh):
+		return constants.RenewalLikelihood_Order_High
+	case string(opportunitymodel.RenewalLikelihoodStringMedium):
+		return constants.RenewalLikelihood_Order_Medium
+	case string(opportunitymodel.RenewalLikelihoodStringLow):
+		return constants.RenewalLikelihood_Order_Low
+	case string(opportunitymodel.RenewalLikelihoodStringZero):
+		return constants.RenewalLikelihood_Order_Zero
 	default:
 		return 0
 	}
