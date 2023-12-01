@@ -87,7 +87,7 @@ func (s *serviceLineItemService) createServiceLineItemWithEvents(ctx context.Con
 		ContractId:     serviceLineItemDetails.ContractId,
 		Name:           serviceLineItemDetails.ServiceLineItemEntity.Name,
 		Quantity:       serviceLineItemDetails.ServiceLineItemEntity.Quantity,
-		Price:          float32(serviceLineItemDetails.ServiceLineItemEntity.Price),
+		Price:          serviceLineItemDetails.ServiceLineItemEntity.Price,
 		StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
 		EndedAt:        utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.EndedAt),
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
@@ -160,7 +160,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItem *en
 		LoggedInUserId:          common.GetUserIdFromContext(ctx),
 		Name:                    serviceLineItem.Name,
 		Quantity:                serviceLineItem.Quantity,
-		Price:                   float32(serviceLineItem.Price),
+		Price:                   serviceLineItem.Price,
 		Comments:                serviceLineItem.Comments,
 		IsRetroactiveCorrection: isRetroactiveCorrection,
 		SourceFields: &commonpb.SourceFields{

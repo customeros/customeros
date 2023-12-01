@@ -69,7 +69,7 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 		model.ServiceLineItemDataFields{
 			Billed:     model.BilledType(request.Billed),
 			Quantity:   request.Quantity,
-			Price:      float64(request.Price),
+			Price:      request.Price,
 			Name:       request.Name,
 			ContractId: request.ContractId,
 			ParentId:   serviceLineItemId,
@@ -115,7 +115,7 @@ func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, requ
 			model.ServiceLineItemDataFields{
 				Billed:   model.BilledType(request.Billed),
 				Quantity: request.Quantity,
-				Price:    float64(request.Price),
+				Price:    request.Price,
 				Name:     request.Name,
 				Comments: request.Comments,
 			},

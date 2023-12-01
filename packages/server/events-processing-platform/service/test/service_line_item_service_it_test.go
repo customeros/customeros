@@ -40,7 +40,7 @@ func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
 		ContractId:     contractId,
 		Billed:         servicelineitempb.BilledType_MONTHLY_BILLED,
 		Quantity:       10,
-		Price:          100.50,
+		Price:          -1.0123456789,
 		Name:           "Test service line item",
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "unit-test",
@@ -76,7 +76,7 @@ func TestServiceLineItemService_CreateServiceLineItem(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 	require.Equal(t, model.MonthlyBilled.String(), eventData.Billed)
 	require.Equal(t, int64(10), eventData.Quantity)
-	require.Equal(t, float64(100.50), eventData.Price)
+	require.Equal(t, -1.0123456789, eventData.Price)
 	require.Equal(t, "Test service line item", eventData.Name)
 	require.Equal(t, contractId, eventData.ContractId)
 }
@@ -107,7 +107,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 		Id:                      serviceLineItemId,
 		Name:                    "Updated Service Line Item",
 		Quantity:                10,
-		Price:                   150.0,
+		Price:                   150.0004,
 		Comments:                "Some comments",
 		IsRetroactiveCorrection: true,
 		UpdatedAt:               timestamppb.New(updatedAt),
@@ -137,7 +137,7 @@ func TestServiceLineItemService_UpdateServiceLineItem(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 	require.Equal(t, model.MonthlyBilled.String(), eventData.Billed)
 	require.Equal(t, int64(10), eventData.Quantity)
-	require.Equal(t, float64(150.0), eventData.Price)
+	require.Equal(t, 150.0004, eventData.Price)
 	require.Equal(t, "Some comments", eventData.Comments)
 	require.Equal(t, "Updated Service Line Item", eventData.Name)
 	require.Equal(t, tenant, eventData.Tenant)
