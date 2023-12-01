@@ -9,7 +9,7 @@ export const filterTimeToRenewalFn: FilterFn<Organization> = (
   filterValue,
 ) => {
   const value = row.getValue<Organization['accountDetails']>(id);
-  const renewalDate = value?.billingDetails?.renewalCycleNext;
+  const renewalDate = value?.renewalSummary?.nextRenewalDate;
 
   if (!renewalDate) return false;
 
