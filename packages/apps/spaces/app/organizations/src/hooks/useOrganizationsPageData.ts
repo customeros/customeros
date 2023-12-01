@@ -137,7 +137,7 @@ export const useOrganizationsPageData = ({
       if (timeToRenewal?.isActive && timeToRenewal?.value) {
         draft.AND.push({
           filter: {
-            property: 'RENEWAL_CYCLE_NEXT',
+            property: 'RENEWAL_DATE',
             value: timeToRenewal?.value,
             operation: ComparisonOperator.Lte,
           },
