@@ -48,6 +48,8 @@ const ServiceItem = ({
   onOpen: (props: ServiceLineItem) => void;
   onCloseService: (props: { input: { id: string } }) => void;
 }) => {
+  const allowedFractionDigits = data.billed === BilledType.Usage ? 4 : 2;
+
   return (
     <>
       <Flex
@@ -82,7 +84,7 @@ const ServiceItem = ({
               </>
             )}
 
-            {formatCurrency(data.price ?? 0)}
+            {formatCurrency(data.price ?? 0, allowedFractionDigits)}
             {getBilledTypeLabel(data.billed)}
           </Text>
           <IconButton

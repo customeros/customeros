@@ -44,7 +44,7 @@ export const OneTimeServiceForm = ({
         }
         isLabelVisible
         label={billedType === BilledType.Once ? 'Price' : 'Price/usage'}
-        min={0}
+        min={billedType === BilledType.Once ? 0.01 : 0.0001}
         leftElement={<CurrencyDollar boxSize={4} color='gray.500' />}
       />
     </>

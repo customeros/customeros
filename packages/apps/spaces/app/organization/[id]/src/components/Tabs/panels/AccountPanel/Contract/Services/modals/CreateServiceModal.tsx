@@ -81,19 +81,21 @@ export const CreateServiceModal = ({
             sourceOfTruth: '',
             appSource: DataSource.Openline,
             externalLinks: [],
-            opportunities: {
-              comments: '',
-              owner: null,
-              internalStage: 'OPEN',
-              internalType: 'RENEWAL',
-              amount: 1160,
-              maxAmount: 1160,
-              name: '',
-              renewalLikelihood: 'HIGH',
-              renewalUpdatedByUserId: '',
-              renewalUpdatedByUserAt: new Date().toISOString(),
-              renewedAt: new Date().toISOString(),
-            },
+            opportunities: [
+              {
+                comments: '',
+                owner: null,
+                internalStage: 'OPEN',
+                internalType: 'RENEWAL',
+                amount: input.price,
+                maxAmount: input.price,
+                name: '',
+                renewalLikelihood: 'HIGH',
+                renewalUpdatedByUserId: '',
+                renewalUpdatedByUserAt: new Date().toISOString(),
+                renewedAt: new Date().toISOString(),
+              },
+            ],
           };
 
           if (draft?.['organization']?.['contracts']) {
