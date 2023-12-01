@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
+	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
@@ -24,12 +25,19 @@ import (
 )
 
 func NewInteractionEventHandler(repositories *repository.Repositories, interactionEventCommands *command_handler.CommandHandlers, log logger.Logger, cfg *config.Config) *interactionEventHandler {
+	aiCfg := aiConfig.Config{
+		OpenAi: aiConfig.AiModelConfigOpenAi{},
+		Anthropic: aiConfig.AiModelConfigAnthropic{
+			ApiPath: cfg.Services.Anthropic.ApiPath,
+			ApiKey:  cfg.Services.Anthropic.ApiKey,
+		},
+	}
 	return &interactionEventHandler{
 		repositories:             repositories,
 		interactionEventCommands: interactionEventCommands,
 		log:                      log,
 		cfg:                      cfg,
-		aiModel:                  ai.NewAiModel(ai.AnthropicModelType, cfg.Services.Anthropic.ApiKey, cfg.Services.Anthropic.ApiPath, "empty org", "no model type", log),
+		aiModel:                  ai.NewAiModel(ai.AnthropicModelType, aiCfg),
 	}
 }
 
