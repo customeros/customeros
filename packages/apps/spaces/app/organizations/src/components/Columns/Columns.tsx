@@ -192,7 +192,7 @@ export const columns = [
     ),
   }),
   columnHelper.accessor('accountDetails', {
-    id: 'RENEWAL_CYCLE_NEXT',
+    id: 'RENEWAL_DATE',
     minSize: 200,
     enableColumnFilter: false,
     // filterFn: filterTimeToRenewalFn,
