@@ -3,6 +3,8 @@ import { Organization } from '@graphql/types';
 import { Skeleton } from '@ui/presentation/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+import { ForecastFilter } from '@organizations/components/Columns/Filters/Forecast';
+import { TimeToRenewalFilter } from '@organizations/components/Columns/Filters/TimeToRenewal';
 import { TimeToRenewalCell } from '@organizations/components/Columns/Cells/renewal/TimeToRenewalCell';
 import { RenewalLikelihoodCell } from '@organizations/components/Columns/Cells/renewal/RenewalLikelihoodCell';
 
@@ -164,7 +166,6 @@ export const columns = [
     id: 'RENEWAL_LIKELIHOOD',
     minSize: 200,
     enableColumnFilter: false,
-    enableSorting: false,
     // filterFn: filterRenewalLikelihoodFn,
     cell: (props) => {
       const value = props.getValue()?.renewalSummary?.renewalLikelihood;
@@ -194,7 +195,6 @@ export const columns = [
     id: 'RENEWAL_CYCLE_NEXT',
     minSize: 200,
     enableColumnFilter: false,
-    enableSorting: false,
     // filterFn: filterTimeToRenewalFn,
     cell: (props) => {
       const nextRenewalDate = props.getValue()?.renewalSummary?.nextRenewalDate;
@@ -206,11 +206,11 @@ export const columns = [
       <THead
         id='timeToRenewal'
         title='Next Renewal'
-        // renderFilter={() => (
-        //   <TimeToRenewalFilter
-        //     onFilterValueChange={props.column.setFilterValue}
-        //   />
-        // )}
+        renderFilter={() => (
+          <TimeToRenewalFilter
+            onFilterValueChange={props.column.setFilterValue}
+          />
+        )}
         {...getTHeadProps<Organization>(props)}
       />
     ),
@@ -224,10 +224,9 @@ export const columns = [
     ),
   }),
   columnHelper.accessor('accountDetails', {
-    id: 'FORECAST_AMOUNT',
+    id: 'FORECAST_ARR',
     minSize: 200,
     enableColumnFilter: false,
-    enableSorting: false,
     // filterFn: filterForecastFn,
     cell: (props) => {
       const value = props.getValue()?.renewalSummary;
@@ -245,13 +244,13 @@ export const columns = [
       <THead<HTMLInputElement>
         id='forecast'
         title='ARR Forecast'
-        // filterWidth='17rem'
-        // renderFilter={(initialFocusRef) => (
-        //   <ForecastFilter
-        //     initialFocusRef={initialFocusRef}
-        //     onFilterValueChange={props.column.setFilterValue}
-        //   />
-        // )}
+        filterWidth='17rem'
+        renderFilter={(initialFocusRef) => (
+          <ForecastFilter
+            initialFocusRef={initialFocusRef}
+            onFilterValueChange={props.column.setFilterValue}
+          />
+        )}
         {...getTHeadProps<Organization>(props)}
       />
     ),
