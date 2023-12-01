@@ -147,7 +147,7 @@ export const useOrganizationsPageData = ({
       if (forecast.isActive && forecast.value) {
         draft.AND.push({
           filter: {
-            property: 'FORECAST_AMOUNT',
+            property: 'FORECAST_ARR',
             value: forecast.value,
             operation: ComparisonOperator.Between,
           },
