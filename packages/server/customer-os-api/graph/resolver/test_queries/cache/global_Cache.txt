@@ -21,5 +21,6 @@ query global_Cache {
         display
       }
     }
+    contractsExist
   }
 }
