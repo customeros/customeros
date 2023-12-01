@@ -524,6 +524,9 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 		RenewalLikelihood: entity.RenewalLikelihood{
 			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityMedium),
 		},
+		RenewalSummary: entity.RenewalSummary{
+			RenewalLikelihoodOrder: utils.Int64Ptr(30),
+		},
 	})
 	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org2",
@@ -533,11 +536,17 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 		RenewalLikelihood: entity.RenewalLikelihood{
 			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityHigh),
 		},
+		RenewalSummary: entity.RenewalSummary{
+			RenewalLikelihoodOrder: utils.Int64Ptr(40),
+		},
 	})
 	organizationId4 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org4",
 		RenewalLikelihood: entity.RenewalLikelihood{
 			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityLow),
+		},
+		RenewalSummary: entity.RenewalSummary{
+			RenewalLikelihoodOrder: utils.Int64Ptr(20),
 		},
 	})
 
@@ -561,9 +570,9 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalAvailable)
 	require.Equal(t, int64(4), organizationsPageStruct.DashboardView_Organizations.TotalElements)
 
-	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Equal(t, organizationId4, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
 	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
-	require.Equal(t, organizationId4, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
+	require.Equal(t, organizationId3, organizationsPageStruct.DashboardView_Organizations.Content[2].ID)
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
 }
 

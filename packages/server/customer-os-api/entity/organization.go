@@ -63,8 +63,8 @@ type OrganizationEntity struct {
 type RenewalSummary struct {
 	ArrForecast            *float64
 	MaxArrForecast         *float64
-	NextRenewalAt          *time.Time
-	RenewalLikelihood      string
+	NextRenewalAt          *time.Time `neo4jDb:"property:derivedNextRenewalAt;lookupName:RENEWAL_DATE;supportCaseSensitive:false"`
+	RenewalLikelihood      string     `neo4jDb:"property:derivedRenewalLikelihood;lookupName:RENEWAL_LIKELIHOOD;supportCaseSensitive:false"`
 	RenewalLikelihoodOrder *int64
 }
 

@@ -144,6 +144,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalLikelihood", renewalLikelihoodValues, utils.IN, false))
 			} else if filter.Filter.Property == "RENEWAL_CYCLE_NEXT" && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
+			} else if filter.Filter.Property == "RENEWAL_DATE" && filter.Filter.Value.Time != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedNextRenewalAt", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == "FORECAST_AMOUNT" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
@@ -294,9 +296,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		if sort != nil && sort.By == "RENEWAL_LIKELIHOOD" {
 			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.renewalLikelihood <> \"\" and o.renewalLikelihood IS NOT NULL THEN o.renewalLikelihood ELSE '9999-ZZZZZ' END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 			} else {
-				query += ", CASE WHEN o.renewalLikelihood <> \"\" and o.renewalLikelihood IS NOT NULL THEN o.renewalLikelihood ELSE '0-AAAAAAAA' END as RENEWAL_LIKELIHOOD_FOR_SORTING "
+				query += ", CASE WHEN o.derivedRenewalLikelihoodOrder IS NOT NULL THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as RENEWAL_LIKELIHOOD_FOR_SORTING "
 			}
 			aliases += ", RENEWAL_LIKELIHOOD_FOR_SORTING "
 		}
@@ -307,6 +309,14 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('1900-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
 			}
 			aliases += ", RENEWAL_CYCLE_NEXT_FOR_SORTING "
+		}
+		if sort != nil && sort.By == "RENEWAL_DATE" {
+			if sort.Direction == model.SortingDirectionAsc {
+				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('2100-01-01') END as RENEWAL_DATE_FOR_SORTING "
+			} else {
+				query += ", CASE WHEN o.derivedNextRenewalAt IS NOT NULL THEN date(o.derivedNextRenewalAt) ELSE date('1900-01-01') END as RENEWAL_DATE_FOR_SORTING "
+			}
+			aliases += ", RENEWAL_DATE_FOR_SORTING "
 		}
 		if sort != nil && sort.By == "FORECAST_AMOUNT" {
 			if sort.Direction == model.SortingDirectionAsc {
@@ -324,9 +334,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", FORECAST_ARR_FOR_SORTING "
 		}
-
-		//RENEWAL_CYCLE_NEXT
-
 		if sort != nil && sort.By == "ORGANIZATION" {
 			query += " OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(parent:Organization) WITH "
 			query += aliases + ", parent "
@@ -350,6 +357,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				query += " ORDER BY RENEWAL_LIKELIHOOD_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_CYCLE_NEXT" {
 				query += " ORDER BY RENEWAL_CYCLE_NEXT_FOR_SORTING " + string(sort.Direction)
+			} else if sort.By == "RENEWAL_DATE" {
+				query += " ORDER BY RENEWAL_DATE_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "LAST_TOUCHPOINT" {
 				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
