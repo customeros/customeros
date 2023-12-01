@@ -587,7 +587,7 @@ func testAddContractService() {
 	tenant := "openline"
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 	contractId := "c5486341-c7d8-47eb-b75a-4016b8e3d6d5"
-	price := 3000
+	price := 0.004
 	//quantity := 3
 	//billed := servicelineitempb.BilledType_ANNUALLY_BILLED
 	billed := servicelineitempb.BilledType_ONCE_BILLED
@@ -597,7 +597,7 @@ func testAddContractService() {
 		LoggedInUserId: userId,
 		Name:           "Custom",
 		ContractId:     contractId,
-		Price:          float32(price),
+		Price:          price,
 		//Quantity:       int64(quantity),
 		Billed: billed,
 		SourceFields: &commonpb.SourceFields{
