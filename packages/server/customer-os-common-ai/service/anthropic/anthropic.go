@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
@@ -14,17 +15,17 @@ import (
 
 const ApiKeyHeader = "X-Openline-API-KEY"
 
-func NewAnthropicClient(cfg *AiModelConfigAnthropic) *AnthropicClient {
+func NewAnthropicClient(cfg *config.AiModelConfigAnthropic) *AnthropicClient {
 	return &AnthropicClient{
 		cfg: cfg,
 	}
 }
 
 type AnthropicClient struct {
-	cfg *AiModelConfigAnthropic
+	cfg *config.AiModelConfigAnthropic
 }
 
-func InvokeAnthropic(ctx context.Context, cfg *AiModelConfigAnthropic, prompt string) (string, error) {
+func InvokeAnthropic(ctx context.Context, cfg *config.AiModelConfigAnthropic, prompt string) (string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.invokeAnthropic")
 	defer span.Finish()
 
