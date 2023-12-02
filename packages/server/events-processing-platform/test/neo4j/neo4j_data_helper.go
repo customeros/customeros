@@ -234,6 +234,7 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 					c.sourceOfTruth=$sourceOfTruth,
 					c.status=$status,
 					c.renewalCycle=$renewalCycle,
+					c.renewalPeriods=$renewalPeriods,
 					c.signedAt=$signedAt,
 					c.serviceStartedAt=$serviceStartedAt,
 					c.endedAt=$endedAt
@@ -248,6 +249,7 @@ func CreateContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"sourceOfTruth":    contract.SourceOfTruth,
 		"status":           contract.Status,
 		"renewalCycle":     contract.RenewalCycle,
+		"renewalPeriods":   contract.RenewalPeriods,
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(contract.SignedAt),
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(contract.ServiceStartedAt),
 		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(contract.EndedAt),

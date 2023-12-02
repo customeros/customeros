@@ -117,9 +117,9 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 
 	// prepare neo4j data
 	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	serviceStartedAt, _ := utils.UnmarshalDateTime("2021-01-01T00:00:00Z")
+	yesterday := utils.Now().AddDate(0, 0, -1)
 	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
-		ServiceStartedAt: serviceStartedAt,
+		ServiceStartedAt: &yesterday,
 		RenewalCycle:     string(model.QuarterlyRenewalCycleString),
 	})
 	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
@@ -152,7 +152,8 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 	err = updateNextCycleDateEvent.GetJsonData(&eventData)
 	require.Nil(t, err)
 	require.Equal(t, tenantName, eventData.Tenant)
-	require.Equal(t, utils.TimePtr(startOfNextQuarter(utils.Now())), eventData.RenewedAt)
+	in1Quarter := yesterday.AddDate(0, 3, 0)
+	require.Equal(t, utils.TimePtr(in1Quarter), eventData.RenewedAt)
 }
 
 func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testing.T) {
@@ -199,6 +200,54 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	require.Nil(t, err)
 	require.Equal(t, tenantName, eventData.Tenant)
 	require.Equal(t, utils.TimePtr(startOfNextYear(utils.Now())), eventData.RenewedAt)
+}
+
+func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// prepare neo4j data
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	yesterday := utils.Now().AddDate(0, 0, -1)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{
+		ServiceStartedAt: &yesterday,
+		RenewalCycle:     string(model.AnnuallyRenewalCycleString),
+		RenewalPeriods:   utils.Int64Ptr(10),
+	})
+	opportunityId := neo4jt.CreateOpportunity(ctx, testDatabase.Driver, tenantName, entity.OpportunityEntity{
+		InternalType:  string(opportunitymodel.OpportunityInternalTypeStringRenewal),
+		InternalStage: string(opportunitymodel.OpportunityInternalStageStringOpen),
+	})
+	neo4jt.LinkContractWithOpportunity(ctx, testDatabase.Driver, contractId, opportunityId, true)
+
+	prepareRenewalOpportunity(t, tenantName, opportunityId, aggregateStore)
+
+	// prepare event handler
+	handler := NewContractHandler(testLogger, testDatabase.Repositories, opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore))
+
+	// EXECUTE
+	err := handler.UpdateRenewalNextCycleDate(ctx, tenantName, contractId)
+	require.Nil(t, err)
+
+	// Check create renewal opportunity command was generated
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	var eventList []eventstore.Event
+	for _, value := range eventsMap {
+		eventList = value
+	}
+	require.Equal(t, 2, len(eventList))
+
+	updateNextCycleDateEvent := eventList[1]
+	require.Equal(t, opportunityevent.OpportunityUpdateNextCycleDateV1, updateNextCycleDateEvent.EventType)
+	var eventData opportunityevent.OpportunityUpdateNextCycleDateEvent
+	err = updateNextCycleDateEvent.GetJsonData(&eventData)
+	require.Nil(t, err)
+	require.Equal(t, tenantName, eventData.Tenant)
+	in10Years := yesterday.AddDate(10, 0, 0)
+	require.Equal(t, in10Years, *eventData.RenewedAt)
 }
 
 func prepareRenewalOpportunity(t *testing.T, tenant, opportunityId string, aggregateStore *eventstoret.TestAggregateStore) {

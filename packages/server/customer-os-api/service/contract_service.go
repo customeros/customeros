@@ -113,13 +113,14 @@ func (s *contractService) Update(ctx context.Context, contract *entity.ContractE
 			Source:    string(contract.Source),
 			AppSource: utils.StringFirstNonEmpty(contract.AppSource, constants.AppSourceCustomerOsApi),
 		},
+		RenewalPeriods: contract.RenewalPeriods,
 	}
-	switch contract.ContractRenewalCycle {
-	case entity.ContractRenewalCycleMonthlyRenewal:
+	switch contract.RenewalCycle {
+	case entity.RenewalCycleMonthlyRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case entity.ContractRenewalCycleQuarterlyRenewal:
+	case entity.RenewalCycleQuarterlyRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-	case entity.ContractRenewalCycleAnnualRenewal:
+	case entity.RenewalCycleAnnualRenewal:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
 		contractUpdateRequest.RenewalCycle = contractpb.RenewalCycle_NONE
@@ -152,14 +153,15 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 			Source:    string(contractDetails.Source),
 			AppSource: utils.StringFirstNonEmpty(contractDetails.AppSource, constants.AppSourceCustomerOsApi),
 		},
+		RenewalPeriods: contractDetails.ContractEntity.RenewalPeriods,
 	}
 
-	switch contractDetails.ContractEntity.ContractRenewalCycle {
-	case entity.ContractRenewalCycleMonthlyRenewal:
+	switch contractDetails.ContractEntity.RenewalCycle {
+	case entity.RenewalCycleMonthlyRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_MONTHLY_RENEWAL
-	case entity.ContractRenewalCycleQuarterlyRenewal:
+	case entity.RenewalCycleQuarterlyRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_QUARTERLY_RENEWAL
-	case entity.ContractRenewalCycleAnnualRenewal:
+	case entity.RenewalCycleAnnualRenewal:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_ANNUALLY_RENEWAL
 	default:
 		createContractRequest.RenewalCycle = contractpb.RenewalCycle_NONE
@@ -234,22 +236,23 @@ func (s *contractService) ContractsExistForTenant(ctx context.Context) (bool, er
 func (s *contractService) mapDbNodeToContractEntity(dbNode dbtype.Node) *entity.ContractEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	contractStatus := entity.GetContractStatus(utils.GetStringPropOrEmpty(props, "status"))
-	contractRenewalCycle := entity.GetContractRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
+	contractRenewalCycle := entity.GetRenewalCycle(utils.GetStringPropOrEmpty(props, "renewalCycle"))
 
 	contract := entity.ContractEntity{
-		Id:                   utils.GetStringPropOrEmpty(props, "id"),
-		Name:                 utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:            utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:            utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		ServiceStartedAt:     utils.GetTimePropOrNil(props, "serviceStartedAt"),
-		SignedAt:             utils.GetTimePropOrNil(props, "signedAt"),
-		EndedAt:              utils.GetTimePropOrNil(props, "endedAt"),
-		ContractUrl:          utils.GetStringPropOrEmpty(props, "contractUrl"),
-		ContractStatus:       contractStatus,
-		ContractRenewalCycle: contractRenewalCycle,
-		Source:               entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:            utils.GetStringPropOrEmpty(props, "appSource"),
+		Id:               utils.GetStringPropOrEmpty(props, "id"),
+		Name:             utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		ServiceStartedAt: utils.GetTimePropOrNil(props, "serviceStartedAt"),
+		SignedAt:         utils.GetTimePropOrNil(props, "signedAt"),
+		EndedAt:          utils.GetTimePropOrNil(props, "endedAt"),
+		ContractUrl:      utils.GetStringPropOrEmpty(props, "contractUrl"),
+		ContractStatus:   contractStatus,
+		RenewalCycle:     contractRenewalCycle,
+		RenewalPeriods:   utils.GetInt64PropOrNil(props, "renewalPeriods"),
+		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &contract
 }

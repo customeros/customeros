@@ -29,6 +29,7 @@ message CreateContractGrpcRequest {
   SourceFields sourceFields = 12;
   ExternalSystemFields externalSystemFields = 13;
   string contractUrl = 14;
+  optional int64 renewalPeriods = 15; // applicable only for yearly renewal
 }
 
 message UpdateContractGrpcRequest {
@@ -44,6 +45,7 @@ message UpdateContractGrpcRequest {
   SourceFields sourceFields = 10;
   ExternalSystemFields externalSystemFields = 11;
   string contractUrl = 12;
+  optional int64 renewalPeriods = 13; // applicable only for yearly renewal
 }
 
 message RolloutRenewalOpportunityOnExpirationGrpcRequest {

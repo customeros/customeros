@@ -25,8 +25,8 @@ const (
 type OpportunityMaskFields int32
 
 const (
-	OpportunityMaskFields_OPPORTUNITY_PROPERTY_NONE               OpportunityMaskFields = 0
-	OpportunityMaskFields_OPPORTUNITY_PROPERTY_ALL                OpportunityMaskFields = 1
+	OpportunityMaskFields_OPPORTUNITY_PROPERTY_NONE               OpportunityMaskFields = 0 // No property, ignored by the server
+	OpportunityMaskFields_OPPORTUNITY_PROPERTY_ALL                OpportunityMaskFields = 1 // All properties, if present in the list all other properties are ignored
 	OpportunityMaskFields_OPPORTUNITY_PROPERTY_NAME               OpportunityMaskFields = 2
 	OpportunityMaskFields_OPPORTUNITY_PROPERTY_AMOUNT             OpportunityMaskFields = 3
 	OpportunityMaskFields_OPPORTUNITY_PROPERTY_COMMENTS           OpportunityMaskFields = 4
