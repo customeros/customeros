@@ -65,7 +65,7 @@
     "react-markdown": "^9.0.0",
     "react-textarea-autosize": "^8.5.2",
     "react-toastify": "^9.1.1",
-    "react-virtuoso": "4.4.2",
+    "react-virtuoso": "4.6.2",
     "recoil": "^0.7.6",
     "remirror": "^2.0.36",
     "rxjs": "^7.8.1",
