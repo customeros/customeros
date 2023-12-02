@@ -8806,7 +8806,7 @@ enum CustomFieldTemplateType {
 }`, BuiltIn: false},
 	{Name: "../schemas/dashboard.graphqls", Input: `extend type Query {
     """
-    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR, RENEWAL_DATE, LIKELIHOOD_TO_RENEW
+    sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, FORECAST_AMOUNT, RENEWAL_LIKELIHOOD, RENEWAL_CYCLE_NEXT, FORECAST_ARR, RENEWAL_DATE
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
@@ -9761,7 +9761,7 @@ type Opportunity implements Node {
     externalType:       String!
     internalStage:      InternalStage!
     externalStage:      String!
-    estimatedClosedAt:  Time!
+    estimatedClosedAt:  Time
     generalNotes:       String!
     nextSteps:          String!
     renewedAt:          Time!
@@ -9800,7 +9800,7 @@ enum OpportunityRenewalLikelihood {
 
 input OpportunityRenewalUpdateInput {
     opportunityId:      ID!
-    name:               String
+    name:               String @deprecated(reason: "Not used")
     amount:             Float
     renewalLikelihood:  OpportunityRenewalLikelihood
     comments:           String
@@ -47458,14 +47458,11 @@ func (ec *executionContext) _Opportunity_estimatedClosedAt(ctx context.Context, 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_estimatedClosedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75467,9 +75464,6 @@ func (ec *executionContext) _Opportunity(ctx context.Context, sel ast.SelectionS
 			}
 		case "estimatedClosedAt":
 			out.Values[i] = ec._Opportunity_estimatedClosedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "generalNotes":
 			out.Values[i] = ec._Opportunity_generalNotes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

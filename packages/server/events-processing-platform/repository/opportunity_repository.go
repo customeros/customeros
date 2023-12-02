@@ -315,24 +315,30 @@ func (r *opportunityRepository) UpdateRenewal(ctx context.Context, tenant, oppor
 	span.LogFields(log.String("opportunityId", opportunityId), log.Object("event", evt))
 
 	params := map[string]any{
-		"tenant":            tenant,
-		"opportunityId":     opportunityId,
-		"updatedAt":         evt.UpdatedAt,
-		"amount":            evt.Amount,
-		"renewalLikelihood": evt.RenewalLikelihood,
-		"comments":          evt.Comments,
-		"sourceOfTruth":     helper.GetSourceOfTruth(evt.Source),
-		"overwrite":         helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
+		"tenant":        tenant,
+		"opportunityId": opportunityId,
+		"updatedAt":     evt.UpdatedAt,
+		"sourceOfTruth": helper.GetSourceOfTruth(evt.Source),
+		"overwrite":     helper.GetSourceOfTruth(evt.Source) == constants.SourceOpenline,
 	}
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:RenewalOpportunity AND op:Opportunity_%s 
-				SET 
-				op.comments = $comments,
-				op.renewalLikelihood = $renewalLikelihood,
-				op.amount = $amount,`, tenant)
+				SET `, tenant)
 	if setUpdatedByUserId {
 		params["renewalUpdatedByUserId"] = evt.UpdatedByUserId
 		cypher += ` op.renewalUpdatedByUserAt = $updatedAt, 
 					op.renewalUpdatedByUserId = $renewalUpdatedByUserId, `
+	}
+	if evt.UpdateComments() {
+		cypher += ` op.comments = $comments, `
+		params["comments"] = evt.Comments
+	}
+	if evt.UpdateAmount() {
+		cypher += ` op.amount = $amount, `
+		params["amount"] = evt.Amount
+	}
+	if evt.UpdateRenewalLikelihood() {
+		cypher += ` op.renewalLikelihood = $renewalLikelihood, `
+		params["renewalLikelihood"] = evt.RenewalLikelihood
 	}
 	cypher += ` op.updatedAt = $updatedAt,
 				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
