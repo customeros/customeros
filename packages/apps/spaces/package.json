@@ -32,7 +32,7 @@
     "@remirror/react": "^2.0.27",
     "@stylistic/eslint-plugin-js": "^1.0.0",
     "@tanstack/react-query": "^4.29.19",
-    "@tanstack/react-query-persist-client": "^5.0.0",
+    "@tanstack/react-query-persist-client": "^5.8.1",
     "@tanstack/react-table": "^8.10.3",
     "@tanstack/react-virtual": "^3.0.0-beta.54",
     "@visx/visx": "^3.5.1",
