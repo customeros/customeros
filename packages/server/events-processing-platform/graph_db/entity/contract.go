@@ -16,6 +16,7 @@ type ContractEntity struct {
 	ContractUrl      string
 	Status           string
 	RenewalCycle     string
+	RenewalPeriods   *int64
 	SignedAt         *time.Time
 	ServiceStartedAt *time.Time
 	EndedAt          *time.Time

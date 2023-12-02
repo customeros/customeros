@@ -207,6 +207,7 @@ type ComplexityRoot struct {
 		Opportunities    func(childComplexity int) int
 		Owner            func(childComplexity int) int
 		RenewalCycle     func(childComplexity int) int
+		RenewalPeriods   func(childComplexity int) int
 		ServiceLineItems func(childComplexity int) int
 		ServiceStartedAt func(childComplexity int) int
 		SignedAt         func(childComplexity int) int
@@ -2209,6 +2210,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.RenewalCycle(childComplexity), true
+
+	case "Contract.renewalPeriods":
+		if e.complexity.Contract.RenewalPeriods == nil {
+			break
+		}
+
+		return e.complexity.Contract.RenewalPeriods(childComplexity), true
 
 	case "Contract.serviceLineItems":
 		if e.complexity.Contract.ServiceLineItems == nil {
@@ -8562,6 +8570,7 @@ type Contract implements Node {
     endedAt:            Time
     name:               String!
     renewalCycle:       ContractRenewalCycle!
+    renewalPeriods:     Int64
     status:             ContractStatus!
     serviceLineItems:   [ServiceLineItem!] @goField(forceResolver: true)
     opportunities:      [Opportunity!] @goField(forceResolver: true)
@@ -8578,6 +8587,7 @@ input ContractInput {
     organizationId:     ID!
     name:               String
     renewalCycle:       ContractRenewalCycle
+    renewalPeriods:     Int64
     appSource:          String
     contractUrl:        String
     serviceStartedAt:   Time
@@ -8590,6 +8600,7 @@ input ContractUpdateInput {
     name:               String
     contractUrl:        String
     renewalCycle:       ContractRenewalCycle
+    renewalPeriods:     Int64
     serviceStartedAt:   Time
     signedAt:           Time
     endedAt:            Time
@@ -19159,6 +19170,47 @@ func (ec *executionContext) fieldContext_Contract_renewalCycle(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ContractRenewalCycle does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contract_renewalPeriods(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_renewalPeriods(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RenewalPeriods, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_renewalPeriods(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -34803,6 +34855,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_name(ctx, field)
 			case "renewalCycle":
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
@@ -34926,6 +34980,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_name(ctx, field)
 			case "renewalCycle":
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
@@ -49922,6 +49978,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(ctx context.Cont
 				return ec.fieldContext_Contract_name(ctx, field)
 			case "renewalCycle":
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
@@ -54258,6 +54316,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_name(ctx, field)
 			case "renewalCycle":
 				return ec.fieldContext_Contract_renewalCycle(ctx, field)
+			case "renewalPeriods":
+				return ec.fieldContext_Contract_renewalPeriods(ctx, field)
 			case "status":
 				return ec.fieldContext_Contract_status(ctx, field)
 			case "serviceLineItems":
@@ -64191,7 +64251,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference"}
+	fieldsInOrder := [...]string{"organizationId", "name", "renewalCycle", "renewalPeriods", "appSource", "contractUrl", "serviceStartedAt", "signedAt", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -64225,6 +64285,15 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 				return it, err
 			}
 			it.RenewalCycle = data
+		case "renewalPeriods":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalPeriods"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalPeriods = data
 		case "appSource":
 			var err error
 
@@ -64283,7 +64352,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contractId", "name", "contractUrl", "renewalCycle", "serviceStartedAt", "signedAt", "endedAt", "appSource"}
+	fieldsInOrder := [...]string{"contractId", "name", "contractUrl", "renewalCycle", "renewalPeriods", "serviceStartedAt", "signedAt", "endedAt", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -64326,6 +64395,15 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.RenewalCycle = data
+		case "renewalPeriods":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalPeriods"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RenewalPeriods = data
 		case "serviceStartedAt":
 			var err error
 
@@ -70117,6 +70195,8 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "renewalPeriods":
+			out.Values[i] = ec._Contract_renewalPeriods(ctx, field, obj)
 		case "status":
 			out.Values[i] = ec._Contract_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

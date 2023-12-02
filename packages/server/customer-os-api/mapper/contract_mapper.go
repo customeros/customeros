@@ -20,7 +20,8 @@ func MapEntityToContract(entity *entity.ContractEntity) *model.Contract {
 		SourceOfTruth:    MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:        entity.AppSource,
 		Status:           MapContractStatusToModel(entity.ContractStatus),
-		RenewalCycle:     MapContractRenewalCycleToModel(entity.ContractRenewalCycle),
+		RenewalCycle:     MapContractRenewalCycleToModel(entity.RenewalCycle),
+		RenewalPeriods:   entity.RenewalPeriods,
 		ServiceStartedAt: entity.ServiceStartedAt,
 		SignedAt:         entity.SignedAt,
 		EndedAt:          entity.EndedAt,
@@ -37,13 +38,14 @@ func MapContractInputToEntity(input model.ContractInput) *entity.ContractEntity 
 		Source:           entity.DataSourceOpenline,
 		SourceOfTruth:    entity.DataSourceOpenline,
 		AppSource:        utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		RenewalPeriods:   input.RenewalPeriods,
 	}
 	if input.RenewalCycle != nil {
 		contractRenewalCycle := MapContractRenewalCycleFromModel(*input.RenewalCycle)
-		contractEntity.ContractRenewalCycle = contractRenewalCycle
+		contractEntity.RenewalCycle = contractRenewalCycle
 	} else {
-		contractRenewalCycle := entity.ContractRenewalCycleNone
-		contractEntity.ContractRenewalCycle = contractRenewalCycle
+		contractRenewalCycle := entity.RenewalCycleNone
+		contractEntity.RenewalCycle = contractRenewalCycle
 	}
 	return &contractEntity
 }
@@ -59,11 +61,12 @@ func MapContractUpdateInputToEntity(input model.ContractUpdateInput) *entity.Con
 		Source:           entity.DataSourceOpenline,
 		SourceOfTruth:    entity.DataSourceOpenline,
 		AppSource:        utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		RenewalPeriods:   input.RenewalPeriods,
 	}
 	if input.RenewalCycle != nil {
-		contractEntity.ContractRenewalCycle = MapContractRenewalCycleFromModel(*input.RenewalCycle)
+		contractEntity.RenewalCycle = MapContractRenewalCycleFromModel(*input.RenewalCycle)
 	} else {
-		contractEntity.ContractRenewalCycle = entity.ContractRenewalCycleNone
+		contractEntity.RenewalCycle = entity.RenewalCycleNone
 	}
 	return &contractEntity
 }

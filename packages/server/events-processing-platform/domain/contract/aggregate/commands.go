@@ -48,6 +48,18 @@ func (a *ContractAggregate) createContract(ctx context.Context, cmd *command.Cre
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
 	cmd.Source.SetDefaultValues()
 
+	if cmd.DataFields.RenewalCycle != model.AnnuallyRenewal {
+		cmd.DataFields.RenewalPeriods = nil
+	}
+	if cmd.DataFields.RenewalPeriods != nil {
+		if *cmd.DataFields.RenewalPeriods < 1 {
+			cmd.DataFields.RenewalPeriods = utils.Int64Ptr(1)
+		}
+		if *cmd.DataFields.RenewalPeriods > 100 {
+			cmd.DataFields.RenewalPeriods = utils.Int64Ptr(100)
+		}
+	}
+
 	// Determine contract status based start and end dates
 	status := determineContractStatus(cmd.DataFields.ServiceStartedAt, cmd.DataFields.EndedAt)
 	cmd.DataFields.Status = status
@@ -90,6 +102,19 @@ func (a *ContractAggregate) updateContract(ctx context.Context, cmd *command.Upd
 	// Determine contract renewal
 	if cmd.DataFields.RenewalCycle == model.None {
 		cmd.DataFields.RenewalCycle = model.RenewalCycleFromString(a.Contract.RenewalCycle)
+	}
+
+	// Set renewal periods
+	if cmd.DataFields.RenewalCycle != model.AnnuallyRenewal {
+		cmd.DataFields.RenewalPeriods = nil
+	}
+	if cmd.DataFields.RenewalPeriods != nil {
+		if *cmd.DataFields.RenewalPeriods < 1 {
+			cmd.DataFields.RenewalPeriods = utils.Int64Ptr(1)
+		}
+		if *cmd.DataFields.RenewalPeriods > 100 {
+			cmd.DataFields.RenewalPeriods = utils.Int64Ptr(100)
+		}
 	}
 
 	updateEvent, err := event.NewContractUpdateEvent(

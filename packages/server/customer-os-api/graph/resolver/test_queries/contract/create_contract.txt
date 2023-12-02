@@ -4,6 +4,7 @@ contract_Create(
         organizationId: $orgId
         name: "Contract 1"
         renewalCycle: MONTHLY_RENEWAL
+        renewalPeriods: 7
         contractUrl: "https://contract.com"
         serviceStartedAt: "2019-01-01T00:00:00Z"
         signedAt: "2019-02-01T00:00:00Z"

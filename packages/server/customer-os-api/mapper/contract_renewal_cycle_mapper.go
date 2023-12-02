@@ -6,19 +6,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-var contractRenewalCycleByModel = map[model.ContractRenewalCycle]entity.ContractRenewalCycle{
-	model.ContractRenewalCycleNone:             entity.ContractRenewalCycleNone,
-	model.ContractRenewalCycleMonthlyRenewal:   entity.ContractRenewalCycleMonthlyRenewal,
-	model.ContractRenewalCycleQuarterlyRenewal: entity.ContractRenewalCycleQuarterlyRenewal,
-	model.ContractRenewalCycleAnnualRenewal:    entity.ContractRenewalCycleAnnualRenewal,
+var contractRenewalCycleByModel = map[model.ContractRenewalCycle]entity.RenewalCycle{
+	model.ContractRenewalCycleNone:             entity.RenewalCycleNone,
+	model.ContractRenewalCycleMonthlyRenewal:   entity.RenewalCycleMonthlyRenewal,
+	model.ContractRenewalCycleQuarterlyRenewal: entity.RenewalCycleQuarterlyRenewal,
+	model.ContractRenewalCycleAnnualRenewal:    entity.RenewalCycleAnnualRenewal,
 }
 
 var contractRenewalCycleByValue = utils.ReverseMap(contractRenewalCycleByModel)
 
-func MapContractRenewalCycleFromModel(input model.ContractRenewalCycle) entity.ContractRenewalCycle {
+func MapContractRenewalCycleFromModel(input model.ContractRenewalCycle) entity.RenewalCycle {
 	return contractRenewalCycleByModel[input]
 }
 
-func MapContractRenewalCycleToModel(input entity.ContractRenewalCycle) model.ContractRenewalCycle {
+func MapContractRenewalCycleToModel(input entity.RenewalCycle) model.ContractRenewalCycle {
 	return contractRenewalCycleByValue[input]
 }

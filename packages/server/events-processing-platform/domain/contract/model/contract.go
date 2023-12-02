@@ -20,6 +20,7 @@ type Contract struct {
 	SignedAt         *time.Time                   `json:"signedAt,omitempty"`
 	EndedAt          *time.Time                   `json:"endedAt,omitempty"`
 	RenewalCycle     string                       `json:"renewalCycle"`
+	RenewalPeriods   *int64                       `json:"renewalPeriods"`
 	Status           string                       `json:"status"`
 	Source           commonmodel.Source           `json:"source"`
 	ExternalSystems  []commonmodel.ExternalSystem `json:"externalSystems"`
@@ -34,6 +35,7 @@ type ContractDataFields struct {
 	SignedAt         *time.Time
 	EndedAt          *time.Time
 	RenewalCycle     RenewalCycle
+	RenewalPeriods   *int64
 	Status           ContractStatus
 }
 

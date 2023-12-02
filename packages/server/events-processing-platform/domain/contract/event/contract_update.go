@@ -18,6 +18,7 @@ type ContractUpdateEvent struct {
 	SignedAt         *time.Time                 `json:"signedAt,omitempty"`
 	EndedAt          *time.Time                 `json:"endedAt,omitempty"`
 	RenewalCycle     string                     `json:"renewalCycle"`
+	RenewalPeriods   *int64                     `json:"renewalPeriods,omitempty"`
 	Status           string                     `json:"status"`
 	ExternalSystem   commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	Source           string                     `json:"source"`
@@ -32,6 +33,7 @@ func NewContractUpdateEvent(aggr eventstore.Aggregate, dataFields model.Contract
 		SignedAt:         dataFields.SignedAt,
 		EndedAt:          dataFields.EndedAt,
 		RenewalCycle:     dataFields.RenewalCycle.String(),
+		RenewalPeriods:   dataFields.RenewalPeriods,
 		Status:           dataFields.Status.String(),
 		UpdatedAt:        updatedAt,
 		Source:           source,

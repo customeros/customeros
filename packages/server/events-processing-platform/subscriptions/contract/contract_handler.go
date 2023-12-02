@@ -75,31 +75,31 @@ func (h *contractHandler) UpdateRenewalNextCycleDate(ctx context.Context, tenant
 	return h.updateRenewalNextCycleDate(ctx, tenant, contract, renewalOpportunity, span)
 }
 
-func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contract *entity.ContractEntity, renewalOpportunity *entity.OpportunityEntity, span opentracing.Span) error {
-	if contract.IsEnded() && renewalOpportunity != nil {
-		err := h.opportunityCommands.CloseLooseOpportunity.Handle(ctx, opportunitycmd.NewCloseLooseOpportunityCommand(renewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, nil))
+func (h *contractHandler) updateRenewalNextCycleDate(ctx context.Context, tenant string, contractEntity *entity.ContractEntity, renewalOpportunityEntity *entity.OpportunityEntity, span opentracing.Span) error {
+	if contractEntity.IsEnded() && renewalOpportunityEntity != nil {
+		err := h.opportunityCommands.CloseLooseOpportunity.Handle(ctx, opportunitycmd.NewCloseLooseOpportunityCommand(renewalOpportunityEntity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, nil))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("CloseLooseOpportunityCommand command failed: %v", err.Error())
-			return nil
+			return errors.Wrap(err, "CloseLooseOpportunityCommand")
 		}
 		return nil
 	}
 
-	renewedAt := h.calculateNextCycleDate(contract.ServiceStartedAt, contract.RenewalCycle)
-	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunity.RenewalDetails.RenewedAt) {
-		err := h.opportunityCommands.UpdateRenewalOpportunityNextCycleDate.Handle(ctx, opportunitycmd.NewUpdateRenewalOpportunityNextCycleDateCommand(renewalOpportunity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, renewedAt))
+	renewedAt := h.calculateNextCycleDate(contractEntity.ServiceStartedAt, contractEntity.RenewalCycle, contractEntity.RenewalPeriods)
+	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunityEntity.RenewalDetails.RenewedAt) {
+		err := h.opportunityCommands.UpdateRenewalOpportunityNextCycleDate.Handle(ctx, opportunitycmd.NewUpdateRenewalOpportunityNextCycleDateCommand(renewalOpportunityEntity.Id, tenant, "", constants.AppSourceEventProcessingPlatform, nil, renewedAt))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("UpdateRenewalOpportunityNextCycleDate command failed: %v", err.Error())
-			return nil
+			return errors.Wrap(err, "UpdateRenewalOpportunityNextCycleDate")
 		}
 	}
 
 	return nil
 }
 
-func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, renewalCycle string) *time.Time {
+func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, renewalCycle string, renewalPeriods *int64) *time.Time {
 	if serviceStartedAt == nil {
 		return nil
 	}
@@ -110,9 +110,13 @@ func (h *contractHandler) calculateNextCycleDate(serviceStartedAt *time.Time, re
 		case string(model.MonthlyRenewalCycleString):
 			renewalCycleNext = renewalCycleNext.AddDate(0, 1, 0)
 		case string(model.QuarterlyRenewalCycleString):
-			renewalCycleNext = renewalCycleNext.AddDate(0, 4, 0)
+			renewalCycleNext = renewalCycleNext.AddDate(0, 3, 0)
 		case string(model.AnnuallyRenewalCycleString):
-			renewalCycleNext = renewalCycleNext.AddDate(1, 0, 0)
+			renewalYears := 1
+			if renewalPeriods != nil {
+				renewalYears = int(*renewalPeriods)
+			}
+			renewalCycleNext = renewalCycleNext.AddDate(int(renewalYears), 0, 0)
 		default:
 			return nil // invalid
 		}

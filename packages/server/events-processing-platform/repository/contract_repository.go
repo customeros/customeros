@@ -54,6 +54,7 @@ func (r *contractRepository) CreateForOrganization(ctx context.Context, tenant, 
 								ct.contractUrl=$contractUrl,
 								ct.status=$status,
 								ct.renewalCycle=$renewalCycle,
+								ct.renewalPeriods=$renewalPeriods,
 								ct.signedAt=$signedAt,
 								ct.serviceStartedAt=$serviceStartedAt
 							WITH ct, t
@@ -75,6 +76,7 @@ func (r *contractRepository) CreateForOrganization(ctx context.Context, tenant, 
 		"contractUrl":      evt.ContractUrl,
 		"status":           evt.Status,
 		"renewalCycle":     evt.RenewalCycle,
+		"renewalPeriods":   evt.RenewalPeriods,
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(evt.SignedAt),
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.ServiceStartedAt),
 		"createdByUserId":  evt.CreatedByUserId,
@@ -99,6 +101,7 @@ func (r *contractRepository) UpdateAndReturn(ctx context.Context, tenant, contra
 				ct.serviceStartedAt = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $serviceStartedAt ELSE ct.serviceStartedAt END,
 				ct.status = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $status ELSE ct.status END,
 				ct.renewalCycle = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalCycle ELSE ct.renewalCycle END,
+				ct.renewalPeriods = CASE WHEN ct.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $renewalPeriods ELSE ct.renewalPeriods END,
 				ct.updatedAt = $updatedAt,
 				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END
 				RETURN ct`
@@ -110,6 +113,7 @@ func (r *contractRepository) UpdateAndReturn(ctx context.Context, tenant, contra
 		"contractUrl":      evt.ContractUrl,
 		"status":           evt.Status,
 		"renewalCycle":     evt.RenewalCycle,
+		"renewalPeriods":   evt.RenewalPeriods,
 		"signedAt":         utils.TimePtrFirstNonNilNillableAsAny(evt.SignedAt),
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.ServiceStartedAt),
 		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(evt.EndedAt),

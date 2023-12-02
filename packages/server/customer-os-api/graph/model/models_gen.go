@@ -360,6 +360,7 @@ type Contract struct {
 	EndedAt          *time.Time           `json:"endedAt,omitempty"`
 	Name             string               `json:"name"`
 	RenewalCycle     ContractRenewalCycle `json:"renewalCycle"`
+	RenewalPeriods   *int64               `json:"renewalPeriods,omitempty"`
 	Status           ContractStatus       `json:"status"`
 	ServiceLineItems []*ServiceLineItem   `json:"serviceLineItems,omitempty"`
 	Opportunities    []*Opportunity       `json:"opportunities,omitempty"`
@@ -379,6 +380,7 @@ type ContractInput struct {
 	OrganizationID    string                        `json:"organizationId"`
 	Name              *string                       `json:"name,omitempty"`
 	RenewalCycle      *ContractRenewalCycle         `json:"renewalCycle,omitempty"`
+	RenewalPeriods    *int64                        `json:"renewalPeriods,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
 	ContractURL       *string                       `json:"contractUrl,omitempty"`
 	ServiceStartedAt  *time.Time                    `json:"serviceStartedAt,omitempty"`
@@ -391,6 +393,7 @@ type ContractUpdateInput struct {
 	Name             *string               `json:"name,omitempty"`
 	ContractURL      *string               `json:"contractUrl,omitempty"`
 	RenewalCycle     *ContractRenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalPeriods   *int64                `json:"renewalPeriods,omitempty"`
 	ServiceStartedAt *time.Time            `json:"serviceStartedAt,omitempty"`
 	SignedAt         *time.Time            `json:"signedAt,omitempty"`
 	EndedAt          *time.Time            `json:"endedAt,omitempty"`
