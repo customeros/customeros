@@ -1251,7 +1251,7 @@ type Opportunity struct {
 	ExternalType           string                       `json:"externalType"`
 	InternalStage          InternalStage                `json:"internalStage"`
 	ExternalStage          string                       `json:"externalStage"`
-	EstimatedClosedAt      time.Time                    `json:"estimatedClosedAt"`
+	EstimatedClosedAt      *time.Time                   `json:"estimatedClosedAt,omitempty"`
 	GeneralNotes           string                       `json:"generalNotes"`
 	NextSteps              string                       `json:"nextSteps"`
 	RenewedAt              time.Time                    `json:"renewedAt"`

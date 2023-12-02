@@ -15,7 +15,7 @@ type OpportunityEntity struct {
 	ExternalType           string
 	InternalStage          InternalStage
 	ExternalStage          string
-	EstimatedClosedAt      time.Time
+	EstimatedClosedAt      *time.Time
 	GeneralNotes           string
 	NextSteps              string
 	RenewedAt              time.Time

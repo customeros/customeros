@@ -35,23 +35,6 @@ func MapEntityToOpportunity(entity *entity.OpportunityEntity) *model.Opportunity
 		AppSource:              entity.AppSource,
 	}
 }
-func MapOpportunityRenewalUpdateInputToEntity(input model.OpportunityRenewalUpdateInput) *entity.OpportunityRenewalEntity {
-	opportunityRenewalEntity := entity.OpportunityRenewalEntity{
-		Id:            input.OpportunityID,
-		Name:          utils.IfNotNilString(input.Name),
-		Amount:        utils.IfNotNilFloat64(input.Amount),
-		Comments:      utils.IfNotNilString(input.Comments),
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
-		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-	}
-	if input.RenewalLikelihood != nil {
-		opportunityRenewalEntity.RenewalLikelihood = MapOpportunityRenewalLikelihoodFromModel(*input.RenewalLikelihood)
-	} else {
-		opportunityRenewalEntity.RenewalLikelihood = entity.OpportunityRenewalLikelihoodZero
-	}
-	return &opportunityRenewalEntity
-}
 
 func MapOpportunityUpdateInputToEntity(input model.OpportunityUpdateInput) *entity.OpportunityEntity {
 	opportunityEntity := entity.OpportunityEntity{
@@ -62,7 +45,7 @@ func MapOpportunityUpdateInputToEntity(input model.OpportunityUpdateInput) *enti
 		ExternalStage:     utils.IfNotNilString(input.ExternalStage),
 		GeneralNotes:      utils.IfNotNilString(input.GeneralNotes),
 		NextSteps:         utils.IfNotNilString(input.NextSteps),
-		EstimatedClosedAt: *input.EstimatedClosedDate,
+		EstimatedClosedAt: input.EstimatedClosedDate,
 		Source:            entity.DataSourceOpenline,
 		SourceOfTruth:     entity.DataSourceOpenline,
 		AppSource:         utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),

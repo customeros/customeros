@@ -169,7 +169,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, cmd
 		renewalLikelihood = model.RenewalLikelihoodStringHigh
 	}
 
-	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), cmd.Comments, cmd.LoggedInUserId, cmd.Source.Source, cmd.Amount, updatedAtNotNil)
+	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), cmd.Comments, cmd.LoggedInUserId, cmd.Source.Source, cmd.Amount, updatedAtNotNil, cmd.MaskFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateRenewalEvent")

@@ -7,9 +7,11 @@ import (
 )
 
 const (
-	FieldMaskName      = "name"
-	FieldMaskAmount    = "amount"
-	FieldMaskMaxAmount = "maxAmount"
+	FieldMaskName              = "name"
+	FieldMaskAmount            = "amount"
+	FieldMaskMaxAmount         = "maxAmount"
+	FieldMaskComments          = "comments"
+	FieldMaskRenewalLikelihood = "renewalLikelihood"
 )
 
 type RenewalDetails struct {

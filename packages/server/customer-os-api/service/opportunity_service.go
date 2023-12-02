@@ -21,7 +21,7 @@ import (
 
 type OpportunityService interface {
 	Update(ctx context.Context, opportunity *entity.OpportunityEntity) error
-	UpdateRenewal(ctx context.Context, opportunity *entity.OpportunityRenewalEntity) error
+	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, appSource string) error
 	GetById(ctx context.Context, id string) (*entity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*entity.OpportunityEntities, error)
 }
@@ -87,7 +87,7 @@ func (s *opportunityService) mapDbNodeToOpportunityEntity(dbNode dbtype.Node) *e
 		ExternalType:           utils.GetStringPropOrEmpty(props, "externalType"),
 		Amount:                 utils.GetFloatPropOrZero(props, "amount"),
 		MaxAmount:              utils.GetFloatPropOrZero(props, "maxAmount"),
-		EstimatedClosedAt:      utils.GetTimePropOrEpochStart(props, "estimatedClosedAt"),
+		EstimatedClosedAt:      utils.GetTimePropOrNil(props, "estimatedClosedAt"),
 		NextSteps:              utils.GetStringPropOrEmpty(props, "nextSteps"),
 		GeneralNotes:           utils.GetStringPropOrEmpty(props, "generalNotes"),
 		RenewedAt:              utils.GetTimePropOrEpochStart(props, "renewedAt"),
@@ -138,7 +138,7 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 		ExternalStage:      opportunity.ExternalStage,
 		GeneralNotes:       opportunity.GeneralNotes,
 		NextSteps:          opportunity.NextSteps,
-		EstimatedCloseDate: utils.ConvertTimeToTimestampPtr(&opportunity.EstimatedClosedAt),
+		EstimatedCloseDate: utils.ConvertTimeToTimestampPtr(opportunity.EstimatedClosedAt),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(opportunity.Source),
 			AppSource: utils.StringFirstNonEmpty(opportunity.AppSource, constants.AppSourceCustomerOsApi),
@@ -155,27 +155,22 @@ func (s *opportunityService) Update(ctx context.Context, opportunity *entity.Opp
 	return nil
 }
 
-func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityRenewal *entity.OpportunityRenewalEntity) error {
+func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood entity.OpportunityRenewalLikelihood, amount *float64, comments *string, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.UpdateRenewal")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("opportunityRenewal", opportunityRenewal))
+	span.LogFields(log.String("opportunityId", opportunityId), log.Object("renewalLikelihood", renewalLikelihood), log.Object("amount", amount), log.Object("comments", comments), log.String("appSource", appSource))
 
-	if opportunityRenewal == nil {
-		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity entity is nil")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	} else if opportunityRenewal.Id == "" {
+	if opportunityId == "" {
 		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity id is missing")
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	opportunityExists, _ := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityRenewal.Id, entity.NodeLabel_Opportunity)
+	opportunityExists, _ := s.repositories.CommonRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, entity.NodeLabel_Opportunity)
 	if !opportunityExists {
-		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity with id {%s} not found", opportunityRenewal.Id)
+		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity with id {%s} not found", opportunityId)
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
@@ -183,16 +178,26 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityRenew
 
 	opportunityRenewalUpdateRequest := opportunitypb.UpdateRenewalOpportunityGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             opportunityRenewal.Id,
+		Id:             opportunityId,
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Amount:         opportunityRenewal.Amount,
-		Comments:       opportunityRenewal.Comments,
+		Amount:         utils.IfNotNilFloat64(amount),
+		Comments:       utils.IfNotNilString(comments),
 		SourceFields: &commonpb.SourceFields{
-			Source:    string(opportunityRenewal.Source),
-			AppSource: utils.StringFirstNonEmpty(opportunityRenewal.AppSource, constants.AppSourceCustomerOsApi),
+			Source:    string(entity.DataSourceOpenline),
+			AppSource: appSource,
 		},
 	}
-	switch opportunityRenewal.RenewalLikelihood {
+	maskFields := make([]opportunitypb.OpportunityMaskFields, 0)
+	if amount != nil {
+		maskFields = append(maskFields, opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_AMOUNT)
+	}
+	if comments != nil {
+		maskFields = append(maskFields, opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_COMMENTS)
+	}
+	maskFields = append(maskFields, opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD)
+	opportunityRenewalUpdateRequest.MaskFields = maskFields
+
+	switch renewalLikelihood {
 	case entity.OpportunityRenewalLikelihoodHigh:
 		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_HIGH_RENEWAL
 	case entity.OpportunityRenewalLikelihoodMedium:

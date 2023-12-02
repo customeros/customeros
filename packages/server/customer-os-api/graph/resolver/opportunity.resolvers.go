@@ -8,11 +8,13 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -46,7 +48,7 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.opportunityId", input.OpportunityID))
 
-	err := r.Services.OpportunityService.UpdateRenewal(ctx, mapper.MapOpportunityRenewalUpdateInputToEntity(input))
+	err := r.Services.OpportunityService.UpdateRenewal(ctx, input.OpportunityID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.Amount, input.Comments, utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update opportunity renewal %s", input.OpportunityID)

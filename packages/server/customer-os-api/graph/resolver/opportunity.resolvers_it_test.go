@@ -134,6 +134,11 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 			require.Equal(t, float64(100), renewalOpportunity.Amount)
 			require.Equal(t, opportunitypb.RenewalLikelihood_HIGH_RENEWAL, renewalOpportunity.RenewalLikelihood)
 			require.Equal(t, "test comments", renewalOpportunity.Comments)
+			require.ElementsMatch(t, []opportunitypb.OpportunityMaskFields{
+				opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_AMOUNT,
+				opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
+				opportunitypb.OpportunityMaskFields_OPPORTUNITY_PROPERTY_COMMENTS},
+				renewalOpportunity.MaskFields)
 			calledUpdateRenewalOpportunity = true
 			return &opportunitypb.OpportunityIdGrpcResponse{
 				Id: opportunityId,
