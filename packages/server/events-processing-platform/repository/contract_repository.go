@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
+	opportunitymodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -22,6 +23,7 @@ type ContractRepository interface {
 	GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error)
 	UpdateStatus(ctx context.Context, tenant, contractId string, evt event.ContractUpdateStatusEvent) error
 	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
+	ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 }
 
 type contractRepository struct {
@@ -276,6 +278,28 @@ func (r *contractRepository) SuspendActiveRenewalOpportunity(ctx context.Context
 		"contractId":             contractId,
 		"internalStageSuspended": "SUSPENDED",
 		"updatedAt":              utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *contractRepository) ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.SuspendActiveRenewalOpportunity")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:SUSPENDED_RENEWAL]->(op:RenewalOpportunity)
+				SET op.internalStage=$internalStage, 
+					op.updatedAt=$updatedAt
+				MERGE (ct)-[:ACTIVE_RENEWAL]->(op)
+				DELETE r`
+	params := map[string]any{
+		"tenant":        tenant,
+		"contractId":    contractId,
+		"internalStage": opportunitymodel.OpportunityInternalStageStringOpen,
+		"updatedAt":     utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
