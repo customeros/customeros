@@ -139,6 +139,11 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			h.log.Errorf("NewRefreshArrCommand failed: %v", err.Error())
 		}
 	} else {
+		err = h.repositories.ContractRepository.ActivateSuspendedRenewalOpportunity(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
+		}
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
 		err = contractHandler.UpdateRenewalArrAndNextCycleDate(ctx, eventData.Tenant, contractId)
 		if err != nil {
