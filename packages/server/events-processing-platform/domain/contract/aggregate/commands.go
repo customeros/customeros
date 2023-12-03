@@ -99,11 +99,6 @@ func (a *ContractAggregate) updateContract(ctx context.Context, cmd *command.Upd
 	status := determineContractStatus(cmd.DataFields.ServiceStartedAt, cmd.DataFields.EndedAt)
 	cmd.DataFields.Status = status
 
-	// Determine contract renewal
-	if cmd.DataFields.RenewalCycle == model.None {
-		cmd.DataFields.RenewalCycle = model.RenewalCycleFromString(a.Contract.RenewalCycle)
-	}
-
 	// Set renewal periods
 	if cmd.DataFields.RenewalCycle != model.AnnuallyRenewal {
 		cmd.DataFields.RenewalPeriods = nil
