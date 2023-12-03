@@ -187,7 +187,7 @@ func (r *serviceLineItemRepository) GetServiceLineItemById(ctx context.Context, 
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-(sli:ServiceLineItem {id:$id}) RETURN sli`
+	cypher := `MATCH(sli:ServiceLineItem {id:$id}) RETURN sli`
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     serviceLineItemId,
