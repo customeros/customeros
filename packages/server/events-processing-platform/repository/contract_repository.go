@@ -21,6 +21,7 @@ type ContractRepository interface {
 	GetContractByServiceLineItemId(ctx context.Context, tenant string, serviceLineItemId string) (*dbtype.Node, error)
 	GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error)
 	UpdateStatus(ctx context.Context, tenant, contractId string, evt event.ContractUpdateStatusEvent) error
+	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 }
 
 type contractRepository struct {
@@ -253,6 +254,28 @@ func (r *contractRepository) UpdateStatus(ctx context.Context, tenant, contractI
 		"serviceStartedAt": utils.TimePtrFirstNonNilNillableAsAny(evt.ServiceStartedAt),
 		"endedAt":          utils.TimePtrFirstNonNilNillableAsAny(evt.EndedAt),
 		"updatedAt":        utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	return utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+}
+
+func (r *contractRepository) SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.SuspendActiveRenewalOpportunity")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
+				SET op.internalStage=$internalStageSuspended, 
+					op.updatedAt=$updatedAt
+				MERGE (ct)-[:SUSPENDED_RENEWAL]->(op)
+				DELETE r`
+	params := map[string]any{
+		"tenant":                 tenant,
+		"contractId":             contractId,
+		"internalStageSuspended": "SUSPENDED",
+		"updatedAt":              utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 

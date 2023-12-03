@@ -660,7 +660,7 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	opportunityDbNodes, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId)
+	openRenewalOpportunityDbNodes, err := h.repositories.OpportunityRepository.GetOpenRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to get open renewal opportunities for organization %s: %s", organizationId, err.Error())
@@ -669,9 +669,9 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummary(ctx context.Context, 
 	var nextRenewalDate *time.Time
 	var lowestRenewalLikelihood *string
 	var renewalLikelihoodOrder int64
-	if len(opportunityDbNodes) > 0 {
-		opportunities := make([]entity.OpportunityEntity, len(opportunityDbNodes))
-		for _, opportunityDbNode := range opportunityDbNodes {
+	if len(openRenewalOpportunityDbNodes) > 0 {
+		opportunities := make([]entity.OpportunityEntity, len(openRenewalOpportunityDbNodes))
+		for _, opportunityDbNode := range openRenewalOpportunityDbNodes {
 			opportunities = append(opportunities, *graph_db.MapDbNodeToOpportunityEntity(opportunityDbNode))
 		}
 		for _, opportunity := range opportunities {

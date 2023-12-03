@@ -10,6 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	opportunitycmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	opportunitycmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
+	cmd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
+	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/graph_db/entity"
@@ -27,9 +29,10 @@ type ActionStatusMetadata struct {
 }
 
 type ContractEventHandler struct {
-	log                 logger.Logger
-	repositories        *repository.Repositories
-	opportunityCommands *opportunitycmdhandler.CommandHandlers
+	log                  logger.Logger
+	repositories         *repository.Repositories
+	opportunityCommands  *opportunitycmdhandler.CommandHandlers
+	organizationCommands *organizationcmdhandler.CommandHandlers
 }
 
 func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) error {
@@ -83,12 +86,20 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	_, err := h.repositories.ContractRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, eventData)
+	contractDbNode, err := h.repositories.ContractRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	beforeUpdateContractEntity := graph_db.MapDbNodeToContractEntity(contractDbNode)
+
+	updatedContractDbNode, err := h.repositories.ContractRepository.UpdateAndReturn(ctx, eventData.Tenant, contractId, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
 		return err
 	}
+	afterUpdateContractEntity := graph_db.MapDbNodeToContractEntity(updatedContractDbNode)
 
 	if eventData.ExternalSystem.Available() {
 		err = h.repositories.ExternalSystemRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, constants.NodeLabel_Contract, eventData.ExternalSystem)
@@ -99,11 +110,41 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		}
 	}
 
-	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
-	err = contractHandler.UpdateRenewalArrAndNextCycleDate(ctx, eventData.Tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
+	if beforeUpdateContractEntity.RenewalCycle != "" && afterUpdateContractEntity.RenewalCycle == "" {
+		err = h.repositories.ContractRepository.SuspendActiveRenewalOpportunity(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while suspending renewal opportunity for contract %s: %s", contractId, err.Error())
+		}
+		organizationDbNode, err := h.repositories.OrganizationRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
+			return nil
+		}
+		if organizationDbNode == nil {
+			h.log.Errorf("Organization not found for contract %s", contractId)
+			return nil
+		}
+		organization := graph_db.MapDbNodeToOrganizationEntity(*organizationDbNode)
+
+		err = h.organizationCommands.RefreshRenewalSummary.Handle(ctx, cmd.NewRefreshRenewalSummaryCommand(eventData.Tenant, organization.ID, "", constants.AppSourceEventProcessingPlatform))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("NewRefreshRenewalSummaryCommand failed: %v", err.Error())
+		}
+		err = h.organizationCommands.RefreshArr.Handle(ctx, cmd.NewRefreshArrCommand(eventData.Tenant, organization.ID, "", constants.AppSourceEventProcessingPlatform))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("NewRefreshArrCommand failed: %v", err.Error())
+		}
+	} else {
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
+		err = contractHandler.UpdateRenewalArrAndNextCycleDate(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
+		}
 	}
 
 	return nil

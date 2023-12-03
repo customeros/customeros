@@ -37,6 +37,7 @@ type OrganizationRepository interface {
 	UpdateArr(ctx context.Context, tenant, organizationId string) error
 	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
 	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
+	GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 }
 
 type organizationRepository struct {
@@ -672,6 +673,41 @@ func (r *organizationRepository) GetOrganizationByOpportunityId(ctx context.Cont
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     opportunityId,
+	}
+	span.LogFields(log.String("query", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	records := result.([]*dbtype.Node)
+	if len(records) == 0 {
+		return nil, nil
+	} else {
+		return records[0], nil
+	}
+}
+
+func (r *organizationRepository) GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationByContractId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("contractId", contractId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]->(c:Contract {id:$id})
+			RETURN org limit 1`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     contractId,
 	}
 	span.LogFields(log.String("query", cypher), log.Object("params", params))
 

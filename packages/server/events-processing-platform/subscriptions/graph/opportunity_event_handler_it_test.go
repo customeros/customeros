@@ -41,9 +41,10 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 
 	// Create an OpportunityCreateEvent
@@ -131,9 +132,10 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 
 	// Create an OpportunityCreateEvent
@@ -242,9 +244,10 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 
 	now := utils.Now()
@@ -296,9 +299,10 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 
 	now := utils.Now()
@@ -441,9 +445,10 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 
 	now := utils.Now()
@@ -510,9 +515,10 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:                 testLogger,
-		repositories:        testDatabase.Repositories,
-		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		log:                  testLogger,
+		repositories:         testDatabase.Repositories,
+		opportunityCommands:  opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+		organizationCommands: organizationcmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore, nil),
 	}
 
 	now := utils.Now()
