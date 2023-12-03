@@ -371,7 +371,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 		"user-123",
 		"openline",
 		float64(10),
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -453,7 +454,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 		"user-123",
 		"openline",
 		float64(10000),
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -521,7 +523,8 @@ func TestOpportunityEventHandler_OnUpdateRenewal_LikelihoodChangedByUser_Generat
 		"user-123",
 		"openline",
 		float64(10000),
-		now)
+		now,
+		[]string{})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE

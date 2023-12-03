@@ -6,6 +6,15 @@ import "common/external_system.proto";
 
 option go_package = "api/grpc/v1/opportunity;opportunity_grpc_service";
 
+enum OpportunityMaskFields {
+  OPPORTUNITY_PROPERTY_NONE = 0; // No property, ignored by the server
+  OPPORTUNITY_PROPERTY_ALL = 1; // All properties, if present in the list all other properties are ignored
+  OPPORTUNITY_PROPERTY_NAME = 2;
+  OPPORTUNITY_PROPERTY_AMOUNT = 3;
+  OPPORTUNITY_PROPERTY_COMMENTS = 4;
+  OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD = 5;
+}
+
 // Define an enum for internalType
 enum OpportunityInternalType {
   NBO = 0;
@@ -58,6 +67,7 @@ message UpdateRenewalOpportunityGrpcRequest {
   google.protobuf.Timestamp updatedAt = 6;
   double amount = 7;
   SourceFields sourceFields = 8;
+  repeated OpportunityMaskFields maskFields = 9;
 }
 
 message UpdateOpportunityGrpcRequest {
