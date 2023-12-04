@@ -154,9 +154,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == "RENEWAL_DATE" && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedNextRenewalAt", *filter.Filter.Value.Time, utils.LTE, false))
-			} else if filter.Filter.Property == "FORECAST_AMOUNT" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastAmount", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
 			} else if filter.Filter.Property == "FORECAST_ARR" && filter.Filter.Value.ArrayInt != nil && len(*filter.Filter.Value.ArrayInt) == 2 {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[0], utils.GTE, false))
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalForecastArr", (*filter.Filter.Value.ArrayInt)[1], utils.LTE, false))
@@ -328,14 +325,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			}
 			aliases += ", RENEWAL_DATE_FOR_SORTING "
 		}
-		if sort != nil && sort.By == "FORECAST_AMOUNT" {
-			if sort.Direction == model.SortingDirectionAsc {
-				query += ", CASE WHEN o.renewalForecastAmount <> \"\" and o.renewalForecastAmount IS NOT NULL THEN o.renewalForecastAmount ELSE 9999999999999999 END as FORECAST_AMOUNT_FOR_SORTING "
-			} else {
-				query += ", CASE WHEN o.renewalForecastAmount <> \"\" and o.renewalForecastAmount IS NOT NULL THEN o.renewalForecastAmount ELSE 0 END as FORECAST_AMOUNT_FOR_SORTING "
-			}
-			aliases += ", FORECAST_AMOUNT_FOR_SORTING "
-		}
 		if sort != nil && sort.By == "FORECAST_ARR" {
 			if sort.Direction == model.SortingDirectionAsc {
 				query += ", CASE WHEN o.renewalForecastArr <> \"\" and o.renewalForecastArr IS NOT NULL THEN o.renewalForecastArr ELSE 9999999999999999 END as FORECAST_ARR_FOR_SORTING "
@@ -359,8 +348,6 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), true, reflect.TypeOf(entity.OrganizationEntity{})).WithAlias("parent").WithDescending()
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
-			} else if sort.By == "FORECAST_AMOUNT" {
-				query += " ORDER BY FORECAST_AMOUNT_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "FORECAST_ARR" {
 				query += " ORDER BY FORECAST_ARR_FOR_SORTING " + string(sort.Direction)
 			} else if sort.By == "RENEWAL_LIKELIHOOD" {

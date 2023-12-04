@@ -23,36 +23,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	panic(fmt.Errorf("not implemented: OrganizationUpdate - organization_Update"))
 }
 
-// OrganizationUpdateRenewalLikelihood is the resolver for the organization_UpdateRenewalLikelihood field.
-func (r *mutationResolver) OrganizationUpdateRenewalLikelihood(ctx context.Context, input model.RenewalLikelihoodInput) (string, error) {
-	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalLikelihood - organization_UpdateRenewalLikelihood"))
-}
-
-// OrganizationUpdateRenewalForecast is the resolver for the organization_UpdateRenewalForecast field.
-func (r *mutationResolver) OrganizationUpdateRenewalForecast(ctx context.Context, input model.RenewalForecastInput) (string, error) {
-	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalForecast - organization_UpdateRenewalForecast"))
-}
-
-// OrganizationUpdateBillingDetails is the resolver for the organization_UpdateBillingDetails field.
-func (r *mutationResolver) OrganizationUpdateBillingDetails(ctx context.Context, input model.BillingDetailsInput) (string, error) {
-	panic(fmt.Errorf("not implemented: OrganizationUpdateBillingDetails - organization_UpdateBillingDetails"))
-}
-
-// OrganizationUpdateRenewalLikelihoodAsync is the resolver for the organization_UpdateRenewalLikelihoodAsync field.
-func (r *mutationResolver) OrganizationUpdateRenewalLikelihoodAsync(ctx context.Context, input model.RenewalLikelihoodInput) (string, error) {
-	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalLikelihoodAsync - organization_UpdateRenewalLikelihoodAsync"))
-}
-
-// OrganizationUpdateRenewalForecastAsync is the resolver for the organization_UpdateRenewalForecastAsync field.
-func (r *mutationResolver) OrganizationUpdateRenewalForecastAsync(ctx context.Context, input model.RenewalForecastInput) (string, error) {
-	panic(fmt.Errorf("not implemented: OrganizationUpdateRenewalForecastAsync - organization_UpdateRenewalForecastAsync"))
-}
-
-// OrganizationUpdateBillingDetailsAsync is the resolver for the organization_UpdateBillingDetailsAsync field.
-func (r *mutationResolver) OrganizationUpdateBillingDetailsAsync(ctx context.Context, input model.BillingDetailsInput) (string, error) {
-	panic(fmt.Errorf("not implemented: OrganizationUpdateBillingDetailsAsync - organization_UpdateBillingDetailsAsync"))
-}
-
 // OrganizationArchive is the resolver for the organization_Archive field.
 func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: OrganizationArchive - organization_Archive"))
@@ -243,29 +213,7 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 	panic(fmt.Errorf("not implemented: OrganizationDistinctOwners - organization_DistinctOwners"))
 }
 
-// UpdatedBy is the resolver for the updatedBy field.
-func (r *renewalForecastResolver) UpdatedBy(ctx context.Context, obj *model.RenewalForecast) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UpdatedBy - updatedBy"))
-}
-
-// UpdatedBy is the resolver for the updatedBy field.
-func (r *renewalLikelihoodResolver) UpdatedBy(ctx context.Context, obj *model.RenewalLikelihood) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: UpdatedBy - updatedBy"))
-}
-
 // Organization returns generated.OrganizationResolver implementation.
 func (r *Resolver) Organization() generated.OrganizationResolver { return &organizationResolver{r} }
 
-// RenewalForecast returns generated.RenewalForecastResolver implementation.
-func (r *Resolver) RenewalForecast() generated.RenewalForecastResolver {
-	return &renewalForecastResolver{r}
-}
-
-// RenewalLikelihood returns generated.RenewalLikelihoodResolver implementation.
-func (r *Resolver) RenewalLikelihood() generated.RenewalLikelihoodResolver {
-	return &renewalLikelihoodResolver{r}
-}
-
 type organizationResolver struct{ *Resolver }
-type renewalForecastResolver struct{ *Resolver }
-type renewalLikelihoodResolver struct{ *Resolver }

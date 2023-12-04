@@ -521,9 +521,6 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 
 	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org1",
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityMedium),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(30),
 		},
@@ -533,18 +530,12 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 	})
 	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org3",
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityHigh),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(40),
 		},
 	})
 	organizationId4 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org4",
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood: string(entity.RenewalLikelihoodProbabilityLow),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(20),
 		},
@@ -576,18 +567,18 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[3].ID)
 }
 
-func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {
+func TestQueryResolver_Sort_Organizations_ByRenewalDate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	daysFromNow10 := time.Now().AddDate(0, 0, 10)
-	daysFromNow20 := time.Now().AddDate(0, 0, 20)
+	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
+	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
 
 	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org1",
-		BillingDetails: entity.BillingDetails{
-			RenewalCycleNext: utils.TimePtr(daysFromNow10),
+		RenewalSummary: entity.RenewalSummary{
+			NextRenewalAt: utils.TimePtr(daysFromNow10),
 		},
 	})
 	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
@@ -595,8 +586,8 @@ func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {
 	})
 	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org3",
-		BillingDetails: entity.BillingDetails{
-			RenewalCycleNext: utils.TimePtr(daysFromNow20),
+		RenewalSummary: entity.RenewalSummary{
+			NextRenewalAt: utils.TimePtr(daysFromNow20),
 		},
 	})
 
@@ -606,7 +597,7 @@ func TestQueryResolver_Sort_Organizations_ByRenewalCycleNext(t *testing.T) {
 		map[string]interface{}{
 			"page":    1,
 			"limit":   10,
-			"sortBy":  "RENEWAL_CYCLE_NEXT",
+			"sortBy":  "RENEWAL_DATE",
 			"sortDir": "ASC",
 		})
 

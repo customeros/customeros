@@ -7,12 +7,6 @@ extend type Query {
 extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalLikelihood(input: RenewalLikelihoodInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalForecast(input: RenewalForecastInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateBillingDetails(input: BillingDetailsInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UpdateRenewalLikelihoodAsync(input: RenewalLikelihoodInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateRenewalLikelihood instead")
-    organization_UpdateRenewalForecastAsync(input: RenewalForecastInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateRenewalForecast instead")
-    organization_UpdateBillingDetailsAsync(input: BillingDetailsInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated(reason: "Use organization_UpdateBillingDetails instead")
     organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -89,30 +83,7 @@ type Organization implements Node {
 }
 
 type OrgAccountDetails {
-    renewalLikelihood: RenewalLikelihood @deprecated
-    renewalForecast: RenewalForecast @deprecated
-    billingDetails: BillingDetails @deprecated
     renewalSummary: RenewalSummary
-}
-
-type RenewalLikelihood {
-    probability: RenewalLikelihoodProbability
-    previousProbability: RenewalLikelihoodProbability
-    comment: String
-    updatedAt: Time
-    updatedById: String
-    updatedBy: User @goField(forceResolver: true)
-}
-
-type RenewalForecast {
-    amount: Float
-    potentialAmount: Float
-    comment: String
-    updatedAt: Time
-    updatedById: String
-    updatedBy: User @goField(forceResolver: true)
-    arr: Float
-    maxArr: Float
 }
 
 type RenewalSummary {
@@ -120,14 +91,6 @@ type RenewalSummary {
     maxArrForecast:    Float
     renewalLikelihood: OpportunityRenewalLikelihood
     nextRenewalDate:   Time
-}
-
-type BillingDetails {
-    amount: Float
-    frequency: RenewalCycle
-    renewalCycle: RenewalCycle
-    renewalCycleStart: Time
-    renewalCycleNext: Time
 }
 
 type OrganizationPage implements Pages {
@@ -192,26 +155,6 @@ input LinkOrganizationsInput {
     type: String
 }
 
-input RenewalLikelihoodInput {
-    id: ID!
-    probability: RenewalLikelihoodProbability
-    comment: String
-}
-
-input RenewalForecastInput {
-    id: ID!
-    amount: Float
-    comment: String
-}
-
-input BillingDetailsInput {
-    id: ID!
-    amount: Float
-    frequency: RenewalCycle
-    renewalCycle: RenewalCycle
-    renewalCycleStart: Time
-}
-
 type SuggestedMergeOrganization {
     organization: Organization!
     confidence: Float
@@ -238,22 +181,6 @@ enum FundingRound {
     FRIENDS_AND_FAMILY
     ANGEL
     BRIDGE
-}
-
-enum RenewalLikelihoodProbability {
-    HIGH
-    MEDIUM
-    LOW
-    ZERO
-}
-
-enum RenewalCycle {
-    WEEKLY
-    BIWEEKLY
-    MONTHLY
-    QUARTERLY
-    BIANNUALLY
-    ANNUALLY
 }
 
 enum LastTouchpointType {

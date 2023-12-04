@@ -861,26 +861,6 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 
 	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, entity.OrganizationEntity{
 		Name: "org",
-		RenewalLikelihood: entity.RenewalLikelihood{
-			RenewalLikelihood:         "0-HIGH",
-			PreviousRenewalLikelihood: "1-MEDIUM",
-			Comment:                   utils.StringPtr("comment 1"),
-			UpdatedAt:                 utils.TimePtr(utils.Now()),
-			UpdatedBy:                 utils.StringPtr("user 1"),
-		},
-		RenewalForecast: entity.RenewalForecast{
-			Amount:          utils.ToPtr[float64](1000),
-			PotentialAmount: utils.ToPtr[float64](0.5),
-			Comment:         utils.StringPtr("comment 2"),
-			UpdatedAt:       nil,
-			UpdatedById:     nil,
-		},
-		BillingDetails: entity.BillingDetails{
-			Amount:            utils.ToPtr[float64](1.1),
-			Frequency:         "MONTHLY",
-			RenewalCycle:      "ANNUALLY",
-			RenewalCycleStart: utils.TimePtr(utils.Now()),
-		},
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.ToPtr[float64](500),
 			MaxArrForecast:         utils.ToPtr[float64](1000),
@@ -904,20 +884,6 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, "org", organization.Name)
-	require.Equal(t, model.RenewalLikelihoodProbabilityHigh, *organization.AccountDetails.RenewalLikelihood.Probability)
-	require.Equal(t, model.RenewalLikelihoodProbabilityMedium, *organization.AccountDetails.RenewalLikelihood.PreviousProbability)
-	require.Equal(t, "comment 1", *organization.AccountDetails.RenewalLikelihood.Comment)
-	require.Equal(t, "user 1", *organization.AccountDetails.RenewalLikelihood.UpdatedByID)
-	require.NotNil(t, organization.AccountDetails.RenewalLikelihood.UpdatedAt)
-	require.Equal(t, 1000.0, *organization.AccountDetails.RenewalForecast.Amount)
-	require.Equal(t, 0.5, *organization.AccountDetails.RenewalForecast.PotentialAmount)
-	require.Equal(t, "comment 2", *organization.AccountDetails.RenewalForecast.Comment)
-	require.Nil(t, organization.AccountDetails.RenewalForecast.UpdatedAt)
-	require.Nil(t, organization.AccountDetails.RenewalForecast.UpdatedBy)
-	require.Equal(t, 1.1, *organization.AccountDetails.BillingDetails.Amount)
-	require.Equal(t, model.RenewalCycleMonthly, *organization.AccountDetails.BillingDetails.Frequency)
-	require.Equal(t, model.RenewalCycleAnnually, *organization.AccountDetails.BillingDetails.RenewalCycle)
-	require.NotNil(t, organization.AccountDetails.BillingDetails.RenewalCycleStart)
 	require.Equal(t, 500.0, *organization.AccountDetails.RenewalSummary.ArrForecast)
 	require.Equal(t, 1000.0, *organization.AccountDetails.RenewalSummary.MaxArrForecast)
 	require.Equal(t, model.OpportunityRenewalLikelihoodHighRenewal, *organization.AccountDetails.RenewalSummary.RenewalLikelihood)
