@@ -285,7 +285,7 @@ func (r *contractRepository) SuspendActiveRenewalOpportunity(ctx context.Context
 }
 
 func (r *contractRepository) ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.SuspendActiveRenewalOpportunity")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.ActivateSuspendedRenewalOpportunity")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
 	span.LogFields(log.String("contractId", contractId))

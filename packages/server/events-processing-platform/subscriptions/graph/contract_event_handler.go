@@ -20,8 +20,8 @@ import (
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 type ActionStatusMetadata struct {
@@ -139,10 +139,12 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			h.log.Errorf("NewRefreshArrCommand failed: %v", err.Error())
 		}
 	} else {
-		err = h.repositories.ContractRepository.ActivateSuspendedRenewalOpportunity(ctx, eventData.Tenant, contractId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
+		if beforeUpdateContractEntity.RenewalCycle == "" && afterUpdateContractEntity.RenewalCycle != "" {
+			err = h.repositories.ContractRepository.ActivateSuspendedRenewalOpportunity(ctx, eventData.Tenant, contractId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
+			}
 		}
 		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.opportunityCommands)
 		err = contractHandler.UpdateRenewalArrAndNextCycleDate(ctx, eventData.Tenant, contractId)
@@ -150,6 +152,10 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 		}
+	}
+
+	if beforeUpdateContractEntity.Status != afterUpdateContractEntity.Status {
+		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, afterUpdateContractEntity.Status, afterUpdateContractEntity.Name, span)
 	}
 
 	return nil
@@ -239,23 +245,33 @@ func (h *ContractEventHandler) OnUpdateStatus(ctx context.Context, evt eventstor
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
 		}
 	}
-	var message string
-	metadata, err := utils.ToJson(ActionStatusMetadata{
-		Status: eventData.Status,
-	})
 
 	if statusChanged {
-		switch eventData.Status {
-		case string(model.ContractStatusStringLive):
-			message = contractEntity.Name + " is now " + strings.ToLower(eventData.Status)
-		case string(model.ContractStatusStringEnded):
-			message = contractEntity.Name + " has " + strings.ToLower(eventData.Status)
-		}
-		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionContractStatusUpdated, message, metadata, utils.Now())
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
-		}
+		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, eventData.Status, contractEntity.Name, span)
 	}
 	return nil
+}
+
+func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, tenant, contractId, status, contractName string, span opentracing.Span) {
+	span, ctx = opentracing.StartSpanFromContext(ctx, "ContractEventHandler.createActionForStatusChange")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("contractId", contractId), log.String("status", status), log.String("contractName", contractName))
+
+	metadata, err := utils.ToJson(ActionStatusMetadata{
+		Status: status,
+	})
+	message := ""
+
+	switch status {
+	case string(model.ContractStatusStringLive):
+		message = contractName + " is now live"
+	case string(model.ContractStatusStringEnded):
+		message = contractName + " has ended"
+	}
+	_, err = h.repositories.ActionRepository.Create(ctx, tenant, contractId, entity.CONTRACT, entity.ActionContractStatusUpdated, message, metadata, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
+	}
 }
