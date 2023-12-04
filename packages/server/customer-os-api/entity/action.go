@@ -19,12 +19,13 @@ type ActionEntity struct {
 type ActionType string
 
 const (
-	ActionNA                          ActionType = ""
-	ActionCreated                     ActionType = "CREATED"
-	ActionRenewalLikelihoodUpdated    ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
-	ActionRenewalForecastUpdated      ActionType = "RENEWAL_FORECAST_UPDATED"
-	ActionContractStatusUpdated       ActionType = "CONTRACT_STATUS_UPDATED"
-	ActionServiceLineItemPriceUpdated ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
+	ActionNA                             ActionType = ""
+	ActionCreated                        ActionType = "CREATED"
+	ActionRenewalLikelihoodUpdated       ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionRenewalForecastUpdated         ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionContractStatusUpdated          ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionServiceLineItemPriceUpdated    ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
+	ActionServiceLineItemQuantityUpdated ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
 )
 
 var AllActionType = []ActionType{
@@ -33,6 +34,7 @@ var AllActionType = []ActionType{
 	ActionRenewalForecastUpdated,
 	ActionContractStatusUpdated,
 	ActionServiceLineItemPriceUpdated,
+	ActionServiceLineItemQuantityUpdated,
 }
 
 func GetActionType(s string) ActionType {
