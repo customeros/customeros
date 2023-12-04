@@ -324,7 +324,7 @@ export const ContractCard = ({
               calendarIconHidden
             />
             <FormSelect
-              label='Contract renews'
+              label='Renewal cycle'
               placeholder='Renewal cycle'
               isLabelVisible
               name='renewalCycle'

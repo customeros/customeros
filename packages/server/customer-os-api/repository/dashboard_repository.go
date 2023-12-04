@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -74,10 +75,16 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
 	if where != nil {
-		span.LogFields(log.Object("where", where))
+		whereJSON, err := json.Marshal(where)
+		if err == nil {
+			span.LogFields(log.String("where", string(whereJSON)))
+		}
 	}
 	if sort != nil {
-		span.LogFields(log.Object("sort", sort))
+		sortJSON, err := json.Marshal(sort)
+		if err == nil {
+			span.LogFields(log.Object("sort", sortJSON))
+		}
 	}
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
@@ -142,7 +149,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				for _, v := range *filter.Filter.Value.ArrayStr {
 					renewalLikelihoodValues = append(renewalLikelihoodValues, mapper.MapOpportunityRenewalLikelihoodFromString(&v))
 				}
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("renewalLikelihood", renewalLikelihoodValues, utils.IN, false))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("derivedRenewalLikelihood", renewalLikelihoodValues, utils.IN, false))
 			} else if filter.Filter.Property == "RENEWAL_CYCLE_NEXT" && filter.Filter.Value.Time != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("billingDetailsRenewalCycleNext", *filter.Filter.Value.Time, utils.LTE, false))
 			} else if filter.Filter.Property == "RENEWAL_DATE" && filter.Filter.Value.Time != nil {
@@ -223,6 +230,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
+
+		span.LogFields(log.String("countQuery", countQuery))
 
 		countQueryResult, err := tx.Run(ctx, countQuery, params)
 		if err != nil {
@@ -387,6 +396,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		// end sort region
 		query += fmt.Sprintf(` RETURN distinct(o) `)
 		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
+
+		span.LogFields(log.Object("query", query))
+		paramsJson, err := json.Marshal(params)
+		if err == nil {
+			span.LogFields(log.String("params", string(paramsJson)))
+		}
 
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {

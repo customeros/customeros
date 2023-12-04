@@ -1,12 +1,13 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { ChartCard } from '@customerMap/components/ChartCard';
 import ParentSize from '@visx/responsive/lib/components/ParentSize';
-import { useGrossRevenueRetentionQuery } from '@customerMap/graphql/grossRevenueRetention.generated';
 
 import { Skeleton } from '@ui/presentation/Skeleton';
+import { ChartCard } from '@customerMap/components/ChartCard';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useGrossRevenueRetentionQuery } from '@customerMap/graphql/grossRevenueRetention.generated';
 
 import { HelpContent } from './HelpContent';
 import { PercentageTrend } from '../../PercentageTrend';
@@ -21,8 +22,10 @@ const RevenueRetentionRateChart = dynamic(
 
 export const GrossRevenueRetention = () => {
   const client = getGraphQLClient();
+  const { data: globalCacheData } = useGlobalCacheQuery(client);
   const { data, isLoading } = useGrossRevenueRetentionQuery(client);
 
+  const hasContracts = globalCacheData?.global_Cache?.contractsExist;
   const chartData = (data?.dashboard_GrossRevenueRetention?.perMonth ?? []).map(
     (d) => ({
       month: d?.month,
@@ -41,6 +44,7 @@ export const GrossRevenueRetention = () => {
     <ChartCard
       flex='2'
       stat={stat}
+      hasData={hasContracts}
       title='Gross Revenue Retention'
       renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
@@ -54,7 +58,11 @@ export const GrossRevenueRetention = () => {
             startColor='gray.300'
             isLoaded={!isLoading}
           >
-            <RevenueRetentionRateChart width={width} data={chartData} />
+            <RevenueRetentionRateChart
+              width={width}
+              data={chartData}
+              hasContracts={hasContracts}
+            />
           </Skeleton>
         )}
       </ParentSize>

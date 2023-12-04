@@ -12,9 +12,15 @@ export type RevenueAtRiskDatum = {
   highConfidence: number;
 };
 
+const mockData: RevenueAtRiskDatum = {
+  atRisk: 1200,
+  highConfidence: 820,
+};
+
 interface RevenueAtRiskProps {
   width: number;
   height: number;
+  hasContracts?: boolean;
   data: RevenueAtRiskDatum;
 }
 
@@ -33,10 +39,16 @@ const mapData = (data: RevenueAtRiskDatum) => {
   ];
 };
 
-const RevenueAtRisk = ({ data, height, width }: RevenueAtRiskProps) => {
+const RevenueAtRisk = ({
+  width,
+  height,
+  data: _data,
+  hasContracts,
+}: RevenueAtRiskProps) => {
+  const data = hasContracts ? _data : mockData;
   const [warning300, greenLight500] = useToken('colors', [
-    'warning.300',
-    'greenLight.500',
+    hasContracts ? 'warning.300' : 'gray.100',
+    hasContracts ? 'greenLight.500' : 'gray.300',
   ]);
   const mappedData = mapData(data);
 

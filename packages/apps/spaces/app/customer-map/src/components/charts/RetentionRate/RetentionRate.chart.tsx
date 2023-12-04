@@ -14,6 +14,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
+import { mockData } from './mock';
 import { Legend } from '../../Legend';
 import { getMonthLabel } from '../util';
 
@@ -24,107 +25,29 @@ export type RetentionRateDatum = {
     churned: number;
   };
 };
-
-const _mockData: RetentionRateDatum[] = [
-  {
-    month: 1,
-    values: {
-      renewed: 20,
-      churned: -10,
-    },
-  },
-  {
-    month: 2,
-    values: {
-      renewed: 50,
-      churned: -20,
-    },
-  },
-  {
-    month: 3,
-    values: {
-      renewed: 68,
-      churned: -30,
-    },
-  },
-  {
-    month: 4,
-    values: {
-      renewed: 55,
-      churned: -40,
-    },
-  },
-  {
-    month: 5,
-    values: {
-      renewed: 73,
-      churned: -50,
-    },
-  },
-  {
-    month: 6,
-    values: {
-      renewed: 80,
-      churned: -60,
-    },
-  },
-  {
-    month: 7,
-    values: {
-      renewed: 85,
-      churned: -70,
-    },
-  },
-  {
-    month: 8,
-    values: {
-      renewed: 90,
-      churned: -80,
-    },
-  },
-  {
-    month: 9,
-    values: {
-      renewed: 95,
-      churned: -90,
-    },
-  },
-  {
-    month: 10,
-    values: {
-      renewed: 100,
-      churned: -95,
-    },
-  },
-  {
-    month: 11,
-    values: {
-      renewed: 71,
-      churned: -65,
-    },
-  },
-  {
-    month: 12,
-    values: {
-      renewed: 95,
-      churned: -25,
-    },
-  },
-];
-
 interface RetentionRateProps {
   width?: number;
   height?: number;
+  hasContracts?: boolean;
   data: RetentionRateDatum[];
 }
 
 const getX = (d: RetentionRateDatum) => getMonthLabel(d.month);
 
-const RetentionRate = ({ data, width }: RetentionRateProps) => {
-  const [gray700, warning950] = useToken('colors', ['gray.700', 'warning.950']);
+const RetentionRate = ({
+  width,
+  data: _data,
+  hasContracts,
+}: RetentionRateProps) => {
+  const data = hasContracts ? _data : mockData;
+  const [gray700, warning950, greenLight500] = useToken('colors', [
+    'gray.700',
+    hasContracts ? 'warning.950' : 'gray.300',
+    hasContracts ? 'greenLight.500' : 'gray.200',
+  ]);
 
   const colorScale = {
-    Renewed: '#66C61C',
+    Renewed: greenLight500,
     Churned: warning950,
   };
 
@@ -232,22 +155,30 @@ const RetentionRate = ({ data, width }: RetentionRateProps) => {
 
             return (
               <Flex flexDir='column'>
-                <Text color='white' fontWeight='semibold' fontSize='sm'>
-                  {xLabel}
-                </Text>
+                {hasContracts ? (
+                  <>
+                    <Text color='white' fontWeight='semibold' fontSize='sm'>
+                      {xLabel}
+                    </Text>
 
-                <Flex direction='column'>
-                  <TooltipEntry
-                    label='Renewed'
-                    value={values.renewed}
-                    color={colorScale.Renewed}
-                  />
-                  <TooltipEntry
-                    label='Churned'
-                    value={values.churned}
-                    color={colorScale.Churned}
-                  />
-                </Flex>
+                    <Flex direction='column'>
+                      <TooltipEntry
+                        label='Renewed'
+                        value={values.renewed}
+                        color={colorScale.Renewed}
+                      />
+                      <TooltipEntry
+                        label='Churned'
+                        value={values.churned}
+                        color={colorScale.Churned}
+                      />
+                    </Flex>
+                  </>
+                ) : (
+                  <Text color='white' fontWeight='semibold' fontSize='sm'>
+                    No data yet
+                  </Text>
+                )}
               </Flex>
             );
           }}

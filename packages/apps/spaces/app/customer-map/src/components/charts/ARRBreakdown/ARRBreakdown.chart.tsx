@@ -15,6 +15,7 @@ import { Flex } from '@ui/layout/Flex';
 import { Text } from '@ui/typography/Text';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
+import { mockData } from './mock';
 import { Legend } from '../../Legend';
 import { getMonthLabel } from '../util';
 
@@ -28,126 +29,21 @@ export type ARRBreakdownDatum = {
   newlyContracted: number;
 };
 
-const _mockData: ARRBreakdownDatum[] = [
-  {
-    month: 1,
-    cancellations: -5,
-    churned: -15,
-    downgrades: -8,
-    newlyContracted: 12,
-    renewals: 18,
-    upsells: 7,
-  },
-  {
-    month: 2,
-    cancellations: -8,
-    churned: -10,
-    downgrades: -5,
-    newlyContracted: 14,
-    renewals: 20,
-    upsells: 3,
-  },
-  {
-    month: 3,
-    cancellations: -12,
-    churned: -7,
-    downgrades: -10,
-    newlyContracted: 8,
-    renewals: 15,
-    upsells: 5,
-  },
-  {
-    month: 4,
-    cancellations: -6,
-    churned: -12,
-    downgrades: -7,
-    newlyContracted: 10,
-    renewals: 22,
-    upsells: 9,
-  },
-  {
-    month: 5,
-    cancellations: -10,
-    churned: -8,
-    downgrades: -15,
-    newlyContracted: 13,
-    renewals: 16,
-    upsells: 4,
-  },
-  {
-    month: 6,
-    cancellations: -14,
-    churned: -5,
-    downgrades: -9,
-    newlyContracted: 11,
-    renewals: 14,
-    upsells: 6,
-  },
-  {
-    month: 7,
-    cancellations: -9,
-    churned: -11,
-    downgrades: -12,
-    newlyContracted: 9,
-    renewals: 17,
-    upsells: 8,
-  },
-  {
-    month: 8,
-    cancellations: -11,
-    churned: -14,
-    downgrades: -6,
-    newlyContracted: 15,
-    renewals: 19,
-    upsells: 2,
-  },
-  {
-    month: 9,
-    cancellations: -7,
-    churned: -9,
-    downgrades: -11,
-    newlyContracted: 12,
-    renewals: 21,
-    upsells: 10,
-  },
-  {
-    month: 10,
-    cancellations: -13,
-    churned: -13,
-    downgrades: -8,
-    newlyContracted: 7,
-    renewals: 13,
-    upsells: 5,
-  },
-  {
-    month: 11,
-    cancellations: -8,
-    churned: -6,
-    downgrades: -14,
-    newlyContracted: 10,
-    renewals: 18,
-    upsells: 7,
-  },
-  {
-    month: 12,
-    cancellations: -10,
-    churned: -10,
-    downgrades: -10,
-    newlyContracted: 10,
-    renewals: 10,
-    upsells: 10,
-  },
-];
-
 interface ARRBreakdownProps {
   width: number;
   height?: number;
+  hasContracts?: boolean;
   data: ARRBreakdownDatum[];
 }
 
 const getX = (d: ARRBreakdownDatum) => getMonthLabel(d.month);
 
-const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
+const ARRBreakdown = ({
+  width,
+  data: _data,
+  hasContracts,
+}: ARRBreakdownProps) => {
+  const data = hasContracts ? _data : mockData;
   const [
     gray700,
     greenLight200,
@@ -159,13 +55,13 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
     greenLight500,
   ] = useToken('colors', [
     'gray.700',
-    'greenLight.200',
-    'greenLight.400',
-    'warning.300',
-    'warning.600',
-    'warning.950',
-    'greenLight.700',
-    'greenLight.500',
+    hasContracts ? 'greenLight.200' : 'gray.50',
+    hasContracts ? 'greenLight.400' : 'gray.300',
+    hasContracts ? 'warning.300' : 'gray.100',
+    hasContracts ? 'warning.600' : 'gray.200',
+    hasContracts ? 'warning.950' : 'gray.300',
+    hasContracts ? 'greenLight.700' : 'gray.300',
+    hasContracts ? 'greenLight.500' : 'gray.200',
   ]);
 
   const colorScale = {
@@ -194,6 +90,7 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
     {
       label: 'Downgrades',
       color: colorScale.Downgrades,
+      borderColor: !hasContracts ? greenLight400 : undefined,
     },
     {
       label: 'Cancellations',
@@ -324,47 +221,54 @@ const ARRBreakdown = ({ width, data }: ARRBreakdownProps) => {
 
             return (
               <Flex flexDir='column'>
-                <Flex justify='space-between' align='center'>
+                {hasContracts ? (
+                  <>
+                    <Flex justify='space-between' align='center'>
+                      <Text color='white' fontWeight='semibold' fontSize='sm'>
+                        {xLabel}
+                      </Text>
+                      <Text color='white' fontWeight='semibold' fontSize='sm'>
+                        {formatCurrency(totalSum)}
+                      </Text>
+                    </Flex>
+                    <Flex direction='column'>
+                      <TooltipEntry
+                        label='Upsells'
+                        value={values.upsells}
+                        color={colorScale.Upsells}
+                      />
+                      <TooltipEntry
+                        label='Renewals'
+                        value={values.renewals}
+                        color={colorScale.Renewals}
+                      />
+                      <TooltipEntry
+                        label='Newly contracted'
+                        value={values.newlyContracted}
+                        color={colorScale.NewlyContracted}
+                      />
+                      <TooltipEntry
+                        label='Churned'
+                        value={values.churned}
+                        color={colorScale.Churned}
+                      />
+                      <TooltipEntry
+                        label='Cancellations'
+                        value={values.cancellations}
+                        color={colorScale.Cancellations}
+                      />
+                      <TooltipEntry
+                        label='Downgrades'
+                        value={values.downgrades}
+                        color={colorScale.Downgrades}
+                      />
+                    </Flex>
+                  </>
+                ) : (
                   <Text color='white' fontWeight='semibold' fontSize='sm'>
-                    {xLabel}
+                    No data yet
                   </Text>
-                  <Text color='white' fontWeight='semibold' fontSize='sm'>
-                    {formatCurrency(totalSum)}
-                  </Text>
-                </Flex>
-
-                <Flex direction='column'>
-                  <TooltipEntry
-                    label='Upsells'
-                    value={values.upsells}
-                    color={colorScale.Upsells}
-                  />
-                  <TooltipEntry
-                    label='Renewals'
-                    value={values.renewals}
-                    color={colorScale.Renewals}
-                  />
-                  <TooltipEntry
-                    label='Newly contracted'
-                    value={values.newlyContracted}
-                    color={colorScale.NewlyContracted}
-                  />
-                  <TooltipEntry
-                    label='Churned'
-                    value={values.churned}
-                    color={colorScale.Churned}
-                  />
-                  <TooltipEntry
-                    label='Cancellations'
-                    value={values.cancellations}
-                    color={colorScale.Cancellations}
-                  />
-                  <TooltipEntry
-                    label='Downgrades'
-                    value={values.downgrades}
-                    color={colorScale.Downgrades}
-                  />
-                </Flex>
+                )}
               </Flex>
             );
           }}

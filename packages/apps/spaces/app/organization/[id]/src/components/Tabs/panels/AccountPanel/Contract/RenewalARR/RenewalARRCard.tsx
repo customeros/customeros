@@ -111,11 +111,9 @@ export const RenewalARRCard = ({
 
                 {!hasEnded && opportunity.renewedAt && startedAt && (
                   <Text color='gray.500' ml={1} fontSize='sm'>
-                    {DateTimeUtils.isToday(opportunity.renewedAt)
-                      ? 'today'
-                      : DateTimeUtils.timeAgo(opportunity.renewedAt, {
-                          addSuffix: true,
-                        })}
+                    {DateTimeUtils.timeAgo(opportunity.renewedAt, {
+                      addSuffix: true,
+                    })}
                   </Text>
                 )}
               </Flex>
