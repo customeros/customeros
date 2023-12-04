@@ -47,6 +47,8 @@ export const Search = () => {
         <SearchSm boxSize='6' />
       </InputLeftElement>
       <Input
+        autoCorrect='off'
+        spellCheck={false}
         placeholder={placeholder}
         defaultValue={defaultValue}
         borderBottom='unset'
