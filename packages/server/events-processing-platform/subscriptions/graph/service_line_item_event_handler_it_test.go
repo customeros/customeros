@@ -448,3 +448,153 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecrease_TimelineEvent(t *test
 	require.Equal(t, "decreased the price for SLI Price Decrease V2 from 150.00 / ANNUALLY to 50.00 / MONTHLY", action.Content)
 	require.Equal(t, `{"price":50}`, action.Metadata)
 }
+
+func TestServiceLineItemEventHandler_OnUpdateQuantityIncrease_TimelineEvent(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Prepare test data in Neo4j
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Name:     "SLI Quantity Increase",
+		Quantity: 15,
+	})
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+		"Action": 0, "TimelineEvent": 0,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemUpdateEvent
+	updatedAt := utils.Now()
+	updateEvent, err := event.NewServiceLineItemUpdateEvent(
+		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
+		model.ServiceLineItemDataFields{
+			Quantity: 20,
+		},
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		updatedAt,
+	)
+	require.Nil(t, err, "failed to create service line item update event")
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	require.Nil(t, err, "failed to execute service line item update event handler")
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+
+	// Validate that the service line item is saved in the repository
+	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	require.Nil(t, err)
+	require.NotNil(t, serviceLineItemDbNode)
+
+	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, int64(20), serviceLineItem.Quantity)
+
+	// verify action
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemQuantityUpdated, action.Type)
+	require.Equal(t, "added 5 licences to SLI Quantity Increase", action.Content)
+	require.Equal(t, `{"quantity":20}`, action.Metadata)
+}
+
+func TestServiceLineItemEventHandler_OnUpdateQuantityDecrease_TimelineEvent(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstoret.NewTestAggregateStore()
+
+	// Prepare test data in Neo4j
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	contractId := neo4jt.CreateContract(ctx, testDatabase.Driver, tenantName, entity.ContractEntity{})
+	serviceLineItemId := neo4jt.CreateServiceLineItemForContract(ctx, testDatabase.Driver, tenantName, contractId, entity.ServiceLineItemEntity{
+		Name:     "SLI Quantity Increase",
+		Quantity: 400,
+	})
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+		"Action": 0, "TimelineEvent": 0,
+	})
+
+	// Prepare the event handler
+	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
+		log:                 testLogger,
+		repositories:        testDatabase.Repositories,
+		opportunityCommands: opportunitycmdhandler.NewCommandHandlers(testLogger, &config.Config{}, aggregateStore),
+	}
+
+	// Create a ServiceLineItemUpdateEvent
+	updatedAt := utils.Now()
+	updateEvent, err := event.NewServiceLineItemUpdateEvent(
+		aggregate.NewServiceLineItemAggregateWithTenantAndID(tenantName, serviceLineItemId),
+		model.ServiceLineItemDataFields{
+			Quantity: 350,
+		},
+		commonmodel.Source{
+			Source:    constants.SourceOpenline,
+			AppSource: constants.AppSourceEventProcessingPlatform,
+		},
+		updatedAt,
+	)
+	require.Nil(t, err, "failed to create service line item update event")
+
+	// Execute the event handler
+	err = serviceLineItemEventHandler.OnUpdate(ctx, updateEvent)
+	require.Nil(t, err, "failed to execute service line item update event handler")
+
+	// Assert Neo4j Node Counts
+	neo4jt.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		"Contract":        1,
+		"ServiceLineItem": 1, "ServiceLineItem_" + tenantName: 1,
+		"TimelineEvent": 1, "TimelineEvent_" + tenantName: 1})
+
+	// Validate that the service line item is saved in the repository
+	serviceLineItemDbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "ServiceLineItem_"+tenantName, serviceLineItemId)
+	require.Nil(t, err)
+	require.NotNil(t, serviceLineItemDbNode)
+
+	serviceLineItem := graph_db.MapDbNodeToServiceLineItemEntity(*serviceLineItemDbNode)
+	require.Equal(t, serviceLineItemId, serviceLineItem.Id)
+	require.Equal(t, model.MonthlyBilled.String(), serviceLineItem.Billed)
+	require.Equal(t, int64(350), serviceLineItem.Quantity)
+
+	// verify actionat
+	actionDbNode, err := neo4jt.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
+	require.Nil(t, err)
+	require.NotNil(t, actionDbNode)
+	action := graph_db.MapDbNodeToActionEntity(*actionDbNode)
+	require.NotNil(t, action.Id)
+	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
+	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
+	require.Equal(t, entity.ActionServiceLineItemQuantityUpdated, action.Type)
+	require.Equal(t, "removed 50 licences from SLI Quantity Increase", action.Content)
+	require.Equal(t, `{"quantity":350}`, action.Metadata)
+}
