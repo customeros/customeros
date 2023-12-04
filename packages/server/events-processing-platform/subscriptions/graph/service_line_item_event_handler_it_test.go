@@ -520,7 +520,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncrease_TimelineEvent(t *t
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemQuantityUpdated, action.Type)
-	require.Equal(t, "added 20 licences to SLI Quantity Increase", action.Content)
+	require.Equal(t, "added 5 licences to SLI Quantity Increase", action.Content)
 	require.Equal(t, `{"quantity":20}`, action.Metadata)
 }
 
@@ -595,6 +595,6 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecrease_TimelineEvent(t *t
 	require.Equal(t, entity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatform, action.AppSource)
 	require.Equal(t, entity.ActionServiceLineItemQuantityUpdated, action.Type)
-	require.Equal(t, "removed 350 licences from SLI Quantity Increase", action.Content)
+	require.Equal(t, "removed 50 licences from SLI Quantity Increase", action.Content)
 	require.Equal(t, `{"quantity":350}`, action.Metadata)
 }

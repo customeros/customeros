@@ -114,9 +114,19 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 	metadataPrice, err := utils.ToJson(ActionPriceMetadata{
 		Price: eventData.Price,
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to serialize price metadata: %s", err.Error())
+		return errors.Wrap(err, "Failed to serialize price metadata")
+	}
 	metadataQuantity, err := utils.ToJson(ActionQuantityMetadata{
 		Quantity: eventData.Quantity,
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to serialize quantity metadata: %s", err.Error())
+		return errors.Wrap(err, "Failed to serialize quantity metadata")
+	}
 	//check to make sure the name displays correctly in the action message
 	if eventData.Name == "" {
 		name = serviceLineItemEntity.Name
@@ -140,10 +150,10 @@ func (h *ServiceLineItemEventHandler) OnUpdate(ctx context.Context, evt eventsto
 
 	if quantityChanged {
 		if eventData.Quantity > serviceLineItemEntity.Quantity {
-			message = "added " + strconv.FormatInt(eventData.Quantity, 10) + " licences to " + name
+			message = "added " + strconv.FormatInt(eventData.Quantity-serviceLineItemEntity.Quantity, 10) + " licences to " + name
 		}
 		if eventData.Quantity < serviceLineItemEntity.Quantity {
-			message = "removed " + strconv.FormatInt(eventData.Quantity, 10) + " licences from " + name
+			message = "removed " + strconv.FormatInt(serviceLineItemEntity.Quantity-eventData.Quantity, 10) + " licences from " + name
 		}
 		_, err = h.repositories.ActionRepository.Create(ctx, eventData.Tenant, contractId, entity.CONTRACT, entity.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now())
 		if err != nil {
