@@ -17,8 +17,7 @@ type Repositories struct {
 
 	CommonRepositories *commrepo.Repositories
 
-	OrganizationRepository neo4jrepo.OrganizationRepository
-	ContractRepository     neo4jrepo.ContractRepository
+	ContractRepository neo4jrepo.ContractRepository
 }
 
 func InitRepositories(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
@@ -29,8 +28,7 @@ func InitRepositories(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Reposit
 		},
 		CommonRepositories: commrepo.InitRepositories(gormDb, driver),
 
-		OrganizationRepository: neo4jrepo.NewOrganizationRepository(driver),
-		ContractRepository:     neo4jrepo.NewContractRepository(driver),
+		ContractRepository: neo4jrepo.NewContractRepository(driver),
 	}
 	return &repositories
 }
