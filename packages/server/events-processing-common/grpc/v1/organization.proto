@@ -109,58 +109,6 @@ message CustomFieldForOrganizationGrpcRequest {
   string loggedInUserId = 12;
 }
 
-enum Likelihood {
-  NONE_LIKELIHOOD = 0;
-  HIGH = 1;
-  MEDIUM = 2;
-  LOW = 3;
-  ZERO = 4;
-}
-
-message OrganizationRenewalLikelihoodRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string userId = 3 [deprecated = true];
-  Likelihood likelihood = 4;
-  optional string comment = 5;
-  string loggedInUserId = 6;
-}
-
-message OrganizationRenewalForecastRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string userId = 3 [deprecated = true];
-  optional double amount = 4;
-  optional string comment = 5;
-  string loggedInUserId = 6;
-}
-
-enum Frequency {
-  WEEKLY = 0;
-  BIWEEKLY = 1;
-  MONTHLY = 2;
-  QUARTERLY = 3;
-  BIANNUALLY = 4;
-  ANNUALLY = 5;
-}
-
-message OrganizationBillingDetailsRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string userId = 3 [deprecated = true];
-  optional double amount = 4;
-  optional Frequency frequency = 5;
-  optional Frequency renewalCycle = 6;
-  optional google.protobuf.Timestamp  cycleStart = 7;
-  string loggedInUserId = 8;
-}
-
-message RequestRenewNextCycleDateRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-}
-
 message AddParentOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -193,10 +141,6 @@ service organizationGrpcService {
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
-  rpc UpdateOrganizationRenewalLikelihood(OrganizationRenewalLikelihoodRequest) returns (OrganizationIdGrpcResponse);
-  rpc UpdateOrganizationRenewalForecast(OrganizationRenewalForecastRequest) returns (OrganizationIdGrpcResponse);
-  rpc UpdateOrganizationBillingDetails(OrganizationBillingDetailsRequest) returns (OrganizationIdGrpcResponse);
-  rpc RequestRenewNextCycleDate(RequestRenewNextCycleDateRequest) returns (OrganizationIdGrpcResponse);
   rpc HideOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshLastTouchpoint(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
