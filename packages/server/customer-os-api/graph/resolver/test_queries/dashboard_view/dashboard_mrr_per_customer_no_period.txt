@@ -1,0 +1,11 @@
+query GetDashboard_MRRPerCustomer {
+  dashboard_MRRPerCustomer {
+    mrrPerCustomer
+    increasePercentage
+    perMonth {
+      year
+      month
+      value
+    }
+  }
+}

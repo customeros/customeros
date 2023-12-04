@@ -1,0 +1,13 @@
+query GetDashboard_MRRPerCustomer ($start: Time!, $end: Time!) {
+  dashboard_MRRPerCustomer(
+      period: {start: $start, end: $end}
+    ) {
+    mrrPerCustomer
+    increasePercentage
+    perMonth {
+      year
+      month
+      value
+    }
+  }
+}

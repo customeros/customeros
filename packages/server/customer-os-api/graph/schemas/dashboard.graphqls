@@ -32,8 +32,9 @@ type DashboardMRRPerCustomer {
     perMonth: [DashboardMRRPerCustomerPerMonth]!
 }
 type DashboardMRRPerCustomerPerMonth {
+    year: Int!
     month: Int!
-    value: Int!
+    value: Float!
 }
 
 type DashboardGrossRevenueRetention {

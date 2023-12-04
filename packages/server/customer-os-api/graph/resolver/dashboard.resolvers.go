@@ -111,7 +111,7 @@ func (r *queryResolver) DashboardMRRPerCustomer(ctx context.Context, period *mod
 	newCustomersData, err := r.Services.QueryService.GetDashboardMRRPerCustomerData(ctx, startTime, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get the revenue at risk data for period %s - %s", startTime.String(), endTime.String())
+		graphql.AddErrorf(ctx, "Failed to get the MRR per customer data for period %s - %s", startTime.String(), endTime.String())
 		return nil, nil
 	}
 
