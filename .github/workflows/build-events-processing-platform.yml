@@ -2,20 +2,22 @@ name: events-processing-platform
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: ["otter"]
     paths:
+      - packages/server/customer-os-common-ai/**
       - packages/server/customer-os-common-module/**
       - packages/server/events-processing-common/**
       - packages/server/events-processing-platform/**
       - .github/workflows/build-events-processing-platform.yml
   pull_request:
     paths:
+      - packages/server/customer-os-common-ai/**
       - packages/server/customer-os-common-module/**
       - packages/server/events-processing-common/**
       - packages/server/events-processing-platform/**
       - .github/workflows/build-events-processing-platform.yml
   release:
-    types: [ created, edited ]
+    types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
@@ -39,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20.5'
+          go-version: "1.20.5"
 
       - name: Build
         run: make all
@@ -55,9 +57,9 @@ jobs:
 
       - name: Test Report
         uses: mikepenz/action-junit-report@v4
-        if: always()    # run this step even if previous step failed
+        if: always() # run this step even if previous step failed
         with:
-          report_paths: ./packages/server/events-processing-platform/unit-tests.xml    # Path to test results
+          report_paths: ./packages/server/events-processing-platform/unit-tests.xml # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
@@ -103,15 +105,17 @@ jobs:
       - name: Prepare sources for docker build
         run: |
           mkdir tmp-sources
+          mkdir tmp-sources/customer-os-common-ai
           mkdir tmp-sources/customer-os-common-module
           mkdir tmp-sources/events-processing-platform
           mkdir tmp-sources/events-processing-common
-          
+
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/events-processing-platform
           cp .env tmp-sources/events-processing-platform/.env
+          cp -r ../customer-os-common-ai/* tmp-sources/customer-os-common-ai
           cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
           cp -r ../events-processing-common/* tmp-sources/events-processing-common
-          
+
           cp Dockerfile tmp-sources/Dockerfile
 
       - name: Log in to the Container registry
