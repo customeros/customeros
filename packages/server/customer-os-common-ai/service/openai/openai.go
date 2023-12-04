@@ -151,7 +151,7 @@ type Message struct {
 type CreateChatCompletionsRequest struct {
 	Model            string               `json:"model,omitempty"`
 	Messages         []Message            `json:"messages,omitempty"`
-	Functions        []CompletionFunciton `json:"functions,omitempty"`
+	Functions        []CompletionFunction `json:"functions,omitempty"`
 	FunctionCall     *string              `json:"function_call,omitempty"`
 	Temperature      float64              `json:"temperature,omitempty"`
 	TopP             float64              `json:"top_p,omitempty"`
@@ -171,7 +171,7 @@ type ResponseFormat struct {
 	Type string `json:"type"`
 }
 
-type CompletionFunciton struct {
+type CompletionFunction struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 	Parameters  []byte `json:"parameters,omitempty"`
@@ -183,7 +183,7 @@ type CreateChatCompletionsResponse struct {
 	Created           int                           `json:"created,omitempty"`
 	Model             string                        `json:"model,omitempty"`
 	Choices           []CreateChatCompletionsChoice `json:"choices,omitempty"`
-	Usage             CreateChatCompletionsUsave    `json:"usage,omitempty"`
+	Usage             CreateChatCompletionsUsage    `json:"usage,omitempty"`
 	SystemFingerprint string                        `json:"system_fingerprint,omitempty"`
 }
 
@@ -194,7 +194,7 @@ type CreateChatCompletionsChoice struct {
 	FinishReason string   `json:"finish_reason,omitempty"`
 }
 
-type CreateChatCompletionsUsave struct {
+type CreateChatCompletionsUsage struct {
 	PromptTokens     int `json:"prompt_tokens,omitempty"`
 	CompletionTokens int `json:"completion_tokens,omitempty"`
 	TotalTokens      int `json:"total_tokens,omitempty"`
