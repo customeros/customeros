@@ -69,7 +69,7 @@ type RenewalSummary struct {
 }
 
 type RenewalLikelihood struct {
-	RenewalLikelihood         string `neo4jDb:"property:renewalLikelihood;lookupName:RENEWAL_LIKELIHOOD;supportCaseSensitive:false"`
+	RenewalLikelihood         string
 	PreviousRenewalLikelihood string
 	Comment                   *string
 	UpdatedAt                 *time.Time
